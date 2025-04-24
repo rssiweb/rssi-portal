@@ -199,10 +199,9 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // If type of admission changed, update the history table
     if ($type_changed && $cmdtuples > 0) {
-        // Determine the category type (New/Existing) based on admission type
         $category_type = $type_of_admission;
 
-        // First, close any open history records for this student that overlap with the new effective date
+        // 1. Close any open records that overlap with the new effective date
         $closeHistoryQuery = "UPDATE student_category_history 
                             SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
                             WHERE student_id = '$student_id' 
@@ -210,14 +209,14 @@ if (@$_POST['form-type'] == "admission_admin") {
                             AND effective_from < DATE '$effective_from_date'";
         pg_query($con, $closeHistoryQuery);
 
-        // Also adjust any future-dated records that would now be incorrect
+        // 2. Adjust any future-dated records
         $adjustFutureRecords = "UPDATE student_category_history 
                               SET effective_from = DATE '$effective_from_date'
                               WHERE student_id = '$student_id' 
                               AND effective_from >= DATE '$effective_from_date'";
         pg_query($con, $adjustFutureRecords);
 
-        // Insert new history record
+        // 3. Insert the new record
         $insertHistoryQuery = "INSERT INTO student_category_history (
                                 student_id, 
                                 category_type, 
@@ -231,19 +230,14 @@ if (@$_POST['form-type'] == "admission_admin") {
                               )";
         pg_query($con, $insertHistoryQuery);
 
-        // For new admissions, ensure we have a complete history from admission date
+        // 4. For new admissions, ensure complete history from admission date
         if (in_array($type_of_admission, ['Basic', 'Regular', 'Premium', 'General'])) {
-            $checkHistoryQuery = "SELECT COUNT(*) as count, 
-                                MIN(effective_from) as min_date 
-                                FROM student_category_history 
-                                WHERE student_id = '$student_id'";
-            $historyResult = pg_query($con, $checkHistoryQuery);
-            $historyData = pg_fetch_assoc($historyResult);
-            $historyCount = $historyData['count'];
-            $minHistoryDate = $historyData['min_date'];
+            $checkInitialRecord = "SELECT 1 FROM student_category_history 
+                                  WHERE student_id = '$student_id' 
+                                  AND effective_from = DATE '$original_doa'";
+            $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
 
-            // If the earliest record isn't from admission date, add it
-            if ($minHistoryDate != $original_doa) {
+            if (!$initialRecordExists) {
                 $insertInitialHistory = "INSERT INTO student_category_history (
                                         student_id, 
                                         category_type, 
@@ -287,7 +281,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     <title>Admin Update Admission Form</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -482,37 +476,50 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <label for="type-of-admission">Access Category:</label>
+                                        <label>Current Plan:</label>
                                     </td>
                                     <td>
-                                        <select class="form-select" id="type-of-admission" name="type-of-admission" required>
-                                            <?php if ($array['type_of_admission'] == null) { ?>
-                                                <option selected>--Select Access Category--</option>
-                                            <?php } else { ?>
-                                                <option selected>--Select Access Category--</option>
-                                                <option hidden selected><?php echo $array['type_of_admission'] ?></option>
-                                            <?php } ?>
-                                            <option value="Basic">Basic</option>
-                                            <option value="Regular">Regular</option>
-                                            <option value="Premium">Premium</option>
-                                            <option value="Classic">Classic</option>
-                                            <option value="Excellence">Excellence</option>
-                                        </select>
-                                        <!-- Add hidden field to store original type for comparison -->
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <p class="mb-1">
+                                                    <strong>Access Category:</strong>
+                                                    <span id="current-admission-display"><?php echo !empty($array['type_of_admission']) ? $array['type_of_admission'] : 'Not selected' ?></span>
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>Effective From:</strong>
+                                                    <span id="current-effective-date-display">
+                                                        <?php
+                                                        // Fetch effective date from student_category_history
+                                                        $effectiveDate = '';
+                                                        if (!empty($array['student_id'])) {
+                                                            $historyQuery = "SELECT effective_from FROM student_category_history 
+                                            WHERE student_id = '" . $array['student_id'] . "' 
+                                            ORDER BY created_at DESC LIMIT 1";
+                                                            $historyResult = pg_query($con, $historyQuery);
+                                                            if ($historyRow = pg_fetch_assoc($historyResult)) {
+                                                                $effectiveDate = date('F Y', strtotime($historyRow['effective_from']));
+                                                            }
+                                                        }
+                                                        echo !empty($effectiveDate) ? $effectiveDate : 'Not set';
+                                                        ?>
+                                                    </span>
+                                                    <small class="text-muted">(Plan will be applied to <?php echo !empty($effectiveDate) ? $effectiveDate : 'the selected' ?> month's feesheet)</small>
+                                                </p>
+                                            </div>
+                                            <div class="ms-3">
+                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updatePlanModal">
+                                                    Update Plan
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal">
+                                                    View History
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <!-- Hidden fields to store the actual values -->
+                                        <input type="hidden" id="division-select" name="division-select" value="<?php echo $array['division'] ?? '' ?>">
+                                        <input type="hidden" id="type-of-admission" name="type-of-admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                        <input type="hidden" id="effective-from-date" name="effective-from-date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
                                         <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                        <small id="type-of-admission-help" class="form-text text-muted">
-                                            Please select the type of access you are applying for.
-                                            <a href="#" id="show-plan-details" data-bs-toggle="modal" data-bs-target="#planDetailsModal">View Plan Details</a>
-                                        </small>
-                                    </td>
-                                </tr>
-                                <tr id="effective-date-row" style="display:none;">
-                                    <td>
-                                        <label for="effective-from-date">Effective From Date:</label>
-                                    </td>
-                                    <td>
-                                        <input type="date" class="form-control" id="effective-from-date" name="effective-from-date">
-                                        <small class="form-text text-muted">Select the date when this admission type should take effect</small>
                                     </td>
                                 </tr>
                                 <tr>
@@ -521,8 +528,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     </td>
                                     <td>
                                         <input type="text" class="form-control" id="student-name" name="student-name" placeholder="Enter student name" value="<?php echo $array['studentname'] ?>" required>
-                                        <small id="student-name-help" class="form-text text-muted">Please enter the name of the
-                                            student.</small>
+                                        <small id="student-name-help" class="form-text text-muted">Please enter the name of the student.</small>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1271,7 +1277,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
@@ -1363,6 +1369,284 @@ if (@$_POST['form-type'] == "admission_admin") {
             </div>
         </div>
     </div>
+    <!-- Update Plan Modal -->
+    <div class="modal fade" id="updatePlanModal" tabindex="-1" aria-labelledby="updatePlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePlanModalLabel">Update Student Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modal-division-select" class="form-label">Division:</label>
+                        <select class="form-select" id="modal-division-select" required>
+                            <option value="">--Select Division--</option>
+                            <option value="kalpana" <?php echo (!empty($array['division']) && $array['division'] == 'kalpana') ? 'selected' : '' ?>>Kalpana Buds School</option>
+                            <option value="rssi" <?php echo (!empty($array['division']) && $array['division'] == 'rssi') ? 'selected' : '' ?>>RSSI NGO</option>
+                        </select>
+                        <small class="form-text text-muted">Please select the division you're applying for.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-type-of-admission" class="form-label">Access Category:</label>
+                        <select class="form-select" id="modal-type-of-admission" required>
+                            <?php if (empty($array['type_of_admission'])) { ?>
+                                <option value="" selected>--Select Access Category--</option>
+                            <?php } else { ?>
+                                <option value="">--Select Access Category--</option>
+                                <option value="<?php echo $array['type_of_admission']; ?>" selected><?php echo $array['type_of_admission']; ?></option>
+                            <?php } ?>
+                        </select>
+                        <small id="modal-type-of-admission-help" class="form-text text-muted">
+                            Please select the type of access you are applying for.
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-effective-from-date" class="form-label">Effective From Date:</label>
+                        <input type="date" class="form-control" id="modal-effective-from-date" min="<?php echo date('Y-m-d'); ?>">
+                        <small class="form-text text-muted">
+                            The selected plan will be applied to the feesheet of the selected month.
+                            <br>Example: If you select June 15, the plan will be effective from June 1.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-plan-changes">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Plan History Modal -->
+    <div class="modal fade" id="planHistoryModal" tabindex="-1" aria-labelledby="planHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planHistoryModalLabel">Plan Change History for <?php echo htmlspecialchars($array['studentname']) ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Plan Type</th>
+                                    <th>Effective From</th>
+                                    <th>Effective Until</th>
+                                    <th>Changed On</th>
+                                    <th>Changed By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $historyQuery = "SELECT category_type, effective_from, effective_until, created_at, created_by 
+                                           FROM student_category_history 
+                                           WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
+                                           ORDER BY effective_from DESC, created_at DESC";
+                                $historyResult = pg_query($con, $historyQuery);
+                                $today = date('Y-m-d');
+
+                                if (pg_num_rows($historyResult) > 0) {
+                                    while ($row = pg_fetch_assoc($historyResult)) {
+                                        $effectiveFrom = $row['effective_from'];
+                                        $effectiveUntil = $row['effective_until'];
+
+                                        // Determine if this is the current active plan
+                                        $isCurrent = false;
+                                        if ($effectiveUntil === null) {
+                                            // No end date - check if effective_from is in past
+                                            $isCurrent = ($today >= $effectiveFrom);
+                                        } else {
+                                            // Has end date - check if today is within range
+                                            $isCurrent = ($today >= $effectiveFrom && $today <= $effectiveUntil);
+                                        }
+                                        // Future plans should never be highlighted
+                                        if ($today < $effectiveFrom) {
+                                            $isCurrent = false;
+                                        }
+                                ?>
+                                        <tr class="<?php echo $isCurrent ? 'table-primary' : '' ?>">
+                                            <td><?php echo htmlspecialchars($row['category_type']) ?></td>
+                                            <td><?php echo date('d M Y', strtotime($effectiveFrom)) ?></td>
+                                            <td>
+                                                <?php echo $effectiveUntil === null ? '' : date('d M Y', strtotime($effectiveUntil)) ?>
+                                            </td>
+                                            <td><?php echo date('d M Y H:i', strtotime($row['created_at'])) ?></td>
+                                            <td><?php echo htmlspecialchars($row['created_by']) ?></td>
+                                        </tr>
+                                <?php
+                                    }
+                                } else {
+                                    echo '<tr><td colspan="5" class="text-center py-4">No plan history found</td></tr>';
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            // When update modal opens, populate fields with current values
+            $('#updatePlanModal').on('show.bs.modal', function() {
+                $('#modal-division-select').val($('#division-select').val());
+                $('#modal-type-of-admission').val($('#type-of-admission').val());
+                $('#modal-effective-from-date').val($('#effective-from-date').val());
+
+                // If division is already selected, load its plans
+                if ($('#modal-division-select').val()) {
+                    loadPlansForDivision($('#modal-division-select').val());
+                }
+            });
+
+            // When history modal opens, it will show server-rendered content (no AJAX needed)
+            $('#planHistoryModal').on('show.bs.modal', function() {
+                // No AJAX call needed - history is loaded server-side in the modal HTML
+            });
+
+            // When division changes, load corresponding access categories
+            $('#modal-division-select').change(function() {
+                const division = $(this).val();
+                loadPlansForDivision(division);
+            });
+
+            function loadPlansForDivision(division) {
+                const admissionSelect = $('#modal-type-of-admission')[0];
+                const helpText = $('#modal-type-of-admission-help')[0];
+
+                // Reset and disable the select initially
+                admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+                admissionSelect.disabled = !division;
+
+                if (!division) {
+                    helpText.textContent = 'Please select the type of access you are applying for.';
+                    return;
+                }
+
+                // Create and show loading spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                helpText.innerHTML = 'Loading plans... ';
+                helpText.appendChild(spinner);
+
+                // Determine API URL based on host
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ?
+                    'http://localhost:8082/get_plans.php' :
+                    'https://login.rssi.in/get_plans.php';
+
+                // Fetch plans via AJAX
+                fetch(`${apiUrl}?division=${division}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(plans => {
+                        // Create new select with placeholder selected by default
+                        admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+
+                        if (plans.length === 0) {
+                            const noOption = document.createElement('option');
+                            noOption.textContent = 'No plans available';
+                            noOption.disabled = true;
+                            admissionSelect.appendChild(noOption);
+                            helpText.textContent = 'No plans available for this division.';
+                            return;
+                        }
+
+                        plans.forEach(plan => {
+                            const option = document.createElement('option');
+                            option.value = plan.name;
+                            option.textContent = plan.name;
+                            admissionSelect.appendChild(option);
+                        });
+
+                        // If there was a previous selection, try to preserve it
+                        const previousSelection = $('#type-of-admission').val();
+                        if (previousSelection) {
+                            // Check if the previous selection exists in the new options
+                            const optionExists = Array.from(admissionSelect.options).some(
+                                option => option.value === previousSelection
+                            );
+                            if (optionExists) {
+                                $(admissionSelect).val(previousSelection);
+                            }
+                        }
+
+                        admissionSelect.disabled = false;
+                        helpText.textContent = 'Please select the type of access you are applying for.';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching plans:', error);
+                        admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+                        const errorOption = document.createElement('option');
+                        errorOption.textContent = 'Error loading plans';
+                        errorOption.disabled = true;
+                        admissionSelect.appendChild(errorOption);
+                        helpText.textContent = 'Failed to load plans. Please try again.';
+                    })
+                    .finally(() => {
+                        admissionSelect.disabled = false;
+                        // Remove spinner if it still exists
+                        if (spinner.parentNode === helpText) {
+                            helpText.removeChild(spinner);
+                        }
+                    });
+            }
+
+            // Save changes from modal to main form
+            $('#save-plan-changes').click(function() {
+                const division = $('#modal-division-select').val();
+                const admissionType = $('#modal-type-of-admission').val();
+                const effectiveDate = $('#modal-effective-from-date').val();
+
+                if (!division || !admissionType || !effectiveDate) {
+                    alert('Please fill all fields');
+                    return;
+                }
+
+                // Update hidden fields in main form
+                $('#division-select').val(division);
+                $('#type-of-admission').val(admissionType);
+                $('#effective-from-date').val(effectiveDate);
+
+                // Update display values
+                $('#current-admission-display').text(admissionType);
+
+                // Format date for display (show month and year only)
+                const dateObj = new Date(effectiveDate);
+                const monthName = dateObj.toLocaleString('default', {
+                    month: 'long'
+                });
+                $('#current-effective-date-display').text(monthName + ' ' + dateObj.getFullYear());
+
+                // Close modal
+                $('#updatePlanModal').modal('hide');
+            });
+
+            // Set minimum date to today and default to first of next month
+            const today = new Date();
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            const formattedDate = nextMonth.toISOString().split('T')[0];
+            $('#modal-effective-from-date').attr('min', today.toISOString().split('T')[0]);
+
+            // Only set default if no existing value
+            if (!$('#effective-from-date').val()) {
+                $('#modal-effective-from-date').val(formattedDate);
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -1,147 +1,74 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
-  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-  header("Location: index.php");
-  exit;
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
 }
 validation();
 
-@$module = $_POST['get_module'];
-@$id = $_POST['get_id'];
-@$category = $_POST['get_category'];
-@$class = $_POST['get_class'];
-@$stid = $_POST['get_stid'];
-@$is_user = $_POST['is_user'];
-// $categories = "'".implode("','", $category)."'";
+// Initialize variables
+$module = $_POST['get_module'] ?? null;
+$id = $_POST['get_id'] ?? null;
+$category = $_POST['get_category'] ?? null;
+$class = $_POST['get_class'] ?? null;
+$stid = $_POST['get_stid'] ?? null;
+$searchByIdOnly = isset($_POST['search_by_id_only']);
 
+// Initialize result array
+$resultArr = [];
 
-if ($category == null && $class == null) {
-  $result = pg_query($con, "SELECT 
-        s.*, 
-        COALESCE(SUM(f.fees), 0) AS total_admission_fee,
-        CASE 
-            WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
-            ELSE null 
-        END AS admission_fee_status
-    FROM rssimyprofile_student AS s
-    LEFT JOIN fees AS f ON f.studentid = s.student_id AND f.ptype = 'Admission Fee'
-    WHERE s.filterstatus = '$id' AND s.module = '$module' 
-    GROUP BY s.student_id, s.studentname, s.class
-    ORDER BY s.category ASC, s.class ASC, s.studentname ASC");
+// Only query if we have valid parameters
+if ($searchByIdOnly) {
+    // Search by Student ID only
+    if (!empty($stid)) {
+        $result = pg_query_params($con, 
+            "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
+            [$stid]
+        );
+        $resultArr = $result ? pg_fetch_all($result) : [];
+    }
+} else {
+    // Normal search (requires module and status)
+    if (!empty($module) && !empty($id)) {
+        $query = "SELECT * FROM rssimyprofile_student 
+                 WHERE filterstatus = $1 AND module = $2";
+        $params = [$id, $module];
+        
+        if (!empty($category)) {
+            $query .= " AND category = $3";
+            $params[] = $category;
+        }
+        
+        if (!empty($class)) {
+            if (is_array($class)) {
+                $placeholders = implode(',', array_fill(0, count($class), '?'));
+                $query .= " AND class IN ($placeholders)";
+                $params = array_merge($params, $class);
+            } else {
+                $query .= " AND class = $3";
+                if (!empty($category)) {
+                    $query = str_replace("category = $3", "category = $3", $query);
+                    $query .= " AND class = $4";
+                    $params[] = $class;
+                } else {
+                    $params[] = $class;
+                }
+            }
+        }
+        
+        $query .= " ORDER BY category ASC, class ASC, studentname ASC";
+        $result = pg_query_params($con, $query, $params);
+        $resultArr = $result ? pg_fetch_all($result) : [];
+    }
 }
 
-if ($category != null && $class == null) {
-  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
-    FROM rssimyprofile_student
-    LEFT JOIN (
-        SELECT f.studentid, 
-               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
-               CASE 
-                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
-                   ELSE null 
-               END AS admission_fee_status
-        FROM fees AS f
-        WHERE f.ptype = 'Admission Fee'
-        GROUP BY f.studentid
-    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
-    WHERE rssimyprofile_student.filterstatus = '$id' 
-        AND rssimyprofile_student.module = '$module' 
-        AND rssimyprofile_student.category = '$category' 
-    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
-}
-
-if ($category == null && $class != null) {
-  @$classs = implode("','", $class);
-  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
-    FROM rssimyprofile_student
-    LEFT JOIN (
-        SELECT f.studentid, 
-               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
-               CASE 
-                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
-                   ELSE null 
-               END AS admission_fee_status
-        FROM fees AS f
-        WHERE f.ptype = 'Admission Fee'
-        GROUP BY f.studentid
-    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
-    WHERE rssimyprofile_student.filterstatus = '$id' 
-        AND rssimyprofile_student.module = '$module' 
-        AND rssimyprofile_student.class IN ('$classs') 
-    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
-}
-
-
-if ($category != null && $class != null) {
-  @$classs = implode("','", $class);
-  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
-    FROM rssimyprofile_student
-    LEFT JOIN (
-        SELECT f.studentid, 
-               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
-               CASE 
-                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
-                   ELSE null 
-               END AS admission_fee_status
-        FROM fees AS f
-        WHERE f.ptype = 'Admission Fee'
-        GROUP BY f.studentid
-    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
-    WHERE rssimyprofile_student.filterstatus = '$id' 
-        AND rssimyprofile_student.module = '$module' 
-        AND rssimyprofile_student.class IN ('$classs') 
-        AND rssimyprofile_student.category = '$category' 
-    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
-}
-
-
-if ($stid != null) {
-  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
-    FROM rssimyprofile_student
-    LEFT JOIN (
-        SELECT f.studentid, 
-               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
-               CASE 
-                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
-                   ELSE null 
-               END AS admission_fee_status
-        FROM fees AS f
-        WHERE f.ptype = 'Admission Fee'
-        GROUP BY f.studentid
-    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
-    WHERE rssimyprofile_student.student_id = '$stid'");
-}
-
-if (!$result) {
-  echo "An error occurred.\n";
-  exit;
-}
-
-$resultArr = pg_fetch_all($result);
 $classlist = [
-  "Nursery",
-  "LKG",
-  "UKG",
-  "Pre-school",
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  '10',
-  "11",
-  "12",
-  "Vocational training",
-  "x"
-]
+    "Nursery", "LKG", "UKG", "Pre-school", "1", "2", "3", "4", "5", 
+    "6", "7", "8", "9", '10', "11", "12", "Vocational training", "x"
+];
 ?>
 
 <!doctype html>
@@ -275,9 +202,6 @@ $classlist = [
 
                 <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                   <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <a href="fees.php" target="_self" class="btn btn-danger btn-sm" role="button">Fees Details</a>
-
-                    <br><br>
                     <form method="POST" action="export_function.php">
                       <input type="hidden" value="student" name="export_type" />
                       <input type="hidden" value="<?php echo $module ?>" name="module" />
@@ -301,146 +225,133 @@ $classlist = [
               </div>
 
               <!-- <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span> -->
-              <form action="" method="POST">
+              <form action="" method="POST" id="searchForm">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
-                    <input type="hidden" name="form-type" type="text" value="search">
+                    <input type="hidden" name="form-type" value="search">
+
+                    <!-- Module (required unless searching by ID) -->
                     <span class="input-help">
                       <select name="get_module" id="get_module" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($module == null) { ?>
-                          <option disabled selected hidden>Select Module</option>
-                        <?php
-                        } else { ?>
-                          <option hidden selected><?php echo $module ?></option>
-                        <?php }
-                        ?>
-                        <option>National</option>
-                        <option>State</option>
+                          <option value="" disabled selected hidden>Select Module</option>
+                        <?php } else { ?>
+                          <option value="<?php echo $module ?>" hidden selected><?php echo $module ?></option>
+                        <?php } ?>
+                        <option value="National">National</option>
+                        <option value="State">State</option>
                       </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Module<span style="color:red">*</span></small>
+                      <small class="form-text text-muted">Module<span style="color:red">*</span></small>
                     </span>
+
+                    <!-- Status (required unless searching by ID) -->
                     <span class="input-help">
                       <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($id == null) { ?>
-                          <option disabled selected hidden>Select Status</option>
-                        <?php
-                        } else { ?>
-                          <option hidden selected><?php echo $id ?></option>
-                        <?php }
-                        ?>
-                        <option>Active</option>
-                        <option>Inactive</option>
+                          <option value="" disabled selected hidden>Select Status</option>
+                        <?php } else { ?>
+                          <option value="<?php echo $id ?>" hidden selected><?php echo $id ?></option>
+                        <?php } ?>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
                       </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Status<span style="color:red">*</span></small>
+                      <small class="form-text text-muted">Status<span style="color:red">*</span></small>
                     </span>
+
+                    <!-- Category (optional) -->
                     <span class="input-help">
                       <select name="get_category" id="get_category" class="form-select" style="width:max-content;display:inline-block">
-                        <?php if ($category == null) { ?>
-                          <option disabled selected hidden>Select Category</option>
+                        <option value="" disabled selected hidden>Select Category</option>
                         <?php
-                        } else { ?>
-                          <option hidden selected><?php echo $category ?></option>
-                        <?php }
-                        ?>
-                        <option>LG1</option>
-                        <option>LG2-A</option>
-                        <option>LG2-B</option>
-                        <option>LG2-C</option>
-                        <option>LG3</option>
-                        <option>LG4</option>
-                        <option>LG4S1</option>
-                        <option>LG4S2</option>
-                        <option>WLG3</option>
-                        <option>WLG4S1</option>
-                        <option>Undefined</option>
-                      </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
-                    </span>
-                    <span class="input-help">
-                      <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
-                        <?php if ($class == null) { ?>
-                          <option disabled selected hidden>Select Class</option>
-
-                          <?php foreach ($classlist as $cls) { ?>
-                            <option><?php echo $cls ?></option>
-                          <?php } ?>
-
-                          <?php
-                        } else {
-
-                          foreach ($classlist as $cls) { ?>
-                            <option <?php if (in_array($cls, $class)) {
-                                      echo "selected";
-                                    } ?>><?php echo $cls ?></option>
-                        <?php }
+                        $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'Undefined'];
+                        foreach ($categories as $cat) {
+                          $selected = ($category == $cat) ? 'selected' : '';
+                          echo "<option value=\"$cat\" $selected>$cat</option>";
                         }
                         ?>
                       </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Class</small>
+                      <small class="form-text text-muted">Category</small>
                     </span>
+
+                    <!-- Class (optional) -->
                     <span class="input-help">
-                      <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Student Id<span style="color:red">*</span></small>
+                      <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
+                        <option disabled hidden>Select Class</option>
+                        <?php foreach ($classlist as $cls) {
+                          $selected = ($class && in_array($cls, (array)$class)) ? 'selected' : '';
+                          echo "<option value=\"$cls\" $selected>$cls</option>";
+                        } ?>
+                      </select>
+                      <small class="form-text text-muted">Class</small>
+                    </span>
+
+                    <!-- Student ID (required when checkbox checked) -->
+                    <span class="input-help">
+                      <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block"
+                        placeholder="Student ID" value="<?php echo htmlspecialchars($stid ?? '') ?>">
+                      <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
                     </span>
                   </div>
                 </div>
+
                 <div class="col2 left" style="display: inline-block;">
                   <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                    <i class="bi bi-search"></i>&nbsp;Search</button>
+                    <i class="bi bi-search"></i>&nbsp;Search
+                  </button>
                 </div>
+
                 <div id="filter-checks">
-                  <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user']))
-                                                                                  echo "checked='checked'"; ?> />
-                  <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
+                  <input type="checkbox" name="search_by_id_only" id="search_by_id_only" class="form-check-input" value="1"
+                    <?= isset($_POST['search_by_id_only']) ? 'checked' : '' ?> />
+                  <label for="search_by_id_only" style="font-weight: 400;">Search by Student ID only</label>
                 </div>
               </form>
+
               <script>
-                if ($('#is_user').not(':checked').length > 0) {
+                document.addEventListener('DOMContentLoaded', function() {
+                  const searchForm = document.getElementById('searchForm');
+                  const idOnlyCheckbox = document.getElementById('search_by_id_only');
+                  const stidField = document.getElementById('get_stid');
+                  const stidRequired = document.getElementById('stid-required');
 
-                  document.getElementById("get_module").disabled = false;
-                  document.getElementById("get_id").disabled = false;
-                  document.getElementById("get_category").disabled = false;
-                  document.getElementById("get_class").disabled = false;
-                  document.getElementById("get_stid").disabled = true;
+                  function toggleFields() {
+                    const idOnly = idOnlyCheckbox.checked;
 
-                } else {
+                    // Toggle disabled state
+                    document.getElementById("get_module").disabled = idOnly;
+                    document.getElementById("get_id").disabled = idOnly;
+                    document.getElementById("get_category").disabled = idOnly;
+                    document.getElementById("get_class").disabled = idOnly;
+                    stidField.disabled = !idOnly;
+                    stidRequired.style.display = idOnly ? 'inline' : 'none';
 
-                  document.getElementById("get_module").disabled = true;
-                  document.getElementById("get_id").disabled = true;
-                  document.getElementById("get_category").disabled = true;
-                  document.getElementById("get_class").disabled = true;
-                  document.getElementById("get_stid").disabled = false;
-
-                }
-
-                const checkbox = document.getElementById('is_user');
-
-                checkbox.addEventListener('change', (event) => {
-                  if (event.target.checked) {
-                    document.getElementById("get_module").disabled = true;
-                    document.getElementById("get_id").disabled = true;
-                    document.getElementById("get_category").disabled = true;
-                    document.getElementById("get_class").disabled = true;
-                    document.getElementById("get_stid").disabled = false;
-                  } else {
-                    document.getElementById("get_module").disabled = false;
-                    document.getElementById("get_id").disabled = false;
-                    document.getElementById("get_category").disabled = false;
-                    document.getElementById("get_class").disabled = false;
-                    document.getElementById("get_stid").disabled = true;
+                    // Toggle required attributes
+                    document.getElementById("get_module").required = !idOnly;
+                    document.getElementById("get_id").required = !idOnly;
+                    stidField.required = idOnly;
                   }
-                })
+
+                  // Initial setup
+                  toggleFields();
+
+                  // Add event listener for checkbox change
+                  idOnlyCheckbox.addEventListener('change', toggleFields);
+
+                  // Form validation
+                  searchForm.addEventListener('submit', function(e) {
+                    if (idOnlyCheckbox.checked && !stidField.value.trim()) {
+                      e.preventDefault();
+                      alert('Please enter a Student ID when searching by ID');
+                      stidField.focus();
+                    }
+                  });
+                });
               </script>
 
               <?php
               function formatContact($role, $contact)
               {
                 return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
-              }
-
-              function formatPaidBadge($maxmonth, $role, $student_id)
-              {
-                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>&nbsp;<a href="fees.php?get_stid=' . $student_id . '" target=_blank"><i class="bi bi-clock-history" style="font-size: 16px ;color:#777777" title="View Payment History"></i></a>' : '';
               }
 
               ?>
@@ -462,11 +373,6 @@ $classlist = [
                       <th>Contact</th>
                       <th>Status</th>
                       <th>Pay type</th>
-                      <!-- <th>Access</th> -->
-                      <th>Admission fee</th>
-                      <th>Month paid</th>
-                      <!-- <th >Misc (Pay & Others)</th> -->
-                      <th>Due</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -492,11 +398,6 @@ $classlist = [
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
-                          <!-- <td style="white-space: unset"><?php echo (($array['access_category'] == 'Premium') ? 'Prem' : (($array['access_category'] == 'Regular') ? 'Reg' : '')); ?></td> -->
-                          <!-- <td style="white-space: unset;"><?php echo $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i>'; ?></td> -->
-                          <td style="white-space: unset;"><?php echo ($array['admission_fee_status'] == "Paid") ? $array['admission_fee_status'] . '-' . $array['total_admission_fee'] : $array['admission_fee_status']; ?></td>
-                          <td style="white-space: unset;"></td>
-                          <td style="white-space: unset;"></td>
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> " target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
                         </tr>
                       <?php
