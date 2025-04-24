@@ -20,33 +20,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_fee_structure'])) {
         // Handle multiple fee submissions
         if (isset($_POST['multiple_fees'])) {
-            $class = pg_escape_string($con, $_POST['class']);
             $studentType = pg_escape_string($con, $_POST['student_type']);
             $effectiveFrom = $_POST['effective_from'];
 
-            foreach ($_POST['category_id'] as $index => $categoryId) {
-                if (!empty($categoryId) && isset($_POST['amount'][$index]) && !empty($_POST['amount'][$index])) {
-                    $amount = $_POST['amount'][$index];
+            // Get the array of selected classes
+            $selectedClasses = $_POST['class']; // This should be an array from your form
 
-                    // End previous effective period
-                    $endPreviousQuery = "UPDATE fee_structure 
-                                        SET effective_until = '$effectiveFrom'::date - INTERVAL '1 day'
-                                        WHERE class = '$class' 
-                                        AND student_type = '$studentType'
-                                        AND category_id = $categoryId
-                                        AND effective_until IS NULL";
-                    pg_query($con, $endPreviousQuery);
+            foreach ($selectedClasses as $class) {
+                $class = pg_escape_string($con, $class);
 
-                    // Insert new fee structure
-                    $query = "INSERT INTO fee_structure 
-                             (class, student_type, category_id, amount, effective_from)
-                             VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom')";
-                    pg_query($con, $query);
+                foreach ($_POST['category_id'] as $index => $categoryId) {
+                    if (!empty($categoryId) && isset($_POST['amount'][$index]) && !empty($_POST['amount'][$index])) {
+                        $amount = $_POST['amount'][$index];
+                        $categoryId = (int)$categoryId;
+
+                        // End previous effective period for this class and category
+                        $endPreviousQuery = "UPDATE fee_structure 
+                                            SET effective_until = '$effectiveFrom'::date - INTERVAL '1 day'
+                                            WHERE class = '$class' 
+                                            AND student_type = '$studentType'
+                                            AND category_id = $categoryId
+                                            AND (effective_until IS NULL OR effective_until >= '$effectiveFrom')";
+                        pg_query($con, $endPreviousQuery);
+
+                        // Insert new fee structure for this class
+                        $query = "INSERT INTO fee_structure 
+                                 (class, student_type, category_id, amount, effective_from, created_at)
+                                 VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom', NOW())";
+                        pg_query($con, $query);
+                    }
                 }
             }
 
             echo "<script>
-                    alert('Fee structures added successfully!');
+                    alert('Fee structures added successfully for all selected classes!');
                     window.location.href = 'fee_structure_management.php';
                   </script>";
             exit;
@@ -155,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Get all categories
-$categories = pg_fetch_all(pg_query($con, "SELECT * FROM fee_categories WHERE is_active = TRUE ORDER BY category_name")) ?? [];
+$categories = pg_fetch_all(pg_query($con, "SELECT * FROM fee_categories WHERE is_active = TRUE AND category_type='structured' ORDER BY id")) ?? [];
 
 // Get all classes
 $classes = pg_fetch_all(pg_query($con, "SELECT DISTINCT class FROM rssimyprofile_student ORDER BY class")) ?? [];
@@ -279,11 +286,11 @@ $feeStructure = pg_fetch_all(pg_query(
             </div>
             <div class="card-body">
                 <ul class="nav nav-tabs mb-4" id="feeTab" role="tablist">
-                    <li class="nav-item" role="presentation">
+                    <!-- <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Fee</button>
-                    </li>
+                    </li> -->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="multiple-tab" data-bs-toggle="tab" data-bs-target="#multiple" type="button" role="tab">Multiple Fees</button>
+                        <button class="nav-link active" id="multiple-tab" data-bs-toggle="tab" data-bs-target="#multiple" type="button" role="tab">Multiple Fees</button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="student-specific-tab" data-bs-toggle="tab" data-bs-target="#student-specific" type="button" role="tab">Student Specific</button>
@@ -292,7 +299,7 @@ $feeStructure = pg_fetch_all(pg_query(
 
                 <div class="tab-content" id="feeTabContent">
                     <!-- Single Fee Tab -->
-                    <div class="tab-pane fade show active" id="single" role="tabpanel">
+                    <!-- <div class="tab-pane fade show active" id="single" role="tabpanel">
                         <form method="post">
                             <div class="row g-3">
                                 <div class="col-md-3">
@@ -306,13 +313,18 @@ $feeStructure = pg_fetch_all(pg_query(
                                 </div>
                                 <div class="col-md-2">
                                     <label for="student_type" class="form-label">Access Category</label>
-                                    <select name="student_type" class="form-select" required>
+                                    <select name="student_type" id="student_type" class="form-select" required>
                                         <option value="">--Select Access Category--</option>
-                                        <option value="Basic">Basic</option>
-                                        <option value="Regular">Regular</option>
-                                        <option value="Premium">Premium</option>
-                                        <option value="Classic">Classic</option>
-                                        <option value="Excellence">Excellence</option>
+                                        <?php
+                                        // Fetch active plans from database
+                                        $plansQuery = "SELECT name,division FROM plans WHERE is_active = true ORDER BY name";
+                                        $plansResult = pg_query($con, $plansQuery);
+
+                                        while ($plan = pg_fetch_assoc($plansResult)) {
+                                            $selected = (isset($array['student_type']) && $array['student_type'] == $plan['name']) ? 'selected' : '';
+                                            echo '<option value="' . htmlspecialchars($plan['name']) . '" ' . $selected . '>' . htmlspecialchars($plan['name'] . '-' . $plan['division']) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -342,31 +354,37 @@ $feeStructure = pg_fetch_all(pg_query(
                                 </div>
                             </div>
                         </form>
-                    </div>
+                    </div> -->
 
                     <!-- Multiple Fees Tab -->
-                    <div class="tab-pane fade" id="multiple" role="tabpanel">
+                    <div class="tab-pane fade show active" id="multiple" role="tabpanel">
                         <form method="post">
                             <input type="hidden" name="multiple_fees" value="1">
                             <div class="row mb-3">
                                 <div class="col-md-3">
-                                    <label for="class" class="form-label">Class</label>
-                                    <select name="class" class="form-select" required>
-                                        <option value="">Select Class</option>
+                                    <label for="class" class="form-label">Class (Select multiple if needed)</label>
+                                    <select name="class[]" id="class" class="form-select" multiple required>
                                         <?php foreach ($classes as $class): ?>
-                                            <option value="<?= $class['class'] ?>"><?= $class['class'] ?></option>
+                                            <option value="<?= htmlspecialchars($class['class']) ?>">
+                                                <?= htmlspecialchars($class['class']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label for="student_type" class="form-label">Access Category</label>
-                                    <select name="student_type" class="form-select" required>
+                                    <select name="student_type" id="student_type" class="form-select" required>
                                         <option value="">--Select Access Category--</option>
-                                        <option value="Basic">Basic</option>
-                                        <option value="Regular">Regular</option>
-                                        <option value="Premium">Premium</option>
-                                        <option value="Classic">Classic</option>
-                                        <option value="Excellence">Excellence</option>
+                                        <?php
+                                        // Fetch active plans from database
+                                        $plansQuery = "SELECT name,division FROM plans WHERE is_active = true ORDER BY name";
+                                        $plansResult = pg_query($con, $plansQuery);
+
+                                        while ($plan = pg_fetch_assoc($plansResult)) {
+                                            $selected = (isset($array['student_type']) && $array['student_type'] == $plan['name']) ? 'selected' : '';
+                                            echo '<option value="' . htmlspecialchars($plan['name']) . '" ' . $selected . '>' . htmlspecialchars($plan['name'] . '-' . $plan['division']) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
