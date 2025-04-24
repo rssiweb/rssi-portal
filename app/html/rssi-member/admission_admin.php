@@ -500,7 +500,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         </select>
                                         <!-- Add hidden field to store original type for comparison -->
                                         <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                        <small id="type-of-admission-help" class="form-text text-muted">Please select the type of access you are applying for.</small>
+                                        <small id="type-of-admission-help" class="form-text text-muted">
+                                            Please select the type of access you are applying for.
+                                            <a href="#" id="show-plan-details" data-bs-toggle="modal" data-bs-target="#planDetailsModal">View Plan Details</a>
+                                        </small>
                                     </td>
                                 </tr>
                                 <tr id="effective-date-row" style="display:none;">
@@ -1343,6 +1346,23 @@ if (@$_POST['form-type'] == "admission_admin") {
             }
         });
     </script>
+    <!-- Bootstrap Modal for Plan Details -->
+    <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planDetailsModalLabel">Plan Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="plan-details-content">
+                    Basic, Regular, and Premium plans are for Kalpana Buds School. Classic and Excellence plans are for RSSI NGO. For detailed fee structure, please refer to the Fee Structure section.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
