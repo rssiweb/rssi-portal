@@ -495,7 +495,8 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             <option value="Basic">Basic</option>
                                             <option value="Regular">Regular</option>
                                             <option value="Premium">Premium</option>
-                                            <option value="General">General</option>
+                                            <option value="Classic">Classic</option>
+                                            <option value="Excellence">Excellence</option>
                                         </select>
                                         <!-- Add hidden field to store original type for comparison -->
                                         <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
