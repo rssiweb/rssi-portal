@@ -19,7 +19,7 @@ validation();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Attendance System</title>
+    <title>Remote Attendance System</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Bootstrap 5.3 CSS -->
@@ -108,11 +108,12 @@ validation();
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="container-fluid py-4">
         <div class="card shadow-lg">
             <div class="card-header text-white py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Manual Attendance</h4>
+                    <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Remote Attendance</h4>
                     <span class="badge bg-light text-primary fs-6"><?php echo date('F j, Y'); ?></span>
                 </div>
             </div>
@@ -156,7 +157,7 @@ validation();
                             </div>
                             <div class="col-md-8">
                                 <label for="remarks" class="form-label fw-semibold">Remarks</label>
-                                <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="Reason for manual attendance..." required></textarea>
+                                <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="Reason for Remote Attendance..." required></textarea>
                             </div>
                         </div>
                     </div>
@@ -269,7 +270,7 @@ validation();
                                 alert('No matching person found');
                             }
                         } else {
-                            alert(response.message || 'Person not found or not eligible for manual attendance');
+                            alert(response.message || 'Person not found or not eligible for Remote Attendance');
                         }
                     },
                     error: function() {

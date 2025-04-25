@@ -108,6 +108,16 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
+                                        <a href="remote_attendance.php" class="card-link" target="_blank">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <i class="bi bi-globe2 icon"></i>
+                                                    <h5 class="card-title mt-3">Remote Attendance</h5>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4">
                                         <a href="in_out_tracker.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">

@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // In your data processing section:
     $latitude = $data['latitude'] ?? null;
     $longitude = $data['longitude'] ?? null;
+    // Create POINT string if coordinates exist
+    $gps_location = ($latitude && $longitude) ? "POINT($latitude $longitude)" : null;
 
     if (empty($persons)) {
         echo json_encode(['success' => false, 'message' => 'No persons selected']);
@@ -63,19 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
 
-            // In your INSERT query:
+            // Later in your INSERT query:
             $insertQuery = "INSERT INTO attendance (
     user_id, punch_in, ip_address, gps_location, 
     recorded_by, date, status, remarks, is_manual
 ) VALUES (
-    $1, $2, $3, " . ($latitude && $longitude ? "NULL" : "NULL") . ", 
-    $4, $5, $6, $7, true
+    $1, $2, $3, $4, 
+    $5, $6, $7, $8, true
 )";
 
             $insertParams = [
                 $id,
                 $punch_in_time,
                 $ip_address,
+                $gps_location, // This will be either the POINT string or NULL
                 $associatenumber,
                 $current_date,
                 $status,
