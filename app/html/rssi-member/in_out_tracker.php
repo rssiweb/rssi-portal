@@ -17,28 +17,70 @@ $query = "
 WITH PunchInOut AS (
     SELECT
         a.user_id,
-		a.status,
+        a.status,
         DATE(a.punch_in) AS punch_date,
         MIN(a.punch_in) AS punch_in,
-        CASE
-            WHEN COUNT(*) = 1 THEN NULL
-            ELSE MAX(a.punch_in)
-        END AS punch_out
+        CASE WHEN COUNT(*) = 1 THEN NULL ELSE MAX(a.punch_in) END AS punch_out
     FROM attendance a
     GROUP BY a.user_id, a.status, DATE(a.punch_in)
+),
+PunchInDetails AS (
+    SELECT DISTINCT ON (user_id, DATE(punch_in))
+        user_id,
+        DATE(punch_in) AS punch_date,
+        punch_in AS punch_in_time,
+        is_manual AS punch_in_is_manual,
+        recorded_by AS punch_in_recorded_by,
+        gps_location AS punch_in_gps,
+        ip_address AS punch_in_ip,
+        remarks AS punch_in_remarks
+    FROM attendance
+    ORDER BY user_id, DATE(punch_in), punch_in ASC
+),
+PunchOutDetails AS (
+    SELECT DISTINCT ON (user_id, DATE(punch_in))
+        user_id,
+        DATE(punch_in) AS punch_date,
+        punch_in AS punch_out_time,
+        is_manual AS punch_out_is_manual,
+        recorded_by AS punch_out_recorded_by,
+        gps_location AS punch_out_gps,
+        ip_address AS punch_out_ip,
+        remarks AS punch_out_remarks
+    FROM attendance
+    ORDER BY user_id, DATE(punch_in), punch_in DESC
 )
 SELECT
     p.user_id,
-	p.status,
+    p.status,
     COALESCE(m.fullname, s.studentname) AS user_name,
-    s.category AS category,
-    s.class AS class,
-    m.engagement AS engagement,
+    s.category,
+    s.class,
+    m.engagement,
     p.punch_in,
-    p.punch_out
+    pid.punch_in_is_manual,
+    pid.punch_in_recorded_by,
+    pid.punch_in_gps,
+    pid.punch_in_ip,
+    pid.punch_in_remarks,
+    p.punch_out,
+    pod.punch_out_is_manual,
+    pod.punch_out_recorded_by,
+    pod.punch_out_gps,
+    pod.punch_out_ip,
+    pod.punch_out_remarks
 FROM PunchInOut p
-LEFT JOIN rssimyaccount_members m ON p.user_id = m.associatenumber
-LEFT JOIN rssimyprofile_student s ON p.user_id = s.student_id";
+LEFT JOIN PunchInDetails pid 
+    ON p.user_id = pid.user_id AND p.punch_date = pid.punch_date AND p.punch_in = pid.punch_in_time
+LEFT JOIN PunchOutDetails pod 
+    ON p.user_id = pod.user_id AND p.punch_date = pod.punch_date AND p.punch_out = pod.punch_out_time
+LEFT JOIN rssimyaccount_members m 
+    ON p.user_id = m.associatenumber
+LEFT JOIN rssimyprofile_student s 
+    ON p.user_id = s.student_id
+";
+
+// Optional condition building (as in your original script)
 
 // Now you can use the $query variable to execute the SQL query using your preferred database connection method.
 
@@ -347,10 +389,44 @@ if ($resultcount) {
                                                 // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
                                                 echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
                                                 echo '<td>' . $array['class'] . '</td>';
-                                                echo '<td>' . $array['status'] . '</td>';
-                                                echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
-                                                echo '<td>' . ($array['punch_out'] ? date('d/m/Y h:i:s a', strtotime($array['punch_out'])) : 'Not Available') . '</td>';
-                                                echo '</tr>';
+                                                echo '<td>' . $array['status'] . '</td>'; ?>
+                                                <td>
+                                                    <?php
+                                                    if ($array['punch_in']) {
+                                                        echo date('d/m/Y h:i:s a', strtotime($array['punch_in']));
+                                                        if ($array['punch_in_is_manual'] === 't') {
+                                                            echo ' <span class="manual-dot"
+                                                                    data-type="in"
+                                                                    data-user="' . $array['user_id'] . '"
+                                                                    data-time="' . $array['punch_in'] . '"
+                                                                    data-recorded_by="' . htmlspecialchars($array['punch_in_recorded_by'] ?? 'N/A', ENT_QUOTES) . '"
+                                                                    data-remarks="' . htmlspecialchars($array['punch_in_remarks'] ?? 'N/A', ENT_QUOTES) . '"
+                                                                    style="cursor:pointer;" title="Manual Entry">&#x1F7E1;</span>';
+                                                        }
+                                                    } else {
+                                                        echo 'Not Available';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    if ($array['punch_out']) {
+                                                        echo date('d/m/Y h:i:s a', strtotime($array['punch_out']));
+                                                        if ($array['punch_out_is_manual'] === 't') {
+                                                            echo ' <span class="manual-dot"
+                                                                    data-type="out"
+                                                                    data-user="' . $array['user_id'] . '"
+                                                                    data-time="' . $array['punch_out'] . '"
+                                                                    data-recorded_by="' . htmlspecialchars($array['punch_out_recorded_by'] ?? 'N/A', ENT_QUOTES) . '"
+                                                                    data-remarks="' . htmlspecialchars($array['punch_out_remarks'] ?? 'N/A', ENT_QUOTES) . '"
+                                                                    style="cursor:pointer;" title="Manual Entry">&#x1F7E1;</span>';
+                                                        }
+                                                    } else {
+                                                        echo 'Not Available';
+                                                    }
+                                                    ?>
+                                                </td>
+                                        <?php echo '</tr>';
                                             }
                                         } else {
                                             echo '<tr id="no-record"><td colspan="7">No records found.</td></tr>';
@@ -548,6 +624,50 @@ if ($resultcount) {
             }, 1000)
         }
     </script>
+    <!-- Modal -->
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="manualEntryModal" tabindex="-1" aria-labelledby="manualEntryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="manualEntryModalLabel">Manual Entry Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>User ID:</strong> <span id="modal-user-id"></span></p>
+                    <p><strong>Entry Type:</strong> <span id="modal-entry-type"></span></p>
+                    <p><strong>Time:</strong> <span id="modal-time"></span></p>
+                    <p><strong>Recorded By:</strong> <span id="modal-recorded_by"></span></p>
+                    <p><strong>Remarks:</strong> <span id="modal-remarks"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const modal = new bootstrap.Modal(document.getElementById('manualEntryModal'));
+
+            document.querySelectorAll('.manual-dot').forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const user = this.dataset.user;
+                    const type = this.dataset.type === 'in' ? 'Punch In' : 'Punch Out';
+                    const time = this.dataset.time;
+                    const recorded_by = this.dataset.recorded_by || 'N/A';
+                    const remarks = this.dataset.remarks || 'N/A';
+
+                    document.getElementById('modal-user-id').textContent = user;
+                    document.getElementById('modal-entry-type').textContent = type;
+                    document.getElementById('modal-time').textContent = new Date(time).toLocaleString();
+                    document.getElementById('modal-recorded_by').textContent = recorded_by;
+                    document.getElementById('modal-remarks').textContent = remarks;
+
+                    modal.show();
+                });
+            });
+        });
+    </script>
+
 </body>
 
 </html>
