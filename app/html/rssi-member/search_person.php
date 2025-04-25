@@ -20,8 +20,7 @@ try {
     // Search in students
     $studentQuery = "SELECT student_id as id, studentname as name, class 
                     FROM rssimyprofile_student 
-                    WHERE (student_id = $1 OR LOWER(studentname) LIKE LOWER($2))
-                    AND filterstatus = 'Active'";
+                    WHERE (student_id = $1 OR LOWER(studentname) LIKE LOWER($2))";
     $studentParams = [$searchTerm, '%' . $searchTerm . '%'];
     $studentResult = pg_query_params($con, $studentQuery, $studentParams);
 

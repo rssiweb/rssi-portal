@@ -284,44 +284,50 @@ validation();
                 });
             });
 
-            // Show selection modal for multiple matches
+            // Show selection modal - CORRECTED VERSION
             function showSelectionModal(matches) {
                 const list = $('#matchesList');
                 list.empty();
 
                 matches.forEach(person => {
-                    const item = `
-                        <a href="#" class="list-group-item list-group-item-action match-item" data-person='${JSON.stringify(person)}'>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${person.name}</strong>
-                                    ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
-                                    <div class="text-muted small">ID: ${person.id}</div>
-                                </div>
-                                <span class="badge ${person.type === 'student' ? 'bg-primary' : 'bg-info'}">
-                                    ${person.type}
-                                </span>
-                            </div>
-                        </a>
-                    `;
+                    const item = $(`
+            <a href="#" class="list-group-item list-group-item-action match-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${person.name}</strong>
+                        ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
+                        <div class="text-muted small">ID: ${person.id}</div>
+                    </div>
+                    <span class="badge ${person.type === 'student' ? 'bg-primary' : 'bg-info'}">
+                        ${person.type}
+                    </span>
+                </div>
+            </a>
+        `);
+                    item.data('person', person);
                     list.append(item);
                 });
 
-                // Handle selection from modal
-                list.on('click', '.match-item', function(e) {
+                // SINGLE event handler binding
+                list.off('click', '.match-item').on('click', '.match-item', function(e) {
                     e.preventDefault();
                     const person = $(this).data('person');
-                    addToAttendanceList(person);
-                    $('#selectionModal').modal('hide');
+                    if (!addToAttendanceList(person)) {
+                        alert(`${person.name} (ID: ${person.id}) is already in the list`);
+                    } else {
+                        $('#selectionModal').modal('hide');
+                    }
                 });
 
                 $('#selectionModal').modal('show');
             }
 
-            // Add person to attendance list
+            // Add person to attendance list - CORRECTED VERSION
             function addToAttendanceList(person) {
-                const personId = person.type === 'student' ?
-                    'student_' + person.id : 'associate_' + person.id;
+                const personId = `${person.type}_${person.id}`;
+
+                // Debug: Log what we're checking against
+                console.log('Checking:', personId, 'against', selectedPersons.map(p => p.id));
 
                 if (!selectedPersons.some(p => p.id === personId)) {
                     selectedPersons.push({
@@ -332,9 +338,9 @@ validation();
                         class: person.class || ''
                     });
                     updateSelectedList();
-                } else {
-                    alert('This person is already in the attendance list');
+                    return true;
                 }
+                return false;
             }
 
             // Remove person from list
