@@ -208,7 +208,7 @@ if (!$result) {
                                 <p>Please find attached the terms and conditions of your employment.</p>
                                 <p><b><u>COMPENSATION and BENEFITS</u></b></p>
                                 <ol>
-                                    <li>Your gross salary including all benefits will be <b>₹<?=$array['salary']?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
+                                    <li>Your gross salary including all benefits will be <b>₹<?= $array['salary'] ?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
                                     <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
                                         You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
                                 </ol>
@@ -295,13 +295,24 @@ if (!$result) {
                                                 ]
                                             ];
 
-                                            $position_associate = $array['position'];
-                                            foreach ($links as $key => $items) {
-                                                if (str_contains($position_associate, $key)) {
-                                                    foreach ($items as $text => $url) {
-                                                        echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                            // Assume these are already defined somewhere
+                                            $position_associate = $array['position'];  // e.g., "Intern", "Centre Incharge", etc.
+                                            $engagement_associate = $array['engagement']; // New variable you want to use if not Centre Incharge
+
+                                            if (str_contains($position_associate, "Centre Incharge")) {
+                                                // If position is Centre Incharge, only show Centre Incharge links
+                                                foreach ($links["Centre Incharge"] as $text => $url) {
+                                                    echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                }
+                                            } else {
+                                                // Otherwise, use engagement type to find the correct links
+                                                foreach ($links as $key => $items) {
+                                                    if (str_contains($engagement_associate, $key)) {
+                                                        foreach ($items as $text => $url) {
+                                                            echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                        }
+                                                        break; // Stop after first match
                                                     }
-                                                    break; // Exit the loop once the matching position is found
                                                 }
                                             }
                                             ?>
