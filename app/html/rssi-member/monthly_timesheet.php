@@ -454,7 +454,8 @@ LEFT JOIN
     holiday_dates h
     ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
-    mode = 'Offline'
+    -- mode = 'Offline'
+    m.engagement IN ('Employee', 'Intern')
     AND grade!='D'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 

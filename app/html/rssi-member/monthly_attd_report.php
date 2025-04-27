@@ -60,8 +60,8 @@ attendance_data AS (
 )
 AND 
 DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-AND 
-s.category != 'LG4'
+--AND 
+--s.category != 'LG4'
 $idCondition
 )
 SELECT

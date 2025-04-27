@@ -12,7 +12,10 @@ validation();
 
 if ($role == 'Admin') {
     // Fetching the data and populating the $teachers array
-    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'";
+    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' 
+    --AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'
+    AND engagement IN ('Employee', 'Intern')
+    ";
     $result = pg_query($con, $query);
 
     if (!$result) {
@@ -333,7 +336,8 @@ SELECT
     exception_status,  -- Include the exception status in the final result
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
-WHERE mode = 'Offline'
+-- WHERE mode = 'Offline'
+WHERE engagement IN ('Employee', 'Intern')
 GROUP BY
     associatenumber,
     filterstatus,

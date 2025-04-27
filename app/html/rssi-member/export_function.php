@@ -1184,7 +1184,8 @@ SELECT
     exception_status,  -- Include the exception status in the final result
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
-WHERE mode = 'Offline'
+-- WHERE mode = 'Offline'
+WHERE engagement IN ('Employee', 'Intern')
 GROUP BY
     associatenumber,
     filterstatus,

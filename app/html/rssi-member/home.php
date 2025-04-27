@@ -350,10 +350,10 @@ if (!function_exists('makeClickableLinks')) {
                           <i class="bi bi-box-arrow-up-right me-2"></i>
                           Class Schedule (Google Drive)
                         </a>
-                        <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=1909211630" target="_blank" class="d-flex align-items-center text-muted text-decoration-none mb-2" title="Offline Attendance (Google Sheet)">
+                        <!-- <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=1909211630" target="_blank" class="d-flex align-items-center text-muted text-decoration-none mb-2" title="Offline Attendance (Google Sheet)">
                           <i class="bi bi-box-arrow-up-right me-2"></i>
                           Offline Attendance (Google Sheet)
-                        </a>
+                        </a> -->
                         <a href="https://ncert.nic.in/textbook.php" target="_blank" class="d-flex align-items-center text-muted text-decoration-none" title="NCERT Textbooks PDF (I-XII)">
                           <i class="bi bi-box-arrow-up-right me-2"></i>
                           NCERT Textbooks PDF (I-XII)
