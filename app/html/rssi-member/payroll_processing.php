@@ -336,7 +336,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 
               <div class="col-md-4 mb-3">
                 <label for="dayspaid" class="form-label">Days paid:</label>
-                <input type="number" class="form-control" id="dayspaid" name="dayspaid" required>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="dayspaid" name="dayspaid" required>
+                  <button type="button" class="btn btn-info" id="fetchComponentsBtn">
+                    <span id="fetchBtnText">Fetch Components</span>
+                    <span id="fetchSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </div>
             <div id="salaryComponents">
@@ -396,8 +402,362 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
     <?php } ?>
 
     <script>
-      // ... Existing code ...
+      function updateDaysPaid() {
+        var payMonth = document.getElementById("payMonth").value;
+        var daysPaidInput = document.getElementById("dayspaid");
 
+        if (payMonth) {
+          var daysInMonth = new Date(new Date().getFullYear(), payMonth, 0).getDate();
+          daysPaidInput.value = daysInMonth;
+        } else {
+          daysPaidInput.value = "";
+        }
+      }
+    </script>
+
+    <script>
+      // Dynamically generate options for the Pay Year dropdown
+      var payYearSelect = document.getElementById('payYear');
+      var currentYear = new Date().getFullYear();
+      var previousYear = currentYear - 1;
+      var yearOptions = '';
+      yearOptions += '<option value="' + currentYear + '">' + currentYear + '</option>';
+      yearOptions += '<option value="' + previousYear + '">' + previousYear + '</option>';
+      payYearSelect.innerHTML = yearOptions;
+    </script>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      window.onload = function() {
+        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+          backdrop: 'static',
+          keyboard: false
+        });
+        myModal.show();
+      };
+    </script>
+
+    <script>
+      window.onload = function() {
+        var myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+          backdrop: "static",
+          keyboard: false,
+        });
+        myModal.show();
+      };
+    </script>
+
+    <script>
+      // Global variable to store component options
+      let componentOptions = {
+        Earning: [],
+        Deduction: [],
+      };
+
+      // Fetch component options when page loads
+      $(document).ready(function() {
+        fetchComponentOptions();
+
+        // Handle fetch components button click
+        $("#fetchComponentsBtn").click(function() {
+          const associateNumber = $("#employeeId").val();
+          const payMonth = $("#payMonth").val();
+          const payYear = $("#payYear").val();
+
+          if (!associateNumber || !payMonth || !payYear) {
+            alert("Please select associate, pay month and pay year first");
+            return;
+          }
+
+          // Show spinner
+          $("#fetchBtnText").text("Fetching...");
+          $("#fetchSpinner").removeClass("d-none");
+          $(this).prop("disabled", true);
+
+          // Find the effective salary structure for this month/year
+          $.ajax({
+            url: "fetch_salary_components.php",
+            method: "POST",
+            data: {
+              associate_number: associateNumber,
+              pay_month: payMonth,
+              pay_year: payYear,
+            },
+            dataType: "json",
+            success: function(response) {
+              // Hide spinner
+              $("#fetchBtnText").text("Fetch Components");
+              $("#fetchSpinner").addClass("d-none");
+              $("#fetchComponentsBtn").prop("disabled", false);
+
+              if (response.success) {
+                // Populate the salary components dynamically
+                fetchSalaryComponents(response.components);
+              } else {
+                alert(response.message || "Failed to fetch components");
+              }
+            },
+            error: function() {
+              // Hide spinner
+              $("#fetchBtnText").text("Fetch Components");
+              $("#fetchSpinner").addClass("d-none");
+              $("#fetchComponentsBtn").prop("disabled", false);
+              alert("Error fetching components");
+            },
+          });
+        });
+      });
+
+      // Function to fetch component options from database
+      function fetchComponentOptions() {
+        $.ajax({
+          url: "fetch_component_options.php",
+          method: "GET",
+          dataType: "json",
+          success: function(response) {
+            if (response.success) {
+              componentOptions = response.options;
+            } else {
+              alert("Failed to load component options");
+            }
+          },
+          error: function() {
+            alert("Error loading component options");
+          },
+        });
+      }
+
+      function addSalaryComponent() {
+        const salaryComponentsDiv = document.getElementById("salaryComponents");
+
+        // Create a new row for the salary component
+        const row = document.createElement("div");
+        row.className = "row mb-3";
+
+        const componentTypeSelect = createSelectField(
+          "componentName[]",
+          "Component Type",
+          ["Earning", "Deduction"]
+        );
+        const subCategorySelect = createSelectField(
+          "subCategory[]",
+          "Sub-Category",
+          [],
+          true
+        ); // Initially disabled
+        const amountInput = createInputField("amount[]", "Amount");
+
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.className = "col";
+
+        const minusButton = createMinusButton();
+        buttonsContainer.appendChild(minusButton);
+
+        // Append the elements to the row
+        row.appendChild(componentTypeSelect);
+        row.appendChild(subCategorySelect);
+        row.appendChild(amountInput);
+        row.appendChild(buttonsContainer);
+
+        salaryComponentsDiv.appendChild(row);
+
+        // Remove Add button from all rows except the last one
+        updateAddButton();
+
+        // Add event listener for componentTypeSelect dropdown
+        componentTypeSelect.querySelector("select").addEventListener("change", function() {
+          updateSubCategoryOptions(this, subCategorySelect);
+        });
+      }
+
+      function createSelectField(name, label, options, disabled = false) {
+        const div = document.createElement("div");
+        div.className = "col";
+
+        const select = document.createElement("select");
+        select.className = "form-select";
+        select.name = name;
+        select.required = true;
+        select.disabled = disabled;
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.innerHTML = label;
+        defaultOption.selected = true;
+        defaultOption.disabled = true;
+
+        select.appendChild(defaultOption);
+
+        options.forEach(function(option) {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.text = option;
+          select.appendChild(optionElement);
+        });
+
+        div.appendChild(select);
+        return div;
+      }
+
+      function createInputField(name, placeholder) {
+        const div = document.createElement("div");
+        div.className = "col";
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.className = "form-control";
+        input.name = name;
+        input.placeholder = placeholder;
+        input.step = "0.01";
+
+        div.appendChild(input);
+        return div;
+      }
+
+      function createPlusButton() {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-primary btn-sm me-2";
+        button.innerHTML = "+ Add";
+        button.onclick = addSalaryComponent;
+
+        return button;
+      }
+
+      function createMinusButton() {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-danger btn-sm";
+        button.innerHTML = "- Remove";
+        button.onclick = deleteSalaryComponent;
+
+        return button;
+      }
+
+      function deleteSalaryComponent() {
+        const row = this.parentNode.parentNode;
+        const salaryComponentsDiv = document.getElementById("salaryComponents");
+        salaryComponentsDiv.removeChild(row);
+
+        // Update Add button
+        updateAddButton();
+      }
+
+      function updateAddButton() {
+        const rows = document.querySelectorAll("#salaryComponents .row");
+        rows.forEach((row, index) => {
+          const buttonsContainer = row.querySelector(".col");
+          const addButton = buttonsContainer.querySelector(".btn-primary");
+
+          // Remove existing Add button
+          if (addButton) {
+            buttonsContainer.removeChild(addButton);
+          }
+
+          // Add Add button to the last row
+          if (index === rows.length - 1) {
+            const plusButton = createPlusButton();
+            buttonsContainer.appendChild(plusButton);
+          }
+        });
+      }
+
+      function updateSubCategoryOptions(componentSelect, subCategorySelect) {
+        const selectedComponent = componentSelect.value;
+        const subCategorySelectElement = subCategorySelect.querySelector("select");
+
+        // Clear existing options
+        subCategorySelectElement.innerHTML = "";
+
+        // Add default option
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.innerHTML = "Sub-Category";
+        defaultOption.selected = true;
+        defaultOption.disabled = true;
+        subCategorySelectElement.appendChild(defaultOption);
+
+        // Enable/disable based on selection
+        subCategorySelectElement.disabled = selectedComponent === "";
+
+        if (selectedComponent !== "") {
+          // Get options from database
+          const options = componentOptions[selectedComponent] || [];
+
+          // Add options to select
+          options.forEach(function(option) {
+            const optionElement = document.createElement("option");
+            optionElement.value = option;
+            optionElement.text = option;
+            subCategorySelectElement.appendChild(optionElement);
+          });
+
+          // Enable the select
+          subCategorySelectElement.disabled = false;
+        }
+      }
+
+      function fetchSalaryComponents(components) {
+        const salaryComponentsDiv = document.getElementById("salaryComponents");
+        salaryComponentsDiv.innerHTML = ""; // Clear existing components
+
+        components.forEach((component) => {
+          addSalaryComponentWithValues(
+            component.is_deduction ? "Deduction" : "Earning",
+            component.component_name,
+            component.monthly_amount
+          );
+        });
+
+        // Update Add button
+        updateAddButton();
+      }
+
+      function addSalaryComponentWithValues(componentType, componentName, amount) {
+        const salaryComponentsDiv = document.getElementById("salaryComponents");
+        const row = document.createElement("div");
+        row.className = "row mb-3";
+
+        const componentTypeSelect = createSelectField(
+          "componentName[]",
+          "Component Type",
+          ["Earning", "Deduction"]
+        );
+        componentTypeSelect.querySelector("select").value = componentType;
+
+        const subCategorySelect = createSelectField(
+          "subCategory[]",
+          "Sub-Category",
+          [],
+          false
+        );
+        subCategorySelect.querySelector("select").innerHTML = `
+      <option value="${componentName}" selected>${componentName}</option>
+    `;
+
+        const amountInput = createInputField("amount[]", "Amount");
+        amountInput.querySelector("input").value = amount;
+
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.className = "col";
+
+        const minusButton = createMinusButton();
+        buttonsContainer.appendChild(minusButton);
+
+        row.appendChild(componentTypeSelect);
+        row.appendChild(subCategorySelect);
+        row.appendChild(amountInput);
+        row.appendChild(buttonsContainer);
+
+        salaryComponentsDiv.appendChild(row);
+
+        // Update Add button
+        updateAddButton();
+      }
+
+      // Fix for payslip preview modal not showing up
       function previewPayslip() {
         // Get the employee ID, pay month, and pay year from the form
         var employeeId = document.getElementById('employeeId').value;
@@ -489,227 +849,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
         var payslipModal = new bootstrap.Modal(document.getElementById('payslipModal'));
         payslipModal.show();
       }
-
-      // ... Existing code ...
-    </script>
-    <script>
-      function updateDaysPaid() {
-        var payMonth = document.getElementById("payMonth").value;
-        var daysPaidInput = document.getElementById("dayspaid");
-
-        if (payMonth) {
-          var daysInMonth = new Date(new Date().getFullYear(), payMonth, 0).getDate();
-          daysPaidInput.value = daysInMonth;
-        } else {
-          daysPaidInput.value = "";
-        }
-      }
-    </script>
-
-    <script>
-      // Dynamically generate options for the Pay Year dropdown
-      var payYearSelect = document.getElementById('payYear');
-      var currentYear = new Date().getFullYear();
-      var previousYear = currentYear - 1;
-      var yearOptions = '';
-      yearOptions += '<option value="' + currentYear + '">' + currentYear + '</option>';
-      yearOptions += '<option value="' + previousYear + '">' + previousYear + '</option>';
-      payYearSelect.innerHTML = yearOptions;
-    </script>
-
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-      function addSalaryComponent() {
-        var salaryComponentsDiv = document.getElementById("salaryComponents");
-
-        // Create a new row for the salary component
-        var row = document.createElement("div");
-        row.className = "row mb-3";
-
-        // Create the select fields for component name and sub-category
-        var componentNameSelect = createSelectField("componentName[]", "Component Name", [
-          "Earning", "Deduction"
-        ]);
-        var subCategorySelect = createSelectField("subCategory[]", "Sub-Category", []);
-        var amountInput = createInputField("amount[]", "Amount");
-
-        // Add the 'required' attribute to the input field
-        amountInput.querySelector("input").required = true;
-        subCategorySelect.querySelector("select").disabled = true;
-
-        // Append the select fields and input field to the row
-        row.appendChild(componentNameSelect);
-        row.appendChild(subCategorySelect);
-        row.appendChild(amountInput);
-
-        // Create the plus and minus buttons
-        var plusButton = createPlusButton();
-        var minusButton = createMinusButton();
-
-        // Create a container div for the buttons
-        var buttonsContainer = document.createElement("div");
-        buttonsContainer.className = "col";
-
-        // Append the buttons to the container div
-        buttonsContainer.appendChild(plusButton);
-        buttonsContainer.appendChild(minusButton);
-
-        // Append the container div to the row
-        row.appendChild(buttonsContainer);
-
-        // Append the row to the salary components div
-        salaryComponentsDiv.appendChild(row);
-
-        // Remove plus button from the previous component
-        var previousComponent = row.previousElementSibling;
-        if (previousComponent) {
-          var previousPlusButton = previousComponent.querySelector(".btn-primary");
-          previousPlusButton.parentNode.removeChild(previousPlusButton);
-        }
-
-        // Add event listener to the componentNameSelect dropdown
-        componentNameSelect.querySelector("select").addEventListener("change", function() {
-          updateSubCategoryOptions(this, subCategorySelect);
-        });
-      }
-
-      function createSelectField(name, label, options) {
-        var div = document.createElement("div");
-        div.className = "col";
-
-        var select = document.createElement("select");
-        select.className = "form-select";
-        select.name = name;
-        select.required = true; // Add the required attribute
-
-        var defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.innerHTML = label;
-        defaultOption.selected = true;
-        defaultOption.disabled = true;
-
-        select.appendChild(defaultOption);
-
-        options.forEach(function(option) {
-          var optionElement = document.createElement("option");
-          optionElement.value = option;
-          optionElement.text = option;
-          select.appendChild(optionElement);
-        });
-
-        div.appendChild(select);
-        return div;
-      }
-
-      function createInputField(name, placeholder) {
-        var div = document.createElement("div");
-        div.className = "col";
-
-        var input = document.createElement("input");
-        input.type = "number";
-        input.className = "form-control";
-        input.name = name;
-        input.placeholder = placeholder;
-
-        div.appendChild(input);
-        return div;
-      }
-
-      function createPlusButton() {
-        var button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-primary btn-sm me-2";
-        button.innerHTML = "+ Add";
-        button.onclick = addSalaryComponent;
-
-        return button;
-      }
-
-      function createMinusButton() {
-        var button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-danger btn-sm";
-        button.innerHTML = "- Remove";
-        button.onclick = deleteSalaryComponent;
-
-        return button;
-      }
-
-      function deleteSalaryComponent() {
-        var row = this.parentNode.parentNode;
-        var salaryComponentsDiv = document.getElementById("salaryComponents");
-        salaryComponentsDiv.removeChild(row);
-      }
-
-      function updateSubCategoryOptions(componentSelect) {
-        var selectedComponent = componentSelect.value;
-        var subCategorySelect = componentSelect.parentNode.nextSibling.querySelector("select");
-
-        subCategorySelect.disabled = selectedComponent === "";
-
-        // Clear existing sub-category options if "Component Name" is not selected
-        if (selectedComponent === "") {
-          subCategorySelect.innerHTML = "";
-          var defaultOption = document.createElement("option");
-          defaultOption.value = "";
-          defaultOption.innerHTML = "Sub-Category";
-          defaultOption.selected = true;
-          defaultOption.disabled = true;
-          subCategorySelect.appendChild(defaultOption);
-        } else {
-          // Add sub-category options based on the selected component
-          subCategorySelect.innerHTML = ""; // Clear existing options
-          var subCategoryOptions = [];
-
-          if (selectedComponent === "Earning") {
-            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus", "Bonus Payout", "Overtime Pay"];
-          } else if (selectedComponent === "Deduction") {
-            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery", "Deferred Bonus Deduction"];
-          } else {
-            subCategoryOptions = [];
-          }
-
-          subCategoryOptions.forEach(function(option) {
-            var optionElement = document.createElement("option");
-            optionElement.value = option;
-            optionElement.text = option;
-            subCategorySelect.appendChild(optionElement);
-          });
-        }
-      }
-
-      function validateForm() {
-        var inputs = document.querySelectorAll("#salaryComponents input");
-        var selectFields = document.querySelectorAll("#salaryComponents select");
-
-        // Check if at least one component has been added
-        if (inputs.length === 0 && selectFields.length === 0) {
-          alert("Please add at least one salary component.");
-          return false; // Prevent form submission
-        }
-
-        // Check for required fields
-        for (var i = 0; i < inputs.length; i++) {
-          if (inputs[i].hasAttribute("required") && !inputs[i].value) {
-            alert("Please fill in all required fields in the salary components.");
-            return false; // Prevent form submission
-          }
-        }
-
-        return true; // Allow form submission
-      }
-    </script>
-
-    <script>
-      window.onload = function() {
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-          backdrop: 'static',
-          keyboard: false
-        });
-        myModal.show();
-      };
     </script>
 
 </body>
