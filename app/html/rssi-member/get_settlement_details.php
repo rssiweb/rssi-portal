@@ -40,10 +40,10 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
 
 <div class="container-fluid">
     <h4>Settlement Details - #<?= $settlement['id'] ?></h4>
-    
+
     <div class="row mt-4">
         <div class="col-md-6">
-            <div class="card">
+            <div class="card" id="settlement-info">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title">Settlement Information</h5>
                 </div>
@@ -75,9 +75,9 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
-            <div class="card">
+            <div class="card" id="settlement-summary-info">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title">Summary</h5>
                 </div>
@@ -89,13 +89,17 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                     <div class="row mb-2">
                         <div class="col-md-6 fw-bold">Cash Payments:</div>
                         <div class="col-md-6">
-                            <?= count(array_filter($payments, function($p) { return $p['payment_type'] === 'cash'; })) ?>
+                            <?= count(array_filter($payments, function ($p) {
+                                return $p['payment_type'] === 'cash';
+                            })) ?>
                         </div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-md-6 fw-bold">Online Payments:</div>
                         <div class="col-md-6">
-                            <?= count(array_filter($payments, function($p) { return $p['payment_type'] === 'online'; })) ?>
+                            <?= count(array_filter($payments, function ($p) {
+                                return $p['payment_type'] === 'online';
+                            })) ?>
                         </div>
                     </div>
                     <div class="row">
@@ -106,7 +110,7 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
             </div>
         </div>
     </div>
-    
+
     <div class="row mt-4">
         <div class="col-md-12">
             <h5>Payment Details</h5>

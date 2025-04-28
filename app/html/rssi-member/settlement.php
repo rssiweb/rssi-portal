@@ -68,7 +68,10 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
     <title>Settlement Management</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         .summary-card {
             border-left: 5px solid;
@@ -86,6 +89,13 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
         .summary-card.online {
             border-color: #17a2b8;
         }
+
+        #settlement-info .card-title,
+        #settlement-summary-info .card-title {
+            padding: 0;
+            /* or correct padding value */
+            color: var(--bs-card-title-color);
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -96,266 +106,285 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 </head>
 
 <body>
-    <div class="container-fluid mt-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title"><i class="fas fa-calculator"></i> Settlement Management</h3>
-                <div class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; margin-right: 8px;">
-                            <?= strtoupper(substr($fullname, 0, 1)) ?>
-                        </div>
-                        <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Filters -->
-                <form method="get" class="row g-3 mb-4">
-                    <input type="hidden" name="page" value="settlement">
-                    <div class="col-md-3">
-                        <label for="settlementDate" class="form-label">Settlement Date:</label>
-                        <input type="date" class="form-control" name="settlement_date" value="<?= $settlementDate ?>">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="status" class="form-label">Status:</label>
-                        <select class="form-select" name="status">
-                            <option value="unsettled" <?= $status === 'unsettled' ? 'selected' : '' ?>>Unsettled Payments</option>
-                            <option value="settled" <?= $status === 'settled' ? 'selected' : '' ?>>Settled Payments</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="button" class="btn btn-success w-100" id="exportSettlement">
-                            <i class="fas fa-file-excel"></i> Export
-                        </button>
-                    </div>
-                </form>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-                <?php if ($status === 'unsettled'): ?>
-                    <!-- Unsettled Payments -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card summary-card total">
-                                <div class="card-body">
-                                    <h5 class="card-title">Unsettled Payments</h5>
-                                    <p class="card-text display-6"><?= $summary['total_payments'] ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card summary-card total">
-                                <div class="card-body">
-                                    <h5 class="card-title">Total Amount</h5>
-                                    <p class="card-text display-6">₹<?= @number_format($summary['total_amount'], 2) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card summary-card cash">
-                                <div class="card-body">
-                                    <h5 class="card-title">Cash Amount</h5>
-                                    <p class="card-text display-6">₹<?= @number_format($summary['cash_amount'], 2) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card summary-card online">
-                                <div class="card-body">
-                                    <h5 class="card-title">Online Amount</h5>
-                                    <p class="card-text display-6">₹<?= @number_format($summary['online_amount'], 2) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <main id="main" class="main">
 
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-success" id="createSettlement" <?php if ($role !== 'Admin') echo 'disabled'; ?>>
-                            <i class="fas fa-file-invoice-dollar"></i> Create Settlement
-                        </button>
-                    </div>
+        <div class="pagetitle">
+            <h1>Settlement Management</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
+                    <li class="breadcrumb-item active">Settlement Management</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered" id="paymentsTable">
-                            <thead class="table">
-                                <tr>
-                                    <th width="40">
-                                        <input type="checkbox" class="form-check-input" id="selectAllPayments">
-                                    </th>
-                                    <th>Payment ID</th>
-                                    <th>Date</th>
-                                    <th>Student</th>
-                                    <th>Class</th>
-                                    <th>Month</th>
-                                    <th>Year</th>
-                                    <th>Amount</th>
-                                    <th>Type</th>
-                                    <th>Transaction ID</th>
-                                    <th>Collector</th>
-                                    <th>Data Entry Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($payments as $payment): ?>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input payment-check" data-id="<?= $payment['id'] ?>"></td>
-                                        <td><?= $payment['id'] ?></td>
-                                        <td><?= date('d/m/Y', strtotime($payment['collection_date'])) ?></td>
-                                        <td><?= htmlspecialchars($payment['studentname']) ?></td>
-                                        <td><?= htmlspecialchars($payment['class']) ?></td>
-                                        <td><?= $payment['month'] ?></td>
-                                        <td><?= $payment['academic_year'] ?></td>
-                                        <td>₹<?= number_format($payment['amount'], 2) ?></td>
-                                        <td><?= ucfirst($payment['payment_type']) ?></td>
-                                        <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
-                                        <td><?= htmlspecialchars($payment['collector_name']) ?></td>
-                                        <td><?= date('d/m/Y h:i A', strtotime($payment['created_at'])) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+        <section class="section dashboard">
+            <div class="row">
 
-                    <!-- Settlement Modal -->
-                    <div class="modal fade" id="settlementModal" tabindex="-1" aria-labelledby="settlementModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title" id="settlementModalLabel">Create Settlement</h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form method="post" id="settlementForm">
-                                    <input type="hidden" name="create_settlement" value="1">
-                                    <input type="hidden" id="settlementPaymentIds" name="payment_ids">
-                                    <input type="hidden" id="settlementDate" name="settlement_date" value="<?= $settlementDate ?>">
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                                    <div class="modal-body">
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Total Amount:</label>
-                                                <div class="form-control-plaintext fw-bold" id="settlementTotal">₹0.00</div>
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid mt-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <!-- Filters -->
+                                        <form method="get" class="row g-3 mb-4 mt-4">
+                                            <input type="hidden" name="page" value="settlement">
+                                            <div class="col-md-3">
+                                                <label for="settlementDate" class="form-label">Settlement Date:</label>
+                                                <input type="date" class="form-control" name="settlement_date" value="<?= $settlementDate ?>">
                                             </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Cash Amount:</label>
-                                                <div class="form-control-plaintext fw-bold" id="settlementCash">₹0.00</div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Online Amount:</label>
-                                                <div class="form-control-plaintext fw-bold" id="settlementOnline">₹0.00</div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="settledBy" class="form-label">Settled By:</label>
-                                                <select class="form-select" id="settledBy" name="settled_by" required>
-                                                    <?php foreach ($collectors as $collector): ?>
-                                                        <option value="<?= $collector['associatenumber'] ?>" <?= $collector['associatenumber'] == $associatenumber ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($collector['fullname']) ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                            <div class="col-md-3">
+                                                <label for="status" class="form-label">Status:</label>
+                                                <select class="form-select" name="status">
+                                                    <option value="unsettled" <?= $status === 'unsettled' ? 'selected' : '' ?>>Unsettled Payments</option>
+                                                    <option value="settled" <?= $status === 'settled' ? 'selected' : '' ?>>Settled Payments</option>
                                                 </select>
                                             </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="settlementNotes" class="form-label">Notes:</label>
-                                            <textarea class="form-control" id="settlementNotes" name="notes" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-success">Submit Settlement</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <!-- Settled Payments -->
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered" id="settlementsTable">
-                            <thead class="table">
-                                <tr>
-                                    <th>Settlement ID</th>
-                                    <th>Date</th>
-                                    <th>Total Amount</th>
-                                    <th>Cash Amount</th>
-                                    <th>Online Amount</th>
-                                    <th>Settled By</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($settlements as $settlement): ?>
-                                    <tr>
-                                        <td><?= $settlement['id'] ?></td>
-                                        <td><?= date('d-M-Y', strtotime($settlement['settlement_date'])) ?></td>
-                                        <td>₹<?= number_format($settlement['total_amount'], 2) ?></td>
-                                        <td>₹<?= number_format($settlement['cash_amount'], 2) ?></td>
-                                        <td>₹<?= number_format($settlement['online_amount'], 2) ?></td>
-                                        <td><?= htmlspecialchars($settlement['settled_by_name']) ?></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-info view-settlement" data-id="<?= $settlement['id'] ?>">
-                                                <i class="fas fa-eye"></i> View
-                                            </button>
-                                            <button class="btn btn-sm btn-warning print-settlement" data-id="<?= $settlement['id'] ?>">
-                                                <i class="fas fa-print"></i> Print
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Settlement Details Modal -->
-                    <div class="modal fade" id="settlementDetailsModal" tabindex="-1" aria-labelledby="settlementDetailsModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title" id="settlementDetailsModalLabel">Settlement Details</h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div id="settlementDetailsContent">
-                                        <div id="settlementLoading" class="text-center py-4" style="display: none;">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
+                                            <div class="col-md-2">
+                                                <label class="form-label">&nbsp;</label>
+                                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
                                             </div>
-                                            <div>Loading settlement details...</div>
-                                        </div>
-                                        <!-- Actual content will be injected here -->
-                                        <div id="settlementLoadedContent"></div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">&nbsp;</label>
+                                                <button type="button" class="btn btn-success w-100" id="exportSettlement">
+                                                    <i class="fas fa-file-excel"></i> Export
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <?php if ($status === 'unsettled'): ?>
+                                            <!-- Unsettled Payments -->
+                                            <div class="row mb-4">
+                                                <div class="col-md-3">
+                                                    <div class="card summary-card total">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Unsettled Payments</h5>
+                                                            <p class="card-text display-6"><?= $summary['total_payments'] ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card summary-card total">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Total Amount</h5>
+                                                            <p class="card-text display-6">₹<?= @number_format($summary['total_amount'], 2) ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card summary-card cash">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Cash Amount</h5>
+                                                            <p class="card-text display-6">₹<?= @number_format($summary['cash_amount'], 2) ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card summary-card online">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Online Amount</h5>
+                                                            <p class="card-text display-6">₹<?= @number_format($summary['online_amount'], 2) ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <button type="button" class="btn btn-success" id="createSettlement" <?php if ($role !== 'Admin') echo 'disabled'; ?>>
+                                                    <i class="fas fa-file-invoice-dollar"></i> Create Settlement
+                                                </button>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-striped table-hover table-bordered" id="paymentsTable">
+                                                    <thead class="table">
+                                                        <tr>
+                                                            <th width="40">
+                                                                <input type="checkbox" class="form-check-input" id="selectAllPayments">
+                                                            </th>
+                                                            <th>Payment ID</th>
+                                                            <th>Date</th>
+                                                            <th>Student</th>
+                                                            <th>Class</th>
+                                                            <th>Month</th>
+                                                            <th>Year</th>
+                                                            <th>Amount</th>
+                                                            <th>Type</th>
+                                                            <th>Transaction ID</th>
+                                                            <th>Collector</th>
+                                                            <th>Data Entry Timestamp</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($payments as $payment): ?>
+                                                            <tr>
+                                                                <td><input type="checkbox" class="form-check-input payment-check" data-id="<?= $payment['id'] ?>"></td>
+                                                                <td><?= $payment['id'] ?></td>
+                                                                <td><?= date('d/m/Y', strtotime($payment['collection_date'])) ?></td>
+                                                                <td><?= htmlspecialchars($payment['studentname']) ?></td>
+                                                                <td><?= htmlspecialchars($payment['class']) ?></td>
+                                                                <td><?= $payment['month'] ?></td>
+                                                                <td><?= $payment['academic_year'] ?></td>
+                                                                <td>₹<?= number_format($payment['amount'], 2) ?></td>
+                                                                <td><?= ucfirst($payment['payment_type']) ?></td>
+                                                                <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
+                                                                <td><?= htmlspecialchars($payment['collector_name']) ?></td>
+                                                                <td><?= date('d/m/Y h:i A', strtotime($payment['created_at'])) ?></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Settlement Modal -->
+                                            <div class="modal fade" id="settlementModal" tabindex="-1" aria-labelledby="settlementModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-success text-white">
+                                                            <h5 class="modal-title" id="settlementModalLabel">Create Settlement</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <form method="post" id="settlementForm">
+                                                            <input type="hidden" name="create_settlement" value="1">
+                                                            <input type="hidden" id="settlementPaymentIds" name="payment_ids">
+                                                            <input type="hidden" id="settlementDate" name="settlement_date" value="<?= $settlementDate ?>">
+
+                                                            <div class="modal-body">
+                                                                <div class="row mb-3">
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label">Total Amount:</label>
+                                                                        <div class="form-control-plaintext fw-bold" id="settlementTotal">₹0.00</div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label">Cash Amount:</label>
+                                                                        <div class="form-control-plaintext fw-bold" id="settlementCash">₹0.00</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label">Online Amount:</label>
+                                                                        <div class="form-control-plaintext fw-bold" id="settlementOnline">₹0.00</div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <label for="settledBy" class="form-label">Settled By:</label>
+                                                                        <select class="form-select" id="settledBy" name="settled_by" required>
+                                                                            <?php foreach ($collectors as $collector): ?>
+                                                                                <option value="<?= $collector['associatenumber'] ?>" <?= $collector['associatenumber'] == $associatenumber ? 'selected' : '' ?>>
+                                                                                    <?= htmlspecialchars($collector['fullname']) ?>
+                                                                                </option>
+                                                                            <?php endforeach; ?>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label for="settlementNotes" class="form-label">Notes:</label>
+                                                                    <textarea class="form-control" id="settlementNotes" name="notes" rows="3"></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-success">Submit Settlement</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php else: ?>
+                                            <!-- Settled Payments -->
+                                            <div class="table-responsive">
+                                                <table class="table table-striped table-hover table-bordered" id="settlementsTable">
+                                                    <thead class="table">
+                                                        <tr>
+                                                            <th>Settlement ID</th>
+                                                            <th>Date</th>
+                                                            <th>Total Amount</th>
+                                                            <th>Cash Amount</th>
+                                                            <th>Online Amount</th>
+                                                            <th>Settled By</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($settlements as $settlement): ?>
+                                                            <tr>
+                                                                <td><?= $settlement['id'] ?></td>
+                                                                <td><?= date('d-M-Y', strtotime($settlement['settlement_date'])) ?></td>
+                                                                <td>₹<?= number_format($settlement['total_amount'], 2) ?></td>
+                                                                <td>₹<?= number_format($settlement['cash_amount'], 2) ?></td>
+                                                                <td>₹<?= number_format($settlement['online_amount'], 2) ?></td>
+                                                                <td><?= htmlspecialchars($settlement['settled_by_name']) ?></td>
+                                                                <td>
+                                                                    <button class="btn btn-sm btn-info view-settlement" data-id="<?= $settlement['id'] ?>">
+                                                                        <i class="fas fa-eye"></i> View
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-warning print-settlement" data-id="<?= $settlement['id'] ?>">
+                                                                        <i class="fas fa-print"></i> Print
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Settlement Details Modal -->
+                                            <div class="modal fade" id="settlementDetailsModal" tabindex="-1" aria-labelledby="settlementDetailsModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-info text-white">
+                                                            <h5 class="modal-title" id="settlementDetailsModalLabel">Settlement Details</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div id="settlementDetailsContent">
+                                                                <div id="settlementLoading" class="text-center py-4" style="display: none;">
+                                                                    <div class="spinner-border text-primary" role="status">
+                                                                        <span class="visually-hidden">Loading...</span>
+                                                                    </div>
+                                                                    <div>Loading settlement details...</div>
+                                                                </div>
+                                                                <!-- Actual content will be injected here -->
+                                                                <div id="settlementLoadedContent"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="button" class="btn btn-primary" id="printSettlementDetails">
+                                                                <i class="fas fa-print"></i> Print
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary" id="printSettlementDetails">
-                                        <i class="fas fa-print"></i> Print
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <?php endif; ?>
+                </div><!-- End Reports -->
             </div>
-        </div>
-    </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
             <?php if ($status === 'unsettled'): ?>
@@ -405,31 +434,31 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             <?php else: ?>
                 // View settlement button handler
                 $(".view-settlement").click(function() {
-    const settlementId = $(this).data("id");
+                    const settlementId = $(this).data("id");
 
-    // Show spinner, hide old content
-    $("#settlementLoading").show();
-    $("#settlementLoadedContent").html('');
+                    // Show spinner, hide old content
+                    $("#settlementLoading").show();
+                    $("#settlementLoadedContent").html('');
 
-    const detailsModal = new bootstrap.Modal(document.getElementById("settlementDetailsModal"));
-    detailsModal.show();
+                    const detailsModal = new bootstrap.Modal(document.getElementById("settlementDetailsModal"));
+                    detailsModal.show();
 
-    $.ajax({
-        url: "get_settlement_details.php",
-        method: "GET",
-        data: {
-            settlement_id: settlementId
-        },
-        success: function(data) {
-            $("#settlementLoading").hide();
-            $("#settlementLoadedContent").html(data);
-        },
-        error: function(xhr, status, error) {
-            $("#settlementLoading").hide();
-            $("#settlementLoadedContent").html('<div class="text-danger">Error loading settlement details: ' + error + '</div>');
-        }
-    });
-});
+                    $.ajax({
+                        url: "get_settlement_details.php",
+                        method: "GET",
+                        data: {
+                            settlement_id: settlementId
+                        },
+                        success: function(data) {
+                            $("#settlementLoading").hide();
+                            $("#settlementLoadedContent").html(data);
+                        },
+                        error: function(xhr, status, error) {
+                            $("#settlementLoading").hide();
+                            $("#settlementLoadedContent").html('<div class="text-danger">Error loading settlement details: ' + error + '</div>');
+                        }
+                    });
+                });
 
 
                 // Print settlement button handler

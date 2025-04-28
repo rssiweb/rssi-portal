@@ -381,6 +381,8 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     <title>Monthly Fee Collection System</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -474,6 +476,11 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             padding: 12px;
             font-size: 0.95rem;
         }
+        #fee-collection-card .card-title {
+            padding: 0;
+            /* or correct padding value */
+            color: var(--bs-card-title-color);
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -497,262 +504,280 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 </head>
 
 <body>
-    <div class="container-fluid mt-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Monthly Fee Collection - <?= $month ?> <?= $year ?></h3>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-                <div class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; margin-right: 8px;">
-                            <?= strtoupper(substr($fullname, 0, 1)) ?>
-                        </div>
-                        <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Updated Filters Form -->
-                <form method="get" class="row g-3 mb-4">
-                    <div class="col-md-2">
-                        <select name="status" class="form-select">
-                            <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active Students</option>
-                            <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive Students</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select name="month" class="form-select">
-                            <?php foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m): ?>
-                                <option value="<?= $m ?>" <?= $month == $m ? 'selected' : '' ?>><?= $m ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select name="year" class="form-select">
-                            <?php for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++): ?>
-                                <option value="<?= $y ?>" <?= $year == $y ? 'selected' : '' ?>><?= $y ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select name="class[]" class="form-select" multiple="multiple" id="classSelect">
-                            <?php foreach ($classes as $classItem): ?>
-                                <option value="<?= $classItem['class'] ?>" <?= in_array($classItem['class'], $class) ? 'selected' : '' ?>>
-                                    <?= $classItem['class'] ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" name="student_id" class="form-control" placeholder="Search by Student ID" value="<?= htmlspecialchars($student_id) ?>">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#concessionModal">
-                            <i class="fas fa-percentage"></i> Concession
-                        </button>
-                    </div>
-                </form>
+    <main id="main" class="main">
 
-                <!-- Summary Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-2">
-                        <div class="card summary-card total">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Students</h6>
-                                <p class="card-text h4"><?= $summary['total_students'] ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card summary-card fee">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Fee</h6>
-                                <p class="card-text h4">₹<?= number_format($summary['total_fee'], 2) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card summary-card concession">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Concession</h6>
-                                <p class="card-text h4">₹<?= number_format($summary['total_concession'], 2) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card summary-card net">
-                            <div class="card-body">
-                                <h6 class="card-title">Net Fee</h6>
-                                <p class="card-text h4">₹<?= number_format(($summary['total_net_fee'] - $summary['total_concession']), 2) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card summary-card paid">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Paid</h6>
-                                <p class="card-text h4">₹<?= number_format($summary['total_paid'], 2) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card summary-card due">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Due</h6>
-                                <p class="card-text h4">₹<?= number_format($summary['total_due'], 2) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-success w-100" id="exportReport">
-                        <i class="fas fa-file-excel"></i> Export Report
-                    </button>
-                </div>
-                <?php if ($isLocked): ?>
-                    <div class="alert alert-warning mt-3">
-                        <i class="fas fa-lock"></i> Fee collection is currently locked for <?= $month ?> <?= $year ?>.
-                        Please contact administration to unlock.
-                    </div>
-                <?php endif; ?>
-                <!-- Replace the table section with this: -->
-                <?php if (!$hasFilters && empty($_GET)): ?>
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> Please select at least one class or enter a student ID to view fee data.
-                    </div>
-                <?php elseif (empty($processedStudents)): ?>
-                    <div class="alert alert-warning mt-3">
-                        <i class="fas fa-exclamation-triangle"></i> No students found matching your criteria.
-                    </div>
-                <?php else: ?>
-                    <!-- Student List -->
-                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                        <table class="table table-striped table-hover table-bordered" id="table-id">
-                            <thead>
-                                <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Class</th>
-                                    <th>Category</th>
-                                    <th>DOA</th>
-                                    <th>Type</th>
-                                    <?php foreach ($categories as $category): ?>
-                                        <?php if (in_array($category['category_name'], ['Admission Fee', 'Monthly Fee', 'Miscellaneous'])): ?>
-                                            <th class="fee-category"><?= $category['category_name'] ?></th>
+        <div class="pagetitle">
+            <h1>Settlement Management</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
+                    <li class="breadcrumb-item active">Settlement Management</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid mt-4">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;" id="fee-collection-card">
+                                        <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Monthly Fee Collection - <?= $month ?> <?= $year ?></h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Updated Filters Form -->
+                                        <form method="get" class="row g-3 mb-4 mt-4">
+                                            <div class="col-md-2">
+                                                <select name="status" class="form-select">
+                                                    <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active Students</option>
+                                                    <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive Students</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="month" class="form-select">
+                                                    <?php foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m): ?>
+                                                        <option value="<?= $m ?>" <?= $month == $m ? 'selected' : '' ?>><?= $m ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="year" class="form-select">
+                                                    <?php for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++): ?>
+                                                        <option value="<?= $y ?>" <?= $year == $y ? 'selected' : '' ?>><?= $y ?></option>
+                                                    <?php endfor; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="class[]" class="form-select" multiple="multiple" id="classSelect">
+                                                    <?php foreach ($classes as $classItem): ?>
+                                                        <option value="<?= $classItem['class'] ?>" <?= in_array($classItem['class'], $class) ? 'selected' : '' ?>>
+                                                            <?= $classItem['class'] ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="text" name="student_id" class="form-control" placeholder="Search by Student ID" value="<?= htmlspecialchars($student_id) ?>">
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#concessionModal">
+                                                    <i class="fas fa-percentage"></i> Concession
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <!-- Summary Cards -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-2">
+                                                <div class="card summary-card total">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Total Students</h6>
+                                                        <p class="card-text h4"><?= $summary['total_students'] ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card summary-card fee">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Total Fee</h6>
+                                                        <p class="card-text h4">₹<?= number_format($summary['total_fee'], 2) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card summary-card concession">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Total Concession</h6>
+                                                        <p class="card-text h4">₹<?= number_format($summary['total_concession'], 2) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card summary-card net">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Net Fee</h6>
+                                                        <p class="card-text h4">₹<?= number_format(($summary['total_net_fee'] - $summary['total_concession']), 2) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card summary-card paid">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Total Paid</h6>
+                                                        <p class="card-text h4">₹<?= number_format($summary['total_paid'], 2) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card summary-card due">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Total Due</h6>
+                                                        <p class="card-text h4">₹<?= number_format($summary['total_due'], 2) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-success w-100" id="exportReport">
+                                                <i class="fas fa-file-excel"></i> Export Report
+                                            </button>
+                                        </div>
+                                        <?php if ($isLocked): ?>
+                                            <div class="alert alert-warning mt-3">
+                                                <i class="fas fa-lock"></i> Fee collection is currently locked for <?= $month ?> <?= $year ?>.
+                                                Please contact administration to unlock.
+                                            </div>
                                         <?php endif; ?>
-                                    <?php endforeach; ?>
-                                    <th>Concession</th>
-                                    <th>Carry Forward</th>
-                                    <th>Net Fee</th>
-                                    <th>Paid</th>
-                                    <th>Due</th>
-                                    <th>Other Charges Paid</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($processedStudents as $student): ?>
-                                    <tr>
-                                        <td><?= $student['student_id'] ?></td>
-                                        <td><?= htmlspecialchars($student['studentname']) ?></td>
-                                        <td><?= $student['class'] ?></td>
-                                        <td><?= $student['category'] ?></td>
-                                        <td><?= $student['doa'] ?></td>
-                                        <td><?= $student['student_type'] ?></td>
-                                        <td class="text-end">
-                                            <?= $student['admission_fee'] > 0 ? '₹' . number_format($student['admission_fee'], 2) : '-' ?>
-                                        </td>
-                                        <td class="text-end">₹<?= number_format($student['monthly_fee'], 2) ?></td>
-                                        <td class="text-end">
-                                            <?php
-                                            $standardMisc = $student['miscellaneous'] ?? 0;
-                                            $studentSpecific = $student['student_specific_fees'] ?? 0;
-                                            $totalMisc = $standardMisc + $studentSpecific;
+                                        <!-- Replace the table section with this: -->
+                                        <?php if (!$hasFilters && empty($_GET)): ?>
+                                            <div class="alert alert-info mt-3">
+                                                <i class="fas fa-info-circle"></i> Please select at least one class or enter a student ID to view fee data.
+                                            </div>
+                                        <?php elseif (empty($processedStudents)): ?>
+                                            <div class="alert alert-warning mt-3">
+                                                <i class="fas fa-exclamation-triangle"></i> No students found matching your criteria.
+                                            </div>
+                                        <?php else: ?>
+                                            <!-- Student List -->
+                                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                                <table class="table table-striped table-hover table-bordered" id="table-id">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Student ID</th>
+                                                            <th>Name</th>
+                                                            <th>Class</th>
+                                                            <th>Category</th>
+                                                            <th>DOA</th>
+                                                            <th>Type</th>
+                                                            <?php foreach ($categories as $category): ?>
+                                                                <?php if (in_array($category['category_name'], ['Admission Fee', 'Monthly Fee', 'Miscellaneous'])): ?>
+                                                                    <th class="fee-category"><?= $category['category_name'] ?></th>
+                                                                <?php endif; ?>
+                                                            <?php endforeach; ?>
+                                                            <th>Concession</th>
+                                                            <th>Carry Forward</th>
+                                                            <th>Net Fee</th>
+                                                            <th>Paid</th>
+                                                            <th>Due</th>
+                                                            <th>Other Charges Paid</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($processedStudents as $student): ?>
+                                                            <tr>
+                                                                <td><?= $student['student_id'] ?></td>
+                                                                <td><?= htmlspecialchars($student['studentname']) ?></td>
+                                                                <td><?= $student['class'] ?></td>
+                                                                <td><?= $student['category'] ?></td>
+                                                                <td><?= $student['doa'] ?></td>
+                                                                <td><?= $student['student_type'] ?></td>
+                                                                <td class="text-end">
+                                                                    <?= $student['admission_fee'] > 0 ? '₹' . number_format($student['admission_fee'], 2) : '-' ?>
+                                                                </td>
+                                                                <td class="text-end">₹<?= number_format($student['monthly_fee'], 2) ?></td>
+                                                                <td class="text-end">
+                                                                    <?php
+                                                                    $standardMisc = $student['miscellaneous'] ?? 0;
+                                                                    $studentSpecific = $student['student_specific_fees'] ?? 0;
+                                                                    $totalMisc = $standardMisc + $studentSpecific;
 
-                                            if ($totalMisc > 0) {
-                                                echo '₹' . number_format($totalMisc, 2);
+                                                                    if ($totalMisc > 0) {
+                                                                        echo '₹' . number_format($totalMisc, 2);
 
-                                                // Build tooltip content as array
-                                                $tooltipLines = [];
+                                                                        // Build tooltip content as array
+                                                                        $tooltipLines = [];
 
-                                                // Add standard misc if exists
-                                                if ($standardMisc > 0) {
-                                                    $tooltipLines[] = 'Standard: ₹' . number_format($standardMisc, 2);
-                                                }
+                                                                        // Add standard misc if exists
+                                                                        if ($standardMisc > 0) {
+                                                                            $tooltipLines[] = 'Standard: ₹' . number_format($standardMisc, 2);
+                                                                        }
 
-                                                // Add student-specific details if exists
-                                                if ($studentSpecific > 0 && !empty($student['student_specific_details'])) {
-                                                    $tooltipLines[] = 'Student-specific:';
-                                                    foreach ($student['student_specific_details'] as $detail) {
-                                                        $tooltipLines[] = '• ' . htmlspecialchars($detail['category']) . ': ₹' .
-                                                            number_format($detail['amount'], 2);
-                                                    }
-                                                }
+                                                                        // Add student-specific details if exists
+                                                                        if ($studentSpecific > 0 && !empty($student['student_specific_details'])) {
+                                                                            $tooltipLines[] = 'Student-specific:';
+                                                                            foreach ($student['student_specific_details'] as $detail) {
+                                                                                $tooltipLines[] = '• ' . htmlspecialchars($detail['category']) . ': ₹' .
+                                                                                    number_format($detail['amount'], 2);
+                                                                            }
+                                                                        }
 
-                                                // Show tooltip if we have content
-                                                if (!empty($tooltipLines)) {
-                                                    // Join with newlines (will be converted to <br> by Bootstrap)
-                                                    $tooltipContent = htmlspecialchars(implode("\n", $tooltipLines));
-                                                    echo ' <span class="text-muted small" data-bs-toggle="tooltip" data-html="true" 
+                                                                        // Show tooltip if we have content
+                                                                        if (!empty($tooltipLines)) {
+                                                                            // Join with newlines (will be converted to <br> by Bootstrap)
+                                                                            $tooltipContent = htmlspecialchars(implode("\n", $tooltipLines));
+                                                                            echo ' <span class="text-muted small" data-bs-toggle="tooltip" data-html="true" 
                   title="' . str_replace("\n", "&#10;", $tooltipContent) . '">
                   <i class="fas fa-info-circle"></i></span>';
-                                                }
-                                            } else {
-                                                echo '-';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td class="text-end">
-                                            <?= $student['concession_amount'] > 0 ? '₹' . number_format($student['concession_amount'], 2) : '-' ?>
-                                        </td>
-                                        <td class="text-end">
-                                            <?= '₹' . number_format($student['carry_forward'], 2) ?>
-                                        </td>
-                                        <td class="text-end">₹<?= number_format(($student['net_fee'] - $student['concession_amount']), 2) ?></td>
-                                        <td class="text-end">₹<?= number_format($student['core_paid_amount'], 2) ?></td>
-                                        <td class="text-end <?= $student['due_amount'] > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' ?>">
-                                            ₹<?= number_format(abs($student['due_amount']), 2) ?>
-                                            <?= $student['due_amount'] < 0 ? ' (Cr)' : '' ?>
-                                        </td>
-                                        <td class="text-end">₹<?= number_format(($student['paid_amount'] - $student['core_paid_amount']), 2) ?></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary collect-fee"
-                                                data-student-id="<?= $student['student_id'] ?>"
-                                                data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
-                                                data-student-class="<?= htmlspecialchars($student['class']) ?>"
-                                                data-net-fee="<?= $student['net_fee'] ?>"
-                                                data-due-amount="<?= $student['due_amount'] ?>"
-                                                <?= $isLocked ? 'disabled title="Fee collection is locked for this month"' : '' ?>>
-                                                <i class="fas fa-hand-holding-usd"></i> Collect
-                                            </button>
+                                                                        }
+                                                                    } else {
+                                                                        echo '-';
+                                                                    }
+                                                                    ?>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <?= $student['concession_amount'] > 0 ? '₹' . number_format($student['concession_amount'], 2) : '-' ?>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <?= '₹' . number_format($student['carry_forward'], 2) ?>
+                                                                </td>
+                                                                <td class="text-end">₹<?= number_format(($student['net_fee'] - $student['concession_amount']), 2) ?></td>
+                                                                <td class="text-end">₹<?= number_format($student['core_paid_amount'], 2) ?></td>
+                                                                <td class="text-end <?= $student['due_amount'] > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' ?>">
+                                                                    ₹<?= number_format(abs($student['due_amount']), 2) ?>
+                                                                    <?= $student['due_amount'] < 0 ? ' (Cr)' : '' ?>
+                                                                </td>
+                                                                <td class="text-end">₹<?= number_format(($student['paid_amount'] - $student['core_paid_amount']), 2) ?></td>
+                                                                <td>
+                                                                    <button class="btn btn-sm btn-primary collect-fee"
+                                                                        data-student-id="<?= $student['student_id'] ?>"
+                                                                        data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
+                                                                        data-student-class="<?= htmlspecialchars($student['class']) ?>"
+                                                                        data-net-fee="<?= $student['net_fee'] ?>"
+                                                                        data-due-amount="<?= $student['due_amount'] ?>"
+                                                                        <?= $isLocked ? 'disabled title="Fee collection is locked for this month"' : '' ?>>
+                                                                        <i class="fas fa-hand-holding-usd"></i> Collect
+                                                                    </button>
 
-                                            <button class="btn btn-sm btn-info view-history"
-                                                data-student-id="<?= $student['student_id'] ?>">
-                                                <i class="fas fa-history"></i> History
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                                                    <button class="btn btn-sm btn-info view-history"
+                                                                        data-student-id="<?= $student['student_id'] ?>">
+                                                                        <i class="fas fa-history"></i> History
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                <?php endif; ?>
+                </div><!-- End Reports -->
             </div>
-        </div>
-    </div>
+        </section>
+
+    </main><!-- End #main -->
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {
