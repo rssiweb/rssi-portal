@@ -158,7 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- Template Main CSS File -->
+  <link href="../assets_new/css/style.css" rel="stylesheet">
   <!-- JavaScript Library Files -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
@@ -209,647 +212,683 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
       }
     </script>
   <?php } ?>
-  <div class="container">
-    <form id="employeeLookupForm" method="get">
-      <h3>Associate Information Lookup</h3>
-      <hr>
+  <?php include 'inactive_session_expire_check.php'; ?>
+  <?php include 'header.php'; ?>
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Payroll Processing</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="#">Payroll</a></li>
+          <li class="breadcrumb-item active">Payroll Processing</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <section class="section dashboard">
       <div class="row">
-        <div class="col-md-6">
-          <label for="lookupEmployeeId" class="form-label">Associate</label>
-          <select class="form-control select2" id="lookupEmployeeId" name="lookupEmployeeId">
-            <option value="">Select Associate</option>
-            <?php if ($associate_number): ?>
-              <!-- Pre-select the selected associate if it exists -->
-              <option value="<?= htmlspecialchars($associate_number) ?>" selected>
-                <?= htmlspecialchars($associate_number) ?> <!-- You can fetch and display the associate's name here if needed -->
-              </option>
-            <?php endif; ?>
 
-          </select>
-        </div>
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label for="academicYear" class="form-label">Academic Year:</label>
-            <select class="form-select" id="academicYear" name="academicYear" required>
-              <?php if ($lyear != null) { ?>
-                <option hidden selected><?php echo $lyear ?></option>
-              <?php }
-              ?>
-              <?php
-              if (date('m') == 1 || date('m') == 2 || date('m') == 3) {
-                $currentYear = date('Y') - 1;
-              } else {
-                $currentYear = date('Y');
-              }
+        <!-- Reports -->
+        <div class="col-12">
+          <div class="card">
 
-              for ($i = 0; $i < 2; $i++) {
-                $nextYear = $currentYear + 1;
-                $yearRange = $currentYear . '-' . $nextYear;
-                echo '<option value="' . $yearRange . '">' . $yearRange . '</option>';
-                $currentYear--;
-              }
-              ?>
-            </select>
-          </div>
-        </div>
-      </div>
+            <div class="card-body">
+              <br>
+              <div class="container">
+                <form id="employeeLookupForm" method="get">
+                  <h3>Associate Information Lookup</h3>
+                  <hr>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="lookupEmployeeId" class="form-label">Associate</label>
+                      <select class="form-control select2" id="lookupEmployeeId" name="lookupEmployeeId">
+                        <option value="">Select Associate</option>
+                        <?php if ($associate_number): ?>
+                          <!-- Pre-select the selected associate if it exists -->
+                          <option value="<?= htmlspecialchars($associate_number) ?>" selected>
+                            <?= htmlspecialchars($associate_number) ?> <!-- You can fetch and display the associate's name here if needed -->
+                          </option>
+                        <?php endif; ?>
 
-      <button type="submit" class="btn btn-primary mb-3">Search</button>
-    </form>
-    <?php if (sizeof($resultArr) > 0) { ?>
-      <?php foreach ($resultArr as $array) { ?>
-        <div class="accordion" id="employeeAccordion">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="employeeDetailsHeading">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#employeeDetailsCollapse" aria-expanded="true" aria-controls="employeeDetailsCollapse">
-                Associate Details
-              </button>
-            </h2>
-            <div id="employeeDetailsCollapse" class="accordion-collapse collapse show" aria-labelledby="employeeDetailsHeading" data-bs-parent="#employeeAccordion">
-              <div class="accordion-body">
-                <div class="row">
-                  <div class="col-md-12 d-flex justify-content-end mb-3">
-                    <?php if ($array['filterstatus'] === 'Active') : ?>
-                      <span class="badge bg-success"><?php echo $array['filterstatus'] ?></span>
-                    <?php else : ?>
-                      <span class="badge bg-danger"><?php echo $array['filterstatus'] ?></span>
-                    <?php endif; ?>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="mb-3">
+                        <label for="academicYear" class="form-label">Academic Year:</label>
+                        <select class="form-select" id="academicYear" name="academicYear" required>
+                          <?php if ($lyear != null) { ?>
+                            <option hidden selected><?php echo $lyear ?></option>
+                          <?php }
+                          ?>
+                          <?php
+                          if (date('m') == 1 || date('m') == 2 || date('m') == 3) {
+                            $currentYear = date('Y') - 1;
+                          } else {
+                            $currentYear = date('Y');
+                          }
+
+                          for ($i = 0; $i < 2; $i++) {
+                            $nextYear = $currentYear + 1;
+                            $yearRange = $currentYear . '-' . $nextYear;
+                            echo '<option value="' . $yearRange . '">' . $yearRange . '</option>';
+                            $currentYear--;
+                          }
+                          ?>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <div class="col-md-4">
-                    <p><strong>Associate number:</strong> <?php echo $array['associatenumber'] ?></p>
-                    <p><strong>Name:</strong> <?php echo $array['fullname'] ?></p>
-                    <p><strong>Association type:</strong> <?php echo $array['engagement'] ?></p>
-                  </div>
-                  <div class="col-md-4">
-                    <p><strong>Base Branch:</strong> <?php echo $array['basebranch'] ?></p>
-                    <p><strong>Deputed Branch:</strong> <?php echo $array['depb'] ?></p>
-                    <p><strong>Base salary/month:</strong> <?php echo 'INR&nbsp;' . $array['salary'] / 12 ?></p>
-                    <p><strong>Leave Balance:</strong> <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?></p>
-                  </div>
-                  <div class="col-md-4">
-                    <!-- <p><strong>Account Number:</strong> <?php echo @$array['accountnumber'] ?></p>
+
+                  <button type="submit" class="btn btn-primary mb-3">Search</button>
+                </form>
+                <?php if (sizeof($resultArr) > 0) { ?>
+                  <?php foreach ($resultArr as $array) { ?>
+                    <div class="accordion" id="employeeAccordion">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="employeeDetailsHeading">
+                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#employeeDetailsCollapse" aria-expanded="true" aria-controls="employeeDetailsCollapse">
+                            Associate Details
+                          </button>
+                        </h2>
+                        <div id="employeeDetailsCollapse" class="accordion-collapse collapse show" aria-labelledby="employeeDetailsHeading" data-bs-parent="#employeeAccordion">
+                          <div class="accordion-body">
+                            <div class="row">
+                              <div class="col-md-12 d-flex justify-content-end mb-3">
+                                <?php if ($array['filterstatus'] === 'Active') : ?>
+                                  <span class="badge bg-success"><?php echo $array['filterstatus'] ?></span>
+                                <?php else : ?>
+                                  <span class="badge bg-danger"><?php echo $array['filterstatus'] ?></span>
+                                <?php endif; ?>
+                              </div>
+                              <div class="col-md-4">
+                                <p><strong>Associate number:</strong> <?php echo $array['associatenumber'] ?></p>
+                                <p><strong>Name:</strong> <?php echo $array['fullname'] ?></p>
+                                <p><strong>Association type:</strong> <?php echo $array['engagement'] ?></p>
+                              </div>
+                              <div class="col-md-4">
+                                <p><strong>Base Branch:</strong> <?php echo $array['basebranch'] ?></p>
+                                <p><strong>Deputed Branch:</strong> <?php echo $array['depb'] ?></p>
+                                <p><strong>Base salary/month:</strong> <?php echo 'INR&nbsp;' . $array['salary'] / 12 ?></p>
+                                <p><strong>Leave Balance:</strong> <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?></p>
+                              </div>
+                              <div class="col-md-4">
+                                <!-- <p><strong>Account Number:</strong> <?php echo @$array['accountnumber'] ?></p>
                     <p><strong>Bank Name:</strong> <?php echo @$array['bankname'] ?></p>
                     <p><strong>IFSC Code:</strong> <?php echo @$array['ifsccode'] ?></p>
                     <p><strong>PAN Card Number:</strong> <?php echo @$array['panno'] ?></p> -->
-                    <p><strong>Category:</strong> <?php echo $array['job_type'] ?></p>
-                    <p><strong>Responsibility:</strong> <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?></p>
-                    <p><strong>Date of Joining:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
+                                <p><strong>Category:</strong> <?php echo $array['job_type'] ?></p>
+                                <p><strong>Responsibility:</strong> <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?></p>
+                                <p><strong>Date of Joining:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <hr>
+                    <form id="salaryForm" method="POST" action="payroll_processing.php" onsubmit="return validateForm();">
+                      <fieldset <?php echo ($array['filterstatus'] != "Active") ? "disabled" : ""; ?>>
+                        <input type="hidden" name="form-type" value="salaryForm">
+                        <input type="hidden" class="form-control" id="employeeId" name="employeeId" Value="<?php echo $array['associatenumber'] ?>" required>
+                        <input type="hidden" class="form-control" name="lyear" Value="<?php echo $lyear ?>">
+                        <div class="row">
+                          <div class="col-md-4 mb-3">
+                            <label for="payMonth" class="form-label">Pay Month:</label>
+                            <select id="payMonth" name="payMonth" class="form-select" required onchange="updateDaysPaid()">
+                              <option value="">Select Month</option>
+                              <option value="1">January</option>
+                              <option value="2">February</option>
+                              <option value="3">March</option>
+                              <option value="4">April</option>
+                              <option value="5">May</option>
+                              <option value="6">June</option>
+                              <option value="7">July</option>
+                              <option value="8">August</option>
+                              <option value="9">September</option>
+                              <option value="10">October</option>
+                              <option value="11">November</option>
+                              <option value="12">December</option>
+                            </select>
+                          </div>
+
+                          <div class="col-md-4 mb-3">
+                            <label for="payYear" class="form-label">Pay Year:</label>
+                            <select id="payYear" name="payYear" class="form-select" required>
+                              <option value="">Select Year</option>
+                              <!-- Dynamically generate options for current and previous year using JavaScript -->
+                            </select>
+                          </div>
+
+                          <div class="col-md-4 mb-3">
+                            <label for="dayspaid" class="form-label">Days paid:</label>
+                            <div class="input-group">
+                              <input type="number" class="form-control" id="dayspaid" name="dayspaid" required>
+                              <button type="button" class="btn btn-info" id="fetchComponentsBtn">
+                                <span id="fetchBtnText">Fetch Components</span>
+                                <span id="fetchSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div id="salaryComponents">
+                          <!-- Salary components will be dynamically added here -->
+                        </div>
+                        <div class="mb-3">
+                          <label for="comment" class="form-label">Comment:</label>
+                          <textarea id="comment" name="comment" class="form-control"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="addSalaryComponent()">Add Salary Component</button>
+                        <button type="button" class="btn btn-warning" onclick="previewPayslip()">Preview Payslip</button>
+                        <button type="submit" class="btn btn-success">Submit</button>
+                      </fieldset>
+                    </form>
+                    <br>
+
+
+                    <!-- Payslip Preview Modal -->
+                    <div class="modal fade" id="payslipModal" tabindex="-1" aria-labelledby="payslipModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="payslipModalLabel">Payslip Preview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body" id="payslipPreview">
+                            <!-- Placeholder for payslip preview -->
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <?php } ?>
+                <?php } else { ?>
+                  <!-- Onboarding not initiated -->
+                  <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <?php
+                          if (pg_num_rows($result) == 0) {
+                            $error_message = "No record found for the entered Associate Number";
+                          }
+                          if (isset($error_message)) {
+                            echo $error_message;
+                          } ?>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                <?php } ?>
               </div>
             </div>
           </div>
-        </div>
-        <hr>
-        <form id="salaryForm" method="POST" action="payroll_processing.php" onsubmit="return validateForm();">
-          <fieldset <?php echo ($array['filterstatus'] != "Active") ? "disabled" : ""; ?>>
-            <input type="hidden" name="form-type" value="salaryForm">
-            <input type="hidden" class="form-control" id="employeeId" name="employeeId" Value="<?php echo $array['associatenumber'] ?>" required>
-            <input type="hidden" class="form-control" name="lyear" Value="<?php echo $lyear ?>">
-            <div class="row">
-              <div class="col-md-4 mb-3">
-                <label for="payMonth" class="form-label">Pay Month:</label>
-                <select id="payMonth" name="payMonth" class="form-select" required onchange="updateDaysPaid()">
-                  <option value="">Select Month</option>
-                  <option value="1">January</option>
-                  <option value="2">February</option>
-                  <option value="3">March</option>
-                  <option value="4">April</option>
-                  <option value="5">May</option>
-                  <option value="6">June</option>
-                  <option value="7">July</option>
-                  <option value="8">August</option>
-                  <option value="9">September</option>
-                  <option value="10">October</option>
-                  <option value="11">November</option>
-                  <option value="12">December</option>
-                </select>
-              </div>
-
-              <div class="col-md-4 mb-3">
-                <label for="payYear" class="form-label">Pay Year:</label>
-                <select id="payYear" name="payYear" class="form-select" required>
-                  <option value="">Select Year</option>
-                  <!-- Dynamically generate options for current and previous year using JavaScript -->
-                </select>
-              </div>
-
-              <div class="col-md-4 mb-3">
-                <label for="dayspaid" class="form-label">Days paid:</label>
-                <div class="input-group">
-                  <input type="number" class="form-control" id="dayspaid" name="dayspaid" required>
-                  <button type="button" class="btn btn-info" id="fetchComponentsBtn">
-                    <span id="fetchBtnText">Fetch Components</span>
-                    <span id="fetchSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div id="salaryComponents">
-              <!-- Salary components will be dynamically added here -->
-            </div>
-            <div class="mb-3">
-              <label for="comment" class="form-label">Comment:</label>
-              <textarea id="comment" name="comment" class="form-control"></textarea>
-            </div>
-            <button type="button" class="btn btn-primary" onclick="addSalaryComponent()">Add Salary Component</button>
-            <button type="button" class="btn btn-warning" onclick="previewPayslip()">Preview Payslip</button>
-            <button type="submit" class="btn btn-success">Submit</button>
-          </fieldset>
-        </form>
-        <br>
-
-
-        <!-- Payslip Preview Modal -->
-        <div class="modal fade" id="payslipModal" tabindex="-1" aria-labelledby="payslipModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="payslipModalLabel">Payslip Preview</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body" id="payslipPreview">
-                <!-- Placeholder for payslip preview -->
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      <?php } ?>
-    <?php } else { ?>
-      <!-- Onboarding not initiated -->
-      <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Error</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <?php
-              if (pg_num_rows($result) == 0) {
-                $error_message = "No record found for the entered Associate Number";
-              }
-              if (isset($error_message)) {
-                echo $error_message;
-              } ?>
-            </div>
-          </div>
-        </div>
+        </div><!-- End Reports -->
       </div>
-    <?php } ?>
+    </section>
 
-    <script>
-      function updateDaysPaid() {
-        var payMonth = document.getElementById("payMonth").value;
-        var daysPaidInput = document.getElementById("dayspaid");
+  </main><!-- End #main -->
 
-        if (payMonth) {
-          var daysInMonth = new Date(new Date().getFullYear(), payMonth, 0).getDate();
-          daysPaidInput.value = daysInMonth;
-        } else {
-          daysPaidInput.value = "";
-        }
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <script>
+    function updateDaysPaid() {
+      var payMonth = document.getElementById("payMonth").value;
+      var daysPaidInput = document.getElementById("dayspaid");
+
+      if (payMonth) {
+        var daysInMonth = new Date(new Date().getFullYear(), payMonth, 0).getDate();
+        daysPaidInput.value = daysInMonth;
+      } else {
+        daysPaidInput.value = "";
       }
-    </script>
+    }
+  </script>
 
-    <script>
-      // Dynamically generate options for the Pay Year dropdown
-      var payYearSelect = document.getElementById('payYear');
-      var currentYear = new Date().getFullYear();
-      var previousYear = currentYear - 1;
-      var yearOptions = '';
-      yearOptions += '<option value="' + currentYear + '">' + currentYear + '</option>';
-      yearOptions += '<option value="' + previousYear + '">' + previousYear + '</option>';
-      payYearSelect.innerHTML = yearOptions;
-    </script>
+  <script>
+    // Dynamically generate options for the Pay Year dropdown
+    var payYearSelect = document.getElementById('payYear');
+    var currentYear = new Date().getFullYear();
+    var previousYear = currentYear - 1;
+    var yearOptions = '';
+    yearOptions += '<option value="' + currentYear + '">' + currentYear + '</option>';
+    yearOptions += '<option value="' + previousYear + '">' + previousYear + '</option>';
+    payYearSelect.innerHTML = yearOptions;
+  </script>
 
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Template Main JS File -->
+  <script src="../assets_new/js/main.js"></script>
 
-    <script>
-      window.onload = function() {
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-          backdrop: 'static',
-          keyboard: false
-        });
-        myModal.show();
-      };
-    </script>
-
-    <script>
-      window.onload = function() {
-        var myModal = new bootstrap.Modal(document.getElementById("myModal"), {
-          backdrop: "static",
-          keyboard: false,
-        });
-        myModal.show();
-      };
-    </script>
-
-    <script>
-      // Global variable to store component options
-      let componentOptions = {
-        Earning: [],
-        Deduction: [],
-      };
-
-      // Fetch component options when page loads
-      $(document).ready(function() {
-        fetchComponentOptions();
-
-        // Handle fetch components button click
-        $("#fetchComponentsBtn").click(function() {
-          const associateNumber = $("#employeeId").val();
-          const payMonth = $("#payMonth").val();
-          const payYear = $("#payYear").val();
-
-          if (!associateNumber || !payMonth || !payYear) {
-            alert("Please select associate, pay month and pay year first");
-            return;
-          }
-
-          // Show spinner
-          $("#fetchBtnText").text("Fetching...");
-          $("#fetchSpinner").removeClass("d-none");
-          $(this).prop("disabled", true);
-
-          // Find the effective salary structure for this month/year
-          $.ajax({
-            url: "fetch_salary_components.php",
-            method: "POST",
-            data: {
-              associate_number: associateNumber,
-              pay_month: payMonth,
-              pay_year: payYear,
-            },
-            dataType: "json",
-            success: function(response) {
-              // Hide spinner
-              $("#fetchBtnText").text("Fetch Components");
-              $("#fetchSpinner").addClass("d-none");
-              $("#fetchComponentsBtn").prop("disabled", false);
-
-              if (response.success) {
-                // Populate the salary components dynamically
-                fetchSalaryComponents(response.components);
-              } else {
-                alert(response.message || "Failed to fetch components");
-              }
-            },
-            error: function() {
-              // Hide spinner
-              $("#fetchBtnText").text("Fetch Components");
-              $("#fetchSpinner").addClass("d-none");
-              $("#fetchComponentsBtn").prop("disabled", false);
-              alert("Error fetching components");
-            },
-          });
-        });
+  <script>
+    window.onload = function() {
+      var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+        backdrop: 'static',
+        keyboard: false
       });
+      myModal.show();
+    };
+  </script>
 
-      // Function to fetch component options from database
-      function fetchComponentOptions() {
+  <script>
+    window.onload = function() {
+      var myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+        backdrop: "static",
+        keyboard: false,
+      });
+      myModal.show();
+    };
+  </script>
+
+  <script>
+    // Global variable to store component options
+    let componentOptions = {
+      Earning: [],
+      Deduction: [],
+    };
+
+    // Fetch component options when page loads
+    $(document).ready(function() {
+      fetchComponentOptions();
+
+      // Handle fetch components button click
+      $("#fetchComponentsBtn").click(function() {
+        const associateNumber = $("#employeeId").val();
+        const payMonth = $("#payMonth").val();
+        const payYear = $("#payYear").val();
+
+        if (!associateNumber || !payMonth || !payYear) {
+          alert("Please select associate, pay month and pay year first");
+          return;
+        }
+
+        // Show spinner
+        $("#fetchBtnText").text("Fetching...");
+        $("#fetchSpinner").removeClass("d-none");
+        $(this).prop("disabled", true);
+
+        // Find the effective salary structure for this month/year
         $.ajax({
-          url: "fetch_component_options.php",
-          method: "GET",
+          url: "fetch_salary_components.php",
+          method: "POST",
+          data: {
+            associate_number: associateNumber,
+            pay_month: payMonth,
+            pay_year: payYear,
+          },
           dataType: "json",
           success: function(response) {
+            // Hide spinner
+            $("#fetchBtnText").text("Fetch Components");
+            $("#fetchSpinner").addClass("d-none");
+            $("#fetchComponentsBtn").prop("disabled", false);
+
             if (response.success) {
-              componentOptions = response.options;
+              // Populate the salary components dynamically
+              fetchSalaryComponents(response.components);
             } else {
-              alert("Failed to load component options");
+              alert(response.message || "Failed to fetch components");
             }
           },
           error: function() {
-            alert("Error loading component options");
+            // Hide spinner
+            $("#fetchBtnText").text("Fetch Components");
+            $("#fetchSpinner").addClass("d-none");
+            $("#fetchComponentsBtn").prop("disabled", false);
+            alert("Error fetching components");
           },
         });
-      }
+      });
+    });
 
-      function addSalaryComponent() {
-        const salaryComponentsDiv = document.getElementById("salaryComponents");
+    // Function to fetch component options from database
+    function fetchComponentOptions() {
+      $.ajax({
+        url: "fetch_component_options.php",
+        method: "GET",
+        dataType: "json",
+        success: function(response) {
+          if (response.success) {
+            componentOptions = response.options;
+          } else {
+            alert("Failed to load component options");
+          }
+        },
+        error: function() {
+          alert("Error loading component options");
+        },
+      });
+    }
 
-        // Create a new row for the salary component
-        const row = document.createElement("div");
-        row.className = "row mb-3";
+    function addSalaryComponent() {
+      const salaryComponentsDiv = document.getElementById("salaryComponents");
 
-        const componentTypeSelect = createSelectField(
-          "componentName[]",
-          "Component Type",
-          ["Earning", "Deduction"]
-        );
-        const subCategorySelect = createSelectField(
-          "subCategory[]",
-          "Sub-Category",
-          [],
-          true
-        ); // Initially disabled
-        const amountInput = createInputField("amount[]", "Amount");
+      // Create a new row for the salary component
+      const row = document.createElement("div");
+      row.className = "row mb-3";
 
-        const buttonsContainer = document.createElement("div");
-        buttonsContainer.className = "col";
+      const componentTypeSelect = createSelectField(
+        "componentName[]",
+        "Component Type",
+        ["Earning", "Deduction"]
+      );
+      const subCategorySelect = createSelectField(
+        "subCategory[]",
+        "Sub-Category",
+        [],
+        true
+      ); // Initially disabled
+      const amountInput = createInputField("amount[]", "Amount");
 
-        const minusButton = createMinusButton();
-        buttonsContainer.appendChild(minusButton);
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.className = "col";
 
-        // Append the elements to the row
-        row.appendChild(componentTypeSelect);
-        row.appendChild(subCategorySelect);
-        row.appendChild(amountInput);
-        row.appendChild(buttonsContainer);
+      const minusButton = createMinusButton();
+      buttonsContainer.appendChild(minusButton);
 
-        salaryComponentsDiv.appendChild(row);
+      // Append the elements to the row
+      row.appendChild(componentTypeSelect);
+      row.appendChild(subCategorySelect);
+      row.appendChild(amountInput);
+      row.appendChild(buttonsContainer);
 
-        // Remove Add button from all rows except the last one
-        updateAddButton();
+      salaryComponentsDiv.appendChild(row);
 
-        // Add event listener for componentTypeSelect dropdown
-        componentTypeSelect.querySelector("select").addEventListener("change", function() {
-          updateSubCategoryOptions(this, subCategorySelect);
-        });
-      }
+      // Remove Add button from all rows except the last one
+      updateAddButton();
 
-      function createSelectField(name, label, options, disabled = false) {
-        const div = document.createElement("div");
-        div.className = "col";
+      // Add event listener for componentTypeSelect dropdown
+      componentTypeSelect.querySelector("select").addEventListener("change", function() {
+        updateSubCategoryOptions(this, subCategorySelect);
+      });
+    }
 
-        const select = document.createElement("select");
-        select.className = "form-select";
-        select.name = name;
-        select.required = true;
-        select.disabled = disabled;
+    function createSelectField(name, label, options, disabled = false) {
+      const div = document.createElement("div");
+      div.className = "col";
 
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.innerHTML = label;
-        defaultOption.selected = true;
-        defaultOption.disabled = true;
+      const select = document.createElement("select");
+      select.className = "form-select";
+      select.name = name;
+      select.required = true;
+      select.disabled = disabled;
 
-        select.appendChild(defaultOption);
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.innerHTML = label;
+      defaultOption.selected = true;
+      defaultOption.disabled = true;
 
+      select.appendChild(defaultOption);
+
+      options.forEach(function(option) {
+        const optionElement = document.createElement("option");
+        optionElement.value = option;
+        optionElement.text = option;
+        select.appendChild(optionElement);
+      });
+
+      div.appendChild(select);
+      return div;
+    }
+
+    function createInputField(name, placeholder) {
+      const div = document.createElement("div");
+      div.className = "col";
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.className = "form-control";
+      input.name = name;
+      input.placeholder = placeholder;
+      input.step = "0.01";
+
+      div.appendChild(input);
+      return div;
+    }
+
+    function createPlusButton() {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn-primary btn-sm me-2";
+      button.innerHTML = "+ Add";
+      button.onclick = addSalaryComponent;
+
+      return button;
+    }
+
+    function createMinusButton() {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn-danger btn-sm";
+      button.innerHTML = "- Remove";
+      button.onclick = deleteSalaryComponent;
+
+      return button;
+    }
+
+    function deleteSalaryComponent() {
+      const row = this.parentNode.parentNode;
+      const salaryComponentsDiv = document.getElementById("salaryComponents");
+      salaryComponentsDiv.removeChild(row);
+
+      // Update Add button
+      updateAddButton();
+    }
+
+    function updateAddButton() {
+      const rows = document.querySelectorAll("#salaryComponents .row");
+      rows.forEach((row, index) => {
+        const buttonsContainer = row.querySelector(".col");
+        const addButton = buttonsContainer.querySelector(".btn-primary");
+
+        // Remove existing Add button
+        if (addButton) {
+          buttonsContainer.removeChild(addButton);
+        }
+
+        // Add Add button to the last row
+        if (index === rows.length - 1) {
+          const plusButton = createPlusButton();
+          buttonsContainer.appendChild(plusButton);
+        }
+      });
+    }
+
+    function updateSubCategoryOptions(componentSelect, subCategorySelect) {
+      const selectedComponent = componentSelect.value;
+      const subCategorySelectElement = subCategorySelect.querySelector("select");
+
+      // Clear existing options
+      subCategorySelectElement.innerHTML = "";
+
+      // Add default option
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.innerHTML = "Sub-Category";
+      defaultOption.selected = true;
+      defaultOption.disabled = true;
+      subCategorySelectElement.appendChild(defaultOption);
+
+      // Enable/disable based on selection
+      subCategorySelectElement.disabled = selectedComponent === "";
+
+      if (selectedComponent !== "") {
+        // Get options from database
+        const options = componentOptions[selectedComponent] || [];
+
+        // Add options to select
         options.forEach(function(option) {
           const optionElement = document.createElement("option");
           optionElement.value = option;
           optionElement.text = option;
-          select.appendChild(optionElement);
+          subCategorySelectElement.appendChild(optionElement);
         });
 
-        div.appendChild(select);
-        return div;
+        // Enable the select
+        subCategorySelectElement.disabled = false;
       }
+    }
 
-      function createInputField(name, placeholder) {
-        const div = document.createElement("div");
-        div.className = "col";
+    function fetchSalaryComponents(components) {
+      const salaryComponentsDiv = document.getElementById("salaryComponents");
+      salaryComponentsDiv.innerHTML = ""; // Clear existing components
 
-        const input = document.createElement("input");
-        input.type = "number";
-        input.className = "form-control";
-        input.name = name;
-        input.placeholder = placeholder;
-        input.step = "0.01";
-
-        div.appendChild(input);
-        return div;
-      }
-
-      function createPlusButton() {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-primary btn-sm me-2";
-        button.innerHTML = "+ Add";
-        button.onclick = addSalaryComponent;
-
-        return button;
-      }
-
-      function createMinusButton() {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-danger btn-sm";
-        button.innerHTML = "- Remove";
-        button.onclick = deleteSalaryComponent;
-
-        return button;
-      }
-
-      function deleteSalaryComponent() {
-        const row = this.parentNode.parentNode;
-        const salaryComponentsDiv = document.getElementById("salaryComponents");
-        salaryComponentsDiv.removeChild(row);
-
-        // Update Add button
-        updateAddButton();
-      }
-
-      function updateAddButton() {
-        const rows = document.querySelectorAll("#salaryComponents .row");
-        rows.forEach((row, index) => {
-          const buttonsContainer = row.querySelector(".col");
-          const addButton = buttonsContainer.querySelector(".btn-primary");
-
-          // Remove existing Add button
-          if (addButton) {
-            buttonsContainer.removeChild(addButton);
-          }
-
-          // Add Add button to the last row
-          if (index === rows.length - 1) {
-            const plusButton = createPlusButton();
-            buttonsContainer.appendChild(plusButton);
-          }
-        });
-      }
-
-      function updateSubCategoryOptions(componentSelect, subCategorySelect) {
-        const selectedComponent = componentSelect.value;
-        const subCategorySelectElement = subCategorySelect.querySelector("select");
-
-        // Clear existing options
-        subCategorySelectElement.innerHTML = "";
-
-        // Add default option
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.innerHTML = "Sub-Category";
-        defaultOption.selected = true;
-        defaultOption.disabled = true;
-        subCategorySelectElement.appendChild(defaultOption);
-
-        // Enable/disable based on selection
-        subCategorySelectElement.disabled = selectedComponent === "";
-
-        if (selectedComponent !== "") {
-          // Get options from database
-          const options = componentOptions[selectedComponent] || [];
-
-          // Add options to select
-          options.forEach(function(option) {
-            const optionElement = document.createElement("option");
-            optionElement.value = option;
-            optionElement.text = option;
-            subCategorySelectElement.appendChild(optionElement);
-          });
-
-          // Enable the select
-          subCategorySelectElement.disabled = false;
-        }
-      }
-
-      function fetchSalaryComponents(components) {
-        const salaryComponentsDiv = document.getElementById("salaryComponents");
-        salaryComponentsDiv.innerHTML = ""; // Clear existing components
-
-        components.forEach((component) => {
-          addSalaryComponentWithValues(
-            component.is_deduction ? "Deduction" : "Earning",
-            component.component_name,
-            component.monthly_amount
-          );
-        });
-
-        // Update Add button
-        updateAddButton();
-      }
-
-      function addSalaryComponentWithValues(componentType, componentName, amount) {
-        const salaryComponentsDiv = document.getElementById("salaryComponents");
-        const row = document.createElement("div");
-        row.className = "row mb-3";
-
-        const componentTypeSelect = createSelectField(
-          "componentName[]",
-          "Component Type",
-          ["Earning", "Deduction"]
+      components.forEach((component) => {
+        addSalaryComponentWithValues(
+          component.is_deduction ? "Deduction" : "Earning",
+          component.component_name,
+          component.monthly_amount
         );
-        componentTypeSelect.querySelector("select").value = componentType;
+      });
 
-        const subCategorySelect = createSelectField(
-          "subCategory[]",
-          "Sub-Category",
-          [],
-          false
-        );
-        subCategorySelect.querySelector("select").innerHTML = `
+      // Update Add button
+      updateAddButton();
+    }
+
+    function addSalaryComponentWithValues(componentType, componentName, amount) {
+      const salaryComponentsDiv = document.getElementById("salaryComponents");
+      const row = document.createElement("div");
+      row.className = "row mb-3";
+
+      const componentTypeSelect = createSelectField(
+        "componentName[]",
+        "Component Type",
+        ["Earning", "Deduction"]
+      );
+      componentTypeSelect.querySelector("select").value = componentType;
+
+      const subCategorySelect = createSelectField(
+        "subCategory[]",
+        "Sub-Category",
+        [],
+        false
+      );
+      subCategorySelect.querySelector("select").innerHTML = `
       <option value="${componentName}" selected>${componentName}</option>
     `;
 
-        const amountInput = createInputField("amount[]", "Amount");
-        amountInput.querySelector("input").value = amount;
+      const amountInput = createInputField("amount[]", "Amount");
+      amountInput.querySelector("input").value = amount;
 
-        const buttonsContainer = document.createElement("div");
-        buttonsContainer.className = "col";
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.className = "col";
 
-        const minusButton = createMinusButton();
-        buttonsContainer.appendChild(minusButton);
+      const minusButton = createMinusButton();
+      buttonsContainer.appendChild(minusButton);
 
-        row.appendChild(componentTypeSelect);
-        row.appendChild(subCategorySelect);
-        row.appendChild(amountInput);
-        row.appendChild(buttonsContainer);
+      row.appendChild(componentTypeSelect);
+      row.appendChild(subCategorySelect);
+      row.appendChild(amountInput);
+      row.appendChild(buttonsContainer);
 
-        salaryComponentsDiv.appendChild(row);
+      salaryComponentsDiv.appendChild(row);
 
-        // Update Add button
-        updateAddButton();
+      // Update Add button
+      updateAddButton();
+    }
+
+    // Fix for payslip preview modal not showing up
+    function previewPayslip() {
+      // Get the employee ID, pay month, and pay year from the form
+      var employeeId = document.getElementById('employeeId').value;
+      var payMonth = document.getElementById('payMonth').value;
+      var payYear = document.getElementById('payYear').value;
+      var daysPaid = document.getElementById('dayspaid').value;
+
+      // Get the selected salary components and their amounts
+      var components = document.getElementsByName('componentName[]');
+      var amounts = document.getElementsByName('amount[]');
+
+      var payslipPreview = '<div class="mb-4">';
+      payslipPreview += '<div class="card">';
+      payslipPreview += '<div class="card-header">Employee Pay Information</div>';
+      payslipPreview += '<div class="card-body">';
+      payslipPreview += '<dl class="row">';
+      payslipPreview += '<dt class="col-sm-4">Employee ID:</dt><dd class="col-sm-8">' + employeeId + '</dd>';
+      payslipPreview += '<dt class="col-sm-4">Pay Month:</dt><dd class="col-sm-8">' + payMonth + '</dd>';
+      payslipPreview += '<dt class="col-sm-4">Pay Year:</dt><dd class="col-sm-8">' + payYear + '</dd>';
+      payslipPreview += '<dt class="col-sm-4">Days Paid:</dt><dd class="col-sm-8">' + daysPaid + '</dd>';
+      payslipPreview += '</dl>';
+      payslipPreview += '</div>';
+      payslipPreview += '</div>';
+      payslipPreview += '</div>';
+
+
+      payslipPreview += '<div>';
+      payslipPreview += '<h3 class="mb-3">Earnings:</h3>';
+      payslipPreview += '<table class="table table-striped">';
+      payslipPreview += '<thead><tr><th>Component</th><th>Subcategory</th><th>Amount</th></tr></thead><tbody>';
+
+      var totalEarnings = 0;
+
+      // Add the selected earnings components, their subcategories, and amounts to the table
+      for (var i = 0; i < components.length; i++) {
+        if (components[i].value === 'Earning') {
+          var componentName = components[i].options[components[i].selectedIndex].text;
+          var subCategory = components[i].parentNode.parentNode.querySelector("select[name='subCategory[]']").value;
+          var amount = parseFloat(amounts[i].value);
+
+          payslipPreview += '<tr><td>' + componentName + '</td><td>' + subCategory + '</td><td>' + amount + '</td></tr>';
+
+          totalEarnings += amount;
+        }
       }
 
-      // Fix for payslip preview modal not showing up
-      function previewPayslip() {
-        // Get the employee ID, pay month, and pay year from the form
-        var employeeId = document.getElementById('employeeId').value;
-        var payMonth = document.getElementById('payMonth').value;
-        var payYear = document.getElementById('payYear').value;
-        var daysPaid = document.getElementById('dayspaid').value;
+      payslipPreview += '</tbody></table>';
 
-        // Get the selected salary components and their amounts
-        var components = document.getElementsByName('componentName[]');
-        var amounts = document.getElementsByName('amount[]');
+      payslipPreview += '<h3 class="mt-4 mb-3">Deductions:</h3>';
+      payslipPreview += '<table class="table table-striped">';
+      payslipPreview += '<thead><tr><th>Component</th><th>Subcategory</th><th>Amount</th></tr></thead><tbody>';
 
-        var payslipPreview = '<div class="mb-4">';
-        payslipPreview += '<div class="card">';
-        payslipPreview += '<div class="card-header">Employee Pay Information</div>';
-        payslipPreview += '<div class="card-body">';
-        payslipPreview += '<dl class="row">';
-        payslipPreview += '<dt class="col-sm-4">Employee ID:</dt><dd class="col-sm-8">' + employeeId + '</dd>';
-        payslipPreview += '<dt class="col-sm-4">Pay Month:</dt><dd class="col-sm-8">' + payMonth + '</dd>';
-        payslipPreview += '<dt class="col-sm-4">Pay Year:</dt><dd class="col-sm-8">' + payYear + '</dd>';
-        payslipPreview += '<dt class="col-sm-4">Days Paid:</dt><dd class="col-sm-8">' + daysPaid + '</dd>';
-        payslipPreview += '</dl>';
-        payslipPreview += '</div>';
-        payslipPreview += '</div>';
-        payslipPreview += '</div>';
+      var totalDeductions = 0;
 
+      // Add the selected deductions components, their subcategories, and amounts to the table
+      for (var i = 0; i < components.length; i++) {
+        if (components[i].value === 'Deduction') {
+          var componentName = components[i].options[components[i].selectedIndex].text;
+          var subCategory = components[i].parentNode.parentNode.querySelector("select[name='subCategory[]']").value;
+          var amount = parseFloat(amounts[i].value);
 
-        payslipPreview += '<div>';
-        payslipPreview += '<h3 class="mb-3">Earnings:</h3>';
-        payslipPreview += '<table class="table table-striped">';
-        payslipPreview += '<thead><tr><th>Component</th><th>Subcategory</th><th>Amount</th></tr></thead><tbody>';
+          payslipPreview += '<tr><td>' + componentName + '</td><td>' + subCategory + '</td><td>' + amount + '</td></tr>';
 
-        var totalEarnings = 0;
-
-        // Add the selected earnings components, their subcategories, and amounts to the table
-        for (var i = 0; i < components.length; i++) {
-          if (components[i].value === 'Earning') {
-            var componentName = components[i].options[components[i].selectedIndex].text;
-            var subCategory = components[i].parentNode.parentNode.querySelector("select[name='subCategory[]']").value;
-            var amount = parseFloat(amounts[i].value);
-
-            payslipPreview += '<tr><td>' + componentName + '</td><td>' + subCategory + '</td><td>' + amount + '</td></tr>';
-
-            totalEarnings += amount;
-          }
+          totalDeductions += amount;
         }
-
-        payslipPreview += '</tbody></table>';
-
-        payslipPreview += '<h3 class="mt-4 mb-3">Deductions:</h3>';
-        payslipPreview += '<table class="table table-striped">';
-        payslipPreview += '<thead><tr><th>Component</th><th>Subcategory</th><th>Amount</th></tr></thead><tbody>';
-
-        var totalDeductions = 0;
-
-        // Add the selected deductions components, their subcategories, and amounts to the table
-        for (var i = 0; i < components.length; i++) {
-          if (components[i].value === 'Deduction') {
-            var componentName = components[i].options[components[i].selectedIndex].text;
-            var subCategory = components[i].parentNode.parentNode.querySelector("select[name='subCategory[]']").value;
-            var amount = parseFloat(amounts[i].value);
-
-            payslipPreview += '<tr><td>' + componentName + '</td><td>' + subCategory + '</td><td>' + amount + '</td></tr>';
-
-            totalDeductions += amount;
-          }
-        }
-
-        payslipPreview += '</tbody></table>';
-
-        // Calculate net pay
-        var netPay = totalEarnings - totalDeductions;
-
-        // Display total earnings, deductions, and net pay
-        payslipPreview += '<div class="mt-4">';
-        payslipPreview += '<h3 class="mb-2">Summary:</h3>';
-        payslipPreview += '<table class="table">';
-        payslipPreview += '<tr><th>Total Earnings:</th><td>' + totalEarnings + '</td></tr>';
-        payslipPreview += '<tr><th>Total Deductions:</th><td>' + totalDeductions + '</td></tr>';
-        payslipPreview += '<tr><th>Net Pay:</th><td>' + netPay + '</td></tr>';
-        payslipPreview += '</table>';
-        payslipPreview += '</div>';
-
-        payslipPreview += '</div></div>';
-
-        // Set the payslip preview content in the modal
-        document.getElementById('payslipPreview').innerHTML = payslipPreview;
-
-        // Show the payslip preview modal
-        var payslipModal = new bootstrap.Modal(document.getElementById('payslipModal'));
-        payslipModal.show();
       }
-    </script>
+
+      payslipPreview += '</tbody></table>';
+
+      // Calculate net pay
+      var netPay = totalEarnings - totalDeductions;
+
+      // Display total earnings, deductions, and net pay
+      payslipPreview += '<div class="mt-4">';
+      payslipPreview += '<h3 class="mb-2">Summary:</h3>';
+      payslipPreview += '<table class="table">';
+      payslipPreview += '<tr><th>Total Earnings:</th><td>' + totalEarnings + '</td></tr>';
+      payslipPreview += '<tr><th>Total Deductions:</th><td>' + totalDeductions + '</td></tr>';
+      payslipPreview += '<tr><th>Net Pay:</th><td>' + netPay + '</td></tr>';
+      payslipPreview += '</table>';
+      payslipPreview += '</div>';
+
+      payslipPreview += '</div></div>';
+
+      // Set the payslip preview content in the modal
+      document.getElementById('payslipPreview').innerHTML = payslipPreview;
+
+      // Show the payslip preview modal
+      var payslipModal = new bootstrap.Modal(document.getElementById('payslipModal'));
+      payslipModal.show();
+    }
+  </script>
 
 </body>
 

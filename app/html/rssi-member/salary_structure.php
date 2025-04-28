@@ -183,9 +183,13 @@ if ($copy_source_data) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Structure Management</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         .category-header {
             background-color: #f8f9fa;
@@ -231,297 +235,324 @@ if ($copy_source_data) {
 </head>
 
 <body>
-    <div class="container-fluid py-4">
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-        <div class="row mb-4">
-            <div class="col">
-                <h1 class="h3 fw-bold">Salary Structure Management</h1>
-            </div>
-        </div>
+    <main id="main" class="main">
 
-        <!-- Search Form -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h2 class="h5 mb-0">Search Associate</h2>
-            </div>
-            <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-8">
-                        <label for="associate_number" class="form-label">Associate Number</label>
-                        <select class="form-select select2" id="associate_number" name="associate_number" required>
-                            <option value="">Select Associate</option>
-                            <?php if (isset($associate_number)): ?>
-                                <option value="<?= htmlspecialchars($associate_number) ?>" selected>
-                                    <?= htmlspecialchars($associate_number) ?>
-                                </option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i> Search
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <div class="pagetitle">
+            <h1>Salary Structure Management</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Payroll</a></li>
+                    <li class="breadcrumb-item active">Salary Structure Management</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-        <?php if (isset($associate_number)): ?>
-            <!-- Existing Structures -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                    <h2 class="h5 mb-0">Existing Salary Structures</h2>
-                    <div>
-                        <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#structuresCollapse">
-                            <i class="bi bi-chevron-down"></i> Toggle
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body collapse show" id="structuresCollapse">
-                    <?php if (empty($existing_structures)): ?>
-                        <div class="alert alert-info mb-0">No salary structures found.</div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Structure Name</th>
-                                        <th>Effective From</th>
-                                        <th>Effective Till</th>
-                                        <th>CTC Amount</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($existing_structures as $structure): ?>
-                                        <?php
-                                        $current_date = date('Y-m-d');
-                                        $effective_from = $structure['effective_from'];
-                                        $effective_till = $structure['effective_till'];
+        <section class="section dashboard">
+            <div class="row">
 
-                                        $is_active = ($current_date >= $effective_from) &&
-                                            ($effective_till === null || $current_date <= $effective_till);
-                                        ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($structure['structure_name']) ?></td>
-                                            <td><?= date('d-M-Y', strtotime($structure['effective_from'])) ?></td>
-                                            <td><?= $structure['effective_till'] ? date('d-M-Y', strtotime($structure['effective_till'])) : 'Present' ?></td>
-                                            <td>₹ <?= number_format($structure['ctc_amount'], 2) ?></td>
-                                            <td>
-                                                <span class="badge bg-<?= $is_active ? 'success' : 'secondary' ?>">
-                                                    <?= $is_active ? 'Active' : 'Inactive' ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex gap-2">
-                                                    <a href="view_structure.php?id=<?= $structure['id'] ?>" class="btn btn-sm btn-outline-primary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <button class="btn btn-sm btn-outline-warning update-end-date-btn"
-                                                        data-id="<?= $structure['id'] ?>"
-                                                        data-associate="<?= $structure['associate_number'] ?>">
-                                                        <i class="bi bi-calendar"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-success copy-structure-btn"
-                                                        data-id="<?= $structure['id'] ?>"
-                                                        data-associate="<?= $structure['associate_number'] ?>">
-                                                        <i class="bi bi-files"></i>
-                                                    </button>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid py-4">
+
+                                <!-- Search Form -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-primary text-white">
+                                        <h2 class="h5 mb-0">Search Associate</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="get" class="row g-3">
+                                            <div class="col-md-8">
+                                                <label for="associate_number" class="form-label">Associate Number</label>
+                                                <select class="form-select select2" id="associate_number" name="associate_number" required>
+                                                    <option value="">Select Associate</option>
+                                                    <?php if (isset($associate_number)): ?>
+                                                        <option value="<?= htmlspecialchars($associate_number) ?>" selected>
+                                                            <?= htmlspecialchars($associate_number) ?>
+                                                        </option>
+                                                    <?php endif; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-search me-1"></i> Search
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <?php if (isset($associate_number)): ?>
+                                    <!-- Existing Structures -->
+                                    <div class="card mb-4">
+                                        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                            <h2 class="h5 mb-0">Existing Salary Structures</h2>
+                                            <div>
+                                                <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#structuresCollapse">
+                                                    <i class="bi bi-chevron-down"></i> Toggle
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body collapse show" id="structuresCollapse">
+                                            <?php if (empty($existing_structures)): ?>
+                                                <div class="alert alert-info mb-0">No salary structures found.</div>
+                                            <?php else: ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Structure Name</th>
+                                                                <th>Effective From</th>
+                                                                <th>Effective Till</th>
+                                                                <th>CTC Amount</th>
+                                                                <th>Status</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($existing_structures as $structure): ?>
+                                                                <?php
+                                                                $current_date = date('Y-m-d');
+                                                                $effective_from = $structure['effective_from'];
+                                                                $effective_till = $structure['effective_till'];
+
+                                                                $is_active = ($current_date >= $effective_from) &&
+                                                                    ($effective_till === null || $current_date <= $effective_till);
+                                                                ?>
+                                                                <tr>
+                                                                    <td><?= htmlspecialchars($structure['structure_name']) ?></td>
+                                                                    <td><?= date('d-M-Y', strtotime($structure['effective_from'])) ?></td>
+                                                                    <td><?= $structure['effective_till'] ? date('d-M-Y', strtotime($structure['effective_till'])) : 'Present' ?></td>
+                                                                    <td>₹ <?= number_format($structure['ctc_amount'], 2) ?></td>
+                                                                    <td>
+                                                                        <span class="badge bg-<?= $is_active ? 'success' : 'secondary' ?>">
+                                                                            <?= $is_active ? 'Active' : 'Inactive' ?>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex gap-2">
+                                                                            <a href="view_structure.php?id=<?= $structure['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                                                                <i class="bi bi-eye"></i>
+                                                                            </a>
+                                                                            <button class="btn btn-sm btn-outline-warning update-end-date-btn"
+                                                                                data-id="<?= $structure['id'] ?>"
+                                                                                data-associate="<?= $structure['associate_number'] ?>">
+                                                                                <i class="bi bi-calendar"></i>
+                                                                            </button>
+                                                                            <button class="btn btn-sm btn-outline-success copy-structure-btn"
+                                                                                data-id="<?= $structure['id'] ?>"
+                                                                                data-associate="<?= $structure['associate_number'] ?>">
+                                                                                <i class="bi bi-files"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
 
-                        <!-- Pagination -->
-                        <?php if ($total_pages > 1): ?>
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-center">
-                                    <?php if ($current_page > 1): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $current_page - 1 ?>" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
+                                                <!-- Pagination -->
+                                                <?php if ($total_pages > 1): ?>
+                                                    <nav aria-label="Page navigation">
+                                                        <ul class="pagination justify-content-center">
+                                                            <?php if ($current_page > 1): ?>
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $current_page - 1 ?>" aria-label="Previous">
+                                                                        <span aria-hidden="true">&laquo;</span>
+                                                                    </a>
+                                                                </li>
+                                                            <?php endif; ?>
 
-                                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                        <li class="page-item <?= $i == $current_page ? 'active' : '' ?>">
-                                            <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $i ?>"><?= $i ?></a>
-                                        </li>
-                                    <?php endfor; ?>
+                                                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                                                <li class="page-item <?= $i == $current_page ? 'active' : '' ?>">
+                                                                    <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $i ?>"><?= $i ?></a>
+                                                                </li>
+                                                            <?php endfor; ?>
 
-                                    <?php if ($current_page < $total_pages): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $current_page + 1 ?>" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </nav>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Create New Salary Structure -->
-            <div class="card">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h2 class="h5 mb-0">Create New Salary Structure</h2>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#componentLibrary">
-                        <i class="bi bi-collection"></i> Component Library
-                    </button>
-                </div>
-                <div class="card-body">
-                    <!-- Component Library (Collapsible) -->
-                    <div class="collapse mb-4" id="componentLibrary">
-                        <div class="card card-body mb-4">
-                            <h5 class="mb-3">Component Library</h5>
-                            <div class="row">
-                                <?php foreach ($grouped_master_components as $type_name => $components): ?>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0"><?= htmlspecialchars($type_name) ?></h6>
-                                            </div>
-                                            <div class="card-body p-0">
-                                                <ul class="list-group list-group-flush">
-                                                    <?php foreach ($components as $component): ?>
-                                                        <li class="list-group-item component-selector"
-                                                            data-master-id="<?= $component['id'] ?>"
-                                                            data-category-id="<?= $component['component_type_id'] ?>"
-                                                            data-category="<?= htmlspecialchars($type_name) ?>"
-                                                            data-name="<?= htmlspecialchars($component['name']) ?>"
-                                                            data-is-deduction="<?= $component['component_type'] === 'Deduction' ? '1' : '0' ?>">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <span><?= htmlspecialchars($component['name']) ?></span>
-                                                                <span class="badge <?= $component['component_type'] === 'Deduction' ? 'badge-deduction' : 'badge-earning' ?>">
-                                                                    <?= $component['component_type'] ?>
-                                                                </span>
-                                                            </div>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                            </div>
+                                                            <?php if ($current_page < $total_pages): ?>
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?associate_number=<?= $associate_number ?>&page=<?= $current_page + 1 ?>" aria-label="Next">
+                                                                        <span aria-hidden="true">&raquo;</span>
+                                                                    </a>
+                                                                </li>
+                                                            <?php endif; ?>
+                                                        </ul>
+                                                    </nav>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
 
-                    <form method="post" id="salaryStructureForm">
-                        <input type="hidden" name="associate_number" value="<?= htmlspecialchars($associate_number) ?>">
-
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <label for="structure_name" class="form-label">Structure Name</label>
-                                <input type="text" class="form-control" id="structure_name" name="structure_name"
-                                    value="<?= htmlspecialchars($_SESSION['new_structure_name'] ?? '') ?>" required>
-                                <?php unset($_SESSION['new_structure_name']); ?>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="effective_from" class="form-label">Effective From</label>
-                                <input type="date" class="form-control" id="effective_from" name="effective_from"
-                                    value="<?= htmlspecialchars($_SESSION['new_effective_from'] ?? date('Y-m-d')) ?>" required>
-                                <?php unset($_SESSION['new_effective_from']); ?>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="effective_till" class="form-label">Effective Till (optional)</label>
-                                <input type="date" class="form-control" id="effective_till" name="effective_till"
-                                    value="<?= htmlspecialchars($_SESSION['new_effective_till'] ?? '') ?>">
-                                <?php unset($_SESSION['new_effective_till']); ?>
-                                <div class="form-text">Leave blank for current structure</div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <label for="ctc_amount" class="form-label">Cost to Company (CTC)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" step="0.01" class="form-control" id="ctc_amount" name="ctc_amount" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="earnings_total" class="form-label">Total Earnings</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" step="0.01" class="form-control" id="earnings_total" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="deductions_total" class="form-label">Total Deductions</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" step="0.01" class="form-control" id="deductions_total" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h5 class="mb-3">Salary Components</h5>
-                        <div id="componentsContainer">
-                            <!-- Components will be added here dynamically -->
-                            <?php if (!empty($copied_components)): ?>
-                                <?php foreach ($copied_components as $index => $component): ?>
-                                    <div class="component-row row g-3 mb-2 <?= $component['is_deduction'] ? 'deduction-row' : '' ?>">
-                                        <input type="hidden" name="components[<?= $index ?>][master_id]" value="<?= $component['master_id'] ?? '' ?>">
-                                        <input type="hidden" name="components[<?= $index ?>][category_id]" value="<?= $component['category_id'] ?>">
-                                        <input type="hidden" name="components[<?= $index ?>][category]" value="<?= htmlspecialchars($component['category']) ?>">
-                                        <input type="hidden" name="components[<?= $index ?>][is_deduction]" value="<?= $component['is_deduction'] ? '1' : '0' ?>">
-                                        <input type="hidden" name="components[<?= $index ?>][order]" value="<?= $component['order'] ?>">
-                                        <div class="col-md-5">
-                                            <input type="text" class="form-control" name="components[<?= $index ?>][name]"
-                                                value="<?= htmlspecialchars($component['name']) ?>" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="input-group">
-                                                <span class="input-group-text">₹</span>
-                                                <input type="number" step="0.01" class="form-control monthly-input"
-                                                    name="components[<?= $index ?>][monthly]"
-                                                    value="<?= htmlspecialchars($component['monthly'] ?? '') ?>"
-                                                    placeholder="Monthly">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="input-group">
-                                                <span class="input-group-text">₹</span>
-                                                <input type="number" step="0.01" class="form-control annual-input"
-                                                    name="components[<?= $index ?>][annual]"
-                                                    value="<?= htmlspecialchars($component['annual']) ?>"
-                                                    placeholder="Annual" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-outline-danger remove-component">
-                                                <i class="bi bi-trash"></i>
+                                    <!-- Create New Salary Structure -->
+                                    <div class="card">
+                                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                            <h2 class="h5 mb-0">Create New Salary Structure</h2>
+                                            <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#componentLibrary">
+                                                <i class="bi bi-collection"></i> Component Library
                                             </button>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
+                                        <div class="card-body">
+                                            <!-- Component Library (Collapsible) -->
+                                            <div class="collapse mb-4" id="componentLibrary">
+                                                <div class="card card-body mb-4">
+                                                    <h5 class="mb-3">Component Library</h5>
+                                                    <div class="row">
+                                                        <?php foreach ($grouped_master_components as $type_name => $components): ?>
+                                                            <div class="col-md-4 mb-3">
+                                                                <div class="card">
+                                                                    <div class="card-header bg-light">
+                                                                        <h6 class="mb-0"><?= htmlspecialchars($type_name) ?></h6>
+                                                                    </div>
+                                                                    <div class="card-body p-0">
+                                                                        <ul class="list-group list-group-flush">
+                                                                            <?php foreach ($components as $component): ?>
+                                                                                <li class="list-group-item component-selector"
+                                                                                    data-master-id="<?= $component['id'] ?>"
+                                                                                    data-category-id="<?= $component['component_type_id'] ?>"
+                                                                                    data-category="<?= htmlspecialchars($type_name) ?>"
+                                                                                    data-name="<?= htmlspecialchars($component['name']) ?>"
+                                                                                    data-is-deduction="<?= $component['component_type'] === 'Deduction' ? '1' : '0' ?>">
+                                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                                        <span><?= htmlspecialchars($component['name']) ?></span>
+                                                                                        <span class="badge <?= $component['component_type'] === 'Deduction' ? 'badge-deduction' : 'badge-earning' ?>">
+                                                                                            <?= $component['component_type'] ?>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </li>
+                                                                            <?php endforeach; ?>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
-                            <button type="button" id="addCustomComponent" class="btn btn-outline-primary">
-                                <i class="bi bi-plus-circle"></i> Add Custom Component
-                            </button>
-                            <div>
-                                <button type="submit" name="save_structure" class="btn btn-primary">
-                                    <i class="bi bi-save me-1"></i> Save Structure
-                                </button>
+                                            <form method="post" id="salaryStructureForm">
+                                                <input type="hidden" name="associate_number" value="<?= htmlspecialchars($associate_number) ?>">
+
+                                                <div class="row mb-4">
+                                                    <div class="col-md-4">
+                                                        <label for="structure_name" class="form-label">Structure Name</label>
+                                                        <input type="text" class="form-control" id="structure_name" name="structure_name"
+                                                            value="<?= htmlspecialchars($_SESSION['new_structure_name'] ?? '') ?>" required>
+                                                        <?php unset($_SESSION['new_structure_name']); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="effective_from" class="form-label">Effective From</label>
+                                                        <input type="date" class="form-control" id="effective_from" name="effective_from"
+                                                            value="<?= htmlspecialchars($_SESSION['new_effective_from'] ?? date('Y-m-d')) ?>" required>
+                                                        <?php unset($_SESSION['new_effective_from']); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="effective_till" class="form-label">Effective Till (optional)</label>
+                                                        <input type="date" class="form-control" id="effective_till" name="effective_till"
+                                                            value="<?= htmlspecialchars($_SESSION['new_effective_till'] ?? '') ?>">
+                                                        <?php unset($_SESSION['new_effective_till']); ?>
+                                                        <div class="form-text">Leave blank for current structure</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mb-4">
+                                                    <div class="col-md-4">
+                                                        <label for="ctc_amount" class="form-label">Cost to Company (CTC)</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">₹</span>
+                                                            <input type="number" step="0.01" class="form-control" id="ctc_amount" name="ctc_amount" readonly>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="earnings_total" class="form-label">Total Earnings</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">₹</span>
+                                                            <input type="number" step="0.01" class="form-control" id="earnings_total" readonly>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="deductions_total" class="form-label">Total Deductions</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">₹</span>
+                                                            <input type="number" step="0.01" class="form-control" id="deductions_total" readonly>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <h5 class="mb-3">Salary Components</h5>
+                                                <div id="componentsContainer">
+                                                    <!-- Components will be added here dynamically -->
+                                                    <?php if (!empty($copied_components)): ?>
+                                                        <?php foreach ($copied_components as $index => $component): ?>
+                                                            <div class="component-row row g-3 mb-2 <?= $component['is_deduction'] ? 'deduction-row' : '' ?>">
+                                                                <input type="hidden" name="components[<?= $index ?>][master_id]" value="<?= $component['master_id'] ?? '' ?>">
+                                                                <input type="hidden" name="components[<?= $index ?>][category_id]" value="<?= $component['category_id'] ?>">
+                                                                <input type="hidden" name="components[<?= $index ?>][category]" value="<?= htmlspecialchars($component['category']) ?>">
+                                                                <input type="hidden" name="components[<?= $index ?>][is_deduction]" value="<?= $component['is_deduction'] ? '1' : '0' ?>">
+                                                                <input type="hidden" name="components[<?= $index ?>][order]" value="<?= $component['order'] ?>">
+                                                                <div class="col-md-5">
+                                                                    <input type="text" class="form-control" name="components[<?= $index ?>][name]"
+                                                                        value="<?= htmlspecialchars($component['name']) ?>" required>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text">₹</span>
+                                                                        <input type="number" step="0.01" class="form-control monthly-input"
+                                                                            name="components[<?= $index ?>][monthly]"
+                                                                            value="<?= htmlspecialchars($component['monthly'] ?? '') ?>"
+                                                                            placeholder="Monthly">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text">₹</span>
+                                                                        <input type="number" step="0.01" class="form-control annual-input"
+                                                                            name="components[<?= $index ?>][annual]"
+                                                                            value="<?= htmlspecialchars($component['annual']) ?>"
+                                                                            placeholder="Annual" required>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-1">
+                                                                    <button type="button" class="btn btn-outline-danger remove-component">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                                                    <button type="button" id="addCustomComponent" class="btn btn-outline-primary">
+                                                        <i class="bi bi-plus-circle"></i> Add Custom Component
+                                                    </button>
+                                                    <div>
+                                                        <button type="submit" name="save_structure" class="btn btn-primary">
+                                                            <i class="bi bi-save me-1"></i> Save Structure
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </div><!-- End Reports -->
             </div>
-        <?php endif; ?>
-    </div>
+        </section>
 
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Component Template -->
     <div id="componentTemplate" class="component-row row g-3 mb-2" style="display: none;">
         <input type="hidden" name="components[0][master_id]" value="">
@@ -651,6 +682,8 @@ if ($copy_source_data) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {

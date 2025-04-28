@@ -464,6 +464,24 @@
         </ul>
       </li><!-- End Components Nav -->
 
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#payroll" data-bs-toggle="collapse" href="#">
+          <span>Payroll</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="payroll" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="salary_structure" href="salary_structure.php">
+              <span>Salary Structure Management</span>
+            </a>
+          </li>
+          <li>
+            <a id="payroll_processingLink" href="payroll_processing.php">
+              <span>Payroll Processing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -533,11 +551,6 @@
           <li>
             <a id="reimbursementstatusLink" href="reimbursementstatus.php">
               <span>Reimbursement Approval</span>
-            </a>
-          </li>
-          <li>
-            <a id="payroll_processingLink" href="payroll_processing.php" target="_blank">
-              <span>Payroll Processing</span>
             </a>
           </li>
           <li>
@@ -809,9 +822,17 @@
         url: 'medistatus.php'
       },
       {
-        id: 'work',
+        id: 'payroll',
+        linkId: 'salary_structure',
+        url: 'salary_structure.php'
+      },{
+        id: 'payroll',
         linkId: 'payroll_processingLink',
         url: 'payroll_processing.php'
+      },{
+        id: 'payroll',
+        linkId: 'salary_structure',
+        url: 'view_structure.php'
       },
       {
         id: 'work',
