@@ -452,12 +452,12 @@
         </a>
         <ul id="irc" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="books" href="books.php" target="_blank">
+            <a id="books" href="books.php">
               <span>Library Dashboard</span>
             </a>
           </li>
           <li>
-            <a id="orders" href="orders.php" target="_blank">
+            <a id="orders" href="orders.php">
               <span>Library Orders Management</span>
             </a>
           </li>
@@ -764,6 +764,16 @@
         url: 'resourcehub.php'
       },
       {
+        id: 'irc',
+        linkId: 'books',
+        url: 'books.php'
+      },
+      {
+        id: 'irc',
+        linkId: 'orders',
+        url: 'orders.php'
+      },
+      {
         id: 'work',
         linkId: 'process-hubLink',
         url: 'process-hub.php'
@@ -825,11 +835,11 @@
         id: 'payroll',
         linkId: 'salary_structure',
         url: 'salary_structure.php'
-      },{
+      }, {
         id: 'payroll',
         linkId: 'payroll_processingLink',
         url: 'payroll_processing.php'
-      },{
+      }, {
         id: 'payroll',
         linkId: 'salary_structure',
         url: 'view_structure.php'

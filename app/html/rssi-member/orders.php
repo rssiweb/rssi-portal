@@ -250,6 +250,8 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         .stat-card {
             border-left: 4px solid #0d6efd;
@@ -300,488 +302,526 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
         .settlement-card {
             border-left: 4px solid #6f42c1;
         }
+
+        #dashboard .card-body {
+            flex: 1 1 auto;
+            padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+            color: var(--bs-card-color);
+        }
     </style>
 </head>
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <div class="container-fluid">
-        <div class="row">
-            <main class="col-md-12 px-md-4 py-3">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Library Orders Management</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <?php if ($role === 'Admin'): ?>
-                                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#settleFinesModal">
-                                    <i class="bi bi-cash-coin"></i> Settle Fines
-                                </button>
-                            <?php endif; ?>
+    <?php include 'header.php'; ?>
 
-                            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settlementHistoryModal">
-                                <i class="bi bi-clock-history"></i> History
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <main id="main" class="main">
 
-                <?php if ($message): ?>
-                    <div class="alert alert-success alert-dismissible fade show"><?php echo $message; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
+        <div class="pagetitle">
+            <h1>Library Orders Management</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Information Resource Center</a></li>
+                    <li class="breadcrumb-item active">Library Orders Management</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                <?php if ($error): ?>
-                    <div class="alert alert-danger alert-dismissible fade show"><?php echo $error; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
+        <section class="section dashboard">
+            <div class="row">
 
-                <!-- Filter Section -->
-                <div class="filter-section mb-4">
-                    <form method="POST" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="academic_year" class="form-label">Academic Year</label>
-                            <select class="form-select" id="academic_year" name="academic_year">
-                                <?php foreach ($academic_years as $year): ?>
-                                    <option value="<?= $year ?>" <?= $selected_academic_year == $year ? 'selected' : '' ?>>
-                                        <?= $year ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">All Statuses</option>
-                                <option value="pending" <?= $selected_status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="issued" <?= $selected_status == 'issued' ? 'selected' : '' ?>>Issued</option>
-                                <option value="returned" <?= $selected_status == 'returned' ? 'selected' : '' ?>>Returned</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="search" class="form-label">Search</label>
-                            <input type="text" class="form-control" id="search" name="search"
-                                placeholder="Search by book title, author or user name" value="<?= htmlspecialchars($search_query) ?>">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" name="filter" class="btn btn-primary w-100">Apply Filters</button>
-                        </div>
-                    </form>
-                </div>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                <!-- Statistics Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-2">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Total Books</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['total_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-book text-primary"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Available Books</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['available_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-success bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-check-circle text-success"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Pending Orders</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['pending_orders']) ?></h3>
-                                    </div>
-                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-clock text-warning"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Issued Books</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['issued_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-info bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-hand-holding text-info"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Returned Books</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['returned_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-secondary bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-undo text-secondary"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="card stat-card settlement-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Outstanding Fines</h6>
-                                        <h3 class="mb-0">₹<?= number_format($stats['outstanding_fines'], 2) ?></h3>
-                                        <?php if ($last_settlement): ?>
-                                            <small class="text-muted">Last settled: <?= date('d M Y', strtotime($last_settlement['settlement_date'])) ?></small>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="bg-danger bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-rupee-sign text-danger"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Book Details</th>
-                                <th>User Details</th>
-                                <th>Order Info</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($order = pg_fetch_assoc($orders_result)): ?>
-                                <tr>
-                                    <td><?php echo $order['order_id']; ?></td>
-                                    <td>
-                                        <strong><?php echo htmlspecialchars($order['title']); ?></strong><br>
-                                        <small class="text-muted">by <?php echo htmlspecialchars($order['author']); ?></small><br>
-                                        <small>ISBN: <?php echo htmlspecialchars($order['isbn']); ?></small>
-                                    </td>
-                                    <td>
-                                        <strong><?php echo htmlspecialchars($order['user_name']); ?></strong><br>
-                                        <small class="text-muted"><?php echo ucfirst($order['user_type']); ?> - <?php echo htmlspecialchars($order['user_details']); ?></small><br>
-                                        <small><?php echo !empty($order['user_email']) ? htmlspecialchars($order['user_email']) : 'N/A'; ?></small><br>
-                                        <small><?php echo htmlspecialchars($order['user_mobile']); ?></small>
-                                    </td>
-                                    <td>
-                                        <small><strong>Ordered:</strong> <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></small><br>
-                                        <?php if ($order['status'] == 'issued' || $order['status'] == 'returned'): ?>
-                                            <small><strong>Issued:</strong> <?php echo date('d M Y', strtotime($order['issue_date'])); ?></small><br>
-                                            <small><strong>Due:</strong> <?php echo date('d M Y', strtotime($order['due_date'])); ?></small><br>
-                                            <?php if ($order['status'] == 'returned'): ?>
-                                                <small><strong>Returned:</strong> <?php echo date('d M Y', strtotime($order['return_date'])); ?></small><br>
-                                                <?php if ($order['fine_amount'] > 0): ?>
-                                                    <small><strong>Fine:</strong> ₹<?php echo number_format($order['fine_amount'], 2); ?></small>
-                                                    <?php if (!empty($order['fine_settled']) && $order['fine_settled'] === 't'): ?>
-                                                        <span class="badge bg-success">Settled</span>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-warning">Pending</span>
+                        <div class="card-body" id="dashboard">
+                            <br>
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <main class="col-md-12 px-md-4 py-3">
+                                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                                            <h1 class="h2">Order Summary</h1>
+                                            <div class="btn-toolbar mb-2 mb-md-0">
+                                                <div class="btn-group me-2">
+                                                    <?php if ($role === 'Admin'): ?>
+                                                        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#settleFinesModal">
+                                                            <i class="bi bi-cash-coin"></i> Settle Fines
+                                                        </button>
                                                     <?php endif; ?>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <span class="badge rounded-pill <?php
-                                                                        switch ($order['status']) {
-                                                                            case 'pending':
-                                                                                echo 'badge-pending';
-                                                                                break;
-                                                                            case 'issued':
-                                                                                echo 'badge-issued';
-                                                                                break;
-                                                                            case 'returned':
-                                                                                echo 'badge-returned';
-                                                                                break;
-                                                                            default:
-                                                                                echo 'bg-light text-dark';
-                                                                        }
-                                                                        ?>">
-                                            <?php echo ucfirst($order['status']); ?>
-                                        </span>
-                                        <?php if ($order['status'] == 'issued'): ?>
-                                            <?php
-                                            $due_date = new DateTime($order['due_date']);
-                                            $today = new DateTime();
-                                            $interval = $today->diff($due_date);
-                                            $days_left = $interval->format('%r%a');
 
-                                            if ($days_left < 0) {
-                                                echo '<br><small class="text-danger">Overdue by ' . abs($days_left) . ' days</small>';
-                                            } elseif ($days_left == 0) {
-                                                echo '<br><small class="text-warning">Due today</small>';
-                                            } else {
-                                                echo '<br><small class="text-success">' . $days_left . ' days left</small>';
-                                            }
-                                            ?>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($order['status'] == 'pending'): ?>
-                                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#issueModal<?php echo $order['order_id']; ?>">
-                                                <i class="bi bi-check-circle"></i> Issue
-                                            </button>
-                                        <?php elseif ($order['status'] == 'issued'): ?>
-                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#returnModal<?php echo $order['order_id']; ?>">
-                                                <i class="bi bi-arrow-return-left"></i> Return
-                                            </button>
-                                        <?php endif; ?>
-                                        <button class="btn btn-sm btn-outline-secondary mt-1" data-bs-toggle="modal" data-bs-target="#detailsModal<?php echo $order['order_id']; ?>">
-                                            <i class="bi bi-info-circle"></i> Details
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <!-- Issue Modal -->
-                                <?php if ($order['status'] == 'pending'): ?>
-                                    <div class="modal fade" id="issueModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-success text-white">
-                                                    <h5 class="modal-title">Issue Book</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settlementHistoryModal">
+                                                        <i class="bi bi-clock-history"></i> History
+                                                    </button>
                                                 </div>
-                                                <form method="POST">
-                                                    <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label for="due_date" class="form-label">Due Date *</label>
-                                                            <input type="date" class="form-control" id="due_date" name="due_date" required
-                                                                min="<?php echo date('Y-m-d'); ?>"
-                                                                value="<?php echo date('Y-m-d', strtotime('+14 days')); ?>">
-                                                        </div>
-                                                        <div class="alert alert-info">
-                                                            <i class="bi bi-info-circle"></i> Book: <strong><?php echo htmlspecialchars($order['title']); ?></strong><br>
-                                                            User: <strong><?php echo htmlspecialchars($order['user_name']); ?></strong>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" name="issue_book" class="btn btn-success">Confirm Issue</button>
-                                                    </div>
-                                                </form>
                                             </div>
                                         </div>
-                                    </div>
-                                <?php endif; ?>
 
-                                <!-- Return Modal -->
-                                <?php if ($order['status'] == 'issued'): ?>
-                                    <div class="modal fade" id="returnModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-primary text-white">
-                                                    <h5 class="modal-title">Return Book</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <?php if ($message): ?>
+                                            <div class="alert alert-success alert-dismissible fade show"><?php echo $message; ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($error): ?>
+                                            <div class="alert alert-danger alert-dismissible fade show"><?php echo $error; ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Filter Section -->
+                                        <div class="filter-section mb-4">
+                                            <form method="POST" class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label for="academic_year" class="form-label">Academic Year</label>
+                                                    <select class="form-select" id="academic_year" name="academic_year">
+                                                        <?php foreach ($academic_years as $year): ?>
+                                                            <option value="<?= $year ?>" <?= $selected_academic_year == $year ? 'selected' : '' ?>>
+                                                                <?= $year ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
                                                 </div>
-                                                <form method="POST">
-                                                    <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                                    <input type="hidden" name="book_id" value="<?php echo $order['book_id']; ?>">
-                                                    <div class="modal-body">
-                                                        <div class="alert alert-info">
-                                                            <i class="bi bi-info-circle"></i>
-                                                            <strong>Book:</strong> <?php echo htmlspecialchars($order['title']); ?><br>
-                                                            <strong>User:</strong> <?php echo htmlspecialchars($order['user_name']); ?><br>
-                                                            <strong>Issued On:</strong> <?php echo date('d M Y', strtotime($order['issue_date'])); ?><br>
-                                                            <strong>Due Date:</strong> <?php echo date('d M Y', strtotime($order['due_date'])); ?>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="fine_amount" class="form-label">Fine Amount (₹)</label>
-                                                            <input type="number" class="form-control" id="fine_amount" name="fine_amount"
-                                                                min="0" step="0.01" value="0" placeholder="Enter 0 if no fine">
-                                                            <small class="text-muted">Leave as 0 if no fine is applicable</small>
+                                                <div class="col-md-3">
+                                                    <label for="status" class="form-label">Status</label>
+                                                    <select class="form-select" id="status" name="status">
+                                                        <option value="">All Statuses</option>
+                                                        <option value="pending" <?= $selected_status == 'pending' ? 'selected' : '' ?>>Pending</option>
+                                                        <option value="issued" <?= $selected_status == 'issued' ? 'selected' : '' ?>>Issued</option>
+                                                        <option value="returned" <?= $selected_status == 'returned' ? 'selected' : '' ?>>Returned</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="search" class="form-label">Search</label>
+                                                    <input type="text" class="form-control" id="search" name="search"
+                                                        placeholder="Search by book title, author or user name" value="<?= htmlspecialchars($search_query) ?>">
+                                                </div>
+                                                <div class="col-md-2 d-flex align-items-end">
+                                                    <button type="submit" name="filter" class="btn btn-primary w-100">Apply Filters</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Statistics Cards -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-2">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Total Books</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['total_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-book text-primary"></i>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" name="return_book" class="btn btn-primary">Confirm Return</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Available Books</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['available_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </form>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Pending Orders</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['pending_orders']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-clock text-warning"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Issued Books</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['issued_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-hand-holding text-info"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Returned Books</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['returned_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-secondary bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-undo text-secondary"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="card stat-card settlement-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Outstanding Fines</h6>
+                                                                <h3 class="mb-0">₹<?= number_format($stats['outstanding_fines'], 2) ?></h3>
+                                                                <?php if ($last_settlement): ?>
+                                                                    <small class="text-muted">Last settled: <?= date('d M Y', strtotime($last_settlement['settlement_date'])) ?></small>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-rupee-sign text-danger"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                <?php endif; ?>
 
-                                <!-- Details Modal -->
-                                <div class="modal fade" id="detailsModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-secondary text-white">
-                                                <h5 class="modal-title">Order Details - #<?php echo $order['order_id']; ?></h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="order-details mb-4">
-                                                            <h6 class="mb-3"><i class="bi bi-book"></i> Book Details</h6>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Title:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['title']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Author:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['author']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">ISBN:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['isbn']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Publisher:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['publisher']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Category:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['category']); ?></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="order-details mb-4">
-                                                            <h6 class="mb-3"><i class="bi bi-person"></i> User Details</h6>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Name:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_name']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Type:</div>
-                                                                <div class="col-8 detail-value"><?php echo ucfirst($order['user_type']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Details:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_details']); ?></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Email:</div>
-                                                                <div class="col-8 detail-value"><?php echo !empty($order['user_email']) ? htmlspecialchars($order['user_email']) : 'N/A'; ?></small></div>
-                                                            </div>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Phone:</div>
-                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_mobile']); ?></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Order ID</th>
+                                                        <th>Book Details</th>
+                                                        <th>User Details</th>
+                                                        <th>Order Info</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php while ($order = pg_fetch_assoc($orders_result)): ?>
+                                                        <tr>
+                                                            <td><?php echo $order['order_id']; ?></td>
+                                                            <td>
+                                                                <strong><?php echo htmlspecialchars($order['title']); ?></strong><br>
+                                                                <small class="text-muted">by <?php echo htmlspecialchars($order['author']); ?></small><br>
+                                                                <small>ISBN: <?php echo htmlspecialchars($order['isbn']); ?></small>
+                                                            </td>
+                                                            <td>
+                                                                <strong><?php echo htmlspecialchars($order['user_name']); ?></strong><br>
+                                                                <small class="text-muted"><?php echo ucfirst($order['user_type']); ?> - <?php echo htmlspecialchars($order['user_details']); ?></small><br>
+                                                                <small><?php echo !empty($order['user_email']) ? htmlspecialchars($order['user_email']) : 'N/A'; ?></small><br>
+                                                                <small><?php echo htmlspecialchars($order['user_mobile']); ?></small>
+                                                            </td>
+                                                            <td>
+                                                                <small><strong>Ordered:</strong> <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></small><br>
+                                                                <?php if ($order['status'] == 'issued' || $order['status'] == 'returned'): ?>
+                                                                    <small><strong>Issued:</strong> <?php echo date('d M Y', strtotime($order['issue_date'])); ?></small><br>
+                                                                    <small><strong>Due:</strong> <?php echo date('d M Y', strtotime($order['due_date'])); ?></small><br>
+                                                                    <?php if ($order['status'] == 'returned'): ?>
+                                                                        <small><strong>Returned:</strong> <?php echo date('d M Y', strtotime($order['return_date'])); ?></small><br>
+                                                                        <?php if ($order['fine_amount'] > 0): ?>
+                                                                            <small><strong>Fine:</strong> ₹<?php echo number_format($order['fine_amount'], 2); ?></small>
+                                                                            <?php if (!empty($order['fine_settled']) && $order['fine_settled'] === 't'): ?>
+                                                                                <span class="badge bg-success">Settled</span>
+                                                                            <?php else: ?>
+                                                                                <span class="badge bg-warning">Pending</span>
+                                                                            <?php endif; ?>
+                                                                        <?php endif; ?>
+                                                                    <?php endif; ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge rounded-pill <?php
+                                                                                                switch ($order['status']) {
+                                                                                                    case 'pending':
+                                                                                                        echo 'badge-pending';
+                                                                                                        break;
+                                                                                                    case 'issued':
+                                                                                                        echo 'badge-issued';
+                                                                                                        break;
+                                                                                                    case 'returned':
+                                                                                                        echo 'badge-returned';
+                                                                                                        break;
+                                                                                                    default:
+                                                                                                        echo 'bg-light text-dark';
+                                                                                                }
+                                                                                                ?>">
+                                                                    <?php echo ucfirst($order['status']); ?>
+                                                                </span>
+                                                                <?php if ($order['status'] == 'issued'): ?>
+                                                                    <?php
+                                                                    $due_date = new DateTime($order['due_date']);
+                                                                    $today = new DateTime();
+                                                                    $interval = $today->diff($due_date);
+                                                                    $days_left = $interval->format('%r%a');
 
-                                                <div class="order-details">
-                                                    <h6 class="mb-3"><i class="bi bi-clock-history"></i> Order Timeline</h6>
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 detail-label">Order Date:</div>
-                                                        <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></div>
-                                                    </div>
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 detail-label">Ordered By:</div>
-                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['ordered_by']); ?></div>
-                                                    </div>
-                                                    <?php if ($order['status'] == 'issued' || $order['status'] == 'returned'): ?>
-                                                        <div class="row mb-2">
-                                                            <div class="col-4 detail-label">Issued On:</div>
-                                                            <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['issue_date'])); ?></div>
-                                                        </div>
-                                                        <div class="row mb-2">
-                                                            <div class="col-4 detail-label">Issued By:</div>
-                                                            <div class="col-8 detail-value"><?php echo htmlspecialchars($order['issued_by']); ?></div>
-                                                        </div>
-                                                        <div class="row mb-2">
-                                                            <div class="col-4 detail-label">Due Date:</div>
-                                                            <div class="col-8 detail-value"><?php echo date('d M Y', strtotime($order['due_date'])); ?></div>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                    <?php if ($order['status'] == 'returned'): ?>
-                                                        <div class="row mb-2">
-                                                            <div class="col-4 detail-label">Returned On:</div>
-                                                            <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['return_date'])); ?></div>
-                                                        </div>
-                                                        <div class="row mb-2">
-                                                            <div class="col-4 detail-label">Fine Amount:</div>
-                                                            <div class="col-8 detail-value">₹<?php echo number_format($order['fine_amount'], 2); ?></div>
-                                                        </div>
-                                                        <?php if (isset($order['fine_settled']) && $order['fine_settled']): ?>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Fine Status:</div>
-                                                                <div class="col-8">
-                                                                    <span class="badge bg-success">Settled</span>
-                                                                </div>
-                                                            </div>
-                                                        <?php else: ?>
-                                                            <div class="row mb-2">
-                                                                <div class="col-4 detail-label">Fine Status:</div>
-                                                                <div class="col-8">
-                                                                    <span class="badge bg-warning">Pending Settlement</span>
+                                                                    if ($days_left < 0) {
+                                                                        echo '<br><small class="text-danger">Overdue by ' . abs($days_left) . ' days</small>';
+                                                                    } elseif ($days_left == 0) {
+                                                                        echo '<br><small class="text-warning">Due today</small>';
+                                                                    } else {
+                                                                        echo '<br><small class="text-success">' . $days_left . ' days left</small>';
+                                                                    }
+                                                                    ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php if ($order['status'] == 'pending'): ?>
+                                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#issueModal<?php echo $order['order_id']; ?>">
+                                                                        <i class="bi bi-check-circle"></i> Issue
+                                                                    </button>
+                                                                <?php elseif ($order['status'] == 'issued'): ?>
+                                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#returnModal<?php echo $order['order_id']; ?>">
+                                                                        <i class="bi bi-arrow-return-left"></i> Return
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                                <button class="btn btn-sm btn-outline-secondary mt-1" data-bs-toggle="modal" data-bs-target="#detailsModal<?php echo $order['order_id']; ?>">
+                                                                    <i class="bi bi-info-circle"></i> Details
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+
+                                                        <!-- Issue Modal -->
+                                                        <?php if ($order['status'] == 'pending'): ?>
+                                                            <div class="modal fade" id="issueModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header bg-success text-white">
+                                                                            <h5 class="modal-title">Issue Book</h5>
+                                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <form method="POST">
+                                                                            <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
+                                                                            <div class="modal-body">
+                                                                                <div class="mb-3">
+                                                                                    <label for="due_date" class="form-label">Due Date *</label>
+                                                                                    <input type="date" class="form-control" id="due_date" name="due_date" required
+                                                                                        min="<?php echo date('Y-m-d'); ?>"
+                                                                                        value="<?php echo date('Y-m-d', strtotime('+14 days')); ?>">
+                                                                                </div>
+                                                                                <div class="alert alert-info">
+                                                                                    <i class="bi bi-info-circle"></i> Book: <strong><?php echo htmlspecialchars($order['title']); ?></strong><br>
+                                                                                    User: <strong><?php echo htmlspecialchars($order['user_name']); ?></strong>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                <button type="submit" name="issue_book" class="btn btn-success">Confirm Issue</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         <?php endif; ?>
-                                                    <?php endif; ?>
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 detail-label">Status:</div>
-                                                        <div class="col-8">
-                                                            <span class="badge rounded-pill <?php
-                                                                                            switch ($order['status']) {
-                                                                                                case 'pending':
-                                                                                                    echo 'badge-pending';
-                                                                                                    break;
-                                                                                                case 'issued':
-                                                                                                    echo 'badge-issued';
-                                                                                                    break;
-                                                                                                case 'returned':
-                                                                                                    echo 'badge-returned';
-                                                                                                    break;
-                                                                                                default:
-                                                                                                    echo 'bg-light text-dark';
-                                                                                            }
-                                                                                            ?>">
-                                                                <?php echo ucfirst($order['status']); ?>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </main>
-        </div>
-    </div>
 
+                                                        <!-- Return Modal -->
+                                                        <?php if ($order['status'] == 'issued'): ?>
+                                                            <div class="modal fade" id="returnModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header bg-primary text-white">
+                                                                            <h5 class="modal-title">Return Book</h5>
+                                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <form method="POST">
+                                                                            <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
+                                                                            <input type="hidden" name="book_id" value="<?php echo $order['book_id']; ?>">
+                                                                            <div class="modal-body">
+                                                                                <div class="alert alert-info">
+                                                                                    <i class="bi bi-info-circle"></i>
+                                                                                    <strong>Book:</strong> <?php echo htmlspecialchars($order['title']); ?><br>
+                                                                                    <strong>User:</strong> <?php echo htmlspecialchars($order['user_name']); ?><br>
+                                                                                    <strong>Issued On:</strong> <?php echo date('d M Y', strtotime($order['issue_date'])); ?><br>
+                                                                                    <strong>Due Date:</strong> <?php echo date('d M Y', strtotime($order['due_date'])); ?>
+                                                                                </div>
+                                                                                <div class="mb-3">
+                                                                                    <label for="fine_amount" class="form-label">Fine Amount (₹)</label>
+                                                                                    <input type="number" class="form-control" id="fine_amount" name="fine_amount"
+                                                                                        min="0" step="0.01" value="0" placeholder="Enter 0 if no fine">
+                                                                                    <small class="text-muted">Leave as 0 if no fine is applicable</small>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                <button type="submit" name="return_book" class="btn btn-primary">Confirm Return</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endif; ?>
+
+                                                        <!-- Details Modal -->
+                                                        <div class="modal fade" id="detailsModal<?php echo $order['order_id']; ?>" tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog modal-lg">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header bg-secondary text-white">
+                                                                        <h5 class="modal-title">Order Details - #<?php echo $order['order_id']; ?></h5>
+                                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="order-details mb-4">
+                                                                                    <h6 class="mb-3"><i class="bi bi-book"></i> Book Details</h6>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Title:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['title']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Author:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['author']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">ISBN:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['isbn']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Publisher:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['publisher']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Category:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['category']); ?></div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <div class="order-details mb-4">
+                                                                                    <h6 class="mb-3"><i class="bi bi-person"></i> User Details</h6>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Name:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_name']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Type:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo ucfirst($order['user_type']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Details:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_details']); ?></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Email:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo !empty($order['user_email']) ? htmlspecialchars($order['user_email']) : 'N/A'; ?></small></div>
+                                                                                    </div>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Phone:</div>
+                                                                                        <div class="col-8 detail-value"><?php echo htmlspecialchars($order['user_mobile']); ?></div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="order-details">
+                                                                            <h6 class="mb-3"><i class="bi bi-clock-history"></i> Order Timeline</h6>
+                                                                            <div class="row mb-2">
+                                                                                <div class="col-4 detail-label">Order Date:</div>
+                                                                                <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></div>
+                                                                            </div>
+                                                                            <div class="row mb-2">
+                                                                                <div class="col-4 detail-label">Ordered By:</div>
+                                                                                <div class="col-8 detail-value"><?php echo htmlspecialchars($order['ordered_by']); ?></div>
+                                                                            </div>
+                                                                            <?php if ($order['status'] == 'issued' || $order['status'] == 'returned'): ?>
+                                                                                <div class="row mb-2">
+                                                                                    <div class="col-4 detail-label">Issued On:</div>
+                                                                                    <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['issue_date'])); ?></div>
+                                                                                </div>
+                                                                                <div class="row mb-2">
+                                                                                    <div class="col-4 detail-label">Issued By:</div>
+                                                                                    <div class="col-8 detail-value"><?php echo htmlspecialchars($order['issued_by']); ?></div>
+                                                                                </div>
+                                                                                <div class="row mb-2">
+                                                                                    <div class="col-4 detail-label">Due Date:</div>
+                                                                                    <div class="col-8 detail-value"><?php echo date('d M Y', strtotime($order['due_date'])); ?></div>
+                                                                                </div>
+                                                                            <?php endif; ?>
+                                                                            <?php if ($order['status'] == 'returned'): ?>
+                                                                                <div class="row mb-2">
+                                                                                    <div class="col-4 detail-label">Returned On:</div>
+                                                                                    <div class="col-8 detail-value"><?php echo date('d M Y, h:i A', strtotime($order['return_date'])); ?></div>
+                                                                                </div>
+                                                                                <div class="row mb-2">
+                                                                                    <div class="col-4 detail-label">Fine Amount:</div>
+                                                                                    <div class="col-8 detail-value">₹<?php echo number_format($order['fine_amount'], 2); ?></div>
+                                                                                </div>
+                                                                                <?php if (isset($order['fine_settled']) && $order['fine_settled']): ?>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Fine Status:</div>
+                                                                                        <div class="col-8">
+                                                                                            <span class="badge bg-success">Settled</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                <?php else: ?>
+                                                                                    <div class="row mb-2">
+                                                                                        <div class="col-4 detail-label">Fine Status:</div>
+                                                                                        <div class="col-8">
+                                                                                            <span class="badge bg-warning">Pending Settlement</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                <?php endif; ?>
+                                                                            <?php endif; ?>
+                                                                            <div class="row mb-2">
+                                                                                <div class="col-4 detail-label">Status:</div>
+                                                                                <div class="col-8">
+                                                                                    <span class="badge rounded-pill <?php
+                                                                                                                    switch ($order['status']) {
+                                                                                                                        case 'pending':
+                                                                                                                            echo 'badge-pending';
+                                                                                                                            break;
+                                                                                                                        case 'issued':
+                                                                                                                            echo 'badge-issued';
+                                                                                                                            break;
+                                                                                                                        case 'returned':
+                                                                                                                            echo 'badge-returned';
+                                                                                                                            break;
+                                                                                                                        default:
+                                                                                                                            echo 'bg-light text-dark';
+                                                                                                                    }
+                                                                                                                    ?>">
+                                                                                        <?php echo ucfirst($order['status']); ?>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <?php endwhile; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </main>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Settle Fines Modal -->
     <div class="modal fade" id="settleFinesModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -909,6 +949,8 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         // Prevent form resubmission on page refresh
         if (window.history.replaceState) {

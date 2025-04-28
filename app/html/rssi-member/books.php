@@ -261,6 +261,8 @@ $stats = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         .book-card {
             transition: all 0.3s ease;
@@ -351,367 +353,388 @@ $stats = [
         #category_feedback {
             display: none;
         }
+
+        #dashboard .card-body {
+            flex: 1 1 auto;
+            padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+            color: var(--bs-card-color);
+        }
     </style>
 </head>
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <div class="container-fluid">
-        <div class="row">
-            <main class="col-md-12 px-md-4 py-3">
-                <!-- Dashboard Header -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
-                    <h1 class="h2">Library Dashboard</h1>
-                    <?php if ($is_admin): ?>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
-                            <i class="bi bi-plus-circle"></i> Add Book
-                        </button>
-                    <?php endif; ?>
-                </div>
+    <?php include 'header.php'; ?>
 
-                <!-- Statistics Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Total Books</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['total_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-book text-primary"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Available</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['available_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-success bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-check-circle text-success"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Pending Orders</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['pending_orders']) ?></h3>
-                                    </div>
-                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-clock text-warning"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Books Issued</h6>
-                                        <h3 class="mb-0"><?= number_format($stats['issued_books']) ?></h3>
-                                    </div>
-                                    <div class="bg-info bg-opacity-10 p-3 rounded">
-                                        <i class="fas fa-hand-holding text-info"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <main id="main" class="main">
 
-                <?php if ($message): ?>
-                    <div class="alert alert-success alert-dismissible fade show"><?= $message ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
+        <div class="pagetitle">
+            <h1>Library Dashboard</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Information Resource Center</a></li>
+                    <li class="breadcrumb-item active">Library Dashboard</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                <?php if ($error): ?>
-                    <div class="alert alert-danger alert-dismissible fade show"><?= $error ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
+        <section class="section dashboard">
+            <div class="row">
 
-                <!-- Filter Section -->
-                <div class="filter-section mb-4">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="search" class="form-label">Search</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="search" name="search" placeholder="Title or description..." value="<?= htmlspecialchars($search) ?>">
-                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="author" class="form-label">Author</label>
-                            <select class="form-select" id="author" name="author">
-                                <option value="">All Authors</option>
-                                <?php while ($row = pg_fetch_assoc($authors)): ?>
-                                    <option value="<?= htmlspecialchars($row['author']) ?>" <?= $author == $row['author'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($row['author']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="publisher" class="form-label">Publisher</label>
-                            <select class="form-select" id="publisher" name="publisher">
-                                <option value="">All Publishers</option>
-                                <?php while ($row = pg_fetch_assoc($publishers)): ?>
-                                    <option value="<?= htmlspecialchars($row['publisher']) ?>" <?= $publisher == $row['publisher'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($row['publisher']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="search_category" class="form-label">Category</label>
-                            <select class="form-select" id="search_category" name="search_category">
-                                <option value="">All Categories</option>
-                                <?php while ($row = pg_fetch_assoc($categories)): ?>
-                                    <option value="<?= htmlspecialchars($row['category']) ?>" <?= $category == $row['category'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($row['category']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        </div>
-                    </form>
-                </div>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                <!-- Books Listing -->
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-4">
-                    <?php while ($book = pg_fetch_assoc($books_result)): ?>
-                        <div class="col">
-                            <div class="card book-card h-100 <?= ($book['available_copies'] <= 0 || $book['status'] == 'unavailable') ? 'unavailable-book' : '' ?>">
-                                <div class="book-cover">
-                                    <?php if (!empty($book['cover_image'])): ?>
-                                        <img src="<?= htmlspecialchars($book['cover_image']) ?>" alt="<?= htmlspecialchars($book['title']) ?>">
-                                    <?php else: ?>
-                                        <div class="text-center p-3">
-                                            <i class="bi bi-book" style="font-size: 3rem;"></i>
-                                            <p class="mt-2 mb-0">No Cover Available</p>
+                        <div class="card-body" id="dashboard">
+                            <br>
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <main class="col-md-12 px-md-4 py-3">
+                                        <!-- Dashboard Header -->
+                                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                                            <h1 class="h2">At a Glance</h1>
+                                            <?php if ($is_admin): ?>
+                                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                                                    <i class="bi bi-plus-circle"></i> Add Book
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="card-body">
-                                    <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
-                                    <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($book['author']) ?></h6>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <small class="text-muted">Publisher: <?= htmlspecialchars($book['publisher'] ?? 'N/A') ?></small>
-                                        <small class="text-muted">Year: <?= $book['publication_year'] ?? 'N/A' ?></small>
-                                    </div>
-                                    <p class="card-text text-truncate-3"><?= htmlspecialchars($book['description']) ?></p>
-                                    <div class="d-flex justify-content-between align-items-center mt-3">
-                                        <small class="text-muted">Copies: <?= $book['available_copies'] ?>/<?= $book['total_copies'] ?></small>
-                                        <small class="text-muted"><?= htmlspecialchars($book['category'] ?? 'N/A') ?></small>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-white border-0">
-                                    <?php if ($book['available_copies'] > 0 && $book['status'] != 'unavailable'): ?>
-                                        <button class="btn btn-sm btn-primary w-100" data-bs-toggle="modal" data-bs-target="#orderModal<?= $book['book_id'] ?>">
-                                            <i class="bi bi-cart-plus"></i> Place Order
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="btn btn-sm btn-secondary w-100" disabled>
-                                            <i class="bi bi-cart-x"></i> Not Available
-                                        </button>
-                                    <?php endif; ?>
 
-                                    <?php if ($is_admin): ?>
-                                        <button class="btn btn-sm btn-outline-primary w-100 mt-2" data-bs-toggle="modal" data-bs-target="#editBookModal<?= $book['book_id'] ?>">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Order Modal for each book -->
-                        <div class="modal fade" id="orderModal<?= $book['book_id'] ?>" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="orderModalLabel">Place Order</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <form method="POST">
-                                        <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label">Book: <strong><?= htmlspecialchars($book['title']) ?></strong></label>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="student_id_<?= $book['book_id'] ?>" class="form-label">Student ID (optional)</label>
-                                                <input type="text" class="form-control" id="student_id_<?= $book['book_id'] ?>" name="student_id"
-                                                    placeholder="Leave blank to order for yourself">
-                                                <small class="text-muted">Only required if ordering for a student</small>
-                                            </div>
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle"></i> You are ordering as: <strong><?= $fullname ?></strong>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" name="place_order" class="btn btn-primary">Confirm Order</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Edit Book Modal (for admin) -->
-                        <?php if ($is_admin): ?>
-                            <div class="modal fade" id="editBookModal<?= $book['book_id'] ?>" tabindex="-1" aria-labelledby="editBookModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="editBookModalLabel">Edit Book</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form method="POST" action="#">
-                                            <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
-                                            <div class="modal-body">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_title_<?= $book['book_id'] ?>" class="form-label">Title *</label>
-                                                        <input type="text" class="form-control" id="edit_title_<?= $book['book_id'] ?>" name="title" value="<?= htmlspecialchars($book['title']) ?>" required>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_author_<?= $book['book_id'] ?>" class="form-label">Author *</label>
-                                                        <input type="text" class="form-control" id="edit_author_<?= $book['book_id'] ?>" name="author" value="<?= htmlspecialchars($book['author']) ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_isbn_<?= $book['book_id'] ?>" class="form-label">ISBN</label>
-                                                        <input type="text" class="form-control" id="edit_isbn_<?= $book['book_id'] ?>" name="isbn" value="<?= htmlspecialchars($book['isbn']) ?>">
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_publisher_<?= $book['book_id'] ?>" class="form-label">Publisher</label>
-                                                        <input type="text" class="form-control" id="edit_publisher_<?= $book['book_id'] ?>" name="publisher" value="<?= htmlspecialchars($book['publisher']) ?>">
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-4 mb-3">
-                                                        <label for="edit_publication_year_<?= $book['book_id'] ?>" class="form-label">Publication Year</label>
-                                                        <input type="number" class="form-control" id="edit_publication_year_<?= $book['book_id'] ?>" name="publication_year"
-                                                            min="1800" max="<?= date('Y') ?>" value="<?= $book['publication_year'] ?>">
-                                                    </div>
-                                                    <!-- <div class="col-md-4 mb-3">
-                                                        <label for="edit_category_<?= $book['book_id'] ?>" class="form-label">Category</label>
-                                                        <input type="text" class="form-control" id="edit_category_<?= $book['book_id'] ?>" name="category" value="<?= htmlspecialchars($book['category']) ?>">
-                                                    </div> -->
-                                                    <div class="col-md-4 mb-3">
-                                                        <label for="edit_category_<?= $book['book_id'] ?>" class="form-label">Category</label>
-
-                                                        <select class="form-select category-select" id="edit_category_<?= $book['book_id'] ?>" name="category" required>
-                                                            <option value="">Select a category</option>
-                                                            <?php
-                                                            $categories_query = pg_query($con, "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category");
-                                                            while ($cat = pg_fetch_assoc($categories_query)) {
-                                                                $selected = ($book['category'] == $cat['category']) ? 'selected' : '';
-                                                                echo '<option value="' . htmlspecialchars($cat['category']) . '" ' . $selected . '>' . htmlspecialchars($cat['category']) . '</option>';
-                                                            }
-                                                            ?>
-                                                            <option value="__new__">+ Add New Category</option>
-                                                        </select>
-
-                                                        <div class="mt-2 new-category-group" style="display: none;">
-                                                            <input type="text" class="form-control new-category-input" placeholder="Enter new category">
-                                                            <div class="invalid-feedback new-category-feedback">Please enter a category name</div>
-                                                            <button type="button" class="btn btn-outline-secondary mt-2 add-category-btn">Add Category</button>
+                                        <!-- Statistics Cards -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Total Books</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['total_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-book text-primary"></i>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Available</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['available_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Pending Orders</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['pending_orders']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-clock text-warning"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card stat-card h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="text-muted mb-2">Books Issued</h6>
+                                                                <h3 class="mb-0"><?= number_format($stats['issued_books']) ?></h3>
+                                                            </div>
+                                                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                                                <i class="fas fa-hand-holding text-info"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                    <div class="col-md-4 mb-3">
-                                                        <label for="edit_location_<?= $book['book_id'] ?>" class="form-label">Location</label>
-                                                        <input type="text" class="form-control" id="edit_location_<?= $book['book_id'] ?>" name="location" value="<?= htmlspecialchars($book['location']) ?>">
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_total_copies_<?= $book['book_id'] ?>" class="form-label">Total Copies *</label>
-                                                        <input type="number" class="form-control" id="edit_total_copies_<?= $book['book_id'] ?>" name="total_copies" min="1" value="<?= $book['total_copies'] ?>" required>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_status_<?= $book['book_id'] ?>" class="form-label">Status</label>
-                                                        <select class="form-select" id="edit_status_<?= $book['book_id'] ?>" name="status">
-                                                            <option value="available" <?= $book['status'] == 'available' ? 'selected' : '' ?>>Available</option>
-                                                            <option value="unavailable" <?= $book['status'] == 'unavailable' ? 'selected' : '' ?>>Unavailable</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="edit_cover_image_<?= $book['book_id'] ?>" class="form-label">Cover Image URL</label>
-                                                    <input type="text" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" value="<?= $book['cover_image'] ?>">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="edit_description_<?= $book['book_id'] ?>" class="form-label">Description</label>
-                                                    <textarea class="form-control" id="edit_description_<?= $book['book_id'] ?>" name="description" rows="4"><?= htmlspecialchars($book['description']) ?></textarea>
-                                                </div>
+                                        <?php if ($message): ?>
+                                            <div class="alert alert-success alert-dismissible fade show"><?= $message ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" name="update_book" class="btn btn-primary">Update Book</button>
+                                        <?php endif; ?>
+
+                                        <?php if ($error): ?>
+                                            <div class="alert alert-danger alert-dismissible fade show"><?= $error ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                             </div>
-                                        </form>
-                                    </div>
+                                        <?php endif; ?>
+
+                                        <!-- Filter Section -->
+                                        <div class="filter-section mb-4">
+                                            <form method="GET" class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label for="search" class="form-label">Search</label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="search" name="search" placeholder="Title or description..." value="<?= htmlspecialchars($search) ?>">
+                                                        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label for="author" class="form-label">Author</label>
+                                                    <select class="form-select" id="author" name="author">
+                                                        <option value="">All Authors</option>
+                                                        <?php while ($row = pg_fetch_assoc($authors)): ?>
+                                                            <option value="<?= htmlspecialchars($row['author']) ?>" <?= $author == $row['author'] ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($row['author']) ?>
+                                                            </option>
+                                                        <?php endwhile; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label for="publisher" class="form-label">Publisher</label>
+                                                    <select class="form-select" id="publisher" name="publisher">
+                                                        <option value="">All Publishers</option>
+                                                        <?php while ($row = pg_fetch_assoc($publishers)): ?>
+                                                            <option value="<?= htmlspecialchars($row['publisher']) ?>" <?= $publisher == $row['publisher'] ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($row['publisher']) ?>
+                                                            </option>
+                                                        <?php endwhile; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label for="search_category" class="form-label">Category</label>
+                                                    <select class="form-select" id="search_category" name="search_category">
+                                                        <option value="">All Categories</option>
+                                                        <?php while ($row = pg_fetch_assoc($categories)): ?>
+                                                            <option value="<?= htmlspecialchars($row['category']) ?>" <?= $category == $row['category'] ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($row['category']) ?>
+                                                            </option>
+                                                        <?php endwhile; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 d-flex align-items-end">
+                                                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Books Listing -->
+                                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-4">
+                                            <?php while ($book = pg_fetch_assoc($books_result)): ?>
+                                                <div class="col">
+                                                    <div class="card book-card h-100 <?= ($book['available_copies'] <= 0 || $book['status'] == 'unavailable') ? 'unavailable-book' : '' ?>">
+                                                        <div class="book-cover">
+                                                            <?php if (!empty($book['cover_image'])): ?>
+                                                                <img src="<?= htmlspecialchars($book['cover_image']) ?>" alt="<?= htmlspecialchars($book['title']) ?>">
+                                                            <?php else: ?>
+                                                                <div class="text-center p-3">
+                                                                    <i class="bi bi-book" style="font-size: 3rem;"></i>
+                                                                    <p class="mt-2 mb-0">No Cover Available</p>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
+                                                            <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($book['author']) ?></h6>
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <small class="text-muted">Publisher: <?= htmlspecialchars($book['publisher'] ?? 'N/A') ?></small>
+                                                                <small class="text-muted">Year: <?= $book['publication_year'] ?? 'N/A' ?></small>
+                                                            </div>
+                                                            <p class="card-text text-truncate-3"><?= htmlspecialchars($book['description']) ?></p>
+                                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                                <small class="text-muted">Copies: <?= $book['available_copies'] ?>/<?= $book['total_copies'] ?></small>
+                                                                <small class="text-muted"><?= htmlspecialchars($book['category'] ?? 'N/A') ?></small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-footer bg-white border-0">
+                                                            <?php if ($book['available_copies'] > 0 && $book['status'] != 'unavailable'): ?>
+                                                                <button class="btn btn-sm btn-primary w-100" data-bs-toggle="modal" data-bs-target="#orderModal<?= $book['book_id'] ?>">
+                                                                    <i class="bi bi-cart-plus"></i> Place Order
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <button class="btn btn-sm btn-secondary w-100" disabled>
+                                                                    <i class="bi bi-cart-x"></i> Not Available
+                                                                </button>
+                                                            <?php endif; ?>
+
+                                                            <?php if ($is_admin): ?>
+                                                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" data-bs-toggle="modal" data-bs-target="#editBookModal<?= $book['book_id'] ?>">
+                                                                    <i class="bi bi-pencil"></i> Edit
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Order Modal for each book -->
+                                                <div class="modal fade" id="orderModal<?= $book['book_id'] ?>" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="orderModalLabel">Place Order</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form method="POST">
+                                                                <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
+                                                                <div class="modal-body">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Book: <strong><?= htmlspecialchars($book['title']) ?></strong></label>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="student_id_<?= $book['book_id'] ?>" class="form-label">Student ID (optional)</label>
+                                                                        <input type="text" class="form-control" id="student_id_<?= $book['book_id'] ?>" name="student_id"
+                                                                            placeholder="Leave blank to order for yourself">
+                                                                        <small class="text-muted">Only required if ordering for a student</small>
+                                                                    </div>
+                                                                    <div class="alert alert-info">
+                                                                        <i class="bi bi-info-circle"></i> You are ordering as: <strong><?= $fullname ?></strong>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" name="place_order" class="btn btn-primary">Confirm Order</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Edit Book Modal (for admin) -->
+                                                <?php if ($is_admin): ?>
+                                                    <div class="modal fade" id="editBookModal<?= $book['book_id'] ?>" tabindex="-1" aria-labelledby="editBookModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="editBookModalLabel">Edit Book</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <form method="POST" action="#">
+                                                                    <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
+                                                                    <div class="modal-body">
+                                                                        <div class="row">
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_title_<?= $book['book_id'] ?>" class="form-label">Title *</label>
+                                                                                <input type="text" class="form-control" id="edit_title_<?= $book['book_id'] ?>" name="title" value="<?= htmlspecialchars($book['title']) ?>" required>
+                                                                            </div>
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_author_<?= $book['book_id'] ?>" class="form-label">Author *</label>
+                                                                                <input type="text" class="form-control" id="edit_author_<?= $book['book_id'] ?>" name="author" value="<?= htmlspecialchars($book['author']) ?>" required>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_isbn_<?= $book['book_id'] ?>" class="form-label">ISBN</label>
+                                                                                <input type="text" class="form-control" id="edit_isbn_<?= $book['book_id'] ?>" name="isbn" value="<?= htmlspecialchars($book['isbn']) ?>">
+                                                                            </div>
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_publisher_<?= $book['book_id'] ?>" class="form-label">Publisher</label>
+                                                                                <input type="text" class="form-control" id="edit_publisher_<?= $book['book_id'] ?>" name="publisher" value="<?= htmlspecialchars($book['publisher']) ?>">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-md-4 mb-3">
+                                                                                <label for="edit_publication_year_<?= $book['book_id'] ?>" class="form-label">Publication Year</label>
+                                                                                <input type="number" class="form-control" id="edit_publication_year_<?= $book['book_id'] ?>" name="publication_year"
+                                                                                    min="1800" max="<?= date('Y') ?>" value="<?= $book['publication_year'] ?>">
+                                                                            </div>
+                                                                            <div class="col-md-4 mb-3">
+                                                                                <label for="edit_category_<?= $book['book_id'] ?>" class="form-label">Category</label>
+
+                                                                                <select class="form-select category-select" id="edit_category_<?= $book['book_id'] ?>" name="category" required>
+                                                                                    <option value="">Select a category</option>
+                                                                                    <?php
+                                                                                    $categories_query = pg_query($con, "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category");
+                                                                                    while ($cat = pg_fetch_assoc($categories_query)) {
+                                                                                        $selected = ($book['category'] == $cat['category']) ? 'selected' : '';
+                                                                                        echo '<option value="' . htmlspecialchars($cat['category']) . '" ' . $selected . '>' . htmlspecialchars($cat['category']) . '</option>';
+                                                                                    }
+                                                                                    ?>
+                                                                                    <option value="__new__">+ Add New Category</option>
+                                                                                </select>
+
+                                                                                <div class="mt-2 new-category-group" style="display: none;">
+                                                                                    <input type="text" class="form-control new-category-input" placeholder="Enter new category">
+                                                                                    <div class="invalid-feedback new-category-feedback">Please enter a category name</div>
+                                                                                    <button type="button" class="btn btn-outline-secondary mt-2 add-category-btn">Add Category</button>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="col-md-4 mb-3">
+                                                                                <label for="edit_location_<?= $book['book_id'] ?>" class="form-label">Location</label>
+                                                                                <input type="text" class="form-control" id="edit_location_<?= $book['book_id'] ?>" name="location" value="<?= htmlspecialchars($book['location']) ?>">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_total_copies_<?= $book['book_id'] ?>" class="form-label">Total Copies *</label>
+                                                                                <input type="number" class="form-control" id="edit_total_copies_<?= $book['book_id'] ?>" name="total_copies" min="1" value="<?= $book['total_copies'] ?>" required>
+                                                                            </div>
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <label for="edit_status_<?= $book['book_id'] ?>" class="form-label">Status</label>
+                                                                                <select class="form-select" id="edit_status_<?= $book['book_id'] ?>" name="status">
+                                                                                    <option value="available" <?= $book['status'] == 'available' ? 'selected' : '' ?>>Available</option>
+                                                                                    <option value="unavailable" <?= $book['status'] == 'unavailable' ? 'selected' : '' ?>>Unavailable</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_cover_image_<?= $book['book_id'] ?>" class="form-label">Cover Image URL</label>
+                                                                            <input type="text" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" value="<?= $book['cover_image'] ?>">
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_description_<?= $book['book_id'] ?>" class="form-label">Description</label>
+                                                                            <textarea class="form-control" id="edit_description_<?= $book['book_id'] ?>" name="description" rows="4"><?= htmlspecialchars($book['description']) ?></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                        <button type="submit" name="update_book" class="btn btn-primary">Update Book</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            <?php endwhile; ?>
+                                        </div>
+
+                                        <!-- Pagination/Load More -->
+                                        <div class="d-flex justify-content-center mb-5">
+                                            <?php if ($has_more): ?>
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>"
+                                                    class="btn btn-primary load-more-btn px-4 py-2">
+                                                    <i class="bi bi-arrow-down-circle"></i> Load More Books
+                                                </a>
+                                            <?php elseif ($total_books > $initial_limit): ?>
+                                                <div class="alert alert-info text-center py-2">
+                                                    <i class="bi bi-info-circle"></i> That's all for now! Check back later for new ones.
+                                                </div>
+                                            <?php elseif ($total_books == 0): ?>
+                                                <div class="alert alert-warning text-center py-2">
+                                                    <i class="bi bi-exclamation-triangle"></i> No books found matching your criteria
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </main>
                                 </div>
                             </div>
-                        <?php endif; ?>
-                    <?php endwhile; ?>
-                </div>
-
-                <!-- Pagination/Load More -->
-                <div class="d-flex justify-content-center mb-5">
-                    <?php if ($has_more): ?>
-                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>"
-                            class="btn btn-primary load-more-btn px-4 py-2">
-                            <i class="bi bi-arrow-down-circle"></i> Load More Books
-                        </a>
-                    <?php elseif ($total_books > $initial_limit): ?>
-                        <div class="alert alert-info text-center py-2">
-                            <i class="bi bi-info-circle"></i> That's all for now! Check back later for new ones.
                         </div>
-                    <?php elseif ($total_books == 0): ?>
-                        <div class="alert alert-warning text-center py-2">
-                            <i class="bi bi-exclamation-triangle"></i> No books found matching your criteria
-                        </div>
-                    <?php endif; ?>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
 
-                    <!-- <?php if ($page > 1): ?>
-                        <div class="pagination-controls">
-                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>"
-                                class="btn btn-outline-primary">
-                                <i class="bi bi-arrow-left"></i> First Page
-                            </a>
-                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>"
-                                class="btn btn-outline-primary">
-                                <i class="bi bi-arrow-left"></i> Previous
-                            </a>
-                        </div>
-                    <?php endif; ?> -->
-                </div>
-            </main>
-        </div>
-    </div>
+    </main><!-- End #main -->
 
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Add Book Modal (for admin) -->
     <?php if ($is_admin): ?>
         <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
@@ -809,6 +832,8 @@ $stats = [
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         // Enhance filter dropdowns with search functionality
         document.querySelectorAll('select.form-select').forEach(select => {
