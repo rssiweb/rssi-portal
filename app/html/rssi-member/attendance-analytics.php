@@ -46,8 +46,20 @@ $labels = [];
 $main_counts = [];
 $compare_counts = [];
 
+$final_daily_data = []; // Initialize the array
+
 if ($view_mode === 'daily') {
-    // Main query for selected period (always run)
+    // Function to get days in month
+    function getDaysInMonth($month, $year)
+    {
+        $date = new DateTime("$year-$month-01");
+        return (int)$date->format('t');
+    }
+
+    // Get number of days in the selected month
+    $days_in_month = getDaysInMonth($selected_month, $selected_year);
+
+    // Main query for selected period
     $daily_query = "
     SELECT 
         DATE(punch_in) AS day,
@@ -63,86 +75,90 @@ if ($view_mode === 'daily') {
     $daily_result = pg_query($con, $daily_query);
     $daily_data = pg_fetch_all($daily_result);
 
+    // Create arrays for all days of month, initialized with null
+    $all_labels = [];
+    $all_main_counts = array_fill(1, $days_in_month, null);
+
     if ($daily_data) {
-        // CASE 1: No comparison - show all dates with data
-        if (!$compare_year || !$compare_month) {
-            foreach ($daily_data as $row) {
-                $date = new DateTime($row['day']);
-                $labels[] = $date->format('M j');
-                $main_counts[] = $row['daily_count'];
+        foreach ($daily_data as $row) {
+            $day_num = (int)$row['day_num'];
+            $all_main_counts[$day_num] = (int)$row['daily_count'];
+        }
+    }
+
+    // CASE 1: No comparison
+    if (!$compare_year || !$compare_month) {
+        for ($day = 1; $day <= $days_in_month; $day++) {
+            $labels[] = date('M j', mktime(0, 0, 0, $selected_month, $day, $selected_year));
+            $main_counts[] = $all_main_counts[$day];
+        }
+
+        foreach ($daily_data as $row) {
+            $date = new DateTime($row['day']);
+            $final_daily_data[] = [
+                'date' => $date->format('M j'),
+                'day' => $date->format('D'),
+                'main_count' => $row['daily_count'],
+                'compare_count' => null,
+                'difference' => null
+            ];
+        }
+    }
+    // CASE 2: With comparison
+    else {
+        // Get number of days in comparison month
+        $compare_days_in_month = getDaysInMonth($compare_month, $compare_year);
+
+        // Query all comparison data for the month
+        $compare_query = "
+        SELECT 
+            EXTRACT(DAY FROM punch_in) AS day_num,
+            COUNT(DISTINCT user_id) AS daily_count
+        FROM attendance
+        WHERE EXTRACT(YEAR FROM punch_in) = $compare_year
+        AND EXTRACT(MONTH FROM punch_in) = $compare_month
+        $where_prefix_filter
+        GROUP BY day_num
+        ORDER BY day_num";
+
+        $compare_result = pg_query($con, $compare_query);
+        $comparison_data = pg_fetch_all($compare_result);
+
+        // Create array for comparison counts
+        $all_compare_counts = array_fill(1, $compare_days_in_month, null);
+        if ($comparison_data) {
+            foreach ($comparison_data as $row) {
+                $day_num = (int)$row['day_num'];
+                $all_compare_counts[$day_num] = (int)$row['daily_count'];
             }
         }
-        // CASE 2: With comparison - show only overlapping dates
-        else {
-            // Get days with data in parent month
-            $parent_days = array_column($daily_data, 'day_num');
-            $parent_days_list = implode(',', $parent_days);
 
-            // Find which of these days exist in comparison month
-            $compare_query = "
-            SELECT DISTINCT EXTRACT(DAY FROM punch_in) AS day_num
-            FROM attendance
-            WHERE EXTRACT(YEAR FROM punch_in) = $compare_year
-            AND EXTRACT(MONTH FROM punch_in) = $compare_month
-            AND EXTRACT(DAY FROM punch_in) IN ($parent_days_list)
-            $where_prefix_filter
-            ORDER BY day_num";
+        // Prepare chart data for all days that exist in both months
+        $max_days = min($days_in_month, $compare_days_in_month);
 
-            $compare_result = pg_query($con, $compare_query);
-            $compare_days = pg_fetch_all($compare_result);
+        for ($day = 1; $day <= $max_days; $day++) {
+            $labels[] = date('M j', mktime(0, 0, 0, $selected_month, $day, $selected_year));
+            $main_count = $all_main_counts[$day];
+            $compare_count = $all_compare_counts[$day];
+            $difference = null;
 
-            // Get the actual day numbers we'll use
-            $common_days = $compare_days ? array_column($compare_days, 'day_num') : [];
-
-            // Now fetch counts for these common days in both periods
-            if (!empty($common_days)) {
-                // Prepare parent month data for common days
-                $parent_map = [];
-                foreach ($daily_data as $row) {
-                    if (in_array($row['day_num'], $common_days)) {
-                        $parent_map[$row['day_num']] = $row['daily_count'];
-                    }
-                }
-
-                // Fetch comparison month data for common days
-                $compare_days_list = implode(',', $common_days);
-                $compare_detail_query = "
-                SELECT 
-                    EXTRACT(DAY FROM punch_in) AS day_num,
-                    COUNT(DISTINCT user_id) AS daily_count
-                FROM attendance
-                WHERE EXTRACT(YEAR FROM punch_in) = $compare_year
-                AND EXTRACT(MONTH FROM punch_in) = $compare_month
-                AND EXTRACT(DAY FROM punch_in) IN ($compare_days_list)
-                $where_prefix_filter
-                GROUP BY day_num
-                ORDER BY day_num";
-
-                $compare_detail_result = pg_query($con, $compare_detail_query);
-                $comparison_data = pg_fetch_all($compare_detail_result);
-
-                // Create comparison map
-                $compare_map = [];
-                if ($comparison_data) {
-                    foreach ($comparison_data as $row) {
-                        $compare_map[$row['day_num']] = $row['daily_count'];
-                    }
-                }
-
-                // Prepare chart data for common days
-                foreach ($daily_data as $row) {
-                    if (in_array($row['day_num'], $common_days)) {
-                        $date = new DateTime($row['day']);
-                        $labels[] = $date->format('M j');
-                        $main_counts[] = $row['daily_count'];
-                        $compare_counts[] = $compare_map[$row['day_num']] ?? null;
-                    }
-                }
+            if ($main_count !== null && $compare_count !== null) {
+                $difference = $main_count - $compare_count;
             }
+
+            $main_counts[] = $main_count;
+            $compare_counts[] = $compare_count;
+
+            $final_daily_data[] = [
+                'date' => date('M j', mktime(0, 0, 0, $selected_month, $day, $selected_year)),
+                'day' => date('D', mktime(0, 0, 0, $selected_month, $day, $selected_year)),
+                'main_count' => $main_count,
+                'compare_count' => $compare_count,
+                'difference' => $difference
+            ];
         }
     }
 }
-
 /*********************** YEARLY DATA ***********************/
 $yearly_results = null;
 $yearly_labels = [];
@@ -207,38 +223,6 @@ $max_year_result = pg_query($con, $max_year_query);
 $min_year = pg_fetch_result($min_year_result, 0, 0);
 $max_year = pg_fetch_result($max_year_result, 0, 0);
 ?>
-
-<?php
-$final_daily_data = [];
-
-if ($daily_data) {
-    foreach ($daily_data as $row) {
-        $day_num = $row['day_num'];
-        $date = new DateTime($row['day']);
-        $formatted_date = $date->format('Y-m-d');
-        $day_name = $date->format('l');
-        $main_count = $row['daily_count'];
-
-        $compare_count = null;
-        $difference = null;
-
-        if ($comparison_data && isset($compare_map[$day_num])) {
-            $compare_count = $compare_map[$day_num];
-            $difference = $main_count - $compare_count;
-        }
-
-        $final_daily_data[] = [
-            'date' => $formatted_date,
-            'day' => $day_name,
-            'main_count' => $main_count,
-            'compare_count' => $compare_count,
-            'difference' => $difference
-        ];
-    }
-}
-?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -551,13 +535,17 @@ if ($daily_data) {
                                                         <tbody>
                                                             <?php foreach ($final_daily_data as $row): ?>
                                                                 <tr>
-                                                                    <td><?= $row['date'] ?></td>
-                                                                    <td><?= $row['day'] ?></td>
-                                                                    <td><?= $row['main_count'] ?></td>
+                                                                    <td><?= htmlspecialchars($row['date']) ?></td>
+                                                                    <td><?= htmlspecialchars($row['day']) ?></td>
+                                                                    <td><?= $row['main_count'] !== null ? $row['main_count'] : 'N/A' ?></td>
                                                                     <?php if ($comparison_data): ?>
                                                                         <td><?= $row['compare_count'] !== null ? $row['compare_count'] : 'N/A' ?></td>
                                                                         <td class="<?= $row['difference'] > 0 ? 'text-success' : ($row['difference'] < 0 ? 'text-danger' : '') ?>">
-                                                                            <?= $row['difference'] !== null ? ($row['difference'] > 0 ? '+' : '') . $row['difference'] : 'N/A' ?>
+                                                                            <?php if ($row['difference'] !== null): ?>
+                                                                                <?= $row['difference'] > 0 ? '+' : '' ?><?= $row['difference'] ?>
+                                                                            <?php else: ?>
+                                                                                N/A
+                                                                            <?php endif; ?>
                                                                         </td>
                                                                     <?php endif; ?>
                                                                 </tr>
@@ -758,6 +746,8 @@ if ($daily_data) {
                 },
                 options: {
                     responsive: true,
+                    spanGaps: true, // Connect points across null values
+                    showLine: true, // Always show the line (default)
                     plugins: {
                         legend: {
                             position: 'top',
