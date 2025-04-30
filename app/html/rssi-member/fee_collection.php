@@ -840,7 +840,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                             </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <!-- <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="concessionFrom" class="form-label">Effective From</label>
                                 <input type="date" class="form-control" id="concessionFrom" name="effective_from"
@@ -849,6 +849,19 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                             <div class="col-md-4">
                                 <label for="concessionUntil" class="form-label">Effective Until (optional)</label>
                                 <input type="date" class="form-control" id="concessionUntil" name="effective_until">
+                            </div>
+                        </div> -->.
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="concessionFromMonth" class="form-label">Effective From (Month)</label>
+                                <input type="month" class="form-control" id="concessionFromMonth" required>
+                                <input type="hidden" name="effective_from" id="effectiveFrom">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="concessionUntilMonth" class="form-label">Effective Until (Month)</label>
+                                <input type="month" class="form-control" id="concessionUntilMonth">
+                                <input type="hidden" name="effective_until" id="effectiveUntil">
                             </div>
                         </div>
 
@@ -1333,6 +1346,30 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 return true;
             });
         });
+    </script>
+    <script>
+        function setEffectiveDates() {
+            const fromInput = document.getElementById("concessionFromMonth");
+            const untilInput = document.getElementById("concessionUntilMonth");
+            const effectiveFrom = document.getElementById("effectiveFrom");
+            const effectiveUntil = document.getElementById("effectiveUntil");
+
+            // Set 'From' to 1st of month
+            fromInput.addEventListener("change", function() {
+                const [year, month] = this.value.split("-");
+                effectiveFrom.value = `${year}-${month}-01`;
+            });
+
+            // Set 'Until' to last day of month
+            untilInput.addEventListener("change", function() {
+                const [year, month] = this.value.split("-");
+                const lastDay = new Date(year, month, 0).getDate(); // 0 gets last day of previous month
+                effectiveUntil.value = `${year}-${month}-${lastDay}`;
+            });
+        }
+
+        // Call the function on page load
+        document.addEventListener("DOMContentLoaded", setEffectiveDates);
     </script>
 </body>
 
