@@ -48,7 +48,7 @@ $status = $_GET['status'] ?? 'Active';
 $month = $_GET['month'] ?? date('F');
 $year = $_GET['year'] ?? date('Y');
 $class = $_GET['class'] ?? [];
-$student_id = $_GET['student_id'] ?? '';
+$search_term = $_GET['search_term'] ?? '';
 
 // Handle class parameter - could be string or array
 if (!is_array($class) && !empty($class)) {
@@ -63,19 +63,18 @@ $firstDayOfMonth = "$year-$monthNumber-01";
 $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
 // After getting filter parameters, add this check:
-$hasFilters = !empty($class) || !empty($student_id);
+$hasFilters = !empty($class) || !empty($search_term);
 
 // Then modify the student data query section:
 if ($hasFilters) {
-
     // Get student data
     $query = "SELECT s.student_id, s.studentname, s.category, s.class, s.doa, 
-                 s.type_of_admission, s.filterstatus, s.effectivefrom
-          FROM rssimyprofile_student s
-          WHERE s.filterstatus = '$status'
-          AND (s.doa <= '$lastDayOfMonth' AND 
-              (s.filterstatus = 'Active' OR 
-               (s.filterstatus = 'Inactive' AND s.effectivefrom > '$firstDayOfMonth')))";
+                     s.type_of_admission, s.filterstatus, s.effectivefrom
+              FROM rssimyprofile_student s
+              WHERE s.filterstatus = '$status'
+              AND (s.doa <= '$lastDayOfMonth' AND 
+                  (s.filterstatus = 'Active' OR 
+                   (s.filterstatus = 'Inactive' AND s.effectivefrom > '$firstDayOfMonth')))";
 
     // Add class filter if classes are selected
     if (!empty($class)) {
@@ -86,10 +85,10 @@ if ($hasFilters) {
         $query .= " AND s.class IN ('$classList')";
     }
 
-    // Add student ID filter if provided
-    // New code (fixed):
-    if (!empty($student_id)) {
-        $query .= " AND s.student_id = '" . pg_escape_string($con, $student_id) . "'";
+    // Add search term filter if provided
+    if (!empty($search_term)) {
+        $escaped_search = pg_escape_string($con, $search_term);
+        $query .= " AND (s.student_id = '$escaped_search' OR s.studentname ILIKE '%$escaped_search%')";
     }
 
     $query .= " ORDER BY s.class, s.studentname";
@@ -476,6 +475,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             padding: 12px;
             font-size: 0.95rem;
         }
+
         #fee-collection-card .card-title {
             padding: 0;
             /* or correct padding value */
@@ -567,7 +567,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
-                                                <input type="text" name="student_id" class="form-control" placeholder="Search by Student ID" value="<?= htmlspecialchars($student_id) ?>">
+                                                <input type="text" name="search_term" class="form-control" placeholder="Search by Student ID or Name" value="<?= htmlspecialchars($search_term) ?>">
                                             </div>
                                             <div class="col-md-1">
                                                 <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
@@ -720,8 +720,8 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                             // Join with newlines (will be converted to <br> by Bootstrap)
                                                                             $tooltipContent = htmlspecialchars(implode("\n", $tooltipLines));
                                                                             echo ' <span class="text-muted small" data-bs-toggle="tooltip" data-html="true" 
-                  title="' . str_replace("\n", "&#10;", $tooltipContent) . '">
-                  <i class="fas fa-info-circle"></i></span>';
+                                                                            title="' . str_replace("\n", "&#10;", $tooltipContent) . '">
+                                                                            <i class="fas fa-info-circle"></i></span>';
                                                                         }
                                                                     } else {
                                                                         echo '-';
@@ -1323,7 +1323,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             // Prevent form submission if no filters are selected
             $('form').on('submit', function(e) {
                 const classSelected = $('#classSelect').val() && $('#classSelect').val().length > 0;
-                const studentIdEntered = $('input[name="student_id"]').val().trim() !== '';
+                const studentIdEntered = $('input[name="search_term"]').val().trim() !== '';
 
                 if (!classSelected && !studentIdEntered) {
                     e.preventDefault();
