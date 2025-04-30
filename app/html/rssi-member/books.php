@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 // Ensure only teachers/admins can access
 if (!isLoggedIn("tid") && !isLoggedIn("aid")) {
@@ -116,7 +117,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_book'])) {
     $total_copies = $_POST['total_copies'] ?? 1;
     $location = pg_escape_string($con, $_POST['location']);
     $description = pg_escape_string($con, $_POST['description']);
-    $cover_image = pg_escape_string($con, $_POST['cover_image']);
+    $cover_image = $_FILES['cover_image'] ?? null;
+
+    // Initialize file links to null
+    $doclink_cover_image = null;
+
+    // Handle caste document upload
+    if (!empty($cover_image['name'])) {
+        $filename_cover_image = "cover_image_" . "$title" . "_" . time();
+        $parent_cover_image = '17OlTCBRZBLpv-pgmsbIPBpDZkL62HaBW';
+        $doclink_cover_image = uploadeToDrive($cover_image, $parent_cover_image, $filename_cover_image);
+    }
 
     $query = "INSERT INTO books (title, author, isbn, publisher, publication_year, category, total_copies, available_copies, location, description, cover_image) 
               VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8, $9, $10) RETURNING book_id";
@@ -131,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_book'])) {
         $total_copies,
         $location,
         $description,
-        $cover_image
+        $doclink_cover_image
     ]);
 
     if ($result) {
@@ -158,8 +169,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_book'])) {
     $total_copies = $_POST['total_copies'] ?? 1;
     $location = pg_escape_string($con, $_POST['location']);
     $description = pg_escape_string($con, $_POST['description']);
-    $cover_image = pg_escape_string($con, $_POST['cover_image']);
+    // Get uploaded file from $_FILES
+    $cover_image = $_FILES['cover_image'] ?? null;
     $status = $_POST['status'] ?? 'available';
+
+    // Initialize file links to null
+    $doclink_cover_image = null;
+
+    // Handle caste document upload
+    if (!empty($cover_image['name'])) {
+        $filename_cover_image = "cover_image_" . "$book_id" . "_" . time();
+        $parent_cover_image = '17OlTCBRZBLpv-pgmsbIPBpDZkL62HaBW';
+        $doclink_cover_image = uploadeToDrive($cover_image, $parent_cover_image, $filename_cover_image);
+    }
+
 
     // Calculate available copies
     $current = pg_fetch_assoc(pg_query_params($con, "SELECT total_copies, available_copies FROM books WHERE book_id = $1", [$book_id]));
@@ -193,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_book'])) {
         $location,
         $description,
         $status,
-        $cover_image,
+        $doclink_cover_image,
         $book_id
     ]);
 
@@ -533,7 +556,21 @@ $stats = [
                                                     <div class="card book-card h-100 <?= ($book['available_copies'] <= 0 || $book['status'] == 'unavailable') ? 'unavailable-book' : '' ?>">
                                                         <div class="book-cover">
                                                             <?php if (!empty($book['cover_image'])): ?>
-                                                                <img src="<?= htmlspecialchars($book['cover_image']) ?>" alt="<?= htmlspecialchars($book['title']) ?>">
+                                                                <!-- <img src="<?= htmlspecialchars($book['cover_image']) ?>" alt="<?= htmlspecialchars($book['title']) ?>"> -->
+                                                                <?php
+                                                                if (!empty($book['cover_image'])) {
+                                                                    // Extract photo ID from the Google Drive link using a regular expression
+                                                                    $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
+                                                                    if (preg_match($pattern, $book['cover_image'], $matches)) {
+                                                                        $photoID = $matches[1]; // Extracted file ID
+                                                                        $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                                                        echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                                    } else {
+                                                                        // If no valid photo ID is found
+                                                                        echo "Invalid Google Drive photo URL.";
+                                                                    }
+                                                                }
+                                                                ?>
                                                             <?php else: ?>
                                                                 <div class="text-center p-3">
                                                                     <i class="bi bi-book" style="font-size: 3rem;"></i>
@@ -616,7 +653,7 @@ $stats = [
                                                                     <h5 class="modal-title" id="editBookModalLabel">Edit Book</h5>
                                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                 </div>
-                                                                <form method="POST" action="#">
+                                                                <form method="POST" action="#" enctype="multipart/form-data">
                                                                     <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
                                                                     <div class="modal-body">
                                                                         <div class="row">
@@ -685,10 +722,21 @@ $stats = [
                                                                                 </select>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="mb-3">
+                                                                        <!-- <div class="mb-3">
                                                                             <label for="edit_cover_image_<?= $book['book_id'] ?>" class="form-label">Cover Image URL</label>
                                                                             <input type="text" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" value="<?= $book['cover_image'] ?>">
+                                                                        </div> -->
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_cover_image_<?= $book['book_id'] ?>" class="form-label">Upload New Cover Image</label>
+                                                                            <input type="file" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" accept="image/*">
+
+                                                                            <?php if (!empty($book['cover_image'])): ?>
+                                                                                <div class="mt-2">
+                                                                                    <small>Current Image: <a href="<?= htmlspecialchars($book['cover_image']) ?>" target="_blank">View Cover Image</a></small>
+                                                                                </div>
+                                                                            <?php endif; ?>
                                                                         </div>
+
                                                                         <div class="mb-3">
                                                                             <label for="edit_description_<?= $book['book_id'] ?>" class="form-label">Description</label>
                                                                             <textarea class="form-control" id="edit_description_<?= $book['book_id'] ?>" name="description" rows="4"><?= htmlspecialchars($book['description']) ?></textarea>
@@ -744,7 +792,7 @@ $stats = [
                         <h5 class="modal-title" id="addBookModalLabel">Add New Book</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="#" id="addBookForm">
+                    <form method="POST" action="#" id="addBookForm" enctype="multipart/form-data">
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -810,9 +858,13 @@ $stats = [
                                     <label for="total_copies" class="form-label">Total Copies *</label>
                                     <input type="number" class="form-control" id="total_copies" name="total_copies" min="1" value="1" required>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <!-- <div class="col-md-6 mb-3">
                                     <label for="cover_image" class="form-label">Cover Image URL</label>
                                     <input type="text" class="form-control" id="cover_image" name="cover_image">
+                                </div> -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="cover_image" class="form-label">Upload Cover Image</label>
+                                    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*">
                                 </div>
                             </div>
                             <div class="mb-3">
