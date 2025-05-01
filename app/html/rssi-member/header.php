@@ -752,6 +752,10 @@
         id: 'work',
         linkId: 'studentLink',
         url: 'student.php'
+      }, {
+        id: 'work',
+        linkId: 'studentLink',
+        url: 'admission_admin.php'
       },
       {
         id: 'work',

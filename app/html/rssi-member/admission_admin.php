@@ -278,12 +278,14 @@ if (@$_POST['form-type'] == "admission_admin") {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Admin Update Admission Form</title>
+    <title>Update Admission Form</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <!------ Include the above in your HEAD tag ---------->
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -335,7 +337,6 @@ if (@$_POST['form-type'] == "admission_admin") {
 </head>
 
 <body>
-    <?php include 'inactive_session_expire_check.php'; ?>
     <?php if (@$type_of_admission != null && @$cmdtuples == 0) { ?>
         <div class="alert alert-danger alert-dismissible text-center" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -351,755 +352,785 @@ if (@$_POST['form-type'] == "admission_admin") {
     </script>';
     }
     ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-    <div class="container">
-        <form method="get" name="a_lookup" id="a_lookup">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Student Information Lookup</h3>
-                <!-- <a href="javascript:history.go(-1)">Go to previous link</a> -->
-            </div>
-            <hr>
-            <div class="mb-3">
-                <label for="student_id" class="form-label">Student ID:</label>
-                <input type="text" class="form-control" id="student_id" name="student_id" Value="<?php echo @$_GET['student_id'] ?>" placeholder="Enter student id" required>
-                <div class="form-text">Enter the student id to search for their information.</div>
-            </div>
-            <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3"> <button type='button' id="lockButton" class="btn btn-primary mb-3" <?php if (empty($_GET['student_id']) || sizeof($resultArr) == 0)
-                                                                                                                                                                    echo 'disabled'; ?>>Lock / Unlock Form</button>
-        </form>
-        <br>
-        <?php if (sizeof($resultArr) > 0) { ?>
-            <?php
-            foreach ($resultArr as $array) {
-            ?>
-                <h3>Student Onboarding Form</h3>
-                <hr>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-12 text-end">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#joining-letter-modal-<?php echo $array['student_id'] ?>">
-                                    <img src="https://cdn.iconscout.com/icon/free/png-256/free-aadhaar-2085055-1747945.png" alt="Student's Aadhaar" title="Student's Aadhaar" width="70px" />
-                                </a><br>
-                                <a href="student-profile.php?get_id=<?php echo $array['student_id'] ?>" target="_blank">Admission form</a>
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>Update Admission Form</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item"><a href="student.php">Student Database</a></li>
+                    <li class="breadcrumb-item active">Update Admission Form</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container">
+                                <form method="get" name="a_lookup" id="a_lookup">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h3>Student Information Lookup</h3>
+                                        <!-- <a href="javascript:history.go(-1)">Go to previous link</a> -->
+                                    </div>
+                                    <hr>
+                                    <div class="mb-3">
+                                        <label for="student_id" class="form-label">Student ID:</label>
+                                        <input type="text" class="form-control" id="student_id" name="student_id" Value="<?php echo @$_GET['student_id'] ?>" placeholder="Enter student id" required>
+                                        <div class="form-text">Enter the student id to search for their information.</div>
+                                    </div>
+                                    <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3"> <button type='button' id="lockButton" class="btn btn-primary mb-3" <?php if (empty($_GET['student_id']) || sizeof($resultArr) == 0)
+                                                                                                                                                                                            echo 'disabled'; ?>>Lock / Unlock Form</button>
+                                </form>
                                 <br>
-                                <a href="pdf_application.php?student_id=<?php echo $array['student_id'] ?>" target="_blank">Parental Consent Form for Repeating a Grade</a>
-                            </div>
-                        </div>
-                        <div class="row align-items-center">
-                            <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
-                                <img src="<?php echo $array['photourl'] ?>" alt="Profile picture" width="100px">
-                            </div>
+                                <?php if (sizeof($resultArr) > 0) { ?>
+                                    <?php
+                                    foreach ($resultArr as $array) {
+                                    ?>
+                                        <h3>Student Onboarding Form</h3>
+                                        <hr>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-12 text-end">
+                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#joining-letter-modal-<?php echo $array['student_id'] ?>">
+                                                            <img src="https://cdn.iconscout.com/icon/free/png-256/free-aadhaar-2085055-1747945.png" alt="Student's Aadhaar" title="Student's Aadhaar" width="70px" />
+                                                        </a><br>
+                                                        <a href="student-profile.php?get_id=<?php echo $array['student_id'] ?>" target="_blank">Admission form</a>
+                                                        <br>
+                                                        <a href="pdf_application.php?student_id=<?php echo $array['student_id'] ?>" target="_blank">Parental Consent Form for Repeating a Grade</a>
+                                                    </div>
+                                                </div>
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
+                                                        <img src="<?php echo $array['photourl'] ?>" alt="Profile picture" width="100px">
+                                                    </div>
 
-                            <div class="col-md-8">
-                                <div class="row">
-                                    <div class="col-md-12 d-flex align-items-center">
-                                        <h2><?php echo $array['studentname'] ?></h2>
-                                        <?php if ($array['filterstatus'] == 'Active') : ?>
-                                            <span class="badge bg-success ms-3">Active</span>
-                                        <?php else : ?>
-                                            <span class="badge bg-danger ms-3">Inactive</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
+                                                    <div class="col-md-8">
+                                                        <div class="row">
+                                                            <div class="col-md-12 d-flex align-items-center">
+                                                                <h2><?php echo $array['studentname'] ?></h2>
+                                                                <?php if ($array['filterstatus'] == 'Active') : ?>
+                                                                    <span class="badge bg-success ms-3">Active</span>
+                                                                <?php else : ?>
+                                                                    <span class="badge bg-danger ms-3">Inactive</span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Student ID:</strong> <?php echo $array['student_id'] ?></p>
-                                        <p><strong>Date of application:</strong>
-                                            <?php echo date('M d, Y', strtotime($array['doa'])) ?></p>
-                                    </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <p><strong>Student ID:</strong> <?php echo $array['student_id'] ?></p>
+                                                                <p><strong>Date of application:</strong>
+                                                                    <?php echo date('M d, Y', strtotime($array['doa'])) ?></p>
+                                                            </div>
 
-                                    <div class="col-md-6">
-                                        <p><strong>Preferred Branch:</strong> <?php echo $array['preferredbranch']; ?></p>
-                                        <p><strong>Contact:</strong> <?php echo $array['contact']; ?></p>
-                                        <p><strong>Email:</strong> <?php echo $array['emailaddress']; ?></p>
-                                        <!-- Add any additional information you want to display here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php
-                // Google Drive URL stored in $array['certificate_url']
-                $url = $array['upload_aadhar_card'];
-
-                // Extract the file ID using regular expressions
-                if (preg_match('/\/file\/d\/([^\/]+)\//', $url, $matches) || preg_match('/[?&]id=([^&]+)/', $url, $matches)) {
-                    $file_id = $matches[1];
-                    // Generate the preview URL
-                    $preview_url = "https://drive.google.com/file/d/$file_id/preview";
-                } else {
-                    echo "File id not found in the URL.";
-                }
-                ?>
-                <!-- Modal -->
-
-                <div class="modal fade" id="joining-letter-modal-<?php echo $array['student_id'] ?>" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="joining-letter-modal-label">Aadhar card</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <hr>
-                <form name="admission_admin" id="admission_admin" action="admission_admin.php" method="post" enctype="multipart/form-data">
-
-                    <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
-                    </button>
-                    <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last updated on
-                        <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?>
-                    </p>
-
-                    <fieldset>
-
-
-                        <input type="hidden" name="form-type" value="admission_admin">
-                        <table class="table">
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <label for="student-id">Student ID:</label>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control" id="student-id" name="student-id" placeholder="Enter student ID" value="<?php echo $array['student_id'] ?>" required readonly>
-                                        <small id="student-id-help" class="form-text text-muted"></small>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <label>Current Plan:</label>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <p class="mb-1">
-                                                    <strong>Access Category:</strong>
-                                                    <span id="current-admission-display"><?php echo !empty($array['type_of_admission']) ? $array['type_of_admission'] : 'Not selected' ?></span>
-                                                </p>
-                                                <p class="mb-1">
-                                                    <strong>Effective From:</strong>
-                                                    <span id="current-effective-date-display">
-                                                        <?php
-                                                        // Fetch effective date from student_category_history
-                                                        $effectiveDate = '';
-                                                        if (!empty($array['student_id'])) {
-                                                            $historyQuery = "SELECT effective_from FROM student_category_history 
-                                            WHERE student_id = '" . $array['student_id'] . "' 
-                                            ORDER BY created_at DESC LIMIT 1";
-                                                            $historyResult = pg_query($con, $historyQuery);
-                                                            if ($historyRow = pg_fetch_assoc($historyResult)) {
-                                                                $effectiveDate = date('F Y', strtotime($historyRow['effective_from']));
-                                                            }
-                                                        }
-                                                        echo !empty($effectiveDate) ? $effectiveDate : 'Not set';
-                                                        ?>
-                                                    </span>
-                                                    <small class="text-muted">(Plan will be applied to <?php echo !empty($effectiveDate) ? $effectiveDate : 'the selected' ?> month's feesheet)</small>
-                                                </p>
-                                            </div>
-                                            <div class="ms-3">
-                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updatePlanModal">
-                                                    Update Plan
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal">
-                                                    View History
-                                                </button>
+                                                            <div class="col-md-6">
+                                                                <p><strong>Preferred Branch:</strong> <?php echo $array['preferredbranch']; ?></p>
+                                                                <p><strong>Contact:</strong> <?php echo $array['contact']; ?></p>
+                                                                <p><strong>Email:</strong> <?php echo $array['emailaddress']; ?></p>
+                                                                <!-- Add any additional information you want to display here -->
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <!-- Hidden fields to store the actual values -->
-                                        <input type="hidden" id="division-select" name="division-select" value="<?php echo $array['division'] ?? '' ?>">
-                                        <input type="hidden" id="type-of-admission" name="type-of-admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                        <input type="hidden" id="effective-from-date" name="effective-from-date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
-                                        <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <label for="student-name">Student Name:</label>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control" id="student-name" name="student-name" placeholder="Enter student name" value="<?php echo $array['studentname'] ?>" required>
-                                        <small id="student-name-help" class="form-text text-muted">Please enter the name of the student.</small>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <label for="date-of-birth">Date of Birth:</label>
-                                    </td>
-                                    <td>
-                                        <input type="date" class="form-control" id="date-of-birth" name="date-of-birth" value="<?php echo $array['dateofbirth'] ?>" required>
-                                        <small id="date-of-birth-help" class="form-text text-muted">Please enter the date of
-                                            birth
-                                            of the student.</small>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <label for="gender">Gender:</label>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="gender" name="gender" required>
-                                            <?php if ($array['gender'] == null) { ?>
-                                                <option selected>--Select Gender--</option>
-                                            <?php
-                                            } else { ?>
-                                                <option selected>--Select Gender--</option>
-                                                <option hidden selected><?php echo $array['gender'] ?></option>
-                                            <?php }
-                                            ?>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Binary">Binary</option>
-                                        </select>
-                                        <small id="gender-help" class="form-text text-muted">Please select the gender of the
-                                            student.</small>
-                                    </td>
-                                </tr>
+                                        <?php
+                                        // Google Drive URL stored in $array['certificate_url']
+                                        $url = $array['upload_aadhar_card'];
 
-                                <!-- <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
-                                <tr>
-                                    <td>
-                                        <label for="student-photo">Upload Student Photo:</label>
-                                    </td>
-                                    <td>
-                                        <!-- File input for uploading a new photo -->
-                                        <input type="file" class="form-control" id="student-photo" name="student-photo" accept="image/*">
-
-                                        <!-- Display existing photo link if available -->
-                                        <?php if (!empty($array['student_photo_raw'])): ?>
-                                            <div>
-                                                <a href="<?php echo htmlspecialchars($array['student_photo_raw']); ?>" target="_blank">View Current Photo</a>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <small id="student-photo-help" class="form-text text-muted">
-                                            Please upload a recent passport size photograph of the student.
-                                        </small>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>
-                                        <label for="aadhar-card">Aadhar Card Available?:</label>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="aadhar-card" name="aadhar-card" required>
-                                            <?php if ($array['aadhar_available'] == null) { ?>
-                                                <option selected>--Select--</option>
-                                            <?php
-                                            } else { ?>
-                                                <option selected>--Select--</option>
-                                                <option hidden selected><?php echo $array['aadhar_available'] ?></option>
-                                            <?php }
-                                            ?>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                        <small id="aadhar-card-help" class="form-text text-muted">Please select whether you have
-                                            an
-                                            Aadhar card or not.</small>
-                                    </td>
-                                </tr>
-
-
-                                <div id="hidden-panel">
-                                    <tr>
-                                        <td>
-                                            <label for="aadhar-number">Aadhar of the Student:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="aadhar-number" name="aadhar-number" placeholder="Enter Aadhar number" value="<?php echo $array['studentaadhar'] ?>">
-                                            <small id="aadhar-number-help" class="form-text text-muted">Please enter the Aadhar
-                                                number of the student.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="aadhar-card-upload">Upload Aadhar Card:</label>
-                                        </td>
-                                        <td>
-                                            <!-- File input for uploading a new Aadhar card -->
-                                            <input type="file" class="form-control" id="aadhar-card-upload" name="aadhar-card-upload">
-
-                                            <!-- Display existing Aadhar card link if available -->
-                                            <?php if (!empty($array['upload_aadhar_card'])): ?>
-                                                <div>
-                                                    <a href="<?php echo htmlspecialchars($array['upload_aadhar_card']); ?>" target="_blank">View Current Aadhar Card</a>
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <small id="aadhar-card-upload-help" class="form-text text-muted">
-                                                Please upload a scanned copy of the Aadhar card (if available).
-                                            </small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="guardian-name">Guardian's Name:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="guardian-name" name="guardian-name" placeholder="Enter guardian name" value="<?php echo $array['guardiansname'] ?>" required>
-                                            <small id="guardian-name-help" class="form-text text-muted">Please enter the name of
-                                                the
-                                                student's guardian.</small>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-                                            <label for="relation">Relation with Student:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="relation" name="relation" required>
-                                                <?php if ($array['relationwithstudent'] == null) { ?>
-                                                    <option selected>--Select Type of Relation--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Type of Relation--</option>
-                                                    <option hidden selected><?php echo $array['relationwithstudent'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Mother">Mother</option>
-                                                <option value="Father">Father</option>
-                                                <option value="Spouse">Spouse</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            <small id="relation-help" class="form-text text-muted">Please enter the relation of
-                                                the
-                                                guardian with the student.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="guardian-aadhar-number">Aadhar of Guardian:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="guardian-aadhar-number" name="guardian-aadhar-number" placeholder="Enter Aadhar number" value="<?php echo $array['guardianaadhar'] ?>">
-                                            <small id="guardian-aadhar-number-help" class="form-text text-muted">Please enter
-                                                the
-                                                Aadhar number of the guardian.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="state">State of Domicile:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="state" name="state" required>
-                                                <?php if ($array['stateofdomicile'] == null) { ?>
-                                                    <option selected>--Select State--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select State--</option>
-                                                    <option hidden selected><?php echo $array['stateofdomicile'] ?></option>
-                                                <?php }
-                                                ?>
-
-                                                <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                                                <option value="Assam">Assam</option>
-                                                <option value="Bihar">Bihar</option>
-                                                <option value="Chhattisgarh">Chhattisgarh</option>
-                                                <option value="Goa">Goa</option>
-                                                <option value="Gujarat">Gujarat</option>
-                                                <option value="Haryana">Haryana</option>
-                                                <option value="Himachal Pradesh">Himachal Pradesh</option>
-                                                <option value="Jammu Kashmir">Jammu and Kashmir</option>
-                                                <option value="Jharkhand">Jharkhand</option>
-                                                <option value="Karnataka">Karnataka</option>
-                                                <option value="Kerala">Kerala</option>
-                                                <option value="Madhya Pradesh">Madhya Pradesh</option>
-                                                <option value="Maharashtra">Maharashtra</option>
-                                                <option value="Manipur">Manipur</option>
-                                                <option value="Meghalaya">Meghalaya</option>
-                                                <option value="Mizoram">Mizoram</option>
-                                                <option value="Nagaland">Nagaland</option>
-                                                <option value="Odisha">Odisha</option>
-                                                <option value="Punjab">Punjab</option>
-                                                <option value="Rajasthan">Rajasthan</option>
-                                                <option value="Sikkim">Sikkim</option>
-                                                <option value="Tamil Nadu">Tamil Nadu</option>
-                                                <option value="Telangana">Telangana</option>
-                                                <option value="Tripura">Tripura</option>
-                                                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                                                <option value="Uttarakhand">Uttarakhand</option>
-                                                <option value="West Bengal">West Bengal</option>
-                                            </select>
-                                            <small id="state-help" class="form-text text-muted">Please select the state where
-                                                the
-                                                student resides.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="postal-address">Current Address:</label>
-                                        </td>
-                                        <td>
-                                            <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter current address" required><?php echo $array['postaladdress'] ?? '' ?></textarea>
-                                            <small id="postal-address-help" class="form-text text-muted">Please enter the complete current address of the student.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="permanent-address">Permanent Address:</label>
-                                        </td>
-                                        <td>
-                                            <textarea class="form-control" id="permanent-address" name="permanent-address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanentaddress'] ?? '' ?></textarea>
-                                            <small id="permanent-address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
-                                            <div>
-                                                <input type="checkbox" id="same-address" onclick="copyAddress()">
-                                                <label for="same-address">Same as current address</label>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <script>
-                                        function copyAddress() {
-                                            const currentAddress = document.getElementById('postal-address').value;
-                                            const permanentAddressField = document.getElementById('permanent-address');
-                                            const sameAddressCheckbox = document.getElementById('same-address');
-
-                                            if (sameAddressCheckbox.checked) {
-                                                permanentAddressField.value = currentAddress; // Copy current address to permanent address
-                                                permanentAddressField.readOnly = true; // Make it read-only when checkbox is checked
-                                            } else {
-                                                permanentAddressField.value = ''; // Clear permanent address when checkbox is unchecked
-                                                permanentAddressField.readOnly = false; // Make it editable again
-                                            }
+                                        // Extract the file ID using regular expressions
+                                        if (preg_match('/\/file\/d\/([^\/]+)\//', $url, $matches) || preg_match('/[?&]id=([^&]+)/', $url, $matches)) {
+                                            $file_id = $matches[1];
+                                            // Generate the preview URL
+                                            $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                        } else {
+                                            echo "File id not found in the URL.";
                                         }
-                                    </script>
+                                        ?>
+                                        <!-- Modal -->
 
-                                    <tr>
-                                        <td>
-                                            <label for="telephone">Telephone Number:</label>
-                                        </td>
-                                        <td>
-                                            <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>">
-                                            <small id="telephone-help" class="form-text text-muted">Please enter a valid
-                                                telephone
-                                                number.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="email">Email Address:</label>
-                                        </td>
-                                        <td>
-                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" value="<?php echo $array['emailaddress'] ?>">
-                                            <small id="email-help" class="form-text text-muted">Please enter a valid email
-                                                address.</small>
-                                        </td>
-                                    </tr>
-                                    <!-- Caste Dropdown Field -->
-                                    <tr>
-                                        <td>
-                                            <label for="caste">Caste:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="caste" name="caste" required>
-                                                <!-- Check if the caste value is null or empty -->
-                                                <?php if (empty($array['caste'])): ?>
-                                                    <option hidden selected>Select your caste</option>
-                                                <?php else: ?>
-                                                    <option hidden selected><?php echo htmlspecialchars($array['caste']); ?></option>
-                                                <?php endif; ?>
-
-                                                <option value="General">General</option>
-                                                <option value="SC">Scheduled Caste (SC)</option>
-                                                <option value="ST">Scheduled Tribe (ST)</option>
-                                                <option value="OBC">Other Backward Class (OBC)</option>
-                                                <option value="EWS">Economically Weaker Section (EWS)</option>
-                                                <option value="Prefer not to disclose">Prefer not to disclose</option>
-                                                <option value="Do not know">Do not know</option>
-                                                <!-- Add additional options as necessary -->
-                                            </select>
-
-                                            <small id="caste-help" class="form-text text-muted">Please select your caste category as per government records.</small>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Supporting Document Upload Field -->
-                                    <tr>
-                                        <td>
-                                            <label for="caste-document">Caste Certificate:</label>
-                                        </td>
-                                        <td>
-                                            <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
-                                            <!-- Display existing Caste Certificate if available -->
-                                            <?php if (!empty($array['caste_document'])): ?>
-                                                <div>
-                                                    <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank">View Caste Certificate</a>
+                                        <div class="modal fade" id="joining-letter-modal-<?php echo $array['student_id'] ?>" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="joining-letter-modal-label">Aadhar card</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
+                                                    </div>
                                                 </div>
-                                            <?php endif; ?>
-                                            <small id="caste-document-help" class="form-text text-muted">Upload your caste certificate (PDF, JPG, JPEG, or PNG).</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="branch">Preferred Branch:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="branch" name="branch" required>
-                                                <?php if ($array['preferredbranch'] == null) { ?>
-                                                    <option selected>--Select Branch--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Branch--</option>
-                                                    <option hidden selected><?php echo $array['preferredbranch'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Lucknow">Lucknow</option>
-                                                <option value="West Bengal">West Bengal</option>
-                                            </select>
-                                            <small id="branch-help" class="form-text text-muted">Please select the preferred
-                                                branch of
-                                                study.</small>
-                                        </td>
-                                    </tr>
+                                            </div>
+                                        </div>
 
-                                    <tr>
-                                        <td>
-                                            <label for="class">Class:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="class" name="class" required>
-                                                <?php if ($array['class'] == null) { ?>
-                                                    <option selected>--Select Class--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Class--</option>
-                                                    <option hidden selected><?php echo $array['class'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Nursery">Nursery</option>
-                                                <option value="LKG">LKG</option>
-                                                <option value="UKG">UKG</option>
-                                                <option value="1">Class 1</option>
-                                                <option value="2">Class 2</option>
-                                                <option value="3">Class 3</option>
-                                                <option value="4">Class 4</option>
-                                                <option value="5">Class 5</option>
-                                                <option value="6">Class 6</option>
-                                                <option value="7">Class 7</option>
-                                                <option value="8">Class 8</option>
-                                                <option value="9">Class 9</option>
-                                                <option value="10">Class 10</option>
-                                                <option value="11">Class 11</option>
-                                                <option value="12">Class 12</option>
-                                                <option value="Vocational training">Vocational training</option>
-                                            </select>
-                                            <small id="class-help" class="form-text text-muted">Please select the class the
-                                                student
-                                                wants to join.</small>
-                                        </td>
-                                    </tr>
+                                        <hr>
+                                        <form name="admission_admin" id="admission_admin" action="admission_admin.php" method="post" enctype="multipart/form-data">
 
-                                    <tr>
-                                        <td>
-                                            <label for="subject-select">Select subject(s): </label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="subject-select" name="subject-select" required>
-                                                <?php if ($array['nameofthesubjects'] == null) { ?>
-                                                    <option selected>--Select Subject--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Subject--</option>
-                                                    <option hidden selected><?php echo $array['nameofthesubjects'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="ALL Subjects">ALL Subjects</option>
-                                                <option value="English">English</option>
-                                                <option value="Embroidery">Embroidery</option>
-                                            </select>
-                                            <small class="form-text text-muted">Please select the subject(s) that you want to
-                                                study from
-                                                the drop-down list.</small>
-                                        </td>
-                                    </tr>
+                                            <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
+                                            </button>
+                                            <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last updated on
+                                                <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?>
+                                            </p>
 
-                                    <tr>
-                                        <td>
-                                            <label for="school-required">School Admission Required:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="school-required" name="school-required">
-                                                <?php if ($array['schooladmissionrequired'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['schooladmissionrequired'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <small id="school-required-help" class="form-text text-muted">Do you require
-                                                admission in a
-                                                new school?</small>
-                                        </td>
-                                    </tr>
+                                            <fieldset>
 
 
+                                                <input type="hidden" name="form-type" value="admission_admin">
+                                                <table class="table">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="student-id">Student ID:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="text" class="form-control" id="student-id" name="student-id" placeholder="Enter student ID" value="<?php echo $array['student_id'] ?>" required readonly>
+                                                                <small id="student-id-help" class="form-text text-muted"></small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label>Current Plan:</label>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="flex-grow-1">
+                                                                        <p class="mb-1">
+                                                                            <strong>Access Category:</strong>
+                                                                            <span id="current-admission-display"><?php echo !empty($array['type_of_admission']) ? $array['type_of_admission'] : 'Not selected' ?></span>
+                                                                        </p>
+                                                                        <p class="mb-1">
+                                                                            <strong>Effective From:</strong>
+                                                                            <span id="current-effective-date-display">
+                                                                                <?php
+                                                                                // Fetch effective date from student_category_history
+                                                                                $effectiveDate = '';
+                                                                                if (!empty($array['student_id'])) {
+                                                                                    $currentDate = date('Y-m-d'); // Get current date in YYYY-MM-DD format
 
-                                    <tr>
-                                        <td>
-                                            <label for="school-name">Name Of The School:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="school-name" name="school-name" placeholder="Enter name of the school" value="<?php echo $array['nameoftheschool'] ?>">
-                                            <small id="school-name-help" class="form-text text-muted">Please enter the name
-                                                of the
-                                                current school or the new school you want to join.</small>
-                                        </td>
-                                    </tr>
+                                                                                    $historyQuery = "SELECT effective_from FROM student_category_history 
+                                                            WHERE student_id = '" . $array['student_id'] . "'
+                                                            AND effective_from <= '$currentDate'
+                                                            AND (effective_until >= '$currentDate' OR effective_until IS NULL)
+                                                            ORDER BY effective_from DESC LIMIT 1";
 
-                                    <tr>
-                                        <td>
-                                            <label for="board-name">Name Of The Board:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="board-name" name="board-name">
-                                                <?php if ($array['nameoftheboard'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['nameoftheboard'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="CBSE">CBSE</option>
-                                                <option value="ICSE">ICSE</option>
-                                                <option value="ISC">ISC</option>
-                                                <option value="State Board">State Board</option>
-                                            </select>
-                                            <small id="board-name-help" class="form-text text-muted">Please enter the name of
-                                                the
-                                                board of education.</small>
-                                        </td>
-                                    </tr>
+                                                                                    $historyResult = pg_query($con, $historyQuery);
+                                                                                    if ($historyRow = pg_fetch_assoc($historyResult)) {
+                                                                                        $effectiveDate = date('F Y', strtotime($historyRow['effective_from']));
+                                                                                    }
+                                                                                }
+                                                                                echo !empty($effectiveDate) ? $effectiveDate : 'Not set';
+                                                                                ?>
+                                                                            </span>
+                                                                            <small class="text-muted">(Plan will be applied to <?php echo !empty($effectiveDate) ? $effectiveDate : 'the selected' ?> month's feesheet)</small>
+                                                                        </p>
+                                                                    </div>
+                                                                    <div class="ms-3">
+                                                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updatePlanModal">
+                                                                            Update Plan
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal">
+                                                                            View History
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Hidden fields to store the actual values -->
+                                                                <input type="hidden" id="division-select" name="division-select" value="<?php echo $array['division'] ?? '' ?>">
+                                                                <input type="hidden" id="type-of-admission" name="type-of-admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                                                <input type="hidden" id="effective-from-date" name="effective-from-date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
+                                                                <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="student-name">Student Name:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="text" class="form-control" id="student-name" name="student-name" placeholder="Enter student name" value="<?php echo $array['studentname'] ?>" required>
+                                                                <small id="student-name-help" class="form-text text-muted">Please enter the name of the student.</small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="date-of-birth">Date of Birth:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="date" class="form-control" id="date-of-birth" name="date-of-birth" value="<?php echo $array['dateofbirth'] ?>" required>
+                                                                <small id="date-of-birth-help" class="form-text text-muted">Please enter the date of
+                                                                    birth
+                                                                    of the student.</small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="gender">Gender:</label>
+                                                            </td>
+                                                            <td>
+                                                                <select class="form-select" id="gender" name="gender" required>
+                                                                    <?php if ($array['gender'] == null) { ?>
+                                                                        <option selected>--Select Gender--</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option selected>--Select Gender--</option>
+                                                                        <option hidden selected><?php echo $array['gender'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option value="Male">Male</option>
+                                                                    <option value="Female">Female</option>
+                                                                    <option value="Binary">Binary</option>
+                                                                </select>
+                                                                <small id="gender-help" class="form-text text-muted">Please select the gender of the
+                                                                    student.</small>
+                                                            </td>
+                                                        </tr>
 
-                                    <tr>
-                                        <td>
-                                            <label for="medium">Medium:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="medium" name="medium">
-                                                <?php if ($array['medium'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['medium'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="English">English</option>
-                                                <option value="Hindi">Hindi</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            <small id="medium-help" class="form-text text-muted">Please select the medium of
-                                                instruction.</small>
-                                        </td>
-                                    </tr>
+                                                        <!-- <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
+                                                        <tr>
+                                                            <td>
+                                                                <label for="student-photo">Upload Student Photo:</label>
+                                                            </td>
+                                                            <td>
+                                                                <!-- File input for uploading a new photo -->
+                                                                <input type="file" class="form-control" id="student-photo" name="student-photo" accept="image/*">
 
-                                    <tr>
-                                        <td>
-                                            <label for="income">Family Monthly Income</label>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control" id="income" name="income" value="<?php echo $array['familymonthlyincome'] ?>">
-                                            <small id="income-help" class="form-text text-muted">Please enter the total monthly
-                                                income
-                                                of the student's family.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="family-members">Total Number of Family Members</label>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control" id="family-members" name="family-members" value="<?php echo $array['totalnumberoffamilymembers'] ?>">
-                                            <small id="family-members-help" class="form-text text-muted">Please enter the total
-                                                number
-                                                of members in the student's family.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="payment-mode">Payment Mode:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="payment-mode" name="payment-mode" required>
-                                                <?php if ($array['payment_mode'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['payment_mode'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="cash">Cash</option>
-                                                <option value="online">Online</option>
-                                            </select>
-                                            <small id="payment-mode-help" class="form-text text-muted">Please select the payment
-                                                mode
-                                                for the admission fee.</small>
-                                        </td>
-                                    </tr>
+                                                                <!-- Display existing photo link if available -->
+                                                                <?php if (!empty($array['student_photo_raw'])): ?>
+                                                                    <div>
+                                                                        <a href="<?php echo htmlspecialchars($array['student_photo_raw']); ?>" target="_blank">View Current Photo</a>
+                                                                    </div>
+                                                                <?php endif; ?>
 
-                                    <tr>
-                                        <td>
-                                            <label for="c-authentication-code">C-Authentication Code:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="c-authentication-code" name="c-authentication-code" placeholder="Enter C-Authentication code" value="<?php echo $array['c_authentication_code'] ?>">
-                                            <small id="c-authentication-code-help" class="form-text text-muted">Please enter the
-                                                C-Authentication code if you are paying by cash.</small>
-                                        </td>
-                                    </tr>
+                                                                <small id="student-photo-help" class="form-text text-muted">
+                                                                    Please upload a recent passport size photograph of the student.
+                                                                </small>
+                                                            </td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>
+                                                                <label for="aadhar-card">Aadhar Card Available?:</label>
+                                                            </td>
+                                                            <td>
+                                                                <select class="form-select" id="aadhar-card" name="aadhar-card" required>
+                                                                    <?php if ($array['aadhar_available'] == null) { ?>
+                                                                        <option selected>--Select--</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option selected>--Select--</option>
+                                                                        <option hidden selected><?php echo $array['aadhar_available'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option value="Yes">Yes</option>
+                                                                    <option value="No">No</option>
+                                                                </select>
+                                                                <small id="aadhar-card-help" class="form-text text-muted">Please select whether you have
+                                                                    an
+                                                                    Aadhar card or not.</small>
+                                                            </td>
+                                                        </tr>
 
 
-                                    <tr>
-                                        <td>
-                                            <label for="transaction-id">Transaction ID:</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="transaction-id" name="transaction-id" value="<?php echo $array['transaction_id'] ?>">
-                                            <small id="online-declaration-help" class="form-text text-muted">Please enter the
-                                                transaction ID if you have paid the admission fee online.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="payment_type" class="form-label">Payment Type:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="payment_type" name="payment_type" required>
-                                                <?php if ($array['payment_type'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['payment_type'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Advance">Advance</option>
-                                                <option value="Regular">Regular</option>
-                                            </select>
-                                        </td>
-                                    </tr>
+                                                        <div id="hidden-panel">
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="aadhar-number">Aadhar of the Student:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="aadhar-number" name="aadhar-number" placeholder="Enter Aadhar number" value="<?php echo $array['studentaadhar'] ?>">
+                                                                    <small id="aadhar-number-help" class="form-text text-muted">Please enter the Aadhar
+                                                                        number of the student.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="aadhar-card-upload">Upload Aadhar Card:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <!-- File input for uploading a new Aadhar card -->
+                                                                    <input type="file" class="form-control" id="aadhar-card-upload" name="aadhar-card-upload">
 
-                                    <!-- <tr>
+                                                                    <!-- Display existing Aadhar card link if available -->
+                                                                    <?php if (!empty($array['upload_aadhar_card'])): ?>
+                                                                        <div>
+                                                                            <a href="<?php echo htmlspecialchars($array['upload_aadhar_card']); ?>" target="_blank">View Current Aadhar Card</a>
+                                                                        </div>
+                                                                    <?php endif; ?>
+
+                                                                    <small id="aadhar-card-upload-help" class="form-text text-muted">
+                                                                        Please upload a scanned copy of the Aadhar card (if available).
+                                                                    </small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="guardian-name">Guardian's Name:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="guardian-name" name="guardian-name" placeholder="Enter guardian name" value="<?php echo $array['guardiansname'] ?>" required>
+                                                                    <small id="guardian-name-help" class="form-text text-muted">Please enter the name of
+                                                                        the
+                                                                        student's guardian.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="relation">Relation with Student:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="relation" name="relation" required>
+                                                                        <?php if ($array['relationwithstudent'] == null) { ?>
+                                                                            <option selected>--Select Type of Relation--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Type of Relation--</option>
+                                                                            <option hidden selected><?php echo $array['relationwithstudent'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Mother">Mother</option>
+                                                                        <option value="Father">Father</option>
+                                                                        <option value="Spouse">Spouse</option>
+                                                                        <option value="Other">Other</option>
+                                                                    </select>
+                                                                    <small id="relation-help" class="form-text text-muted">Please enter the relation of
+                                                                        the
+                                                                        guardian with the student.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="guardian-aadhar-number">Aadhar of Guardian:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="guardian-aadhar-number" name="guardian-aadhar-number" placeholder="Enter Aadhar number" value="<?php echo $array['guardianaadhar'] ?>">
+                                                                    <small id="guardian-aadhar-number-help" class="form-text text-muted">Please enter
+                                                                        the
+                                                                        Aadhar number of the guardian.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="state">State of Domicile:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="state" name="state" required>
+                                                                        <?php if ($array['stateofdomicile'] == null) { ?>
+                                                                            <option selected>--Select State--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select State--</option>
+                                                                            <option hidden selected><?php echo $array['stateofdomicile'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+
+                                                                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                                                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                                                        <option value="Assam">Assam</option>
+                                                                        <option value="Bihar">Bihar</option>
+                                                                        <option value="Chhattisgarh">Chhattisgarh</option>
+                                                                        <option value="Goa">Goa</option>
+                                                                        <option value="Gujarat">Gujarat</option>
+                                                                        <option value="Haryana">Haryana</option>
+                                                                        <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                                                        <option value="Jammu Kashmir">Jammu and Kashmir</option>
+                                                                        <option value="Jharkhand">Jharkhand</option>
+                                                                        <option value="Karnataka">Karnataka</option>
+                                                                        <option value="Kerala">Kerala</option>
+                                                                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                                                        <option value="Maharashtra">Maharashtra</option>
+                                                                        <option value="Manipur">Manipur</option>
+                                                                        <option value="Meghalaya">Meghalaya</option>
+                                                                        <option value="Mizoram">Mizoram</option>
+                                                                        <option value="Nagaland">Nagaland</option>
+                                                                        <option value="Odisha">Odisha</option>
+                                                                        <option value="Punjab">Punjab</option>
+                                                                        <option value="Rajasthan">Rajasthan</option>
+                                                                        <option value="Sikkim">Sikkim</option>
+                                                                        <option value="Tamil Nadu">Tamil Nadu</option>
+                                                                        <option value="Telangana">Telangana</option>
+                                                                        <option value="Tripura">Tripura</option>
+                                                                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                                                        <option value="Uttarakhand">Uttarakhand</option>
+                                                                        <option value="West Bengal">West Bengal</option>
+                                                                    </select>
+                                                                    <small id="state-help" class="form-text text-muted">Please select the state where
+                                                                        the
+                                                                        student resides.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="postal-address">Current Address:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter current address" required><?php echo $array['postaladdress'] ?? '' ?></textarea>
+                                                                    <small id="postal-address-help" class="form-text text-muted">Please enter the complete current address of the student.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="permanent-address">Permanent Address:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <textarea class="form-control" id="permanent-address" name="permanent-address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanentaddress'] ?? '' ?></textarea>
+                                                                    <small id="permanent-address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
+                                                                    <div>
+                                                                        <input type="checkbox" id="same-address" onclick="copyAddress()">
+                                                                        <label for="same-address">Same as current address</label>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+
+                                                            <script>
+                                                                function copyAddress() {
+                                                                    const currentAddress = document.getElementById('postal-address').value;
+                                                                    const permanentAddressField = document.getElementById('permanent-address');
+                                                                    const sameAddressCheckbox = document.getElementById('same-address');
+
+                                                                    if (sameAddressCheckbox.checked) {
+                                                                        permanentAddressField.value = currentAddress; // Copy current address to permanent address
+                                                                        permanentAddressField.readOnly = true; // Make it read-only when checkbox is checked
+                                                                    } else {
+                                                                        permanentAddressField.value = ''; // Clear permanent address when checkbox is unchecked
+                                                                        permanentAddressField.readOnly = false; // Make it editable again
+                                                                    }
+                                                                }
+                                                            </script>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="telephone">Telephone Number:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>">
+                                                                    <small id="telephone-help" class="form-text text-muted">Please enter a valid
+                                                                        telephone
+                                                                        number.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="email">Email Address:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" value="<?php echo $array['emailaddress'] ?>">
+                                                                    <small id="email-help" class="form-text text-muted">Please enter a valid email
+                                                                        address.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <!-- Caste Dropdown Field -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="caste">Caste:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="caste" name="caste" required>
+                                                                        <!-- Check if the caste value is null or empty -->
+                                                                        <?php if (empty($array['caste'])): ?>
+                                                                            <option hidden selected>Select your caste</option>
+                                                                        <?php else: ?>
+                                                                            <option hidden selected><?php echo htmlspecialchars($array['caste']); ?></option>
+                                                                        <?php endif; ?>
+
+                                                                        <option value="General">General</option>
+                                                                        <option value="SC">Scheduled Caste (SC)</option>
+                                                                        <option value="ST">Scheduled Tribe (ST)</option>
+                                                                        <option value="OBC">Other Backward Class (OBC)</option>
+                                                                        <option value="EWS">Economically Weaker Section (EWS)</option>
+                                                                        <option value="Prefer not to disclose">Prefer not to disclose</option>
+                                                                        <option value="Do not know">Do not know</option>
+                                                                        <!-- Add additional options as necessary -->
+                                                                    </select>
+
+                                                                    <small id="caste-help" class="form-text text-muted">Please select your caste category as per government records.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <!-- Supporting Document Upload Field -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="caste-document">Caste Certificate:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
+                                                                    <!-- Display existing Caste Certificate if available -->
+                                                                    <?php if (!empty($array['caste_document'])): ?>
+                                                                        <div>
+                                                                            <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank">View Caste Certificate</a>
+                                                                        </div>
+                                                                    <?php endif; ?>
+                                                                    <small id="caste-document-help" class="form-text text-muted">Upload your caste certificate (PDF, JPG, JPEG, or PNG).</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="branch">Preferred Branch:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="branch" name="branch" required>
+                                                                        <?php if ($array['preferredbranch'] == null) { ?>
+                                                                            <option selected>--Select Branch--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Branch--</option>
+                                                                            <option hidden selected><?php echo $array['preferredbranch'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Lucknow">Lucknow</option>
+                                                                        <option value="West Bengal">West Bengal</option>
+                                                                    </select>
+                                                                    <small id="branch-help" class="form-text text-muted">Please select the preferred
+                                                                        branch of
+                                                                        study.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="class">Class:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="class" name="class" required>
+                                                                        <?php if ($array['class'] == null) { ?>
+                                                                            <option selected>--Select Class--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Class--</option>
+                                                                            <option hidden selected><?php echo $array['class'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Nursery">Nursery</option>
+                                                                        <option value="LKG">LKG</option>
+                                                                        <option value="UKG">UKG</option>
+                                                                        <option value="1">Class 1</option>
+                                                                        <option value="2">Class 2</option>
+                                                                        <option value="3">Class 3</option>
+                                                                        <option value="4">Class 4</option>
+                                                                        <option value="5">Class 5</option>
+                                                                        <option value="6">Class 6</option>
+                                                                        <option value="7">Class 7</option>
+                                                                        <option value="8">Class 8</option>
+                                                                        <option value="9">Class 9</option>
+                                                                        <option value="10">Class 10</option>
+                                                                        <option value="11">Class 11</option>
+                                                                        <option value="12">Class 12</option>
+                                                                        <option value="Vocational training">Vocational training</option>
+                                                                    </select>
+                                                                    <small id="class-help" class="form-text text-muted">Please select the class the
+                                                                        student
+                                                                        wants to join.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="subject-select">Select subject(s): </label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="subject-select" name="subject-select" required>
+                                                                        <?php if ($array['nameofthesubjects'] == null) { ?>
+                                                                            <option selected>--Select Subject--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Subject--</option>
+                                                                            <option hidden selected><?php echo $array['nameofthesubjects'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="ALL Subjects">ALL Subjects</option>
+                                                                        <option value="English">English</option>
+                                                                        <option value="Embroidery">Embroidery</option>
+                                                                    </select>
+                                                                    <small class="form-text text-muted">Please select the subject(s) that you want to
+                                                                        study from
+                                                                        the drop-down list.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="school-required">School Admission Required:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="school-required" name="school-required">
+                                                                        <?php if ($array['schooladmissionrequired'] == null) { ?>
+                                                                            <option selected>--Select--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select--</option>
+                                                                            <option hidden selected><?php echo $array['schooladmissionrequired'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Yes">Yes</option>
+                                                                        <option value="No">No</option>
+                                                                    </select>
+                                                                    <small id="school-required-help" class="form-text text-muted">Do you require
+                                                                        admission in a
+                                                                        new school?</small>
+                                                                </td>
+                                                            </tr>
+
+
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="school-name">Name Of The School:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="school-name" name="school-name" placeholder="Enter name of the school" value="<?php echo $array['nameoftheschool'] ?>">
+                                                                    <small id="school-name-help" class="form-text text-muted">Please enter the name
+                                                                        of the
+                                                                        current school or the new school you want to join.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="board-name">Name Of The Board:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="board-name" name="board-name">
+                                                                        <?php if ($array['nameoftheboard'] == null) { ?>
+                                                                            <option selected>--Select--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select--</option>
+                                                                            <option hidden selected><?php echo $array['nameoftheboard'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="CBSE">CBSE</option>
+                                                                        <option value="ICSE">ICSE</option>
+                                                                        <option value="ISC">ISC</option>
+                                                                        <option value="State Board">State Board</option>
+                                                                    </select>
+                                                                    <small id="board-name-help" class="form-text text-muted">Please enter the name of
+                                                                        the
+                                                                        board of education.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="medium">Medium:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="medium" name="medium">
+                                                                        <?php if ($array['medium'] == null) { ?>
+                                                                            <option selected>--Select--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select--</option>
+                                                                            <option hidden selected><?php echo $array['medium'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="English">English</option>
+                                                                        <option value="Hindi">Hindi</option>
+                                                                        <option value="Other">Other</option>
+                                                                    </select>
+                                                                    <small id="medium-help" class="form-text text-muted">Please select the medium of
+                                                                        instruction.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="income">Family Monthly Income</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control" id="income" name="income" value="<?php echo $array['familymonthlyincome'] ?>">
+                                                                    <small id="income-help" class="form-text text-muted">Please enter the total monthly
+                                                                        income
+                                                                        of the student's family.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="family-members">Total Number of Family Members</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control" id="family-members" name="family-members" value="<?php echo $array['totalnumberoffamilymembers'] ?>">
+                                                                    <small id="family-members-help" class="form-text text-muted">Please enter the total
+                                                                        number
+                                                                        of members in the student's family.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="payment-mode">Payment Mode:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="payment-mode" name="payment-mode" required>
+                                                                        <?php if ($array['payment_mode'] == null) { ?>
+                                                                            <option selected>--Select--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select--</option>
+                                                                            <option hidden selected><?php echo $array['payment_mode'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="cash">Cash</option>
+                                                                        <option value="online">Online</option>
+                                                                    </select>
+                                                                    <small id="payment-mode-help" class="form-text text-muted">Please select the payment
+                                                                        mode
+                                                                        for the admission fee.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="c-authentication-code">C-Authentication Code:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="c-authentication-code" name="c-authentication-code" placeholder="Enter C-Authentication code" value="<?php echo $array['c_authentication_code'] ?>">
+                                                                    <small id="c-authentication-code-help" class="form-text text-muted">Please enter the
+                                                                        C-Authentication code if you are paying by cash.</small>
+                                                                </td>
+                                                            </tr>
+
+
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="transaction-id">Transaction ID:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="transaction-id" name="transaction-id" value="<?php echo $array['transaction_id'] ?>">
+                                                                    <small id="online-declaration-help" class="form-text text-muted">Please enter the
+                                                                        transaction ID if you have paid the admission fee online.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="payment_type" class="form-label">Payment Type:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="payment_type" name="payment_type" required>
+                                                                        <?php if ($array['payment_type'] == null) { ?>
+                                                                            <option selected>--Select--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select--</option>
+                                                                            <option hidden selected><?php echo $array['payment_type'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Advance">Advance</option>
+                                                                        <option value="Regular">Regular</option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+
+                                                            <!-- <tr>
                                         <td>
                                             <label for="access_category" class="form-label">Access Category:</label>
                                         </td>
@@ -1118,161 +1149,168 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             </select>
                                         </td>
                                     </tr> -->
-                                    <tr>
-                                        <td>
-                                            <label for="module">Module</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="module" name="module" required>
-                                                <?php if ($array['module'] == null) { ?>
-                                                    <option selected>--Select Module--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Module--</option>
-                                                    <option hidden selected><?php echo $array['module'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="National">National</option>
-                                                <option value="State">State</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="category">Category</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="category" name="category" required>
-                                                <?php if ($array['category'] == null) { ?>
-                                                    <option selected>--Select Category--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Category--</option>
-                                                    <option hidden selected><?php echo $array['category'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="LG1">LG1</option>
-                                                <option value="LG2-A">LG2-A</option>
-                                                <option value="LG2-B">LG2-B</option>
-                                                <option value="LG2-C">LG2-C</option>
-                                                <option value="LG3">LG3</option>
-                                                <option value="LG3">LG4</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="age">Age</label>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control" id="age" name="age" placeholder="Enter Age" value="<?php $today = new DateTime();
-                                                                                                                                            echo $today->diff(new DateTime($array['dateofbirth']))->y ?>" readonly>
-                                        </td>
-                                    </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="module">Module</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="module" name="module" required>
+                                                                        <?php if ($array['module'] == null) { ?>
+                                                                            <option selected>--Select Module--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Module--</option>
+                                                                            <option hidden selected><?php echo $array['module'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="National">National</option>
+                                                                        <option value="State">State</option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="category">Category</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="category" name="category" required>
+                                                                        <?php if ($array['category'] == null) { ?>
+                                                                            <option selected>--Select Category--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Category--</option>
+                                                                            <option hidden selected><?php echo $array['category'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="LG1">LG1</option>
+                                                                        <option value="LG2-A">LG2-A</option>
+                                                                        <option value="LG2-B">LG2-B</option>
+                                                                        <option value="LG2-C">LG2-C</option>
+                                                                        <option value="LG3">LG3</option>
+                                                                        <option value="LG3">LG4</option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="age">Age</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control" id="age" name="age" placeholder="Enter Age" value="<?php $today = new DateTime();
+                                                                                                                                                                    echo $today->diff(new DateTime($array['dateofbirth']))->y ?>" readonly>
+                                                                </td>
+                                                            </tr>
 
-                                    <tr>
-                                        <td>
-                                            <label for="photo-url">Photo URL</label>
-                                        </td>
-                                        <td>
-                                            <input type="url" class="form-control" id="photo-url" name="photo-url" placeholder="Enter Photo URL" value="<?php echo $array['photourl'] ?>" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="id-card-issued">ID Card Issued</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="id-card-issued" name="id-card-issued" required>
-                                                <?php if ($array['id_card_issued'] == null) { ?>
-                                                    <option selected>--Select Option--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Option--</option>
-                                                    <option hidden selected><?php echo $array['id_card_issued'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                        </td>
-                                    </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="photo-url">Photo URL</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="url" class="form-control" id="photo-url" name="photo-url" placeholder="Enter Photo URL" value="<?php echo $array['photourl'] ?>" required>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="id-card-issued">ID Card Issued</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="id-card-issued" name="id-card-issued" required>
+                                                                        <?php if ($array['id_card_issued'] == null) { ?>
+                                                                            <option selected>--Select Option--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Option--</option>
+                                                                            <option hidden selected><?php echo $array['id_card_issued'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Yes">Yes</option>
+                                                                        <option value="No">No</option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
 
-                                    <tr>
-                                        <td>
-                                            <label for="status">Status</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="status" name="status" required>
-                                                <?php if ($array['filterstatus'] == null) { ?>
-                                                    <option selected>--Select Option--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select Option--</option>
-                                                    <option hidden selected><?php echo $array['filterstatus'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Active">Active</option>
-                                                <option value="Inactive">Inactive</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="effectivefrom">Effective From</label>
-                                        </td>
-                                        <td>
-                                            <input type="date" class="form-control" id="effectivefrom" name="effectivefrom" value="<?php echo $array['effectivefrom'] !== null && $array['effectivefrom'] !== '' ? date("Y-m-d", strtotime($array['effectivefrom'])) : ''; ?>">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="remarks">Remarks</label>
-                                        </td>
-                                        <td>
-                                            <textarea class="form-control" id="remarks" name="remarks" rows="3"><?php echo $array['remarks'] ?></textarea>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="scode">Scode</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="scode" name="scode" placeholder="Enter Scode" value="<?php echo $array['scode'] ?>">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label for="updatedby">Updated By</label>
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" id="updatedby" name="updatedby" placeholder="Enter Exit Interview" value="<?php echo $associatenumber ?>" readonly>
-                                        </td>
-                                    </tr>
-                            </tbody>
-                        </table>
-                        <br>
-                        <button type="submit" id="submitBtn" class="btn btn-danger">Save
-                            Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
-                        </button>
-                        <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last
-                            updated
-                            on <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?></p>
-                    </fieldset>
-                </form>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="status">Status</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="status" name="status" required>
+                                                                        <?php if ($array['filterstatus'] == null) { ?>
+                                                                            <option selected>--Select Option--</option>
+                                                                        <?php
+                                                                        } else { ?>
+                                                                            <option selected>--Select Option--</option>
+                                                                            <option hidden selected><?php echo $array['filterstatus'] ?></option>
+                                                                        <?php }
+                                                                        ?>
+                                                                        <option value="Active">Active</option>
+                                                                        <option value="Inactive">Inactive</option>
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="effectivefrom">Effective From</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="date" class="form-control" id="effectivefrom" name="effectivefrom" value="<?php echo $array['effectivefrom'] !== null && $array['effectivefrom'] !== '' ? date("Y-m-d", strtotime($array['effectivefrom'])) : ''; ?>">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="remarks">Remarks</label>
+                                                                </td>
+                                                                <td>
+                                                                    <textarea class="form-control" id="remarks" name="remarks" rows="3"><?php echo $array['remarks'] ?></textarea>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="scode">Scode</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="scode" name="scode" placeholder="Enter Scode" value="<?php echo $array['scode'] ?>">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="updatedby">Updated By</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="updatedby" name="updatedby" placeholder="Enter Exit Interview" value="<?php echo $associatenumber ?>" readonly>
+                                                                </td>
+                                                            </tr>
+                                                    </tbody>
+                                                </table>
+                                                <br>
+                                                <button type="submit" id="submitBtn" class="btn btn-danger">Save
+                                                    Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
+                                                </button>
+                                                <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last
+                                                    updated
+                                                    on <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?></p>
+                                            </fieldset>
+                                        </form>
 
-            <?php } ?>
-        <?php
-        } else if ($student_id == null) {
-        ?>
-            <p>Please enter the Student ID.</p>
-        <?php
-        } else {
-        ?>
-            <p>We could not find any records matching the entered Student ID.</p>
-        <?php } ?>
+                                    <?php } ?>
+                                <?php
+                                } else if ($student_id == null) {
+                                ?>
+                                    <p>Please enter the Student ID.</p>
+                                <?php
+                                } else {
+                                ?>
+                                    <p>We could not find any records matching the entered Student ID.</p>
+                                <?php } ?>
 
-    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
+
+    </main><!-- End #main -->
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
@@ -1404,11 +1442,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                     </div>
 
                     <div class="mb-3">
-                        <label for="modal-effective-from-date" class="form-label">Effective From Date:</label>
-                        <input type="date" class="form-control" id="modal-effective-from-date" min="<?php echo date('Y-m-d'); ?>">
+                        <label for="modal-effective-from-date" class="form-label">Effective From Month:</label>
+                        <input type="month" class="form-control" id="modal-effective-from-date">
                         <small class="form-text text-muted">
-                            The selected plan will be applied to the feesheet of the selected month.
-                            <br>Example: If you select June 15, the plan will be effective from June 1.
+                            The selected plan will be applied to the feesheet starting from the first day of the selected month.
                         </small>
                     </div>
                 </div>
@@ -1609,12 +1646,15 @@ if (@$_POST['form-type'] == "admission_admin") {
             $('#save-plan-changes').click(function() {
                 const division = $('#modal-division-select').val();
                 const admissionType = $('#modal-type-of-admission').val();
-                const effectiveDate = $('#modal-effective-from-date').val();
+                const effectiveMonth = $('#modal-effective-from-date').val(); // Format: YYYY-MM
 
-                if (!division || !admissionType || !effectiveDate) {
+                if (!division || !admissionType || !effectiveMonth) {
                     alert('Please fill all fields');
                     return;
                 }
+
+                // Convert month selection to first day of month (YYYY-MM-DD)
+                const effectiveDate = effectiveMonth + '-01';
 
                 // Update hidden fields in main form
                 $('#division-select').val(division);
@@ -1625,25 +1665,26 @@ if (@$_POST['form-type'] == "admission_admin") {
                 $('#current-admission-display').text(admissionType);
 
                 // Format date for display (show month and year only)
-                const dateObj = new Date(effectiveDate);
+                const [year, month] = effectiveMonth.split('-');
+                const dateObj = new Date(year, month - 1);
                 const monthName = dateObj.toLocaleString('default', {
                     month: 'long'
                 });
-                $('#current-effective-date-display').text(monthName + ' ' + dateObj.getFullYear());
+                $('#current-effective-date-display').text(monthName + ' ' + year);
 
                 // Close modal
                 $('#updatePlanModal').modal('hide');
             });
 
-            // Set minimum date to today and default to first of next month
+            // Set default to next month (format: YYYY-MM)
             const today = new Date();
-            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-            const formattedDate = nextMonth.toISOString().split('T')[0];
-            $('#modal-effective-from-date').attr('min', today.toISOString().split('T')[0]);
+            const nextMonth = today.getMonth() === 11 ?
+                `${today.getFullYear() + 1}-01` :
+                `${today.getFullYear()}-${String(today.getMonth() + 2).padStart(2, '0')}`;
 
             // Only set default if no existing value
             if (!$('#effective-from-date').val()) {
-                $('#modal-effective-from-date').val(formattedDate);
+                $('#modal-effective-from-date').val(nextMonth);
             }
         });
     </script>
