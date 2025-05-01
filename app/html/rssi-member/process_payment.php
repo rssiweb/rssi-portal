@@ -14,11 +14,36 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Get and validate all required parameters
 $redirectParams = [
-    'status' => $_REQUEST['status'] ?? '',
+    'status' => $_REQUEST['status'] ?? 'Active',
     'month' => $_REQUEST['month'] ?? date('F'),
     'year' => $_REQUEST['year'] ?? date('Y'),
-    'class' => $_REQUEST['class'] ?? ''
+    'search_term' => $_REQUEST['search_term'] ?? ''
 ];
+// Handle class parameter (can be array or string)
+if (isset($_REQUEST['class']) && is_array($_REQUEST['class'])) {
+    $redirectParams['class'] = $_REQUEST['class'];
+} elseif (isset($_REQUEST['class']) && !empty($_REQUEST['class'])) {
+    $redirectParams['class'] = [$_REQUEST['class']];
+} else {
+    $redirectParams['class'] = [];
+}
+
+// Function to build redirect URL with proper parameter handling
+function buildRedirectUrl($params) {
+    $queryParams = [];
+    
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                $queryParams[] = urlencode($key.'[]') . '=' . urlencode($item);
+            }
+        } elseif ($value !== '' && $value !== null) {
+            $queryParams[] = urlencode($key) . '=' . urlencode($value);
+        }
+    }
+    
+    return 'fee_collection.php?' . implode('&', $queryParams);
+}
 
 // Validate required fields
 $requiredFields = ['student_id', 'month', 'year', 'payment_type', 'collected_by'];
@@ -179,7 +204,7 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Payment processed successfully',
-        'redirect' => 'fee_collection.php?' . http_build_query(array_filter($redirectParams))
+        'redirect' => buildRedirectUrl($redirectParams)
     ]);
     
 } catch (Exception $e) {
@@ -188,6 +213,6 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Error processing payment: ' . $e->getMessage(),
-        'redirect' => 'fee_collection.php?' . http_build_query($redirectParams)
+        'redirect' => buildRedirectUrl($redirectParams)
     ]);
 }

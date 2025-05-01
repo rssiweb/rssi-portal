@@ -904,12 +904,25 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 e.preventDefault();
 
                 var form = $(this);
-                // Include all parameters in the form data
-                var formData = form.serialize() +
-                    '&status=' + encodeURIComponent(new URLSearchParams(window.location.search).get('status') || '') +
-                    '&month=' + encodeURIComponent(new URLSearchParams(window.location.search).get('month') || '') +
-                    '&year=' + encodeURIComponent(new URLSearchParams(window.location.search).get('year') || '') +
-                    '&class=' + encodeURIComponent(new URLSearchParams(window.location.search).get('class') || '');
+                var formData = form.serialize();
+
+                // Get all current URL parameters
+                var urlParams = new URLSearchParams(window.location.search);
+
+                // Add all parameters to form data
+                urlParams.forEach(function(value, key) {
+                    // Handle array parameters (like class[])
+                    if (key.endsWith('[]')) {
+                        // Get all values for this array parameter
+                        var values = urlParams.getAll(key);
+                        values.forEach(function(val) {
+                            formData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(val);
+                        });
+                    } else {
+                        // Handle regular parameters
+                        formData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                    }
+                });
 
                 var submitBtn = form.find('button[type="submit"]');
                 var originalText = submitBtn.html();
@@ -1205,18 +1218,31 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
                 // Get current URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                const currentParams = {
-                    status: urlParams.get('status') || '',
-                    month: urlParams.get('month') || '<?= $month ?>',
-                    year: urlParams.get('year') || '<?= $year ?>',
-                    class: urlParams.get('class') || ''
-                };
+                // Add all parameters to form data
+                urlParams.forEach((value, key) => {
+                    // Handle array parameters (like class[])
+                    if (key.endsWith('[]')) {
+                        // Get all values for this array parameter
+                        const values = urlParams.getAll(key);
+                        values.forEach(val => {
+                            formData += `&${key}=${encodeURIComponent(val)}`;
+                        });
+                    } else {
+                        // Handle regular parameters
+                        formData += `&${key}=${encodeURIComponent(value)}`;
+                    }
+                });
 
-                // Add parameters to form data
-                formData += `&status=${encodeURIComponent(currentParams.status)}`;
-                formData += `&month=${encodeURIComponent(currentParams.month)}`;
-                formData += `&year=${encodeURIComponent(currentParams.year)}`;
-                formData += `&class=${encodeURIComponent(currentParams.class)}`;
+                // Ensure these default values if not present
+                if (!urlParams.has('status')) {
+                    formData += '&status=Active';
+                }
+                if (!urlParams.has('month')) {
+                    formData += `&month=${encodeURIComponent('<?= $month ?>')}`;
+                }
+                if (!urlParams.has('year')) {
+                    formData += `&year=${encodeURIComponent('<?= $year ?>')}`;
+                }
 
                 const submitBtn = form.find('button[type="submit"]');
                 const originalText = submitBtn.html();

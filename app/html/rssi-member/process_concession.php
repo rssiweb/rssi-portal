@@ -12,20 +12,51 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get and validate required parameters from both POST and GET
+// Function to build redirect URL with proper parameter handling
+function buildRedirectUrl($params)
+{
+    $queryParams = [];
+
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                $queryParams[] = urlencode($key . '[]') . '=' . urlencode($item);
+            }
+        } elseif ($value !== '' && $value !== null) {
+            $queryParams[] = urlencode($key) . '=' . urlencode($value);
+        }
+    }
+
+    return 'fee_collection.php?' . implode('&', $queryParams);
+}
+
+// Get and validate all parameters
 $redirectParams = [
-    'status' => $_REQUEST['status'] ?? '',
+    'status' => $_REQUEST['status'] ?? 'Active',
     'month' => $_REQUEST['month'] ?? date('F'),
     'year' => $_REQUEST['year'] ?? date('Y'),
-    'class' => $_REQUEST['class'] ?? ''
+    'search_term' => $_REQUEST['search_term'] ?? ''
 ];
+
+// Handle class parameter (can be array or string)
+if (isset($_REQUEST['class']) && is_array($_REQUEST['class'])) {
+    $redirectParams['class'] = $_REQUEST['class'];
+} elseif (isset($_REQUEST['class']) && !empty($_REQUEST['class'])) {
+    $redirectParams['class'] = [$_REQUEST['class']];
+} else {
+    $redirectParams['class'] = [];
+}
 
 // Input validation
 $requiredFields = ['student_id', 'reason', 'effective_from', 'category_ids', 'concession_amounts'];
 foreach ($requiredFields as $field) {
     if (empty($_POST[$field])) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+        echo json_encode([
+            'success' => false,
+            'message' => "Missing required field: $field",
+            'redirect' => buildRedirectUrl($redirectParams)
+        ]);
         exit;
     }
 }
@@ -41,20 +72,32 @@ $concessionAmounts = $_POST['concession_amounts'];
 // Validate date formats
 if (!DateTime::createFromFormat('Y-m-d', $effectiveFrom)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid effective_from date format']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid effective_from date format',
+        'redirect' => buildRedirectUrl($redirectParams)
+    ]);
     exit;
 }
 
 if ($effectiveUntil && !DateTime::createFromFormat('Y-m-d', $effectiveUntil)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid effective_until date format']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid effective_until date format',
+        'redirect' => buildRedirectUrl($redirectParams)
+    ]);
     exit;
 }
 
 // Start transaction
 if (!pg_query($con, "BEGIN")) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Failed to start transaction']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Failed to start transaction',
+        'redirect' => buildRedirectUrl($redirectParams)
+    ]);
     exit;
 }
 
@@ -102,27 +145,19 @@ try {
 
     // Store success message
     $_SESSION['success_message'] = "Concession added successfully";
-    
-    // Build redirect URL with all parameters
-    $redirectUrl = 'fee_collection.php?' . http_build_query(array_filter([
-        'status' => $redirectParams['status'],
-        'month' => $redirectParams['month'],
-        'year' => $redirectParams['year'],
-        'class' => $redirectParams['class']
-    ]));
-    
+
     // Return success response with redirect URL
     echo json_encode([
         'success' => true,
         'message' => 'Concession processed successfully',
-        'redirect' => $redirectUrl
+        'redirect' => buildRedirectUrl($redirectParams)
     ]);
-    
 } catch (Exception $e) {
     pg_query($con, "ROLLBACK");
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error adding concession: ' . $e->getMessage()
+        'message' => 'Error adding concession: ' . $e->getMessage(),
+        'redirect' => buildRedirectUrl($redirectParams)
     ]);
 }
