@@ -9,8 +9,22 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-// Get the requested view
+// Get the requested view and academic year
 $view = isset($_POST['view']) ? $_POST['view'] : 'stock_add';
+$academicYear = isset($_POST['academic_year']) ? $_POST['academic_year'] : null;
+
+// Function to check if a date falls within an academic year (April 1 to March 31)
+function isInAcademicYear($date, $academicYear)
+{
+    if (empty($date) || empty($academicYear)) return false;
+
+    list($startYear, $endYear) = explode('-', $academicYear);
+    $startDate = new DateTime($startYear . '-04-01');
+    $endDate = new DateTime($endYear . '-03-31 23:59:59');
+    $checkDate = new DateTime($date);
+
+    return ($checkDate >= $startDate && $checkDate <= $endDate);
+}
 
 // Query based on the view
 switch ($view) {
@@ -39,53 +53,58 @@ switch ($view) {
                 a.quantity_received
             ORDER BY a.timestamp desc;
         ";
+        $dateField = 'date_received';
         break;
     case 'stock_distribution':
         $query = "
-        SELECT
-            d.transaction_out_id AS Ref,
-            d.date AS date_distribution,
-            d.distributed_to,
-            COALESCE(m.fullname, s.studentname) AS distributed_to_name,
-            i.item_name,
-            d.quantity_distributed,
-            u.unit_name,
-            d.timestamp,
-            d.distributed_by
-        FROM stock_item i
-        JOIN stock_out d ON i.item_id = d.item_distributed
-        JOIN stock_item_unit u ON u.unit_id = d.unit
-        LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
-        LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
-        GROUP BY 
-            d.transaction_out_id,
-            d.date,
-            d.distributed_to,
-            m.fullname, s.studentname,
-            i.item_name,
-            d.quantity_distributed,
-            u.unit_name,
-            d.timestamp,
-            d.distributed_by
-        ORDER BY d.timestamp desc;
-    ";
+            SELECT
+                d.transaction_out_id AS Ref,
+                d.date AS date_distribution,
+                d.distributed_to,
+                COALESCE(m.fullname, s.studentname) AS distributed_to_name,
+                i.item_name,
+                d.quantity_distributed,
+                u.unit_name,
+                d.timestamp,
+                d.distributed_by
+            FROM stock_item i
+            JOIN stock_out d ON i.item_id = d.item_distributed
+            JOIN stock_item_unit u ON u.unit_id = d.unit
+            LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
+            LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+            GROUP BY 
+                d.transaction_out_id,
+                d.date,
+                d.distributed_to,
+                m.fullname, s.studentname,
+                i.item_name,
+                d.quantity_distributed,
+                u.unit_name,
+                d.timestamp,
+                d.distributed_by
+            ORDER BY d.timestamp desc;
+        ";
+        $dateField = 'date_distribution';
         break;
     case 'user_distribution':
         $query = "
-    SELECT
-        d.distributed_to,
-        COALESCE(m.fullname, s.studentname) AS distributed_to_name,
-        i.item_name,
-        COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
-        u.unit_name
-    FROM stock_out d
-    JOIN stock_item i ON i.item_id = d.item_distributed
-    JOIN stock_item_unit u ON u.unit_id = d.unit
-    LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
-    LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
-    GROUP BY d.distributed_to, m.fullname, s.studentname, i.item_id, i.item_name, u.unit_id, u.unit_name
-    ORDER BY d.distributed_to, i.item_id, u.unit_id;
-";
+            SELECT
+                d.distributed_to,
+                COALESCE(m.fullname, s.studentname) AS distributed_to_name,
+                i.item_name,
+                COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
+                u.unit_name,
+                MIN(d.date) AS first_distribution_date,
+                MAX(d.date) AS last_distribution_date
+            FROM stock_out d
+            JOIN stock_item i ON i.item_id = d.item_distributed
+            JOIN stock_item_unit u ON u.unit_id = d.unit
+            LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
+            LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+            GROUP BY d.distributed_to, m.fullname, s.studentname, i.item_id, i.item_name, u.unit_id, u.unit_name
+            ORDER BY d.distributed_to, i.item_id, u.unit_id;
+        ";
+        $dateField = 'last_distribution_date'; // Using last distribution date for academic year filtering
         break;
     default:
         echo 'Invalid view.';
@@ -101,38 +120,48 @@ if (!$result) {
 
 $data = [];
 while ($row = pg_fetch_assoc($result)) {
-    $data[] = $row;
+    // Filter by academic year if selected
+    if ($academicYear && isset($row[$dateField])) {
+        if (isInAcademicYear($row[$dateField], $academicYear)) {
+            $data[] = $row;
+        }
+    } else {
+        $data[] = $row; // No academic year filter applied
+    }
 }
 
 // Output the data in HTML table format
-echo '<div class="table-responsive">
-      <table class="table" id="table-id">';
-echo '<thead><tr>';
-foreach (array_keys($data[0]) as $key) {
-    echo "<th>" . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . "</th>";
-}
-echo '</tr></thead><tbody>';
-foreach ($data as $row) {
-    echo '<tr>';
-    foreach ($row as $key => $value) {
-        // Format the date fields
-        if ($key == 'date_received' || $key == 'timestamp' || $key == 'date_distribution') {
-            // Check if value is not null or empty
-            if (!empty($value)) {
-                $date = new DateTime($value);
-                // Format dates in dd/mm/yyyy and timestamps in dd/mm/yyyy hh:mm AM/PM
-                $formattedValue = ($key == 'timestamp') ? $date->format('d/m/Y h:i A') : $date->format('d/m/Y');
-            } else {
-                $formattedValue = '';
-            }
-        } else {
-            $formattedValue = $value ?? '';
-        }
-        echo "<td>" . htmlspecialchars($formattedValue, ENT_QUOTES, 'UTF-8') . "</td>";
+if (empty($data)) {
+    echo '<div class="alert alert-info">No data found for the selected academic year.</div>';
+} else {
+    echo '<div class="table-responsive">
+          <table class="table" id="table-id">';
+    echo '<thead><tr>';
+    foreach (array_keys($data[0]) as $key) {
+        echo "<th>" . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . "</th>";
     }
-    echo '</tr>';
-}
-echo '</tbody></table></div>';
+    echo '</tr></thead><tbody>';
 
+    foreach ($data as $row) {
+        echo '<tr>';
+        foreach ($row as $key => $value) {
+            // Format the date fields
+            if (in_array($key, ['date_received', 'timestamp', 'date_distribution', 'first_distribution_date', 'last_distribution_date'])) {
+                if (!empty($value)) {
+                    $date = new DateTime($value);
+                    $formattedValue = (strpos($key, 'timestamp') !== false) ?
+                        $date->format('d/m/Y h:i A') : $date->format('d/m/Y');
+                } else {
+                    $formattedValue = '';
+                }
+            } else {
+                $formattedValue = $value ?? '';
+            }
+            echo "<td>" . htmlspecialchars($formattedValue, ENT_QUOTES, 'UTF-8') . "</td>";
+        }
+        echo '</tr>';
+    }
+    echo '</tbody></table></div>';
+}
 
 pg_close($con);
