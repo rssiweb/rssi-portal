@@ -65,6 +65,7 @@ switch ($view) {
                 i.item_name,
                 d.quantity_distributed,
                 u.unit_name,
+                d.description,
                 d.timestamp,
                 d.distributed_by
             FROM stock_item i
@@ -80,6 +81,7 @@ switch ($view) {
                 i.item_name,
                 d.quantity_distributed,
                 u.unit_name,
+                d.description,
                 d.timestamp,
                 d.distributed_by
             ORDER BY d.timestamp desc;
@@ -92,7 +94,7 @@ switch ($view) {
                 d.distributed_to,
                 COALESCE(m.fullname, s.studentname) AS distributed_to_name,
                 i.item_name,
-                COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
+                SUM(d.quantity_distributed) AS total_distributed_count,
                 u.unit_name,
                 MIN(d.date) AS first_distribution_date,
                 MAX(d.date) AS last_distribution_date
@@ -101,10 +103,20 @@ switch ($view) {
             JOIN stock_item_unit u ON u.unit_id = d.unit
             LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
             LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+        ";
+
+        // Add WHERE clause for academic year filtering if selected
+        if ($academicYear) {
+            list($startYear, $endYear) = explode('-', $academicYear);
+            $startDate = $startYear . '-04-01';
+            $endDate = $endYear . '-03-31';
+            $query .= " WHERE d.date BETWEEN '$startDate' AND '$endDate'";
+        }
+
+        $query .= "
             GROUP BY d.distributed_to, m.fullname, s.studentname, i.item_id, i.item_name, u.unit_id, u.unit_name
             ORDER BY d.distributed_to, i.item_id, u.unit_id;
         ";
-        $dateField = 'last_distribution_date'; // Using last distribution date for academic year filtering
         break;
     default:
         echo 'Invalid view.';
@@ -120,13 +132,13 @@ if (!$result) {
 
 $data = [];
 while ($row = pg_fetch_assoc($result)) {
-    // Filter by academic year if selected
-    if ($academicYear && isset($row[$dateField])) {
+    // For user_distribution, we don't need additional PHP filtering since it's done in SQL
+    if ($view !== 'user_distribution' && $academicYear && isset($dateField)) {
         if (isInAcademicYear($row[$dateField], $academicYear)) {
             $data[] = $row;
         }
     } else {
-        $data[] = $row; // No academic year filter applied
+        $data[] = $row; // No additional filtering needed
     }
 }
 
