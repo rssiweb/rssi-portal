@@ -510,12 +510,12 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Settlement Management</h1>
+            <h1>Fee Collection</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
-                    <li class="breadcrumb-item active">Settlement Management</li>
+                    <li class="breadcrumb-item active">Fee Collection</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

@@ -52,7 +52,7 @@ rsort($academicYears);
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
     <style>
-        .nav-link.active {
+        #navbarNav .nav-link.active {
             font-weight: bold;
             color: #0d6efd !important;
             border-bottom: 2px solid #0d6efd;
@@ -118,7 +118,7 @@ rsort($academicYears);
                                 <!-- <h1>Inventory Insights</h1> -->
                                 <!-- Navigation Tabs -->
                                 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-                                    <div class="navbar-nav">
+                                    <div class="navbar-nav" id="navbarNav">
                                         <a class="nav-item nav-link active" href="#" data-view="stock_add">Detailed Stock Add</a>
                                         <a class="nav-item nav-link" href="#" data-view="stock_distribution">Detailed Distribution Record</a>
                                         <a class="nav-item nav-link" href="#" data-view="user_distribution">User-Based Distribution Record</a>
@@ -154,7 +154,7 @@ rsort($academicYears);
             loadView('stock_add', academicYear);
 
             // Handle navigation clicks
-            $('.nav-link').click(function(e) {
+            $('#navbarNav .nav-link').click(function(e) {
                 e.preventDefault();
 
                 // Update active tab styling
