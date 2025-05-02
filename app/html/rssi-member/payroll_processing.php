@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   $subCategories = is_array($_POST['subCategory']) ? $_POST['subCategory'] : [$_POST['subCategory']];
   $amounts = is_array($_POST['amount']) ? $_POST['amount'] : [$_POST['amount']];
 
+  $success = false;
+  $error_message = '';
+
   // Insert form data into the database
   try {
     // Insert into payslip_entry table first
@@ -98,8 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
     $result = pg_query($con, $query);
 
     if (!$result) {
-      echo "Error: " . pg_last_error($con);
-      exit;
+      $error_message = "Error: " . pg_last_error($con);
+      throw new Exception($error_message);
     }
 
     // Insert into payslip_component table for each component
@@ -113,23 +116,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
       $cmdtuples = pg_affected_rows($result);
 
       if (!$result) {
-        echo "Error: " . pg_last_error($con);
-        exit;
+        $error_message = "Error: " . pg_last_error($con);
+        throw new Exception($error_message);
       }
     }
+
+    $success = true;
   } catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
+    $error_message = $e->getMessage();
+    echo "<script>alert('Error: Failed to create payslip. Please try again.\\n" . addslashes($error_message) . "');</script>";
     exit;
   }
 
-  if (@$cmdtuples == 1 && $employee_email != "") {
-    sendEmail("payslip", array(
-      "month" => date('F', mktime(0, 0, 0, $paymonth, 1)),
-      "year" => @$payyear,
-      "fullname" => @$employee_fullname,
-      "associatenumber" => @$employee_associatenumber,
-      "payslipid" => @$uniqueId,
-    ), $employee_email, False);
+  if ($success) {
+    if (@$cmdtuples == 1 && $employee_email != "") {
+      sendEmail("payslip", array(
+        "month" => date('F', mktime(0, 0, 0, $paymonth, 1)),
+        "year" => @$payyear,
+        "fullname" => @$employee_fullname,
+        "associatenumber" => @$employee_associatenumber,
+        "payslipid" => @$uniqueId,
+      ), $employee_email, False);
+    }
+
+    echo "<script>
+    alert('Payslip created successfully! Payslip ID: {$uniqueId}');
+    if (window.history.replaceState) {
+        // Update the URL without causing a page reload or resubmission
+        window.history.replaceState(null, null, window.location.href);
+    }
+    window.location.reload(); // Trigger a page reload to reflect changes
+    </script>";
   }
 }
 ?>
@@ -195,23 +212,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 </head>
 
 <body>
-  <?php include 'inactive_session_expire_check.php'; ?>
-  <?php if (@$employeeId != null && @$cmdtuples == 0) { ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center;">
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>Error: Failed to create payslip. Please try again.</span>
-    </div>
-  <?php } else if (@$cmdtuples == 1) { ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: center;">
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      <span class="blink_me"><i class="bi bi-check-lg"></i></span>&nbsp;&nbsp;<span>Payslip created successfully!</span>
-    </div>
-    <script>
-      if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
-      }
-    </script>
-  <?php } ?>
   <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 

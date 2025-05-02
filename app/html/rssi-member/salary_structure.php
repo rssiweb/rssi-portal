@@ -127,6 +127,7 @@ $master_components = pg_query($con, "SELECT mc.*, ct.name as type_name, ct.compo
                                    FROM salary_components_master mc
                                    JOIN salary_component_types ct ON mc.component_type_id = ct.id
                                    WHERE mc.is_active = TRUE
+                                   AND is_in_library = TRUE
                                    ORDER BY ct.display_order, mc.name");
 $master_components = pg_fetch_all($master_components) ?: [];
 
