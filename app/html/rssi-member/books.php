@@ -6,6 +6,7 @@ include("../../util/drive.php");
 // Ensure only teachers/admins can access
 if (!isLoggedIn("tid") && !isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -148,11 +149,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_book'])) {
     if ($result) {
         $book_id = pg_fetch_result($result, 0, 0);
         $_SESSION['message'] = "Book added successfully!";
-        header("Location: books.php");
+        header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     } else {
         $_SESSION['error'] = "Error adding book: " . pg_last_error($con);
-        header("Location: books.php");
+        header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     }
 }
@@ -222,11 +223,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_book'])) {
 
     if ($result) {
         $_SESSION['message'] = "Book updated successfully!";
-        header("Location: books.php");
+        header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     } else {
         $_SESSION['error'] = "Error updating book: " . pg_last_error($con);
-        header("Location: books.php");
+        header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     }
 }
@@ -753,24 +754,6 @@ $stats = [
                                                 <?php endif; ?>
                                             <?php endwhile; ?>
                                         </div>
-
-                                        <!-- Pagination/Load More -->
-                                        <div class="d-flex justify-content-center mb-5">
-                                            <?php if ($has_more): ?>
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>"
-                                                    class="btn btn-primary load-more-btn px-4 py-2">
-                                                    <i class="bi bi-arrow-down-circle"></i> Load More Books
-                                                </a>
-                                            <?php elseif ($total_books > $initial_limit): ?>
-                                                <div class="alert alert-info text-center py-2">
-                                                    <i class="bi bi-info-circle"></i> That's all for now! Check back later for new ones.
-                                                </div>
-                                            <?php elseif ($total_books == 0): ?>
-                                                <div class="alert alert-warning text-center py-2">
-                                                    <i class="bi bi-exclamation-triangle"></i> No books found matching your criteria
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
                                     </main>
                                 </div>
                             </div>
@@ -988,6 +971,159 @@ $stats = [
         });
     </script>
 
+    <!-- Add this above your load more button -->
+    <div class="text-center mb-2">
+        <small class="text-muted">
+            Showing <?= min($initial_limit + (($page - 1) * $load_more_limit), $total_books) ?> of <?= $total_books ?> books
+        </small>
+    </div>
+
+    <!-- Your existing load more button -->
+    <div class="d-flex justify-content-center mb-5">
+        <?php if ($has_more): ?>
+            <button class="btn btn-primary load-more-btn px-4 py-2" id="loadMoreButton">
+                <i class="bi bi-arrow-down-circle"></i> Load More Books
+            </button>
+        <?php elseif ($total_books > $initial_limit): ?>
+            <div class="alert alert-info text-center py-2">
+                <i class="bi bi-info-circle"></i> That's all for now! Check back later for new ones.
+            </div>
+        <?php elseif ($total_books == 0): ?>
+            <div class="alert alert-warning text-center py-2">
+                <i class="bi bi-exclamation-triangle"></i> No books found matching your criteria
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize with the current page from URL
+            let targetPage = <?= $page ?>;
+            let currentLoadedPage = 1; // Tracks what we've actually loaded
+            let isLoading = false;
+            const initialLimit = <?= $initial_limit ?>;
+            const loadMoreLimit = <?= $load_more_limit ?>;
+            const totalBooks = <?= $total_books ?>;
+            const $loadMoreBtn = $('#loadMoreButton');
+            const $showingCount = $('.text-center.mb-2 small');
+
+            // Function to update the showing count
+            function updateShowingCount() {
+                const totalShown = initialLimit + ((currentLoadedPage - 1) * loadMoreLimit);
+                $showingCount.text(`Showing ${Math.min(totalShown, totalBooks)} of ${totalBooks} books`);
+            }
+
+            // Initialize count display
+            updateShowingCount();
+
+            // Function to load a specific page of books
+            function loadPage(pageNumber) {
+                if (isLoading) return Promise.reject();
+
+                isLoading = true;
+                const $btn = $loadMoreBtn;
+                const wasButtonVisible = $btn.is(':visible');
+
+                // Show loading state if button is visible
+                if (wasButtonVisible) {
+                    $btn.prop('disabled', true);
+                    $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+                }
+
+                return new Promise((resolve, reject) => {
+                    $.ajax({
+                        url: 'load_books.php',
+                        type: 'GET',
+                        data: {
+                            page: pageNumber,
+                            search: $('#search').val(),
+                            author: $('#author').val(),
+                            publisher: $('#publisher').val(),
+                            search_category: $('#search_category').val()
+                        },
+                        success: function(data) {
+                            if (data.trim()) {
+                                $('.row-cols-1').append(data);
+                                currentLoadedPage = pageNumber;
+                                updateShowingCount();
+                                resolve();
+                            } else {
+                                reject();
+                            }
+                        },
+                        error: function() {
+                            reject();
+                        },
+                        complete: function() {
+                            isLoading = false;
+                            if (wasButtonVisible) {
+                                $btn.prop('disabled', false);
+                                $btn.html('<i class="bi bi-arrow-down-circle"></i> Load More Books');
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Load More button click handler
+            $(document).on('click', '.load-more-btn', function(e) {
+                e.preventDefault();
+                const nextPage = currentLoadedPage + 1;
+
+                loadPage(nextPage).then(() => {
+                    // Update URL to reflect the new highest loaded page
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('page', nextPage);
+                    history.replaceState(null, '', '?' + params.toString());
+
+                    // Check if we've reached the end
+                    const totalLoaded = initialLimit + ((nextPage - 1) * loadMoreLimit);
+                    if (totalLoaded >= totalBooks) {
+                        $loadMoreBtn.replaceWith('<div class="alert alert-info text-center py-2">' +
+                            '<i class="bi bi-info-circle"></i> That\'s all for now! Check back later for new ones.' +
+                            '</div>');
+                    }
+                }).catch(() => {
+                    alert('Error loading more books. Please try again.');
+                });
+            });
+
+            // On initial load, if targetPage > 1, load all pages up to targetPage
+            if (targetPage > 1) {
+                // Show loading state immediately
+                $loadMoreBtn.prop('disabled', true);
+                $loadMoreBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+
+                // Load pages sequentially
+                (async function() {
+                    for (let p = 2; p <= targetPage; p++) {
+                        try {
+                            await loadPage(p);
+                        } catch {
+                            alert('Error loading books. Please refresh the page.');
+                            break;
+                        }
+                    }
+
+                    // Restore button state
+                    const totalLoaded = initialLimit + ((targetPage - 1) * loadMoreLimit);
+                    if (totalLoaded >= totalBooks) {
+                        $loadMoreBtn.replaceWith('<div class="alert alert-info text-center py-2">' +
+                            '<i class="bi bi-info-circle"></i> That\'s all for now! Check back later for new ones.' +
+                            '</div>');
+                    } else {
+                        $loadMoreBtn.prop('disabled', false);
+                        $loadMoreBtn.html('<i class="bi bi-arrow-down-circle"></i> Load More Books');
+                    }
+
+                    // Set URL to the target page (not changing during loading)
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('page', targetPage);
+                    history.replaceState(null, '', '?' + params.toString());
+                })();
+            }
+        });
+    </script>
 </body>
 
 </html>
