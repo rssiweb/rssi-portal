@@ -218,80 +218,164 @@ if ($hasFilters) {
         $concessionAmount = (float)(pg_fetch_assoc($concessionResult)['concession_amount'] ?? 0);
 
         // 8. Calculate carry forward (previous months' unpaid dues)
+        // $carryForward = 0;
+        // if ($monthNumber != '04') { // No carry forward in April (start of academic year)
+        //     // Get all months from April to previous month of current year
+        //     $startMonth = 4; // April
+        //     $endMonth = $monthNumber - 1;
+
+        //     for ($m = $startMonth; $m <= $endMonth; $m++) {
+        //         $loopMonthNum = str_pad($m, 2, '0', STR_PAD_LEFT);
+        //         $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
+        //         $loopMonthDate = "$year-$loopMonthNum-01";
+
+        //         // Get student type for this historical month
+        //         $loopStudentType = getStudentTypeForDate($con, $studentId, $loopMonthDate);
+
+        //         // Get month's fees
+        //         $loopFeeQuery = "SELECT COALESCE(SUM(fs.amount), 0) as total_fee
+        //                    FROM fee_structure fs
+        //                    JOIN fee_categories fc ON fs.category_id = fc.id
+        //                    WHERE fs.class = '{$student['class']}'
+        //                    AND fs.student_type = '$loopStudentType'
+        //                    AND '$year-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
+        //                    AND (
+        //                        fc.category_name != 'Admission Fee'
+        //                        OR (
+        //                            fc.category_name = 'Admission Fee'
+        //                            AND (
+        //                                '$loopMonthNum' = '04'
+        //                                OR (
+        //                                    EXTRACT(MONTH FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopMonthNum'
+        //                                    AND EXTRACT(YEAR FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$year'
+        //                                )
+        //                            )
+        //                        )
+        //                    )";
+        //         $loopFeeResult = pg_query($con, $loopFeeQuery);
+        //         $loopTotalFee = (float)(pg_fetch_assoc($loopFeeResult)['total_fee'] ?? 0);
+
+        //         // Get month's STUDENT-SPECIFIC fees
+        //         $loopStudentSpecificQuery = "SELECT COALESCE(SUM(ssf.amount), 0) as total_fee
+        //                               FROM student_specific_fees ssf
+        //                               JOIN fee_categories fc ON ssf.category_id = fc.id
+        //                               WHERE ssf.student_id = '{$student['student_id']}'
+        //                               AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
+        //         $loopStudentSpecificResult = pg_query($con, $loopStudentSpecificQuery);
+        //         $loopStudentSpecificFee = (float)(pg_fetch_assoc($loopStudentSpecificResult)['total_fee'] ?? 0);
+
+        //         // Combine both fee types
+        //         $CombLoopTotalFee = $loopTotalFee + $loopStudentSpecificFee;
+
+        //         // Get month's payments for core categories (Admission, Monthly, Miscellaneous)
+        //         $loopPaymentsQuery = "SELECT COALESCE(SUM(p.amount), 0) as paid_amount
+        //                        FROM fee_payments p
+        //                        JOIN fee_categories fc ON p.category_id = fc.id
+        //                        WHERE p.student_id = '$studentId'
+        //                        AND p.month = '$loopMonthName'
+        //                        AND p.academic_year = '$year'
+        //                        AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
+
+        //         $loopPaymentsResult = pg_query($con, $loopPaymentsQuery);
+        //         $loopPaidAmount = (float)(pg_fetch_assoc($loopPaymentsResult)['paid_amount'] ?? 0);
+
+        //         // Get month's concessions
+        //         $loopConcessionQuery = "SELECT COALESCE(SUM(concession_amount), 0) as concession_amount
+        //                           FROM student_concessions
+        //                           WHERE student_id = '$studentId'
+        //                           AND '$year-$loopMonthNum-01' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31')";
+        //         $loopConcessionResult = pg_query($con, $loopConcessionQuery);
+        //         $loopConcessionAmount = (float)(pg_fetch_assoc($loopConcessionResult)['concession_amount'] ?? 0);
+
+        //         // Calculate month's due
+        //         $loopNetFee = $CombLoopTotalFee - $loopConcessionAmount;
+        //         $loopDueAmount = $loopNetFee - $loopPaidAmount;
+
+        //         // Add to carry forward if positive
+        //         $carryForward += $loopDueAmount;
+        //     }
+        // }
+
+        // 8. Calculate carry forward (previous months' unpaid dues)
         $carryForward = 0;
         if ($monthNumber != '04') { // No carry forward in April (start of academic year)
             // Get all months from April to previous month of current year
             $startMonth = 4; // April
             $endMonth = $monthNumber - 1;
 
+            // Get student's date of admission
+            $doa = $student['doa'];
+            $doaMonth = date('m', strtotime($doa));
+            $doaYear = date('Y', strtotime($doa));
+
             for ($m = $startMonth; $m <= $endMonth; $m++) {
                 $loopMonthNum = str_pad($m, 2, '0', STR_PAD_LEFT);
                 $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
                 $loopMonthDate = "$year-$loopMonthNum-01";
+
+                // Skip months before student's admission
+                if ($year == $doaYear && $m < $doaMonth) {
+                    continue;
+                }
 
                 // Get student type for this historical month
                 $loopStudentType = getStudentTypeForDate($con, $studentId, $loopMonthDate);
 
                 // Get month's fees
                 $loopFeeQuery = "SELECT COALESCE(SUM(fs.amount), 0) as total_fee
-                           FROM fee_structure fs
-                           JOIN fee_categories fc ON fs.category_id = fc.id
-                           WHERE fs.class = '{$student['class']}'
-                           AND fs.student_type = '$loopStudentType'
-                           AND '$year-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
+                   FROM fee_structure fs
+                   JOIN fee_categories fc ON fs.category_id = fc.id
+                   WHERE fs.class = '{$student['class']}'
+                   AND fs.student_type = '$loopStudentType'
+                   AND '$year-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
+                   AND (
+                       fc.category_name != 'Admission Fee'
+                       OR (
+                           fc.category_name = 'Admission Fee'
                            AND (
-                               fc.category_name != 'Admission Fee'
+                               '$loopMonthNum' = '04'
                                OR (
-                                   fc.category_name = 'Admission Fee'
-                                   AND (
-                                       '$loopMonthNum' = '04'
-                                       OR (
-                                           EXTRACT(MONTH FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopMonthNum'
-                                           AND EXTRACT(YEAR FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$year'
-                                       )
-                                   )
+                                   EXTRACT(MONTH FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopMonthNum'
+                                   AND EXTRACT(YEAR FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$year'
                                )
-                           )";
+                           )
+                       )
+                   )";
                 $loopFeeResult = pg_query($con, $loopFeeQuery);
                 $loopTotalFee = (float)(pg_fetch_assoc($loopFeeResult)['total_fee'] ?? 0);
 
-                // Get month's STUDENT-SPECIFIC fees
+                // Rest of your existing code...
                 $loopStudentSpecificQuery = "SELECT COALESCE(SUM(ssf.amount), 0) as total_fee
-                                      FROM student_specific_fees ssf
-                                      JOIN fee_categories fc ON ssf.category_id = fc.id
-                                      WHERE ssf.student_id = '{$student['student_id']}'
-                                      AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
+                              FROM student_specific_fees ssf
+                              JOIN fee_categories fc ON ssf.category_id = fc.id
+                              WHERE ssf.student_id = '{$student['student_id']}'
+                              AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
                 $loopStudentSpecificResult = pg_query($con, $loopStudentSpecificQuery);
                 $loopStudentSpecificFee = (float)(pg_fetch_assoc($loopStudentSpecificResult)['total_fee'] ?? 0);
 
-                // Combine both fee types
                 $CombLoopTotalFee = $loopTotalFee + $loopStudentSpecificFee;
 
-                // Get month's payments for core categories (Admission, Monthly, Miscellaneous)
                 $loopPaymentsQuery = "SELECT COALESCE(SUM(p.amount), 0) as paid_amount
-                               FROM fee_payments p
-                               JOIN fee_categories fc ON p.category_id = fc.id
-                               WHERE p.student_id = '$studentId'
-                               AND p.month = '$loopMonthName'
-                               AND p.academic_year = '$year'
-                               AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
+                       FROM fee_payments p
+                       JOIN fee_categories fc ON p.category_id = fc.id
+                       WHERE p.student_id = '$studentId'
+                       AND p.month = '$loopMonthName'
+                       AND p.academic_year = '$year'
+                       AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
 
                 $loopPaymentsResult = pg_query($con, $loopPaymentsQuery);
                 $loopPaidAmount = (float)(pg_fetch_assoc($loopPaymentsResult)['paid_amount'] ?? 0);
 
-                // Get month's concessions
                 $loopConcessionQuery = "SELECT COALESCE(SUM(concession_amount), 0) as concession_amount
-                                  FROM student_concessions
-                                  WHERE student_id = '$studentId'
-                                  AND '$year-$loopMonthNum-01' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31')";
+                          FROM student_concessions
+                          WHERE student_id = '$studentId'
+                          AND '$year-$loopMonthNum-01' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31')";
                 $loopConcessionResult = pg_query($con, $loopConcessionQuery);
                 $loopConcessionAmount = (float)(pg_fetch_assoc($loopConcessionResult)['concession_amount'] ?? 0);
 
-                // Calculate month's due
                 $loopNetFee = $CombLoopTotalFee - $loopConcessionAmount;
                 $loopDueAmount = $loopNetFee - $loopPaidAmount;
 
-                // Add to carry forward if positive
                 $carryForward += $loopDueAmount;
             }
         }
