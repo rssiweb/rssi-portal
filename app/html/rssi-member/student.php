@@ -398,7 +398,7 @@ $classlist = [
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
-                          <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> " target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
+                          <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
                         </tr>
                       <?php
                       endforeach;

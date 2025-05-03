@@ -1074,5 +1074,6 @@
     toggleCollapsedClass('monthly_attd_report.php', 'attendX');
     toggleCollapsedClass('monthly_attd_report_associate.php', 'attendX');
     toggleCollapsedClass('attendance-analytics.php', 'attendX');
+    toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
   </script>

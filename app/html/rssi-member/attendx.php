@@ -108,7 +108,7 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="remote_attendance.php" class="card-link" target="_blank">
+                                        <a href="remote_attendance.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-globe2 icon"></i>
