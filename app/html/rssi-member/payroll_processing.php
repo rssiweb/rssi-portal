@@ -12,64 +12,81 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+?>
+<?php
+// Initialize variables
+$associate_number = $_GET['lookupEmployeeId'] ?? $_POST['employeeId'] ?? null;
+$lyear = $_GET['academicYear'] ?? $_POST['academicYear'] ?? null;
+$error_message = null;
+$show_inactive_confirmation = false;
+$resultArr = []; // Initialize result array
 
-// this page is hit with get and post both
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  @$lyear = $_POST['academicYear'];
-  @$associate_number = @strtoupper($_POST['employeeId']);
-} else {
-  @$lyear = $_GET['academicYear'];
-  @$associate_number = @strtoupper($_GET['lookupEmployeeId']);
+// Only query if associate number is provided
+if ($associate_number) {
+  $associate_number = strtoupper($associate_number);
+  $query = "
+        SELECT *, rssimyaccount_members.email AS employee_email, 
+               rssimyaccount_members.fullname AS employee_fullname, 
+               rssimyaccount_members.associatenumber AS employee_associatenumber, 
+               rssimyaccount_members.phone AS employee_phone,
+               rssimyaccount_members.filterstatus
+        FROM rssimyaccount_members
+        LEFT JOIN (
+            SELECT applicantid, COALESCE(SUM(CASE WHEN typeofleave='Sick Leave' THEN days ELSE 0 END), 0) AS sltd,
+                   COALESCE(SUM(CASE WHEN typeofleave='Casual Leave' THEN days ELSE 0 END), 0) AS cltd,
+                   COALESCE(SUM(CASE WHEN typeofleave='Leave Without Pay' THEN days ELSE 0 END), 0) AS lwptd
+            FROM leavedb_leavedb
+            WHERE lyear='$lyear' AND status='Approved'
+            GROUP BY applicantid
+        ) AS leave_stats ON rssimyaccount_members.associatenumber = leave_stats.applicantid
+        LEFT JOIN (
+            SELECT applicantid, 1 AS onleave
+            FROM leavedb_leavedb
+            WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved'
+        ) AS on_leave ON rssimyaccount_members.associatenumber = on_leave.applicantid
+        LEFT JOIN (
+            SELECT allo_applicantid, COALESCE(SUM(CASE WHEN allo_leavetype='Sick Leave' THEN allo_daycount ELSE 0 END), 0) AS slad,
+                   COALESCE(SUM(CASE WHEN allo_leavetype='Casual Leave' THEN allo_daycount ELSE 0 END), 0) AS clad
+            FROM leaveallocation
+            WHERE allo_academicyear='$lyear'
+            GROUP BY allo_applicantid
+        ) AS leave_allocation ON rssimyaccount_members.associatenumber = leave_allocation.allo_applicantid
+        LEFT JOIN (
+            SELECT adj_applicantid, COALESCE(SUM(CASE WHEN adj_leavetype='Sick Leave' THEN adj_day ELSE 0 END), 0) AS sladd,
+                   COALESCE(SUM(CASE WHEN adj_leavetype='Casual Leave' THEN adj_day ELSE 0 END), 0) AS cladd,
+                   COALESCE(SUM(CASE WHEN adj_leavetype='Leave Without Pay' THEN adj_day ELSE 0 END), 0) AS lwpadd
+            FROM leaveadjustment
+            WHERE adj_academicyear='$lyear'
+            GROUP BY adj_applicantid
+        ) AS leave_adjustment ON rssimyaccount_members.associatenumber = leave_adjustment.adj_applicantid
+        WHERE rssimyaccount_members.associatenumber = '$associate_number'
+    ";
+
+  $result = pg_query($con, $query);
+
+  if (!$result) {
+    $error_message = "Database query error: " . pg_last_error($con);
+  } elseif (pg_num_rows($result) == 0) {
+    $error_message = "No record found for the entered Associate Number";
+  } else {
+    $resultArr = pg_fetch_all($result) ?: [];
+    $row = $resultArr[0] ?? [];
+
+    if ($row && $row['filterstatus'] === 'Inactive') {
+      $error_message = "Payslip creation for inactive associate is not possible. Please make them active before proceeding.";
+    }
+
+    // Set other variables if needed
+    if ($row) {
+      $employee_email = $row['employee_email'];
+      $employee_fullname = $row['employee_fullname'];
+      $employee_phone = $row['employee_phone'];
+      $employee_associatenumber = $row['employee_associatenumber'];
+    }
+  }
 }
-$query = "
-    SELECT *, rssimyaccount_members.email AS employee_email, rssimyaccount_members.fullname AS employee_fullname, rssimyaccount_members.associatenumber AS employee_associatenumber, rssimyaccount_members.phone AS employee_phone
-    FROM rssimyaccount_members
-    LEFT JOIN (
-        SELECT applicantid, COALESCE(SUM(CASE WHEN typeofleave='Sick Leave' THEN days ELSE 0 END), 0) AS sltd,
-               COALESCE(SUM(CASE WHEN typeofleave='Casual Leave' THEN days ELSE 0 END), 0) AS cltd,
-               COALESCE(SUM(CASE WHEN typeofleave='Leave Without Pay' THEN days ELSE 0 END), 0) AS lwptd
-        FROM leavedb_leavedb
-        WHERE lyear='$lyear' AND status='Approved'
-        GROUP BY applicantid
-    ) AS leave_stats ON rssimyaccount_members.associatenumber = leave_stats.applicantid
-    LEFT JOIN (
-        SELECT applicantid, 1 AS onleave
-        FROM leavedb_leavedb
-        WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved'
-    ) AS on_leave ON rssimyaccount_members.associatenumber = on_leave.applicantid
-    LEFT JOIN (
-        SELECT allo_applicantid, COALESCE(SUM(CASE WHEN allo_leavetype='Sick Leave' THEN allo_daycount ELSE 0 END), 0) AS slad,
-               COALESCE(SUM(CASE WHEN allo_leavetype='Casual Leave' THEN allo_daycount ELSE 0 END), 0) AS clad
-        FROM leaveallocation
-        WHERE allo_academicyear='$lyear'
-        GROUP BY allo_applicantid
-    ) AS leave_allocation ON rssimyaccount_members.associatenumber = leave_allocation.allo_applicantid
-    LEFT JOIN (
-        SELECT adj_applicantid, COALESCE(SUM(CASE WHEN adj_leavetype='Sick Leave' THEN adj_day ELSE 0 END), 0) AS sladd,
-               COALESCE(SUM(CASE WHEN adj_leavetype='Casual Leave' THEN adj_day ELSE 0 END), 0) AS cladd,
-               COALESCE(SUM(CASE WHEN adj_leavetype='Leave Without Pay' THEN adj_day ELSE 0 END), 0) AS lwpadd
-        FROM leaveadjustment
-        WHERE adj_academicyear='$lyear'
-        GROUP BY adj_applicantid
-    ) AS leave_adjustment ON rssimyaccount_members.associatenumber = leave_adjustment.adj_applicantid
-    WHERE rssimyaccount_members.associatenumber = '$associate_number'
-";
-
-$result = pg_query($con, $query);
-
-if ($row = pg_fetch_assoc($result)) {
-  $employee_email = $row['employee_email'];
-  $employee_fullname = $row['employee_fullname'];
-  $employee_phone = $row['employee_phone'];
-  $employee_associatenumber = $row['employee_associatenumber'];
-}
-
-$resultArr = pg_fetch_all($result);
-if (!$result) {
-  echo "An error occurred.\n";
-  exit;
-}
-
+// echo "Debug: associate_number = $associate_number";
+// echo "Debug: error_message = $error_message";
 ?>
 <?php
 // Suppress error reporting for specific lines
@@ -90,9 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   $subCategories = is_array($_POST['subCategory']) ? $_POST['subCategory'] : [$_POST['subCategory']];
   $amounts = is_array($_POST['amount']) ? $_POST['amount'] : [$_POST['amount']];
 
-  $success = false;
-  $error_message = '';
-
   // Insert form data into the database
   try {
     // Insert into payslip_entry table first
@@ -101,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
     $result = pg_query($con, $query);
 
     if (!$result) {
-      $error_message = "Error: " . pg_last_error($con);
-      throw new Exception($error_message);
+      echo "Error: " . pg_last_error($con);
+      exit;
     }
 
     // Insert into payslip_component table for each component
@@ -116,37 +130,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
       $cmdtuples = pg_affected_rows($result);
 
       if (!$result) {
-        $error_message = "Error: " . pg_last_error($con);
-        throw new Exception($error_message);
+        echo "Error: " . pg_last_error($con);
+        exit;
       }
     }
-
-    $success = true;
   } catch (Exception $e) {
-    $error_message = $e->getMessage();
-    echo "<script>alert('Error: Failed to create payslip. Please try again.\\n" . addslashes($error_message) . "');</script>";
+    echo "Error: " . $e->getMessage();
     exit;
   }
 
-  if ($success) {
-    if (@$cmdtuples == 1 && $employee_email != "") {
-      sendEmail("payslip", array(
-        "month" => date('F', mktime(0, 0, 0, $paymonth, 1)),
-        "year" => @$payyear,
-        "fullname" => @$employee_fullname,
-        "associatenumber" => @$employee_associatenumber,
-        "payslipid" => @$uniqueId,
-      ), $employee_email, False);
-    }
-
-    echo "<script>
-    alert('Payslip created successfully! Payslip ID: {$uniqueId}');
-    if (window.history.replaceState) {
-        // Update the URL without causing a page reload or resubmission
-        window.history.replaceState(null, null, window.location.href);
-    }
-    window.location.reload(); // Trigger a page reload to reflect changes
-    </script>";
+  if (@$cmdtuples == 1 && $employee_email != "") {
+    sendEmail("payslip", array(
+      "month" => date('F', mktime(0, 0, 0, $paymonth, 1)),
+      "year" => @$payyear,
+      "fullname" => @$employee_fullname,
+      "associatenumber" => @$employee_associatenumber,
+      "payslipid" => @$uniqueId,
+    ), $employee_email, False);
   }
 }
 ?>
@@ -212,6 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 </head>
 
 <body>
+
   <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 
@@ -238,21 +239,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
             <div class="card-body">
               <br>
               <div class="container">
+                <?php if (@$employeeId != null && @$cmdtuples == 0) { ?>
+                  <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center;">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>Error: Failed to create payslip. Please try again.</span>
+                  </div>
+                <?php } else if (@$cmdtuples == 1) { ?>
+                  <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: center;">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <span class="blink_me"><i class="bi bi-check-lg"></i></span>&nbsp;&nbsp;<span>Payslip created successfully! Payslip ID: <?= $uniqueId ?></span>
+                  </div>
+                  <script>
+                    if (window.history.replaceState) {
+                      window.history.replaceState(null, null, window.location.href);
+                    }
+                  </script>
+                <?php } ?>
                 <form id="employeeLookupForm" method="get">
                   <h3>Associate Information Lookup</h3>
                   <hr>
                   <div class="row">
                     <div class="col-md-6">
                       <label for="lookupEmployeeId" class="form-label">Associate</label>
-                      <select class="form-control select2" id="lookupEmployeeId" name="lookupEmployeeId">
+                      <select class="form-control select2" id="lookupEmployeeId" name="lookupEmployeeId" required>
                         <option value="">Select Associate</option>
                         <?php if ($associate_number): ?>
-                          <!-- Pre-select the selected associate if it exists -->
                           <option value="<?= htmlspecialchars($associate_number) ?>" selected>
-                            <?= htmlspecialchars($associate_number) ?> <!-- You can fetch and display the associate's name here if needed -->
+                            <?= htmlspecialchars($associate_number) ?>
                           </option>
                         <?php endif; ?>
-
                       </select>
                     </div>
                     <div class="col-md-6">
@@ -261,8 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                         <select class="form-select" id="academicYear" name="academicYear" required>
                           <?php if ($lyear != null) { ?>
                             <option hidden selected><?php echo $lyear ?></option>
-                          <?php }
-                          ?>
+                          <?php } ?>
                           <?php
                           if (date('m') == 1 || date('m') == 2 || date('m') == 3) {
                             $currentYear = date('Y') - 1;
@@ -281,10 +295,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                       </div>
                     </div>
                   </div>
-
                   <button type="submit" class="btn btn-primary mb-3">Search</button>
                 </form>
-                <?php if (sizeof($resultArr) > 0) { ?>
+                <?php if (sizeof($resultArr) > 0 && !isset($error_message)) { ?>
                   <?php foreach ($resultArr as $array) { ?>
                     <div class="accordion" id="employeeAccordion">
                       <div class="accordion-item">
@@ -315,10 +328,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                                 <p><strong>Leave Balance:</strong> <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?></p>
                               </div>
                               <div class="col-md-4">
-                                <!-- <p><strong>Account Number:</strong> <?php echo @$array['accountnumber'] ?></p>
-                    <p><strong>Bank Name:</strong> <?php echo @$array['bankname'] ?></p>
-                    <p><strong>IFSC Code:</strong> <?php echo @$array['ifsccode'] ?></p>
-                    <p><strong>PAN Card Number:</strong> <?php echo @$array['panno'] ?></p> -->
                                 <p><strong>Category:</strong> <?php echo $array['job_type'] ?></p>
                                 <p><strong>Responsibility:</strong> <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?></p>
                                 <p><strong>Date of Joining:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
@@ -407,26 +416,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                     </div>
                   <?php } ?>
                 <?php } else { ?>
-                  <!-- Onboarding not initiated -->
+                  <!-- Modal Structure -->
                   <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+                          <h5 class="modal-title" id="exampleModalLabel">
+                            <?php echo isset($error_message) ? 'Error' : 'Alert'; ?>
+                          </h5>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                           <?php
-                          if (pg_num_rows($result) == 0) {
-                            $error_message = "No record found for the entered Associate Number";
-                          }
                           if (isset($error_message)) {
-                            echo $error_message;
-                          } ?>
+                            echo htmlspecialchars($error_message);
+                          } elseif (!isset($associate_number)) {
+                            echo 'Please select an associate to create payslip for.';
+                          }
+                          ?>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                       </div>
                     </div>
                   </div>
+                  <?php if (isset($error_message) || !isset($associate_number)): ?>
+                    <script>
+                      // This will execute immediately after the page elements are loaded
+                      document.addEventListener('DOMContentLoaded', function() {
+                        var modal = new bootstrap.Modal(document.getElementById('myModal'));
+                        modal.show();
+                      });
+                    </script>
+                  <?php endif; ?>
                 <?php } ?>
               </div>
             </div>
@@ -467,26 +490,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
-
-  <script>
-    window.onload = function() {
-      var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-        backdrop: 'static',
-        keyboard: false
-      });
-      myModal.show();
-    };
-  </script>
-
-  <script>
-    window.onload = function() {
-      var myModal = new bootstrap.Modal(document.getElementById("myModal"), {
-        backdrop: "static",
-        keyboard: false,
-      });
-      myModal.show();
-    };
-  </script>
 
   <script>
     // Global variable to store component options

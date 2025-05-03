@@ -448,7 +448,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#irc" data-bs-toggle="collapse" href="#">
-          <span>Information Resource Center</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>IRC</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="irc" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
