@@ -206,7 +206,7 @@ if (!$result) {
 
                 // Check the job type
                 if ($array['shift'] === "Afternoon") {
-                    $reporting_time = "2:45 pm";
+                    $reporting_time = "2:15 pm";
                 } elseif ($array['shift'] === null) {
                     $reporting_time = "10:45 am";
                 } else {
