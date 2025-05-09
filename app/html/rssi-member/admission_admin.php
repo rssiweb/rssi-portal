@@ -537,8 +537,8 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                             AND (effective_until >= '$currentDate' OR effective_until IS NULL)
                                                                             ORDER BY effective_from DESC, created_at DESC LIMIT 1";
 
-                                                                                                                    // Query to check for future plans
-                                                                                                                    $futurePlanQuery = "SELECT 1 FROM student_category_history
+                                                                            // Query to check for future plans
+                                                                            $futurePlanQuery = "SELECT 1 FROM student_category_history
                                                                             WHERE student_id = '" . $array['student_id'] . "'
                                                                             AND effective_from > '$currentDate'
                                                                             LIMIT 1";
@@ -546,7 +546,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                             // Get current active plan
                                                                             $currentResult = pg_query($con, $currentPlanQuery);
                                                                             if ($currentRow = pg_fetch_assoc($currentResult)) {
-                                                                                $currentCategory = $currentRow['class'] . '/' . $currentRow['category_type'];
+                                                                                $currentCategory = ($currentRow['class'] ?? $array['class']) . '/' . $currentRow['category_type'];
                                                                                 $effectiveDateFormatted = date('F Y', strtotime($currentRow['effective_from']));
                                                                             }
 
