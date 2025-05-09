@@ -12,7 +12,7 @@
                 <a href="https://www.instagram.com/rssi.in/" class="text-muted  me-3" target="_blank"><i class="bi bi-instagram"></i></a>
                 <a href="https://www.linkedin.com/company/rssingo/" class="text-muted  me-3" target="_blank"><i class="bi bi-linkedin"></i></a>
                 <a href="https://x.com/RssiNgo" class="text-muted me-3" target="_blank"><i class="bi bi-twitter-x" target="_blank"></i></a>
-                <a href="https://www.facebook.com/rssi.in" class="text-muted me-3" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://www.facebook.com/rssicommunity" class="text-muted me-3" target="_blank"><i class="bi bi-facebook"></i></a>
             </div>
         </div>
     </div>
