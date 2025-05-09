@@ -1516,7 +1516,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 ?>
                                         <tr class="<?php echo $isCurrent ? 'table-primary' : '' ?>">
                                             <td><?php echo htmlspecialchars($row['category_type']) ?></td>
-                                            <td><?php echo htmlspecialchars($row['class']) ?></td>
+                                            <td><?php echo htmlspecialchars($row['class'] ?? $array['class']) ?></td>
                                             <td><?php echo date('d M Y', strtotime($effectiveFrom)) ?></td>
                                             <td>
                                                 <?php echo $effectiveUntil === null ? '' : date('d M Y', strtotime($effectiveUntil)) ?>
