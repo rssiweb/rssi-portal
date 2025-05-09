@@ -531,8 +531,7 @@ $feeStructure = pg_fetch_all(pg_query(
                                                 <table class="table table-hover">
                                                     <thead class="table-light">
                                                         <tr>
-                                                            <th>Class</th>
-                                                            <th>Student Type</th>
+                                                            <th>Access Category</th>
                                                             <th>Category</th>
                                                             <th>Type</th>
                                                             <th>Amount</th>
@@ -548,8 +547,7 @@ $feeStructure = pg_fetch_all(pg_query(
                                                             $rowClass = $isActive ? 'active-fee' : 'inactive-fee';
                                                         ?>
                                                             <tr class="<?= $rowClass ?> <?= $isActive ? 'active-row' : 'inactive-row' ?>" style="<?= $isActive ? '' : 'display: none;' ?>">
-                                                                <td><?= $fee['class'] ?></td>
-                                                                <td><?= $fee['student_type'] ?></td>
+                                                                <td><?= $fee['class'] ?>/<?= $fee['student_type'] ?></td>
                                                                 <td><?= $fee['category_name'] ?></td>
                                                                 <td>
                                                                     <span class="badge fee-type-badge <?= strtolower(str_replace(' ', '-', $fee['fee_type'])) ?>">

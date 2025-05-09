@@ -32,20 +32,21 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // First, fetch the current student data including DOA
     $student_id = $_POST['student-id'];
-    $currentStudentQuery = "SELECT type_of_admission, doa FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    $currentStudentQuery = "SELECT type_of_admission, doa, class FROM rssimyprofile_student WHERE student_id = '$student_id'";
     $currentStudentResult = pg_query($con, $currentStudentQuery);
     $currentStudentData = pg_fetch_assoc($currentStudentResult);
 
     $original_type_of_admission = $currentStudentData['type_of_admission'] ?? '';
+    $original_class = $currentStudentData['class'] ?? '';
     $original_doa = $currentStudentData['doa'] ?? date('Y-m-d'); // Fallback to today if not set
 
     // Get the form data
-    $type_of_admission = $_POST['type-of-admission'];
-    $effective_from_date = $_POST['effective-from-date'] ?? date('Y-m-d');
+    $type_of_admission = $_POST['type_of_admission'];
+    $effective_from_date = $_POST['effective_from_date'] ?? date('Y-m-d');
 
     // Validate effective date
-    if (!empty($_POST['effective-from-date'])) {
-        $effective_from_date = date('Y-m-d', strtotime($_POST['effective-from-date']));
+    if (!empty($_POST['effective_from_date'])) {
+        $effective_from_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
         // Ensure effective date isn't before DOA
         if (strtotime($effective_from_date) < strtotime($original_doa)) {
             $effective_from_date = $original_doa;
@@ -56,6 +57,7 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // Check if type of admission has changed
     $type_changed = ($type_of_admission != $original_type_of_admission);
+    $class_changed = ($class != $original_class);
 
     $student_name = $_POST['student-name'];
     $date_of_birth = $_POST['date-of-birth'];
@@ -198,62 +200,72 @@ if (@$_POST['form-type'] == "admission_admin") {
     $cmdtuples = pg_affected_rows($resultt);
 
     // If type of admission changed, update the history table
-    if ($type_changed && $cmdtuples > 0) {
+    if (($type_changed || $class_changed) && $cmdtuples > 0) {
         $category_type = $type_of_admission;
 
-        // 1. Close any open records that overlap with the new effective date
-        $closeHistoryQuery = "UPDATE student_category_history 
+        // 4. For new admissions, ensure complete history from admission date
+        $checkInitialRecord = "SELECT 1 FROM student_category_history 
+            WHERE student_id = '$student_id' 
+            AND effective_from = DATE '$original_doa'";
+        $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
+
+        if (!$initialRecordExists) {
+            $insertInitialHistory = "INSERT INTO student_category_history (
+                  student_id, 
+                  category_type, 
+                  effective_from, 
+                  effective_until,
+                  created_by,
+                  class
+                ) VALUES (
+                  '$student_id', 
+                  '$original_type_of_admission', 
+                  DATE '$original_doa', 
+                  DATE '$effective_from_date' - INTERVAL '1 day',
+                  '$updated_by',
+                  '$original_class'
+                )";
+            pg_query($con, $insertInitialHistory);
+        }
+
+        // 0. First close ALL existing active records (where effective_until is NULL)
+        $closeAllActiveRecords = "UPDATE student_category_history 
                             SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
-                            WHERE student_id = '$student_id' 
-                            AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
-                            AND effective_from < DATE '$effective_from_date'";
+                            WHERE student_id = '$student_id'
+                            AND effective_until IS NULL";
+        pg_query($con, $closeAllActiveRecords);
+
+        // 1. Close any records that overlap with the new effective date
+        // (This handles cases where records might have explicit effective_until dates)
+        $closeHistoryQuery = "UPDATE student_category_history 
+                        SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
+                        WHERE student_id = '$student_id' 
+                        AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
+                        AND effective_from < DATE '$effective_from_date'";
         pg_query($con, $closeHistoryQuery);
 
         // 2. Adjust any future-dated records
         $adjustFutureRecords = "UPDATE student_category_history 
-                              SET effective_from = DATE '$effective_from_date'
-                              WHERE student_id = '$student_id' 
-                              AND effective_from >= DATE '$effective_from_date'";
+                          SET effective_from = DATE '$effective_from_date'
+                          WHERE student_id = '$student_id' 
+                          AND effective_from >= DATE '$effective_from_date'";
         pg_query($con, $adjustFutureRecords);
 
         // 3. Insert the new record
         $insertHistoryQuery = "INSERT INTO student_category_history (
-                                student_id, 
-                                category_type, 
-                                effective_from, 
-                                created_by
-                              ) VALUES (
-                                '$student_id', 
-                                '$category_type', 
-                                DATE '$effective_from_date', 
-                                '$updated_by'
-                              )";
+                            student_id, 
+                            category_type, 
+                            effective_from, 
+                            created_by,
+                            class
+                          ) VALUES (
+                            '$student_id', 
+                            '$category_type', 
+                            DATE '$effective_from_date', 
+                            '$updated_by',
+                            '$class'
+                          )";
         pg_query($con, $insertHistoryQuery);
-
-        // 4. For new admissions, ensure complete history from admission date
-        if (in_array($type_of_admission, ['Basic', 'Regular', 'Premium', 'General'])) {
-            $checkInitialRecord = "SELECT 1 FROM student_category_history 
-                                  WHERE student_id = '$student_id' 
-                                  AND effective_from = DATE '$original_doa'";
-            $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
-
-            if (!$initialRecordExists) {
-                $insertInitialHistory = "INSERT INTO student_category_history (
-                                        student_id, 
-                                        category_type, 
-                                        effective_from, 
-                                        effective_until,
-                                        created_by
-                                      ) VALUES (
-                                        '$student_id', 
-                                        '$original_type_of_admission', 
-                                        DATE '$original_doa', 
-                                        DATE '$effective_from_date' - INTERVAL '1 day',
-                                        '$updated_by'
-                                      )";
-                pg_query($con, $insertInitialHistory);
-            }
-        }
     }
 }
 ?>
@@ -500,6 +512,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                 <small id="student-id-help" class="form-text text-muted"></small>
                                                             </td>
                                                         </tr>
+                                                        <!-- Current Plan Display -->
                                                         <tr>
                                                             <td>
                                                                 <label>Current Plan:</label>
@@ -507,34 +520,57 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                             <td>
                                                                 <div class="d-flex align-items-center">
                                                                     <div class="flex-grow-1">
+                                                                        <?php
+                                                                        // Default values
+                                                                        $currentCategory = !empty($array['class']) ? $array['class'] . '/' . $array['type_of_admission'] : 'Not selected';
+                                                                        $effectiveDateFormatted = !empty($array['doa']) ? date('F Y', strtotime($array['doa'])) : 'Not set';
+                                                                        $hasFuturePlan = false;
+
+                                                                        if (!empty($array['student_id'])) {
+                                                                            $currentDate = date('Y-m-d');
+
+                                                                            // Query to get current active plan (latest by created_at if same effective_from)
+                                                                            $currentPlanQuery = "SELECT category_type, class, effective_from 
+                                                                            FROM student_category_history 
+                                                                            WHERE student_id = '" . $array['student_id'] . "'
+                                                                            AND effective_from <= '$currentDate'
+                                                                            AND (effective_until >= '$currentDate' OR effective_until IS NULL)
+                                                                            ORDER BY effective_from DESC, created_at DESC LIMIT 1";
+
+                                                                                                                    // Query to check for future plans
+                                                                                                                    $futurePlanQuery = "SELECT 1 FROM student_category_history
+                                                                            WHERE student_id = '" . $array['student_id'] . "'
+                                                                            AND effective_from > '$currentDate'
+                                                                            LIMIT 1";
+
+                                                                            // Get current active plan
+                                                                            $currentResult = pg_query($con, $currentPlanQuery);
+                                                                            if ($currentRow = pg_fetch_assoc($currentResult)) {
+                                                                                $currentCategory = $currentRow['class'] . '/' . $currentRow['category_type'];
+                                                                                $effectiveDateFormatted = date('F Y', strtotime($currentRow['effective_from']));
+                                                                            }
+
+                                                                            // Check for future plans
+                                                                            $futureResult = pg_query($con, $futurePlanQuery);
+                                                                            $hasFuturePlan = (pg_num_rows($futureResult) > 0);
+                                                                        }
+                                                                        ?>
+
                                                                         <p class="mb-1">
                                                                             <strong>Access Category:</strong>
-                                                                            <span id="current-admission-display"><?php echo !empty($array['type_of_admission']) ? $array['type_of_admission'] : 'Not selected' ?></span>
+                                                                            <span id="current-admission-display"><?php echo $currentCategory; ?></span>
                                                                         </p>
                                                                         <p class="mb-1">
                                                                             <strong>Effective From:</strong>
                                                                             <span id="current-effective-date-display">
-                                                                                <?php
-                                                                                // Fetch effective date from student_category_history
-                                                                                $effectiveDate = '';
-                                                                                if (!empty($array['student_id'])) {
-                                                                                    $currentDate = date('Y-m-d'); // Get current date in YYYY-MM-DD format
-
-                                                                                    $historyQuery = "SELECT effective_from FROM student_category_history 
-                                                            WHERE student_id = '" . $array['student_id'] . "'
-                                                            AND effective_from <= '$currentDate'
-                                                            AND (effective_until >= '$currentDate' OR effective_until IS NULL)
-                                                            ORDER BY effective_from DESC LIMIT 1";
-
-                                                                                    $historyResult = pg_query($con, $historyQuery);
-                                                                                    if ($historyRow = pg_fetch_assoc($historyResult)) {
-                                                                                        $effectiveDate = date('F Y', strtotime($historyRow['effective_from']));
-                                                                                    }
-                                                                                }
-                                                                                echo !empty($effectiveDate) ? $effectiveDate : 'Not set';
-                                                                                ?>
+                                                                                <?php echo $effectiveDateFormatted; ?>
+                                                                                <?php if ($hasFuturePlan): ?>
+                                                                                    <span class="badge bg-warning text-dark ms-2" title="Future plan exists">
+                                                                                        <i class="fas fa-clock"></i> Pending Change
+                                                                                    </span>
+                                                                                <?php endif; ?>
                                                                             </span>
-                                                                            <small class="text-muted">(Plan will be applied to <?php echo !empty($effectiveDate) ? $effectiveDate : 'the selected' ?> month's feesheet)</small>
+                                                                            <small class="text-muted">(Plan will be applied to <?php echo $effectiveDateFormatted; ?> month's feesheet)</small>
                                                                         </p>
                                                                     </div>
                                                                     <div class="ms-3">
@@ -547,9 +583,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     </div>
                                                                 </div>
                                                                 <!-- Hidden fields to store the actual values -->
-                                                                <input type="hidden" id="division-select" name="division-select" value="<?php echo $array['division'] ?? '' ?>">
-                                                                <input type="hidden" id="type-of-admission" name="type-of-admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                                                <input type="hidden" id="effective-from-date" name="effective-from-date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
+                                                                <input type="hidden" id="division-select" name="division" value="<?php echo $array['division'] ?? '' ?>">
+                                                                <input type="hidden" id="class-select" name="class" value="<?php echo $array['class'] ?? '' ?>">
+                                                                <input type="hidden" id="type-of-admission" name="type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                                                <input type="hidden" id="effective-from-date" name="effective_from_date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
                                                                 <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
                                                             </td>
                                                         </tr>
@@ -899,43 +936,6 @@ if (@$_POST['form-type'] == "admission_admin") {
 
                                                             <tr>
                                                                 <td>
-                                                                    <label for="class">Class:</label>
-                                                                </td>
-                                                                <td>
-                                                                    <select class="form-select" id="class" name="class" required>
-                                                                        <?php if ($array['class'] == null) { ?>
-                                                                            <option selected>--Select Class--</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option selected>--Select Class--</option>
-                                                                            <option hidden selected><?php echo $array['class'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option value="Nursery">Nursery</option>
-                                                                        <option value="LKG">LKG</option>
-                                                                        <option value="UKG">UKG</option>
-                                                                        <option value="1">Class 1</option>
-                                                                        <option value="2">Class 2</option>
-                                                                        <option value="3">Class 3</option>
-                                                                        <option value="4">Class 4</option>
-                                                                        <option value="5">Class 5</option>
-                                                                        <option value="6">Class 6</option>
-                                                                        <option value="7">Class 7</option>
-                                                                        <option value="8">Class 8</option>
-                                                                        <option value="9">Class 9</option>
-                                                                        <option value="10">Class 10</option>
-                                                                        <option value="11">Class 11</option>
-                                                                        <option value="12">Class 12</option>
-                                                                        <option value="Vocational training">Vocational training</option>
-                                                                    </select>
-                                                                    <small id="class-help" class="form-text text-muted">Please select the class the
-                                                                        student
-                                                                        wants to join.</small>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td>
                                                                     <label for="subject-select">Select subject(s): </label>
                                                                 </td>
                                                                 <td>
@@ -1129,26 +1129,6 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     </select>
                                                                 </td>
                                                             </tr>
-
-                                                            <!-- <tr>
-                                        <td>
-                                            <label for="access_category" class="form-label">Access Category:</label>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" id="access_category" name="access_category" required>
-                                                <?php if ($array['access_category'] == null) { ?>
-                                                    <option selected>--Select--</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option selected>--Select--</option>
-                                                    <option hidden selected><?php echo $array['access_category'] ?></option>
-                                                <?php }
-                                                ?>
-                                                <option value="Premium">Premium</option>
-                                                <option value="Regular">Regular</option>
-                                            </select>
-                                        </td>
-                                    </tr> -->
                                                             <tr>
                                                                 <td>
                                                                     <label for="module">Module</label>
@@ -1427,6 +1407,35 @@ if (@$_POST['form-type'] == "admission_admin") {
                     </div>
 
                     <div class="mb-3">
+                        <label for="modal-class-select" class="form-label">Class:</label>
+                        <select class="form-select" id="modal-class-select" required>
+                            <?php if ($array['class'] == null) { ?>
+                                <option selected>--Select Class--</option>
+                            <?php } else { ?>
+                                <option value="">--Select Class--</option>
+                                <option value="<?php echo $array['class']; ?>" selected><?php echo $array['class']; ?></option>
+                            <?php } ?>
+                            <option value="Nursery">Nursery</option>
+                            <option value="LKG">LKG</option>
+                            <option value="UKG">UKG</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                            <option value="Vocational training">Vocational training</option>
+                        </select>
+                        <small class="form-text text-muted">Please select the class the student wants to join.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="modal-type-of-admission" class="form-label">Access Category:</label>
                         <select class="form-select" id="modal-type-of-admission" required>
                             <?php if (empty($array['type_of_admission'])) { ?>
@@ -1470,6 +1479,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                             <thead>
                                 <tr>
                                     <th>Plan Type</th>
+                                    <th>Class</th>
                                     <th>Effective From</th>
                                     <th>Effective Until</th>
                                     <th>Changed On</th>
@@ -1478,7 +1488,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                             </thead>
                             <tbody>
                                 <?php
-                                $historyQuery = "SELECT category_type, effective_from, effective_until, created_at, created_by 
+                                $historyQuery = "SELECT category_type, class, effective_from, effective_until, created_at, created_by 
                                            FROM student_category_history 
                                            WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
                                            ORDER BY effective_from DESC, created_at DESC";
@@ -1506,6 +1516,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 ?>
                                         <tr class="<?php echo $isCurrent ? 'table-primary' : '' ?>">
                                             <td><?php echo htmlspecialchars($row['category_type']) ?></td>
+                                            <td><?php echo htmlspecialchars($row['class']) ?></td>
                                             <td><?php echo date('d M Y', strtotime($effectiveFrom)) ?></td>
                                             <td>
                                                 <?php echo $effectiveUntil === null ? '' : date('d M Y', strtotime($effectiveUntil)) ?>
@@ -1534,6 +1545,7 @@ if (@$_POST['form-type'] == "admission_admin") {
             // When update modal opens, populate fields with current values
             $('#updatePlanModal').on('show.bs.modal', function() {
                 $('#modal-division-select').val($('#division-select').val());
+                $('#modal-class-select').val($('#class-select').val());
                 $('#modal-type-of-admission').val($('#type-of-admission').val());
                 $('#modal-effective-from-date').val($('#effective-from-date').val());
 
@@ -1541,11 +1553,6 @@ if (@$_POST['form-type'] == "admission_admin") {
                 if ($('#modal-division-select').val()) {
                     loadPlansForDivision($('#modal-division-select').val());
                 }
-            });
-
-            // When history modal opens, it will show server-rendered content (no AJAX needed)
-            $('#planHistoryModal').on('show.bs.modal', function() {
-                // No AJAX call needed - history is loaded server-side in the modal HTML
             });
 
             // When division changes, load corresponding access categories
@@ -1645,10 +1652,11 @@ if (@$_POST['form-type'] == "admission_admin") {
             // Save changes from modal to main form
             $('#save-plan-changes').click(function() {
                 const division = $('#modal-division-select').val();
+                const classVal = $('#modal-class-select').val();
                 const admissionType = $('#modal-type-of-admission').val();
                 const effectiveMonth = $('#modal-effective-from-date').val(); // Format: YYYY-MM
 
-                if (!division || !admissionType || !effectiveMonth) {
+                if (!division || !classVal || !admissionType || !effectiveMonth) {
                     alert('Please fill all fields');
                     return;
                 }
@@ -1658,11 +1666,12 @@ if (@$_POST['form-type'] == "admission_admin") {
 
                 // Update hidden fields in main form
                 $('#division-select').val(division);
+                $('#class-select').val(classVal);
                 $('#type-of-admission').val(admissionType);
                 $('#effective-from-date').val(effectiveDate);
 
                 // Update display values
-                $('#current-admission-display').text(admissionType);
+                $('#current-admission-display').text(classVal + '/' + admissionType);
 
                 // Format date for display (show month and year only)
                 const [year, month] = effectiveMonth.split('-');
