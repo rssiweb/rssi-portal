@@ -9,6 +9,7 @@ if (!isLoggedIn("aid")) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Process form data
     $student_id = pg_escape_string($con, $_POST['student_id']);
     $record_date = pg_escape_string($con, $_POST['record_date']);
     $cycle_start_date = pg_escape_string($con, $_POST['cycle_start_date']);
@@ -33,10 +34,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['error_message'] = "Error saving period record: " . pg_last_error($con);
     }
 
-    header("Location: health_portal.php#period-tracking-tab");
+    // Get all current GET parameters from the referring URL
+    $referer = parse_url($_SERVER['HTTP_REFERER']);
+    $queryParams = [];
+    if (isset($referer['query'])) {
+        parse_str($referer['query'], $queryParams);
+    }
+
+    // Ensure we're going back to the period-tracking tab
+    $queryParams['tab'] = 'period-tracking';
+
+    // Reconstruct the redirect URL
+    $redirectUrl = "health_portal.php";
+    if (!empty($queryParams)) {
+        $redirectUrl .= '?' . http_build_query($queryParams);
+    }
+
+    // Add hash fragment for the tab
+    $redirectUrl .= '#period-tracking';
+
+    header("Location: $redirectUrl");
     exit;
 } else {
-    header("Location: health_portal.php");
+    // For non-POST requests, redirect with original parameters
+    $referer = parse_url($_SERVER['HTTP_REFERER']);
+    $queryParams = [];
+    if (isset($referer['query'])) {
+        parse_str($referer['query'], $queryParams);
+    }
+
+    // Reconstruct the redirect URL
+    $redirectUrl = "health_portal.php";
+    if (!empty($queryParams)) {
+        $redirectUrl .= '?' . http_build_query($queryParams);
+    }
+
+    header("Location: $redirectUrl");
     exit;
 }
 ?>

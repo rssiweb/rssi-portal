@@ -115,8 +115,7 @@ if ($activeTab == 'dashboard') {
 
     $padQuery = $basePadQuery . " ORDER BY pd.distribution_date DESC LIMIT 10";
     $padResult = pg_query($con, $padQuery);
-} 
-elseif ($activeTab == 'health-records') {
+} elseif ($activeTab == 'health-records') {
     $healthFilterQuery = $baseHealthQuery;
 
     if (!empty($_GET['class'])) {
@@ -161,8 +160,7 @@ elseif ($activeTab == 'health-records') {
     //     echo "</tr>";
     // }
     // echo "</table>";
-}
-elseif ($activeTab == 'period-tracking') {
+} elseif ($activeTab == 'period-tracking') {
     $periodFilterQuery = $basePeriodQuery;
 
     if (isset($_GET['class']) && $_GET['class'] != '') {
@@ -181,8 +179,7 @@ elseif ($activeTab == 'period-tracking') {
 
     $periodFilterQuery .= " ORDER BY pr.cycle_start_date DESC";
     $periodFilterResult = pg_query($con, $periodFilterQuery);
-} 
-elseif ($activeTab == 'pad-distribution') {
+} elseif ($activeTab == 'pad-distribution') {
     $padFilterQuery = $basePadQuery . " AND s.gender = 'Female'";
 
     if (isset($_GET['class']) && $_GET['class'] != '') {
@@ -196,8 +193,7 @@ elseif ($activeTab == 'pad-distribution') {
 
     $padFilterQuery .= " ORDER BY pd.distribution_date DESC";
     $padFilterResult = pg_query($con, $padFilterQuery);
-} 
-elseif ($activeTab == 'reports') {
+} elseif ($activeTab == 'reports') {
     if (isset($_GET['student_id']) && $_GET['student_id'] != '') {
         $studentId = pg_escape_string($con, $_GET['student_id']);
         $metric = isset($_GET['metric']) ? pg_escape_string($con, $_GET['metric']) : 'height';
@@ -457,7 +453,24 @@ elseif ($activeTab == 'reports') {
                                     </div>
                                     <div class="card-body">
                                         <div class="list-group">
-                                            
+                                            <?php
+                                            if (!$healthResult) {
+                                                echo '<div class="alert alert-danger">Query error</div>';
+                                            } elseif (pg_num_rows($healthResult) == 0) {
+                                                echo '<div class="alert alert-info">No records found</div>';
+                                            } else {
+                                                while ($row = pg_fetch_assoc($healthResult)) {
+                                                    echo '<a href="#" class="list-group-item list-group-item-action">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h6 class="mb-1">' . htmlspecialchars($row['studentname']) . '</h6>
+                                                        <small>' . date('M d', strtotime($row['record_date'])) . '</small>
+                                                    </div>
+                                                    <p class="mb-1">Class: ' . htmlspecialchars($row['class']) . '</p>
+                                                    <small>' . htmlspecialchars($row['recorded_by_name']) . '</small>
+                                                </a>';
+                                                }
+                                            }
+                                            ?>
                                         </div>
                                     </div>
                                 </div>
@@ -848,7 +861,7 @@ elseif ($activeTab == 'reports') {
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <button type="submit" class="btn btn-primary w-100">Generate Chart</button>
+                                                    <button type="submit" class="btn btn-primary">Generate Chart</button>
                                                 </div>
                                             </div>
                                         </form>
@@ -991,6 +1004,11 @@ elseif ($activeTab == 'reports') {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="save_period_record.php" method="POST">
+                    <!-- Add these hidden fields at the top of your form -->
+                    <input type="hidden" name="current_tab" value="period-tracking">
+                    <?php if (isset($_GET['academic_year'])): ?>
+                        <input type="hidden" name="academic_year" value="<?= htmlspecialchars($_GET['academic_year']) ?>">
+                    <?php endif; ?>
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -1059,18 +1077,29 @@ elseif ($activeTab == 'reports') {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="save_pad_distribution.php" method="POST">
+                    <!-- Add hidden fields to preserve URL parameters -->
+                    <input type="hidden" name="current_tab" value="pad-distribution">
+                    <?php if (isset($_GET['academic_year'])): ?>
+                        <input type="hidden" name="academic_year" value="<?= htmlspecialchars($_GET['academic_year']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($_GET['class'])): ?>
+                        <input type="hidden" name="current_class" value="<?= htmlspecialchars($_GET['class']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($_GET['month'])): ?>
+                        <input type="hidden" name="current_month" value="<?= htmlspecialchars($_GET['month']) ?>">
+                    <?php endif; ?>
+
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="padStudentSelect" class="form-label">Student</label>
-                                <select class="form-select" id="padStudentSelect" name="student_id" required>
-                                    <option value="">Select Student</option>
+                                <label for="padStudentSelect" class="form-label">Students</label>
+                                <select class="form-select" id="padStudentSelect" name="student_ids[]" multiple="multiple" required>
                                     <?php
                                     $femaleStudentsQuery = "SELECT student_id, studentname, class 
-                                                          FROM rssimyprofile_student 
-                                                          WHERE gender = 'Female'
-                                                          AND filterstatus='Active'
-                                                          ORDER BY class, studentname";
+                                          FROM rssimyprofile_student 
+                                          WHERE gender = 'Female'
+                                          AND filterstatus='Active'
+                                          ORDER BY class, studentname";
                                     $femaleStudentsResult = pg_query($con, $femaleStudentsQuery);
 
                                     while ($student = pg_fetch_assoc($femaleStudentsResult)) {
@@ -1080,6 +1109,7 @@ elseif ($activeTab == 'reports') {
                                     }
                                     ?>
                                 </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple students</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="distributionDate" class="form-label">Distribution Date</label>
@@ -1089,7 +1119,7 @@ elseif ($activeTab == 'reports') {
                         </div>
 
                         <div class="mb-3">
-                            <label for="padQuantity" class="form-label">Quantity</label>
+                            <label for="padQuantity" class="form-label">Quantity per Student</label>
                             <input type="number" class="form-control" id="padQuantity" name="quantity" value="1" min="1">
                         </div>
 
@@ -1119,6 +1149,36 @@ elseif ($activeTab == 'reports') {
                         <button type="submit" class="btn btn-primary">Save Distribution</button>
                     </div>
                 </form>
+
+                <!-- Add this script to enhance the multi-select -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Initialize the multi-select dropdown
+                        $('#padStudentSelect').select2({
+                            placeholder: "Select students",
+                            allowClear: true,
+                            width: '100%'
+                        });
+
+                        // Toggle bulk distribution options
+                        document.getElementById('bulkDistribution').addEventListener('change', function() {
+                            const bulkOptions = document.getElementById('bulkDistributionOptions');
+                            const studentSelect = document.getElementById('padStudentSelect');
+
+                            if (this.checked) {
+                                bulkOptions.style.display = 'block';
+                                studentSelect.disabled = true;
+                                studentSelect.removeAttribute('required');
+                                document.getElementById('bulkClassSelect').setAttribute('required', '');
+                            } else {
+                                bulkOptions.style.display = 'none';
+                                studentSelect.disabled = false;
+                                studentSelect.setAttribute('required', '');
+                                document.getElementById('bulkClassSelect').removeAttribute('required');
+                            }
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>
