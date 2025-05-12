@@ -12,7 +12,9 @@ if (!in_array($type, ['health', 'period', 'pad'])) {
 // Fetch record with student details
 $record = pg_fetch_assoc(pg_query($con, "
     SELECT r.*, s.studentname, s.class, s.student_id as admissionnumber,
-           a.fullname as recorded_by, a.position as designation, s.photourl
+           a.fullname as recorded_by, a.position as designation, s.photourl,
+           -- Age calculation (as of record date)
+            EXTRACT(YEAR FROM AGE(" . getRecordDateColumn($type) . "::date, s.dateofbirth::date))::integer AS age_at_record
     FROM " . getTableName($type) . " r
     JOIN rssimyprofile_student s ON r." . getStudentColumn($type) . " = s.student_id
     JOIN rssimyaccount_members a ON r." . getRecordedByColumn($type) . " = a.associatenumber
@@ -49,6 +51,12 @@ function getRecordedByColumn($type)
 function getIdColumn($type)
 {
     return ($type === 'pad') ? 'transaction_out_id' : 'id';
+}
+
+// Function to get the correct recorded_by column name
+function getRecordDateColumn($type)
+{
+    return ($type === 'pad') ? 'date' : 'record_date';
 }
 
 header('Content-Type: text/html');
@@ -249,18 +257,22 @@ header('Content-Type: text/html');
         <h3 class="record-title"><?= strtoupper($type) ?> Record</h3>
 
         <div class="student-info">
-            <table>
+            <table style="width: 100%; text-align: left;">
                 <tr>
-                    <th>Student Name:</th>
-                    <td><?= htmlspecialchars($record['studentname']) ?></td>
-                    <th>Student ID:</th>
+                    <th style="text-align: left; padding-right: 15px;">Student Name:</th>
+                    <td style="padding-right: 30px;"><?= htmlspecialchars($record['studentname']) ?></td>
+                    <th style="text-align: left; padding-right: 15px;">Student ID:</th>
                     <td><?= htmlspecialchars($record['admissionnumber']) ?></td>
                 </tr>
                 <tr>
-                    <th>Class:</th>
-                    <td><?= htmlspecialchars($record['class']) ?></td>
-                    <th>Date Issued:</th>
+                    <th style="text-align: left; padding-right: 15px;">Class:</th>
+                    <td style="padding-right: 30px;"><?= htmlspecialchars($record['class']) ?></td>
+                    <th style="text-align: left; padding-right: 15px;">Date Issued:</th>
                     <td><?= date('d/m/Y') ?></td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding-right: 15px;">Age (at the time of data recording):</th>
+                    <td colspan="3"><?= htmlspecialchars($record['age_at_record']) ?></td>
                 </tr>
             </table>
         </div>
@@ -271,27 +283,27 @@ header('Content-Type: text/html');
                     case 'health': ?>
                         <tr>
                             <th>Record Date</th>
-                            <td><?= date('d M Y', strtotime($record['record_date'])) ?></td>
+                            <td><?= date('d M Y', strtotime($record['record_date'] ?? '')) ?></td>
                         </tr>
                         <tr>
                             <th>Height</th>
-                            <td><?= htmlspecialchars($record['height_cm']) ?> cm</td>
+                            <td><?= htmlspecialchars($record['height_cm'] ?? '') ?> cm</td>
                         </tr>
                         <tr>
                             <th>Weight</th>
-                            <td><?= htmlspecialchars($record['weight_kg']) ?> kg</td>
+                            <td><?= htmlspecialchars($record['weight_kg'] ?? '') ?> kg</td>
                         </tr>
                         <tr>
                             <th>BMI</th>
-                            <td><?= htmlspecialchars($record['bmi']) ?></td>
+                            <td><?= htmlspecialchars($record['bmi'] ?? '') ?></td>
                         </tr>
                         <tr>
                             <th>Blood Pressure</th>
-                            <td><?= htmlspecialchars($record['blood_pressure']) ?></td>
+                            <td><?= htmlspecialchars($record['blood_pressure'] ?? '') ?></td>
                         </tr>
                         <tr>
                             <th>Vision</th>
-                            <td><?= htmlspecialchars($record['vision_left']) ?>/<?= htmlspecialchars($record['vision_right']) ?></td>
+                            <td><?= htmlspecialchars($record['vision_left'] ?? '') ?>/<?= htmlspecialchars($record['vision_right'] ?? '') ?></td>
                         </tr>
                         <?php if (!empty($record['general_health_notes'])): ?>
                             <tr>

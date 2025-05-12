@@ -68,7 +68,9 @@ while ($classRow = pg_fetch_assoc($classesResult)) {
 }
 
 // Build base queries for each tab with academic year filter
-$baseHealthQuery = "SELECT sh.*, s.studentname, s.gender, s.class, st.fullname as recorded_by_name
+$baseHealthQuery = "SELECT sh.*, s.studentname, s.gender, s.class, st.fullname as recorded_by_name,
+                    -- Age calculation (as of record date)
+                    EXTRACT(YEAR FROM AGE(sh.record_date::date, s.dateofbirth::date))::integer AS age_at_record
                    FROM student_health_records sh
                    JOIN rssimyprofile_student s ON sh.student_id = s.student_id
                    JOIN rssimyaccount_members st ON sh.recorded_by = st.associatenumber
@@ -530,6 +532,10 @@ $students = fetchStudents($con);
                                         <thead>
                                             <tr>
                                                 <th>Student</th>
+                                                <th>Age <i class="bi bi-info-circle ms-1"
+                                                        data-bs-toggle="tooltip"
+                                                        data-bs-placement="top"
+                                                        title="At the time of data recording"></i></th>
                                                 <th>Date</th>
                                                 <th>Height (cm)</th>
                                                 <th>Weight (kg)</th>
@@ -552,6 +558,7 @@ $students = fetchStudents($con);
                                                                 </div>
                                                             </div>
                                                         </td>
+                                                        <td><?= htmlspecialchars($row['age_at_record'] ?? '') ?></td>
                                                         <td><?= date('d M Y', strtotime($row['record_date'])) ?></td>
                                                         <td><?= htmlspecialchars($row['height_cm'] ?? '') ?></td>
                                                         <td><?= htmlspecialchars($row['weight_kg'] ?? '') ?></td>
