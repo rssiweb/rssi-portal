@@ -583,7 +583,7 @@ $students = fetchStudents($con);
                                                 <?php endforeach; ?>
                                             <?php else: ?>
                                                 <tr>
-                                                    <td colspan="8" class="text-center">
+                                                    <td colspan="9" class="text-center">
                                                         <?php if (isset($healthFilterQuery)): ?>
                                                             No records found matching your criteria
                                                         <?php else: ?>

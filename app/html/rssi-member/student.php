@@ -3,9 +3,9 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
 }
 validation();
 
@@ -22,52 +22,72 @@ $resultArr = [];
 
 // Only query if we have valid parameters
 if ($searchByIdOnly) {
-    // Search by Student ID only
-    if (!empty($stid)) {
-        $result = pg_query_params($con, 
-            "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
-            [$stid]
-        );
-        $resultArr = $result ? pg_fetch_all($result) : [];
-    }
+  // Search by Student ID only
+  if (!empty($stid)) {
+    $result = pg_query_params(
+      $con,
+      "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
+      [$stid]
+    );
+    $resultArr = $result ? pg_fetch_all($result) : [];
+  }
 } else {
-    // Normal search (requires module and status)
-    if (!empty($module) && !empty($id)) {
-        $query = "SELECT * FROM rssimyprofile_student 
+  // Normal search (requires module and status)
+  if (!empty($module) && !empty($id)) {
+    $query = "SELECT * FROM rssimyprofile_student 
                  WHERE filterstatus = $1 AND module = $2";
-        $params = [$id, $module];
-        
-        if (!empty($category)) {
-            $query .= " AND category = $3";
-            $params[] = $category;
-        }
-        
-        if (!empty($class)) {
-            if (is_array($class)) {
-                $placeholders = implode(',', array_fill(0, count($class), '?'));
-                $query .= " AND class IN ($placeholders)";
-                $params = array_merge($params, $class);
-            } else {
-                $query .= " AND class = $3";
-                if (!empty($category)) {
-                    $query = str_replace("category = $3", "category = $3", $query);
-                    $query .= " AND class = $4";
-                    $params[] = $class;
-                } else {
-                    $params[] = $class;
-                }
-            }
-        }
-        
-        $query .= " ORDER BY category ASC, class ASC, studentname ASC";
-        $result = pg_query_params($con, $query, $params);
-        $resultArr = $result ? pg_fetch_all($result) : [];
+    $params = ['Active', $module]; // Assuming filterstatus should be 'Active'
+
+    $paramCount = 3; // Start counting from 3
+
+    if (!empty($category)) {
+      $query .= " AND category = $$paramCount";
+      $params[] = $category;
+      $paramCount++;
     }
+
+    if (!empty($class)) {
+      if (is_array($class)) {
+        // Generate numbered placeholders for each class
+        $placeholders = [];
+        foreach ($class as $classItem) {
+          $placeholders[] = "$$paramCount";
+          $params[] = $classItem;
+          $paramCount++;
+        }
+        $query .= " AND class IN (" . implode(',', $placeholders) . ")";
+      } else {
+        $query .= " AND class = $$paramCount";
+        $params[] = $class;
+        $paramCount++;
+      }
+    }
+
+    $query .= " ORDER BY category ASC, class ASC, studentname ASC";
+    $result = pg_query_params($con, $query, $params);
+    $resultArr = $result ? pg_fetch_all($result) : [];
+  }
 }
 
 $classlist = [
-    "Nursery", "LKG", "UKG", "Pre-school", "1", "2", "3", "4", "5", 
-    "6", "7", "8", "9", '10', "11", "12", "Vocational training", "x"
+  "Nursery",
+  "LKG",
+  "UKG",
+  "Pre-school",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  '10',
+  "11",
+  "12",
+  "Vocational training",
+  "x"
 ];
 ?>
 
@@ -204,103 +224,97 @@ $classlist = [
                   <div class="col" style="display: inline-block; width:47%; text-align:right">
                     <form method="POST" action="export_function.php">
                       <input type="hidden" value="student" name="export_type" />
-                      <input type="hidden" value="<?php echo $module ?>" name="module" />
-                      <input type="hidden" value="<?php echo $id ?>" name="id" />
-                      <input type="hidden" value="<?php echo $category ?>" name="category" />
-                      <input type="hidden" value="<?php echo $classs ?>" name="classs" />
-                      <input type="hidden" value="<?php echo $class ?>" name="class" />
-                      <input type="hidden" value="<?php echo $stid ?>" name="stid" />
+                      <!-- Include all search parameters as hidden fields -->
+                      <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
+                      <input type="hidden" name="get_id" value="<?= htmlspecialchars($id ?? '') ?>">
+                      <input type="hidden" name="get_category" value="<?= htmlspecialchars($category ?? '') ?>">
+                      <input type="hidden" name="get_class" value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
+                      <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
+                      <input type="hidden" name="search_by_id_only" value="<?= isset($_POST['search_by_id_only']) ? '1' : '0' ?>">
 
                       <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                     </form>
                   </div>
-                <?php } else { ?>
-                  <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <a href="javascript:void(0);" target="_self" class="btn btn-danger btn-sm disabled" role="button">Fees
-                      Details</a>
-                  </div>
                 <?php } ?>
               </div>
 
               <!-- <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span> -->
               <form action="" method="POST" id="searchForm">
-                <div class="form-group" style="display: inline-block;">
-                  <div class="col2" style="display: inline-block;">
-                    <input type="hidden" name="form-type" value="search">
+                <div class="form-group d-flex flex-wrap align-items-end gap-3">
+                  <input type="hidden" name="form-type" value="search">
 
-                    <!-- Module (required unless searching by ID) -->
-                    <span class="input-help">
-                      <select name="get_module" id="get_module" class="form-select" style="width:max-content; display:inline-block" required>
-                        <?php if ($module == null) { ?>
-                          <option value="" disabled selected hidden>Select Module</option>
-                        <?php } else { ?>
-                          <option value="<?php echo $module ?>" hidden selected><?php echo $module ?></option>
-                        <?php } ?>
-                        <option value="National">National</option>
-                        <option value="State">State</option>
-                      </select>
-                      <small class="form-text text-muted">Module<span style="color:red">*</span></small>
-                    </span>
+                  <!-- Module (required unless searching by ID) -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <select name="get_module" id="get_module" class="form-select" required>
+                      <?php if ($module == null) { ?>
+                        <option value="" disabled selected hidden>Select Module</option>
+                      <?php } else { ?>
+                        <option value="<?php echo $module ?>" hidden selected><?php echo $module ?></option>
+                      <?php } ?>
+                      <option value="National">National</option>
+                      <option value="State">State</option>
+                    </select>
+                    <small class="form-text text-muted">Module<span style="color:red">*</span></small>
+                  </div>
 
-                    <!-- Status (required unless searching by ID) -->
-                    <span class="input-help">
-                      <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" required>
-                        <?php if ($id == null) { ?>
-                          <option value="" disabled selected hidden>Select Status</option>
-                        <?php } else { ?>
-                          <option value="<?php echo $id ?>" hidden selected><?php echo $id ?></option>
-                        <?php } ?>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                      <small class="form-text text-muted">Status<span style="color:red">*</span></small>
-                    </span>
+                  <!-- Status (required unless searching by ID) -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <select name="get_id" id="get_id" class="form-select" required>
+                      <?php if ($id == null) { ?>
+                        <option value="" disabled selected hidden>Select Status</option>
+                      <?php } else { ?>
+                        <option value="<?php echo $id ?>" hidden selected><?php echo $id ?></option>
+                      <?php } ?>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                    <small class="form-text text-muted">Status<span style="color:red">*</span></small>
+                  </div>
 
-                    <!-- Category (optional) -->
-                    <span class="input-help">
-                      <select name="get_category" id="get_category" class="form-select" style="width:max-content;display:inline-block">
-                        <option value="" disabled selected hidden>Select Category</option>
-                        <?php
-                        $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'Undefined'];
-                        foreach ($categories as $cat) {
-                          $selected = ($category == $cat) ? 'selected' : '';
-                          echo "<option value=\"$cat\" $selected>$cat</option>";
-                        }
-                        ?>
-                      </select>
-                      <small class="form-text text-muted">Category</small>
-                    </span>
+                  <!-- Category (optional) -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <select name="get_category" id="get_category" class="form-select">
+                      <option value="" disabled selected hidden>Select Category</option>
+                      <?php
+                      $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'Undefined'];
+                      foreach ($categories as $cat) {
+                        $selected = ($category == $cat) ? 'selected' : '';
+                        echo "<option value=\"$cat\" $selected>$cat</option>";
+                      }
+                      ?>
+                    </select>
+                    <small class="form-text text-muted">Category</small>
+                  </div>
 
-                    <!-- Class (optional) -->
-                    <span class="input-help">
-                      <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
-                        <option disabled hidden>Select Class</option>
-                        <?php foreach ($classlist as $cls) {
-                          $selected = ($class && in_array($cls, (array)$class)) ? 'selected' : '';
-                          echo "<option value=\"$cls\" $selected>$cls</option>";
-                        } ?>
-                      </select>
-                      <small class="form-text text-muted">Class</small>
-                    </span>
+                  <!-- Class (optional) -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <select name="get_class[]" id="get_class" class="form-control" multiple>
+                      <option disabled hidden>Select Class</option>
+                      <?php foreach ($classlist as $cls) {
+                        $selected = ($class && in_array($cls, (array)$class)) ? 'selected' : '';
+                        echo "<option value=\"$cls\" $selected>$cls</option>";
+                      } ?>
+                    </select>
+                    <small class="form-text text-muted">Class</small>
+                  </div>
 
-                    <!-- Student ID (required when checkbox checked) -->
-                    <span class="input-help">
-                      <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block"
-                        placeholder="Student ID" value="<?php echo htmlspecialchars($stid ?? '') ?>">
-                      <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
-                    </span>
+                  <!-- Student ID (required when checkbox checked) -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <input name="get_stid" id="get_stid" class="form-control"
+                      placeholder="Student ID" value="<?php echo htmlspecialchars($stid ?? '') ?>">
+                    <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
+                  </div>
+
+                  <div class="d-flex flex-column">
+                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                      <i class="bi bi-search"></i>&nbsp;Search
+                    </button>
                   </div>
                 </div>
 
-                <div class="col2 left" style="display: inline-block;">
-                  <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                    <i class="bi bi-search"></i>&nbsp;Search
-                  </button>
-                </div>
-
-                <div id="filter-checks">
+                <div id="filter-checks" class="mt-2">
                   <input type="checkbox" name="search_by_id_only" id="search_by_id_only" class="form-check-input" value="1"
                     <?= isset($_POST['search_by_id_only']) ? 'checked' : '' ?> />
                   <label for="search_by_id_only" style="font-weight: 400;">Search by Student ID only</label>
@@ -411,7 +425,7 @@ $classlist = [
                     elseif (sizeof($resultArr) == 0 && $stid == "") :
                     ?>
                       <tr>
-                        <td colspan="13">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs); ?></td>
+                        <td colspan="13">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
                       </tr>
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid != "") :

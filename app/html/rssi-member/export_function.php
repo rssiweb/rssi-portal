@@ -437,35 +437,59 @@ function student_export()
 
 
   global $con;
-  @$module = $_POST['module'];
-  @$id = $_POST['id'];
-  @$category = $_POST['category'];
-  @$classs = $_POST['classs'];
-  @$class = $_POST['class'];
-  @$stid = $_POST['stid'];
+  // Get search parameters from POST
+  $module = $_POST['get_module'] ?? null;
+  $id = $_POST['get_id'] ?? null;
+  $category = $_POST['get_category'] ?? null;
+  $class = isset($_POST['get_class']) ? explode(',', $_POST['get_class']) : null;
+  $stid = $_POST['get_stid'] ?? null;
+  $searchByIdOnly = $_POST['search_by_id_only'] ?? '0';
 
+  // Build the same query as in your search
+  if ($searchByIdOnly == '1') {
+    // Search by Student ID only
+    if (!empty($stid)) {
+      $result = pg_query_params(
+        $con,
+        "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
+        [$stid]
+      );
+    }
+  } else {
+    // Normal search (requires module and status)
+    if (!empty($module) && !empty($id)) {
+      $query = "SELECT * FROM rssimyprofile_student 
+                 WHERE filterstatus = $1 AND module = $2";
+      $params = [$id, $module];
 
-  $query = "SELECT * FROM rssimyprofile_student 
-    LEFT JOIN (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees GROUP BY studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE filterstatus='$id' AND module='$module'";
+      $paramCount = 3;
 
-  if ($category != null) {
-    $query .= " AND category='$category'";
+      if (!empty($category)) {
+        $query .= " AND category = $$paramCount";
+        $params[] = $category;
+        $paramCount++;
+      }
+
+      if (!empty($class)) {
+        if (is_array($class)) {
+          $placeholders = [];
+          foreach ($class as $classItem) {
+            $placeholders[] = "$$paramCount";
+            $params[] = $classItem;
+            $paramCount++;
+          }
+          $query .= " AND class IN (" . implode(',', $placeholders) . ")";
+        } else {
+          $query .= " AND class = $$paramCount";
+          $params[] = $class;
+          $paramCount++;
+        }
+      }
+
+      $query .= " ORDER BY category ASC, class ASC, studentname ASC";
+      $result = pg_query_params($con, $query, $params);
+    }
   }
-
-  if ($class != null) {
-    $query .= " AND class IN ('$classs')";
-  }
-
-  if ($stid != null) {
-    $query = "SELECT * FROM rssimyprofile_student 
-        LEFT JOIN (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees GROUP BY studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE student_id='$stid'";
-  }
-
-  $query .= " ORDER BY category ASC, class ASC, studentname ASC";
-
-  $result = pg_query($con, $query);
 
   if (!$result) {
     echo "An error occurred.\n";
