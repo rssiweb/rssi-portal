@@ -237,8 +237,10 @@ if ($activeTab == 'dashboard') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Health Records Portal</title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #4e73df;
@@ -557,8 +559,18 @@ if ($activeTab == 'dashboard') {
                                                         <td><?= htmlspecialchars($row['blood_pressure']) ?></td>
                                                         <td><?= htmlspecialchars($row['vision_left']) ?>/<?= htmlspecialchars($row['vision_right']) ?></td>
                                                         <td>
-                                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                                                            <button class="btn btn-action btn-outline-primary view-record"
+                                                                data-type="health"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="View">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-action btn-outline-secondary edit-record"
+                                                                data-type="health"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -652,12 +664,28 @@ if ($activeTab == 'dashboard') {
                                                         </td>
                                                         <td>' . date('d M Y', strtotime($row['cycle_start_date'])) . '</td>
                                                         <td>' . ($row['cycle_end_date'] ? date('d M Y', strtotime($row['cycle_end_date'])) : 'Ongoing') . '</td>
-                                                        <td>' . htmlspecialchars(substr($row['symptoms'], 0, 30)) . '...</td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
-                                                        </td>
-                                                    </tr>';
+                                                        <td>' . htmlspecialchars(substr($row['symptoms'], 0, 30)) . '...</td>' ?>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-action btn-outline-primary view-record"
+                                                                data-type="period"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="View">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-action btn-outline-info add-symptoms"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="Add Symptoms">
+                                                                <i class="bi bi-plus-circle"></i>
+                                                            </button>
+                                                            <button class="btn btn-action btn-outline-secondary edit-record"
+                                                                data-type="period"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                    </td>
+                                            <?php '</tr>';
                                                 }
 
                                                 if (pg_num_rows($periodFilterResult) == 0) {
@@ -762,12 +790,28 @@ if ($activeTab == 'dashboard') {
                                                         <td>' . date('d M Y', strtotime($row['distribution_date'])) . '</td>
                                                         <td>' . $row['quantity'] . '</td>
                                                         <td>' . $academicYear . '</td>
-                                                        <td>' . htmlspecialchars($row['recorded_by_name']) . '</td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
-                                                        </td>
-                                                    </tr>';
+                                                        <td>' . htmlspecialchars($row['recorded_by_name']) . '</td>' ?>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-action btn-outline-primary view-record"
+                                                                data-type="pad"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="View">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-action btn-outline-success distribute-again"
+                                                                data-id="<?= $row['student_id'] ?>"
+                                                                title="Distribute Again">
+                                                                <i class="bi bi-box-seam"></i>
+                                                            </button>
+                                                            <button class="btn btn-action btn-outline-secondary edit-record"
+                                                                data-type="pad"
+                                                                data-id="<?= $row['id'] ?>"
+                                                                title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                    </td>
+                                            <?php '</tr>';
                                                 }
 
                                                 if (pg_num_rows($padFilterResult) == 0) {
@@ -1575,6 +1619,284 @@ if ($activeTab == 'dashboard') {
 
             // Initialize the correct tab on page load
             handleTabNavigation();
+        });
+    </script>
+    <!-- View Record Modal (for all record types) -->
+    <div class="modal fade" id="viewRecordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewModalTitle">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewRecordContent">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="printRecordBtn"><i class="fas fa-print"></i> Print</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Record Modal (for all record types) -->
+    <div class="modal fade" id="editRecordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalTitle">Edit Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editRecordForm">
+                    <div class="modal-body" id="editRecordContent">
+                        <!-- Content will be loaded via AJAX -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Add Symptoms Modal -->
+    <div class="modal fade" id="addSymptomsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Symptoms</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="add_symptoms.php" method="POST">
+                    <input type="hidden" name="record_id" id="periodRecordId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Symptoms</label>
+                            <textarea class="form-control" name="symptoms" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Symptoms</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const viewModal = new bootstrap.Modal(document.getElementById('viewRecordModal'));
+            const editModal = new bootstrap.Modal(document.getElementById('editRecordModal'));
+
+            // View Record Handler
+            document.querySelectorAll('.view-record').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordType = this.getAttribute('data-type');
+                    const recordId = this.getAttribute('data-id');
+
+                    // Show spinner and clear previous content
+                    document.getElementById('viewRecordContent').innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>`;
+
+                    document.getElementById('viewModalTitle').textContent = `Loading ${recordType.charAt(0).toUpperCase() + recordType.slice(1)} Record...`;
+                    viewModal.show();
+
+                    // Set data attributes for print button
+                    document.getElementById('viewRecordModal').dataset.type = recordType;
+                    document.getElementById('viewRecordModal').dataset.id = recordId;
+
+                    fetch(`get_record.php?type=${recordType}&id=${recordId}&mode=view`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(text => {
+                                    throw new Error(text || 'Network response was not ok');
+                                });
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            document.getElementById('viewModalTitle').textContent = `${recordType.charAt(0).toUpperCase() + recordType.slice(1)} Record Details`;
+                            document.getElementById('viewRecordContent').innerHTML = html;
+                        })
+                        .catch(error => {
+                            document.getElementById('viewRecordContent').innerHTML = `
+                            <div class="alert alert-danger">
+                                Failed to load record: ${error.message}
+                            </div>`;
+                        });
+                });
+            });
+
+            // Print button handler
+            document.getElementById('printRecordBtn').addEventListener('click', function() {
+                const type = document.getElementById('viewRecordModal').dataset.type;
+                const id = document.getElementById('viewRecordModal').dataset.id;
+
+                if (type && id) {
+                    window.open(`http://localhost:8082/rssi-member/print_record.php?type=${type}&id=${id}`, '_blank');
+                } else {
+                    alert('Cannot print: Record information not available');
+                }
+            });
+
+            // Edit Record Handler
+            document.querySelectorAll('.edit-record').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordType = this.getAttribute('data-type');
+                    const recordId = this.getAttribute('data-id');
+
+                    // Show spinner and clear previous content
+                    document.getElementById('editRecordContent').innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>`;
+
+                    document.getElementById('editModalTitle').textContent = `Loading ${recordType.charAt(0).toUpperCase() + recordType.slice(1)} Record...`;
+                    editModal.show();
+
+                    fetch(`get_record.php?type=${recordType}&id=${recordId}&mode=edit`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(text => {
+                                    throw new Error(text || 'Network response was not ok');
+                                });
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            document.getElementById('editModalTitle').textContent = `Edit ${recordType.charAt(0).toUpperCase() + recordType.slice(1)} Record`;
+                            document.getElementById('editRecordContent').innerHTML = html;
+                            // Set form action
+                            document.getElementById('editRecordForm').action = `save_record.php?type=${recordType}&id=${recordId}`;
+                        })
+                        .catch(error => {
+                            document.getElementById('editRecordContent').innerHTML = `
+                            <div class="alert alert-danger">
+                                Failed to load record: ${error.message}
+                            </div>`;
+                        });
+                });
+            });
+
+            // Handle form submission for edit modal
+            document.getElementById('editRecordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Show spinner during form submission
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Saving...
+            `;
+                submitButton.disabled = true;
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.error || 'Failed to save record');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Show success alert
+                        alert('Record updated successfully!');
+                        editModal.hide();
+                        location.reload();
+                    })
+                    .catch(error => {
+                        submitButton.innerHTML = originalButtonText;
+                        submitButton.disabled = false;
+                        alert('Error: ' + error.message);
+                    });
+            });
+
+            // Add this to your existing script section
+            document.querySelectorAll('.add-symptoms').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-id');
+                    // Open modal to add symptoms
+                    const modal = new bootstrap.Modal(document.getElementById('addSymptomsModal'));
+                    document.getElementById('periodRecordId').value = recordId;
+                    modal.show();
+                });
+            });
+
+            // Handle form submission for symptoms modal
+            document.getElementById('addSymptomsModal').querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const form = this;
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+
+                // Show loading state
+                submitButton.innerHTML = `
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Saving...
+    `;
+                submitButton.disabled = true;
+
+                // Get current URL parameters to preserve them
+                const currentUrl = new URL(window.location.href);
+                const urlParams = currentUrl.search;
+
+                fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.error);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Show success alert
+                            alert('Symptoms have been added successfully!');
+
+                            // Close the modal
+                            bootstrap.Modal.getInstance(document.getElementById('addSymptomsModal')).hide();
+
+                            // Redirect back to original page with parameters
+                            window.location.href = window.location.pathname + urlParams;
+                        } else {
+                            throw new Error(data.message || 'Failed to save symptoms');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error.message);
+                        submitButton.innerHTML = originalButtonText;
+                        submitButton.disabled = false;
+                    });
+            });
+
+            document.querySelectorAll('.distribute-again').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    // Pre-fill the pad distribution modal with this student
+                    const modal = new bootstrap.Modal(document.getElementById('addPadDistributionModal'));
+                    document.getElementById('padStudentSelect').value = studentId;
+                    modal.show();
+                });
+            });
         });
     </script>
 </body>
