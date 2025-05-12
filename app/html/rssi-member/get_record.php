@@ -6,7 +6,7 @@ $id = $_GET['id'] ?? 0;
 $mode = $_GET['mode'] ?? 'view';
 
 // Validate inputs
-if (!in_array($type, ['health', 'period', 'pad']) || !is_numeric($id)) {
+if (!in_array($type, ['health', 'period', 'pad'])) {
     die("Invalid request");
 }
 
@@ -22,7 +22,7 @@ switch ($type) {
         break;
     case 'pad':
         $record = pg_fetch_assoc(pg_query($con, 
-            "SELECT * FROM stock_out WHERE transaction_out_id = $id"));
+            "SELECT * FROM stock_out WHERE transaction_out_id = '$id'"));
         break;
 }
 
@@ -56,7 +56,7 @@ if ($mode === 'view') {
         } elseif (strpos($field, 'notes') !== false || strpos($field, 'symptoms') !== false) {
             echo '<textarea class="form-control" name="' . $field . '">' . htmlspecialchars($value) . '</textarea>';
         } else {
-            echo '<input type="text" class="form-control" name="' . $field . '" value="' . htmlspecialchars($value) . '">';
+            echo '<input type="text" class="form-control" name="' . $field . '" value="' . htmlspecialchars($value ?? '', ENT_QUOTES) . '">';
         }
         
         echo '</div>';

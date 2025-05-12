@@ -8,7 +8,7 @@ $id = $_GET['id'] ?? 0;
 $method = $_SERVER['REQUEST_METHOD'];
 
 // Validate inputs
-if (!in_array($type, ['health', 'period', 'pad']) || !is_numeric($id)) {
+if (!in_array($type, ['health', 'period', 'pad'])) {
     http_response_code(400);
     die(json_encode(['error' => 'Invalid request']));
 }
@@ -25,7 +25,7 @@ switch ($type) {
         break;
     case 'pad':
         $table = 'stock_out';
-        $idField = 'id';
+        $idField = 'transaction_out_id';
         break;
     default:
         http_response_code(400);

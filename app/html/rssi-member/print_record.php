@@ -5,7 +5,7 @@ $type = $_GET['type'] ?? '';
 $id = $_GET['id'] ?? 0;
 
 // Validate inputs
-if (!in_array($type, ['health', 'period', 'pad']) || !is_numeric($id)) {
+if (!in_array($type, ['health', 'period', 'pad'])) {
     die('Invalid request');
 }
 
@@ -14,9 +14,9 @@ $record = pg_fetch_assoc(pg_query($con, "
     SELECT r.*, s.studentname, s.class, s.student_id as admissionnumber,
            a.fullname as recorded_by, a.position as designation, s.photourl
     FROM " . getTableName($type) . " r
-    JOIN rssimyprofile_student s ON r.student_id = s.student_id
-    JOIN rssimyaccount_members a ON r.recorded_by = a.associatenumber
-    WHERE r.id = $id
+    JOIN rssimyprofile_student s ON r.distributed_to = s.student_id
+    JOIN rssimyaccount_members a ON r.distributed_by = a.associatenumber
+    WHERE r.transaction_out_id = '$id'
 "));
 
 if (!$record) {
