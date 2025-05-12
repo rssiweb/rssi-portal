@@ -137,30 +137,6 @@ if ($activeTab == 'dashboard') {
     while ($row = pg_fetch_assoc($healthFilterResult)) {
         $healthRecords[] = $row;
     }
-
-    // DEBUGGING - Show fetched data (use one of the following options)
-
-    // Option 1: Use print_r() to display the raw array
-    // echo "<pre>";
-    // print_r($healthRecords);
-    // echo "</pre>";
-
-    // Option 2: Use var_dump() for detailed debugging
-    // echo "<pre>";
-    // var_dump($healthRecords);
-    // echo "</pre>";
-
-    // Option 3: Display the data in a table format for better readability
-    // echo "<table border='1'>";
-    // echo "<tr><th>Record Date</th><th>Student Name</th><th>Student ID</th></tr>";
-    // foreach ($healthRecords as $record) {
-    //     echo "<tr>";
-    //     echo "<td>" . htmlspecialchars($record['record_date']) . "</td>";
-    //     echo "<td>" . htmlspecialchars($record['studentname']) . "</td>";
-    //     echo "<td>" . htmlspecialchars($record['student_id']) . "</td>";
-    //     echo "</tr>";
-    // }
-    // echo "</table>";
 } elseif ($activeTab == 'period-tracking') {
     $periodFilterQuery = $basePeriodQuery;
 
@@ -231,6 +207,47 @@ if ($activeTab == 'dashboard') {
     }
 }
 ?>
+
+<?php
+// Function to fetch students based on conditions
+function fetchStudents($con, $gender = null)
+{
+    // Base query
+    $query = "SELECT student_id, studentname, class 
+              FROM rssimyprofile_student 
+              WHERE filterstatus='Active'";
+
+    // Add gender condition if provided
+    if ($gender) {
+        $query .= " AND gender = '" . pg_escape_string($con, $gender) . "'";
+    }
+
+    // Order by class and student name
+    $query .= " ORDER BY class, studentname";
+
+    // Execute the query
+    $result = pg_query($con, $query);
+    $students = [];
+
+    // Fetch and format the results
+    while ($row = pg_fetch_assoc($result)) {
+        $students[] = [
+            'id' => $row['student_id'],
+            'text' => $row['studentname'] . ' (' . $row['student_id'] . ')'
+        ];
+    }
+
+    return $students;
+}
+
+// Fetch female students
+$femaleStudents = fetchStudents($con, 'Female');
+
+// Fetch all active students
+$students = fetchStudents($con);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -239,9 +256,15 @@ if ($activeTab == 'dashboard') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Health Records Portal</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- In your head section -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
         :root {
             --primary-color: #4e73df;
@@ -365,30 +388,6 @@ if ($activeTab == 'dashboard') {
                             </ul>
                         </div>
                     </div>
-
-
-                    <!-- <div class="alert alert-info">
-                        <h5>Debug Information:</h5>
-                        <p>Active Tab: <?php echo $activeTab; ?></p>
-                        <p>Academic Year: <?php echo $selectedAcademicYear; ?> (<?php echo $academicYearStart ?> to <?php echo $academicYearEnd ?>)</p>
-                        <?php if (isset($healthFilterQuery)): ?>
-                            <p>Query: <?php echo htmlspecialchars($healthFilterQuery); ?></p>
-                            <p>Result Count: <?php echo pg_num_rows($healthFilterResult); ?></p>
-                        <?php endif; ?>
-                        <p>Filters:
-                            Class: <?php echo isset($_GET['class']) ? htmlspecialchars($_GET['class']) : 'None'; ?>,
-                            Search: <?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : 'None'; ?>
-                        </p>
-                        <?php
-                        // Test query directly
-                        $testQuery = "SELECT COUNT(*) FROM student_health_records 
-                            WHERE record_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
-                        $testResult = pg_query($con, $testQuery);
-                        $testCount = pg_fetch_result($testResult, 0, 0);
-                        ?>
-                        <p>Total records in date range: <?php echo $testCount; ?></p>
-                    </div> -->
-
                 </div>
 
                 <div class="tab-content">
@@ -975,20 +974,12 @@ if ($activeTab == 'dashboard') {
                                 <label for="studentSelect" class="form-label">Student</label>
                                 <select class="form-select" id="studentSelect" name="student_id" required>
                                     <option value="">Select Student</option>
-                                    <?php
-                                    $studentsQuery = "SELECT student_id, studentname, class 
-                                                     FROM rssimyprofile_student 
-                                                     WHERE filterstatus='Active'
-                                                     ORDER BY class, studentname";
-                                    $studentsResult = pg_query($con, $studentsQuery);
-
-                                    while ($student = pg_fetch_assoc($studentsResult)) {
-                                        echo '<option value="' . htmlspecialchars($student['student_id']) . '">'
-                                            . htmlspecialchars($student['studentname']) . ' (' . htmlspecialchars($student['class']) . ')</option>';
-                                    }
-                                    ?>
+                                    <?php foreach ($students as $student): ?>
+                                        <option value="<?= $student['id']; ?>"><?= $student['text']; ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
+
                             <div class="col-md-6">
                                 <label for="recordDate" class="form-label">Record Date</label>
                                 <input type="date" class="form-control" id="recordDate" name="record_date" required
@@ -1060,22 +1051,15 @@ if ($activeTab == 'dashboard') {
                                 <label for="periodStudentSelect" class="form-label">Student</label>
                                 <select class="form-select" id="periodStudentSelect" name="student_id" required>
                                     <option value="">Select Student</option>
-                                    <?php
-                                    $femaleStudentsQuery = "SELECT student_id, studentname, class 
-                                                          FROM rssimyprofile_student 
-                                                          WHERE gender = 'Female'
-                                                          AND filterstatus='Active'
-                                                          ORDER BY class, studentname";
-                                    $femaleStudentsResult = pg_query($con, $femaleStudentsQuery);
-
-                                    while ($student = pg_fetch_assoc($femaleStudentsResult)) {
-                                        echo '<option value="' . $student['student_id'] . '">'
-                                            . htmlspecialchars($student['studentname'] . ' (' . $student['class'] . ')')
-                                            . '</option>';
-                                    }
-                                    ?>
+                                    <?php foreach ($femaleStudents as $student): ?>
+                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
+                                    <?php endforeach; ?>
                                 </select>
+                                <small class="text-muted">Choose a student from the list.</small>
+                                <div class="invalid-feedback">Please select a student.</div>
                             </div>
+
+
                             <div class="col-md-6">
                                 <label for="recordDatePeriod" class="form-label">Record Date</label>
                                 <input type="date" class="form-control" id="recordDatePeriod" name="record_date" required
@@ -1136,26 +1120,18 @@ if ($activeTab == 'dashboard') {
 
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="padStudentSelect" class="form-label">Students</label>
-                                <select class="form-select" id="padStudentSelect" name="student_ids[]" multiple="multiple" required>
-                                    <?php
-                                    $femaleStudentsQuery = "SELECT student_id, studentname, class 
-                                          FROM rssimyprofile_student 
-                                          WHERE gender = 'Female'
-                                          AND filterstatus='Active'
-                                          ORDER BY class, studentname";
-                                    $femaleStudentsResult = pg_query($con, $femaleStudentsQuery);
-
-                                    while ($student = pg_fetch_assoc($femaleStudentsResult)) {
-                                        echo '<option value="' . $student['student_id'] . '">'
-                                            . htmlspecialchars($student['studentname'] . ' (' . $student['class'] . ')')
-                                            . '</option>';
-                                    }
-                                    ?>
+                            <div class="col-md-12">
+                                <label for="padStudentSelect" class="form-label">Search and Select Students</label>
+                                <select id="padStudentSelect" name="student_ids[]" class="form-control" multiple="multiple" required>
+                                    <?php foreach ($femaleStudents as $student): ?>
+                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
+                                    <?php endforeach; ?>
                                 </select>
-                                <small class="text-muted">Hold Ctrl/Cmd to select multiple students</small>
+                                <small class="text-muted">Start typing to search students. You can select multiple students.</small>
+                                <div class="invalid-feedback">Please select at least one student.</div>
                             </div>
+                        </div>
+                        <div class="row g-3"> <!-- Better grid spacing -->
                             <div class="col-md-6">
                                 <label for="distributionDate" class="form-label">Distribution Date</label>
                                 <input type="date" class="form-control" id="distributionDate" name="distribution_date" required
@@ -1194,36 +1170,6 @@ if ($activeTab == 'dashboard') {
                         <button type="submit" class="btn btn-primary">Save Distribution</button>
                     </div>
                 </form>
-
-                <!-- Add this script to enhance the multi-select -->
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        // Initialize the multi-select dropdown
-                        $('#padStudentSelect').select2({
-                            placeholder: "Select students",
-                            allowClear: true,
-                            width: '100%'
-                        });
-
-                        // Toggle bulk distribution options
-                        document.getElementById('bulkDistribution').addEventListener('change', function() {
-                            const bulkOptions = document.getElementById('bulkDistributionOptions');
-                            const studentSelect = document.getElementById('padStudentSelect');
-
-                            if (this.checked) {
-                                bulkOptions.style.display = 'block';
-                                studentSelect.disabled = true;
-                                studentSelect.removeAttribute('required');
-                                document.getElementById('bulkClassSelect').setAttribute('required', '');
-                            } else {
-                                bulkOptions.style.display = 'none';
-                                studentSelect.disabled = false;
-                                studentSelect.setAttribute('required', '');
-                                document.getElementById('bulkClassSelect').removeAttribute('required');
-                            }
-                        });
-                    });
-                </script>
             </div>
         </div>
     </div>
@@ -1396,8 +1342,72 @@ if ($activeTab == 'dashboard') {
             </div>
         </div>
     </div>
+    <!-- View Record Modal (for all record types) -->
+    <div class="modal fade" id="viewRecordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewModalTitle">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewRecordContent">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="printRecordBtn"><i class="fas fa-print"></i> Print</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Edit Record Modal (for all record types) -->
+    <div class="modal fade" id="editRecordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalTitle">Edit Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editRecordForm">
+                    <div class="modal-body" id="editRecordContent">
+                        <!-- Content will be loaded via AJAX -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Add Symptoms Modal -->
+    <div class="modal fade" id="addSymptomsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Symptoms</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="add_symptoms.php" method="POST">
+                    <input type="hidden" name="record_id" id="periodRecordId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Symptoms</label>
+                            <textarea class="form-control" name="symptoms" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Symptoms</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1622,69 +1632,6 @@ if ($activeTab == 'dashboard') {
             handleTabNavigation();
         });
     </script>
-    <!-- View Record Modal (for all record types) -->
-    <div class="modal fade" id="viewRecordModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewModalTitle">Record Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="viewRecordContent">
-                    <!-- Content will be loaded via AJAX -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="printRecordBtn"><i class="fas fa-print"></i> Print</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Record Modal (for all record types) -->
-    <div class="modal fade" id="editRecordModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalTitle">Edit Record</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="editRecordForm">
-                    <div class="modal-body" id="editRecordContent">
-                        <!-- Content will be loaded via AJAX -->
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- Add Symptoms Modal -->
-    <div class="modal fade" id="addSymptomsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Symptoms</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="add_symptoms.php" method="POST">
-                    <input type="hidden" name="record_id" id="periodRecordId">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Symptoms</label>
-                            <textarea class="form-control" name="symptoms" rows="3" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Symptoms</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const viewModal = new bootstrap.Modal(document.getElementById('viewRecordModal'));
@@ -1847,9 +1794,9 @@ if ($activeTab == 'dashboard') {
 
                 // Show loading state
                 submitButton.innerHTML = `
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Saving...
-    `;
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Saving...
+                    `;
                 submitButton.disabled = true;
 
                 // Get current URL parameters to preserve them
@@ -1900,6 +1847,62 @@ if ($activeTab == 'dashboard') {
             });
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle bulk distribution options
+            document.getElementById('bulkDistribution').addEventListener('change', function() {
+                const bulkOptions = document.getElementById('bulkDistributionOptions');
+                const studentSelect = document.getElementById('padStudentSelect');
+
+                if (this.checked) {
+                    bulkOptions.style.display = 'block';
+                    studentSelect.disabled = true;
+                    studentSelect.removeAttribute('required');
+                    document.getElementById('bulkClassSelect').setAttribute('required', '');
+                } else {
+                    bulkOptions.style.display = 'none';
+                    studentSelect.disabled = false;
+                    studentSelect.setAttribute('required', '');
+                    document.getElementById('bulkClassSelect').removeAttribute('required');
+                }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Array of modal and select configurations
+            const modals = [{
+                    modal: '#addPadDistributionModal',
+                    select: '#padStudentSelect',
+                    allowClear: false
+                },
+                {
+                    modal: '#addHealthRecordModal',
+                    select: '#studentSelect',
+                    allowClear: true
+                },
+                {
+                    modal: '#addPeriodRecordModal',
+                    select: '#periodStudentSelect',
+                    allowClear: true
+                }
+            ];
+
+            // Loop through each modal and initialize Select2
+            modals.forEach(function(item) {
+                $(item.modal).on('shown.bs.modal', function() {
+                    $(item.select).select2({
+                        placeholder: "Search by name or ID...",
+                        allowClear: item.allowClear,
+                        width: '100%',
+                        dropdownParent: $(this) // Use the current modal as parent
+                    });
+                });
+            });
+        });
+    </script>
+
 </body>
 
 </html>
