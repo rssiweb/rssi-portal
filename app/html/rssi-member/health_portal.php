@@ -553,11 +553,11 @@ $students = fetchStudents($con);
                                                             </div>
                                                         </td>
                                                         <td><?= date('d M Y', strtotime($row['record_date'])) ?></td>
-                                                        <td><?= htmlspecialchars($row['height_cm']) ?></td>
-                                                        <td><?= htmlspecialchars($row['weight_kg']) ?></td>
-                                                        <td><?= htmlspecialchars($row['bmi']) ?></td>
-                                                        <td><?= htmlspecialchars($row['blood_pressure']) ?></td>
-                                                        <td><?= htmlspecialchars($row['vision_left']) ?>/<?= htmlspecialchars($row['vision_right']) ?></td>
+                                                        <td><?= htmlspecialchars($row['height_cm'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($row['weight_kg'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($row['bmi'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($row['blood_pressure'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($row['vision_left'] ?? '') ?>/<?= htmlspecialchars($row['vision_right'] ?? '') ?></td>
                                                         <td>
                                                             <button class="btn btn-action btn-outline-primary view-record"
                                                                 data-type="health"
@@ -662,9 +662,9 @@ $students = fetchStudents($con);
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td>' . date('d M Y', strtotime($row['cycle_start_date'])) . '</td>
+                                                        <td>' . date('d M Y', strtotime($row['cycle_start_date']) ?? '') . '</td>
                                                         <td>' . ($row['cycle_end_date'] ? date('d M Y', strtotime($row['cycle_end_date'])) : 'Ongoing') . '</td>
-                                                        <td>' . htmlspecialchars(substr($row['symptoms'], 0, 30)) . '...</td>' ?>
+                                                        <td>' . htmlspecialchars(substr($row['symptoms'] ?? '', 0, 30)) . '</td>' ?>
                                                     <td>
                                                         <div class="action-buttons">
                                                             <button class="btn btn-action btn-outline-primary view-record"
@@ -987,11 +987,11 @@ $students = fetchStudents($con);
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="height" class="form-label">Height (cm)</label>
-                                <input type="number" step="0.1" class="form-control" id="height" name="height_cm">
+                                <input type="number" step="0.1" class="form-control" id="height" name="height_cm" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="weight" class="form-label">Weight (kg)</label>
-                                <input type="number" step="0.1" class="form-control" id="weight" name="weight_kg">
+                                <input type="number" step="0.1" class="form-control" id="weight" name="weight_kg" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="bmi" class="form-label">BMI</label>
@@ -1150,7 +1150,7 @@ $students = fetchStudents($con);
 
                         <div class="mb-3">
                             <label for="padQuantity" class="form-label">Quantity per Student</label>
-                            <input type="number" class="form-control" id="padQuantity" name="quantity" value="1" min="1">
+                            <input type="number" class="form-control" id="padQuantity" name="quantity" value="1" min="1" required>
                         </div>
 
                         <div class="mb-3">

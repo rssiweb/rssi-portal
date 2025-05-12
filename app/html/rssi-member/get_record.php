@@ -13,16 +13,22 @@ if (!in_array($type, ['health', 'period', 'pad'])) {
 // Fetch record based on type
 switch ($type) {
     case 'health':
-        $record = pg_fetch_assoc(pg_query($con, 
-            "SELECT * FROM student_health_records WHERE id = $id"));
+        $record = pg_fetch_assoc(pg_query(
+            $con,
+            "SELECT * FROM student_health_records WHERE id = $id"
+        ));
         break;
     case 'period':
-        $record = pg_fetch_assoc(pg_query($con, 
-            "SELECT * FROM student_period_records WHERE id = $id"));
+        $record = pg_fetch_assoc(pg_query(
+            $con,
+            "SELECT * FROM student_period_records WHERE id = $id"
+        ));
         break;
     case 'pad':
-        $record = pg_fetch_assoc(pg_query($con, 
-            "SELECT * FROM stock_out WHERE transaction_out_id = '$id'"));
+        $record = pg_fetch_assoc(pg_query(
+            $con,
+            "SELECT * FROM stock_out WHERE transaction_out_id = '$id'"
+        ));
         break;
 }
 
@@ -47,20 +53,19 @@ if ($mode === 'view') {
     echo '<div class="edit-form">';
     foreach ($record as $field => $value) {
         if ($field === 'id') continue;
-        
+
         echo '<div class="mb-3">';
         echo '<label class="form-label">' . ucwords(str_replace('_', ' ', $field)) . '</label>';
-        
+
         if (strpos($field, 'date') !== false) {
-            echo '<input type="date" class="form-control" name="' . $field . '" value="' . htmlspecialchars($value) . '">';
+            echo '<input type="date" class="form-control" name="' . $field . '" value="' . htmlspecialchars($value ?? '') . '">';
         } elseif (strpos($field, 'notes') !== false || strpos($field, 'symptoms') !== false) {
-            echo '<textarea class="form-control" name="' . $field . '">' . htmlspecialchars($value) . '</textarea>';
+            echo '<textarea class="form-control" name="' . $field . '">' . htmlspecialchars($value ?? '') . '</textarea>';
         } else {
             echo '<input type="text" class="form-control" name="' . $field . '" value="' . htmlspecialchars($value ?? '', ENT_QUOTES) . '">';
         }
-        
+
         echo '</div>';
     }
     echo '</div>';
 }
-?>

@@ -13,7 +13,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $student_id = pg_escape_string($con, $_POST['student_id']);
     $record_date = pg_escape_string($con, $_POST['record_date']);
     $cycle_start_date = pg_escape_string($con, $_POST['cycle_start_date']);
-    $cycle_end_date = !empty($_POST['cycle_end_date']) ? pg_escape_string($con, $_POST['cycle_end_date']) : null;
+    $cycle_end_date = (isset($_POST['cycle_end_date']) && $_POST['cycle_end_date'] !== '') 
+    ? "'" . pg_escape_string($con, $_POST['cycle_end_date']) . "'" 
+    : 'NULL';
     $symptoms = pg_escape_string($con, $_POST['symptoms']);
     $notes = pg_escape_string($con, $_POST['notes']);
     $recorded_by = $associatenumber;
@@ -22,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 student_id, record_date, cycle_start_date, cycle_end_date, 
                 symptoms, notes, recorded_by
               ) VALUES (
-                '$student_id', '$record_date', '$cycle_start_date', '$cycle_end_date', 
+                '$student_id', '$record_date', '$cycle_start_date', $cycle_end_date, 
                 '$symptoms', '$notes', '$recorded_by'
               )";
 

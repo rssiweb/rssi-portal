@@ -15,13 +15,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($referer['query'])) {
         parse_str($referer['query'], $queryParams);
     }
-    
+
     // Process form data
     $student_id = pg_escape_string($con, $_POST['student_id']);
     $record_date = pg_escape_string($con, $_POST['record_date']);
-    $height_cm = !empty($_POST['height_cm']) ? pg_escape_string($con, $_POST['height_cm']) : null;
-    $weight_kg = !empty($_POST['weight_kg']) ? pg_escape_string($con, $_POST['weight_kg']) : null;
-    $bmi = !empty($_POST['bmi']) ? pg_escape_string($con, $_POST['bmi']) : null;
+    // Convert empty strings to NULL for numeric fields
+    $height_cm = (isset($_POST['height_cm']) && $_POST['height_cm'] !== '') ? pg_escape_string($con, $_POST['height_cm']) : 'NULL';
+    $weight_kg = (isset($_POST['weight_kg']) && $_POST['weight_kg'] !== '') ? pg_escape_string($con, $_POST['weight_kg']) : 'NULL';
+    $bmi = (isset($_POST['bmi']) && $_POST['bmi'] !== '') ? pg_escape_string($con, $_POST['bmi']) : 'NULL';
     $blood_pressure = pg_escape_string($con, $_POST['blood_pressure']);
     $vision_left = pg_escape_string($con, $_POST['vision_left']);
     $vision_right = pg_escape_string($con, $_POST['vision_right']);
@@ -49,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }
-    
+
     header("Location: $redirectUrl");
     exit;
 } else {
@@ -59,13 +60,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($referer['query'])) {
         parse_str($referer['query'], $queryParams);
     }
-    
+
     $redirectUrl = "health_portal.php";
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }
-    
+
     header("Location: $redirectUrl");
     exit;
 }
-?>

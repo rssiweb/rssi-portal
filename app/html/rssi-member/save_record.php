@@ -33,25 +33,35 @@ switch ($type) {
 }
 
 try {
-    // Handle POST request (update)
     if ($method === 'POST') {
         $updates = [];
         $values = [];
         $paramCount = 1;
 
+        // First pass: identify which fields need parameters
+        $needsParam = [];
         foreach ($_POST as $field => $value) {
-            // Skip the 'tab' field as we don't need to store it
-            if ($field === 'tab' || $field === 'academic_year') {
-                continue;
-            }
+            if ($field === 'tab' || $field === 'academic_year') continue;
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $field)) continue;
+            
+            $needsParam[$field] = ($value !== '' && $value !== null && strtoupper($value) !== 'NULL');
+        }
 
-            // Validate field names to prevent SQL injection
-            if (!preg_match('/^[a-zA-Z0-9_]+$/', $field)) {
-                continue;
+        // Second pass: build query with proper NULL handling
+        foreach ($_POST as $field => $value) {
+            if (!isset($needsParam[$field])) continue;
+            
+            if ($needsParam[$field]) {
+                $updates[] = "$field = $" . $paramCount++;
+                // Explicitly cast numeric fields
+                if (in_array($field, ['height_cm', 'weight_kg', 'bmi'])) {
+                    $values[] = (float)$value;
+                } else {
+                    $values[] = $value;
+                }
+            } else {
+                $updates[] = "$field = NULL";
             }
-
-            $updates[] = "$field = $" . $paramCount++;
-            $values[] = $value;
         }
 
         if (empty($updates)) {
@@ -59,10 +69,10 @@ try {
             die(json_encode(['error' => 'No valid fields to update']));
         }
 
-        // Add ID as the last parameter
+        // Add ID parameter
         $values[] = $id;
-
         $query = "UPDATE $table SET " . implode(', ', $updates) . " WHERE $idField = $" . $paramCount;
+        
         $result = pg_query_params($con, $query, $values);
 
         if ($result) {
