@@ -485,7 +485,7 @@ $students = fetchStudents($con);
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Student Health Records (<?php echo $selectedAcademicYear; ?>)</h5>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addHealthRecordModal">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addHealthRecordModal">
                                     <i class="bi bi-plus"></i> Add Record
                                 </button>
                             </div>
@@ -597,7 +597,7 @@ $students = fetchStudents($con);
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Period Tracking Records (<?php echo $selectedAcademicYear; ?>)</h5>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addPeriodRecordModal">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addPeriodRecordModal">
                                     <i class="bi bi-plus"></i> Add Record
                                 </button>
                             </div>
@@ -705,7 +705,7 @@ $students = fetchStudents($con);
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Sanitary Pad Distribution (<?php echo $selectedAcademicYear; ?>)</h5>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addPadDistributionModal">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addPadDistributionModal">
                                     <i class="bi bi-plus"></i> Add Distribution
                                 </button>
                             </div>
@@ -880,23 +880,20 @@ $students = fetchStudents($con);
 
                                             <div class="row mb-3">
                                                 <div class="col-md-4">
-                                                    <select class="form-select" name="student_id" required>
+                                                    <select class="form-select" id="studentGrowth" name="student_id" required>
                                                         <option value="">Select Student</option>
-                                                        <?php
-                                                        $studentsQuery = "SELECT student_id, studentname, class 
-                                                                        FROM rssimyprofile_student 
-                                                                        WHERE filterstatus='Active'
-                                                                        ORDER BY class, studentname";
-                                                        $studentsResult = pg_query($con, $studentsQuery);
-
-                                                        while ($student = pg_fetch_assoc($studentsResult)) {
-                                                            $selected = (isset($_GET['student_id']) && $_GET['student_id'] == $student['student_id']) ? 'selected' : '';
-                                                            echo '<option value="' . htmlspecialchars($student['student_id']) . '" ' . $selected . '>'
-                                                                . htmlspecialchars($student['studentname']) . ' (' . htmlspecialchars($student['class']) . ')</option>';
-                                                        }
-                                                        ?>
+                                                        <?php foreach ($students as $student): ?>
+                                                            <option
+                                                                value="<?= htmlspecialchars($student['id']); ?>"
+                                                                <?= (isset($_GET['student_id']) && $_GET['student_id'] == $student['id']) ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($student['text']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
                                                     </select>
+                                                    <small class="text-muted">Choose a student from the list.</small>
+                                                    <div class="invalid-feedback">Please select a student.</div>
                                                 </div>
+
                                                 <div class="col-md-4">
                                                     <select class="form-select" name="metric">
                                                         <option value="height" <?php echo (isset($_GET['metric']) && $_GET['metric'] == 'height') ? 'selected' : ''; ?>>Height</option>
@@ -965,7 +962,7 @@ $students = fetchStudents($con);
                     <h5 class="modal-title" id="addHealthRecordModalLabel">Add Health Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="save_health_record.php" method="POST">
+                <form id="healthRecordForm" action="save_health_record.php" method="POST">
                     <input type="hidden" name="source_tab" value="<?php echo isset($_GET['tab']) ? htmlspecialchars($_GET['tab']) : 'health-records'; ?>">
                     <input type="hidden" name="academic_year" value="<?php echo isset($_GET['academic_year']) ? htmlspecialchars($_GET['academic_year']) : ''; ?>">
                     <div class="modal-body">
@@ -1024,7 +1021,13 @@ $students = fetchStudents($con);
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Record</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span class="default-text">Save Record</span>
+                            <span class="loading-text d-none">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Submitting...
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1039,7 +1042,7 @@ $students = fetchStudents($con);
                     <h5 class="modal-title" id="addPeriodRecordModalLabel">Add Period Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="save_period_record.php" method="POST">
+                <form id="periodRecordForm" action="save_period_record.php" method="POST">
                     <!-- Add these hidden fields at the top of your form -->
                     <input type="hidden" name="current_tab" value="period-tracking">
                     <?php if (isset($_GET['academic_year'])): ?>
@@ -1090,7 +1093,13 @@ $students = fetchStudents($con);
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Record</button>
+                        <button type="submit" class="btn btn-primary" id="submitPeriodBtn">
+                            <span class="default-text">Save Record</span>
+                            <span class="loading-text d-none">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Submitting...
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1105,7 +1114,7 @@ $students = fetchStudents($con);
                     <h5 class="modal-title" id="addPadDistributionModalLabel">Record Sanitary Pad Distribution</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="save_pad_distribution.php" method="POST">
+                <form id="padDistributionForm" action="save_pad_distribution.php" method="POST">
                     <!-- Add hidden fields to preserve URL parameters -->
                     <input type="hidden" name="current_tab" value="pad-distribution">
                     <?php if (isset($_GET['academic_year'])): ?>
@@ -1167,7 +1176,13 @@ $students = fetchStudents($con);
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Distribution</button>
+                        <button type="submit" class="btn btn-primary" id="submitPadBtn">
+                            <span class="default-text">Save Distribution</span>
+                            <span class="loading-text d-none">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Submitting...
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1354,7 +1369,7 @@ $students = fetchStudents($con);
                     <!-- Content will be loaded via AJAX -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="printRecordBtn"><i class="fas fa-print"></i> Print</button>
+                    <button type="button" class="btn btn-primary" id="printRecordBtn"><i class="bi bi-printer"></i> Print</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -1886,7 +1901,7 @@ $students = fetchStudents($con);
                     modal: '#addPeriodRecordModal',
                     select: '#periodStudentSelect',
                     allowClear: true
-                }
+                },
             ];
 
             // Loop through each modal and initialize Select2
@@ -1901,6 +1916,30 @@ $students = fetchStudents($con);
                 });
             });
         });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#studentGrowth').select2({
+                placeholder: "Search by name or ID...",
+                allowClear: true
+            });
+        });
+    </script>
+    <script>
+        // General function to handle form submission
+        function handleFormSubmit(formId, submitBtnId) {
+            document.getElementById(formId).addEventListener('submit', function() {
+                const btn = document.getElementById(submitBtnId);
+                btn.disabled = true;
+                btn.querySelector('.default-text').classList.add('d-none');
+                btn.querySelector('.loading-text').classList.remove('d-none');
+            });
+        }
+
+        // Call the function for each form
+        handleFormSubmit('healthRecordForm', 'submitBtn');
+        handleFormSubmit('periodRecordForm', 'submitPeriodBtn');
+        handleFormSubmit('padDistributionForm', 'submitPadBtn');
     </script>
 
 </body>

@@ -14,15 +14,16 @@ $record = pg_fetch_assoc(pg_query($con, "
     SELECT r.*, s.studentname, s.class, s.student_id as admissionnumber,
            a.fullname as recorded_by, a.position as designation, s.photourl
     FROM " . getTableName($type) . " r
-    JOIN rssimyprofile_student s ON r.distributed_to = s.student_id
-    JOIN rssimyaccount_members a ON r.distributed_by = a.associatenumber
-    WHERE r.transaction_out_id = '$id'
+    JOIN rssimyprofile_student s ON r." . getStudentColumn($type) . " = s.student_id
+    JOIN rssimyaccount_members a ON r." . getRecordedByColumn($type) . " = a.associatenumber
+    WHERE r." . getIdColumn($type) . "= '$id'
 "));
 
 if (!$record) {
     die('Record not found');
 }
 
+// Function to get the correct table name
 function getTableName($type)
 {
     return [
@@ -30,6 +31,24 @@ function getTableName($type)
         'period' => 'student_period_records',
         'pad' => 'stock_out'
     ][$type];
+}
+
+// Function to get the correct student column name
+function getStudentColumn($type)
+{
+    return ($type === 'pad') ? 'distributed_to' : 'student_id';
+}
+
+// Function to get the correct recorded_by column name
+function getRecordedByColumn($type)
+{
+    return ($type === 'pad') ? 'distributed_by' : 'recorded_by';
+}
+
+// Function to get the correct recorded_by column name
+function getIdColumn($type)
+{
+    return ($type === 'pad') ? 'transaction_out_id' : 'id';
 }
 
 header('Content-Type: text/html');
