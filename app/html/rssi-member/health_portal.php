@@ -1739,7 +1739,7 @@ if ($activeTab == 'dashboard') {
                 const id = document.getElementById('viewRecordModal').dataset.id;
 
                 if (type && id) {
-                    window.open(`http://localhost:8082/rssi-member/print_record.php?type=${type}&id=${id}`, '_blank');
+                    window.open(`print_record.php?type=${type}&id=${id}`, '_blank');
                 } else {
                     alert('Cannot print: Record information not available');
                 }
