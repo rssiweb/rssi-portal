@@ -481,7 +481,11 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
-
+      <li class="nav-item">
+        <a class="nav-link collapsed" id="health_portal" href="health_portal.php" target="_blank">
+          <span>Health Portal</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -1076,4 +1080,5 @@
     toggleCollapsedClass('attendance-analytics.php', 'attendX');
     toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
+    toggleCollapsedClass('health_portal.php', 'health_portal');
   </script>
