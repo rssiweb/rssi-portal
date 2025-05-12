@@ -24,7 +24,7 @@ switch ($type) {
         $idField = 'id';
         break;
     case 'pad':
-        $table = 'sanitary_pad_distribution';
+        $table = 'stock_out';
         $idField = 'id';
         break;
     default:

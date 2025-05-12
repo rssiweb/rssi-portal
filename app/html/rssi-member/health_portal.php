@@ -84,11 +84,12 @@ $basePeriodQuery = "SELECT pr.*, s.studentname, s.class, st.fullname as recorded
                    AND pr.cycle_start_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
 $basePadQuery = "SELECT pd.*, s.studentname, s.class, st.fullname as recorded_by_name
-                FROM sanitary_pad_distribution pd
-                JOIN rssimyprofile_student s ON pd.student_id = s.student_id
-                JOIN rssimyaccount_members st ON pd.recorded_by = st.associatenumber
+                FROM stock_out pd
+                JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
+                JOIN rssimyaccount_members st ON pd.distributed_by = st.associatenumber
                 WHERE s.filterstatus='Active'
-                AND pd.distribution_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
+                AND pd.item_distributed=149
+                AND pd.date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
 // Initialize variables for all tabs
 $healthResult = $periodResult = $padResult = $healthFilterResult = $periodFilterResult = $padFilterResult = null;
@@ -98,8 +99,8 @@ $statsQuery = "SELECT
                 (SELECT COUNT(*) FROM rssimyprofile_student WHERE filterstatus='Active') as total_students,
                 (SELECT COUNT(*) FROM student_health_records 
                  WHERE record_date BETWEEN '$academicYearStart' AND '$academicYearEnd') as yearly_checks,
-                (SELECT COUNT(*) FROM sanitary_pad_distribution
-                 WHERE distribution_date BETWEEN '$academicYearStart' AND '$academicYearEnd') as yearly_pads";
+                (SELECT COUNT(*) FROM stock_out
+                 WHERE date BETWEEN '$academicYearStart' AND '$academicYearEnd' AND item_distributed=149) as yearly_pads";
 $statsResult = pg_query($con, $statsQuery);
 $stats = pg_fetch_assoc($statsResult);
 
@@ -113,7 +114,7 @@ if ($activeTab == 'dashboard') {
     $periodQuery = $basePeriodQuery . " ORDER BY pr.cycle_start_date DESC LIMIT 10";
     $periodResult = pg_query($con, $periodQuery);
 
-    $padQuery = $basePadQuery . " ORDER BY pd.distribution_date DESC LIMIT 10";
+    $padQuery = $basePadQuery . " ORDER BY pd.date DESC LIMIT 10";
     $padResult = pg_query($con, $padQuery);
 } elseif ($activeTab == 'health-records') {
     $healthFilterQuery = $baseHealthQuery;
@@ -128,7 +129,7 @@ if ($activeTab == 'dashboard') {
         $healthFilterQuery .= " AND (s.studentname ILIKE '%$search%' OR s.student_id::text ILIKE '%$search%')";
     }
 
-    $healthFilterQuery .= " ORDER BY sh.record_date DESC";
+    $healthFilterQuery .= " ORDER BY sh.created_at DESC";
     $healthFilterResult = pg_query($con, $healthFilterQuery);
 
     // Store results in an array for easier debugging
@@ -177,7 +178,7 @@ if ($activeTab == 'dashboard') {
         $periodFilterQuery .= " AND (s.studentname ILIKE '%$search%')";
     }
 
-    $periodFilterQuery .= " ORDER BY pr.cycle_start_date DESC";
+    $periodFilterQuery .= " ORDER BY pr.created_at DESC";
     $periodFilterResult = pg_query($con, $periodFilterQuery);
 } elseif ($activeTab == 'pad-distribution') {
     $padFilterQuery = $basePadQuery . " AND s.gender = 'Female'";
@@ -188,10 +189,10 @@ if ($activeTab == 'dashboard') {
 
     if (isset($_GET['month']) && $_GET['month'] != '') {
         $month = $_GET['month'];
-        $padFilterQuery .= " AND EXTRACT(MONTH FROM pd.distribution_date) = $month";
+        $padFilterQuery .= " AND EXTRACT(MONTH FROM pd.date) = $month";
     }
 
-    $padFilterQuery .= " ORDER BY pd.distribution_date DESC";
+    $padFilterQuery .= " ORDER BY pd.timestamp DESC";
     $padFilterResult = pg_query($con, $padFilterQuery);
 } elseif ($activeTab == 'reports') {
     if (isset($_GET['student_id']) && $_GET['student_id'] != '') {
@@ -775,7 +776,7 @@ if ($activeTab == 'dashboard') {
                                             <?php
                                             if (isset($padFilterResult)) {
                                                 while ($row = pg_fetch_assoc($padFilterResult)) {
-                                                    $academicYear = getAcademicYear($row['distribution_date']);
+                                                    $academicYear = getAcademicYear($row['date']);
 
                                                     echo '<tr>
                                                         <td>
@@ -787,26 +788,26 @@ if ($activeTab == 'dashboard') {
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td>' . date('d M Y', strtotime($row['distribution_date'])) . '</td>
-                                                        <td>' . $row['quantity'] . '</td>
+                                                        <td>' . date('d M Y', strtotime($row['date'])) . '</td>
+                                                        <td>' . $row['quantity_distributed'] . '</td>
                                                         <td>' . $academicYear . '</td>
                                                         <td>' . htmlspecialchars($row['recorded_by_name']) . '</td>' ?>
                                                     <td>
                                                         <div class="action-buttons">
                                                             <button class="btn btn-action btn-outline-primary view-record"
                                                                 data-type="pad"
-                                                                data-id="<?= $row['id'] ?>"
+                                                                data-id="<?= $row['transaction_out_id'] ?>"
                                                                 title="View">
                                                                 <i class="bi bi-eye"></i>
                                                             </button>
                                                             <button class="btn btn-action btn-outline-success distribute-again"
-                                                                data-id="<?= $row['student_id'] ?>"
+                                                                data-id="<?= $row['distributed_to'] ?>"
                                                                 title="Distribute Again">
                                                                 <i class="bi bi-box-seam"></i>
                                                             </button>
                                                             <button class="btn btn-action btn-outline-secondary edit-record"
                                                                 data-type="pad"
-                                                                data-id="<?= $row['id'] ?>"
+                                                                data-id="<?= $row['transaction_out_id'] ?>"
                                                                 title="Edit">
                                                                 <i class="bi bi-pencil"></i>
                                                             </button>

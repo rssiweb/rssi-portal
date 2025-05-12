@@ -12,6 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $recorded_by = $associatenumber;
     $distribution_date = pg_escape_string($con, $_POST['distribution_date']);
     $quantity = pg_escape_string($con, $_POST['quantity']);
+    $transaction_out_id = uniqid();
 
     if (isset($_POST['bulk_distribution']) && $_POST['bulk_distribution'] == 'on') {
         // Bulk distribution to entire class
@@ -27,10 +28,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         while ($student = pg_fetch_assoc($studentsResult)) {
             $student_id = $student['student_id'];
-            $query = "INSERT INTO sanitary_pad_distribution (
-                        student_id, distribution_date, quantity, recorded_by
+            $query = "INSERT INTO stock_out (
+                        --student_id, distribution_date, quantity, recorded_by
+                        transaction_out_id, distributed_to, date, quantity_distributed, distributed_by, item_distributed, unit
                       ) VALUES (
-                        '$student_id', '$distribution_date', $quantity, '$recorded_by'
+                        '$transaction_out_id','$student_id', '$distribution_date', $quantity, '$recorded_by',149,3
                       )";
 
             $result = pg_query($con, $query);
@@ -57,10 +59,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             foreach ($student_ids as $student_id) {
                 $student_id = pg_escape_string($con, $student_id);
-                $query = "INSERT INTO sanitary_pad_distribution (
-                            student_id, distribution_date, quantity, recorded_by
+                $query = "INSERT INTO stock_out (
+                            --student_id, distribution_date, quantity, recorded_by
+                            transaction_out_id, distributed_to, date, quantity_distributed, distributed_by, item_distributed, unit
                           ) VALUES (
-                            '$student_id', '$distribution_date', $quantity, '$recorded_by'
+                            '$transaction_out_id','$student_id', '$distribution_date', $quantity, '$recorded_by',149,3
                           )";
 
                 $result = pg_query($con, $query);

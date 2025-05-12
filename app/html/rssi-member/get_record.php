@@ -22,7 +22,7 @@ switch ($type) {
         break;
     case 'pad':
         $record = pg_fetch_assoc(pg_query($con, 
-            "SELECT * FROM sanitary_pad_distribution WHERE id = $id"));
+            "SELECT * FROM stock_out WHERE transaction_out_id = $id"));
         break;
 }
 

@@ -18,14 +18,15 @@ $to_date = isset($_POST['to_date']) ? pg_escape_string($con, $_POST['to_date']) 
 switch ($report_type) {
     case 'yearly':
         $query = "SELECT 
-                    EXTRACT(YEAR FROM pd.distribution_date) as year,
+                    EXTRACT(YEAR FROM pd.date) as year,
                     COUNT(*) as distributions,
-                    SUM(pd.quantity) as total_pads,
-                    COUNT(DISTINCT pd.student_id) as students_served
-                  FROM sanitary_pad_distribution pd
-                  JOIN rssimyprofile_student s ON pd.student_id = s.student_id
+                    SUM(pd.quantity_distributed) as total_pads,
+                    COUNT(DISTINCT pd.distributed_to) as students_served
+                  FROM stock_out pd
+                  JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
                   WHERE s.gender = 'Female'
                   AND s.filterstatus='Active'
+                  AND pd.item_distributed=149
                   AND pd.distribution_date BETWEEN '$from_date' AND '$to_date'";
         if (!empty($class)) {
             $query .= " AND s.class = '$class'";
@@ -40,14 +41,15 @@ switch ($report_type) {
                     s.studentname,
                     s.class,
                     COUNT(*) as distributions,
-                    SUM(pd.quantity) as total_pads,
-                    MIN(pd.distribution_date) as first_distribution,
-                    MAX(pd.distribution_date) as last_distribution
-                  FROM sanitary_pad_distribution pd
-                  JOIN rssimyprofile_student s ON pd.student_id = s.student_id
+                    SUM(pd.quantity_distributed) as total_pads,
+                    MIN(pd.date) as first_distribution,
+                    MAX(pd.date) as last_distribution
+                  FROM stock_out pd
+                  JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
                   WHERE s.gender = 'Female'
                   AND s.filterstatus='Active'
-                  AND pd.distribution_date BETWEEN '$from_date' AND '$to_date'";
+                  AND pd.item_distributed=149
+                  AND pd.date BETWEEN '$from_date' AND '$to_date'";
         if (!empty($class)) {
             $query .= " AND s.class = '$class'";
         }
@@ -58,16 +60,17 @@ switch ($report_type) {
     case 'monthly':
     default:
         $query = "SELECT 
-                    EXTRACT(YEAR FROM pd.distribution_date) as year,
-                    EXTRACT(MONTH FROM pd.distribution_date) as month,
+                    EXTRACT(YEAR FROM pd.date) as year,
+                    EXTRACT(MONTH FROM pd.date) as month,
                     COUNT(*) as distributions,
-                    SUM(pd.quantity) as total_pads,
-                    COUNT(DISTINCT pd.student_id) as students_served
-                  FROM sanitary_pad_distribution pd
-                  JOIN rssimyprofile_student s ON pd.student_id = s.student_id
+                    SUM(pd.quantity_distributed) as total_pads,
+                    COUNT(DISTINCT pd.distributed_to) as students_served
+                  FROM stock_out pd
+                  JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
                   WHERE s.gender = 'Female'
                   AND s.filterstatus='Active'
-                  AND pd.distribution_date BETWEEN '$from_date' AND '$to_date'";
+                  AND pd.item_distributed=149
+                  AND pd.date BETWEEN '$from_date' AND '$to_date'";
         if (!empty($class)) {
             $query .= " AND s.class = '$class'";
         }

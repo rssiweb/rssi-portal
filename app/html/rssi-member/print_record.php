@@ -28,7 +28,7 @@ function getTableName($type)
     return [
         'health' => 'student_health_records',
         'period' => 'student_period_records',
-        'pad' => 'sanitary_pad_distribution'
+        'pad' => 'stock_out'
     ][$type];
 }
 
@@ -308,16 +308,16 @@ header('Content-Type: text/html');
                     case 'pad': ?>
                         <tr>
                             <th>Distribution Date</th>
-                            <td><?= date('d M Y', strtotime($record['distribution_date'])) ?></td>
+                            <td><?= date('d M Y', strtotime($record['date'])) ?></td>
                         </tr>
                         <tr>
                             <th>Quantity</th>
-                            <td><?= htmlspecialchars($record['quantity']) ?></td>
+                            <td><?= htmlspecialchars($record['quantity_distributed']) ?></td>
                         </tr>
-                        <?php if (!empty($record['notes'])): ?>
+                        <?php if (!empty($record['description'])): ?>
                             <tr>
                                 <th>Notes</th>
-                                <td><?= nl2br(htmlspecialchars($record['notes'])) ?></td>
+                                <td><?= nl2br(htmlspecialchars($record['description'])) ?></td>
                             </tr>
                 <?php endif;
                 endswitch; ?>
