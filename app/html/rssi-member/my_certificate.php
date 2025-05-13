@@ -141,21 +141,20 @@ $get_certificate_no = isset($_GET['get_certificate_no']) ? strtoupper($_GET['get
 $get_nomineeid = isset($_GET['get_nomineeid']) ? strtoupper($_GET['get_nomineeid']) : '';
 $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
 $academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
-$view_all = isset($_GET['view_all']) ? $_GET['view_all'] : '';
 $user_associatenumber = $associatenumber; // Get the user's associate number
 
 // Base query
-$query = "SELECT certificate.*, 
-    faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
-    student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
-    nominator.fullname AS nominated_by_name
-FROM certificate  
-LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-    ON certificate.awarded_to_id = faculty.associatenumber
-LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
-    ON certificate.awarded_to_id = student.student_id
-LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
-    ON certificate.nominatedby = nominator.associatenumber";
+$query = "SELECT certificate.*,
+faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone,
+student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
+nominator.fullname AS nominated_by_name
+FROM certificate
+LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty
+ON certificate.awarded_to_id = faculty.associatenumber
+LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student
+ON certificate.awarded_to_id = student.student_id
+LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator
+ON certificate.nominatedby = nominator.associatenumber";
 
 $conditions = [];
 
@@ -183,14 +182,16 @@ if ($role == 'Admin') {
                     $conditions[] = "awarded_to_id='$get_nomineeid'";
                 }
                 break;
+            case 'academic_year':
             case 'combo':
+            case 'view_all':
                 if (!empty($get_certificate_no)) {
                     $conditions[] = "certificate_no='$get_certificate_no'";
                 }
                 if (!empty($get_nomineeid)) {
                     $conditions[] = "awarded_to_id='$get_nomineeid'";
                 }
-                if (!empty($academic_year)) {
+                if (!empty($academic_year) && $search_mode != 'view_all') {
                     $start_date = $academic_year . '-04-01';
                     $end_date = ($academic_year + 1) . '-03-31';
                     $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
@@ -200,21 +201,40 @@ if ($role == 'Admin') {
     }
 } else {
     // Non-admin-specific search logic
-    if ($view_all) {
-        $conditions[] = "awarded_to_id='$user_associatenumber'";
-    } elseif (!empty($get_certificate_no)) {
-        $conditions[] = "certificate_no='$get_certificate_no' AND awarded_to_id='$user_associatenumber'";
-    } elseif (!empty($academic_year)) {
-        $start_date = $academic_year . '-04-01';
-        $end_date = ($academic_year + 1) . '-03-31';
-        if (!empty($get_certificate_no)) {
-            $conditions[] = "certificate_no='$get_certificate_no' AND issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
-        } else {
+    switch ($search_mode) {
+        case 'certificate_no':
+            if (!empty($get_certificate_no)) {
+                $conditions[] = "certificate_no='$get_certificate_no' AND awarded_to_id='$user_associatenumber'";
+            } else {
+                $conditions[] = "awarded_to_id='$user_associatenumber'";
+            }
+            break;
+
+        case 'academic_year':
+            $start_date = $academic_year . '-04-01';
+            $end_date = ($academic_year + 1) . '-03-31';
             $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
-        }
-    } else {
-        // Default for non-admin: current academic year
-        $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
+            break;
+
+        case 'combo':
+            $conditions[] = "awarded_to_id='$user_associatenumber'";
+            if (!empty($get_certificate_no)) {
+                $conditions[] = "certificate_no='$get_certificate_no'";
+            }
+            if (!empty($academic_year)) {
+                $start_date = $academic_year . '-04-01';
+                $end_date = ($academic_year + 1) . '-03-31';
+                $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+            }
+            break;
+
+        case 'view_all':
+            $conditions[] = "awarded_to_id='$user_associatenumber'";
+            break;
+
+        default:
+            // Default for non-admin: current academic year
+            $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
     }
 }
 
@@ -232,8 +252,6 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -584,27 +602,32 @@ $resultArr = pg_fetch_all($result);
                             <form action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
 
-                                    <!-- Search Mode Selector (Admin Only) -->
-                                    <?php if ($role == 'Admin') { ?>
-                                        <div class="mb-3">
-                                            <label>Search Mode:</label>
-                                            <select name="search_mode" id="search_mode" class="form-select" style="width: auto; display: inline-block;">
-                                                <option value="certificate_no" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'certificate_no' ? 'selected' : ''; ?>>By Certificate No</option>
+                                    <!-- Unified Search Mode Selector -->
+                                    <div class="mb-3">
+                                        <label>Search Mode:</label>
+                                        <select name="search_mode" id="search_mode" class="form-select" style="width: auto; display: inline-block;">
+                                            <option value="certificate_no" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'certificate_no' ? 'selected' : ''; ?>>By Certificate No</option>
+
+                                            <!-- Show Nominee ID option only for Admin -->
+                                            <?php if ($role == 'Admin') { ?>
                                                 <option value="nominee_id" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'nominee_id' ? 'selected' : ''; ?>>By Nominee ID</option>
-                                                <option value="combo" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'combo' ? 'selected' : ''; ?>>Combination</option>
-                                            </select>
-                                        </div>
-                                    <?php } ?>
+                                            <?php } ?>
+
+                                            <option value="academic_year" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'academic_year' ? 'selected' : ''; ?>>By Academic Year</option>
+                                            <option value="combo" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'combo' ? 'selected' : ''; ?>>Combination</option>
+                                            <option value="view_all" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'view_all' ? 'selected' : ''; ?>>View All Certificates</option>
+                                        </select>
+                                    </div>
 
                                     <!-- Certificate No. -->
                                     <div class="col2" style="display: inline-block;">
-                                        <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width: auto;" placeholder="Certificate No." value="<?php echo $get_certificate_no; ?>" <?php echo $role == 'Admin' && isset($_GET['search_mode']) && $_GET['search_mode'] == 'nominee_id' ? 'disabled' : ''; ?>>
+                                        <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width: auto;" placeholder="Certificate No." value="<?php echo $get_certificate_no; ?>">
                                     </div>
 
                                     <!-- Nominee ID (Admin Only) -->
                                     <?php if ($role == 'Admin') { ?>
                                         <div class="col2" style="display: inline-block;">
-                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width: auto;" placeholder="Nominee ID" value="<?php echo $get_nomineeid; ?>" <?php echo (!isset($_GET['search_mode']) || $_GET['search_mode'] == 'certificate_no') ? 'disabled' : ''; ?>>
+                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width: auto;" placeholder="Nominee ID" value="<?php echo $get_nomineeid; ?>">
                                         </div>
                                     <?php } ?>
 
@@ -636,75 +659,54 @@ $resultArr = pg_fetch_all($result);
                                         </button>
                                     </div>
                                 </div>
-
-                                <!-- View All (Non-Admin) -->
-                                <?php if ($role != 'Admin') { ?>
-                                    <div class="form-check mt-2">
-                                        <input type="checkbox" name="view_all" id="view_all" class="form-check-input" value="1" <?php echo isset($_GET['view_all']) ? 'checked' : ''; ?>>
-                                        <label for="view_all">View All Certificates</label>
-                                    </div>
-                                <?php } ?>
-
-                                <!-- Dynamic Form Control -->
-                                <script>
-                                    const searchMode = document.getElementById('search_mode');
-                                    const certNo = document.getElementById("get_certificate_no");
-                                    const nomineeId = document.getElementById("get_nomineeid");
-                                    const academicYear = document.getElementById("academic_year");
-                                    const viewAll = document.getElementById("view_all");
-
-                                    // Admin-specific function to toggle fields
-                                    function toggleAdminFields() {
-                                        const mode = searchMode ? searchMode.value : 'certificate_no';
-                                        certNo.disabled = (mode === 'nominee_id');
-                                        nomineeId.disabled = (mode === 'certificate_no');
-                                        academicYear.disabled = (mode === 'nominee_id' || mode === 'certificate_no');
-
-                                        // Set required attribute based on disabled state and mode
-                                        if (mode === 'combo') {
-                                            certNo.required = false;
-                                            nomineeId.required = false;
-                                            academicYear.required = false;
-                                        } else {
-                                            certNo.required = !certNo.disabled;
-                                            nomineeId.required = !nomineeId.disabled;
-                                            academicYear.required = !academicYear.disabled;
-                                        }
-                                    }
-
-                                    // Non-admin-specific function to toggle fields
-                                    function toggleNonAdminFields() {
-                                        if (viewAll && viewAll.checked) {
-                                            certNo.disabled = true;
-                                            academicYear.disabled = true;
-                                        } else if (certNo.value.trim() !== "") {
-                                            certNo.disabled = false;
-                                            academicYear.disabled = true;
-                                        } else {
-                                            certNo.disabled = false;
-                                            academicYear.disabled = false;
-                                        }
-                                    }
-
-                                    // Initialize fields based on the role
-                                    function initializeFields() {
-                                        if (searchMode) {
-                                            // Admin user
-                                            toggleAdminFields();
-                                            searchMode.addEventListener('change', toggleAdminFields);
-                                        } else {
-                                            // Non-admin user
-                                            toggleNonAdminFields();
-                                            if (viewAll) viewAll.addEventListener('change', toggleNonAdminFields);
-                                            certNo.addEventListener('input', toggleNonAdminFields);
-                                        }
-                                    }
-
-                                    // Execute initialization on page load
-                                    initializeFields();
-                                </script>
-
                             </form>
+
+                            <!-- Optimized Script -->
+                            <script>
+                                const searchMode = document.getElementById('search_mode');
+                                const certNo = document.getElementById("get_certificate_no");
+                                const nomineeId = document.getElementById("get_nomineeid");
+                                const academicYear = document.getElementById("academic_year");
+
+                                function toggleFields() {
+                                    const mode = searchMode.value;
+
+                                    // Disable all fields initially
+                                    certNo.disabled = true;
+                                    academicYear.disabled = true;
+                                    if (nomineeId) nomineeId.disabled = true;
+
+                                    // Enable fields based on selected mode
+                                    if (mode === 'certificate_no') {
+                                        certNo.disabled = false;
+                                        certNo.required = true;
+                                    } else if (mode === 'nominee_id') {
+                                        nomineeId.disabled = false;
+                                        nomineeId.required = true;
+                                    } else if (mode === 'academic_year') {
+                                        academicYear.disabled = false;
+                                        academicYear.required = true;
+                                    } else if (mode === 'combo') {
+                                        certNo.disabled = false;
+                                        if (nomineeId) nomineeId.disabled = false;
+                                        academicYear.disabled = false;
+                                        certNo.required = false;
+                                        if (nomineeId) nomineeId.required = false;
+                                        academicYear.required = false;
+                                    } else if (mode === 'view_all') {
+                                        certNo.required = false;
+                                        academicYear.required = false;
+                                        if (nomineeId) nomineeId.required = false;
+                                    }
+                                }
+
+                                // Initialize the fields on page load
+                                toggleFields();
+
+                                // Add event listener to update fields dynamically
+                                searchMode.addEventListener('change', toggleFields);
+                            </script>
+
 
 
                             <br>
