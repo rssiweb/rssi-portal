@@ -136,13 +136,13 @@ include("../../util/email.php");
 }
 ?>
 <?php
-@$get_certificate_no = strtoupper($_GET['get_certificate_no']);
-@$get_nomineeid = strtoupper($_GET['get_nomineeid']);
-@$is_user = $_GET['is_user'];
-@$academic_year = $_GET['academic_year'];
-
-// Determine the user's associatenumber
-$user_associatenumber = $associatenumber;
+$search_mode = isset($_GET['search_mode']) ? $_GET['search_mode'] : '';
+$get_certificate_no = isset($_GET['get_certificate_no']) ? strtoupper($_GET['get_certificate_no']) : '';
+$get_nomineeid = isset($_GET['get_nomineeid']) ? strtoupper($_GET['get_nomineeid']) : '';
+$is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
+$academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+$view_all = isset($_GET['view_all']) ? $_GET['view_all'] : '';
+$user_associatenumber = $associatenumber; // Get the user's associate number
 
 // Base query
 $query = "SELECT certificate.*, 
@@ -157,49 +157,74 @@ LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprof
 LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
     ON certificate.nominatedby = nominator.associatenumber";
 
-$conditions = array();
+$conditions = [];
 
-// Admin can filter by any field
+// Determine current academic year for default loading
+$currentMonth = date('m');
+$currentYear = date('Y');
+$academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+$start_date = $academicYear . '-04-01';
+$end_date = ($academicYear + 1) . '-03-31';
+
 if ($role == 'Admin') {
-    if (!empty($get_certificate_no)) {
-        $conditions[] = "certificate_no='$get_certificate_no'";
-    }
-    if (!empty($get_nomineeid)) {
-        $conditions[] = "awarded_to_id='$get_nomineeid'";
-    }
-} else {
-    // Non-admin can view only their data, but allow filtering by certificate number if provided
-    if (!empty($get_certificate_no)) {
-        $conditions[] = "certificate_no='$get_certificate_no' AND awarded_to_id='$user_associatenumber'";
+    // Admin-specific search logic
+    if (empty($search_mode) && empty($get_certificate_no) && empty($get_nomineeid) && empty($academic_year)) {
+        // Default view - Current academic year
+        $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
     } else {
+        switch ($search_mode) {
+            case 'certificate_no':
+                if (!empty($get_certificate_no)) {
+                    $conditions[] = "certificate_no='$get_certificate_no'";
+                }
+                break;
+            case 'nominee_id':
+                if (!empty($get_nomineeid)) {
+                    $conditions[] = "awarded_to_id='$get_nomineeid'";
+                }
+                break;
+            case 'combo':
+                if (!empty($get_certificate_no)) {
+                    $conditions[] = "certificate_no='$get_certificate_no'";
+                }
+                if (!empty($get_nomineeid)) {
+                    $conditions[] = "awarded_to_id='$get_nomineeid'";
+                }
+                if (!empty($academic_year)) {
+                    $start_date = $academic_year . '-04-01';
+                    $end_date = ($academic_year + 1) . '-03-31';
+                    $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+                }
+                break;
+        }
+    }
+} else {
+    // Non-admin-specific search logic
+    if ($view_all) {
         $conditions[] = "awarded_to_id='$user_associatenumber'";
+    } elseif (!empty($get_certificate_no)) {
+        $conditions[] = "certificate_no='$get_certificate_no' AND awarded_to_id='$user_associatenumber'";
+    } elseif (!empty($academic_year)) {
+        $start_date = $academic_year . '-04-01';
+        $end_date = ($academic_year + 1) . '-03-31';
+        if (!empty($get_certificate_no)) {
+            $conditions[] = "certificate_no='$get_certificate_no' AND issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
+        } else {
+            $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
+        }
+    } else {
+        // Default for non-admin: current academic year
+        $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date' AND awarded_to_id='$user_associatenumber'";
     }
 }
-
-// Handle academic year filtering
-if (!empty($academic_year)) {
-    $start_date = $academic_year . '-04-01';
-    $end_date = ($academic_year + 1) . '-03-31';
-    $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
-} else {
-    // Default to current academic year if no filter is set
-    $currentMonth = date('m');
-    $currentYear = date('Y');
-    $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
-    $start_date = $academicYear . '-04-01';
-    $end_date = ($academicYear + 1) . '-03-31';
-    $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
-}
-$formattedAcademicYear = $academic_year . '-' . ($academic_year + 1);
 
 // Append conditions to query
 if (!empty($conditions)) {
     $query .= " WHERE " . implode(' AND ', $conditions);
 }
-
 $query .= " ORDER BY issuedon DESC";
-$result = pg_query($con, $query);
 
+$result = pg_query($con, $query);
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -207,6 +232,7 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -557,22 +583,35 @@ $resultArr = pg_fetch_all($result);
 
                             <form action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
+
+                                    <!-- Search Mode Selector (Admin Only) -->
+                                    <?php if ($role == 'Admin') { ?>
+                                        <div class="mb-3">
+                                            <label>Search Mode:</label>
+                                            <select name="search_mode" id="search_mode" class="form-select" style="width: auto; display: inline-block;">
+                                                <option value="certificate_no" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'certificate_no' ? 'selected' : ''; ?>>By Certificate No</option>
+                                                <option value="nominee_id" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'nominee_id' ? 'selected' : ''; ?>>By Nominee ID</option>
+                                                <option value="combo" <?php echo isset($_GET['search_mode']) && $_GET['search_mode'] == 'combo' ? 'selected' : ''; ?>>Combination</option>
+                                            </select>
+                                        </div>
+                                    <?php } ?>
+
                                     <!-- Certificate No. -->
                                     <div class="col2" style="display: inline-block;">
-                                        <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width:max-content; display:inline-block" placeholder="Certificate No." value="<?php echo $get_certificate_no; ?>">
+                                        <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width: auto;" placeholder="Certificate No." value="<?php echo $get_certificate_no; ?>" <?php echo $role == 'Admin' && isset($_GET['search_mode']) && $_GET['search_mode'] == 'nominee_id' ? 'disabled' : ''; ?>>
                                     </div>
 
                                     <!-- Nominee ID (Admin Only) -->
                                     <?php if ($role == 'Admin') { ?>
                                         <div class="col2" style="display: inline-block;">
-                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee ID" value="<?php echo $get_nomineeid; ?>" <?php echo isset($_GET['is_user']) ? '' : 'disabled'; ?>>
+                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width: auto;" placeholder="Nominee ID" value="<?php echo $get_nomineeid; ?>" <?php echo (!isset($_GET['search_mode']) || $_GET['search_mode'] == 'certificate_no') ? 'disabled' : ''; ?>>
                                         </div>
                                     <?php } ?>
 
                                     <!-- Academic Year -->
                                     <div class="col2" style="display: inline-block;">
-                                        <select name="academic_year" id="academic_year" class="form-select">
-                                            <option value="" disabled>Select</option>
+                                        <select name="academic_year" id="academic_year" class="form-select" style="width: auto;">
+                                            <option value="" disabled>Select Year</option>
                                             <?php
                                             $currentYear = date('Y');
                                             $currentMonth = date('m');
@@ -589,40 +628,82 @@ $resultArr = pg_fetch_all($result);
                                             ?>
                                         </select>
                                     </div>
-                                </div>
 
-                                <!-- Search Button -->
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search
-                                    </button>
-                                </div>
-
-                                <!-- Search by Nominee ID Checkbox (Admin Only) -->
-                                <?php if ($role == 'Admin') { ?>
-                                    <div id="filter-checks" class="form-check mt-3">
-                                        <input type="checkbox" name="is_user" id="is_user" class="form-check-input" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                        <label for="is_user">Search by Nominee ID</label>
+                                    <!-- Search Button -->
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search" class="btn btn-success btn-sm">
+                                            <i class="bi bi-search"></i>&nbsp;Search
+                                        </button>
                                     </div>
+                                </div>
 
-                                    <script>
-                                        const checkbox = document.getElementById('is_user');
-                                        const certNo = document.getElementById("get_certificate_no");
-                                        const nomineeId = document.getElementById("get_nomineeid");
-
-                                        function toggleInputs() {
-                                            const isChecked = checkbox.checked;
-                                            certNo.disabled = isChecked;
-                                            nomineeId.disabled = !isChecked;
-                                        }
-
-                                        // Initialize the state on page load
-                                        toggleInputs();
-
-                                        // Listen for checkbox changes
-                                        checkbox.addEventListener('change', toggleInputs);
-                                    </script>
+                                <!-- View All (Non-Admin) -->
+                                <?php if ($role != 'Admin') { ?>
+                                    <div class="form-check mt-2">
+                                        <input type="checkbox" name="view_all" id="view_all" class="form-check-input" value="1" <?php echo isset($_GET['view_all']) ? 'checked' : ''; ?>>
+                                        <label for="view_all">View All Certificates</label>
+                                    </div>
                                 <?php } ?>
+
+                                <!-- Dynamic Form Control -->
+                                <script>
+                                    const searchMode = document.getElementById('search_mode');
+                                    const certNo = document.getElementById("get_certificate_no");
+                                    const nomineeId = document.getElementById("get_nomineeid");
+                                    const academicYear = document.getElementById("academic_year");
+                                    const viewAll = document.getElementById("view_all");
+
+                                    // Admin-specific function to toggle fields
+                                    function toggleAdminFields() {
+                                        const mode = searchMode ? searchMode.value : 'certificate_no';
+                                        certNo.disabled = (mode === 'nominee_id');
+                                        nomineeId.disabled = (mode === 'certificate_no');
+                                        academicYear.disabled = (mode === 'nominee_id' || mode === 'certificate_no');
+
+                                        // Set required attribute based on disabled state and mode
+                                        if (mode === 'combo') {
+                                            certNo.required = false;
+                                            nomineeId.required = false;
+                                            academicYear.required = false;
+                                        } else {
+                                            certNo.required = !certNo.disabled;
+                                            nomineeId.required = !nomineeId.disabled;
+                                            academicYear.required = !academicYear.disabled;
+                                        }
+                                    }
+
+                                    // Non-admin-specific function to toggle fields
+                                    function toggleNonAdminFields() {
+                                        if (viewAll && viewAll.checked) {
+                                            certNo.disabled = true;
+                                            academicYear.disabled = true;
+                                        } else if (certNo.value.trim() !== "") {
+                                            certNo.disabled = false;
+                                            academicYear.disabled = true;
+                                        } else {
+                                            certNo.disabled = false;
+                                            academicYear.disabled = false;
+                                        }
+                                    }
+
+                                    // Initialize fields based on the role
+                                    function initializeFields() {
+                                        if (searchMode) {
+                                            // Admin user
+                                            toggleAdminFields();
+                                            searchMode.addEventListener('change', toggleAdminFields);
+                                        } else {
+                                            // Non-admin user
+                                            toggleNonAdminFields();
+                                            if (viewAll) viewAll.addEventListener('change', toggleNonAdminFields);
+                                            certNo.addEventListener('input', toggleNonAdminFields);
+                                        }
+                                    }
+
+                                    // Execute initialization on page load
+                                    initializeFields();
+                                </script>
+
                             </form>
 
 
@@ -739,9 +820,9 @@ $resultArr = pg_fetch_all($result);
                                 </tr>
                             <?php
                             } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                                <?php echo '<tr>
-                                <td colspan="5">No record found for ' . $get_certificate_no . ' ' . $get_nomineeid . ' ' . $formattedAcademicYear . '</td>
-                                </tr>'; ?>
+                                <tr>
+                                    <td colspan="5">No matching records found. Please try different filter values.</td>
+                                </tr>
                             <?php
                             }
                             echo '</tbody>
