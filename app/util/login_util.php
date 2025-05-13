@@ -11,20 +11,36 @@ function isLoggedIn(string $key)
 
 function passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on)
 {
+    // Calculate the date three months ago from today
+    $threeMonthsAgo = date('Y-m-d H:i:s', strtotime('-3 months'));
+
+    // Initialize the message variable
+    $message = '';
+
+    // Check if the password has never been updated or is older than the default password update date
     if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+        $message = "For security reasons, you must change your default password before accessing additional features.";
+    }
+    // Check if the password has not been updated in the last three months
+    elseif ($password_updated_on < $threeMonthsAgo) {
+        $message = "It has been over three months since your last password update. Please change your password to ensure account security.";
+    }
+
+    // If a message is set, show the alert and redirect
+    if ($message) {
         // Start output buffering
         ob_start();
 
-        // Show the alert and redirect using JavaScript
+        // Display the alert and redirect using JavaScript
         echo '<script type="text/javascript">';
-        echo 'alert("For security reasons, you must change your password before accessing additional features.");';
+        echo 'alert("' . addslashes($message) . '");';
         echo 'window.location.href = "defaultpasswordreset.php";';
         echo '</script>';
 
         // End output buffering and send the output
         ob_end_flush();
 
-        // Use exit to stop further script execution
+        // Stop further script execution
         exit();
     }
 }
@@ -134,7 +150,8 @@ function validation()
         exit; // Exit to prevent further execution
     }
 }
-function checkMaintenanceStatus($pageName) {
+function checkMaintenanceStatus($pageName)
+{
     global $con; // Ensure the database connection is available
 
     // Query the active_maintenance table to check if the page is under maintenance
