@@ -133,101 +133,81 @@ include("../../util/email.php");
             ), $email_nominee, False);
         }
     }
+}
 ?>
 <?php
+@$get_certificate_no = strtoupper($_GET['get_certificate_no']);
+@$get_nomineeid = strtoupper($_GET['get_nomineeid']);
+@$is_user = $_GET['is_user'];
+@$academic_year = $_GET['academic_year'];
 
-    @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
-    @$get_nomineeid = strtoupper($_GET['get_nomineeid']);
-    @$is_user = $_GET['is_user'];
-    @$academic_year = $_GET['academic_year'];
+// Determine the user's associatenumber
+$user_associatenumber = $associatenumber;
 
-    // Build base query
-    $query = "SELECT certificate.*, 
-        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
-        student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
-        nominator.fullname AS nominated_by_name
-    FROM certificate  
-    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-        ON certificate.awarded_to_id = faculty.associatenumber
-    LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
-        ON certificate.awarded_to_id = student.student_id
-    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
-        ON certificate.nominatedby = nominator.associatenumber";
+// Base query
+$query = "SELECT certificate.*, 
+    faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
+    student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
+    nominator.fullname AS nominated_by_name
+FROM certificate  
+LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+    ON certificate.awarded_to_id = faculty.associatenumber
+LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+    ON certificate.awarded_to_id = student.student_id
+LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
+    ON certificate.nominatedby = nominator.associatenumber";
 
-    // Add WHERE conditions based on filters
-    $conditions = array();
+$conditions = array();
 
-    if ($get_certificate_no != null) {
+// Admin can filter by any field
+if ($role == 'Admin') {
+    if (!empty($get_certificate_no)) {
         $conditions[] = "certificate_no='$get_certificate_no'";
     }
-
-    if ($get_nomineeid != null) {
+    if (!empty($get_nomineeid)) {
         $conditions[] = "awarded_to_id='$get_nomineeid'";
     }
-
-    if ($academic_year != null && $academic_year != '') {
-        $start_date = $academic_year . '-04-01';
-        $end_date = ($academic_year + 1) . '-03-31';
-        $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+} else {
+    // Non-admin can view only their data, but allow filtering by certificate number if provided
+    if (!empty($get_certificate_no)) {
+        $conditions[] = "certificate_no='$get_certificate_no' AND awarded_to_id='$user_associatenumber'";
     } else {
-        // Default to current academic year if no filters are set
-        if ($get_certificate_no == null && $get_nomineeid == null) {
-            $currentMonth = date('m');
-            $currentYear = date('Y');
-            $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
-            $start_date = $academicYear . '-04-01';
-            $end_date = ($academicYear + 1) . '-03-31';
-            $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
-        }
+        $conditions[] = "awarded_to_id='$user_associatenumber'";
     }
+}
 
-    if (!empty($conditions)) {
-        $query .= " WHERE " . implode(' AND ', $conditions);
-    }
+// Handle academic year filtering
+if (!empty($academic_year)) {
+    $start_date = $academic_year . '-04-01';
+    $end_date = ($academic_year + 1) . '-03-31';
+    $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+} else {
+    // Default to current academic year if no filter is set
+    $currentMonth = date('m');
+    $currentYear = date('Y');
+    $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+    $start_date = $academicYear . '-04-01';
+    $end_date = ($academicYear + 1) . '-03-31';
+    $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+}
+$formattedAcademicYear = $academic_year . '-' . ($academic_year + 1);
 
-    $query .= " ORDER BY issuedon DESC";
+// Append conditions to query
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(' AND ', $conditions);
+}
 
-    $result = pg_query($con, $query);
+$query .= " ORDER BY issuedon DESC";
+$result = pg_query($con, $query);
 
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
-    }
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
 
-    $resultArr = pg_fetch_all($result);
-} ?>
-<?php if ($role != 'Admin') {
-    @$academic_year = $_GET['academic_year'];
+$resultArr = pg_fetch_all($result);
+?>
 
-    // Build base query for non-admin users
-    $query = "SELECT * FROM certificate WHERE awarded_to_id='$associatenumber'";
-
-    // Add academic year condition if selected
-    if ($academic_year != null && $academic_year != '') {
-        $start_date = $academic_year . '-04-01';
-        $end_date = ($academic_year + 1) . '-03-31';
-        $query .= " AND issuedon BETWEEN '$start_date' AND '$end_date'";
-    } else {
-        // Default to current academic year if no filter is set
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
-        $start_date = $academicYear . '-04-01';
-        $end_date = ($academicYear + 1) . '-03-31';
-        $query .= " AND issuedon BETWEEN '$start_date' AND '$end_date'";
-    }
-
-    $query .= " ORDER BY issuedon DESC";
-
-    $result = pg_query($con, $query);
-
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
-    }
-
-    $resultArr = pg_fetch_all($result);
-} ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -575,75 +555,78 @@ include("../../util/email.php");
 
                             <?php } ?>
 
-                            <?php if ($role == 'Admin') { ?>
+                            <form action="" method="GET">
+                                <div class="form-group" style="display: inline-block;">
+                                    <!-- Certificate No. -->
+                                    <div class="col2" style="display: inline-block;">
+                                        <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width:max-content; display:inline-block" placeholder="Certificate No." value="<?php echo $get_certificate_no; ?>">
+                                    </div>
 
-                                <form action="" method="GET">
-                                    <div class="form-group" style="display: inline-block;">
+                                    <!-- Nominee ID (Admin Only) -->
+                                    <?php if ($role == 'Admin') { ?>
                                         <div class="col2" style="display: inline-block;">
-                                            <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width:max-content; display:inline-block" placeholder="Certificate no" value="<?php echo $get_certificate_no ?>">
+                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee ID" value="<?php echo $get_nomineeid; ?>" <?php echo isset($_GET['is_user']) ? '' : 'disabled'; ?>>
                                         </div>
-                                        <div class="col2" style="display: inline-block;">
-                                            <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo $get_nomineeid ?>">
-                                        </div>
-                                        <div class="col2" style="display: inline-block;">
-                                            <select name="academic_year" id="academic_year" class="form-select">
-                                                <option value="">All Academic Years</option>
-                                                <?php
-                                                // Generate academic years from 2020 to current year + 1
-                                                $currentYear = date('Y');
-                                                $currentMonth = date('m');
-                                                // If current month is Jan-Mar, show previous year as current academic year
-                                                $displayCurrentYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+                                    <?php } ?>
 
-                                                for ($year = 2020; $year <= $currentYear + 1; $year++) {
-                                                    $nextYear = $year + 1;
-                                                    $selected = (isset($_GET['academic_year']) && $_GET['academic_year'] == $year) ? 'selected' : '';
-                                                    // If no academic year selected, default to current academic year
-                                                    if (!isset($_GET['academic_year']) && $year == $displayCurrentYear) {
-                                                        $selected = 'selected';
-                                                    }
-                                                    echo "<option value='$year' $selected>$year-$nextYear</option>";
+                                    <!-- Academic Year -->
+                                    <div class="col2" style="display: inline-block;">
+                                        <select name="academic_year" id="academic_year" class="form-select">
+                                            <option value="" disabled>Select</option>
+                                            <?php
+                                            $currentYear = date('Y');
+                                            $currentMonth = date('m');
+                                            $displayCurrentYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+
+                                            for ($year = 2020; $year <= $currentYear + 1; $year++) {
+                                                $nextYear = $year + 1;
+                                                $selected = (isset($_GET['academic_year']) && $_GET['academic_year'] == $year) ? 'selected' : '';
+                                                if (!isset($_GET['academic_year']) && $year == $displayCurrentYear) {
+                                                    $selected = 'selected';
                                                 }
-                                                ?>
-                                            </select>
-                                        </div>
+                                                echo "<option value='$year' $selected>$year-$nextYear</option>";
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                                    </div>
+                                </div>
+
+                                <!-- Search Button -->
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Search
+                                    </button>
+                                </div>
+
+                                <!-- Search by Nominee ID Checkbox (Admin Only) -->
+                                <?php if ($role == 'Admin') { ?>
                                     <div id="filter-checks" class="form-check mt-3">
                                         <input type="checkbox" name="is_user" id="is_user" class="form-check-input" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                        <label for="is_user">Search by Nominee id</label>
+                                        <label for="is_user">Search by Nominee ID</label>
                                     </div>
-                                </form>
-                                <script>
-                                    if ($('#is_user').not(':checked').length > 0) {
 
-                                        document.getElementById("get_certificate_no").disabled = false;
-                                        document.getElementById("get_nomineeid").disabled = true;
+                                    <script>
+                                        const checkbox = document.getElementById('is_user');
+                                        const certNo = document.getElementById("get_certificate_no");
+                                        const nomineeId = document.getElementById("get_nomineeid");
 
-                                    } else {
-
-                                        document.getElementById("get_certificate_no").disabled = true;
-                                        document.getElementById("get_nomineeid").disabled = false;
-
-                                    }
-
-                                    const checkbox = document.getElementById('is_user');
-
-                                    checkbox.addEventListener('change', (event) => {
-                                        if (event.target.checked) {
-                                            document.getElementById("get_certificate_no").disabled = true;
-                                            document.getElementById("get_nomineeid").disabled = false;
-                                        } else {
-                                            document.getElementById("get_certificate_no").disabled = false;
-                                            document.getElementById("get_nomineeid").disabled = true;
+                                        function toggleInputs() {
+                                            const isChecked = checkbox.checked;
+                                            certNo.disabled = isChecked;
+                                            nomineeId.disabled = !isChecked;
                                         }
-                                    })
-                                </script>
 
-                            <?php } ?><br>
+                                        // Initialize the state on page load
+                                        toggleInputs();
+
+                                        // Listen for checkbox changes
+                                        checkbox.addEventListener('change', toggleInputs);
+                                    </script>
+                                <?php } ?>
+                            </form>
+
+
+                            <br>
 
                             <?php echo '
                    <div class="table-responsive">
@@ -746,16 +729,19 @@ include("../../util/email.php");
                                 <?php }
                                 echo '</tr>' ?>
                             <?php
-                            } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                            ?>
+                            } else if (@$get_certificate_no == "" && @$get_nomineeid == "" && $academic_year == "") { ?>
+                                <tr>
+                                    <td colspan="5">Please select Filter value.</td>
+                                </tr>
+                                ?>
                                 <tr>
                                     <td colspan="5">Please select Filter value.</td>
                                 </tr>
                             <?php
                             } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
                                 <?php echo '<tr>
-                                    <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
-                                </tr>' ?>
+                                <td colspan="5">No record found for ' . $get_certificate_no . ' ' . $get_nomineeid . ' ' . $formattedAcademicYear . '</td>
+                                </tr>'; ?>
                             <?php
                             }
                             echo '</tbody>
