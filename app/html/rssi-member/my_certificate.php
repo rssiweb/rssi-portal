@@ -736,7 +736,7 @@ $resultArr = pg_fetch_all($result);
                             <tr>
                                 <td>' . $array['certificate_no'] . '</td>' ?>
                                     <?php if ($role == 'Admin') { ?>
-                                        <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . '</td>' ?>
+                                        <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['awarded_to_student_name'] . @$array['awarded_to_name'] . '</td>' ?>
                                     <?php } ?>
                                     <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
 
