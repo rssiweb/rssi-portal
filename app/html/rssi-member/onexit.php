@@ -165,13 +165,13 @@ if ($id != null) {
                                             echo '<td>' . ($array['exit_initiated_on'] ? date('d/m/Y h:i:s a', strtotime($array['exit_initiated_on'])) : 'Not Exited') . '</td>';
                                             echo '<td>';
                                             if ($array['onboarding_initiated_on']) {
-                                                echo '<a href="onboarding.php?associate-number=' . $array['associate_id'] . '" target="_blank">View Onboarding Form</a>';
+                                                echo '<a href="onboarding.php?associate-number=' . $array['associate_id'] . '">View Onboarding Form</a>';
                                             }
                                             if ($array['exit_initiated_on']) {
                                                 if ($array['onboarding_initiated_on']) {
                                                     echo ' | ';
                                                 }
-                                                echo '<a href="exit.php?associate-number=' . $array['associate_id'] . '" target="_blank">View Exit Form</a>';
+                                                echo '<a href="exit.php?associate-number=' . $array['associate_id'] . '">View Exit Form</a>';
                                             }
                                             echo '</td>';
 
