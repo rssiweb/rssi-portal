@@ -13,20 +13,28 @@ if (!isLoggedIn("aid")) {
 validation();
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, remarks, photo, engagement, position, depb, filterstatus, COALESCE(latest_certificate.certificate_url, certificate.certificate_url) AS certificate_url, COALESCE(latest_certificate.badge_name, certificate.badge_name) AS badge_name, onboard_initiated_by, onboarding_gen_otp_center_incharge, onboarding_gen_otp_associate, email, onboarding_flag, onboarding_photo, reporting_date_time, disclaimer, ip_address, onboarding_submitted_by, onboarding_submitted_on, onboard_initiated_on, onboard_initiated_by, COALESCE(latest_certificate.issuedon, certificate.issuedon) AS issuedon, COALESCE(latest_certificate.certificate_no, certificate.certificate_no) AS certificate_no
-    FROM rssimyaccount_members
-    LEFT JOIN (
-        SELECT awarded_to_id, badge_name, certificate_url, issuedon, certificate_no
-        FROM certificate
-        WHERE badge_name = 'Joining Letter'
-        ORDER BY issuedon DESC
-        LIMIT 1
-    ) latest_certificate ON latest_certificate.awarded_to_id = rssimyaccount_members.associatenumber
-    LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
-    LEFT JOIN onboarding ON onboarding.onboarding_associate_id = rssimyaccount_members.associatenumber
-    WHERE rssimyaccount_members.associatenumber = '$associate_number'
-    ORDER BY certificate.issuedon DESC
-    LIMIT 1");
+$result = pg_query($con, "SELECT 
+    fullname, associatenumber, doj, effectivedate, remarks, photo, engagement, position, depb, filterstatus, 
+    COALESCE(latest_certificate.certificate_url, certificate.certificate_url) AS certificate_url, 
+    COALESCE(latest_certificate.badge_name, certificate.badge_name) AS badge_name, 
+    onboard_initiated_by, onboarding_gen_otp_center_incharge, onboarding_gen_otp_associate, email, 
+    onboarding_flag, onboarding_photo, reporting_date_time, disclaimer, 
+    security_deposit_amount, security_deposit_currency, security_deposit_transaction_id, ip_address, 
+    onboarding_submitted_by, onboarding_submitted_on, onboard_initiated_on, onboard_initiated_by, 
+    COALESCE(latest_certificate.issuedon, certificate.issuedon) AS issuedon, 
+    COALESCE(latest_certificate.certificate_no, certificate.certificate_no) AS certificate_no
+FROM rssimyaccount_members
+LEFT JOIN (
+    SELECT DISTINCT ON (awarded_to_id) awarded_to_id, badge_name, certificate_url, issuedon, certificate_no
+    FROM certificate
+    WHERE badge_name = 'Joining Letter'
+    ORDER BY awarded_to_id, issuedon DESC
+) latest_certificate ON latest_certificate.awarded_to_id = rssimyaccount_members.associatenumber
+LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
+LEFT JOIN onboarding ON onboarding.onboarding_associate_id = rssimyaccount_members.associatenumber
+WHERE rssimyaccount_members.associatenumber = '$associate_number'
+ORDER BY certificate.issuedon DESC
+LIMIT 1;");
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -191,6 +199,7 @@ if (@$cmdtuples == 1) {
                                     </div>
                                     <button type="submit" class="btn btn-primary mb-3">Search</button>
                                 </form>
+
                                 <?php if (sizeof($resultArr) > 0) { ?>
                                     <?php foreach ($resultArr as $array) { ?>
                                         <?php if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] != null && $array['certificate_url'] != null) { ?>
@@ -301,16 +310,32 @@ if (@$cmdtuples == 1) {
                                                                 <div class="input-group">
                                                                     <!-- Currency Dropdown -->
                                                                     <select class="form-select" id="currency" name="currency" required>
-                                                                        <option value="INR" selected>INR</option>
+                                                                        <?php
+                                                                        // Fetch the currency from the database if it exists
+                                                                        $currency = isset($array['security_deposit_currency']) ? $array['security_deposit_currency'] : 'INR';
+
+                                                                        // Define an array of available currencies
+                                                                        $currencies = ['INR'];
+
+                                                                        // Generate the dropdown options
+                                                                        foreach ($currencies as $curr) {
+                                                                            $selected = ($curr == $currency) ? 'selected' : '';
+                                                                            echo "<option value=\"$curr\" $selected>$curr</option>";
+                                                                        }
+                                                                        ?>
                                                                     </select>
-                                                                    <input type="number" class="form-control" id="securityDeposit" name="securityDeposit" placeholder="Enter amount" required>
+
+                                                                    <!-- Amount Input -->
+                                                                    <input type="number" class="form-control" id="securityDeposit" name="securityDeposit"
+                                                                        value="<?php echo isset($array['security_deposit_amount']) ? $array['security_deposit_amount'] : ''; ?>"
+                                                                        placeholder="Enter amount" required>
                                                                 </div>
                                                             </div>
 
                                                             <!-- Transaction ID -->
                                                             <div class="col-md-6">
                                                                 <label for="transactionId" class="form-label">Transaction ID</label>
-                                                                <input type="text" class="form-control" id="transactionId" name="transactionId" placeholder="Enter transaction ID" required>
+                                                                <input type="text" class="form-control" id="transactionId" name="transactionId" value="<?php echo $array['security_deposit_transaction_id'] ?>" placeholder="Enter transaction ID" required>
                                                             </div>
                                                         </div>
                                                     <?php endif; ?>
