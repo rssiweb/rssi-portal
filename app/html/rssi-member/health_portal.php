@@ -74,7 +74,7 @@ $baseHealthQuery = "SELECT sh.*, s.studentname, s.gender, s.class, st.fullname a
                    FROM student_health_records sh
                    JOIN rssimyprofile_student s ON sh.student_id = s.student_id
                    JOIN rssimyaccount_members st ON sh.recorded_by = st.associatenumber
-                   WHERE s.filterstatus='Active'
+                   --WHERE s.filterstatus='Active'
                    AND sh.record_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
 $basePeriodQuery = "SELECT pr.*, s.studentname, s.class, st.fullname as recorded_by_name
@@ -82,14 +82,14 @@ $basePeriodQuery = "SELECT pr.*, s.studentname, s.class, st.fullname as recorded
                    JOIN rssimyprofile_student s ON pr.student_id = s.student_id
                    JOIN rssimyaccount_members st ON pr.recorded_by = st.associatenumber
                    WHERE s.gender = 'Female'
-                   AND s.filterstatus='Active'
+                   --AND s.filterstatus='Active'
                    AND pr.cycle_start_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
 $basePadQuery = "SELECT pd.*, s.studentname, s.class, st.fullname as recorded_by_name
                 FROM stock_out pd
                 JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
                 JOIN rssimyaccount_members st ON pd.distributed_by = st.associatenumber
-                WHERE s.filterstatus='Active'
+                --WHERE s.filterstatus='Active'
                 AND pd.item_distributed=149
                 AND pd.date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
@@ -98,10 +98,23 @@ $healthResult = $periodResult = $padResult = $healthFilterResult = $periodFilter
 
 // Fetch stats for dashboard (always fetch these)
 $statsQuery = "SELECT 
-                (SELECT COUNT(*) FROM rssimyprofile_student WHERE filterstatus='Active') as total_students,
+                (SELECT COUNT(*) AS active_students_count
+                FROM rssimyprofile_student
+                WHERE 
+                    -- Student was admitted before or during the academic year
+                    doa <= '$academicYearEnd'
+                    AND (
+                        -- Student is still active (no effectivefrom date)
+                        effectivefrom IS NULL
+                        -- OR student became inactive after our academic year ended
+                        OR effectivefrom > '$academicYearEnd'
+                    )
+                    -- Optional: include status filter if you have it
+                    -- AND filtertstatus = 'Active'
+                ) as total_students,
                 (SELECT COUNT(*) FROM student_health_records 
                  WHERE record_date BETWEEN '$academicYearStart' AND '$academicYearEnd') as yearly_checks,
-                (SELECT COUNT(*) FROM stock_out
+                (SELECT COALESCE(SUM(quantity_distributed), 0) FROM stock_out
                  WHERE date BETWEEN '$academicYearStart' AND '$academicYearEnd' AND item_distributed=149) as yearly_pads";
 $statsResult = pg_query($con, $statsQuery);
 $stats = pg_fetch_assoc($statsResult);
