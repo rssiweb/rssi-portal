@@ -2193,6 +2193,89 @@ echo "<script>
             }
         });
     </script>
+    <script>
+        // Tab URL handling
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to activate a tab by its ID
+            function activateTab(tabId) {
+                // Hide all tab panes
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('active');
+                });
+
+                // Show the selected tab pane
+                const targetPane = document.getElementById(tabId);
+                if (targetPane) {
+                    targetPane.classList.add('active');
+                }
+
+                // Update the active state in the sidebar
+                document.querySelectorAll('#sidebar-menu .nav-link, #mobile-menu-items .nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${tabId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // Function to clean up URL parameters (keep only one tab parameter)
+            function cleanUrlParams(activeTab) {
+                const url = new URL(window.location.href);
+                const params = new URLSearchParams(url.search);
+
+                // Remove all tab parameters
+                params.delete('tab');
+
+                // Add only the active tab parameter
+                if (activeTab) {
+                    params.append('tab', activeTab);
+                }
+
+                // Build new URL
+                url.search = params.toString();
+                return url.toString();
+            }
+
+            // Handle tab clicks - update URL
+            document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const tabId = this.getAttribute('href').substring(1);
+                    const cleanUrl = cleanUrlParams(tabId);
+                    window.history.pushState({
+                        tab: tabId
+                    }, '', cleanUrl);
+                });
+            });
+
+            // Check for tab parameter on page load
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+
+            if (tabParam) {
+                activateTab(tabParam);
+                // Clean up URL if multiple tab parameters exist
+                const cleanUrl = cleanUrlParams(tabParam);
+                if (cleanUrl !== window.location.href) {
+                    window.history.replaceState({
+                        tab: tabParam
+                    }, '', cleanUrl);
+                }
+            }
+
+            // Handle browser back/forward navigation
+            window.addEventListener('popstate', function(event) {
+                if (event.state && event.state.tab) {
+                    activateTab(event.state.tab);
+                } else {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tabParam = urlParams.get('tab');
+                    if (tabParam) {
+                        activateTab(tabParam);
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
