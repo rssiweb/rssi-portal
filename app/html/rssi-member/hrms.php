@@ -32,7 +32,21 @@ if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumb
 
 
 // Step 1: Fetch current associate data (this part remains the same)
-$sql = "SELECT * FROM rssimyaccount_members WHERE associatenumber='$search_id'";
+$sql = "SELECT 
+    m.*,
+    o.security_deposit_amount,
+    o.security_deposit_currency,
+    o.security_deposit_transaction_id,
+    ae.security_refund
+FROM 
+    rssimyaccount_members m
+LEFT JOIN 
+    onboarding o ON o.onboarding_associate_id = m.associatenumber
+LEFT JOIN 
+    associate_exit ae ON ae.exit_associate_id = m.associatenumber
+WHERE 
+    m.associatenumber = '$search_id';
+";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
 
@@ -181,7 +195,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'eduq',
             'mjorsub',
             'phone',
+            'alt_phone',
             'email',
+            'alt_email',
             'currentaddress',
             'permanentaddress',
             'panno',
@@ -195,7 +211,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'eduq',
             'mjorsub',
             'phone',
+            'alt_phone',
             'email',
+            'alt_email',
             'panno',
             'raw_photo'
         ];
@@ -828,11 +846,11 @@ echo "<script>
                                                 <a class="nav-link" href="#work-details" data-bs-toggle="tab">Work Details</a>
                                             </li>
                                             <li class="nav-item">
-                                                <a class="nav-link" href="#learnings" data-bs-toggle="tab">Qualifications and Experience</a>
+                                                <a class="nav-link" href="#qualifications_experience" data-bs-toggle="tab">Qualifications and Experience</a>
                                             </li>
-                                            <li class="nav-item">
+                                            <!-- <li class="nav-item">
                                                 <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Learnings</a>
-                                            </li>
+                                            </li> -->
                                             <li class="nav-item">
                                                 <a class="nav-link" href="#status_compensation" data-bs-toggle="tab">Status & Compensation</a>
                                             </li>
@@ -882,10 +900,24 @@ echo "<script>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
+                                                                                <td><label for="alt_phone">Telephone Number (Alt):</label></td>
+                                                                                <td>
+                                                                                    <span id="alt_phoneText"><?php echo $array['alt_phone']; ?></span>
+                                                                                    <input class="form-control" type="number" name="alt_phone" id="alt_phone" value="<?php echo $array['alt_phone']; ?>" disabled style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
                                                                                 <td><label for="email">Email Address:</label></td>
                                                                                 <td>
                                                                                     <span id="emailText"><?php echo $array['email']; ?></span>
                                                                                     <input class="form-control" type="email" name="email" id="email" value="<?php echo $array['email']; ?>" disabled style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="alt_email">Email Address (Alt):</label></td>
+                                                                                <td>
+                                                                                    <span id="alt_emailText"><?php echo $array['alt_email']; ?></span>
+                                                                                    <input class="form-control" type="email" name="alt_email" id="alt_email" value="<?php echo $array['alt_email']; ?>" disabled style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1369,8 +1401,8 @@ echo "<script>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <!-- Learnings Tab -->
-                                                    <div id="learnings" class="tab-pane" role="tabpanel">
+                                                    <!-- Qualifications and Experience Tab -->
+                                                    <div id="qualifications_experience" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="qualification">
                                                             <div class="card-header">
                                                                 Qualification Details
@@ -1709,10 +1741,29 @@ echo "<script>
                                                                                     </td>
                                                                                 </tr>
                                                                                 <tr>
-                                                                                    <td><label for="security_deposit">Security deposit:</label></td>
+                                                                                    <td><label for="security_deposit">Security Deposit:</label></td>
                                                                                     <td>
-                                                                                        <span id="security_depositText"><?php echo is_null($array['security_deposit']) ? 'No security deposit has been made.' : $array['security_deposit']; ?></span>
-                                                                                        <input type="number" name="security_deposit" id="security_deposit" value="<?php echo $array["security_deposit"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                        <p id="security_depositText" class="mb-1">
+                                                                                            <?php
+                                                                                            echo is_null($array['security_deposit_amount']) ?
+                                                                                                'No security deposit has been made.' : $array['security_deposit_currency'] . ' ' . $array['security_deposit_amount'];
+                                                                                            ?>
+                                                                                        </p>
+                                                                                        <p id="security_deposit_transaction_idText" class="mb-1">
+                                                                                            Transaction ID:
+                                                                                            <?php
+                                                                                            echo is_null($array['security_deposit_transaction_id']) ?
+                                                                                                'N/A' :
+                                                                                                $array['security_deposit_transaction_id'];
+                                                                                            ?>
+                                                                                        </p>
+                                                                                        <p id="refund_statusText" class="mb-0">
+                                                                                            Refund:
+                                                                                            <?php
+                                                                                            echo is_null($array['security_refund']) ?
+                                                                                                'N/A' : ($array['security_refund'] == 'Yes' ? 'Yes' : 'No');
+                                                                                            ?>
+                                                                                        </p>
                                                                                     </td>
                                                                                 </tr>
                                                                             </tbody>
