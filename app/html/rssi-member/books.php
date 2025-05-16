@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/email.php");
 include("../../util/drive.php");
 
 // Ensure only teachers/admins can access
@@ -82,6 +83,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['place_order'])) {
                 if ($insert_result) {
                     // Decrement available copies
                     pg_query_params($con, "UPDATE books SET available_copies = available_copies - 1 WHERE book_id = $1", [$book_id]);
+
+                    $query = "SELECT STRING_AGG(alt_email, ', ') AS centre_incharge_email,
+                            STRING_AGG(fullname, ', ') AS centre_incharge_name 
+                            FROM rssimyaccount_members 
+                            WHERE position = 'Centre Incharge' 
+                            AND filterstatus = 'Active'";
+
+                    $result = pg_query($con, $query);
+                    $row = pg_fetch_assoc($result);
+
+                    $centre_incharge_email = $row['centre_incharge_email'];
+                    $centre_incharge_name = $row['centre_incharge_name'];
+
+                    if (!empty($centre_incharge_email)) {
+                        // Split emails and names into arrays
+                        $emails = explode(', ', $centre_incharge_email);
+                        $names = explode(', ', $centre_incharge_name);
+
+                        // Send individual emails
+                        foreach ($emails as $index => $email) {
+                            $name = $names[$index] ?? 'Centre Incharge';  // Fallback name if not matched
+                            sendEmail("book_order_placed", [
+                                "name" => $name,
+                                "book_id" => $book_id,
+                                "current_datetime" => date("d/m/Y g:i a"),
+                            ], $email);
+                        }
+                    }
+
                     $_SESSION['message'] = "Order placed successfully!";
                     header("Location: " . $_SERVER['REQUEST_URI']);
                     exit();
