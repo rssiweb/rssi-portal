@@ -1,0 +1,24 @@
+New Book Order Placed - Action Required
+<!-- You have earned a badge -->
+<!DOCTYPE html>
+<html>
+
+<body>
+    <p>Dear {{name}},</p>
+    <p>A new book order has been placed. Please review the order details and take the necessary action.</p>
+
+    <p><strong>Order Details:</strong></p>
+    <ul>
+        <li>Book ID: {{book_id}}</li>
+        <li>Order Time: {{current_datetime}}</li>
+    </ul>
+
+    <p>You can view the complete order details here:
+        <a href="https://login.rssi.in/rssi-member/orders.php">Order Details</a>
+    </p>
+
+    <p>Regards,<br>Information Resource Center (IRC)</p>
+    <p style="color: gray; font-size: 12px;">This is a system-generated email. Please do not reply.</p>
+</body>
+
+</html>
