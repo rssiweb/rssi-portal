@@ -197,15 +197,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "<script>alert('Error: Failed to insert data into the database.'); window.history.back();</script>";
             exit;
         }
+        if ($result) {
+            // Fetch admin details from the database
+            $query = "SELECT fullname, alt_email FROM rssimyaccount_members WHERE role = 'Admin' AND position = 'Director'";
+            $adminResult = pg_query($con, $query);
 
-        // Success message
-        echo "<script>alert('Request submitted successfully! The status will be updated within 24 hours after receiving the update request.'); 
+            if ($adminResult && pg_num_rows($adminResult) > 0) {
+                while ($adminRow = pg_fetch_assoc($adminResult)) {
+                    $admin_name = $adminRow['fullname'];
+                    $admin_email = $adminRow['alt_email'];
+
+                    // Send email to each admin individually
+                    sendEmail("external_course_completion", [
+                        "courseId" => $courseId,
+                        "applicantid" => $associatenumber,
+                        "fromdate" => date('Y-m-d H:i:s'),
+                        "score" => $score,
+                        "doclink" => $doclink,
+                        "admin_name" => $admin_name,
+                    ], $admin_email);
+                }
+            } else {
+                error_log("No admins found in the database.");
+            }
+
+            // Success message
+            echo "<script>alert('Request submitted successfully! The status will be updated within 24 hours after receiving the update request.'); 
            if (window.history.replaceState) {
                         // Update the URL without causing a page reload or resubmission
                         window.history.replaceState(null, null, window.location.href);
                     }
                     window.location.reload(); // Trigger a page reload to reflect changes
             </script>";
+        }
         exit;
     } catch (Exception $e) {
         echo "<script>alert('Error: " . addslashes($e->getMessage()) . "'); window.history.back();</script>";

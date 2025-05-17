@@ -1,111 +1,118 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 include("../../util/email.php");
 include("../../util/drive.php");
-
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
+    exit;
 }
 
 validation();
-?>
-<?php
-// File: #
 
-// Database connection (assuming $con is already defined)
-// Include your database connection script if necessary
-// include 'db_connection.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['external_score_id'], $_POST['action_type'], $_POST['remarks'])) {
+        $externalScoreId = intval($_POST['external_score_id']);
+        $action = ($_POST['action_type'] === 'approve') ? 'approved' : 'rejected';
+        $remarks = trim($_POST['remarks']);
 
-// Handle approval or rejection action
-if (isset($_POST['approve']) || isset($_POST['reject'])) {
-    $externalScoreId = $_POST['external_score_id'];
-    $action = isset($_POST['approve']) ? 'approved' : 'rejected';
+        // Fetch the external score record
+        $query = "
+            SELECT e.*, m.fullname, m.email, w.coursename
+            FROM external_exam_scores e
+            LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
+            LEFT JOIN wbt w ON e.course_id = w.courseid
+            WHERE e.id = $1
+        ";
+        $stmt = pg_prepare($con, "fetch_external_score", $query);
+        $result = pg_execute($con, "fetch_external_score", [$externalScoreId]);
 
-    // Fetch the external score record
-    $query = "
-        SELECT e.*, m.fullname, w.coursename
-        FROM external_exam_scores e
-        LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
-        LEFT JOIN wbt w ON e.course_id = w.courseid
-        WHERE e.id = $1
-    ";
-    $stmt = pg_prepare($con, "fetch_external_score", $query);
-    $result = pg_execute($con, "fetch_external_score", [$externalScoreId]);
-
-    if ($result && pg_num_rows($result) > 0) {
-        $row = pg_fetch_assoc($result);
-
-        if ($action === 'approved') {
-            // Prepare data for insertion into wbt_status
-            $associateNumber = $row['associate_number'];
+        if ($result && pg_num_rows($result) > 0) {
+            $row = pg_fetch_assoc($result);
             $courseId = $row['course_id'];
-            $timestamp = $row['completion_date']; // Use completion_date as timestamp
-            $fScore = $row['score'] / 100; // Divide score by 100
-            $email = null; // Set email to null
+            $applicantid = $row['associate_number'];
+            $email = $row['email'];
+            $fullname = $row['fullname'];
 
-            // Insert into wbt_status
-            $insertQuery = "
-                INSERT INTO wbt_status (
-                    associatenumber, 
-                    courseid, 
-                    timestamp, 
-                    f_score, 
-                    email
-                ) VALUES ($1, $2, $3, $4, $5)
+            if ($action === 'approved') {
+                // Insert data into wbt_status
+                $timestamp = date('Y-m-d H:i:s');
+                $fScore = $row['score'] / 100;
+
+                $insertQuery = "
+                    INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email) 
+                    VALUES ($1, $2, $3, $4, $5)
+                ";
+                $insertStmt = pg_prepare($con, "insert_wbt_status", $insertQuery);
+                $insertResult = pg_execute($con, "insert_wbt_status", [$applicantid, $courseId, $timestamp, $fScore, $email]);
+
+                if (!$insertResult) {
+                    echo "<script>alert('Error: Failed to insert into wbt_status.');</script>";
+                    exit;
+                }
+            }
+
+            // Send email for rejected requests
+            if ($action === 'rejected') {
+                $emailQuery = "SELECT email FROM rssimyaccount_members WHERE associatenumber = $1";
+                $emailStmt = pg_prepare($con, "fetch_email", $emailQuery);
+                $emailResult = pg_execute($con, "fetch_email", [$applicantid]);
+
+                if ($emailResult && pg_num_rows($emailResult) > 0) {
+                    $emailRow = pg_fetch_assoc($emailResult);
+                    $associate_email = $emailRow['email'];
+
+                    // Send rejection email
+                    sendEmail("external_course_reject", [
+                        "courseId" => $courseId,
+                        "applicantid" => $applicantid,
+                        "name" => $fullname,
+                        "date" => date('Y-m-d H:i:s'),
+                        "remarks" => $remarks,
+                    ], $associate_email);
+                } else {
+                    error_log("No associate email found for rejection.");
+                }
+            }
+
+            // Update the external_exam_scores table
+            $updateQuery = "
+                UPDATE external_exam_scores
+                SET 
+                    status = $1,
+                    reviewed_by = $2,
+                    reviewed_on = $3,
+                    remarks = $4
+                WHERE id = $5
             ";
-            $insertStmt = pg_prepare($con, "insert_wbt_status", $insertQuery);
-            $insertResult = pg_execute($con, "insert_wbt_status", [
-                $associateNumber,
-                $courseId,
-                $timestamp,
-                $fScore,
-                $email
+            $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
+            $updateResult = pg_execute($con, "update_external_score", [
+                $action,
+                $associatenumber,
+                date('Y-m-d H:i:s'),
+                $remarks,
+                $externalScoreId
             ]);
 
-            if (!$insertResult) {
-                echo "<script>alert('Error: Failed to insert into wbt_status.');</script>";
+            if ($updateResult) {
+                echo "<script>alert('Request $action successfully!'); 
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
+                window.location.reload();
+                </script>";
+                exit;
+            } else {
+                echo "<script>alert('Error: Failed to update external_exam_scores.');</script>";
                 exit;
             }
-        }
-
-        // Update the external_exam_scores table
-        $updateQuery = "
-            UPDATE external_exam_scores
-            SET 
-                status = $1,
-                reviewed_by = $2,
-                reviewed_on = $3
-            WHERE id = $4
-        ";
-        $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
-        $updateResult = pg_execute($con, "update_external_score", [
-            $action,
-            $associatenumber, // Assuming $associatenumber contains the logged-in user's data
-            date('Y-m-d H:i:s'), // Current timestamp
-            $externalScoreId
-        ]);
-
-        if ($updateResult) {
-            echo "<script>alert('Request $action successfully!'); 
-            if (window.history.replaceState) {
-                        // Update the URL without causing a page reload or resubmission
-                        window.history.replaceState(null, null, window.location.href);
-                    }
-                    window.location.reload(); // Trigger a page reload to reflect changes
-            </script>";
-            exit;
         } else {
-            echo "<script>alert('Error: Failed to update external_exam_scores.');</script>";
+            echo "<script>alert('Error: External score record not found.');</script>";
             exit;
         }
-    } else {
-        echo "<script>alert('Error: External score record not found.');</script>";
-        exit;
     }
 }
 
@@ -182,7 +189,7 @@ if (!$result) {
         <div class="pagetitle">
             <h1>iExplore Workflow</h1>
             <nav>
-            <ol class="breadcrumb">
+                <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
                     <li class="breadcrumb-item active">iExplore Workflow</li>
@@ -229,12 +236,46 @@ if (!$result) {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <form method="POST" action="#" style="display:inline;">
-                                                        <input type="hidden" name="external_score_id" value="<?= $row['id']; ?>">
-                                                        <button type="submit" name="approve" class="btn btn-success btn-sm">Approve</button>
-                                                        <button type="submit" name="reject" class="btn btn-danger btn-sm">Reject</button>
-                                                    </form>
-                                                </td>
+    <!-- Approve/Reject Buttons -->
+    <button type="button" class="btn btn-success btn-sm" onclick="openModal('Approve', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Approve</button>
+    <button type="button" class="btn btn-danger btn-sm" onclick="openModal('Reject', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Reject</button>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Action Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="#">
+                    <div class="modal-body">
+                        <input type="hidden" name="external_score_id" id="external_score_id">
+                        <input type="hidden" name="action_type" id="action_type">
+
+                        <!-- Display Details for User Understanding -->
+                        <div class="mb-3">
+                            <p><strong>Course Name:</strong> <span id="courseName"></span></p>
+                            <p><strong>Applicant Name:</strong> <span id="applicantName"></span></p>
+                            <p><strong>Score:</strong> <span id="score"></span></p>
+                            <p><strong>Completion Date:</strong> <span id="completionDate"></span></p>
+                        </div>
+
+                        <!-- Remarks Field -->
+                        <div class="mb-3">
+                            <label id="remarksLabel" class="form-label">Remarks for:</label>
+                            <textarea name="remarks" id="remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</td>
                                             </tr>
                                         <?php endwhile; ?>
                                     </tbody>
@@ -255,6 +296,31 @@ if (!$result) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
+    <!-- JavaScript to Trigger Modal and Set Form Values -->
+<script>
+    function openModal(action, courseName, applicantName, score, completionDate, id) {
+        // Set the action type and score ID in the modal form
+        document.getElementById('external_score_id').value = id;
+        document.getElementById('action_type').value = action.toLowerCase();
+
+        // Update modal title and remarks label based on action type
+        const modalTitle = action === 'Approve' ? 'Approve Request' : 'Reject Request';
+        const remarksLabel = `Remarks for ${action}:`;
+        document.getElementById('modalLabel').textContent = modalTitle;
+        document.getElementById('remarksLabel').textContent = remarksLabel;
+
+        // Set the course details in the modal
+        document.getElementById('courseName').textContent = courseName;
+        document.getElementById('applicantName').textContent = applicantName;
+        document.getElementById('score').textContent = score;
+        document.getElementById('completionDate').textContent = completionDate;
+
+        // Show the modal
+        var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
+        modal.show();
+    }
+</script>
 </body>
 
 </html>
