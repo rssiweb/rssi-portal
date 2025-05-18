@@ -1971,14 +1971,15 @@ echo "<script>
                 var label = document.querySelector('label[for="' + fieldname + '"]');
 
                 if (label) {
-                    // Create a warning icon element
-                    var warningIcon = document.createElement("i");
-                    warningIcon.classList.add("bi", "bi-clock", "text-warning");
-                    warningIcon.setAttribute("title", "Under Review");
+                    // Create a badge element
+                    var badge = document.createElement("span");
+                    badge.classList.add("badge", "bg-warning", "text-dark", "ms-2");
+                    badge.textContent = "Under Review";
 
-                    // Append the warning icon next to the label
-                    label.appendChild(warningIcon);
+                    // Append the badge next to the label
+                    label.appendChild(badge);
                 }
+
             });
         });
     </script>
