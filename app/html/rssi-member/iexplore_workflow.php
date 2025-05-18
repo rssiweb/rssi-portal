@@ -55,29 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // Send email for rejected requests
-            if ($action === 'rejected') {
-                $emailQuery = "SELECT email FROM rssimyaccount_members WHERE associatenumber = $1";
-                $emailStmt = pg_prepare($con, "fetch_email", $emailQuery);
-                $emailResult = pg_execute($con, "fetch_email", [$applicantid]);
-
-                if ($emailResult && pg_num_rows($emailResult) > 0) {
-                    $emailRow = pg_fetch_assoc($emailResult);
-                    $associate_email = $emailRow['email'];
-
-                    // Send rejection email
-                    sendEmail("external_course_reject", [
-                        "courseId" => $courseId,
-                        "applicantid" => $applicantid,
-                        "name" => $fullname,
-                        "date" => date('Y-m-d H:i:s'),
-                        "remarks" => $remarks,
-                    ], $associate_email);
-                } else {
-                    error_log("No associate email found for rejection.");
-                }
-            }
-
             // Update the external_exam_scores table
             $updateQuery = "
                 UPDATE external_exam_scores
@@ -98,6 +75,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if ($updateResult) {
+
+                // Send email for rejected requests
+                if ($action === 'rejected') {
+                    $emailQuery = "SELECT email FROM rssimyaccount_members WHERE associatenumber = $1";
+                    $emailStmt = pg_prepare($con, "fetch_email", $emailQuery);
+                    $emailResult = pg_execute($con, "fetch_email", [$applicantid]);
+
+                    if ($emailResult && pg_num_rows($emailResult) > 0) {
+                        $emailRow = pg_fetch_assoc($emailResult);
+                        $associate_email = $emailRow['email'];
+
+                        // Send rejection email
+                        sendEmail("external_course_reject", [
+                            "courseId" => $courseId,
+                            "applicantid" => $applicantid,
+                            "name" => $fullname,
+                            "date" => date('Y-m-d H:i:s'),
+                            "remarks" => $remarks,
+                        ], $associate_email, false);
+                    } else {
+                        error_log("No associate email found for rejection.");
+                    }
+                }
+
                 echo "<script>alert('Request $action successfully!'); 
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
@@ -236,46 +237,46 @@ if (!$result) {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-    <!-- Approve/Reject Buttons -->
-    <button type="button" class="btn btn-success btn-sm" onclick="openModal('Approve', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Approve</button>
-    <button type="button" class="btn btn-danger btn-sm" onclick="openModal('Reject', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Reject</button>
+                                                    <!-- Approve/Reject Buttons -->
+                                                    <button type="button" class="btn btn-success btn-sm" onclick="openModal('Approve', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Approve</button>
+                                                    <button type="button" class="btn btn-danger btn-sm" onclick="openModal('Reject', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Reject</button>
 
-    <!-- Bootstrap Modal -->
-    <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLabel">Action Confirmation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="#">
-                    <div class="modal-body">
-                        <input type="hidden" name="external_score_id" id="external_score_id">
-                        <input type="hidden" name="action_type" id="action_type">
+                                                    <!-- Bootstrap Modal -->
+                                                    <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="modalLabel">Action Confirmation</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <form method="POST" action="#">
+                                                                    <div class="modal-body">
+                                                                        <input type="hidden" name="external_score_id" id="external_score_id">
+                                                                        <input type="hidden" name="action_type" id="action_type">
 
-                        <!-- Display Details for User Understanding -->
-                        <div class="mb-3">
-                            <p><strong>Course Name:</strong> <span id="courseName"></span></p>
-                            <p><strong>Applicant Name:</strong> <span id="applicantName"></span></p>
-                            <p><strong>Score:</strong> <span id="score"></span></p>
-                            <p><strong>Completion Date:</strong> <span id="completionDate"></span></p>
-                        </div>
+                                                                        <!-- Display Details for User Understanding -->
+                                                                        <div class="mb-3">
+                                                                            <p><strong>Course Name:</strong> <span id="courseName"></span></p>
+                                                                            <p><strong>Applicant Name:</strong> <span id="applicantName"></span></p>
+                                                                            <p><strong>Score:</strong> <span id="score"></span></p>
+                                                                            <p><strong>Completion Date:</strong> <span id="completionDate"></span></p>
+                                                                        </div>
 
-                        <!-- Remarks Field -->
-                        <div class="mb-3">
-                            <label id="remarksLabel" class="form-label">Remarks for:</label>
-                            <textarea name="remarks" id="remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</td>
+                                                                        <!-- Remarks Field -->
+                                                                        <div class="mb-3">
+                                                                            <label id="remarksLabel" class="form-label">Remarks for:</label>
+                                                                            <textarea name="remarks" id="remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         <?php endwhile; ?>
                                     </tbody>
@@ -298,29 +299,29 @@ if (!$result) {
     <script src="../assets_new/js/main.js"></script>
 
     <!-- JavaScript to Trigger Modal and Set Form Values -->
-<script>
-    function openModal(action, courseName, applicantName, score, completionDate, id) {
-        // Set the action type and score ID in the modal form
-        document.getElementById('external_score_id').value = id;
-        document.getElementById('action_type').value = action.toLowerCase();
+    <script>
+        function openModal(action, courseName, applicantName, score, completionDate, id) {
+            // Set the action type and score ID in the modal form
+            document.getElementById('external_score_id').value = id;
+            document.getElementById('action_type').value = action.toLowerCase();
 
-        // Update modal title and remarks label based on action type
-        const modalTitle = action === 'Approve' ? 'Approve Request' : 'Reject Request';
-        const remarksLabel = `Remarks for ${action}:`;
-        document.getElementById('modalLabel').textContent = modalTitle;
-        document.getElementById('remarksLabel').textContent = remarksLabel;
+            // Update modal title and remarks label based on action type
+            const modalTitle = action === 'Approve' ? 'Approve Request' : 'Reject Request';
+            const remarksLabel = `Remarks for ${action}:`;
+            document.getElementById('modalLabel').textContent = modalTitle;
+            document.getElementById('remarksLabel').textContent = remarksLabel;
 
-        // Set the course details in the modal
-        document.getElementById('courseName').textContent = courseName;
-        document.getElementById('applicantName').textContent = applicantName;
-        document.getElementById('score').textContent = score;
-        document.getElementById('completionDate').textContent = completionDate;
+            // Set the course details in the modal
+            document.getElementById('courseName').textContent = courseName;
+            document.getElementById('applicantName').textContent = applicantName;
+            document.getElementById('score').textContent = score;
+            document.getElementById('completionDate').textContent = completionDate;
 
-        // Show the modal
-        var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
-        modal.show();
-    }
-</script>
+            // Show the modal
+            var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
+            modal.show();
+        }
+    </script>
 </body>
 
 </html>
