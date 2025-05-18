@@ -203,7 +203,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'panno',
             'linkedin',
             'religion',
-            'caste'
+            'caste',
+            'father_name',
+            'mother_name',
+            'blood_group',
         ];
 
         $fields_requiring_approval = [
@@ -978,6 +981,42 @@ echo "<script>
                                                                                     <input type="text" name="panno" id="panno" placeholder="Enter your PAN number" value="<?php echo $array["panno"]; ?>" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
+                                                                            <!-- Father's Name -->
+                                                                            <tr>
+                                                                                <td><label for="father_name">Father's Name:</label></td>
+                                                                                <td>
+                                                                                    <span id="fatherNameText"><?php echo $array['father_name']; ?></span>
+                                                                                    <input type="text" name="father_name" id="father_name" placeholder="Enter your Father's Name" value="<?php echo $array['father_name']; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Mother's Name -->
+                                                                            <tr>
+                                                                                <td><label for="mother_name">Mother's Name:</label></td>
+                                                                                <td>
+                                                                                    <span id="motherNameText"><?php echo $array['mother_name']; ?></span>
+                                                                                    <input type="text" name="mother_name" id="mother_name" placeholder="Enter your Mother's Name" value="<?php echo $array['mother_name']; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Blood Group -->
+                                                                            <tr>
+                                                                                <td><label for="blood_group">Blood Group:</label></td>
+                                                                                <td>
+                                                                                    <span id="bloodGroupText"><?php echo $array['blood_group']; ?></span>
+                                                                                    <select name="blood_group" id="blood_group" class="form-select" style="display:none;" disabled>
+                                                                                        <option value="">Select Blood Group</option>
+                                                                                        <?php
+                                                                                        $bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+                                                                                        foreach ($bloodGroups as $group) {
+                                                                                            $selected = ($array['blood_group'] == $group) ? 'selected' : '';
+                                                                                            echo "<option value=\"$group\" $selected>$group</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
