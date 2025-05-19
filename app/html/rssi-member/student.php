@@ -222,7 +222,7 @@ $classlist = [
 
                 <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                   <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <form method="POST" action="export_function.php">
+                    <form method="POST" action="export_function.php" target="_blank">
                       <input type="hidden" value="student" name="export_type" />
                       <!-- Include all search parameters as hidden fields -->
                       <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
@@ -230,11 +230,11 @@ $classlist = [
                       <input type="hidden" name="get_category" value="<?= htmlspecialchars($category ?? '') ?>">
                       <input type="hidden" name="get_class" value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
                       <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
-                      <input type="hidden" name="search_by_id_only" value="<?= isset($_POST['search_by_id_only']) ? '1' : '0' ?>">
+                      <input type="hidden" name="search_by_id_only" value="<?= $searchByIdOnly ? '1' : '0' ?>">
 
                       <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
+            padding: 0px;
+            border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                     </form>
                   </div>
                 <?php } ?>
