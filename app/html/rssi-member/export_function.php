@@ -434,19 +434,20 @@ AND bd.bank_account_number IS NULL";
 
 function student_export()
 {
-
-
   global $con;
-  // Get search parameters from POST
+  // Initialize variables
   $module = $_POST['get_module'] ?? null;
   $id = $_POST['get_id'] ?? null;
   $category = $_POST['get_category'] ?? null;
-  $class = isset($_POST['get_class']) ? explode(',', $_POST['get_class']) : null;
+  $class = $_POST['get_class'] ?? null;
   $stid = $_POST['get_stid'] ?? null;
-  $searchByIdOnly = $_POST['search_by_id_only'] ?? '0';
+  $searchByIdOnly = isset($_POST['search_by_id_only']);
 
-  // Build the same query as in your search
-  if ($searchByIdOnly == '1') {
+  // Initialize result array
+  $resultArr = [];
+
+  // Only query if we have valid parameters
+  if ($searchByIdOnly) {
     // Search by Student ID only
     if (!empty($stid)) {
       $result = pg_query_params(
@@ -454,33 +455,35 @@ function student_export()
         "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
         [$stid]
       );
+      $resultArr = $result ? pg_fetch_all($result) : [];
     }
   } else {
     // Normal search (requires module and status)
     if (!empty($module) && !empty($id)) {
       $query = "SELECT * FROM rssimyprofile_student 
-                 WHERE filterstatus = $1 AND module = $2";
-      $params = [$id, $module];
+                      WHERE filterstatus = $1 AND module = $2";
+      $params = [$id, $module]; // Assuming filterstatus should be 'Active'
 
-      $paramCount = 3;
+      $paramCount = 3; // Start counting from 3
 
       if (!empty($category)) {
-        $query .= " AND category = $$paramCount";
+        $query .= " AND category = $" . $paramCount;
         $params[] = $category;
         $paramCount++;
       }
 
       if (!empty($class)) {
         if (is_array($class)) {
+          // Generate numbered placeholders for each class
           $placeholders = [];
           foreach ($class as $classItem) {
-            $placeholders[] = "$$paramCount";
+            $placeholders[] = "$" . $paramCount;
             $params[] = $classItem;
             $paramCount++;
           }
           $query .= " AND class IN (" . implode(',', $placeholders) . ")";
         } else {
-          $query .= " AND class = $$paramCount";
+          $query .= " AND class = $" . $paramCount;
           $params[] = $class;
           $paramCount++;
         }
@@ -488,23 +491,27 @@ function student_export()
 
       $query .= " ORDER BY category ASC, class ASC, studentname ASC";
       $result = pg_query_params($con, $query, $params);
+
+      // Fetch results only if the query was successful
+      if ($result) {
+        $resultArr = pg_fetch_all($result);
+      }
     }
   }
 
-  if (!$result) {
-    echo "An error occurred.\n";
+  if (empty($resultArr)) {
+    echo "An error occurred or no data found.\n";
     exit;
   }
 
-  $resultArr = pg_fetch_all($result);
-
+  // Output CSV header
   echo 'Student Id,Name,Category,Class,Age,Gender,Contact,Access,Pay type,Status,DOA,DOT,Remarks' . "\n";
 
   foreach ($resultArr as $array) {
-
     echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['age'] . ',' . $array['gender'] . ',' . $array['contact'] . ',' . $array['access_category'] . ',' . $array['payment_type'] . ',' . $array['filterstatus'] . ',' . $array['doa'] . ',' . $array['effectivefrom'] . ',"' . $array['remarks'] . '"' . "\n";
   }
 }
+
 function donation_old_export()
 {
 

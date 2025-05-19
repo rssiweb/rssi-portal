@@ -36,7 +36,7 @@ if ($searchByIdOnly) {
   if (!empty($module) && !empty($id)) {
     $query = "SELECT * FROM rssimyprofile_student 
                  WHERE filterstatus = $1 AND module = $2";
-    $params = ['Active', $module]; // Assuming filterstatus should be 'Active'
+    $params = [$id, $module]; // Assuming filterstatus should be 'Active'
 
     $paramCount = 3; // Start counting from 3
 
