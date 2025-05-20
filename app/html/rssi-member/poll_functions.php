@@ -180,3 +180,11 @@ function get_paginated_polls($con, $page = 1, $per_page = 5, $current_user_id = 
         'total_pages' => ceil($total / $per_page)
     ];
 }
+function get_latest_active_poll($con) {
+    $query = "SELECT * FROM polls 
+              WHERE expires_at > NOW() 
+              ORDER BY created_at DESC 
+              LIMIT 1";
+    $result = pg_query($con, $query);
+    return pg_fetch_assoc($result);
+}

@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("poll_functions.php");
 
 if (!isLoggedIn("aid")) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -110,16 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <?php
 if (!function_exists('makeClickableLinks')) {
-    function makeClickableLinks($text)
-    {
-        // Regular expression to identify URLs in the text
-        $text = preg_replace(
-            '~(https?://[^\s]+)~i', // Match URLs starting with http or https
-            '<a href="$1" target="_blank">$1</a>', // Replace with anchor tag
-            $text
-        );
-        return $text;
-    }
+  function makeClickableLinks($text)
+  {
+    // Regular expression to identify URLs in the text
+    $text = preg_replace(
+      '~(https?://[^\s]+)~i', // Match URLs starting with http or https
+      '<a href="$1" target="_blank">$1</a>', // Replace with anchor tag
+      $text
+    );
+    return $text;
+  }
 }
 ?>
 
@@ -362,22 +363,87 @@ if (!function_exists('makeClickableLinks')) {
                     </div>
                     <div class="card shadow-sm mb-4">
                       <div class="card-body">
-                        <h5 class="card-title">Opinion Poll</h5>
-                        <form id="pollForm">
-                          <div class="form-check">
-                            <input class="form-check-input" type="radio" name="pollOption" id="option1" value="Option 1">
-                            <label class="form-check-label" for="option1">Option 1: More Sports Events</label>
-                          </div>
-                          <div class="form-check">
-                            <input class="form-check-input" type="radio" name="pollOption" id="option2" value="Option 2">
-                            <label class="form-check-label" for="option2">Option 2: Community Involvement</label>
-                          </div>
-                          <div class="form-check">
-                            <input class="form-check-input" type="radio" name="pollOption" id="option3" value="Option 3">
-                            <label class="form-check-label" for="option3">Option 3: Virtual Events</label>
-                          </div>
-                          <button type="submit" class="btn btn-primary mt-3">Vote</button>
-                        </form>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <h5 class="card-title mb-0">Opinion Poll</h5>
+                          <a href="polls.php" class="text-muted text-decoration-none"
+                            style="font-family: inherit; font-size: 0.9rem; cursor: pointer;">View Poll Archives →</a>
+                        </div>
+                        <?php
+                        // Get the latest active poll
+                        $latest_poll = get_latest_active_poll($con);
+                        $user = get_user_id();
+                        $user_id = $user ? $user['id'] : null;
+                        $is_student = $user ? $user['is_student'] : false;
+
+                        if ($latest_poll):
+                          $poll_id = $latest_poll['poll_id'];
+                          $has_voted = $user ? has_voted($con, $poll_id, $user_id, $is_student) : false;
+                          $expired = is_poll_expired($con, $poll_id);
+                          $results = get_poll_results($con, $poll_id);
+                          $total_votes = array_sum(array_column($results, 'vote_count'));
+                        ?>
+
+                          <p class="poll-question"><?= htmlspecialchars($latest_poll['question']) ?></p>
+
+                          <?php if (!$has_voted && !$expired && $user): ?>
+                            <!-- Voting Form -->
+                            <form action="polls.php" method="POST">
+                              <input type="hidden" name="action" value="vote">
+                              <input type="hidden" name="poll_id" value="<?= $poll_id ?>">
+                              <div class="poll-options">
+                                <?php foreach ($results as $option): ?>
+                                  <div class="form-check mb-3">
+                                    <input class="form-check-input"
+                                      type="<?= $latest_poll['is_multiple_choice'] == 't' ? 'checkbox' : 'radio' ?>"
+                                      name="<?= $latest_poll['is_multiple_choice'] == 't' ? 'option_id[]' : 'option_id' ?>"
+                                      id="option_<?= $option['option_id'] ?>"
+                                      value="<?= $option['option_id'] ?>"
+                                      <?= $latest_poll['is_multiple_choice'] != 't' ? 'required' : '' ?>>
+                                    <label class="form-check-label" for="option_<?= $option['option_id'] ?>">
+                                      <?= htmlspecialchars($option['option_text']) ?>
+                                    </label>
+                                  </div>
+                                <?php endforeach; ?>
+                              </div>
+                              <button type="submit" class="btn btn-primary mt-3">Vote</button>
+                            </form>
+                          <?php else: ?>
+                            <!-- Results Display -->
+                            <?php if ($has_voted): ?>
+                              <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle"></i> You voted in this poll
+                              </div>
+                            <?php elseif ($expired): ?>
+                              <div class="alert alert-warning mb-3">
+                                <i class="bi bi-exclamation-circle"></i> This poll has closed
+                              </div>
+                            <?php elseif (!$user): ?>
+                              <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle"></i> Please login to vote
+                              </div>
+                            <?php endif; ?>
+
+                            <div class="poll-results">
+                              <div class="results-header">Results (<?= $total_votes ?> votes)</div>
+                              <?php foreach ($results as $option): ?>
+                                <div class="poll-option mb-2">
+                                  <div class="option-text">
+                                    <?= htmlspecialchars($option['option_text']) ?>
+                                    (<?= $option['vote_count'] ?> votes, <?= $total_votes > 0 ? round(($option['vote_count'] / $total_votes) * 100, 1) : 0 ?>%)
+                                  </div>
+                                  <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" style="width: <?= $total_votes > 0 ? ($option['vote_count'] / $total_votes) * 100 : 0 ?>%"></div>
+                                  </div>
+                                </div>
+                              <?php endforeach; ?>
+                            </div>
+
+                            <a href="polls.php?poll_id=<?= $poll_id ?>" class="btn btn-outline-secondary mt-3">View Poll Details</a>
+                          <?php endif; ?>
+
+                        <?php else: ?>
+                          <div class="alert alert-info">No active polls available at this time.</div>
+                        <?php endif; ?>
                       </div>
                     </div>
 
