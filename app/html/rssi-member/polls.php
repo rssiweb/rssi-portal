@@ -17,8 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         switch ($_POST['action']) {
             case 'create_poll':
                 $user = get_user_id();
+
                 if (!$user) {
                     $_SESSION['error_message'] = "You must be logged in to create a poll.";
+                    header("Location: polls.php");
+                    exit;
+                }
+
+                // Check if user is Admin
+                if ($role !== 'Admin') {
+                    $_SESSION['error_message'] = "You do not have access privileges to create a poll.";
                     header("Location: polls.php");
                     exit;
                 }
@@ -29,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $is_multiple_choice = isset($_POST['is_multiple_choice']) ? true : false;
 
                 $poll_id = create_poll($con, $question, $expires_at, $options, $user['id'], $is_multiple_choice);
+
                 if ($poll_id) {
                     $_SESSION['success_message'] = "Poll created successfully!";
                     header("Location: polls.php?poll_id=$poll_id");
@@ -37,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     header("Location: polls.php");
                 }
                 exit;
+
 
             case 'vote':
                 $user = get_user_id();
@@ -88,6 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Get current view
 $action = $_GET['action'] ?? '';
+if ($action === 'create' && $role !== 'Admin') {
+    echo "<script>
+        alert('You do not have permission to create a poll.');
+        window.location.href = 'polls.php';
+    </script>";
+    exit;
+}
 $poll_id = $_GET['poll_id'] ?? 0;
 
 // Get user information
@@ -99,13 +116,126 @@ $user = get_user_id();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poll System</title>
+    <title>Opinion Poll Archives</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+    <style>
+        /* Scoped poll styles with ID selector */
+        #poll-system-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+        }
+
+        #poll-system-container .poll-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #poll-system-container .poll-item:last-child {
+            border-bottom: none;
+        }
+
+        #poll-system-container .poll-question {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        #poll-system-container .poll-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #poll-system-container .status-badge,
+        #poll-system-container .type-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        #poll-system-container .status-badge.active {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        #poll-system-container .status-badge.expired {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        #poll-system-container .type-badge {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        #poll-system-container .poll-results {
+            margin-top: 16px;
+        }
+
+        #poll-system-container .poll-options {
+            margin: 16px 0;
+        }
+
+        #poll-system-container .results-header {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #444;
+        }
+
+        #poll-system-container .poll-option {
+            margin-bottom: 10px;
+        }
+
+        #poll-system-container .option-text {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: #555;
+        }
+
+        #poll-system-container .progress {
+            height: 6px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #poll-system-container .progress-bar {
+            height: 100%;
+            background-color: #1976d2;
+        }
+
+        #poll-system-container .action-buttons {
+            margin-top: 20px;
+        }
+
+        /* For the form checkboxes/radios - scoped */
+        #poll-system-container .form-check-input {
+            margin-top: 0.25rem;
+        }
+
+        #poll-system-container .form-check-label {
+            margin-left: 0.5rem;
+        }
+
+        /* Create poll form styles */
+        #poll-system-container .create-poll-form {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+        }
+    </style>
 </head>
 
 <body>
@@ -113,29 +243,23 @@ $user = get_user_id();
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
-
         <div class="pagetitle">
-            <h1>Poll System</h1>
+            <h1>Opinion Poll Archives</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">Poll System</li>
+                    <li class="breadcrumb-item active">Opinion Poll Archives</li>
                 </ol>
             </nav>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
-
-                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
-                            <br>
-
-                            <div class="container mt-4">
+                            <div id="poll-system-container" class="container mt-3">
                                 <?php if (isset($_SESSION['success_message'])): ?>
                                     <div class="alert alert-success"><?= $_SESSION['success_message'] ?></div>
                                     <?php unset($_SESSION['success_message']); ?>
@@ -148,12 +272,12 @@ $user = get_user_id();
 
                                 <?php if ($action == 'create'): ?>
                                     <!-- Create Poll Form -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-primary text-white">
+                                    <div class="create-poll-form">
+                                        <div class="card-header">
                                             <h2>Create New Poll</h2>
                                         </div>
                                         <div class="card-body">
-                                            <form action="polls.php" method="POST" class="mt-3">
+                                            <form action="polls.php" method="POST">
                                                 <input type="hidden" name="action" value="create_poll">
                                                 <div class="mb-3">
                                                     <label for="question" class="form-label">Question</label>
@@ -170,20 +294,28 @@ $user = get_user_id();
                                                 <div id="options-container">
                                                     <div class="mb-3 option-row">
                                                         <div class="input-group">
-                                                            <input type="text" class="form-control" name="options[]" required>
-                                                            <button type="button" class="btn btn-danger remove-option">Remove</button>
+                                                            <input type="text" class="form-control" name="options[]" placeholder="Option text" required>
+                                                            <button type="button" class="btn btn-outline-danger remove-option">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                     <div class="mb-3 option-row">
                                                         <div class="input-group">
-                                                            <input type="text" class="form-control" name="options[]" required>
-                                                            <button type="button" class="btn btn-danger remove-option">Remove</button>
+                                                            <input type="text" class="form-control" name="options[]" placeholder="Option text" required>
+                                                            <button type="button" class="btn btn-outline-danger remove-option">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button type="button" id="add-option" class="btn btn-secondary mb-3">Add Option</button>
-                                                <button type="submit" class="btn btn-primary">Create Poll</button>
-                                                <a href="polls.php" class="btn btn-outline-secondary">Cancel</a>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" id="add-option" class="btn btn-outline-secondary">
+                                                        <i class="bi bi-plus-circle"></i> Add Option
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">Create Poll</button>
+                                                    <a href="polls.php" class="btn btn-outline-secondary">Cancel</a>
+                                                </div>
                                             </form>
                                         </div>
                                     </div>
@@ -203,77 +335,86 @@ $user = get_user_id();
                                     $total_votes = array_sum(array_column($results, 'vote_count'));
                                     ?>
 
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-info text-white">
-                                            <h2><?= htmlspecialchars($poll['question']) ?></h2>
-                                            <div class="text-white">
-                                                Created: <?= date('M j, Y g:i A', strtotime($poll['created_at'])) ?> |
-                                                Expires: <?= date('M j, Y g:i A', strtotime($poll['expires_at'])) ?>
-                                                <?= $expired ? '<span class="badge bg-danger ms-2">Expired</span>' : '<span class="badge bg-success ms-2">Active</span>' ?>
-                                                <?php if ($poll['is_multiple_choice'] == 't') { ?>
-                                                    <span class="badge bg-warning ms-2">Multiple Choice</span>
-                                                <?php } ?>
-                                            </div>
+                                    <div class="poll-item">
+                                        <small class="text-muted d-block mb-2">
+                                            <?= date('M j, Y', strtotime($poll['created_at'])) ?>
+                                        </small>
+
+                                        <p class="poll-question"><?= htmlspecialchars($poll['question']) ?></p>
+
+                                        <div class="poll-meta">
+                                            <span class="creator">Created by <?= htmlspecialchars($poll['creator_name']) ?></span>
+                                            <span class="status-badge <?= $expired ? 'expired' : 'active' ?>">
+                                                <?= $expired ? 'Closed' : 'Active' ?>
+                                            </span>
+                                            <?php if ($poll['is_multiple_choice'] == 't'): ?>
+                                                <span class="type-badge">Multiple Choice</span>
+                                            <?php endif; ?>
                                         </div>
-                                        <div class="card-body">
-                                            <?php if (!$has_voted && !$expired && $user): ?>
-                                                <!-- Voting Form -->
-                                                <form action="polls.php" method="POST" class="mt-3">
-                                                    <input type="hidden" name="action" value="vote">
-                                                    <input type="hidden" name="poll_id" value="<?= $poll_id ?>">
-                                                    <div class="mb-3">
-                                                        <?php foreach ($results as $option): ?>
-                                                            <div class="form-check mb-2">
-                                                                <input class="form-check-input"
-                                                                    type="<?= $poll['is_multiple_choice'] == 't' ? 'checkbox' : 'radio' ?>"
-                                                                    name="<?= $poll['is_multiple_choice'] == 't' ? 'option_id[]' : 'option_id' ?>"
-                                                                    id="option_<?= $option['option_id'] ?>"
-                                                                    value="<?= $option['option_id'] ?>"
-                                                                    <?= $poll['is_multiple_choice'] != 't' ? 'required' : '' ?>>
-                                                                <label class="form-check-label" for="option_<?= $option['option_id'] ?>">
-                                                                    <?= htmlspecialchars($option['option_text']) ?>
-                                                                </label>
-                                                            </div>
-                                                        <?php endforeach; ?>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-primary">Submit Vote</button>
-                                                </form>
-                                            <?php else: ?>
-                                                <!-- Results Display -->
-                                                <h4 class="mt-3">Results (<?= $total_votes ?> votes)</h4>
-                                                <?php foreach ($results as $option): ?>
-                                                    <div class="mb-3">
-                                                        <div class="d-flex justify-content-between mb-1">
-                                                            <span><?= htmlspecialchars($option['option_text']) ?></span>
-                                                            <span><?= $option['vote_count'] ?> votes (<?= $total_votes > 0 ? round(($option['vote_count'] / $total_votes) * 100, 1) : 0 ?>%)</span>
+
+                                        <?php if (!$has_voted && !$expired && $user): ?>
+                                            <!-- Voting Form -->
+                                            <form action="polls.php" method="POST">
+                                                <input type="hidden" name="action" value="vote">
+                                                <input type="hidden" name="poll_id" value="<?= $poll_id ?>">
+                                                <div class="poll-options">
+                                                    <?php foreach ($results as $option): ?>
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input"
+                                                                type="<?= $poll['is_multiple_choice'] == 't' ? 'checkbox' : 'radio' ?>"
+                                                                name="<?= $poll['is_multiple_choice'] == 't' ? 'option_id[]' : 'option_id' ?>"
+                                                                id="option_<?= $option['option_id'] ?>"
+                                                                value="<?= $option['option_id'] ?>"
+                                                                <?= $poll['is_multiple_choice'] != 't' ? 'required' : '' ?>>
+                                                            <label class="form-check-label" for="option_<?= $option['option_id'] ?>">
+                                                                <?= htmlspecialchars($option['option_text']) ?>
+                                                            </label>
                                                         </div>
-                                                        <div class="progress" style="height: 20px;">
-                                                            <div class="progress-bar" role="progressbar"
-                                                                style="width: <?= $total_votes > 0 ? ($option['vote_count'] / $total_votes) * 100 : 0 ?>%"
-                                                                aria-valuenow="<?= $option['vote_count'] ?>"
-                                                                aria-valuemin="0"
-                                                                aria-valuemax="<?= $total_votes ?>"></div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <div class="action-buttons">
+                                                    <button type="submit" class="btn btn-primary">Submit Vote</button>
+                                                </div>
+                                            </form>
+                                        <?php else: ?>
+                                            <!-- Results Display -->
+                                            <?php if ($has_voted): ?>
+                                                <div class="alert alert-success">
+                                                    <i class="bi bi-check-circle"></i> You already voted in this poll on <?= date('M j, Y g:i A', strtotime($poll['voted_at'])) ?>
+                                                </div>
+                                            <?php elseif ($user): ?>
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle"></i> You haven't voted in this poll yet.
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <div class="poll-results">
+                                                <div class="results-header">Results (<?= $total_votes ?> votes)</div>
+
+                                                <?php foreach ($results as $option): ?>
+                                                    <div class="poll-option">
+                                                        <div class="option-text"><?= htmlspecialchars($option['option_text']) ?> (<?= $option['vote_count'] ?> votes, <?= $total_votes > 0 ? round(($option['vote_count'] / $total_votes) * 100, 1) : 0 ?>%)</div>
+                                                        <div class="progress">
+                                                            <div class="progress-bar" style="width: <?= $total_votes > 0 ? ($option['vote_count'] / $total_votes) * 100 : 0 ?>%"></div>
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
 
-                                                <?php if ($has_voted): ?>
-                                                    <div class="alert alert-success mt-3">You voted in this poll on <?= date('M j, Y g:i A', strtotime($poll['voted_at'])) ?>.</div>
-                                                <?php elseif (!$expired && $user): ?>
-                                                    <div class="alert alert-info mt-3">You haven't voted in this poll yet.</div>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
-
-                                            <a href="polls.php" class="btn btn-outline-secondary mt-3">Back to All Polls</a>
+                                        <div class="action-buttons mt-3">
+                                            <a href="polls.php" class="btn btn-outline-secondary">Back to All Polls</a>
                                         </div>
                                     </div>
 
                                 <?php else: ?>
                                     <!-- Main Polls Listing -->
                                     <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <h2>Current Polls</h2>
+                                        <div></div> <!-- Empty left side to preserve spacing -->
                                         <?php if ($role == 'Admin'): ?>
-                                            <a href="polls.php?action=create" class="btn btn-primary">Create New Poll</a>
+                                            <a href="polls.php?action=create" class="btn btn-outline-primary">
+                                                <i class="bi bi-plus-circle"></i> Create New Poll
+                                            </a>
                                         <?php endif; ?>
                                     </div>
 
@@ -281,33 +422,38 @@ $user = get_user_id();
                                     $polls = get_all_polls($con);
 
                                     if (empty($polls)): ?>
-                                        <div class="alert alert-info">No polls available yet. Be the first to create one!</div>
+                                        <div class="alert alert-info">No polls available yet.</div>
                                     <?php else: ?>
-                                        <?php foreach ($polls as $poll):
-                                            $expired = is_poll_expired($con, $poll['poll_id']);
-                                            $has_voted = $user ? has_voted($con, $poll['poll_id'], $user['id'], $user['is_student']) : false;
-                                            $results = get_poll_results($con, $poll['poll_id']);
-                                            $total_votes = array_sum(array_column($results, 'vote_count'));
-                                        ?>
-                                            <div class="card mb-4">
-                                                <div class="card-header <?= $expired ? 'bg-secondary' : 'bg-primary' ?> text-white">
-                                                    <h3><?= htmlspecialchars($poll['question']) ?></h3>
-                                                    <div class="text-white">
-                                                        Created by <?= htmlspecialchars($poll['creator_name']) ?> on <?= date('M j, Y g:i A', strtotime($poll['created_at'])) ?> |
-                                                        Expires: <?= date('M j, Y g:i A', strtotime($poll['expires_at'])) ?>
-                                                        <?= $expired ? '<span class="badge bg-danger ms-2">Expired</span>' : '<span class="badge bg-success ms-2">Active</span>' ?>
-                                                        <?php if ($poll['is_multiple_choice'] == 't') { ?>
-                                                            <span class="badge bg-warning ms-2">Multiple Choice</span>
-                                                        <?php } ?>
+                                        <div class="poll-list">
+                                            <?php foreach ($polls as $poll):
+                                                $expired = is_poll_expired($con, $poll['poll_id']);
+                                                $has_voted = $user ? has_voted($con, $poll['poll_id'], $user['id'], $user['is_student']) : false;
+                                                $results = get_poll_results($con, $poll['poll_id']);
+                                                $total_votes = array_sum(array_column($results, 'vote_count'));
+                                            ?>
+                                                <div class="poll-item">
+                                                    <small class="text-muted d-block mb-2">
+                                                        <?= date('M j, Y', strtotime($poll['created_at'])) ?>
+                                                    </small>
+
+                                                    <p class="poll-question"><?= htmlspecialchars($poll['question']) ?></p>
+
+                                                    <div class="poll-meta">
+                                                        <span class="creator">Created by <?= htmlspecialchars($poll['creator_name']) ?></span>
+                                                        <span class="status-badge <?= $expired ? 'expired' : 'active' ?>">
+                                                            <?= $expired ? 'Closed' : 'Active' ?>
+                                                        </span>
+                                                        <?php if ($poll['is_multiple_choice'] == 't'): ?>
+                                                            <span class="type-badge">Multiple Choice</span>
+                                                        <?php endif; ?>
                                                     </div>
-                                                </div>
-                                                <div class="card-body">
+
                                                     <?php if (!$has_voted && !$expired && $user): ?>
-                                                        <!-- Voting Form -->
-                                                        <form action="polls.php" method="POST" class="mt-3">
+                                                        <!-- Voting Form in Listing -->
+                                                        <form action="polls.php" method="POST">
                                                             <input type="hidden" name="action" value="vote">
                                                             <input type="hidden" name="poll_id" value="<?= $poll['poll_id'] ?>">
-                                                            <div class="mb-3">
+                                                            <div class="poll-options">
                                                                 <?php foreach ($results as $option): ?>
                                                                     <div class="form-check mb-2">
                                                                         <input class="form-check-input"
@@ -322,56 +468,56 @@ $user = get_user_id();
                                                                     </div>
                                                                 <?php endforeach; ?>
                                                             </div>
-                                                            <button type="submit" class="btn btn-primary">Submit Vote</button>
-                                                            <a href="polls.php?poll_id=<?= $poll['poll_id'] ?>" class="btn btn-outline-secondary">View Details</a>
+                                                            <div class="action-buttons">
+                                                                <button type="submit" class="btn btn-primary">Submit Vote</button>
+                                                            </div>
                                                         </form>
                                                     <?php else: ?>
-                                                        <!-- Results Summary -->
-                                                        <h5 class="mt-3">Results (<?= $total_votes ?> votes)</h5>
-                                                        <?php foreach ($results as $option): ?>
-                                                            <div class="mb-2">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <span><?= htmlspecialchars($option['option_text']) ?></span>
-                                                                    <span><?= $option['vote_count'] ?> votes (<?= $total_votes > 0 ? round(($option['vote_count'] / $total_votes) * 100, 1) : 0 ?>%)</span>
-                                                                </div>
-                                                                <div class="progress" style="height: 10px;">
-                                                                    <div class="progress-bar" role="progressbar"
-                                                                        style="width: <?= $total_votes > 0 ? ($option['vote_count'] / $total_votes) * 100 : 0 ?>%"
-                                                                        aria-valuenow="<?= $option['vote_count'] ?>"
-                                                                        aria-valuemin="0"
-                                                                        aria-valuemax="<?= $total_votes ?>"></div>
-                                                                </div>
-                                                            </div>
-                                                        <?php endforeach; ?>
+                                                        <!-- Results Display in Listing -->
 
-                                                        <?php if ($has_voted): ?>
-                                                            <div class="alert alert-success mt-3">You voted in this poll.</div>
-                                                        <?php elseif (!$expired && $user): ?>
-                                                            <div class="alert alert-info mt-3">You haven't voted in this poll yet.</div>
-                                                        <?php endif; ?>
+                                                        <div class="poll-results">
+                                                            <div class="results-header">Results (<?= $total_votes ?> votes)</div>
 
-                                                        <a href="polls.php?poll_id=<?= $poll['poll_id'] ?>" class="btn btn-outline-secondary mt-2">View Details</a>
+                                                            <?php foreach (array_slice($results, 0, 3) as $option): ?>
+                                                                <div class="poll-option">
+                                                                    <div class="option-text">
+                                                                        <?= htmlspecialchars($option['option_text']) ?>
+                                                                        (<?= $total_votes > 0 ? round(($option['vote_count'] / $total_votes) * 100, 1) : 0 ?>%)
+                                                                    </div>
+                                                                    <div class="progress">
+                                                                        <div class="progress-bar" style="width: <?= $total_votes > 0 ? ($option['vote_count'] / $total_votes) * 100 : 0 ?>%"></div>
+                                                                    </div>
+
+                                                                </div>
+                                                            <?php endforeach; ?>
+
+                                                            <?php if (count($results) > 3): ?>
+                                                                <div class="text-center mt-2">
+                                                                    <small>+<?= count($results) - 3 ?> more options</small>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <div class="action-buttons">
+                                                            <a href="polls.php?poll_id=<?= $poll['poll_id'] ?>" class="btn btn-outline-secondary">View Details</a>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
-                                            </div>
-                                        <?php endforeach; ?>
+                                            <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                </div><!-- End Reports -->
+                </div>
             </div>
         </section>
-
-    </main><!-- End #main -->
+    </main>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
     <script>
-        // Add/remove poll options dynamically
         document.addEventListener('DOMContentLoaded', function() {
             const optionsContainer = document.getElementById('options-container');
             const addOptionBtn = document.getElementById('add-option');
@@ -381,15 +527,17 @@ $user = get_user_id();
                 newOption.className = 'mb-3 option-row';
                 newOption.innerHTML = `
                     <div class="input-group">
-                        <input type="text" class="form-control" name="options[]" required>
-                        <button type="button" class="btn btn-danger remove-option">Remove</button>
+                        <input type="text" class="form-control" name="options[]" placeholder="Option text" required>
+                        <button type="button" class="btn btn-outline-danger remove-option">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 `;
                 optionsContainer.appendChild(newOption);
             });
 
             optionsContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-option')) {
+                if (e.target.classList.contains('remove-option') || e.target.closest('.remove-option')) {
                     if (document.querySelectorAll('.option-row').length > 1) {
                         e.target.closest('.option-row').remove();
                     } else {

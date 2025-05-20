@@ -118,7 +118,7 @@ function get_all_polls($con)
         FROM polls p
         LEFT JOIN rssimyaccount_members m ON p.created_by::varchar = m.associatenumber AND $2 = false
         LEFT JOIN rssimyprofile_student s ON p.created_by::varchar = s.student_id AND $2 = true
-        ORDER BY p.expires_at DESC
+        ORDER BY p.created_at DESC
     ";
 
     $result = pg_query_params($con, $query, [

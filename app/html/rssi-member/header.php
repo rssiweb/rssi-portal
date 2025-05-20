@@ -224,12 +224,6 @@
               <span>Defaulters List</span>
             </a>
           </li>
-          <li>
-            <a id="iexplore_workflow" href="iexplore_workflow.php">
-              <span>iExplore Workflow</span>
-            </a>
-          </li>
-
         </ul>
       </li><!-- End Components Nav -->
       <li class="nav-item">
@@ -488,33 +482,28 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-
-
-<li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#support360" data-bs-toggle="collapse" href="#">
-          <span>Support 360</span><i class="bi bi-chevron-down ms-auto"></i>
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#worklist" data-bs-toggle="collapse" href="#">
+          <span>Worklist</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="support360" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="worklist" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="create_ticket" href="create_ticket.php">
-              <span>Create Ticket</span>
+            <a id="hrms_worklist" href="hrms_worklist.php">
+              <span>HRMS Worklist</span>
             </a>
           </li>
           <li>
-            <a id="ticket_log" href="ticket_log.php">
-              <span>Ticket Log</span>
+            <a id="post_worklist" href="post_worklist.php">
+              <span>Post Worklist</span>
+            </a>
+          </li>
+          <li>
+            <a id="iexplore_worklist" href="iexplore_worklist.php">
+              <span>iExplore Worklist</span>
             </a>
           </li>
         </ul>
       </li>
-
-
-
-
-
-
-
-
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -549,16 +538,6 @@
           <li>
             <a id="facultyLink" href="faculty.php">
               <span>RSSI Faculty</span>
-            </a>
-          </li>
-          <li>
-            <a id="hrms_workflow" href="hrms_workflow.php">
-              <span>HRMS Workflow</span>
-            </a>
-          </li>
-          <li>
-            <a id="post_workflow" href="post_workflow.php">
-              <span>Post Workflow</span>
             </a>
           </li>
           <li>
@@ -748,9 +727,9 @@
         linkId: 'iexplore_defaulters',
         url: 'iexplore_defaulters.php'
       }, {
-        id: 'learning',
-        linkId: 'iexplore_workflow',
-        url: 'iexplore_workflow.php'
+        id: 'worklist',
+        linkId: 'iexplore_worklist',
+        url: 'iexplore_worklist.php'
       },
       {
         id: 'learning',
@@ -814,11 +793,11 @@
         id: 'work',
         linkId: 'process-hubLink',
         url: 'process-hub.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'process-hubLink',
         url: 'onboarding.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'process-hubLink',
         url: 'exit.php'
@@ -833,13 +812,13 @@
         linkId: 'facultyLink',
         url: 'faculty.php'
       }, {
-        id: 'work',
-        linkId: 'hrms_workflow',
-        url: 'hrms_workflow.php'
+        id: 'worklist',
+        linkId: 'hrms_worklist',
+        url: 'hrms_worklist.php'
       }, {
-        id: 'work',
-        linkId: 'post_workflow',
-        url: 'post_workflow.php'
+        id: 'worklist',
+        linkId: 'post_worklist',
+        url: 'post_worklist.php'
       },
       {
         id: 'work',

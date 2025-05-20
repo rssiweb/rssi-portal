@@ -207,7 +207,7 @@ if ($result) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>HRMS Workflow</title>
+    <title>HRMS Worklist</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -252,12 +252,12 @@ if ($result) {
         <main id="main" class="main">
 
             <div class="pagetitle">
-                <h1>HRMS Workflow</h1>
+                <h1>HRMS Worklist</h1>
                 <nav>
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Work</a></li>
-                        <li class="breadcrumb-item active">HRMS Workflow</li>
+                        <li class="breadcrumb-item"><a href="#">Worklist</a></li>
+                        <li class="breadcrumb-item active">HRMS Worklist</li>
                     </ol>
                 </nav>
             </div><!-- End Page Title -->

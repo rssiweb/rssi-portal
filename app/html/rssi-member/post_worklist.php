@@ -59,7 +59,7 @@ if (!$result) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Workflow</title>
+    <title>Post Worklist</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -82,11 +82,11 @@ if (!$result) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Post Workflow</h1>
+            <h1>Post Worklist</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item"><a href="#">Worklist</a></li>
                     <li class="breadcrumb-item active">Post Workflow</li>
                 </ol>
             </nav>
