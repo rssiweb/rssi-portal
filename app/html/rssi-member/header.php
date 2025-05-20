@@ -325,6 +325,7 @@
             </a>
           </li>
         </ul>
+      </li>
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#stockmanagement" data-bs-toggle="collapse" href="#">
           <span>Stock Management</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -486,6 +487,34 @@
           <span>Health Portal</span>
         </a>
       </li><!-- End Profile Page Nav -->
+
+
+
+<li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#support360" data-bs-toggle="collapse" href="#">
+          <span>Support 360</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="support360" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="create_ticket" href="create_ticket.php">
+              <span>Create Ticket</span>
+            </a>
+          </li>
+          <li>
+            <a id="ticket_log" href="ticket_log.php">
+              <span>Ticket Log</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+
+
+
+
+
+
+
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
