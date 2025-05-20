@@ -274,7 +274,7 @@ $user = get_user_id();
                                     <!-- Create Poll Form -->
                                     <div class="create-poll-form">
                                         <div class="card-header">
-                                            <h2>Create New Poll</h2>
+                                            <h3>Create New Poll</h3>
                                         </div>
                                         <div class="card-body">
                                             <form action="polls.php" method="POST">
@@ -401,9 +401,13 @@ $user = get_user_id();
                                                 <?php endforeach; ?>
                                             </div>
                                         <?php endif; ?>
-
+                                        <?php
+                                        $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+                                        $poll = get_poll($con, $poll_id);
+                                        // ... rest of your poll detail code ...
+                                        ?>
                                         <div class="action-buttons mt-3">
-                                            <a href="polls.php" class="btn btn-outline-secondary">Back to All Polls</a>
+                                            <a href="polls.php?page=<?= $current_page ?>" class="btn btn-outline-secondary">Back to All Polls (Page <?= $current_page ?>)</a>
                                         </div>
                                     </div>
 
@@ -419,7 +423,19 @@ $user = get_user_id();
                                     </div>
 
                                     <?php
-                                    $polls = get_all_polls($con);
+                                    // Get current page from URL, default to 1
+                                    $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+                                    $per_page = 3;
+
+                                    // Get current user info
+                                    $user = get_user_id();
+                                    $user_id = $user ? $user['id'] : null;
+                                    $is_student = $user ? $user['is_student'] : false;
+
+                                    // Get paginated polls
+                                    $polls_data = get_paginated_polls($con, $current_page, $per_page, $user_id, $is_student);
+                                    $polls = $polls_data['polls'];
+                                    $total_pages = $polls_data['total_pages'];
 
                                     if (empty($polls)): ?>
                                         <div class="alert alert-info">No polls available yet.</div>
@@ -427,7 +443,7 @@ $user = get_user_id();
                                         <div class="poll-list">
                                             <?php foreach ($polls as $poll):
                                                 $expired = is_poll_expired($con, $poll['poll_id']);
-                                                $has_voted = $user ? has_voted($con, $poll['poll_id'], $user['id'], $user['is_student']) : false;
+                                                $has_voted = isset($poll['has_voted']) ? (bool)$poll['has_voted'] : false;
                                                 $results = get_poll_results($con, $poll['poll_id']);
                                                 $total_votes = array_sum(array_column($results, 'vote_count'));
                                             ?>
@@ -499,12 +515,68 @@ $user = get_user_id();
                                                         </div>
 
                                                         <div class="action-buttons">
-                                                            <a href="polls.php?poll_id=<?= $poll['poll_id'] ?>" class="btn btn-outline-secondary">View Details</a>
+                                                            <!-- In your poll listing where you have the "View Details" button -->
+                                                            <a href="polls.php?poll_id=<?= $poll['poll_id'] ?>&page=<?= $current_page ?>" class="btn btn-outline-secondary">View Details</a>
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
                                             <?php endforeach; ?>
                                         </div>
+                                        <!-- Pagination Controls -->
+                                        <nav aria-label="Poll pagination">
+                                            <ul class="pagination justify-content-center mt-4">
+                                                <!-- Previous Button -->
+                                                <li class="page-item <?= $current_page == 1 ? 'disabled' : '' ?>">
+                                                    <a class="page-link" href="polls.php?page=<?= $current_page - 1 ?>" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo; Previous</span>
+                                                    </a>
+                                                </li>
+
+                                                <!-- Page Numbers -->
+                                                <?php
+                                                // Show up to 5 page numbers around current page
+                                                $start_page = max(1, $current_page - 2);
+                                                $end_page = min($total_pages, $current_page + 2);
+
+                                                // Adjust if we're at the beginning or end
+                                                if ($current_page <= 3) {
+                                                    $end_page = min(5, $total_pages);
+                                                }
+                                                if ($current_page >= $total_pages - 2) {
+                                                    $start_page = max(1, $total_pages - 4);
+                                                }
+
+                                                // Always show first page if not in range
+                                                if ($start_page > 1) {
+                                                    echo '<li class="page-item"><a class="page-link" href="polls.php?page=1">1</a></li>';
+                                                    if ($start_page > 2) {
+                                                        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                    }
+                                                }
+
+                                                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                                    <li class="page-item <?= $i == $current_page ? 'active' : '' ?>">
+                                                        <a class="page-link" href="polls.php?page=<?= $i ?>"><?= $i ?></a>
+                                                    </li>
+                                                <?php endfor;
+
+                                                // Always show last page if not in range
+                                                if ($end_page < $total_pages) {
+                                                    if ($end_page < $total_pages - 1) {
+                                                        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                    }
+                                                    echo '<li class="page-item"><a class="page-link" href="polls.php?page=' . $total_pages . '">' . $total_pages . '</a></li>';
+                                                }
+                                                ?>
+
+                                                <!-- Next Button -->
+                                                <li class="page-item <?= $current_page == $total_pages ? 'disabled' : '' ?>">
+                                                    <a class="page-link" href="polls.php?page=<?= $current_page + 1 ?>" aria-label="Next">
+                                                        <span aria-hidden="true">Next &raquo;</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </nav>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>

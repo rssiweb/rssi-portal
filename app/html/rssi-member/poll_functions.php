@@ -2,7 +2,7 @@
 function get_user_id()
 {
     global $associatenumber, $student_id;
-    
+
     if (isset($associatenumber) && !empty($associatenumber)) {
         return ['id' => $associatenumber, 'is_student' => false];
     } elseif (isset($student_id) && !empty($student_id)) {
@@ -132,4 +132,51 @@ function get_all_polls($con)
     }
 
     return pg_fetch_all($result) ?: [];
+}
+function get_paginated_polls($con, $page = 1, $per_page = 5, $current_user_id = null, $is_student = false) {
+    $offset = ($page - 1) * $per_page;
+    
+    // Prepare parameters for safe query
+    $params = [];
+    $query = "SELECT p.*, 
+               CASE 
+                   WHEN m.associatenumber IS NOT NULL THEN m.fullname
+                   WHEN s.student_id IS NOT NULL THEN s.studentname
+                   ELSE 'Unknown'
+               END as creator_name";
+    
+    // Add has_voted subquery if user is logged in
+    if ($current_user_id !== null) {
+        $query .= ", (SELECT 1 FROM poll_votes 
+                     WHERE poll_id = p.poll_id 
+                     AND voter_id = $1::varchar 
+                     AND is_student = $2 LIMIT 1) as has_voted";
+        $params[] = $current_user_id;
+        $params[] = $is_student ? 't' : 'f';
+    }
+    
+    $query .= " FROM polls p
+               LEFT JOIN rssimyaccount_members m ON p.created_by::varchar = m.associatenumber AND $2 = false
+               LEFT JOIN rssimyprofile_student s ON p.created_by::varchar = s.student_id AND $2 = true
+               ORDER BY p.created_at DESC
+               LIMIT $per_page OFFSET $offset";
+    
+    // Execute query with parameters
+    $result = pg_query_params($con, $query, $params);
+    
+    $polls = [];
+    while ($row = pg_fetch_assoc($result)) {
+        $polls[] = $row;
+    }
+    
+    // Get total count for pagination
+    $count_query = "SELECT COUNT(*) as total FROM polls";
+    $count_result = pg_query($con, $count_query);
+    $total = pg_fetch_assoc($count_result)['total'];
+    
+    return [
+        'polls' => $polls,
+        'total' => $total,
+        'total_pages' => ceil($total / $per_page)
+    ];
 }
