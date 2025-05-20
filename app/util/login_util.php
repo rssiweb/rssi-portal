@@ -160,7 +160,7 @@ function checkMaintenanceStatus($pageName)
 
     if ($result && pg_num_rows($result) > 0) {
         $row = pg_fetch_assoc($result);
-        if ($row['is_under_maintenance'] === 't') {
+        if ($row['is_under_maintenance'] === 't' && strpos($_SERVER['HTTP_HOST'], 'localhost') === false) {
             // Redirect to under_maintenance.php with the original page name as a query parameter
             header("Location: under_maintenance.php?page=" . urlencode($pageName));
             exit;
