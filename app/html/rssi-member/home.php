@@ -366,7 +366,7 @@ if (!function_exists('makeClickableLinks')) {
                         <div class="d-flex justify-content-between align-items-center mb-3">
                           <h5 class="card-title mb-0">Opinion Poll</h5>
                           <a href="polls.php" class="text-muted text-decoration-none"
-                            style="font-family: inherit; font-size: 0.9rem; cursor: pointer;">View Poll Archives →</a>
+                            style="font-family: inherit; font-size: 0.9rem; cursor: pointer;" title="View Poll Archives">View Poll Archives →</a>
                         </div>
                         <?php
                         // Get the latest active poll

@@ -1088,6 +1088,7 @@
 
     // Call the function for 'home.php' and 'profile.php'
     toggleCollapsedClass('home.php', 'homeLink');
+    toggleCollapsedClass('polls.php', 'homeLink');
     toggleCollapsedClass('hrms.php', 'hrmsLink');
     toggleCollapsedClass('scan.php', 'attendX');
     toggleCollapsedClass('in_out_tracker.php', 'attendX');
