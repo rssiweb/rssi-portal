@@ -421,7 +421,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                         </a><br>
                                                         <a href="student-profile.php?get_id=<?php echo $array['student_id'] ?>" target="_blank">Admission form</a>
                                                         <br>
-                                                        <a href="pdf_application.php?student_id=<?php echo $array['student_id'] ?>" target="_blank">Parental Consent Form for Repeating a Grade</a>
+                                                        <a href="pdf_application.php?student_id=<?php echo $array['student_id'] ?>" target="_blank">Retention Form</a>
                                                     </div>
                                                 </div>
                                                 <div class="row align-items-center">

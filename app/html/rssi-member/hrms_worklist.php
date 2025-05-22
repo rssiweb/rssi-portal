@@ -372,7 +372,7 @@ if ($result) {
                     // Handle confirm button click
                     $('#confirm-approve').off('click').on('click', function() {
                         $.ajax({
-                            url: 'hrms_workflow.php',
+                            url: 'hrms_worklist.php',
                             method: 'POST',
                             data: {
                                 action: 'approve',
@@ -401,7 +401,7 @@ if ($result) {
 
                     // Directly reject the field in the workflow
                     $.ajax({
-                        url: 'hrms_workflow.php',
+                        url: 'hrms_worklist.php',
                         method: 'POST',
                         data: {
                             action: 'reject',
