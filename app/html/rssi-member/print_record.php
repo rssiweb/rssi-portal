@@ -25,6 +25,139 @@ if (!$record) {
     die('Record not found');
 }
 
+// Function to calculate health statuses
+function calculateHealthStatuses($age, $bmi, $bp, $vision)
+{
+    $statuses = [];
+
+    // BMI Status (Ages 4-15) - Using India-specific percentiles
+    if ($age >= 4 && $age <= 15) {
+        $bmiThresholds = [
+            4 => 14,
+            5 => 13.5,
+            6 => 13,
+            7 => 13.5,
+            8 => 14,
+            9 => 14.5,
+            10 => 15,
+            11 => 16,
+            12 => 17,
+            13 => 17.5,
+            14 => 18,
+            15 => 18.5
+        ];
+
+        if (isset($bmiThresholds[$age])) {
+            if ($bmi < $bmiThresholds[$age]) {
+                $statuses[] = [
+                    'type' => 'BMI',
+                    'status' => 'Underweight',
+                    'class' => 'info',
+                    'icon' => 'info-circle',
+                    'description' => 'Below 5th percentile for Indian children'
+                ];
+            } elseif ($bmi >= ($bmiThresholds[$age] + 6)) {
+                $statuses[] = [
+                    'type' => 'BMI',
+                    'status' => 'Obese',
+                    'class' => 'danger',
+                    'icon' => 'exclamation-triangle-fill',
+                    'description' => '≥95th percentile for Indian children'
+                ];
+            } elseif ($bmi >= ($bmiThresholds[$age] + 4)) {
+                $statuses[] = [
+                    'type' => 'BMI',
+                    'status' => 'Overweight',
+                    'class' => 'warning',
+                    'icon' => 'exclamation-triangle',
+                    'description' => '85th-95th percentile for Indian children'
+                ];
+            }
+        }
+    }
+
+    // Blood Pressure Status (India-specific thresholds)
+    if (preg_match('/^(\d+)\/(\d+)$/', $bp, $matches)) {
+        $systolic = (int)$matches[1];
+        $diastolic = (int)$matches[2];
+
+        if ($systolic >= 130 || $diastolic >= 85) { // Modified for Indian population
+            $statuses[] = [
+                'type' => 'BP',
+                'status' => 'High BP',
+                'class' => 'danger',
+                'icon' => 'heart-pulse',
+                'description' => '≥130/85 mmHg (Indian standards)'
+            ];
+        } elseif ($systolic >= 120 && $diastolic < 85) {
+            $statuses[] = [
+                'type' => 'BP',
+                'status' => 'Elevated',
+                'class' => 'warning',
+                'icon' => 'heart',
+                'description' => '120-129/<85 mmHg'
+            ];
+        }
+    }
+
+    // Vision Status (checks both eyes)
+    if (preg_match('/^(\d+)\/(\d+)\s*\/\s*(\d+)\/(\d+)$/', $vision, $matches)) {
+        $leftNumerator = (int)$matches[1];
+        $leftDenominator = (int)$matches[2];
+        $rightNumerator = (int)$matches[3];
+        $rightDenominator = (int)$matches[4];
+
+        $leftRatio = $leftDenominator / $leftNumerator;
+        $rightRatio = $rightDenominator / $rightNumerator;
+
+        if ($leftRatio > 2 || $rightRatio > 2) {
+            $statuses[] = [
+                'type' => 'Vision',
+                'status' => 'Vision Concern',
+                'class' => 'warning',
+                'icon' => 'eye-slash',
+                'description' => 'One or both eyes worse than 20/40'
+            ];
+        }
+    }
+
+    return empty($statuses) ? [
+        [
+            'type' => 'Overall',
+            'status' => 'Normal',
+            'class' => 'success',
+            'icon' => 'check-circle',
+            'description' => 'All parameters within normal range'
+        ]
+    ] : $statuses;
+}
+
+// Helper function to find a status by type
+function findStatus($statuses, $type)
+{
+    foreach ($statuses as $status) {
+        if ($status['type'] === $type) {
+            return $status;
+        }
+    }
+    return null;
+}
+
+// Calculate health statuses if this is a health record
+$healthStatuses = [];
+if ($type === 'health') {
+    $bmi = $record['bmi'] ?? null;
+    $bp = $record['blood_pressure'] ?? null;
+    $vision = ($record['vision_left'] ?? '') . '/' . ($record['vision_right'] ?? '');
+
+    $healthStatuses = calculateHealthStatuses(
+        $record['age_at_record'],
+        $bmi,
+        $bp,
+        $vision
+    );
+}
+
 // Function to get the correct table name
 function getTableName($type)
 {
@@ -67,6 +200,7 @@ header('Content-Type: text/html');
 <head>
     <title>Official Record - <?= ucfirst($type) ?>_<?= $record['admissionnumber'] ?></title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -159,12 +293,58 @@ header('Content-Type: text/html');
             margin-top: 20px;
         }
 
+        .status-badge {
+            margin-left: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bg-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .bg-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .bg-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .bg-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
         @media print {
             body {
                 padding: 0;
             }
 
             .no-print {
+                display: none;
+            }
+
+            .status-badge {
+                display: none;
+            }
+
+            .print-status {
+                display: inline;
+                color: #333;
+                font-style: italic;
+            }
+        }
+
+        @media screen {
+            .print-status {
                 display: none;
             }
         }
@@ -194,7 +374,6 @@ header('Content-Type: text/html');
         @media print {
             .a4-container {
                 page-break-after: avoid;
-                /* Prevent splitting */
             }
 
             .confidentiality-footer {
@@ -208,16 +387,9 @@ header('Content-Type: text/html');
     <div class="a4-container">
         <div class="letterhead" style="width: 100%; max-width: 800px; margin: 0 auto; padding-bottom: 5px; border-bottom: 1px solid #d1d3d4; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <!-- Left Side - Corporate Seal -->
-                <div style="width: 15%; text-align: left;">
-                    <!-- <div style="width: 60px; height: 60px; border: 1px solid #1a5276; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1a5276; font-weight: bold; font-size: 10px; line-height: 1.1; text-align: center;">
-                OFFICIAL SEAL
-            </div> -->
-                </div>
+                <div style="width: 15%; text-align: left;"></div>
 
-                <!-- Center - Organization Info -->
                 <div style="text-align: center; flex: 1;">
-                    <!-- Center Column - Organization Info -->
                     <div style="flex: 1; text-align: center;">
                         <h1 style="color: #1a5276; font-size: 18px; margin: 0; font-weight: 600; line-height: 1.2;">RINA SHIKSHA SAHAYAK FOUNDATION</h1>
                         <p style="color: #555; font-size: 11px; margin: 2px 0; font-style: italic; line-height: 1.2;">
@@ -233,7 +405,6 @@ header('Content-Type: text/html');
                     </div>
                 </div>
 
-                <!-- Right Side - Verification -->
                 <div style="width: 20%; text-align: right;">
                     <div style="display: inline-block; text-align: center;">
                         <?php
@@ -295,15 +466,39 @@ header('Content-Type: text/html');
                         </tr>
                         <tr>
                             <th>BMI</th>
-                            <td><?= htmlspecialchars($record['bmi'] ?? '') ?></td>
+                            <td>
+                                <?= htmlspecialchars($record['bmi'] ?? '') ?>
+                                <?php if ($bmi && ($bmiStatus = findStatus($healthStatuses, 'BMI'))): ?>
+                                    <span class="status-badge bg-<?= $bmiStatus['class'] ?>">
+                                        <i class="bi bi-<?= $bmiStatus['icon'] ?>"></i> <?= $bmiStatus['status'] ?>
+                                    </span>
+                                    <span class="print-status">(<?= $bmiStatus['status'] ?>)</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <tr>
                             <th>Blood Pressure</th>
-                            <td><?= htmlspecialchars($record['blood_pressure'] ?? '') ?></td>
+                            <td>
+                                <?= htmlspecialchars($record['blood_pressure'] ?? '') ?>
+                                <?php if ($bp && ($bpStatus = findStatus($healthStatuses, 'BP'))): ?>
+                                    <span class="status-badge bg-<?= $bpStatus['class'] ?>">
+                                        <i class="bi bi-<?= $bpStatus['icon'] ?>"></i> <?= $bpStatus['status'] ?>
+                                    </span>
+                                    <span class="print-status">(<?= $bpStatus['status'] ?>)</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <tr>
                             <th>Vision</th>
-                            <td><?= htmlspecialchars($record['vision_left'] ?? '') ?>/<?= htmlspecialchars($record['vision_right'] ?? '') ?></td>
+                            <td>
+                                <?= htmlspecialchars($record['vision_left'] ?? '') ?>/<?= htmlspecialchars($record['vision_right'] ?? '') ?>
+                                <?php if ($vision && ($visionStatus = findStatus($healthStatuses, 'Vision'))): ?>
+                                    <span class="status-badge bg-<?= $visionStatus['class'] ?>">
+                                        <i class="bi bi-<?= $visionStatus['icon'] ?>"></i> <?= $visionStatus['status'] ?>
+                                    </span>
+                                    <span class="print-status">(<?= $visionStatus['status'] ?>)</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php if (!empty($record['general_health_notes'])): ?>
                             <tr>

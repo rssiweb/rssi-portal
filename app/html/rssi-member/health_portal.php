@@ -331,6 +331,28 @@ $students = fetchStudents($con);
             display: block;
         } */
     </style>
+    <style>
+        .bg-purple {
+            --bs-bg-opacity: 0.1;
+            background-color: rgba(111, 66, 193, var(--bs-bg-opacity)) !important;
+            color: #6f42c1 !important;
+            border-color: rgba(111, 66, 193, 0.25) !important;
+        }
+
+        .bg-purple-light {
+            --bs-bg-opacity: 0.1;
+            background-color: rgba(180, 160, 220, var(--bs-bg-opacity)) !important;
+            color: #6f42c1 !important;
+            border-color: rgba(180, 160, 220, 0.25) !important;
+        }
+
+        .bg-amber {
+            --bs-bg-opacity: 0.1;
+            background-color: rgba(255, 193, 7, var(--bs-bg-opacity)) !important;
+            color: #b88a00 !important;
+            border-color: rgba(255, 193, 7, 0.25) !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -540,27 +562,300 @@ $students = fetchStudents($con);
                                     </div>
                                 </form>
 
+                                <?php
+                                /**
+                                 * Calculate health statuses based on Indian medical standards
+                                 */
+                                function calculateHealthStatuses($age, $bmi, $bp, $vision)
+                                {
+                                    $statuses = [];
+
+                                    // BMI Status (Ages 4-15) - Using India-specific percentiles
+                                    if ($age >= 4 && $age <= 15) {
+                                        $bmiThresholds = [
+                                            4 => 14,
+                                            5 => 13.5,
+                                            6 => 13,
+                                            7 => 13.5,
+                                            8 => 14,
+                                            9 => 14.5,
+                                            10 => 15,
+                                            11 => 16,
+                                            12 => 17,
+                                            13 => 17.5,
+                                            14 => 18,
+                                            15 => 18.5
+                                        ];
+
+                                        if (isset($bmiThresholds[$age])) {
+                                            if ($bmi < $bmiThresholds[$age]) {
+                                                $statuses[] = [
+                                                    'type' => 'BMI',
+                                                    'status' => 'Underweight',
+                                                    'class' => 'info',
+                                                    'icon' => 'info-circle',
+                                                    'description' => 'Below 5th percentile for Indian children'
+                                                ];
+                                            } elseif ($bmi >= ($bmiThresholds[$age] + 6)) {
+                                                $statuses[] = [
+                                                    'type' => 'BMI',
+                                                    'status' => 'Obese',
+                                                    'class' => 'danger',
+                                                    'icon' => 'exclamation-triangle-fill',
+                                                    'description' => '≥95th percentile for Indian children'
+                                                ];
+                                            } elseif ($bmi >= ($bmiThresholds[$age] + 4)) {
+                                                $statuses[] = [
+                                                    'type' => 'BMI',
+                                                    'status' => 'Overweight',
+                                                    'class' => 'amber',
+                                                    'icon' => 'exclamation-triangle',
+                                                    'description' => '85th-95th percentile for Indian children'
+                                                ];
+                                            }
+                                        }
+                                    }
+
+                                    // Blood Pressure Status (India-specific thresholds)
+                                    if (preg_match('/^(\d+)\/(\d+)$/', $bp, $matches)) {
+                                        $systolic = (int)$matches[1];
+                                        $diastolic = (int)$matches[2];
+
+                                        if ($systolic >= 130 || $diastolic >= 85) { // Modified for Indian population
+                                            $statuses[] = [
+                                                'type' => 'BP',
+                                                'status' => 'High BP',
+                                                'class' => 'danger',
+                                                'icon' => 'heart-pulse',
+                                                'description' => '≥130/85 mmHg (Indian standards)'
+                                            ];
+                                        } elseif ($systolic >= 120 && $diastolic < 85) {
+                                            $statuses[] = [
+                                                'type' => 'BP',
+                                                'status' => 'Elevated',
+                                                'class' => 'amber',
+                                                'icon' => 'heart',
+                                                'description' => '120-129/<85 mmHg'
+                                            ];
+                                        }
+                                    }
+
+                                    // Vision Status (checks both eyes)
+                                    if (preg_match('/^(\d+)\/(\d+)\s*\/\s*(\d+)\/(\d+)$/', $vision, $matches)) {
+                                        // Format: "left_num/left_denom / right_num/right_denom" (e.g., "20/20 / 20/45")
+                                        $leftNumerator = (int)$matches[1];
+                                        $leftDenominator = (int)$matches[2];
+                                        $rightNumerator = (int)$matches[3];
+                                        $rightDenominator = (int)$matches[4];
+
+                                        // Check if EITHER eye is worse than 20/40 (denominator/numerator > 2)
+                                        $leftRatio = $leftDenominator / $leftNumerator;  // 20/20 → 1.0 (normal)
+                                        $rightRatio = $rightDenominator / $rightNumerator; // 20/45 → 2.25 (concern)
+
+                                        if ($leftRatio > 2 || $rightRatio > 2) {
+                                            $statuses[] = [
+                                                'type' => 'Vision',
+                                                'status' => 'Vision Concern',
+                                                'class' => 'amber',
+                                                'icon' => 'bi bi-eye-slash',
+                                                'description' => 'One or both eyes worse than 20/40'
+                                            ];
+                                        }
+                                    }
+
+                                    return empty($statuses) ? [
+                                        [
+                                            'type' => 'Overall',
+                                            'status' => 'Normal',
+                                            'class' => 'success',
+                                            'icon' => 'check-circle',
+                                            'description' => 'All parameters within normal range'
+                                        ]
+                                    ] : $statuses;
+                                }
+                                ?>
+                                <!-- Health Reference Modal -->
+                                <div class="modal fade" id="healthStatusModal" tabindex="-1" aria-labelledby="healthModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="healthModalLabel">Health Status Reference</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <!-- BMI Reference Table -->
+                                                <h6 class="fw-normal mb-3">BMI Classification (Ages 4-15)</h6>
+                                                <div class="table-responsive mb-4">
+                                                    <table class="table table-bordered">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="30%">BMI Range</th>
+                                                                <th width="20%">Status</th>
+                                                                <th width="50%">Indicator</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>Below age cutoff</td>
+                                                                <td>Underweight</td>
+                                                                <td>
+                                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                                                        <i class="bi bi-info-circle me-1"></i>Underweight
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Cutoff to cutoff+4</td>
+                                                                <td>Normal</td>
+                                                                <td>
+                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                                        <i class="bi bi-check-circle me-1"></i>Normal
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Cutoff+4 to cutoff+6</td>
+                                                                <td>Overweight</td>
+                                                                <td>
+                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-amber border-opacity-25">
+                                                                        <i class="bi bi-exclamation-triangle me-1"></i>Overweight
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Above cutoff+6</td>
+                                                                <td>Obese</td>
+                                                                <td>
+                                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Obese
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <p class="small text-muted mb-0">Age cutoffs: 4y=14, 5y=13.5, 6y=13, 7y=13.5, 8y=14, 9y=14.5, 10y=15, 11y=16, 12y=17, 13y=17.5, 14y=18, 15y=18.5</p>
+                                                </div>
+
+                                                <!-- BP Reference Table -->
+                                                <h6 class="fw-normal mb-3">Blood Pressure Classification</h6>
+                                                <div class="table-responsive mb-4">
+                                                    <table class="table table-bordered">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="30%">BP Range</th>
+                                                                <th width="20%">Status</th>
+                                                                <th width="50%">Indicator</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>&lt;120/80</td>
+                                                                <td>Normal</td>
+                                                                <td>
+                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                                        <i class="bi bi-heart me-1"></i>Normal BP
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>120-129/&lt;85</td>
+                                                                <td>Elevated</td>
+                                                                <td>
+                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-amber border-opacity-25">
+                                                                        <i class="bi bi-heart me-1"></i>Elevated BP
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>≥130/85</td>
+                                                                <td>High BP</td>
+                                                                <td>
+                                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                                                        <i class="bi bi-heart-pulse me-1"></i>High BP
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Vision Reference Table -->
+                                                <h6 class="fw-normal mb-3">Vision Classification</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="30%">Visual Acuity</th>
+                                                                <th width="20%">Status</th>
+                                                                <th width="50%">Indicator</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>20/20 to 20/40</td>
+                                                                <td>Normal</td>
+                                                                <td>
+                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                                        <i class="bi bi-eye me-1"></i>Normal Vision
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Worse than 20/40</td>
+                                                                <td>Vision Concern</td>
+                                                                <td>
+                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-amber border-opacity-25">
+                                                                        <i class="bi bi-eye-slash me-1"></i>Vision Concern
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <p class="small text-muted mb-0 me-auto">Screening tool only - Consult a healthcare professional</p>
+                                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <!-- Main Table with Health Status Column -->
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover">
                                         <thead>
                                             <tr>
                                                 <th>Student</th>
-                                                <th>Age <i class="bi bi-info-circle ms-1"
-                                                        data-bs-toggle="tooltip"
-                                                        data-bs-placement="top"
-                                                        title="At the time of data recording"></i></th>
+                                                <th>Age <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="At recording time"></i></th>
                                                 <th>Date</th>
                                                 <th>Height (cm)</th>
                                                 <th>Weight (kg)</th>
                                                 <th>BMI</th>
                                                 <th>BP</th>
                                                 <th>Vision</th>
+                                                <th>
+                                                    Health Status
+                                                    <button class="btn btn-link p-0 ms-1" data-bs-toggle="modal" data-bs-target="#healthStatusModal">
+                                                        <i class="bi bi-info-circle text-muted"></i>
+                                                    </button>
+                                                </th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php if (!empty($healthRecords)): ?>
-                                                <?php foreach ($healthRecords as $row): ?>
+                                                <?php foreach ($healthRecords as $row):
+                                                    $statuses = calculateHealthStatuses(
+                                                        $row['age_at_record'] ?? 0,
+                                                        $row['bmi'] ?? 0,
+                                                        $row['blood_pressure'] ?? '',
+                                                        ($row['vision_left'] ?? '') . '/' . ($row['vision_right'] ?? '')
+                                                    );
+                                                ?>
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
@@ -575,9 +870,19 @@ $students = fetchStudents($con);
                                                         <td><?= date('d M Y', strtotime($row['record_date'])) ?></td>
                                                         <td><?= htmlspecialchars($row['height_cm'] ?? '') ?></td>
                                                         <td><?= htmlspecialchars($row['weight_kg'] ?? '') ?></td>
-                                                        <td><?= htmlspecialchars($row['bmi'] ?? '') ?></td>
+                                                        <td><?= number_format($row['bmi'] ?? 0, 1) ?></td>
                                                         <td><?= htmlspecialchars($row['blood_pressure'] ?? '') ?></td>
                                                         <td><?= htmlspecialchars($row['vision_left'] ?? '') ?>/<?= htmlspecialchars($row['vision_right'] ?? '') ?></td>
+                                                        <td>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                <?php foreach ($statuses as $status): ?>
+                                                                    <span class="badge bg-<?= $status['class'] ?> bg-opacity-10 text-<?= $status['class'] ?> border border-<?= $status['class'] ?> border-opacity-25"
+                                                                        data-bs-toggle="tooltip" title="<?= $status['type'] ?>">
+                                                                        <i class="bi bi-<?= $status['icon'] ?> me-1"></i><?= $status['status'] ?>
+                                                                    </span>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        </td>
                                                         <td>
                                                             <button class="btn btn-action btn-outline-primary view-record"
                                                                 data-type="health"
@@ -596,18 +901,23 @@ $students = fetchStudents($con);
                                                 <?php endforeach; ?>
                                             <?php else: ?>
                                                 <tr>
-                                                    <td colspan="9" class="text-center">
-                                                        <?php if (isset($healthFilterQuery)): ?>
-                                                            No records found matching your criteria
-                                                        <?php else: ?>
-                                                            No health records available
-                                                        <?php endif; ?>
+                                                    <td colspan="10" class="text-center">
+                                                        <?= isset($healthFilterQuery) ? 'No matching records' : 'No health records' ?>
                                                     </td>
                                                 </tr>
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <script>
+                                    // Initialize tooltips
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).forEach(function(el) {
+                                            new bootstrap.Tooltip(el);
+                                        });
+                                    });
+                                </script>
                             </div>
                         </div>
                     </div>
