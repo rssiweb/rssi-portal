@@ -30,49 +30,61 @@ function calculateHealthStatuses($age, $bmi, $bp, $vision)
 {
     $statuses = [];
 
-    // BMI Status (Ages 4-15) - Using India-specific percentiles
+    // BMI Status (Ages 4-15) - Aligned with CDC Percentiles & WHO Categories
     if ($age >= 4 && $age <= 15) {
         $bmiThresholds = [
-            4 => 14,
-            5 => 13.5,
-            6 => 13,
-            7 => 13.5,
-            8 => 14,
-            9 => 14.5,
-            10 => 15,
-            11 => 16,
-            12 => 17,
-            13 => 17.5,
-            14 => 18,
-            15 => 18.5
+            // Age => [Underweight(<5%), Healthy(5-85%), Overweight(85-95%), Obese(>95%)]
+            4 => [14.0, 14.0, 16.8, 17.8],
+            5 => [13.8, 13.8, 17.2, 18.4],
+            6 => [13.6, 13.6, 17.6, 19.2],
+            7 => [13.5, 13.5, 18.0, 20.0],
+            8 => [13.5, 13.5, 18.5, 21.0],
+            9 => [13.8, 13.8, 19.2, 22.0],
+            10 => [14.2, 14.2, 20.0, 23.0],
+            11 => [14.8, 14.8, 20.8, 24.0],
+            12 => [15.5, 15.5, 21.5, 25.0],
+            13 => [16.0, 16.0, 22.0, 26.0],
+            14 => [16.5, 16.5, 22.5, 26.5],
+            15 => [17.0, 17.0, 23.0, 27.0]
         ];
 
         if (isset($bmiThresholds[$age])) {
-            if ($bmi < $bmiThresholds[$age]) {
+            [$severeThin, $healthyMin, $overweightMin, $obeseMin] = $bmiThresholds[$age];
+
+            if ($bmi < $severeThin) {
                 $statuses[] = [
                     'type' => 'BMI',
                     'status' => 'Underweight',
                     'class' => 'info',
-                    'icon' => 'info-circle',
-                    'description' => 'Below 5th percentile for Indian children'
+                    'icon' => 'bi bi-info-circle',
+                    'description' => 'Severe thinness for age'
                 ];
-            } elseif ($bmi >= ($bmiThresholds[$age] + 6)) {
+            } elseif ($bmi < $healthyMin) {
+                $statuses[] = [
+                    'type' => 'BMI',
+                    'status' => 'Underweight',
+                    'class' => 'info',
+                    'icon' => 'bi bi-info-circle',
+                    'description' => 'Moderate thinness for age'
+                ];
+            } elseif ($bmi >= $obeseMin) {
                 $statuses[] = [
                     'type' => 'BMI',
                     'status' => 'Obese',
                     'class' => 'danger',
                     'icon' => 'exclamation-triangle-fill',
-                    'description' => '≥95th percentile for Indian children'
+                    'description' => 'Obese for age'
                 ];
-            } elseif ($bmi >= ($bmiThresholds[$age] + 4)) {
+            } elseif ($bmi >= $overweightMin) {
                 $statuses[] = [
                     'type' => 'BMI',
                     'status' => 'Overweight',
                     'class' => 'warning',
                     'icon' => 'exclamation-triangle',
-                    'description' => '85th-95th percentile for Indian children'
+                    'description' => 'At risk of overweight'
                 ];
             }
+            // Normal weight (5-85%) shows no status
         }
     }
 

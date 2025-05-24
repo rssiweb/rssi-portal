@@ -570,49 +570,61 @@ $students = fetchStudents($con);
                                 {
                                     $statuses = [];
 
-                                    // BMI Status (Ages 4-15) - Using India-specific percentiles
+                                    // BMI Status (Ages 4-15) - Aligned with CDC Percentiles & WHO Categories
                                     if ($age >= 4 && $age <= 15) {
                                         $bmiThresholds = [
-                                            4 => 14,
-                                            5 => 13.5,
-                                            6 => 13,
-                                            7 => 13.5,
-                                            8 => 14,
-                                            9 => 14.5,
-                                            10 => 15,
-                                            11 => 16,
-                                            12 => 17,
-                                            13 => 17.5,
-                                            14 => 18,
-                                            15 => 18.5
+                                            // Age => [Underweight(<5%), Healthy(5-85%), Overweight(85-95%), Obese(>95%)]
+                                            4 => [14.0, 14.0, 16.8, 17.8],
+                                            5 => [13.8, 13.8, 17.2, 18.4],
+                                            6 => [13.6, 13.6, 17.6, 19.2],
+                                            7 => [13.5, 13.5, 18.0, 20.0],
+                                            8 => [13.5, 13.5, 18.5, 21.0],
+                                            9 => [13.8, 13.8, 19.2, 22.0],
+                                            10 => [14.2, 14.2, 20.0, 23.0],
+                                            11 => [14.8, 14.8, 20.8, 24.0],
+                                            12 => [15.5, 15.5, 21.5, 25.0],
+                                            13 => [16.0, 16.0, 22.0, 26.0],
+                                            14 => [16.5, 16.5, 22.5, 26.5],
+                                            15 => [17.0, 17.0, 23.0, 27.0]
                                         ];
 
                                         if (isset($bmiThresholds[$age])) {
-                                            if ($bmi < $bmiThresholds[$age]) {
+                                            [$severeThin, $healthyMin, $overweightMin, $obeseMin] = $bmiThresholds[$age];
+
+                                            if ($bmi < $severeThin) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Underweight',
                                                     'class' => 'info',
-                                                    'icon' => 'info-circle',
-                                                    'description' => 'Below 5th percentile for Indian children'
+                                                    'icon' => 'bi bi-info-circle',
+                                                    'description' => 'Severe thinness for age'
                                                 ];
-                                            } elseif ($bmi >= ($bmiThresholds[$age] + 6)) {
+                                            } elseif ($bmi < $healthyMin) {
+                                                $statuses[] = [
+                                                    'type' => 'BMI',
+                                                    'status' => 'Underweight',
+                                                    'class' => 'info',
+                                                    'icon' => 'bi bi-info-circle',
+                                                    'description' => 'Moderate thinness for age'
+                                                ];
+                                            } elseif ($bmi >= $obeseMin) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Obese',
                                                     'class' => 'danger',
                                                     'icon' => 'exclamation-triangle-fill',
-                                                    'description' => '≥95th percentile for Indian children'
+                                                    'description' => 'Obese for age'
                                                 ];
-                                            } elseif ($bmi >= ($bmiThresholds[$age] + 4)) {
+                                            } elseif ($bmi >= $overweightMin) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Overweight',
                                                     'class' => 'amber',
                                                     'icon' => 'exclamation-triangle',
-                                                    'description' => '85th-95th percentile for Indian children'
+                                                    'description' => 'At risk of overweight'
                                                 ];
                                             }
+                                            // Normal weight (5-85%) shows no status
                                         }
                                     }
 
@@ -697,7 +709,7 @@ $students = fetchStudents($con);
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>Below age cutoff</td>
+                                                                <td>Below 5th percentile</td>
                                                                 <td>Underweight</td>
                                                                 <td>
                                                                     <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
@@ -706,25 +718,25 @@ $students = fetchStudents($con);
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>Cutoff to cutoff+4</td>
-                                                                <td>Normal</td>
+                                                                <td>5th - 85th percentile</td>
+                                                                <td>Healthy Weight</td>
                                                                 <td>
                                                                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                                                        <i class="bi bi-check-circle me-1"></i>Normal
+                                                                        <i class="bi bi-check-circle me-1"></i>Healthy
                                                                     </span>
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>Cutoff+4 to cutoff+6</td>
-                                                                <td>Overweight</td>
+                                                                <td>85th - 95th percentile</td>
+                                                                <td>Overweight (At Risk)</td>
                                                                 <td>
-                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-amber border-opacity-25">
+                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-warning border-opacity-25">
                                                                         <i class="bi bi-exclamation-triangle me-1"></i>Overweight
                                                                     </span>
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>Above cutoff+6</td>
+                                                                <td>Above 95th percentile</td>
                                                                 <td>Obese</td>
                                                                 <td>
                                                                     <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
@@ -734,7 +746,16 @@ $students = fetchStudents($con);
                                                             </tr>
                                                         </tbody>
                                                     </table>
-                                                    <p class="small text-muted mb-0">Age cutoffs: 4y=14, 5y=13.5, 6y=13, 7y=13.5, 8y=14, 9y=14.5, 10y=15, 11y=16, 12y=17, 13y=17.5, 14y=18, 15y=18.5</p>
+                                                    <p class="small text-muted mb-0">
+                                                        CDC/WHO Growth Standards:
+                                                        Underweight (<5th %ile), Healthy (5-85%ile),
+                                                            Overweight (85-95%ile), Obese (>95%ile)
+                                                    </p>
+                                                    <p class="small text-muted">
+                                                        Sample Age Cutoffs (5th/85th/95th %ile):
+                                                        4y=14.0/16.8/17.8, 8y=14.5/19.5/21.5,
+                                                        12y=15.5/21.5/25.0, 15y=17.0/23.0/27.0
+                                                    </p>
                                                 </div>
 
                                                 <!-- BP Reference Table -->
@@ -813,10 +834,15 @@ $students = fetchStudents($con);
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                             </div>
                                             <div class="modal-footer">
-                                                <p class="small text-muted mb-0 me-auto">Screening tool only - Consult a healthcare professional</p>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-lightbulb text-warning"></i>
+                                                    <small class="text-muted">
+                                                        Screening tool only - Consult a healthcare professional.
+                                                        Status based on CDC growth charts (children) and WHO BMI standards (adults).
+                                                    </small>
+                                                </div>
                                                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                                             </div>
                                         </div>
