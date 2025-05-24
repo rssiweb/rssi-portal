@@ -77,7 +77,7 @@ function calculateHealthStatuses($age, $bmi, $bp, $vision)
     }
 
     // Blood Pressure Status (India-specific thresholds)
-    if (preg_match('/^(\d+)\/(\d+)$/', $bp, $matches)) {
+    if (!empty($bp) && preg_match('/^(\d+)\/(\d+)$/', $bp, $matches)) {
         $systolic = (int)$matches[1];
         $diastolic = (int)$matches[2];
 
@@ -101,7 +101,7 @@ function calculateHealthStatuses($age, $bmi, $bp, $vision)
     }
 
     // Vision Status (checks both eyes)
-    if (preg_match('/^(\d+)\/(\d+)\s*\/\s*(\d+)\/(\d+)$/', $vision, $matches)) {
+    if (!empty($vision) && preg_match('/^(\d+)\/(\d+)\s*\/\s*(\d+)\/(\d+)$/', $vision, $matches)) {
         $leftNumerator = (int)$matches[1];
         $leftDenominator = (int)$matches[2];
         $rightNumerator = (int)$matches[3];
@@ -418,7 +418,7 @@ header('Content-Type: text/html');
                             style="width: 60px;"
                             alt="QR Code">
                         <img src="<?php echo $c ?>"
-                            style="height: 60px; object-fit: cover; margin-left: 5px;"
+                            style="width: 60px; height: 60px; object-fit: cover; margin-left: 5px;"
                             alt="Photo">
                     </div>
                 </div>
@@ -564,13 +564,7 @@ header('Content-Type: text/html');
             <div style="clear:both;"></div>
         </div>
         <div class="confidentiality-footer">
-            <strong>CONFIDENTIALITY NOTICE:</strong> This document contains privileged health information protected under:
-            <ul style="margin: 3px 0; padding-left: 15px;">
-                <li>Section 72 of the <strong>Information Technology Act, 2000</strong> (Penalty for breach of privacy)</li>
-                <li><strong>Indian Medical Council (Professional Conduct) Regulations</strong> (Patient confidentiality)</li>
-                <li><strong>Digital Personal Data Protection Act, 2023</strong> (Sensitive personal data)</li>
-            </ul>
-            Unauthorized access, disclosure, or duplication is prohibited. Only authorized personnel of Rina Shiksha Sahayak Foundation and the patient/guardian may access this record. For verification, scan the QR code.
+            <p>Important Disclaimer: We make every effort to provide accurate health information. However, Rina Shiksha Sahayak Foundation cannot guarantee its completeness. This record is not a substitute for professional medical advice, and we encourage you to consult a qualified medical professional for any health-related decisions.</p>
         </div>
     </div>
     <script>
