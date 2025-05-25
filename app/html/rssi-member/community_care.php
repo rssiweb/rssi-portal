@@ -2503,47 +2503,7 @@ $result = pg_query($con, $query);
             });
         });
     </script>
-    <script>
-        $(document).ready(function() {
-            // Array of modal and select configurations
-            const modals = [{
-                    modal: '#addPadDistributionModal',
-                    select: '#padStudentSelect',
-                    allowClear: false
-                },
-                {
-                    modal: '#addHealthRecordModal',
-                    select: '#studentSelect',
-                    allowClear: true
-                },
-                {
-                    modal: '#addPeriodRecordModal',
-                    select: '#periodStudentSelect',
-                    allowClear: true
-                },
-            ];
 
-            // Loop through each modal and initialize Select2
-            modals.forEach(function(item) {
-                $(item.modal).on('shown.bs.modal', function() {
-                    $(item.select).select2({
-                        placeholder: "Search by name or contact number...",
-                        allowClear: item.allowClear,
-                        width: '100%',
-                        dropdownParent: $(this) // Use the current modal as parent
-                    });
-                });
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            $('#studentGrowth').select2({
-                placeholder: "Search by name or contact number...",
-                allowClear: true
-            });
-        });
-    </script>
     <script>
         // General function to handle form submission
         function handleFormSubmit(formId, submitBtnId) {
@@ -2580,6 +2540,7 @@ $result = pg_query($con, $query);
                     }
                 },
                 minimumInputLength: 1,
+                allowClear: true,
                 placeholder: 'Search all students'
             });
 
@@ -2603,6 +2564,7 @@ $result = pg_query($con, $query);
                         }
                     },
                     minimumInputLength: 1,
+                    allowClear: true,
                     placeholder: 'Search by name'
                 });
             });
@@ -2627,6 +2589,7 @@ $result = pg_query($con, $query);
                         }
                     },
                     minimumInputLength: 1,
+                    allowClear: true,
                     placeholder: 'Search female beneficiaries'
                 });
             });

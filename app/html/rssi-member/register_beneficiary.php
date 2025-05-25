@@ -402,7 +402,7 @@ if (isset($_SESSION['registration_success'])) {
                 </div>
 
                 <div class="text-center mt-3 text-muted">
-                    <small>Already have an account? <a href="login.php">Sign in here</a></small>
+                    <small>Already have an account? <a href="#">Sign in here</a></small>
                 </div>
             </div>
         </div>

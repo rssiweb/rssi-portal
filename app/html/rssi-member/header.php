@@ -476,11 +476,24 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
+
       <li class="nav-item">
-        <a class="nav-link collapsed" id="health_portal" href="health_portal.php" target="_blank">
-          <span>Health Portal</span>
+        <a class="nav-link collapsed" data-bs-target="#health_portal" data-bs-toggle="collapse" href="#">
+          <span>Health & Wellness Initiatives</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-      </li><!-- End Profile Page Nav -->
+        <ul id="health_portal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="salary_structure" href="health_portal.php" target="_blank">
+              <span>Student Health Portal</span>
+            </a>
+          </li>
+          <li>
+            <a id="community_care" href="community_care.php" target="_blank">
+              <span>Community Care Portal</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#worklist" data-bs-toggle="collapse" href="#">
@@ -1097,5 +1110,4 @@
     toggleCollapsedClass('attendance-analytics.php', 'attendX');
     toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
-    toggleCollapsedClass('health_portal.php', 'health_portal');
   </script>
