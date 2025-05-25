@@ -10,15 +10,35 @@ if (!in_array($type, ['health', 'period', 'pad'])) {
 }
 
 // Fetch record with student details
+// $record = pg_fetch_assoc(pg_query($con, "
+//     SELECT r.*, s.studentname, s.class, s.student_id as admissionnumber,
+//            a.fullname as recorded_by, a.position as designation, s.photourl,
+//            -- Age calculation (as of record date)
+//             EXTRACT(YEAR FROM AGE(" . getRecordDateColumn($type) . "::date, s.dateofbirth::date))::integer AS age_at_record
+//     FROM " . getTableName($type) . " r
+//     JOIN rssimyprofile_student s ON r." . getStudentColumn($type) . " = s.student_id
+//     JOIN rssimyaccount_members a ON r." . getRecordedByColumn($type) . " = a.associatenumber
+//     WHERE r." . getIdColumn($type) . "= '$id'
+// "));
+
 $record = pg_fetch_assoc(pg_query($con, "
-    SELECT r.*, s.studentname, s.class, s.student_id as admissionnumber,
-           a.fullname as recorded_by, a.position as designation, s.photourl,
-           -- Age calculation (as of record date)
-            EXTRACT(YEAR FROM AGE(" . getRecordDateColumn($type) . "::date, s.dateofbirth::date))::integer AS age_at_record
+    SELECT r.*, 
+           COALESCE(s.studentname, p.name) AS studentname,
+           COALESCE(s.class, 'N/A') AS class,
+           COALESCE(s.student_id, p.id::varchar) AS admissionnumber,
+           a.fullname as recorded_by, 
+           a.position as designation, 
+           COALESCE(s.photourl, p.profile_photo) AS photourl,
+           EXTRACT(YEAR FROM AGE(" . getRecordDateColumn($type) . "::date, 
+               COALESCE(s.dateofbirth::date, p.date_of_birth)::date))::integer AS age_at_record
     FROM " . getTableName($type) . " r
-    JOIN rssimyprofile_student s ON r." . getStudentColumn($type) . " = s.student_id
-    JOIN rssimyaccount_members a ON r." . getRecordedByColumn($type) . " = a.associatenumber
-    WHERE r." . getIdColumn($type) . "= '$id'
+    LEFT JOIN rssimyprofile_student s 
+        ON r." . getStudentColumn($type) . " = s.student_id
+    LEFT JOIN public_health_records p 
+        ON r." . getStudentColumn($type) . " = p.id::varchar
+    JOIN rssimyaccount_members a 
+        ON r." . getRecordedByColumn($type) . " = a.associatenumber
+    WHERE r." . getIdColumn($type) . " = '$id'
 "));
 
 if (!$record) {
@@ -420,8 +440,8 @@ header('Content-Type: text/html');
                 <div style="width: 20%; text-align: right;">
                     <div style="display: inline-block; text-align: center;">
                         <?php
-                        $a = 'https://login.rssi.in/rssi-student/verification.php?get_id=';
-                        $b = $record['admissionnumber'];
+                        $a = 'https://login.rssi.in/rssi-member/print_record.php?';
+                        $b = "type=$type&id=$id";
                         $c = $record['photourl'];
                         $url = $a . $b;
                         $url = urlencode($url);
@@ -429,9 +449,21 @@ header('Content-Type: text/html');
                         <img src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>"
                             style="width: 60px;"
                             alt="QR Code">
-                        <img src="<?php echo $c ?>"
-                            style="width: 60px; height: 60px; object-fit: cover; margin-left: 5px;"
-                            alt="Photo">
+                        <?php
+                        if (!empty($c)) {
+                            if (strpos($c, 'drive.google.com') !== false && preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $c, $matches)) {
+                                // Google Drive image
+                                $file_id = $matches[1];
+                                $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                echo '<iframe src="' . $preview_url . '" width="60" height="60" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                            } else {
+                                // Regular image
+                                echo '<img src="' . $c . '" style="width: 60px; height: 60px; object-fit: cover; margin-left: 5px;" alt="Photo">';
+                            }
+                        } else {
+                            echo 'No photo available';
+                        }
+                        ?>
                     </div>
                 </div>
             </div>
@@ -442,9 +474,9 @@ header('Content-Type: text/html');
         <div class="student-info">
             <table style="width: 100%; text-align: left;">
                 <tr>
-                    <th style="text-align: left; padding-right: 15px;">Student Name:</th>
+                    <th style="text-align: left; padding-right: 15px;">Beneficiary Name:</th>
                     <td style="padding-right: 30px;"><?= htmlspecialchars($record['studentname']) ?></td>
-                    <th style="text-align: left; padding-right: 15px;">Student ID:</th>
+                    <th style="text-align: left; padding-right: 15px;">Beneficiary ID:</th>
                     <td><?= htmlspecialchars($record['admissionnumber']) ?></td>
                 </tr>
                 <tr>

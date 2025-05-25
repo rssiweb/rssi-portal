@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $queryParams['tab'] = 'period-tracking';
 
     // Reconstruct the redirect URL
-    $redirectUrl = "health_portal.php";
+    $redirectUrl = basename($referer['path']);;
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Reconstruct the redirect URL
-    $redirectUrl = "health_portal.php";
+    $redirectUrl = basename($referer['path']);;
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }

@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Reconstruct the original URL with all parameters
-    $redirectUrl = "health_portal.php";
+    $redirectUrl = basename($referer['path']);
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         parse_str($referer['query'], $queryParams);
     }
 
-    $redirectUrl = "health_portal.php";
+    $redirectUrl = basename($referer['path']);
     if (!empty($queryParams)) {
         $redirectUrl .= '?' . http_build_query($queryParams);
     }

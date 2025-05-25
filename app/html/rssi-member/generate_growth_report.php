@@ -14,26 +14,47 @@ $metric = isset($_POST['metric']) ? pg_escape_string($con, $_POST['metric']) : '
 $from_date = isset($_POST['from_date']) ? pg_escape_string($con, $_POST['from_date']) : date('Y-m-d', strtotime('-1 year'));
 $to_date = isset($_POST['to_date']) ? pg_escape_string($con, $_POST['to_date']) : date('Y-m-d');
 $compare_years = isset($_POST['compare_academic_years']);
+$current_script = isset($_POST['current_script']) ? pg_escape_string($con, $_POST['current_script']) : '';
 
 // Build base query
-$query = "SELECT 
-            s.student_id,
-            s.studentname,
-            s.class,
-            sh.record_date,
-            sh.height_cm,
-            sh.weight_kg,
-            sh.bmi
-          FROM student_health_records sh
-          JOIN rssimyprofile_student s ON sh.student_id = s.student_id
-          WHERE s.filterstatus='Active'
-          AND sh.record_date BETWEEN '$from_date' AND '$to_date'";
+if ($current_script === 'community_care') {
+    $query = "SELECT 
+                p.id AS student_id,
+                p.name AS studentname,
+                'N/A' AS class,
+                sh.record_date,
+                sh.height_cm,
+                sh.weight_kg,
+                sh.bmi
+              FROM student_health_records sh
+              JOIN public_health_records p ON sh.student_id = p.id::varchar
+              WHERE sh.record_date BETWEEN '$from_date' AND '$to_date'";
+} else {
+    $query = "SELECT 
+                s.student_id,
+                s.studentname,
+                s.class,
+                sh.record_date,
+                sh.height_cm,
+                sh.weight_kg,
+                sh.bmi
+              FROM student_health_records sh
+              JOIN rssimyprofile_student s ON sh.student_id = s.student_id
+              WHERE s.filterstatus = 'Active'
+                AND sh.record_date BETWEEN '$from_date' AND '$to_date'";
 
-if (!empty($class)) {
-    $query .= " AND s.class = '$class'";
+    // Only apply class filter if not community_care
+    if (!empty($class)) {
+        $query .= " AND s.class = '$class'";
+    }
 }
 
-$query .= " ORDER BY s.class, s.studentname, sh.record_date";
+// Use appropriate ORDER BY clause
+if ($current_script === 'community_care') {
+    $query .= " ORDER BY studentname, record_date";
+} else {
+    $query .= " ORDER BY s.class, s.studentname, sh.record_date";
+}
 
 $result = pg_query($con, $query);
 
@@ -45,12 +66,12 @@ $output = fopen('php://output', 'w');
 
 // Header row
 fputcsv($output, [
-    'Student ID', 
-    'Student Name', 
-    'Class', 
-    'Record Date', 
-    'Height (cm)', 
-    'Weight (kg)', 
+    'Student ID',
+    'Student Name',
+    'Class',
+    'Record Date',
+    'Height (cm)',
+    'Weight (kg)',
     'BMI'
 ]);
 
@@ -69,4 +90,3 @@ while ($row = pg_fetch_assoc($result)) {
 
 fclose($output);
 exit;
-?>

@@ -59,50 +59,39 @@ if (isset($_GET['tab'])) {
     }
 }
 
-// Fetch classes for filters
-$classesQuery = "SELECT DISTINCT class FROM rssimyprofile_student WHERE filterstatus='Active' ORDER BY class";
-$classesResult = pg_query($con, $classesQuery);
-$classes = [];
-while ($classRow = pg_fetch_assoc($classesResult)) {
-    $classes[] = $classRow['class'];
-}
-
-// Build base queries for each tab with academic year filter
-$baseHealthQuery = "SELECT sh.*, s.studentname, s.gender, s.class, st.fullname as recorded_by_name,
+// Build base queries for each tab with academic year filter and proper type casting
+$baseHealthQuery = "SELECT sh.*, p.name, p.gender, p.date_of_birth, st.fullname as recorded_by_name,
                     -- Age calculation (as of record date)
-                    EXTRACT(YEAR FROM AGE(sh.record_date::date, s.dateofbirth::date))::integer AS age_at_record
+                    EXTRACT(YEAR FROM AGE(sh.record_date::date, p.date_of_birth::date))::integer AS age_at_record
                    FROM student_health_records sh
-                   JOIN rssimyprofile_student s ON sh.student_id = s.student_id
+                   JOIN public_health_records p ON sh.student_id = p.id::varchar
                    JOIN rssimyaccount_members st ON sh.recorded_by = st.associatenumber
-                   --WHERE s.filterstatus='Active'
-                   AND sh.record_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
+                   WHERE sh.record_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
-$basePeriodQuery = "SELECT pr.*, s.studentname, s.class, st.fullname as recorded_by_name
+$basePeriodQuery = "SELECT pr.*, p.name, p.gender, p.date_of_birth, st.fullname as recorded_by_name
                    FROM student_period_records pr
-                   JOIN rssimyprofile_student s ON pr.student_id = s.student_id
+                   JOIN public_health_records p ON pr.student_id = p.id::varchar
                    JOIN rssimyaccount_members st ON pr.recorded_by = st.associatenumber
-                   WHERE s.gender = 'Female'
-                   --AND s.filterstatus='Active'
+                   WHERE p.gender = 'Female'
                    AND pr.cycle_start_date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
-$basePadQuery = "SELECT pd.*, s.studentname, s.class, st.fullname as recorded_by_name
+$basePadQuery = "SELECT pd.*, p.name, p.gender, p.date_of_birth, st.fullname as recorded_by_name
                 FROM stock_out pd
-                JOIN rssimyprofile_student s ON pd.distributed_to = s.student_id
+                JOIN public_health_records p ON pd.distributed_to = p.id::varchar
                 JOIN rssimyaccount_members st ON pd.distributed_by = st.associatenumber
-                --WHERE s.filterstatus='Active'
-                AND pd.item_distributed=149
+                WHERE pd.item_distributed=149
+                AND p.gender = 'Female'
                 AND pd.date BETWEEN '$academicYearStart' AND '$academicYearEnd'";
 
 // Initialize variables for all tabs
 $healthResult = $periodResult = $padResult = $healthFilterResult = $periodFilterResult = $padFilterResult = null;
-
 // Fetch stats for dashboard (always fetch these)
 $statsQuery = "SELECT 
                 (SELECT COUNT(*) AS active_students_count
-                FROM rssimyprofile_student
+                FROM public_health_records
                 WHERE 
                     -- Student was admitted before or during the academic year
-                    doa <= '$academicYearEnd'
+                    created_at <= '$academicYearEnd'
                     AND (
                         -- Student is still active (no effectivefrom date)
                         effectivefrom IS NULL
@@ -112,10 +101,19 @@ $statsQuery = "SELECT
                     -- Optional: include status filter if you have it
                     -- AND filtertstatus = 'Active'
                 ) as total_students,
-                (SELECT COUNT(*) FROM student_health_records 
-                 WHERE record_date BETWEEN '$academicYearStart' AND '$academicYearEnd') as yearly_checks,
-                (SELECT COALESCE(SUM(quantity_distributed), 0) FROM stock_out
-                 WHERE date BETWEEN '$academicYearStart' AND '$academicYearEnd' AND item_distributed=149) as yearly_pads";
+                (
+                    SELECT COUNT(*)
+                    FROM student_health_records shr
+                    INNER JOIN public_health_records phr ON phr.id::varchar = shr.student_id
+                    WHERE shr.record_date BETWEEN '$academicYearStart' AND '$academicYearEnd'
+                ) AS yearly_checks,
+                (
+                    SELECT COALESCE(SUM(so.quantity_distributed), 0)
+                    FROM stock_out so
+                    INNER JOIN public_health_records shr ON so.distributed_to = shr.id::varchar
+                    WHERE so.date BETWEEN '$academicYearStart' AND '$academicYearEnd'
+                    AND so.item_distributed = 149
+                ) AS yearly_pads";
 $statsResult = pg_query($con, $statsQuery);
 $stats = pg_fetch_assoc($statsResult);
 
@@ -134,14 +132,14 @@ if ($activeTab == 'dashboard') {
 } elseif ($activeTab == 'health-records') {
     $healthFilterQuery = $baseHealthQuery;
 
-    if (!empty($_GET['class'])) {
-        $class = pg_escape_string($con, $_GET['class']);
-        $healthFilterQuery .= " AND s.class = '$class'";
-    }
-
     if (!empty($_GET['search'])) {
         $search = pg_escape_string($con, $_GET['search']);
-        $healthFilterQuery .= " AND (s.studentname ILIKE '%$search%' OR s.student_id::text ILIKE '%$search%')";
+        $healthFilterQuery .= " AND (p.name ILIKE '%$search%' OR p.id::text ILIKE '%$search%' OR p.contact_number ILIKE '%$search%')";
+    }
+
+    if (!empty($_GET['gender']) && in_array($_GET['gender'], ['Male', 'Female'])) {
+        $gender = pg_escape_string($con, $_GET['gender']);
+        $healthFilterQuery .= " AND p.gender = '$gender'";
     }
 
     $healthFilterQuery .= " ORDER BY sh.created_at DESC";
@@ -155,8 +153,9 @@ if ($activeTab == 'dashboard') {
 } elseif ($activeTab == 'period-tracking') {
     $periodFilterQuery = $basePeriodQuery;
 
-    if (isset($_GET['class']) && $_GET['class'] != '') {
-        $periodFilterQuery .= " AND s.class = '" . pg_escape_string($con, $_GET['class']) . "'";
+    if (!empty($_GET['search'])) {
+        $search = pg_escape_string($con, $_GET['search']);
+        $periodFilterQuery .= " AND (p.name ILIKE '%$search%' OR p.id::text ILIKE '%$search%' OR p.contact_number ILIKE '%$search%')";
     }
 
     if (isset($_GET['month']) && $_GET['month'] != '') {
@@ -164,18 +163,14 @@ if ($activeTab == 'dashboard') {
         $periodFilterQuery .= " AND (pr.cycle_start_date >= '$month-01' AND pr.cycle_start_date <= '$month-31')";
     }
 
-    if (isset($_GET['search']) && $_GET['search'] != '') {
-        $search = pg_escape_string($con, $_GET['search']);
-        $periodFilterQuery .= " AND (s.studentname ILIKE '%$search%')";
-    }
-
-    $periodFilterQuery .= " ORDER BY pr.created_at DESC";
+    $periodFilterQuery .= " ORDER BY pr.cycle_start_date DESC";
     $periodFilterResult = pg_query($con, $periodFilterQuery);
 } elseif ($activeTab == 'pad-distribution') {
-    $padFilterQuery = $basePadQuery . " AND s.gender = 'Female'";
+    $padFilterQuery = $basePadQuery;
 
-    if (isset($_GET['class']) && $_GET['class'] != '') {
-        $padFilterQuery .= " AND s.class = '" . pg_escape_string($con, $_GET['class']) . "'";
+    if (!empty($_GET['search'])) {
+        $search = pg_escape_string($con, $_GET['search']);
+        $padFilterQuery .= " AND (p.name ILIKE '%$search%' OR p.id::text ILIKE '%$search%' OR p.contact_number ILIKE '%$search%')";
     }
 
     if (isset($_GET['month']) && $_GET['month'] != '') {
@@ -183,7 +178,7 @@ if ($activeTab == 'dashboard') {
         $padFilterQuery .= " AND EXTRACT(MONTH FROM pd.date) = $month";
     }
 
-    $padFilterQuery .= " ORDER BY pd.timestamp DESC";
+    $padFilterQuery .= " ORDER BY pd.date DESC";
     $padFilterResult = pg_query($con, $padFilterQuery);
 } elseif ($activeTab == 'reports') {
     if (isset($_GET['student_id']) && $_GET['student_id'] != '') {
@@ -191,9 +186,9 @@ if ($activeTab == 'dashboard') {
         $metric = isset($_GET['metric']) ? pg_escape_string($con, $_GET['metric']) : 'height';
 
         // Get student info
-        $studentQuery = "SELECT studentname, class 
-                        FROM rssimyprofile_student 
-                        WHERE student_id = '$studentId'";
+        $studentQuery = "SELECT name, gender, date_of_birth 
+                        FROM public_health_records 
+                        WHERE id = '$studentId'::int";
         $studentResult = pg_query($con, $studentQuery);
         $student = pg_fetch_assoc($studentResult);
 
@@ -222,15 +217,14 @@ if ($activeTab == 'dashboard') {
     }
 }
 ?>
-
 <?php
 // Function to fetch students based on conditions
 function fetchStudents($con, $gender = null)
 {
     // Base query
-    $query = "SELECT student_id, studentname, class 
-              FROM rssimyprofile_student 
-              WHERE filterstatus='Active'";
+    $query = "SELECT id, name, contact_number 
+              FROM public_health_records 
+              WHERE registration_completed= true";
 
     // Add gender condition if provided
     if ($gender) {
@@ -238,7 +232,7 @@ function fetchStudents($con, $gender = null)
     }
 
     // Order by class and student name
-    $query .= " ORDER BY class, studentname";
+    $query .= " ORDER BY name";
 
     // Execute the query
     $result = pg_query($con, $query);
@@ -247,8 +241,8 @@ function fetchStudents($con, $gender = null)
     // Fetch and format the results
     while ($row = pg_fetch_assoc($result)) {
         $students[] = [
-            'id' => $row['student_id'],
-            'text' => $row['studentname'] . ' (' . $row['student_id'] . ')'
+            'id' => $row['id'],
+            'text' => $row['name'] . ' (' . $row['contact_number'] . ')'
         ];
     }
 
@@ -261,9 +255,9 @@ $femaleStudents = fetchStudents($con, 'Female');
 // Fetch all active students
 $students = fetchStudents($con);
 ?>
-
 <?php
-function getBaseFilterUrl() {
+function getBaseFilterUrl()
+{
     $url = $_SERVER['REQUEST_URI'];
     $parsedUrl = parse_url($url);
     parse_str($parsedUrl['query'] ?? '', $queryParams);
@@ -278,17 +272,82 @@ function getBaseFilterUrl() {
     return $newQuery ? "$basePath?$newQuery" : $basePath;
 }
 ?>
+<?php
+$records_per_page = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
 
+// Search functionality
+$search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
+$search_condition = $search ?
+    "WHERE name ILIKE '%$search%' OR contact_number LIKE '%$search%' OR email ILIKE '%$search%'" : '';
+
+// Get total records for pagination
+$total_query = "SELECT COUNT(*) FROM public_health_records $search_condition";
+$total_result = pg_query($con, $total_query);
+$total_records = pg_fetch_result($total_result, 0, 0);
+$total_pages = ceil($total_records / $records_per_page);
+
+// Get records for current page
+$query = "SELECT * FROM public_health_records $search_condition 
+          ORDER BY created_at DESC 
+          LIMIT $records_per_page OFFSET $offset";
+$result = pg_query($con, $query);
+
+// CSV Export functionality
+if (isset($_GET['export']) && $_GET['export'] == 'csv') {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="beneficiaries_' . date('Y-m-d') . '.csv"');
+
+    $output = fopen('php://output', 'w');
+
+    // CSV header
+    fputcsv($output, [
+        'ID',
+        'Name',
+        'Mobile',
+        'Email',
+        'Date of Birth',
+        'Gender',
+        'Referral Source',
+        'Registration Date'
+    ]);
+
+    // Get all records for export
+    $export_query = "SELECT id, name, contact_number, email, date_of_birth, 
+                    gender, referral_source, created_at 
+                    FROM public_health_records $search_condition 
+                    ORDER BY created_at DESC";
+    $export_result = pg_query($con, $export_query);
+
+    while ($row = pg_fetch_assoc($export_result)) {
+        fputcsv($output, [
+            $row['id'],
+            $row['name'],
+            $row['contact_number'],
+            $row['email'],
+            $row['date_of_birth'],
+            $row['gender'],
+            $row['referral_source'],
+            $row['created_at']
+        ]);
+    }
+
+    fclose($output);
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Health Records Portal</title>
+    <title>Community Care Portal</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- In your head section -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -369,6 +428,40 @@ function getBaseFilterUrl() {
             border-color: rgba(255, 193, 7, 0.25) !important;
         }
     </style>
+    <style>
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box .form-control {
+            padding-left: 40px;
+            border-radius: 20px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 10px;
+            color: #6c757d;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .export-btn {
+            border-radius: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -378,7 +471,7 @@ function getBaseFilterUrl() {
             <div class="col-md-3 col-lg-2 d-md-block sidebar collapse bg-primary">
                 <div class="position-sticky pt-3">
                     <div class="text-center mb-4">
-                        <h4 class="text-white">Student Health Portal</h4>
+                        <h4 class="text-white">Community Care Portal</h4>
                     </div>
                     <ul class="nav flex-column">
                         <li class="nav-item">
@@ -423,7 +516,7 @@ function getBaseFilterUrl() {
             <!-- Main Content -->
             <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Student Health Dashboard</h1>
+                    <h1 class="h2">Community Care Dashboard</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="academicYearDropdown" data-bs-toggle="dropdown">
@@ -452,7 +545,7 @@ function getBaseFilterUrl() {
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="card-title">Total Students</h6>
+                                                <h6 class="card-title">Total Beneficiaries</h6>
                                                 <h2 class="card-text"><?php echo $stats['total_students']; ?></h2>
                                             </div>
                                             <i class="bi bi-people-fill fs-1"></i>
@@ -491,12 +584,166 @@ function getBaseFilterUrl() {
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Student Growth Trends (<?php echo $selectedAcademicYear; ?>)</h5>
+                                    <div class="card-header text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Beneficiary List</h5>
+                                        <a href="register_beneficiary.php" class="btn btn-light btn-sm" target="_blank">
+                                            <i class="fas fa-user-plus me-1"></i> New Registration
+                                        </a>
                                     </div>
                                     <div class="card-body">
-                                        <div class="chart-container">
+                                        <!-- <div class="chart-container">
                                             <canvas id="growthChart"></canvas>
+                                        </div> -->
+
+                                        <!-- <div class="container py-4"> -->
+                                        <!-- <div class="card"> -->
+                                        <!-- <div class="card-header text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Beneficiary List</h5>
+                <a href="register_beneficiary.php" class="btn btn-light btn-sm" target="_blank">
+                    <i class="fas fa-user-plus me-1"></i> New Registration
+                </a>
+            </div> -->
+
+                                        <div class="card-body">
+                                            <div class="row mb-4">
+                                                <div class="col-md-8">
+                                                    <form method="get" class="search-box">
+                                                        <i class="fas fa-search"></i>
+                                                        <input type="text" name="search" class="form-control" placeholder="Search by name, mobile or email..."
+                                                            value="<?= htmlspecialchars($search) ?>">
+                                                    </form>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    <a href="?export=csv<?= $search ? '&search=' . urlencode($search) : '' ?>"
+                                                        class="btn btn-outline-primary export-btn">
+                                                        <i class="fas fa-file-export me-1"></i> Export to CSV
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Profile</th>
+                                                            <th>Name</th>
+                                                            <th>Mobile</th>
+                                                            <th>Email</th>
+                                                            <th>Age</th>
+                                                            <th>Gender</th>
+                                                            <th>Registered On</th>
+                                                            <!-- <th>Actions</th> -->
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php if (pg_num_rows($result) > 0): ?>
+                                                            <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                                <tr>
+                                                                    <td><?= $row['id'] ?></td>
+                                                                    <td>
+                                                                        <?php if (!empty($row['profile_photo'])): ?>
+                                                                            <?php
+                                                                            // Extract file ID from Google Drive URL
+                                                                            preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $row['profile_photo'], $matches);
+                                                                            $file_id = $matches[1] ?? null;
+
+                                                                            if ($file_id):
+                                                                                $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                                                            ?>
+                                                                                <div class="drive-photo-preview"
+                                                                                    data-toggle="tooltip"
+                                                                                    title="Click to view full photo"
+                                                                                    onclick="showPhotoModal('<?= $preview_url ?>')">
+                                                                                    <iframe src="<?= $preview_url ?>"
+                                                                                        width="40"
+                                                                                        height="40"
+                                                                                        frameborder="0"
+                                                                                        style="border-radius: 50%;"
+                                                                                        allow="autoplay">
+                                                                                    </iframe>
+                                                                                </div>
+                                                                            <?php else: ?>
+                                                                                <div class="profile-img bg-light text-center">
+                                                                                    <i class="fas fa-user text-muted" style="line-height: 36px;"></i>
+                                                                                </div>
+                                                                            <?php endif; ?>
+                                                                        <?php else: ?>
+                                                                            <div class="profile-img bg-light text-center">
+                                                                                <i class="fas fa-user text-muted" style="line-height: 36px;"></i>
+                                                                            </div>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td><?= htmlspecialchars($row['name']) ?></td>
+                                                                    <td><?= htmlspecialchars($row['contact_number']) ?></td>
+                                                                    <td><?= htmlspecialchars($row['email']) ?></td>
+                                                                    <td>
+                                                                        <?php
+                                                                        $dob = new DateTime($row['date_of_birth']);
+                                                                        $now = new DateTime();
+                                                                        echo $now->diff($dob)->y;
+                                                                        ?>
+                                                                    </td>
+                                                                    <td><?= htmlspecialchars($row['gender']) ?></td>
+                                                                    <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
+                                                                    <!-- <td>
+                                            <a href="view_beneficiary.php?id=<?= $row['id'] ?>"
+                                                class="btn btn-sm btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="edit_beneficiary.php?id=<?= $row['id'] ?>"
+                                                class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td> -->
+                                                                </tr>
+                                                            <?php endwhile; ?>
+                                                        <?php else: ?>
+                                                            <tr>
+                                                                <td colspan="9" class="text-center py-4">
+                                                                    <i class="fas fa-user-slash fa-2x mb-3" style="color: #6c757d;"></i>
+                                                                    <h5>No beneficiaries found</h5>
+                                                                    <?php if ($search): ?>
+                                                                        <p>Try a different search term</p>
+                                                                    <?php else: ?>
+                                                                        <p>No beneficiaries have registered yet</p>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endif; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <?php if ($total_pages > 1): ?>
+                                                <nav aria-label="Page navigation">
+                                                    <ul class="pagination justify-content-center">
+                                                        <?php if ($page > 1): ?>
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="?page=<?= $page - 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>" aria-label="Previous">
+                                                                    <span aria-hidden="true">&laquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        <?php endif; ?>
+
+                                                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                                            <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                                                                <a class="page-link" href="?page=<?= $i ?><?= $search ? '&search=' . urlencode($search) : '' ?>"><?= $i ?></a>
+                                                            </li>
+                                                        <?php endfor; ?>
+
+                                                        <?php if ($page < $total_pages): ?>
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="?page=<?= $page + 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>" aria-label="Next">
+                                                                    <span aria-hidden="true">&raquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        <?php endif; ?>
+                                                    </ul>
+                                                </nav>
+                                            <?php endif; ?>
+                                            <!-- </div> -->
+                                            <!-- </div> -->
                                         </div>
                                     </div>
                                 </div>
@@ -517,10 +764,10 @@ function getBaseFilterUrl() {
                                                 while ($row = pg_fetch_assoc($healthResult)) {
                                                     echo '<a href="#" class="list-group-item list-group-item-action">
                                                     <div class="d-flex w-100 justify-content-between">
-                                                        <h6 class="mb-1">' . htmlspecialchars($row['studentname']) . '</h6>
+                                                        <h6 class="mb-1">' . htmlspecialchars($row['name']) . '</h6>
                                                         <small>' . date('M d', strtotime($row['record_date'])) . '</small>
                                                     </div>
-                                                    <p class="mb-1">Class: ' . htmlspecialchars($row['class']) . '</p>
+                                                    <p class="mb-1">Age: ' . htmlspecialchars($row['age_at_record']) . '</p>
                                                     <small>' . htmlspecialchars($row['recorded_by_name']) . '</small>
                                                 </a>';
                                                 }
@@ -537,7 +784,7 @@ function getBaseFilterUrl() {
                     <div class="tab-pane fade <?php echo $activeTab == 'health-records' ? 'show active' : ''; ?>" id="health-records">
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Student Health Records (<?php echo $selectedAcademicYear; ?>)</h5>
+                                <h5 class="mb-0">Beneficiary Health Records (<?php echo $selectedAcademicYear; ?>)</h5>
                                 <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addHealthRecordModal">
                                     <i class="bi bi-plus"></i> Add Record
                                 </button>
@@ -547,16 +794,16 @@ function getBaseFilterUrl() {
                                     <input type="hidden" name="tab" value="health-records">
                                     <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
                                     <!-- Add current filter values as hidden fields if they exist -->
-                                    <?php if (isset($_GET['class'])) : ?>
+                                    <!-- <?php if (isset($_GET['class'])) : ?>
                                         <input type="hidden" name="class" value="<?php echo htmlspecialchars($_GET['class']); ?>">
-                                    <?php endif; ?>
+                                    <?php endif; ?> -->
                                     <?php if (isset($_GET['search'])) : ?>
                                         <input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>">
                                     <?php endif; ?>
 
 
                                     <div class="row mb-3">
-                                        <div class="col-md-4">
+                                        <!-- <div class="col-md-4">
                                             <select class="form-select" name="class">
                                                 <option value="">All Classes</option>
                                                 <?php
@@ -566,9 +813,9 @@ function getBaseFilterUrl() {
                                                 }
                                                 ?>
                                             </select>
-                                        </div>
+                                        </div> -->
                                         <div class="col-md-4">
-                                            <input type="text" class="form-control" name="search" placeholder="Search student..."
+                                            <input type="text" class="form-control" name="search" placeholder="Search beneficiary..."
                                                 value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                                         </div>
                                         <div class="col-md-4">
@@ -871,7 +1118,7 @@ function getBaseFilterUrl() {
                                     <table class="table table-striped table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Student</th>
+                                                <th>Beneficiary</th>
                                                 <th>Age <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="At recording time"></i></th>
                                                 <th>Date</th>
                                                 <th>Height (cm)</th>
@@ -901,10 +1148,9 @@ function getBaseFilterUrl() {
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['studentname']) ?>&background=random" class="avatar me-2">
+                                                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0"><?= htmlspecialchars($row['studentname']) ?></h6>
-                                                                    <small class="text-muted"><?= htmlspecialchars($row['class']) ?></small>
+                                                                    <h6 class="mb-0"><?= htmlspecialchars($row['name']) ?></h6>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -975,7 +1221,7 @@ function getBaseFilterUrl() {
                             </div>
                             <div class="card-body">
                                 <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> Only female students are shown in this section.
+                                    <i class="bi bi-info-circle"></i> Only female beneficiaries are shown in this section.
                                 </div>
 
                                 <form method="GET" action="">
@@ -983,7 +1229,7 @@ function getBaseFilterUrl() {
                                     <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
 
                                     <div class="row mb-3">
-                                        <div class="col-md-3">
+                                        <!-- <div class="col-md-3">
                                             <select class="form-select" name="class">
                                                 <option value="">All Classes</option>
                                                 <?php
@@ -993,13 +1239,13 @@ function getBaseFilterUrl() {
                                                 }
                                                 ?>
                                             </select>
-                                        </div>
+                                        </div> -->
                                         <div class="col-md-3">
                                             <input type="month" class="form-control" name="month"
                                                 value="<?php echo isset($_GET['month']) ? htmlspecialchars($_GET['month']) : ''; ?>">
                                         </div>
                                         <div class="col-md-3">
-                                            <input type="text" class="form-control" name="search" placeholder="Search student..."
+                                            <input type="text" class="form-control" name="search" placeholder="Search beneficiary..."
                                                 value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                                         </div>
                                         <div class="col-md-3">
@@ -1013,7 +1259,7 @@ function getBaseFilterUrl() {
                                     <table class="table table-striped table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Student</th>
+                                                <th>Beneficiary</th>
                                                 <th>Cycle Start</th>
                                                 <th>Cycle End</th>
                                                 <th>Symptoms</th>
@@ -1027,10 +1273,9 @@ function getBaseFilterUrl() {
                                                     echo '<tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="https://ui-avatars.com/api/?name=' . urlencode($row['studentname']) . '&background=random" class="avatar me-2">
+                                                                <img src="https://ui-avatars.com/api/?name=' . urlencode($row['name']) . '&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0">' . htmlspecialchars($row['studentname']) . '</h6>
-                                                                    <small class="text-muted">' . htmlspecialchars($row['class']) . '</small>
+                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . '</h6>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1087,7 +1332,7 @@ function getBaseFilterUrl() {
                                     <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
 
                                     <div class="row mb-3">
-                                        <div class="col-md-3">
+                                        <!-- <div class="col-md-3">
                                             <select class="form-select" name="class">
                                                 <option value="">All Classes</option>
                                                 <?php
@@ -1097,7 +1342,7 @@ function getBaseFilterUrl() {
                                                 }
                                                 ?>
                                             </select>
-                                        </div>
+                                        </div> -->
                                         <div class="col-md-3">
                                             <select class="form-select" name="month">
                                                 <option value="">All Months</option>
@@ -1135,7 +1380,7 @@ function getBaseFilterUrl() {
                                     <table class="table table-striped table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Student</th>
+                                                <th>Beneficiary</th>
                                                 <th>Distribution Date</th>
                                                 <th>Quantity</th>
                                                 <th>Academic Year</th>
@@ -1152,10 +1397,9 @@ function getBaseFilterUrl() {
                                                     echo '<tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="https://ui-avatars.com/api/?name=' . urlencode($row['studentname']) . '&background=random" class="avatar me-2">
+                                                                <img src="https://ui-avatars.com/api/?name=' . urlencode($row['name']) . '&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0">' . htmlspecialchars($row['studentname']) . '</h6>
-                                                                    <small class="text-muted">' . htmlspecialchars($row['class']) . '</small>
+                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . '</h6>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1340,13 +1584,16 @@ function getBaseFilterUrl() {
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="studentSelect" class="form-label">Student</label>
+                                <label for="studentSelect" class="form-label">Beneficiaries</label>
                                 <select class="form-select" id="studentSelect" name="student_id" required>
-                                    <option value="">Select Student</option>
+                                    <option value="">Select Beneficiary</option>
                                     <?php foreach ($students as $student): ?>
                                         <option value="<?= $student['id']; ?>"><?= $student['text']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="form-text text-muted">
+                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
+                                </div>
                             </div>
 
                             <div class="col-md-6">
@@ -1423,15 +1670,15 @@ function getBaseFilterUrl() {
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="periodStudentSelect" class="form-label">Student</label>
+                                <label for="periodStudentSelect" class="form-label">Beneficiary</label>
                                 <select class="form-select" id="periodStudentSelect" name="student_id" required>
-                                    <option value="">Select Student</option>
+                                    <option value="">Select Beneficiary</option>
                                     <?php foreach ($femaleStudents as $student): ?>
                                         <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <small class="text-muted">Choose a student from the list.</small>
-                                <div class="invalid-feedback">Please select a student.</div>
+                                <small class="text-muted">Choose a beneficiary from the list.</small>
+                                <div class="invalid-feedback">Please select a beneficiary.</div>
                             </div>
 
 
@@ -1502,14 +1749,14 @@ function getBaseFilterUrl() {
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label for="padStudentSelect" class="form-label">Search and Select Students</label>
+                                <label for="padStudentSelect" class="form-label">Search and Select Beneficiaries</label>
                                 <select id="padStudentSelect" name="student_ids[]" class="form-control" multiple="multiple" required>
                                     <?php foreach ($femaleStudents as $student): ?>
                                         <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <small class="text-muted">Start typing to search students. You can select multiple students.</small>
-                                <div class="invalid-feedback">Please select at least one student.</div>
+                                <small class="text-muted">Start typing to search beneficiaries. You can select multiple beneficiaries.</small>
+                                <div class="invalid-feedback">Please select at least one beneficiary.</div>
                             </div>
                         </div>
                         <div class="row g-3"> <!-- Better grid spacing -->
@@ -1525,14 +1772,14 @@ function getBaseFilterUrl() {
                             <input type="number" class="form-control" id="padQuantity" name="quantity" value="1" min="1" required>
                         </div>
 
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="bulkDistribution" name="bulk_distribution">
                                 <label class="form-check-label" for="bulkDistribution">
                                     Bulk distribution to entire class
                                 </label>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="mb-3" id="bulkDistributionOptions" style="display: none;">
                             <label for="bulkClassSelect" class="form-label">Select Class</label>
@@ -1572,9 +1819,10 @@ function getBaseFilterUrl() {
                 <form action="generate_growth_report.php" method="POST" target="_blank">
                     <div class="modal-body">
                         <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
+                        <input type="hidden" name="current_script" value="community_care">
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label class="form-label">Class</label>
                                 <select class="form-select" name="class">
                                     <option value="">All Classes</option>
@@ -1584,7 +1832,7 @@ function getBaseFilterUrl() {
                                     }
                                     ?>
                                 </select>
-                            </div>
+                            </div> -->
                             <div class="col-md-6">
                                 <label class="form-label">Metric</label>
                                 <select class="form-select" name="metric">
@@ -1606,12 +1854,12 @@ function getBaseFilterUrl() {
                             </div>
                         </div>
 
-                        <div class="form-check mb-3">
+                        <!-- <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="compareAcademicYears" name="compare_academic_years">
                             <label class="form-check-label" for="compareAcademicYears">
                                 Compare with previous academic year
                             </label>
-                        </div>
+                        </div> -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -1633,9 +1881,10 @@ function getBaseFilterUrl() {
                 <form action="generate_period_report.php" method="POST" target="_blank">
                     <div class="modal-body">
                         <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
+                        <input type="hidden" name="current_script" value="community_care">
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label class="form-label">Class</label>
                                 <select class="form-select" name="class">
                                     <option value="">All Classes</option>
@@ -1645,7 +1894,7 @@ function getBaseFilterUrl() {
                                     }
                                     ?>
                                 </select>
-                            </div>
+                            </div> -->
                             <div class="col-md-6">
                                 <label class="form-label">Report Type</label>
                                 <select class="form-select" name="report_type">
@@ -1687,9 +1936,10 @@ function getBaseFilterUrl() {
                 <form action="generate_pad_report.php" method="POST" target="_blank">
                     <div class="modal-body">
                         <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
+                        <input type="hidden" name="current_script" value="community_care">
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label class="form-label">Class</label>
                                 <select class="form-select" name="class">
                                     <option value="">All Classes</option>
@@ -1699,13 +1949,13 @@ function getBaseFilterUrl() {
                                     }
                                     ?>
                                 </select>
-                            </div>
+                            </div> -->
                             <div class="col-md-6">
                                 <label class="form-label">Report Type</label>
                                 <select class="form-select" name="report_type">
                                     <option value="monthly">Monthly Summary</option>
                                     <option value="yearly">Yearly Summary</option>
-                                    <option value="student">By Student</option>
+                                    <option value="student">By Beneficiary</option>
                                 </select>
                             </div>
                         </div>
@@ -2280,7 +2530,7 @@ function getBaseFilterUrl() {
             modals.forEach(function(item) {
                 $(item.modal).on('shown.bs.modal', function() {
                     $(item.select).select2({
-                        placeholder: "Search by name or ID...",
+                        placeholder: "Search by name or contact number...",
                         allowClear: item.allowClear,
                         width: '100%',
                         dropdownParent: $(this) // Use the current modal as parent
@@ -2292,7 +2542,7 @@ function getBaseFilterUrl() {
     <script>
         $(document).ready(function() {
             $('#studentGrowth').select2({
-                placeholder: "Search by name or ID...",
+                placeholder: "Search by name or contact number...",
                 allowClear: true
             });
         });
