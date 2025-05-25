@@ -217,44 +217,7 @@ if ($activeTab == 'dashboard') {
     }
 }
 ?>
-<?php
-// Function to fetch students based on conditions
-function fetchStudents($con, $gender = null)
-{
-    // Base query
-    $query = "SELECT id, name, contact_number 
-              FROM public_health_records 
-              WHERE registration_completed= true";
 
-    // Add gender condition if provided
-    if ($gender) {
-        $query .= " AND gender = '" . pg_escape_string($con, $gender) . "'";
-    }
-
-    // Order by class and student name
-    $query .= " ORDER BY name";
-
-    // Execute the query
-    $result = pg_query($con, $query);
-    $students = [];
-
-    // Fetch and format the results
-    while ($row = pg_fetch_assoc($result)) {
-        $students[] = [
-            'id' => $row['id'],
-            'text' => $row['name'] . ' (' . $row['contact_number'] . ')'
-        ];
-    }
-
-    return $students;
-}
-
-// Fetch female students
-$femaleStudents = fetchStudents($con, 'Female');
-
-// Fetch all active students
-$students = fetchStudents($con);
-?>
 <?php
 function getBaseFilterUrl()
 {
@@ -277,65 +240,49 @@ $records_per_page = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $records_per_page;
 
+// Get academic year from query parameters
+$academicYear = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
+
+// Validate academic year format (YYYY-YYYY)
+if ($academicYear && !preg_match('/^\d{4}-\d{4}$/', $academicYear)) {
+    die("Invalid academic year format. Please use YYYY-YYYY format.");
+}
+
+// Base condition for active students
+$academicCondition = '';
+if ($academicYear) {
+    list($startYear, $endYear) = explode('-', $academicYear);
+    $academicYearEnd = $endYear . '-03-31'; // Academic year ends March 31
+
+    $academicCondition = "WHERE created_at <= '$academicYearEnd'
+                          AND (
+                              effectivefrom IS NULL
+                              OR effectivefrom > '$academicYearEnd'
+                          )";
+}
+
 // Search functionality
 $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
-$search_condition = $search ?
-    "WHERE name ILIKE '%$search%' OR contact_number LIKE '%$search%' OR email ILIKE '%$search%'" : '';
+$search_condition = '';
+if ($search) {
+    $search_condition = (empty($academicCondition) ? 'WHERE' : 'AND') .
+        " (name ILIKE '%$search%' OR contact_number LIKE '%$search%' OR email ILIKE '%$search%')";
+}
+
+// Combine conditions
+$where_clause = $academicCondition . $search_condition;
 
 // Get total records for pagination
-$total_query = "SELECT COUNT(*) FROM public_health_records $search_condition";
+$total_query = "SELECT COUNT(*) FROM public_health_records $where_clause";
 $total_result = pg_query($con, $total_query);
 $total_records = pg_fetch_result($total_result, 0, 0);
 $total_pages = ceil($total_records / $records_per_page);
 
 // Get records for current page
-$query = "SELECT * FROM public_health_records $search_condition 
+$query = "SELECT * FROM public_health_records $where_clause
           ORDER BY created_at DESC 
           LIMIT $records_per_page OFFSET $offset";
 $result = pg_query($con, $query);
-
-// CSV Export functionality
-if (isset($_GET['export']) && $_GET['export'] == 'csv') {
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="beneficiaries_' . date('Y-m-d') . '.csv"');
-
-    $output = fopen('php://output', 'w');
-
-    // CSV header
-    fputcsv($output, [
-        'ID',
-        'Name',
-        'Mobile',
-        'Email',
-        'Date of Birth',
-        'Gender',
-        'Referral Source',
-        'Registration Date'
-    ]);
-
-    // Get all records for export
-    $export_query = "SELECT id, name, contact_number, email, date_of_birth, 
-                    gender, referral_source, created_at 
-                    FROM public_health_records $search_condition 
-                    ORDER BY created_at DESC";
-    $export_result = pg_query($con, $export_query);
-
-    while ($row = pg_fetch_assoc($export_result)) {
-        fputcsv($output, [
-            $row['id'],
-            $row['name'],
-            $row['contact_number'],
-            $row['email'],
-            $row['date_of_birth'],
-            $row['gender'],
-            $row['referral_source'],
-            $row['created_at']
-        ]);
-    }
-
-    fclose($output);
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -352,7 +299,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Include Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
@@ -614,7 +561,27 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                                     </form>
                                                 </div>
                                                 <div class="col-md-4 text-end">
-                                                    <a href="?export=csv<?= $search ? '&search=' . urlencode($search) : '' ?>"
+                                                    <?php
+                                                    // Get current filter parameters from URL
+                                                    $academicYear = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+                                                    $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
+
+                                                    // Build export URL with current filters
+                                                    $exportUrl = 'export_beneficiaries.php';
+                                                    $params = [];
+
+                                                    if (!empty($academicYear)) {
+                                                        $params[] = 'academic_year=' . urlencode($academicYear);
+                                                    }
+                                                    if (!empty($searchTerm)) {
+                                                        $params[] = 'search=' . urlencode($searchTerm);
+                                                    }
+
+                                                    if (!empty($params)) {
+                                                        $exportUrl .= '?' . implode('&', $params);
+                                                    }
+                                                    ?>
+                                                    <a href="<?= $exportUrl ?>"
                                                         class="btn btn-outline-primary export-btn">
                                                         <i class="fas fa-file-export me-1"></i> Export to CSV
                                                     </a>
@@ -664,13 +631,13 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                                                                     </iframe>
                                                                                 </div>
                                                                             <?php else: ?>
-                                                                                <div class="profile-img bg-light text-center">
-                                                                                    <i class="fas fa-user text-muted" style="line-height: 36px;"></i>
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40" class="avatar me-2" style="border-radius: 50%;">
                                                                                 </div>
                                                                             <?php endif; ?>
                                                                         <?php else: ?>
-                                                                            <div class="profile-img bg-light text-center">
-                                                                                <i class="fas fa-user text-muted" style="line-height: 36px;"></i>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40" class="avatar me-2" style="border-radius: 50%;">
                                                                             </div>
                                                                         <?php endif; ?>
                                                                     </td>
@@ -1495,7 +1462,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                             <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4">
+                                                <!-- <div class="col-md-4">
                                                     <select class="form-select" id="studentGrowth" name="student_id" required>
                                                         <option value="">Select Student</option>
                                                         <?php foreach ($students as $student): ?>
@@ -1508,8 +1475,14 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                                     </select>
                                                     <small class="text-muted">Choose a student from the list.</small>
                                                     <div class="invalid-feedback">Please select a student.</div>
+                                                </div> -->
+                                                <div class="col-md-4">
+                                                    <select class="form-select js-data-ajax-all" id="studentGrowth" name="student_id" required>
+                                                        <option value="">Select Student</option>
+                                                    </select>
+                                                    <small class="text-muted">Choose a student from the list.</small>
+                                                    <div class="invalid-feedback">Please select a student.</div>
                                                 </div>
-
                                                 <div class="col-md-4">
                                                     <select class="form-select" name="metric">
                                                         <option value="height" <?php echo (isset($_GET['metric']) && $_GET['metric'] == 'height') ? 'selected' : ''; ?>>Height</option>
@@ -1583,13 +1556,23 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <input type="hidden" name="academic_year" value="<?php echo isset($_GET['academic_year']) ? htmlspecialchars($_GET['academic_year']) : ''; ?>">
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label for="studentSelect" class="form-label">Beneficiaries</label>
                                 <select class="form-select" id="studentSelect" name="student_id" required>
                                     <option value="">Select Beneficiary</option>
                                     <?php foreach ($students as $student): ?>
                                         <option value="<?= $student['id']; ?>"><?= $student['text']; ?></option>
                                     <?php endforeach; ?>
+                                </select>
+                                <div class="form-text text-muted">
+                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
+                                </div>
+                            </div> -->
+                            <div class="col-md-6">
+                                <label for="studentSelect" class="form-label">Beneficiaries</label>
+                                <select class="form-select js-data-ajax" id="studentSelect" name="student_id" required>
+                                    <option value="">Select Beneficiary</option>
+                                    <!-- Initial options can be kept or removed -->
                                 </select>
                                 <div class="form-text text-muted">
                                     First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
@@ -1669,7 +1652,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <?php endif; ?>
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label for="periodStudentSelect" class="form-label">Beneficiary</label>
                                 <select class="form-select" id="periodStudentSelect" name="student_id" required>
                                     <option value="">Select Beneficiary</option>
@@ -1679,8 +1662,15 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                 </select>
                                 <small class="text-muted">Choose a beneficiary from the list.</small>
                                 <div class="invalid-feedback">Please select a beneficiary.</div>
+                            </div> -->
+                            <div class="col-md-6">
+                                <label for="periodStudentSelect" class="form-label">Beneficiary</label>
+                                <select class="form-select js-data-ajax-female" id="periodStudentSelect" name="student_id" required>
+                                    <option value="">Select Beneficiary</option>
+                                </select>
+                                <small class="text-muted">Choose a beneficiary from the list.</small>
+                                <div class="invalid-feedback">Please select a beneficiary.</div>
                             </div>
-
 
                             <div class="col-md-6">
                                 <label for="recordDatePeriod" class="form-label">Record Date</label>
@@ -1748,12 +1738,19 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-12">
+                            <!-- <div class="col-md-12">
                                 <label for="padStudentSelect" class="form-label">Search and Select Beneficiaries</label>
                                 <select id="padStudentSelect" name="student_ids[]" class="form-control" multiple="multiple" required>
                                     <?php foreach ($femaleStudents as $student): ?>
                                         <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
                                     <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">Start typing to search beneficiaries. You can select multiple beneficiaries.</small>
+                                <div class="invalid-feedback">Please select at least one beneficiary.</div>
+                            </div> -->
+                            <div class="col-md-12">
+                                <label for="padStudentSelect" class="form-label">Search and Select Beneficiaries</label>
+                                <select id="padStudentSelect" name="student_ids[]" class="form-control js-data-ajax-female-multiple" multiple="multiple" required>
                                 </select>
                                 <small class="text-muted">Start typing to search beneficiaries. You can select multiple beneficiaries.</small>
                                 <div class="invalid-feedback">Please select at least one beneficiary.</div>
@@ -2563,7 +2560,108 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
         handleFormSubmit('periodRecordForm', 'submitPeriodBtn');
         handleFormSubmit('padDistributionForm', 'submitPadBtn');
     </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize the non-modal select (studentGrowth)
+            $('#studentGrowth').select2({
+                ajax: {
+                    url: 'search_beneficiaries.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    }
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search all students'
+            });
 
+            // Initialize modal selects when their modals are shown
+            $('#addHealthRecordModal').on('shown.bs.modal', function() {
+                $('#studentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    placeholder: 'Search by name'
+                });
+            });
+
+            $('#addPeriodRecordModal').on('shown.bs.modal', function() { // Make sure this matches your female select modal ID
+                $('#periodStudentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                gender: 'Female'
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    placeholder: 'Search female beneficiaries'
+                });
+            });
+
+            $('#addPadDistributionModal').on('shown.bs.modal', function() { // Make sure this matches your multiple select modal ID
+                $('#padStudentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                gender: 'Female'
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    placeholder: 'Search female beneficiaries',
+                    closeOnSelect: false
+                });
+            });
+
+            // Destroy Select2 when modals close to prevent memory leaks
+            $('.modal').on('hidden.bs.modal', function() {
+                $(this).find('select').select2('destroy');
+            });
+        });
+    </script>
 </body>
 
 </html>

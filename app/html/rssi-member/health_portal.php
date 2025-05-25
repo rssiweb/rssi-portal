@@ -112,9 +112,11 @@ $statsQuery = "SELECT
                     -- Optional: include status filter if you have it
                     -- AND filtertstatus = 'Active'
                 ) as total_students,
-                (SELECT COUNT(*) FROM student_health_records 
+                (SELECT COUNT(*) FROM student_health_records shr
+                INNER JOIN rssimyprofile_student s ON shr.student_id = s.student_id
                  WHERE record_date BETWEEN '$academicYearStart' AND '$academicYearEnd') as yearly_checks,
-                (SELECT COALESCE(SUM(quantity_distributed), 0) FROM stock_out
+                (SELECT COALESCE(SUM(quantity_distributed), 0) FROM stock_out so
+                INNER JOIN rssimyprofile_student s ON so.distributed_to = s.student_id
                  WHERE date BETWEEN '$academicYearStart' AND '$academicYearEnd' AND item_distributed=149) as yearly_pads";
 $statsResult = pg_query($con, $statsQuery);
 $stats = pg_fetch_assoc($statsResult);
@@ -263,7 +265,8 @@ $students = fetchStudents($con);
 ?>
 
 <?php
-function getBaseFilterUrl() {
+function getBaseFilterUrl()
+{
     $url = $_SERVER['REQUEST_URI'];
     $parsedUrl = parse_url($url);
     parse_str($parsedUrl['query'] ?? '', $queryParams);

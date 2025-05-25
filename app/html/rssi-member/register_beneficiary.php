@@ -377,8 +377,8 @@ if (isset($_SESSION['registration_success'])) {
                                         </h5>
 
                                         <div class="mb-3">
-                                            <label for="referral_source" class="form-label">How did you hear about us?</label>
-                                            <select class="form-select" id="referral_source" name="referral_source">
+                                            <label for="referral_source" class="form-label required-field">How did you hear about us?</label>
+                                            <select class="form-select" id="referral_source" name="referral_source" required>
                                                 <option value="" selected disabled>Select option</option>
                                                 <option value="Doctor Reference">Doctor Reference</option>
                                                 <option value="Friend/Family">Friend/Family</option>
