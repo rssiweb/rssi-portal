@@ -437,9 +437,11 @@ if ($students) {
                                                                 ?>
                                                             </select>
                                                         </div>
+                                                        <!-- First Effective From (change type to month) -->
                                                         <div class="col-md-3">
-                                                            <label for="effective_from" class="form-label">Effective From</label>
-                                                            <input type="date" name="effective_from" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                                            <label for="effective_from_month1" class="form-label">Effective From</label>
+                                                            <input type="month" id="effective_from_month1" class="form-control month-first-day" required>
+                                                            <input type="hidden" name="effective_from" id="effective_from1" value="<?= date('Y-m-01') ?>">
                                                         </div>
                                                     </div>
 
@@ -503,14 +505,18 @@ if ($students) {
                                                         </div>
                                                     </div>
                                                     <div class="row mb-3">
+                                                        <!-- Second Effective From (change type to month) -->
                                                         <div class="col-md-4">
-                                                            <label class="form-label">Effective From</label>
-                                                            <input type="date" name="effective_from" class="form-control"
-                                                                value="<?= date('Y-m-d') ?>" required>
+                                                            <label for="effective_from_month2" class="form-label">Effective From</label>
+                                                            <input type="month" id="effective_from_month2" class="form-control month-first-day" required>
+                                                            <input type="hidden" name="effective_from" id="effective_from2" value="<?= date('Y-m-01') ?>">
                                                         </div>
+
+                                                        <!-- Effective Until (change type to month) -->
                                                         <div class="col-md-4">
-                                                            <label class="form-label">Effective Until (optional)</label>
-                                                            <input type="date" name="effective_until" class="form-control">
+                                                            <label for="effective_until_month" class="form-label">Effective Until (optional)</label>
+                                                            <input type="month" id="effective_until_month" class="form-control month-last-day">
+                                                            <input type="hidden" name="effective_until" id="effective_until">
                                                         </div>
                                                         <div class="col-md-4 d-flex align-items-end">
                                                             <button type="submit" name="assign_fee" class="btn btn-primary">
@@ -729,13 +735,24 @@ if ($students) {
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for student multi-select
-            $('#spf_id').select2({
-                placeholder: "Select students",
-                allowClear: false,
-                width: '100%',
-                closeOnSelect: true // Keep dropdown open for multiple selections
+            function initializeSelect2() {
+                $('#spf_id').select2({
+                    placeholder: "Select students",
+                    allowClear: false,
+                    width: '100%',
+                    closeOnSelect: true
+                });
+            }
+
+            // On tab show
+            $('#student-specific-tab').on('shown.bs.tab', function() {
+                initializeSelect2();
             });
+
+            // If tab is already active on page load
+            if ($('#student-specific-tab').hasClass('active')) {
+                initializeSelect2();
+            }
 
             // Handle both standard and student fee deactivation
             $(document).on('click', '.btn-deactivate, .btn-deactivate-student', function() {
@@ -766,6 +783,95 @@ if ($students) {
 
             // Prevent alert from auto-closing
             $('.alert').alert('dispose');
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current month as default for all Effective From fields
+            const currentMonth = new Date().toISOString().slice(0, 7);
+
+            // Initialize all Effective From fields (month selection, 1st day as value)
+            document.querySelectorAll('.month-first-day').forEach(monthInput => {
+                monthInput.value = currentMonth;
+                updateDateFromMonthInput(monthInput, true);
+                monthInput.addEventListener('change', function() {
+                    updateDateFromMonthInput(this, true);
+                });
+            });
+
+            // Initialize Effective Until field (month selection, last day as value)
+            const untilInput = document.querySelector('.month-last-day');
+            if (untilInput) {
+                updateDateFromMonthInput(untilInput, false);
+                untilInput.addEventListener('change', function() {
+                    updateDateFromMonthInput(this, false);
+                });
+            }
+
+            function updateDateFromMonthInput(monthInput, isFirstDay) {
+                if (!monthInput.value) return;
+
+                const [year, month] = monthInput.value.split('-');
+                const date = isFirstDay ?
+                    new Date(year, month - 1, 1) : // First day of month
+                    new Date(year, month, 0); // Last day of month
+
+                // Find the nearest hidden input with the same base name
+                const hiddenInput = monthInput.nextElementSibling;
+                if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
+                    hiddenInput.value = date.toISOString().split('T')[0];
+                }
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const feeTab = document.getElementById('feeTab');
+
+            // Function to get query parameter by name
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            // Function to set query parameter
+            function setQueryParam(name, value) {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set(name, value);
+                const newUrl = window.location.pathname + '?' + urlParams.toString();
+                history.pushState(null, null, newUrl);
+            }
+
+            // Function to activate tab based on query parameter
+            function activateTabFromQuery() {
+                const tabName = getQueryParam('tab');
+                if (tabName) {
+                    const tabTrigger = document.querySelector(`[data-bs-target="#${tabName}"]`);
+                    if (tabTrigger) {
+                        const tab = new bootstrap.Tab(tabTrigger);
+                        tab.show();
+                    }
+                }
+            }
+
+            // Update query parameter when a tab is clicked
+            feeTab.addEventListener('click', function(e) {
+                if (e.target.classList.contains('nav-link')) {
+                    const target = e.target.getAttribute('data-bs-target');
+                    if (target) {
+                        const tabName = target.replace('#', '');
+                        setQueryParam('tab', tabName);
+                    }
+                }
+            });
+
+            // Activate correct tab on page load
+            activateTabFromQuery();
+
+            // Also handle back/forward navigation
+            window.addEventListener('popstate', function() {
+                activateTabFromQuery();
+            });
         });
     </script>
 </body>
