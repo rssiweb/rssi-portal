@@ -176,6 +176,24 @@ $feeStructure = pg_fetch_all(pg_query(
      ORDER BY fs.class, fs.student_type, fc.category_name, fs.effective_from DESC"
 )) ?? [];
 ?>
+<?php
+$studentOptions = '';
+$students = pg_fetch_all(pg_query(
+    $con,
+    "SELECT student_id, studentname, class 
+     FROM rssimyprofile_student 
+     WHERE filterstatus='Active' 
+     ORDER BY class, studentname"
+));
+if ($students) {
+    foreach ($students as $student) {
+        $id = htmlspecialchars($student['student_id']);
+        $name = htmlspecialchars($student['studentname']);
+        $class = htmlspecialchars($student['class']);
+        $studentOptions .= "<option value=\"$id\">$id-$name ($class)</option>";
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -186,7 +204,14 @@ $feeStructure = pg_fetch_all(pg_query(
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- In your head section -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
@@ -458,21 +483,8 @@ $feeStructure = pg_fetch_all(pg_query(
                                                     <div class="row mb-3">
                                                         <div class="col-md-6">
                                                             <label class="form-label">Students (select multiple)</label>
-                                                            <select name="student_ids[]" class="form-select selectpicker" multiple required
-                                                                data-live-search="true" data-actions-box="true">
-                                                                <?php
-                                                                $students = pg_fetch_all(pg_query(
-                                                                    $con,
-                                                                    "SELECT student_id, studentname, class 
-                                             FROM rssimyprofile_student 
-                                             WHERE filterstatus='Active'
-                                             ORDER BY class, studentname"
-                                                                ));
-                                                                foreach ($students as $student): ?>
-                                                                    <option value="<?= $student['student_id'] ?>">
-                                                                        <?= $student['student_id'] . '-' . $student['studentname'] ?> (<?= $student['class'] ?>)
-                                                                    </option>
-                                                                <?php endforeach; ?>
+                                                            <select name="student_ids[]" id="spf_id" class="form-select select2-multiple" multiple="multiple" required>
+                                                                <?= $studentOptions ?>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-3">
@@ -711,16 +723,19 @@ $feeStructure = pg_fetch_all(pg_query(
     </div>
 
     <!-- Required JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize select picker
-            $('.selectpicker').selectpicker();
+            // Initialize Select2 for student multi-select
+            $('#spf_id').select2({
+                placeholder: "Select students",
+                allowClear: false,
+                width: '100%',
+                closeOnSelect: true // Keep dropdown open for multiple selections
+            });
 
             // Handle both standard and student fee deactivation
             $(document).on('click', '.btn-deactivate, .btn-deactivate-student', function() {
