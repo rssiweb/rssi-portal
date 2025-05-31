@@ -1145,12 +1145,12 @@ $result = pg_query($con, $query);
                                                                 title="View">
                                                                 <i class="bi bi-eye"></i>
                                                             </button>
-                                                            <button class="btn btn-action btn-outline-secondary edit-record"
+                                                            <!-- <button class="btn btn-action btn-outline-secondary edit-record"
                                                                 data-type="health"
                                                                 data-id="<?= $row['id'] ?>"
                                                                 title="Edit">
                                                                 <i class="bi bi-pencil"></i>
-                                                            </button>
+                                                            </button> -->
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1387,12 +1387,12 @@ $result = pg_query($con, $query);
                                                                 title="Distribute Again">
                                                                 <i class="bi bi-box-seam"></i>
                                                             </button>
-                                                            <button class="btn btn-action btn-outline-secondary edit-record"
+                                                            <!-- <button class="btn btn-action btn-outline-secondary edit-record"
                                                                 data-type="pad"
                                                                 data-id="<?= $row['transaction_out_id'] ?>"
                                                                 title="Edit">
                                                                 <i class="bi bi-pencil"></i>
-                                                            </button>
+                                                            </button> -->
                                                     </td>
                                             <?php '</tr>';
                                                 }

@@ -10,7 +10,8 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-function getStudentInfoForDate($con, $studentId, $targetDate) {
+function getStudentInfoForDate($con, $studentId, $targetDate)
+{
     // First try to get from history table
     $query = "SELECT category_type, class 
               FROM student_category_history 
@@ -22,12 +23,12 @@ function getStudentInfoForDate($con, $studentId, $targetDate) {
               )
               ORDER BY effective_from DESC, created_at DESC
               LIMIT 1";
-    
+
     $result = pg_query_params($con, $query, array($studentId));
     if ($row = pg_fetch_assoc($result)) {
         return $row; // Return historical data if found
     }
-    
+
     // Fallback to original student record if no history exists
     $originalQuery = "SELECT type_of_admission as category_type, class 
                      FROM rssimyprofile_student 
@@ -192,7 +193,7 @@ if ($hasFilters) {
                     COALESCE(SUM(CASE 
                         WHEN category_id IN (
                             SELECT id FROM fee_categories 
-                            WHERE category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')
+                            WHERE category_name IN ('Admission Fee', 'Monthly Fee')
                         ) THEN amount 
                         ELSE 0 
                     END), 0) as core_paid_amount
@@ -282,7 +283,7 @@ if ($hasFilters) {
                        WHERE p.student_id = '$studentId'
                        AND p.month = '$loopMonthName'
                        AND p.academic_year = '$year'
-                       AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
+                       AND fc.category_name IN ('Admission Fee', 'Monthly Fee')";
 
                 $loopPaymentsResult = pg_query($con, $loopPaymentsQuery);
                 $loopPaidAmount = (float)(pg_fetch_assoc($loopPaymentsResult)['paid_amount'] ?? 0);
@@ -313,7 +314,7 @@ if ($hasFilters) {
             'class' => $student['class'],
             'category' => $student['category'],
             'doa' => date('d-M-Y', strtotime($student['doa'])),
-            'student_type' => $currentClass.'/'.$studentType,
+            'student_type' => $currentClass . '/' . $studentType,
             'admission_fee' => $feeDetails['Admission Fee'],
             'monthly_fee' => $feeDetails['Monthly Fee'],
             'miscellaneous' => $feeDetails['Miscellaneous'],
@@ -1001,7 +1002,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                     <!-- Fee Categories Notice -->
                                     <div class="fee-notice mb-4 p-3 bg-light border-start border-4 border-primary">
                                         <p class="mb-0 text-muted">
-                                            Dues can be collected under Admission, Monthly, Exam, or Miscellaneous fees.
+                                            Dues can be collected either as an Admission Fee or a Monthly Fee.
                                         </p>
                                     </div>
                                     <div id="feeActions" class="d-flex justify-content-end mb-3"></div>

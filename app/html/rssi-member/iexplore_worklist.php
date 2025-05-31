@@ -193,7 +193,7 @@ if (!$result) {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Worklist</a></li>
-                    <li class="breadcrumb-item active">iExplore Workflow</li>
+                    <li class="breadcrumb-item active">iExplore Worklist</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

@@ -280,7 +280,7 @@ if (!$result) {
                                             <?php
                                             $links = [
                                                 "Intern" => [
-                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view",
+                                                    "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
                                                     "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
                                                 ],
                                                 "Centre Incharge" => [
