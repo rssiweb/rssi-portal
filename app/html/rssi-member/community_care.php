@@ -962,12 +962,16 @@ $result = pg_query($con, $query);
                                                     <table class="table table-bordered">
                                                         <thead class="table-light">
                                                             <tr>
-                                                                <th width="30%">BMI Range</th>
+                                                                <th width="30%">Classification</th>
                                                                 <th width="20%">Status</th>
                                                                 <th width="50%">Indicator</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
+                                                            <!-- Children (Percentile-based) -->
+                                                            <tr class="table-active">
+                                                                <td colspan="3"><strong>For Children (4-15 years)</strong></td>
+                                                            </tr>
                                                             <tr>
                                                                 <td>Below 5th percentile</td>
                                                                 <td>Underweight</td>
@@ -1004,12 +1008,56 @@ $result = pg_query($con, $query);
                                                                     </span>
                                                                 </td>
                                                             </tr>
+
+                                                            <!-- Adults (Fixed BMI ranges) -->
+                                                            <tr class="table-active">
+                                                                <td colspan="3"><strong>For Adults (16-75 years)</strong></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>BMI &lt; 18.5</td>
+                                                                <td>Underweight</td>
+                                                                <td>
+                                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                                                        <i class="bi bi-info-circle me-1"></i>Underweight
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>18.5 ≤ BMI &lt; 25.0</td>
+                                                                <td>Healthy Weight</td>
+                                                                <td>
+                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                                        <i class="bi bi-check-circle me-1"></i>Healthy
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>25.0 ≤ BMI &lt; 30.0</td>
+                                                                <td>Overweight</td>
+                                                                <td>
+                                                                    <span class="badge bg-amber bg-opacity-10 text-amber border border-warning border-opacity-25">
+                                                                        <i class="bi bi-exclamation-triangle me-1"></i>Overweight
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>BMI ≥ 30.0</td>
+                                                                <td>Obese</td>
+                                                                <td>
+                                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Obese
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                     <p class="small text-muted mb-0">
-                                                        CDC/WHO Growth Standards:
-                                                        Underweight (<5th %ile), Healthy (5-85%ile),
-                                                            Overweight (85-95%ile), Obese (>95%ile)
+                                                        <strong>Children (4-15):</strong> CDC/WHO Growth Standards: Underweight (&lt;5th %ile), Healthy (5-85%ile),
+                                                        Overweight (85-95%ile), Obese (>95%ile)
+                                                    </p>
+                                                    <p class="small text-muted mb-0">
+                                                        <strong>Adults (16-75):</strong> WHO Standard Classification: Underweight (&lt;18.5), Healthy (18.5-24.9),
+                                                        Overweight (25.0-29.9), Obese (≥30.0)
                                                     </p>
                                                     <p class="small text-muted">
                                                         Sample Age Cutoffs (5th/85th/95th %ile):
