@@ -63,9 +63,9 @@ if ($resultArr > 0) {
 
 $query_admission = "SELECT studentname, emailaddress, contact, preferredbranch, student_id, doa, module,
     'admission' AS process_type,
-    (SELECT COUNT(*) FROM rssimyprofile_student WHERE module IS NULL) AS row_count
+    (SELECT COUNT(*) FROM rssimyprofile_student WHERE filterstatus IS NULL) AS row_count
 FROM rssimyprofile_student
-WHERE module IS NULL";
+WHERE filterstatus IS NULL";
 
 $result_admission = pg_query($con, $query_admission);
 $resultArr_admission = pg_fetch_all($result_admission);

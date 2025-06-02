@@ -800,61 +800,91 @@ $result = pg_query($con, $query);
                                 {
                                     $statuses = [];
 
-                                    // BMI Status (Ages 4-15) - Aligned with CDC Percentiles & WHO Categories
-                                    if ($age >= 4 && $age <= 15) {
-                                        $bmiThresholds = [
-                                            // Age => [Underweight(<5%), Healthy(5-85%), Overweight(85-95%), Obese(>95%)]
-                                            4 => [14.0, 14.0, 16.8, 17.8],
-                                            5 => [13.8, 13.8, 17.2, 18.4],
-                                            6 => [13.6, 13.6, 17.6, 19.2],
-                                            7 => [13.5, 13.5, 18.0, 20.0],
-                                            8 => [13.5, 13.5, 18.5, 21.0],
-                                            9 => [13.8, 13.8, 19.2, 22.0],
-                                            10 => [14.2, 14.2, 20.0, 23.0],
-                                            11 => [14.8, 14.8, 20.8, 24.0],
-                                            12 => [15.5, 15.5, 21.5, 25.0],
-                                            13 => [16.0, 16.0, 22.0, 26.0],
-                                            14 => [16.5, 16.5, 22.5, 26.5],
-                                            15 => [17.0, 17.0, 23.0, 27.0]
-                                        ];
+                                    // BMI Status - Different thresholds for children (4-15) and adults (16-75)
+                                    if ($age >= 4 && $age <= 75) {
+                                        if ($age <= 15) {
+                                            // Child BMI thresholds (Ages 4-15) - Aligned with CDC Percentiles & WHO Categories
+                                            $bmiThresholds = [
+                                                // Age => [Underweight(<5%), Healthy(5-85%), Overweight(85-95%), Obese(>95%)]
+                                                4 => [14.0, 14.0, 16.8, 17.8],
+                                                5 => [13.8, 13.8, 17.2, 18.4],
+                                                6 => [13.6, 13.6, 17.6, 19.2],
+                                                7 => [13.5, 13.5, 18.0, 20.0],
+                                                8 => [13.5, 13.5, 18.5, 21.0],
+                                                9 => [13.8, 13.8, 19.2, 22.0],
+                                                10 => [14.2, 14.2, 20.0, 23.0],
+                                                11 => [14.8, 14.8, 20.8, 24.0],
+                                                12 => [15.5, 15.5, 21.5, 25.0],
+                                                13 => [16.0, 16.0, 22.0, 26.0],
+                                                14 => [16.5, 16.5, 22.5, 26.5],
+                                                15 => [17.0, 17.0, 23.0, 27.0]
+                                            ];
 
-                                        if (isset($bmiThresholds[$age])) {
-                                            [$severeThin, $healthyMin, $overweightMin, $obeseMin] = $bmiThresholds[$age];
+                                            if (isset($bmiThresholds[$age])) {
+                                                [$severeThin, $healthyMin, $overweightMin, $obeseMin] = $bmiThresholds[$age];
 
-                                            if ($bmi < $severeThin) {
+                                                if ($bmi < $severeThin) {
+                                                    $statuses[] = [
+                                                        'type' => 'BMI',
+                                                        'status' => 'Underweight',
+                                                        'class' => 'info',
+                                                        'icon' => 'bi bi-info-circle',
+                                                        'description' => 'Severe thinness for age'
+                                                    ];
+                                                } elseif ($bmi < $healthyMin) {
+                                                    $statuses[] = [
+                                                        'type' => 'BMI',
+                                                        'status' => 'Underweight',
+                                                        'class' => 'info',
+                                                        'icon' => 'bi bi-info-circle',
+                                                        'description' => 'Moderate thinness for age'
+                                                    ];
+                                                } elseif ($bmi >= $obeseMin) {
+                                                    $statuses[] = [
+                                                        'type' => 'BMI',
+                                                        'status' => 'Obese',
+                                                        'class' => 'danger',
+                                                        'icon' => 'exclamation-triangle-fill',
+                                                        'description' => 'Obese for age'
+                                                    ];
+                                                } elseif ($bmi >= $overweightMin) {
+                                                    $statuses[] = [
+                                                        'type' => 'BMI',
+                                                        'status' => 'Overweight',
+                                                        'class' => 'amber',
+                                                        'icon' => 'exclamation-triangle',
+                                                        'description' => 'At risk of overweight'
+                                                    ];
+                                                }
+                                            }
+                                        } else {
+                                            // Adult BMI thresholds (Ages 16-75) - Standard WHO classification
+                                            if ($bmi < 18.5) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Underweight',
                                                     'class' => 'info',
                                                     'icon' => 'bi bi-info-circle',
-                                                    'description' => 'Severe thinness for age'
+                                                    'description' => 'BMI < 18.5 (Adult standard)'
                                                 ];
-                                            } elseif ($bmi < $healthyMin) {
-                                                $statuses[] = [
-                                                    'type' => 'BMI',
-                                                    'status' => 'Underweight',
-                                                    'class' => 'info',
-                                                    'icon' => 'bi bi-info-circle',
-                                                    'description' => 'Moderate thinness for age'
-                                                ];
-                                            } elseif ($bmi >= $obeseMin) {
+                                            } elseif ($bmi >= 30.0) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Obese',
                                                     'class' => 'danger',
                                                     'icon' => 'exclamation-triangle-fill',
-                                                    'description' => 'Obese for age'
+                                                    'description' => 'BMI ≥ 30.0 (Adult standard)'
                                                 ];
-                                            } elseif ($bmi >= $overweightMin) {
+                                            } elseif ($bmi >= 25.0) {
                                                 $statuses[] = [
                                                     'type' => 'BMI',
                                                     'status' => 'Overweight',
                                                     'class' => 'amber',
                                                     'icon' => 'exclamation-triangle',
-                                                    'description' => 'At risk of overweight'
+                                                    'description' => 'BMI 25.0-29.9 (Adult standard)'
                                                 ];
                                             }
-                                            // Normal weight (5-85%) shows no status
+                                            // Normal weight (18.5-24.9) shows no status
                                         }
                                     }
 
