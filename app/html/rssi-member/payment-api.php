@@ -1087,7 +1087,7 @@ if (@$_POST['form-type'] == "admission") {
           "student_id" => $student_id,
           "student_name" => $student_name,
           "preferred_branch" => $preferred_branch,
-          "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
+          "timestamp" => date("d/m/Y g:i a")
         ), $email_address);
       }
     } else {
