@@ -997,7 +997,7 @@ if (@$_POST['form-type'] == "admission") {
   $c_authentication_code = $_POST['c-authentication-code'];
   $transaction_id = $_POST['transaction-id'];
   $subject_select = $_POST['subject-select'];
-  @$timestamp = date('Y-m-d H:i:s');
+  $timestamp = $_POST['admission-date'];
   $caste_document = $_FILES['caste-document'];
   $caste = $_POST['caste'];
 
