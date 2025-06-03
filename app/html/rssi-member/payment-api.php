@@ -1000,71 +1000,90 @@ if (@$_POST['form-type'] == "admission") {
   $timestamp = $_POST['admission-date'];
   $caste_document = $_FILES['caste-document'];
   $caste = $_POST['caste'];
+  $c_auth_session_id = isset($_POST['c_auth_session_id']) ? $_POST['c_auth_session_id'] : null;
+  $is_verified = false; // default
 
-  // Determine if student is new admission or not
-  $is_new_admission = 'A'; // Set to true if new admission, false otherwise
+  if ($c_auth_session_id) {
+    $query = "SELECT is_verified FROM cash_verification_codes WHERE session_id = $1 LIMIT 1";
+    $result = pg_query_params($con, $query, array($c_auth_session_id));
+    if ($row = pg_fetch_assoc($result)) {
+      // Adjust based on how is_verified is stored
+      $is_verified = $row['is_verified'];
 
-  // if ($type_of_admission == 'New Admission') {
-  //   $is_new_admission = 'A';
-  // } else {
-  //   $is_new_admission = 'B';
-  // }
-
-  // Determine branch code
-  $branch = ''; // Set branch code (LKO for Lucknow, KOL for West Bengal)
-
-  // Replace with the correct branch code based on the branch location
-  if ($preferred_branch == 'Lucknow') {
-    $branch = 'LKO';
-  } elseif ($preferred_branch == 'West Bengal') {
-    $branch = 'KOL';
+      // echo json_encode(array(
+      //   'is_verified' => $is_verified,
+      //   'c_auth_session_id' => $c_auth_session_id,
+      //   'message' => $is_verified ? 'Verification successful.' : 'Verification failed.'
+      // ));
+      // exit;
+    }
   }
 
-  // Determine current year
-  $current_year = date('y'); // Two-digit year from current date
+  if ($payment_mode == 'online' || ($payment_mode == 'cash' && $is_verified == 't')) {
+    // Determine if student is new admission or not
+    $is_new_admission = 'A'; // Set to true if new admission, false otherwise
 
-  // Generate a random 3-digit number
-  $random_number = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
+    // if ($type_of_admission == 'New Admission') {
+    //   $is_new_admission = 'A';
+    // } else {
+    //   $is_new_admission = 'B';
+    // }
 
-  // Generate student ID
-  $logic_1 = $is_new_admission; // Logic 1
-  $logic_2 = $branch; // Logic 2
-  $logic_3 = $current_year; // Logic 3
-  $logic_4 = $random_number; // Logic 4
+    // Determine branch code
+    $branch = ''; // Set branch code (LKO for Lucknow, KOL for West Bengal)
 
-  $student_id = $logic_1 . $logic_2 . $logic_3 . $logic_4; // Concatenate all four logics
+    // Replace with the correct branch code based on the branch location
+    if ($preferred_branch == 'Lucknow') {
+      $branch = 'LKO';
+    } elseif ($preferred_branch == 'West Bengal') {
+      $branch = 'KOL';
+    }
 
-  // send uploaded file to drive
-  // get the drive link
-  if (empty($_FILES['aadhar-card-upload']['name'])) {
-    $doclink_aadhar_card = null;
-  } else {
-    $filename_aadhar_card = "doc_" . $student_name . "_" . time();
-    $parent_aadhar_card = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
-    $doclink_aadhar_card = uploadeToDrive($uploadedFile_aadhar_card, $parent_aadhar_card, $filename_aadhar_card);
-  }
-  if (empty($_FILES['student-photo']['name'])) {
-    $doclink_student_photo = null;
-  } else {
-    $filename_student_photo = "doc_" . $student_name . "_" . time();
-    $parent_student_photo = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
-    $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
-  }
+    // Determine current year
+    $current_year = date('y'); // Two-digit year from current date
 
-  if (empty($_FILES['caste-document']['name'])) {
-    $doclink_caste_document = null;
-  } else {
-    $filename_caste_document = "caste_" . $student_name . "_" . time();
-    $parent_caste_document = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
-    $doclink_caste_document = uploadeToDrive($caste_document, $parent_caste_document, $filename_caste_document);
-  }
+    // Generate a random 3-digit number
+    $random_number = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
 
-  $student = "INSERT INTO rssimyprofile_student (type_of_admission,studentname,dateofbirth,gender,student_photo_raw,aadhar_available,studentaadhar,upload_aadhar_card,guardiansname,relationwithstudent,guardianaadhar,stateofdomicile,postaladdress,permanentaddress,contact,emailaddress,preferredbranch,class,schooladmissionrequired,nameoftheschool,nameoftheboard,medium,familymonthlyincome,totalnumberoffamilymembers,payment_mode,c_authentication_code,transaction_id,student_id,nameofthesubjects,doa,caste,caste_document) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$permanent_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select','$timestamp','$caste','$doclink_caste_document')";
+    // Generate student ID
+    $logic_1 = $is_new_admission; // Logic 1
+    $logic_2 = $branch; // Logic 2
+    $logic_3 = $current_year; // Logic 3
+    $logic_4 = $random_number; // Logic 4
 
-  $result = pg_query($con, $student);
+    $student_id = $logic_1 . $logic_2 . $logic_3 . $logic_4; // Concatenate all four logics
 
-  // Insert new history record
-  $insertHistoryQuery = "INSERT INTO student_category_history (
+    // send uploaded file to drive
+    // get the drive link
+    if (empty($_FILES['aadhar-card-upload']['name'])) {
+      $doclink_aadhar_card = null;
+    } else {
+      $filename_aadhar_card = "doc_" . $student_name . "_" . time();
+      $parent_aadhar_card = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+      $doclink_aadhar_card = uploadeToDrive($uploadedFile_aadhar_card, $parent_aadhar_card, $filename_aadhar_card);
+    }
+    if (empty($_FILES['student-photo']['name'])) {
+      $doclink_student_photo = null;
+    } else {
+      $filename_student_photo = "doc_" . $student_name . "_" . time();
+      $parent_student_photo = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+      $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
+    }
+
+    if (empty($_FILES['caste-document']['name'])) {
+      $doclink_caste_document = null;
+    } else {
+      $filename_caste_document = "caste_" . $student_name . "_" . time();
+      $parent_caste_document = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+      $doclink_caste_document = uploadeToDrive($caste_document, $parent_caste_document, $filename_caste_document);
+    }
+
+    $student = "INSERT INTO rssimyprofile_student (type_of_admission,studentname,dateofbirth,gender,student_photo_raw,aadhar_available,studentaadhar,upload_aadhar_card,guardiansname,relationwithstudent,guardianaadhar,stateofdomicile,postaladdress,permanentaddress,contact,emailaddress,preferredbranch,class,schooladmissionrequired,nameoftheschool,nameoftheboard,medium,familymonthlyincome,totalnumberoffamilymembers,payment_mode,c_authentication_code,transaction_id,student_id,nameofthesubjects,doa,caste,caste_document) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$permanent_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select','$timestamp','$caste','$doclink_caste_document')";
+
+    $result = pg_query($con, $student);
+
+    // Insert new history record
+    $insertHistoryQuery = "INSERT INTO student_category_history (
       student_id, 
       category_type, 
       effective_from, 
@@ -1075,24 +1094,25 @@ if (@$_POST['form-type'] == "admission") {
       DATE '$timestamp', 
       'System'
     )";
-  pg_query($con, $insertHistoryQuery);
+    pg_query($con, $insertHistoryQuery);
 
-  if ($result) {
-    $cmdtuples = pg_affected_rows($result);
-    if ($cmdtuples == 1) {
-      $response = array("success" => true, "message" => "Form submitted successfully.");
-      echo json_encode($response);
-      if (@$cmdtuples == 1 && $email_address != "") {
-        sendEmail("admission_success", array(
-          "student_id" => $student_id,
-          "student_name" => $student_name,
-          "preferred_branch" => $preferred_branch,
-          "timestamp" => date("d/m/Y g:i a")
-        ), $email_address);
+    if ($result) {
+      $cmdtuples = pg_affected_rows($result);
+      if ($cmdtuples == 1) {
+        $response = array("success" => true, "message" => "Form submitted successfully.");
+        echo json_encode($response);
+        if (@$cmdtuples == 1 && $email_address != "") {
+          sendEmail("admission_success", array(
+            "student_id" => $student_id,
+            "student_name" => $student_name,
+            "preferred_branch" => $preferred_branch,
+            "timestamp" => date("d/m/Y g:i a")
+          ), $email_address);
+        }
+      } else {
+        $response = array("success" => false, "message" => "Form submission failed.");
+        echo json_encode($response);
       }
-    } else {
-      $response = array("success" => false, "message" => "Form submission failed.");
-      echo json_encode($response);
     }
   } else {
     $response = array("success" => false, "message" => "Form submission failed.");

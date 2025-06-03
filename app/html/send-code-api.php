@@ -56,7 +56,7 @@ if (!$storeResult) {
 
 // Fetch all active director emails
 $emailQuery = "SELECT email, fullname FROM rssimyaccount_members 
-              WHERE position = 'Director' AND filterstatus = 'Active'";
+              WHERE position = 'Centre Incharge' AND filterstatus = 'Active'";
 $emailResult = pg_query($con, $emailQuery);
 
 if (!$emailResult) {

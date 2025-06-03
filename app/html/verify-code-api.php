@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Get the POST data
 $data = json_decode(file_get_contents('php://input'), true);
 $code = $data['code'] ?? '';
+$sessionId = $data['session_id'] ?? '';
 
 if (empty($code)) {
     echo json_encode(['success' => false, 'message' => 'Code is required']);
@@ -23,14 +24,19 @@ if (empty($code)) {
 
 // Start session to get session ID
 // session_start();
-$sessionId = session_id();
+// $sessionId = session_id();
 
 // Verify the code against your database
 // This assumes you have a table storing the generated codes
 $query = "SELECT * FROM cash_verification_codes 
-          WHERE code = $1 AND created_at > NOW() - INTERVAL '1 hour' 
+          WHERE code = $1 
+          AND session_id = $2 
+          AND created_at > NOW() - INTERVAL '1 hour' 
           AND is_verified = false";
-$result = pg_query_params($con, $query, [$code]);
+$result = pg_query_params($con, $query, [$code, $sessionId]);
+
+error_log("Verifying code for session ID: " . $sessionId);
+error_log("Running query: $query with params - code: $code, session_id: $sessionId");
 
 if (!$result) {
     echo json_encode(['success' => false, 'message' => 'Database error']);
