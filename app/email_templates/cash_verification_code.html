@@ -83,21 +83,46 @@ Cash Payment Verification Code
                                                                                                         requested for:
                                                                                                     </p>
 
-                                                                                                    <ul
-                                                                                                        style="list-style-type: none;">
-                                                                                                        <li>Student:
-                                                                                                            {{student_name}}
-                                                                                                        </li>
-                                                                                                        <li>Plan:
-                                                                                                            {{class}}/{{type_of_admission}}
-                                                                                                        </li>
-                                                                                                        <li>Branch:
-                                                                                                            {{preferred_branch}}
-                                                                                                        </li>
-                                                                                                        <li>Time:
-                                                                                                            {{timestamp}}
-                                                                                                        </li>
-                                                                                                    </ul>
+                                                                                                    <table
+                                                                                                        style="width: 100%; border-collapse: collapse;">
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Student:
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                {{student_name}}
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Plan:
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                {{class}}
+                                                                                                                /
+                                                                                                                {{type_of_admission}}
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Date of
+                                                                                                                Admission:
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                {{doa}}
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Submitted
+                                                                                                                On:
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                {{timestamp}}
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    </table>
+
                                                                                                     <p>Verification
                                                                                                         Code:
                                                                                                         <span

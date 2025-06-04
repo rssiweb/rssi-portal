@@ -23,6 +23,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 $code = $data['code'] ?? '';
 $studentName = $data['student_name'] ?? '';
 $preferredBranch = $data['preferred_branch'] ?? '';
+$doa = $data['doa'] ?? '';
 $class = $data['class'] ?? '';
 $type_of_admission = $data['type_of_admission'] ?? '';
 $sessionId = session_id();
@@ -55,7 +56,7 @@ if (!$storeResult) {
 }
 
 // Fetch all active director emails
-$emailQuery = "SELECT email, fullname FROM rssimyaccount_members 
+$emailQuery = "SELECT alt_email, fullname FROM rssimyaccount_members 
               WHERE position = 'Centre Incharge' AND filterstatus = 'Active'";
 $emailResult = pg_query($con, $emailQuery);
 
@@ -65,15 +66,41 @@ if (!$emailResult) {
 }
 
 $emails = [];
+$fullnames = [];
+$maskedEmails = []; // To store masked versions for display
+
 while ($row = pg_fetch_assoc($emailResult)) {
-    if (!empty($row['email'])) {
-        $emails[] = $row['email'];
-        $fullnames[] = $row['fullname'];
+    if (!empty($row['alt_email'])) {
+        // Split comma-separated emails into an array
+        $rawEmails = explode(',', $row['alt_email']);
+
+        foreach ($rawEmails as $email) {
+            $email = trim($email); // Remove whitespace
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = $email;
+                $fullnames[] = $row['fullname'];
+
+                // New masking rule: keep first 2 chars + at least 1 X
+                $parts = explode('@', $email);
+                if (count($parts) === 2) {
+                    $username = $parts[0];
+                    $domain = $parts[1];
+
+                    // Calculate how many characters to keep (minimum 1 X)
+                    $keepChars = min(2, strlen($username) - 1);
+                    $maskedUsername = substr($username, 0, $keepChars) . str_repeat('X', max(1, strlen($username) - $keepChars));
+
+                    $maskedEmails[] = $maskedUsername . '@' . $domain;
+                } else {
+                    $maskedEmails[] = $email; // fallback if invalid format
+                }
+            }
+        }
     }
 }
 
 if (empty($emails)) {
-    echo json_encode(['success' => false, 'message' => 'No director emails found']);
+    echo json_encode(['success' => false, 'message' => 'No emails found']);
     exit;
 }
 
@@ -89,6 +116,7 @@ $emailData = [
     "type_of_admission" => $type_of_admission,
     "timestamp" => date("d/m/Y g:i a"),
     "fullname" => $fullNames,
+    "doa" => date('d/m/Y', strtotime($doa)),
     "session_id" => $sessionId  // Include session ID in email for reference
 ];
 
@@ -100,8 +128,9 @@ try {
     // assume it's successful if no exception was thrown
     echo json_encode([
         'success' => true,
-        'message' => 'Code sent to directors',
-        'session_id' => $sessionId
+        'message' => 'Code sent to recipients',
+        'session_id' => $sessionId,
+        'email_sent' => $maskedEmails
     ]);
     exit;
 } catch (Exception $e) {
