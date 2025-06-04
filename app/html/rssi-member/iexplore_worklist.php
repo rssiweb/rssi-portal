@@ -117,13 +117,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all pending external score requests
+// Fetch latest pending external score requests per course and associate
 $query = "
-    SELECT e.*, m.fullname, w.coursename
-    FROM external_exam_scores e
-    LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
-    LEFT JOIN wbt w ON e.course_id = w.courseid
-    WHERE e.status IS NULL OR e.status = 'pending'
+    WITH latest_submissions AS (
+        SELECT DISTINCT ON (e.course_id, e.associate_number)
+            e.*, m.fullname, w.coursename
+        FROM external_exam_scores e
+        LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
+        LEFT JOIN wbt w ON e.course_id = w.courseid
+        WHERE e.status IS NULL OR e.status = 'pending'
+        ORDER BY e.course_id, e.associate_number, e.submission_time DESC
+    )
+    SELECT * FROM latest_submissions
 ";
 $result = pg_query($con, $query);
 
