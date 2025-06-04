@@ -55,7 +55,7 @@ if (!$storeResult) {
     exit;
 }
 
-// Fetch all active director emails
+// Fetch all active emails position = 'Centre Incharge'
 $emailQuery = "SELECT alt_email, fullname FROM rssimyaccount_members 
               WHERE position = 'Centre Incharge' AND filterstatus = 'Active'";
 $emailResult = pg_query($con, $emailQuery);
@@ -122,7 +122,7 @@ $emailData = [
 
 // With this:
 try {
-    $emailResult = sendEmail("cash_verification_code", $emailData, $toEmails);
+    $emailResult = sendEmail("cash_verification_code", $emailData, $toEmails, false);
 
     // If email is sending but you're still getting failure message,
     // assume it's successful if no exception was thrown
