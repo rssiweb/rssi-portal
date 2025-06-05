@@ -244,7 +244,7 @@ if (!$phoneNumber) {
                                 <th scope="col">Visitor details</th>
                                 <th scope="col">Visit date from</th>
                                 <th scope="col">Visit date to</th>
-                                <th scope="col">Identity proof</th>
+                                <!--<th scope="col">Identity proof</th>-->
                                 <th scope="col">Photo</th>
                                 <th scope="col">Purpose of visit</th>
                                 <th scope="col">Branch name</th>
@@ -262,9 +262,9 @@ if (!$phoneNumber) {
                                 <td>' . $array['fullname'] . '<br>' . $array['tel'] . '<br>' . $array['email'] . '</td>
                                 <td>' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '</td>
                                 
-                                <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>
-                                
-                                <td><span class="noticea"><a href="' . $array['nationalid'] . '" target="_blank"><i class="bi bi-filetype-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>' ?>
+                                <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>' ?>
+
+                                    <!--<td><span class="noticea"><a href="' . $array['nationalid'] . '" target="_blank"><i class="bi bi-filetype-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>-->
                                     <td>
                                         <?php
                                         // Assuming $array['photo'] contains the URL
@@ -289,7 +289,7 @@ if (!$phoneNumber) {
 
                                     <!-- Modal for each row -->
                                     <div class="modal fade" id="detailsModal<?php echo $array['visitid']; ?>" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg"> <!-- Changed to modal-lg for better preview -->
+                                        <div class="modal-dialog modal-dialog-scrollable modal-lg"> <!-- Changed to modal-lg for better preview -->
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title" id="detailsModalLabel">Visit Details #<?php echo $array['visitid']; ?></h5>
@@ -323,6 +323,8 @@ if (!$phoneNumber) {
                                                                 <p><strong>Other Reason:</strong> <?php echo $array['other_reason']; ?></p>
                                                             <?php endif; ?>
                                                             <p><strong>Mentor Email:</strong> <?php echo $array['mentoremail']; ?></p>
+                                                            <p><strong>Enrollment Number:</strong> <?php echo $array['enrollmentnumber']; ?></p>
+                                                            <p><strong>Institute Name:</strong> <?php echo $array['institutename']; ?></p>
 
                                                             <?php if (!empty($array['instituteid'])): ?>
                                                                 <div class="mt-3">
@@ -334,14 +336,20 @@ if (!$phoneNumber) {
                                                                     $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
                                                                     ?>
                                                                     <iframe src="<?php echo $previewUrl; ?>" width="100%" height="300" frameborder="0" allow="autoplay" style="border: 1px solid #ddd;"></iframe>
-                                                                    <!-- <p class="small mt-1">
-                                                                        <a href="<?php echo $array['instituteid']; ?>" target="_blank" class="text-decoration-none">Open full ID card in new tab</a>
-                                                                    </p> -->
                                                                 </div>
                                                             <?php endif; ?>
-
-                                                            <p><strong>Enrollment Number:</strong> <?php echo $array['enrollmentnumber']; ?></p>
-                                                            <p><strong>Institute Name:</strong> <?php echo $array['institutename']; ?></p>
+                                                            <?php if (!empty($array['nationalid'])): ?>
+                                                                <div class="mt-3">
+                                                                    <h6 class="fw-bold">Identity proof</h6>
+                                                                    <?php
+                                                                    $urlParts = parse_url($array['nationalid']);
+                                                                    $pathParts = explode('/', $urlParts['path']);
+                                                                    $fileId = $pathParts[3];
+                                                                    $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
+                                                                    ?>
+                                                                    <iframe src="<?php echo $previewUrl; ?>" width="100%" height="300" frameborder="0" allow="autoplay" style="border: 1px solid #ddd;"></iframe>
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 </div>
