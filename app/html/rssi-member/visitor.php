@@ -283,6 +283,74 @@ if (!$phoneNumber) {
                                     </td>
                                     <td>
                                         <?php echo $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') ?>
+                                        <br>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#detailsModal<?php echo $array['visitid']; ?>" class="text-decoration-none">Details</a>
+                                    </td>
+
+                                    <!-- Modal for each row -->
+                                    <div class="modal fade" id="detailsModal<?php echo $array['visitid']; ?>" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg"> <!-- Changed to modal-lg for better preview -->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="detailsModalLabel">Visit Details #<?php echo $array['visitid']; ?></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h6 class="fw-bold">Visitor Information</h6>
+                                                            <p><strong>Name:</strong> <?php echo $array['fullname']; ?></p>
+                                                            <p><strong>Phone:</strong> <?php echo $array['tel']; ?></p>
+                                                            <p><strong>Email:</strong> <?php echo $array['email']; ?></p>
+
+                                                            <?php if (!empty($array['photo'])): ?>
+                                                                <div class="mt-3">
+                                                                    <h6 class="fw-bold">Visitor Photo</h6>
+                                                                    <?php
+                                                                    $urlParts = parse_url($array['photo']);
+                                                                    $pathParts = explode('/', $urlParts['path']);
+                                                                    $fileId = $pathParts[3];
+                                                                    $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
+                                                                    ?>
+                                                                    <iframe src="<?php echo $previewUrl; ?>" width="150" height="150" frameborder="0" allow="autoplay" class="img-thumbnail"></iframe>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h6 class="fw-bold">Visit Details</h6>
+                                                            <p><strong>Purpose:</strong> <?php echo $array['visitpurpose']; ?></p>
+                                                            <?php if ($array['other_reason']): ?>
+                                                                <p><strong>Other Reason:</strong> <?php echo $array['other_reason']; ?></p>
+                                                            <?php endif; ?>
+                                                            <p><strong>Mentor Email:</strong> <?php echo $array['mentoremail']; ?></p>
+
+                                                            <?php if (!empty($array['instituteid'])): ?>
+                                                                <div class="mt-3">
+                                                                    <h6 class="fw-bold">Institute ID Card</h6>
+                                                                    <?php
+                                                                    $urlParts = parse_url($array['instituteid']);
+                                                                    $pathParts = explode('/', $urlParts['path']);
+                                                                    $fileId = $pathParts[3];
+                                                                    $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
+                                                                    ?>
+                                                                    <iframe src="<?php echo $previewUrl; ?>" width="100%" height="300" frameborder="0" allow="autoplay" style="border: 1px solid #ddd;"></iframe>
+                                                                    <!-- <p class="small mt-1">
+                                                                        <a href="<?php echo $array['instituteid']; ?>" target="_blank" class="text-decoration-none">Open full ID card in new tab</a>
+                                                                    </p> -->
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <p><strong>Enrollment Number:</strong> <?php echo $array['enrollmentnumber']; ?></p>
+                                                            <p><strong>Institute Name:</strong> <?php echo $array['institutename']; ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     </td>
                                     <td><?php echo $array['visitbranch'] ?></td>
 
