@@ -4,114 +4,10 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-
     header("Location: index.php");
     exit;
 }
 validation();
-?>
-<?php
-// Fetch products from the database
-$products = [];
-// Add pagination parameters at the top of your PHP code
-$itemsPerPage = 5;
-$currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
-
-// Modify your query to include search and pagination
-$query = "SELECT
-    i.item_id,
-    i.item_name,
-    i.image_url,
-    i.description,
-    u.unit_id,
-    u.unit_name,
-    p.unit_quantity,
-    COALESCE((SELECT SUM(quantity_received) 
-              FROM stock_add 
-              WHERE item_id = i.item_id 
-              AND unit_id = u.unit_id), 0) AS total_added_count,
-    COALESCE((SELECT SUM(quantity_distributed) 
-              FROM stock_out 
-              WHERE item_distributed = i.item_id 
-              AND unit = u.unit_id), 0) AS total_distributed_count,
-    (COALESCE((SELECT SUM(quantity_received) 
-              FROM stock_add 
-              WHERE item_id = i.item_id 
-              AND unit_id = u.unit_id), 0) 
-     - 
-     COALESCE((SELECT SUM(quantity_distributed) 
-              FROM stock_out 
-              WHERE item_distributed = i.item_id 
-              AND unit = u.unit_id), 0)) AS in_stock,
-    p.price_per_unit,
-    p.discount_percentage,
-    p.original_price,
-    i.rating,
-    i.review_count,
-    i.is_featured
-FROM 
-    stock_item i
-LEFT JOIN stock_add sa ON i.item_id = sa.item_id
-LEFT JOIN stock_out so ON i.item_id = so.item_distributed
-JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
-LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
-    AND p.unit_id = u.unit_id
-    AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-WHERE 
-    i.access_scope = 'public'";
-
-// Add search condition if search term exists
-if (!empty($searchTerm)) {
-    $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
-}
-
-$query .= " GROUP BY 
-    i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
-    u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
-ORDER BY 
-    i.is_featured DESC, i.item_name";
-
-// Get total count for pagination
-$countQuery = "SELECT COUNT(DISTINCT i.item_id) as total FROM stock_item i 
-               LEFT JOIN stock_add sa ON i.item_id = sa.item_id
-               LEFT JOIN stock_out so ON i.item_id = so.item_distributed
-               JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
-               WHERE i.access_scope = 'public'";
-
-if (!empty($searchTerm)) {
-    $countQuery .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
-}
-
-$countResult = pg_query($con, $countQuery);
-$totalItems = pg_fetch_assoc($countResult)['total'];
-$totalPages = ceil($totalItems / $itemsPerPage);
-
-// Add LIMIT and OFFSET to the main query
-$query .= " LIMIT $itemsPerPage OFFSET " . (($currentPage - 1) * $itemsPerPage);
-
-$result = pg_query($con, $query);
-
-if ($result) {
-    while ($row = pg_fetch_assoc($result)) {
-        $products[] = [
-            'id' => (int)$row['item_id'],
-            'name' => $row['item_name'],
-            'price' => (float)$row['price_per_unit'],
-            'original_price' => isset($row['original_price']) ? (float)$row['original_price'] : (float)$row['price_per_unit'],
-            'image' => $row['image_url'],
-            'description' => $row['description'] ?? '',
-            'unit_name' => $row['unit_name'],
-            'unit_quantity' => $row['unit_quantity'] ?? 1,
-            'in_stock' => $row['in_stock'],
-            'soldOut' => $row['in_stock'] <= 0,
-            'discount_percentage' => (float)$row['discount_percentage'] ?? 0,
-            'rating' => (float)$row['rating'] ?? 0,
-            'review_count' => (int)$row['review_count'] ?? 0,
-            'is_featured' => $row['is_featured'] ?? false
-        ];
-    }
-}
 ?>
 
 <!doctype html>
@@ -127,37 +23,29 @@ if ($result) {
             dataLayer.push(arguments);
         }
         gtag('js', new Date());
-
         gtag('config', 'AW-11316670180');
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>eMart</title>
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <!-- In your head section -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Include Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
@@ -192,8 +80,7 @@ if ($result) {
             display: inline-flex;
             align-items: center;
         }
-    </style>
-    <style>
+
         /* Make loading modal appear above order confirmation modal */
         #myModal {
             z-index: 1080 !important;
@@ -213,7 +100,6 @@ if ($result) {
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
-
         <div class="pagetitle">
             <h1>eMart</h1>
             <nav>
@@ -227,197 +113,43 @@ if ($result) {
 
         <section class="section dashboard">
             <div class="row">
-
                 <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
                             <br>
                             <div class="container py-5">
                                 <div class="row">
-                                    <!-- Left Section: Total Points -->
-                                    <div class="col-md-3">
-                                        <form method="get" action="" class="d-flex">
-                                            <input type="text" name="search" class="form-control me-2" placeholder="Search products..."
-                                                value="<?php echo htmlspecialchars($searchTerm); ?>">
-                                            <button type="submit" class="btn btn-primary">Search</button>
-                                            <?php if (!empty($searchTerm)): ?>
-                                                <a href="?" class="btn btn-outline-secondary ms-2">Clear</a>
-                                            <?php endif; ?>
-                                        </form>
-                                    </div>
+                                    <!-- Left Section: Empty for alignment -->
+                                    <div class="col-md-3"></div>
 
                                     <!-- Middle Section: Product List -->
                                     <div class="col-md-6">
-                                        <div id="productList">
-                                            <script>
-                                                const products = <?php echo json_encode($products); ?>;
-
-                                                // Modify your renderProducts function to accept filtered products
-                                                function renderProducts(filteredProducts = products) {
-                                                    const productList = document.getElementById('productList');
-                                                    productList.innerHTML = '';
-
-                                                    if (filteredProducts.length === 0) {
-                                                        productList.innerHTML = `
-                                                            <div class="alert alert-info">
-                                                                No products found matching your search.
-                                                            </div>
-                                                        `;
-                                                        return;
-                                                    }
-
-                                                    products.forEach(product => {
-                                                        const hasDiscount = product.discount_percentage > 0;
-                                                        const displayPrice = hasDiscount ?
-                                                            (product.original_price * (1 - product.discount_percentage / 100)).toFixed(2) :
-                                                            product.price.toFixed(2);
-
-                                                        const stockStatus = product.in_stock <= 0;
-                                                        const lowStock = product.in_stock > 0 && product.in_stock <= 5;
-
-                                                        const productCard = document.createElement('div');
-                                                        productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
-                                                        productCard.innerHTML = `
-                                                        <div class="d-flex">
-                                                            <!-- Product Image -->
-                                                            <div class="col-6 me-3" style="height: 150px;">
-                                                                <img src="${product.image}" alt="${product.name}" 
-                                                                    class="img-fluid h-100 w-100 object-fit-cover rounded">
-                                                            </div>
-                                                            
-                                                            <!-- Product Details -->
-                                                            <div class="flex-grow-1">
-                                                                <!-- Product Name -->
-                                                                <h5 class="mb-1">${product.name}</h5>
-                                                                <small class="text-muted">Product Id- ${product.id}</small>
-                                                                
-                                                                <!-- Rating -->
-                                                                ${product.rating > 0 ? `
-                                                                <div class="d-flex align-items-center mb-1">
-                                                                    <div class="text-warning">
-                                                                        ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
-                                                                    </div>
-                                                                    <small class="text-muted ms-2">${product.review_count} reviews</small>
-                                                                </div>
-                                                                ` : ''}
-                                                                
-                                                                <!-- Description -->
-                                                                ${product.description ? `
-                                                                <p class="text-muted small mb-2 text-truncate-2" 
-                                                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                                                ${product.description}
-                                                                </p>
-                                                                ` : ''}
-                                                                
-                                                                <!-- Pricing -->
-                                                                <div class="mb-2">
-                                                                    ${hasDiscount ? `
-                                                                        <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
-                                                                        <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
-                                                                        <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
-                                                                    ` : `
-                                                                        <span class="fs-5 fw-bold">₹${displayPrice}</span>
-                                                                    `}
-                                                                    <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
-                                                                </div>
-                                                                <!--<div class="text-muted small mb-2 text-truncate-2">Only ${product.in_stock} left in stock</div>-->
-                                                                <!-- Stock Status -->
-                                                                ${stockStatus ? `
-                                                                    <div class="text-danger mb-2">Out of Stock</div>
-                                                                ` : lowStock ? `
-                                                                    <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
-                                                                    <div class="btn-quantity d-flex align-items-center">
-                                                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                                                        <i class="bi bi-dash"></i>
-                                                                    </button>
-                                                                    <input type="number" 
-                                                                        id="count${product.id}" 
-                                                                        class="form-control mx-2 text-center stock-input" 
-                                                                        value="0" 
-                                                                        min="0" 
-                                                                        onchange="validateQuantityInput(${product.id})"
-                                                                        oninput="validateQuantityInput(${product.id})"
-                                                                        style="width: 60px;">
-                                                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                                                        <i class="bi bi-plus"></i>
-                                                                    </button>
-                                                                </div>
-                                                                ` : `
-                                                                    <div class="text-success mb-2">In Stock</div>
-                                                                    <div class="btn-quantity d-flex align-items-center">
-                                                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                                                        <i class="bi bi-dash"></i>
-                                                                    </button>
-                                                                    <input type="number" 
-                                                                        id="count${product.id}" 
-                                                                        class="form-control mx-2 text-center stock-input" 
-                                                                        value="0" 
-                                                                        min="0" 
-                                                                        onchange="validateQuantityInput(${product.id})"
-                                                                        oninput="validateQuantityInput(${product.id})"
-                                                                        style="width: 60px;">
-                                                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                                                        <i class="bi bi-plus"></i>
-                                                                    </button>
-                                                                </div>
-                                                                `}
-                                                                
-                                                                <!--${product.is_featured ? `<span class="badge bg-info mt-2">Featured</span>` : ''}-->
-                                                            </div>
-                                                        </div>
-                                                    `;
-                                                        productList.appendChild(productCard);
-                                                    });
-                                                }
-
-                                                // Add search functionality
-                                                document.addEventListener('DOMContentLoaded', function() {
-                                                    // Handle search if there's a search term in the URL
-                                                    const urlParams = new URLSearchParams(window.location.search);
-                                                    const searchTerm = urlParams.get('search');
-
-                                                    if (searchTerm) {
-                                                        const filtered = products.filter(product =>
-                                                            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                                            (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
-                                                        );
-                                                        renderProducts(filtered);
-                                                    } else {
-                                                        renderProducts();
-                                                    }
-                                                });
-                                            </script>
+                                        <!-- Search Box -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <div class="input-group">
+                                                    <input type="text" id="searchInput" class="form-control" placeholder="Search products..."
+                                                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                                    <button id="searchButton" class="btn btn-primary" type="button">
+                                                        <i class="bi bi-search"></i> Search
+                                                    </button>
+                                                    <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                                                        <button id="clearSearch" class="btn btn-outline-secondary" type="button">
+                                                            <i class="bi bi-x"></i> Clear
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <!-- Add pagination controls below the productList -->
-                                        <?php if ($totalPages > 1): ?>
-                                            <nav aria-label="Page navigation">
-                                                <ul class="pagination justify-content-center">
-                                                    <?php if ($currentPage > 1): ?>
-                                                        <li class="page-item">
-                                                            <a class="page-link" href="?page=<?php echo $currentPage - 1; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>" aria-label="Previous">
-                                                                <span aria-hidden="true">&laquo;</span>
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
 
-                                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                                        <li class="page-item <?php echo $i == $currentPage ? 'active' : ''; ?>">
-                                                            <a class="page-link" href="?page=<?php echo $i; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>"><?php echo $i; ?></a>
-                                                        </li>
-                                                    <?php endfor; ?>
+                                        <!-- Product List Container -->
+                                        <div id="productList">
+                                            <!-- Products will be loaded here via AJAX -->
+                                        </div>
 
-                                                    <?php if ($currentPage < $totalPages): ?>
-                                                        <li class="page-item">
-                                                            <a class="page-link" href="?page=<?php echo $currentPage + 1; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>" aria-label="Next">
-                                                                <span aria-hidden="true">&raquo;</span>
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                </ul>
-                                            </nav>
-                                        <?php endif; ?>
+                                        <!-- Pagination Container -->
+                                        <div id="paginationContainer"></div>
                                     </div>
 
                                     <!-- Right Section: Cart Summary -->
@@ -438,7 +170,6 @@ if ($result) {
                 </div><!-- End Reports -->
             </div>
         </section>
-
     </main><!-- End #main -->
 
     <!-- Order Confirmation Modal -->
@@ -503,7 +234,6 @@ if ($result) {
                         </div>
 
                         <div class="row mt-3">
-
                             <div class="col-md-6" id="transactionIdContainer" style="display: none;">
                                 <label for="transactionId" class="form-label">Transaction ID</label>
                                 <input type="text" id="transactionId" class="form-control" placeholder="Enter transaction ID">
@@ -533,7 +263,6 @@ if ($result) {
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" style="display: none;">
         <div class="modal-dialog modal-dialog-centered">
@@ -543,34 +272,264 @@ if ($result) {
                         <div class="spinner-border" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p id="loadingMessage">Submission in progress.
-                            Please do not close or reload this page.</p>
+                        <p id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
-        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        // Add event listener to intercept Escape key press
-        document.body.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                // Prevent default behavior of Escape key
-                event.preventDefault();
-            }
-        });
-    </script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
     <script>
+        // Global variables
+        let pageNumber = <?php echo isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1; ?>;
+        let currentSearchTerm = '<?php echo isset($_GET['search']) ? addslashes($_GET['search']) : ''; ?>';
+        let totalPages = 1;
         let cart = [];
+        let products = []; // Store products for cart operations
 
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial products
+            loadProducts(pageNumber, currentSearchTerm);
+
+            // Search button click handler
+            document.getElementById('searchButton').addEventListener('click', function() {
+                const searchTerm = document.getElementById('searchInput').value.trim();
+                loadProducts(1, searchTerm);
+            });
+
+            // Clear search button
+            const clearSearchBtn = document.getElementById('clearSearch');
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    document.getElementById('searchInput').value = '';
+                    loadProducts(1, '');
+                });
+            }
+
+            // Handle Enter key in search input
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.trim();
+                    loadProducts(1, searchTerm);
+                }
+            });
+
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const page = urlParams.get('page') || 1;
+                const searchTerm = urlParams.get('search') || '';
+                document.getElementById('searchInput').value = searchTerm;
+                loadProducts(page, searchTerm);
+            });
+        });
+
+        // Function to load products via AJAX
+        function loadProducts(page = 1, searchTerm = '') {
+            // Show loading indicator
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '<div class="text-center my-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+            // Update URL without reloading
+            updateUrl(page, searchTerm);
+
+            // Update current page and search term
+            pageNumber = page;
+            currentSearchTerm = searchTerm;
+
+            // Show/hide clear button
+            const clearSearchBtn = document.getElementById('clearSearch');
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = searchTerm ? 'inline-block' : 'none';
+            }
+
+            // Fetch products via AJAX
+            fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    products = data.products; // Store products for cart operations
+                    renderProducts(data.products);
+                    totalPages = data.totalPages;
+                    renderPagination();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    productList.innerHTML = '<div class="alert alert-danger">Error loading products. Please try again.</div>';
+                });
+        }
+
+        // Update URL without reloading page
+        function updateUrl(page, searchTerm) {
+            const urlParams = new URLSearchParams();
+            if (page > 1) urlParams.set('page', page);
+            if (searchTerm) urlParams.set('search', searchTerm);
+            history.pushState(null, '', urlParams.toString() ? `?${urlParams}` : window.location.pathname);
+        }
+
+        // Render products to the page
+        function renderProducts(products) {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            if (products.length === 0) {
+                productList.innerHTML = `
+                    <div class="alert alert-info">
+                        No products found matching your search.
+                    </div>
+                `;
+                return;
+            }
+
+            products.forEach(product => {
+                const hasDiscount = product.discount_percentage > 0;
+                const displayPrice = hasDiscount ?
+                    (product.original_price * (1 - product.discount_percentage / 100)).toFixed(2) :
+                    product.price.toFixed(2);
+
+                const stockStatus = product.in_stock <= 0;
+                const lowStock = product.in_stock > 0 && product.in_stock <= 5;
+
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
+                productCard.innerHTML = `
+                    <div class="d-flex">
+                        <!-- Product Image -->
+                        <div class="col-6 me-3" style="height: 150px;">
+                            <img src="${product.image}" alt="${product.name}" 
+                                class="img-fluid h-100 w-100 object-fit-cover rounded">
+                        </div>
+                        
+                        <!-- Product Details -->
+                        <div class="flex-grow-1">
+                            <!-- Product Name -->
+                            <h5 class="mb-1">${product.name}</h5>
+                            <small class="text-muted">Product Id- ${product.id}</small>
+                            
+                            <!-- Rating -->
+                            ${product.rating > 0 ? `
+                            <div class="d-flex align-items-center mb-1">
+                                <div class="text-warning">
+                                    ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
+                                </div>
+                                <small class="text-muted ms-2">${product.review_count} reviews</small>
+                            </div>
+                            ` : ''}
+                            
+                            <!-- Description -->
+                            ${product.description ? `
+                            <p class="text-muted small mb-2 text-truncate-2" 
+                            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${product.description}
+                            </p>
+                            ` : ''}
+                            
+                            <!-- Pricing -->
+                            <div class="mb-2">
+                                ${hasDiscount ? `
+                                    <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
+                                    <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
+                                    <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
+                                ` : `
+                                    <span class="fs-5 fw-bold">₹${displayPrice}</span>
+                                `}
+                                <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
+                            </div>
+                            
+                            <!-- Stock Status -->
+                            ${stockStatus ? `
+                                <div class="text-danger mb-2">Out of Stock</div>
+                            ` : lowStock ? `
+                                <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
+                                <div class="btn-quantity d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" 
+                                        id="count${product.id}" 
+                                        class="form-control mx-2 text-center stock-input" 
+                                        value="0" 
+                                        min="0" 
+                                        max="${product.in_stock}"
+                                        onchange="validateQuantityInput(${product.id})"
+                                        oninput="validateQuantityInput(${product.id})"
+                                        style="width: 60px;">
+                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="text-success mb-2">In Stock</div>
+                                <div class="btn-quantity d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" 
+                                        id="count${product.id}" 
+                                        class="form-control mx-2 text-center stock-input" 
+                                        value="0" 
+                                        min="0" 
+                                        max="${product.in_stock}"
+                                        onchange="validateQuantityInput(${product.id})"
+                                        oninput="validateQuantityInput(${product.id})"
+                                        style="width: 60px;">
+                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+                productList.appendChild(productCard);
+            });
+        }
+
+        // Render pagination controls
+        function renderPagination() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            let paginationHTML = `
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item ${pageNumber === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadProducts(${pageNumber - 1}, '${currentSearchTerm}'); return false;" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>`;
+
+            // Show page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === pageNumber ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadProducts(${i}, '${currentSearchTerm}'); return false;">${i}</a>
+                    </li>`;
+            }
+
+            paginationHTML += `
+                        <li class="page-item ${pageNumber >= totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadProducts(${pageNumber + 1}, '${currentSearchTerm}'); return false;" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>`;
+
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        // Cart functions
         function updateCart(productId, productName, price, count) {
             const existingIndex = cart.findIndex(item => item.id === productId);
 
@@ -583,14 +542,11 @@ if ($result) {
                 };
 
                 if (existingIndex >= 0) {
-                    // Update existing item
                     cart[existingIndex] = cartItem;
                 } else {
-                    // Add new item
                     cart.push(cartItem);
                 }
             } else if (existingIndex >= 0) {
-                // Remove item from cart if count is 0
                 cart.splice(existingIndex, 1);
             }
 
@@ -609,16 +565,16 @@ if ($result) {
                 listItem.textContent = `${item.name} x ${item.count}`;
                 const itemTotal = item.price * item.count;
                 total += itemTotal;
-                listItem.innerHTML += `<span>₹${itemTotal}</span>`;
+                listItem.innerHTML += `<span>₹${itemTotal.toFixed(2)}</span>`;
                 cartList.appendChild(listItem);
             });
 
-            cartTotal.textContent = `₹${total}`;
+            cartTotal.textContent = `₹${total.toFixed(2)}`;
         }
 
         function increaseCount(productId) {
             const countInput = document.getElementById(`count${productId}`);
-            const currentCount = parseInt(countInput.value);
+            const currentCount = parseInt(countInput.value) || 0;
             const product = products.find(p => p.id === productId);
 
             if (product && currentCount < product.in_stock) {
@@ -631,7 +587,7 @@ if ($result) {
 
         function decreaseCount(productId) {
             const countInput = document.getElementById(`count${productId}`);
-            const currentCount = parseInt(countInput.value);
+            const currentCount = parseInt(countInput.value) || 0;
             const product = products.find(p => p.id === productId);
 
             if (currentCount > 0) {
@@ -642,7 +598,6 @@ if ($result) {
             }
         }
 
-        // Add input validation to prevent manual entry above stock limit
         function validateQuantityInput(productId) {
             const countInput = document.getElementById(`count${productId}`);
             const product = products.find(p => p.id === productId);
@@ -650,12 +605,10 @@ if ($result) {
             if (product) {
                 let enteredValue = parseInt(countInput.value);
 
-                // Handle NaN cases (when input is cleared)
                 if (isNaN(enteredValue)) {
                     enteredValue = 0;
                 }
 
-                // Ensure value is within bounds
                 if (enteredValue < 0) {
                     enteredValue = 0;
                 } else if (enteredValue > product.in_stock) {
@@ -664,8 +617,6 @@ if ($result) {
                 }
 
                 countInput.value = enteredValue;
-
-                // Update cart with validated quantity
                 updateCart(productId, product.name, product.price, enteredValue);
             }
         }
@@ -673,14 +624,15 @@ if ($result) {
         function placeOrder() {
             // Get current page and search parameters
             const urlParams = new URLSearchParams(window.location.search);
-            const currentPage = urlParams.get('page') || 1;
+            const pageNumber = urlParams.get('page') || 1;
             const searchTerm = urlParams.get('search') || '';
 
             // Store them in session storage to restore after order
-            sessionStorage.setItem('emartPage', currentPage);
+            sessionStorage.setItem('emartPage', pageNumber);
             if (searchTerm) {
                 sessionStorage.setItem('emartSearch', searchTerm);
             }
+
             if (cart.length === 0) {
                 alert('Your cart is empty!');
                 return;
@@ -693,18 +645,18 @@ if ($result) {
             let orderSummary = '';
             cart.forEach(item => {
                 orderSummary += `
-            <tr>
-                <td>${item.name}</td>
-                <td>${item.count}</td>
-                <td>₹${item.price}</td>
-                <td>₹${item.price * item.count}</td>
-            </tr>
-            `;
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.count}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>₹${(item.price * item.count).toFixed(2)}</td>
+                    </tr>
+                `;
             });
 
             // Populate the modal with order details
             document.getElementById('orderSummaryBody').innerHTML = orderSummary;
-            document.getElementById('orderTotal').textContent = `₹${totalPoints}`;
+            document.getElementById('orderTotal').textContent = `₹${totalPoints.toFixed(2)}`;
             updateFreebieOptionBasedOnTotal();
 
             // Show the order confirmation modal
@@ -712,6 +664,25 @@ if ($result) {
             orderModal.show();
         }
 
+        function updateFreebieOptionBasedOnTotal() {
+            const totalText = $('#orderTotal').text().replace(/[^\d.]/g, ''); // Remove ₹ or commas
+            const total = parseFloat(totalText) || 0;
+
+            const freebieOption = $('#paymentMode option[value="freebie"]');
+
+            if (total > 0) {
+                freebieOption.prop('disabled', true);
+
+                // If currently selected, reset to blank
+                if ($('#paymentMode').val() === 'freebie') {
+                    $('#paymentMode').val('');
+                }
+            } else {
+                freebieOption.prop('disabled', false);
+            }
+        }
+
+        // Initialize Select2 and form handling when DOM is loaded
         $(document).ready(function() {
             // Initialize beneficiary select2 when modal is shown
             $('#orderConfirmationModal').on('shown.bs.modal', function() {
@@ -820,8 +791,6 @@ if ($result) {
                     'remarks': remarks,
                     'beneficiaries': JSON.stringify(beneficiaries)
                 });
-
-                // Submit data
                 fetch('process_order.php', {
                         method: 'POST',
                         headers: {
@@ -834,7 +803,6 @@ if ($result) {
                         loadingModal.hide();
                         if (data.status === 'success') {
                             alert(data.message);
-                            // Redirect to order confirmation page with the new order ID
                             window.location.href = `order_confirmation.php?id=${data.order_id}`;
                         } else {
                             alert(data.message);
@@ -848,7 +816,6 @@ if ($result) {
                         $('#submitOrderBtn').prop('disabled', false);
                     });
 
-                // Prevent Escape key from closing modal
                 document.addEventListener('keydown', function(event) {
                     if (event.key === 'Escape') {
                         event.preventDefault();
@@ -856,50 +823,6 @@ if ($result) {
                 });
             });
         });
-        // At the bottom of your JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            // Restore pagination and search if coming back from order
-            const savedPage = sessionStorage.getItem('emartPage');
-            const savedSearch = sessionStorage.getItem('emartSearch');
-
-            if (savedPage || savedSearch) {
-                let redirectUrl = window.location.pathname + '?';
-                if (savedPage) {
-                    redirectUrl += `page=${savedPage}`;
-                    sessionStorage.removeItem('emartPage');
-                }
-                if (savedSearch) {
-                    if (savedPage) redirectUrl += '&';
-                    redirectUrl += `search=${encodeURIComponent(savedSearch)}`;
-                    sessionStorage.removeItem('emartSearch');
-                }
-
-                // Only redirect if we're not already on the correct page
-                const currentUrl = window.location.href;
-                if (!currentUrl.includes(redirectUrl)) {
-                    window.location.href = redirectUrl;
-                }
-            }
-        });
-    </script>
-    <script>
-        function updateFreebieOptionBasedOnTotal() {
-            const totalText = $('#orderTotal').text().replace(/[^\d.]/g, ''); // Remove ₹ or commas
-            const total = parseFloat(totalText) || 0;
-
-            const freebieOption = $('#paymentMode option[value="freebie"]');
-
-            if (total > 0) {
-                freebieOption.prop('disabled', true);
-
-                // If currently selected, reset to blank
-                if ($('#paymentMode').val() === 'freebie') {
-                    $('#paymentMode').val('');
-                }
-            } else {
-                freebieOption.prop('disabled', false);
-            }
-        }
     </script>
 </body>
 
