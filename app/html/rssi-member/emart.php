@@ -13,38 +13,43 @@ validation();
 <?php
 // Fetch products from the database
 $products = [];
-// $query = "SELECT id, name, price, image_url, sold_out FROM products WHERE is_active=true";
+// Add pagination parameters at the top of your PHP code
+$itemsPerPage = 5;
+$currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Modify your query to include search and pagination
 $query = "SELECT
     i.item_id,
     i.item_name,
     i.image_url,
-    i.description,  -- Added description
+    i.description,
     u.unit_id,
     u.unit_name,
     p.unit_quantity,
-     COALESCE((SELECT SUM(quantity_received) 
-                  FROM stock_add 
-                  WHERE item_id = i.item_id 
-                  AND unit_id = u.unit_id), 0) AS total_added_count,
-        COALESCE((SELECT SUM(quantity_distributed) 
-                  FROM stock_out 
-                  WHERE item_distributed = i.item_id 
-                  AND unit = u.unit_id), 0) AS total_distributed_count,
-        (COALESCE((SELECT SUM(quantity_received) 
-                  FROM stock_add 
-                  WHERE item_id = i.item_id 
-                  AND unit_id = u.unit_id), 0) 
-         - 
-         COALESCE((SELECT SUM(quantity_distributed) 
-                  FROM stock_out 
-                  WHERE item_distributed = i.item_id 
-                  AND unit = u.unit_id), 0)) AS in_stock,
+    COALESCE((SELECT SUM(quantity_received) 
+              FROM stock_add 
+              WHERE item_id = i.item_id 
+              AND unit_id = u.unit_id), 0) AS total_added_count,
+    COALESCE((SELECT SUM(quantity_distributed) 
+              FROM stock_out 
+              WHERE item_distributed = i.item_id 
+              AND unit = u.unit_id), 0) AS total_distributed_count,
+    (COALESCE((SELECT SUM(quantity_received) 
+              FROM stock_add 
+              WHERE item_id = i.item_id 
+              AND unit_id = u.unit_id), 0) 
+     - 
+     COALESCE((SELECT SUM(quantity_distributed) 
+              FROM stock_out 
+              WHERE item_distributed = i.item_id 
+              AND unit = u.unit_id), 0)) AS in_stock,
     p.price_per_unit,
-    p.discount_percentage,  -- Added discount
-    p.original_price,      -- Added original price
-    i.rating,              -- Added rating
-    i.review_count,        -- Added review count
-    i.is_featured          -- Added featured flag
+    p.discount_percentage,
+    p.original_price,
+    i.rating,
+    i.review_count,
+    i.is_featured
 FROM 
     stock_item i
 LEFT JOIN stock_add sa ON i.item_id = sa.item_id
@@ -54,12 +59,36 @@ LEFT JOIN stock_item_price p ON p.item_id = i.item_id
     AND p.unit_id = u.unit_id
     AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
 WHERE 
-    i.access_scope = 'public'
-GROUP BY 
+    i.access_scope = 'public'";
+
+// Add search condition if search term exists
+if (!empty($searchTerm)) {
+    $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
+}
+
+$query .= " GROUP BY 
     i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
     u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
 ORDER BY 
     i.is_featured DESC, i.item_name";
+
+// Get total count for pagination
+$countQuery = "SELECT COUNT(DISTINCT i.item_id) as total FROM stock_item i 
+               LEFT JOIN stock_add sa ON i.item_id = sa.item_id
+               LEFT JOIN stock_out so ON i.item_id = so.item_distributed
+               JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
+               WHERE i.access_scope = 'public'";
+
+if (!empty($searchTerm)) {
+    $countQuery .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
+}
+
+$countResult = pg_query($con, $countQuery);
+$totalItems = pg_fetch_assoc($countResult)['total'];
+$totalPages = ceil($totalItems / $itemsPerPage);
+
+// Add LIMIT and OFFSET to the main query
+$query .= " LIMIT $itemsPerPage OFFSET " . (($currentPage - 1) * $itemsPerPage);
 
 $result = pg_query($con, $query);
 
@@ -209,7 +238,14 @@ if ($result) {
                                 <div class="row">
                                     <!-- Left Section: Total Points -->
                                     <div class="col-md-3">
-
+                                        <form method="get" action="" class="d-flex">
+                                            <input type="text" name="search" class="form-control me-2" placeholder="Search products..."
+                                                value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                            <button type="submit" class="btn btn-primary">Search</button>
+                                            <?php if (!empty($searchTerm)): ?>
+                                                <a href="?" class="btn btn-outline-secondary ms-2">Clear</a>
+                                            <?php endif; ?>
+                                        </form>
                                     </div>
 
                                     <!-- Middle Section: Product List -->
@@ -218,14 +254,15 @@ if ($result) {
                                             <script>
                                                 const products = <?php echo json_encode($products); ?>;
 
-                                                function renderProducts() {
+                                                // Modify your renderProducts function to accept filtered products
+                                                function renderProducts(filteredProducts = products) {
                                                     const productList = document.getElementById('productList');
                                                     productList.innerHTML = '';
 
-                                                    if (products.length === 0) {
+                                                    if (filteredProducts.length === 0) {
                                                         productList.innerHTML = `
                                                             <div class="alert alert-info">
-                                                                No products available at the moment.
+                                                                No products found matching your search.
                                                             </div>
                                                         `;
                                                         return;
@@ -243,101 +280,144 @@ if ($result) {
                                                         const productCard = document.createElement('div');
                                                         productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
                                                         productCard.innerHTML = `
-                        <div class="d-flex">
-                            <!-- Product Image -->
-                            <div class="col-6 me-3" style="height: 150px;">
-                                <img src="${product.image}" alt="${product.name}" 
-                                     class="img-fluid h-100 w-100 object-fit-cover rounded">
-                            </div>
-                            
-                            <!-- Product Details -->
-                            <div class="flex-grow-1">
-                                <!-- Product Name -->
-                                <h5 class="mb-1">${product.name}</h5>
-                                <small class="text-muted">Product Id- ${product.id}</small>
-                                
-                                <!-- Rating -->
-                                ${product.rating > 0 ? `
-                                <div class="d-flex align-items-center mb-1">
-                                    <div class="text-warning">
-                                        ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
-                                    </div>
-                                    <small class="text-muted ms-2">${product.review_count} reviews</small>
-                                </div>
-                                ` : ''}
-                                
-                                <!-- Description -->
-                                ${product.description ? `
-                                <p class="text-muted small mb-2 text-truncate-2" 
-                                   style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                   ${product.description}
-                                </p>
-                                ` : ''}
-                                
-                                <!-- Pricing -->
-                                <div class="mb-2">
-                                    ${hasDiscount ? `
-                                        <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
-                                        <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
-                                        <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
-                                    ` : `
-                                        <span class="fs-5 fw-bold">₹${displayPrice}</span>
-                                    `}
-                                    <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
-                                </div>
-                                <!--<div class="text-muted small mb-2 text-truncate-2">Only ${product.in_stock} left in stock</div>-->
-                                <!-- Stock Status -->
-                                ${stockStatus ? `
-                                    <div class="text-danger mb-2">Out of Stock</div>
-                                ` : lowStock ? `
-                                    <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
-                                    <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="0" 
-                                        min="0" 
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                                ` : `
-                                    <div class="text-success mb-2">In Stock</div>
-                                    <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="0" 
-                                        min="0" 
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                                `}
-                                
-                                <!--${product.is_featured ? `<span class="badge bg-info mt-2">Featured</span>` : ''}-->
-                            </div>
-                        </div>
-                    `;
+                                                        <div class="d-flex">
+                                                            <!-- Product Image -->
+                                                            <div class="col-6 me-3" style="height: 150px;">
+                                                                <img src="${product.image}" alt="${product.name}" 
+                                                                    class="img-fluid h-100 w-100 object-fit-cover rounded">
+                                                            </div>
+                                                            
+                                                            <!-- Product Details -->
+                                                            <div class="flex-grow-1">
+                                                                <!-- Product Name -->
+                                                                <h5 class="mb-1">${product.name}</h5>
+                                                                <small class="text-muted">Product Id- ${product.id}</small>
+                                                                
+                                                                <!-- Rating -->
+                                                                ${product.rating > 0 ? `
+                                                                <div class="d-flex align-items-center mb-1">
+                                                                    <div class="text-warning">
+                                                                        ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
+                                                                    </div>
+                                                                    <small class="text-muted ms-2">${product.review_count} reviews</small>
+                                                                </div>
+                                                                ` : ''}
+                                                                
+                                                                <!-- Description -->
+                                                                ${product.description ? `
+                                                                <p class="text-muted small mb-2 text-truncate-2" 
+                                                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                                                ${product.description}
+                                                                </p>
+                                                                ` : ''}
+                                                                
+                                                                <!-- Pricing -->
+                                                                <div class="mb-2">
+                                                                    ${hasDiscount ? `
+                                                                        <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
+                                                                        <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
+                                                                        <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
+                                                                    ` : `
+                                                                        <span class="fs-5 fw-bold">₹${displayPrice}</span>
+                                                                    `}
+                                                                    <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
+                                                                </div>
+                                                                <!--<div class="text-muted small mb-2 text-truncate-2">Only ${product.in_stock} left in stock</div>-->
+                                                                <!-- Stock Status -->
+                                                                ${stockStatus ? `
+                                                                    <div class="text-danger mb-2">Out of Stock</div>
+                                                                ` : lowStock ? `
+                                                                    <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
+                                                                    <div class="btn-quantity d-flex align-items-center">
+                                                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                                                        <i class="bi bi-dash"></i>
+                                                                    </button>
+                                                                    <input type="number" 
+                                                                        id="count${product.id}" 
+                                                                        class="form-control mx-2 text-center stock-input" 
+                                                                        value="0" 
+                                                                        min="0" 
+                                                                        onchange="validateQuantityInput(${product.id})"
+                                                                        oninput="validateQuantityInput(${product.id})"
+                                                                        style="width: 60px;">
+                                                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                                                        <i class="bi bi-plus"></i>
+                                                                    </button>
+                                                                </div>
+                                                                ` : `
+                                                                    <div class="text-success mb-2">In Stock</div>
+                                                                    <div class="btn-quantity d-flex align-items-center">
+                                                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                                                        <i class="bi bi-dash"></i>
+                                                                    </button>
+                                                                    <input type="number" 
+                                                                        id="count${product.id}" 
+                                                                        class="form-control mx-2 text-center stock-input" 
+                                                                        value="0" 
+                                                                        min="0" 
+                                                                        onchange="validateQuantityInput(${product.id})"
+                                                                        oninput="validateQuantityInput(${product.id})"
+                                                                        style="width: 60px;">
+                                                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                                                        <i class="bi bi-plus"></i>
+                                                                    </button>
+                                                                </div>
+                                                                `}
+                                                                
+                                                                <!--${product.is_featured ? `<span class="badge bg-info mt-2">Featured</span>` : ''}-->
+                                                            </div>
+                                                        </div>
+                                                    `;
                                                         productList.appendChild(productCard);
                                                     });
                                                 }
 
-                                                renderProducts();
+                                                // Add search functionality
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    // Handle search if there's a search term in the URL
+                                                    const urlParams = new URLSearchParams(window.location.search);
+                                                    const searchTerm = urlParams.get('search');
+
+                                                    if (searchTerm) {
+                                                        const filtered = products.filter(product =>
+                                                            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                            (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                                                        );
+                                                        renderProducts(filtered);
+                                                    } else {
+                                                        renderProducts();
+                                                    }
+                                                });
                                             </script>
                                         </div>
+                                        <!-- Add pagination controls below the productList -->
+                                        <?php if ($totalPages > 1): ?>
+                                            <nav aria-label="Page navigation">
+                                                <ul class="pagination justify-content-center">
+                                                    <?php if ($currentPage > 1): ?>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="?page=<?php echo $currentPage - 1; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>" aria-label="Previous">
+                                                                <span aria-hidden="true">&laquo;</span>
+                                                            </a>
+                                                        </li>
+                                                    <?php endif; ?>
+
+                                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                                        <li class="page-item <?php echo $i == $currentPage ? 'active' : ''; ?>">
+                                                            <a class="page-link" href="?page=<?php echo $i; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>"><?php echo $i; ?></a>
+                                                        </li>
+                                                    <?php endfor; ?>
+
+                                                    <?php if ($currentPage < $totalPages): ?>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="?page=<?php echo $currentPage + 1; ?><?php echo !empty($searchTerm) ? '&search=' . urlencode($searchTerm) : ''; ?>" aria-label="Next">
+                                                                <span aria-hidden="true">&raquo;</span>
+                                                            </a>
+                                                        </li>
+                                                    <?php endif; ?>
+                                                </ul>
+                                            </nav>
+                                        <?php endif; ?>
                                     </div>
 
                                     <!-- Right Section: Cart Summary -->
@@ -591,6 +671,16 @@ if ($result) {
         }
 
         function placeOrder() {
+            // Get current page and search parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('page') || 1;
+            const searchTerm = urlParams.get('search') || '';
+
+            // Store them in session storage to restore after order
+            sessionStorage.setItem('emartPage', currentPage);
+            if (searchTerm) {
+                sessionStorage.setItem('emartSearch', searchTerm);
+            }
             if (cart.length === 0) {
                 alert('Your cart is empty!');
                 return;
@@ -765,6 +855,31 @@ if ($result) {
                     }
                 });
             });
+        });
+        // At the bottom of your JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore pagination and search if coming back from order
+            const savedPage = sessionStorage.getItem('emartPage');
+            const savedSearch = sessionStorage.getItem('emartSearch');
+
+            if (savedPage || savedSearch) {
+                let redirectUrl = window.location.pathname + '?';
+                if (savedPage) {
+                    redirectUrl += `page=${savedPage}`;
+                    sessionStorage.removeItem('emartPage');
+                }
+                if (savedSearch) {
+                    if (savedPage) redirectUrl += '&';
+                    redirectUrl += `search=${encodeURIComponent(savedSearch)}`;
+                    sessionStorage.removeItem('emartSearch');
+                }
+
+                // Only redirect if we're not already on the correct page
+                const currentUrl = window.location.href;
+                if (!currentUrl.includes(redirectUrl)) {
+                    window.location.href = redirectUrl;
+                }
+            }
         });
     </script>
     <script>
