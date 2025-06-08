@@ -26,6 +26,43 @@ try {
     // Begin transaction
     pg_query($con, "BEGIN");
 
+    // 1. First validate stock availability for all items
+    $stockErrors = [];
+    foreach ($cart as $item) {
+        $stockCheckQuery = "SELECT 
+        i.item_name,
+        COALESCE(SUM(sa.quantity_received), 0) - COALESCE(SUM(so.quantity_distributed), 0) AS available_stock
+    FROM stock_item i
+    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
+    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
+    WHERE i.item_id = $1
+    GROUP BY i.item_id, i.item_name";
+
+        $stockCheckResult = pg_query_params($con, $stockCheckQuery, [$item['productId']]);
+        $stockData = pg_fetch_assoc($stockCheckResult);
+
+        if (!$stockData) {
+            $stockErrors[] = "Could not verify stock for item ID: {$item['productId']}";
+            continue;
+        }
+
+        $availableStock = (int)$stockData['available_stock'];
+        $requestedQuantity = (int)$item['count'];
+        $itemName = htmlspecialchars($stockData['item_name']);
+
+        if ($requestedQuantity > $availableStock) {
+            $stockErrors[] = "'{$itemName}' - Available: $availableStock, Ordered: $requestedQuantity";
+        }
+    }
+
+    // If any stock errors, throw them all at once
+    if (!empty($stockErrors)) {
+        $errorMessage = "Insufficient stock for the following items:\n";
+        $errorMessage .= implode("\n", $stockErrors);
+        $errorMessage .= "\n\nPlease adjust quantities and try again.";
+        throw new Exception($errorMessage);
+    }
+
     foreach ($beneficiaries as $beneficiary) {
         // Insert stock_out for each item
         foreach ($cart as $item) {

@@ -18,48 +18,48 @@ $query = "SELECT
     i.item_id,
     i.item_name,
     i.image_url,
+    i.description,  -- Added description
     u.unit_id,
     u.unit_name,
     p.unit_quantity,
-    -- Calculate total added and distributed quantities
-    
-    COALESCE(SUM(sa.quantity_received), 0) AS total_added_count,
-    COALESCE(SUM(so.quantity_distributed), 0) AS total_distributed_count,
-    
-    COALESCE(SUM(sa.quantity_received), 0) - COALESCE(SUM(so.quantity_distributed), 0) AS in_stock,
-
-    p.price_per_unit
-
+     COALESCE((SELECT SUM(quantity_received) 
+                  FROM stock_add 
+                  WHERE item_id = i.item_id 
+                  AND unit_id = u.unit_id), 0) AS total_added_count,
+        COALESCE((SELECT SUM(quantity_distributed) 
+                  FROM stock_out 
+                  WHERE item_distributed = i.item_id 
+                  AND unit = u.unit_id), 0) AS total_distributed_count,
+        (COALESCE((SELECT SUM(quantity_received) 
+                  FROM stock_add 
+                  WHERE item_id = i.item_id 
+                  AND unit_id = u.unit_id), 0) 
+         - 
+         COALESCE((SELECT SUM(quantity_distributed) 
+                  FROM stock_out 
+                  WHERE item_distributed = i.item_id 
+                  AND unit = u.unit_id), 0)) AS in_stock,
+    p.price_per_unit,
+    p.discount_percentage,  -- Added discount
+    p.original_price,      -- Added original price
+    i.rating,              -- Added rating
+    i.review_count,        -- Added review count
+    i.is_featured          -- Added featured flag
 FROM 
     stock_item i
-
--- Join with stock_add to get added quantities
-LEFT JOIN stock_add sa 
-    ON i.item_id = sa.item_id
-
--- Join with stock_out to get distributed quantities
-LEFT JOIN stock_out so 
-    ON i.item_id = so.item_distributed
-
--- Join with unit table
-JOIN stock_item_unit u 
-    ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
-
--- Join with price table to get current active price
-LEFT JOIN stock_item_price p 
-    ON p.item_id = i.item_id 
+LEFT JOIN stock_add sa ON i.item_id = sa.item_id
+LEFT JOIN stock_out so ON i.item_id = so.item_distributed
+JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
+LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
     AND p.unit_id = u.unit_id
     AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-
 WHERE 
     i.access_scope = 'public'
-
 GROUP BY 
-    i.item_id, i.item_name, u.unit_id, u.unit_name, p.price_per_unit,p.unit_quantity
-
+    i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
+    u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
 ORDER BY 
-    i.item_name;
-";
+    i.is_featured DESC, i.item_name";
 
 $result = pg_query($con, $query);
 
@@ -68,11 +68,18 @@ if ($result) {
         $products[] = [
             'id' => (int)$row['item_id'],
             'name' => $row['item_name'],
-            'price' => (int)$row['price_per_unit'],
+            'price' => (float)$row['price_per_unit'],
+            'original_price' => isset($row['original_price']) ? (float)$row['original_price'] : (float)$row['price_per_unit'],
             'image' => $row['image_url'],
+            'description' => $row['description'] ?? '',
             'unit_name' => $row['unit_name'],
-            'unit_quantity' => $row['unit_quantity'] ?? 1, // Default to 1 if not set
-            //'soldOut' => $row['sold_out'] === 't' ? true : false,
+            'unit_quantity' => $row['unit_quantity'] ?? 1,
+            'in_stock' => $row['in_stock'],
+            'soldOut' => $row['in_stock'] <= 0,
+            'discount_percentage' => (float)$row['discount_percentage'] ?? 0,
+            'rating' => (float)$row['rating'] ?? 0,
+            'review_count' => (int)$row['review_count'] ?? 0,
+            'is_featured' => $row['is_featured'] ?? false
         ];
     }
 }
@@ -183,7 +190,7 @@ if ($result) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Rewards & Recognition</a></li>
+                    <li class="breadcrumb-item"><a href="#">Stock Management</a></li>
                     <li class="breadcrumb-item active">eMart</li>
                 </ol>
             </nav>
@@ -208,29 +215,119 @@ if ($result) {
                                     <!-- Middle Section: Product List -->
                                     <div class="col-md-6">
                                         <div id="productList">
-                                            <!-- Product Template -->
                                             <script>
                                                 const products = <?php echo json_encode($products); ?>;
 
                                                 function renderProducts() {
                                                     const productList = document.getElementById('productList');
                                                     productList.innerHTML = '';
+
+                                                    if (products.length === 0) {
+                                                        productList.innerHTML = `
+                        <div class="alert alert-info">
+                            No products available at the moment.
+                        </div>
+                    `;
+                                                        return;
+                                                    }
+
                                                     products.forEach(product => {
+                                                        const hasDiscount = product.discount_percentage > 0;
+                                                        const displayPrice = hasDiscount ?
+                                                            (product.original_price * (1 - product.discount_percentage / 100)).toFixed(2) :
+                                                            product.price.toFixed(2);
+
+                                                        const stockStatus = product.in_stock <= 0;
+                                                        const lowStock = product.in_stock > 0 && product.in_stock <= 5;
+
                                                         const productCard = document.createElement('div');
-                                                        productCard.className = 'product-card d-flex align-items-center';
+                                                        productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
                                                         productCard.innerHTML = `
-                        <img src="${product.image}" alt="${product.name}" class="me-3" width="50%">
-                        <div>
-                            <h5>${product.name}</h5>
-                            <p>Price: <strong>₹${product.price} for ${product.unit_quantity} ${product.unit_name}</strong></p>
-                            ${product.soldOut ? 
-                                '<span class="text-danger">Sold Out</span>' : 
-                                `<div class="btn-quantity">
-                                    <button class="btn btn-sm btn-secondary" onclick="decreaseCount(${product.id})">-</button>
-                                    <input type="number" id="count${product.id}" class="form-control mx-2 text-center" value="0" min="0" style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">+</button>
-                                </div>`
-                            }
+                        <div class="d-flex">
+                            <!-- Product Image -->
+                            <div class="me-3" style="width: 150px; height: 150px;">
+                                <img src="${product.image}" alt="${product.name}" 
+                                     class="img-fluid h-100 w-100 object-fit-cover rounded">
+                            </div>
+                            
+                            <!-- Product Details -->
+                            <div class="flex-grow-1">
+                                <!-- Product Name -->
+                                <h5 class="mb-1">${product.name}</h5>
+                                
+                                <!-- Rating -->
+                                ${product.rating > 0 ? `
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="text-warning">
+                                        ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
+                                    </div>
+                                    <small class="text-muted ms-2">${product.review_count} reviews</small>
+                                </div>
+                                ` : ''}
+                                
+                                <!-- Description -->
+                                ${product.description ? `
+                                <p class="text-muted small mb-2 text-truncate-2" 
+                                   style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                   ${product.description}
+                                </p>
+                                ` : ''}
+                                
+                                <!-- Pricing -->
+                                <div class="mb-2">
+                                    ${hasDiscount ? `
+                                        <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
+                                        <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
+                                        <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
+                                    ` : `
+                                        <span class="fs-5 fw-bold">₹${displayPrice}</span>
+                                    `}
+                                    <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
+                                </div>
+                                <!--<div class="text-muted small mb-2 text-truncate-2">Only ${product.in_stock} left in stock</div>-->
+                                <!-- Stock Status -->
+                                ${stockStatus ? `
+                                    <div class="text-danger mb-2">Out of Stock</div>
+                                ` : lowStock ? `
+                                    <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
+                                    <div class="btn-quantity d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" 
+                                        id="count${product.id}" 
+                                        class="form-control mx-2 text-center stock-input" 
+                                        value="0" 
+                                        min="0" 
+                                        onchange="validateQuantityInput(${product.id})"
+                                        oninput="validateQuantityInput(${product.id})"
+                                        style="width: 60px;">
+                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                ` : `
+                                    <div class="text-success mb-2">In Stock</div>
+                                    <div class="btn-quantity d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" 
+                                        id="count${product.id}" 
+                                        class="form-control mx-2 text-center stock-input" 
+                                        value="0" 
+                                        min="0" 
+                                        onchange="validateQuantityInput(${product.id})"
+                                        oninput="validateQuantityInput(${product.id})"
+                                        style="width: 60px;">
+                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                `}
+                                
+                                <!--${product.is_featured ? `<span class="badge bg-info mt-2">Featured</span>` : ''}-->
+                            </div>
                         </div>
                     `;
                                                         productList.appendChild(productCard);
@@ -479,25 +576,57 @@ if ($result) {
             cartTotal.textContent = `₹${total}`;
         }
 
+        function increaseCount(productId) {
+            const countInput = document.getElementById(`count${productId}`);
+            const currentCount = parseInt(countInput.value);
+            const product = products.find(p => p.id === productId);
+
+            if (product && currentCount < product.in_stock) {
+                countInput.value = currentCount + 1;
+                updateCart(productId, product.name, product.price, currentCount + 1);
+            } else if (product && currentCount >= product.in_stock) {
+                alert(`You cannot order more than ${product.in_stock} items of this product.`);
+            }
+        }
+
         function decreaseCount(productId) {
             const countInput = document.getElementById(`count${productId}`);
             const currentCount = parseInt(countInput.value);
+            const product = products.find(p => p.id === productId);
+
             if (currentCount > 0) {
                 countInput.value = currentCount - 1;
-                const product = products.find(p => p.id === productId);
                 if (product) {
                     updateCart(productId, product.name, product.price, currentCount - 1);
                 }
             }
         }
 
-        function increaseCount(productId) {
+        // Add input validation to prevent manual entry above stock limit
+        function validateQuantityInput(productId) {
             const countInput = document.getElementById(`count${productId}`);
-            const currentCount = parseInt(countInput.value);
-            countInput.value = currentCount + 1;
             const product = products.find(p => p.id === productId);
+
             if (product) {
-                updateCart(productId, product.name, product.price, currentCount + 1);
+                let enteredValue = parseInt(countInput.value);
+
+                // Handle NaN cases (when input is cleared)
+                if (isNaN(enteredValue)) {
+                    enteredValue = 0;
+                }
+
+                // Ensure value is within bounds
+                if (enteredValue < 0) {
+                    enteredValue = 0;
+                } else if (enteredValue > product.in_stock) {
+                    enteredValue = product.in_stock;
+                    alert(`You cannot order more than ${product.in_stock} items of this product.`);
+                }
+
+                countInput.value = enteredValue;
+
+                // Update cart with validated quantity
+                updateCart(productId, product.name, product.price, enteredValue);
             }
         }
 
