@@ -245,7 +245,7 @@ if ($result) {
                                                         productCard.innerHTML = `
                         <div class="d-flex">
                             <!-- Product Image -->
-                            <div class="me-3" style="width: 150px; height: 150px;">
+                            <div class="col-6 me-3" style="height: 150px;">
                                 <img src="${product.image}" alt="${product.name}" 
                                      class="img-fluid h-100 w-100 object-fit-cover rounded">
                             </div>
@@ -254,6 +254,7 @@ if ($result) {
                             <div class="flex-grow-1">
                                 <!-- Product Name -->
                                 <h5 class="mb-1">${product.name}</h5>
+                                <small class="text-muted">Product Id- ${product.id}</small>
                                 
                                 <!-- Rating -->
                                 ${product.rating > 0 ? `
@@ -365,7 +366,7 @@ if ($result) {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="orderConfirmationModalLabel">Order Confirmation</h5>
+                    <h5 class="modal-title" id="orderConfirmationModalLabel">Checkout Page</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="orderForm">
@@ -440,7 +441,7 @@ if ($result) {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" id="submitOrderBtn" class="btn btn-primary">Confirm Order</button>
+                        <button type="submit" id="submitOrderBtn" class="btn btn-primary">Checkout</button>
                     </div>
                 </form>
             </div>
