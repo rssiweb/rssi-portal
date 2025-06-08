@@ -121,7 +121,7 @@ validation();
                             <div class="container py-5">
                                 <div class="row">
                                     <!-- Left Section: Empty for alignment -->
-                                    <div class="col-md-3"></div>
+                                    <!-- <div class="col-md-3"></div> -->
 
                                     <!-- Middle Section: Product List -->
                                     <div class="col-md-6">
@@ -153,7 +153,7 @@ validation();
                                     </div>
 
                                     <!-- Right Section: Cart Summary -->
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <div class="right-section">
                                             <h4>Cart Summary</h4>
                                             <ul id="cartList" class="list-group mb-3">
@@ -559,17 +559,40 @@ validation();
             cartList.innerHTML = '';
             let total = 0;
 
-            cart.forEach(item => {
+            cart.forEach((item, index) => {
                 const listItem = document.createElement('li');
                 listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.textContent = `${item.name} x ${item.count}`;
+
                 const itemTotal = item.price * item.count;
                 total += itemTotal;
-                listItem.innerHTML += `<span>₹${itemTotal.toFixed(2)}</span>`;
+
+                listItem.innerHTML = `
+            <div>
+                ${item.name} x ${item.count}
+                <span class="text-muted ms-2">(₹${item.price.toFixed(2)} each)</span>
+            </div>
+            <div>
+                <span class="me-3">₹${itemTotal.toFixed(2)}</span>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
+                    <i class="bi bi-x"></i> <!-- Bootstrap Icons cross -->
+                </button>
+            </div>
+        `;
+
                 cartList.appendChild(listItem);
             });
 
             cartTotal.textContent = `₹${total.toFixed(2)}`;
+        }
+
+        // Add this new function to handle item removal
+        function removeFromCart(index) {
+            // Remove the item at the specified index
+            cart.splice(index, 1);
+            // Re-render the cart
+            renderCart();
+            // Update cart count in navbar or elsewhere if needed
+            updateCartCount();
         }
 
         function increaseCount(productId) {
