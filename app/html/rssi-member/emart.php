@@ -362,7 +362,7 @@ if ($result) {
 
     <!-- Order Confirmation Modal -->
     <div class="modal fade" id="orderConfirmationModal" tabindex="-1" aria-labelledby="orderConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="orderConfirmationModalLabel">Order Confirmation</h5>
@@ -416,6 +416,7 @@ if ($result) {
                                     <option value="">Select Payment Mode</option>
                                     <option value="cash">Cash</option>
                                     <option value="online">Online Payment</option>
+                                    <option value="freebie">Freebies (no payment required)</option>
                                 </select>
                             </div>
                         </div>
@@ -613,6 +614,7 @@ if ($result) {
             // Populate the modal with order details
             document.getElementById('orderSummaryBody').innerHTML = orderSummary;
             document.getElementById('orderTotal').textContent = `₹${totalPoints}`;
+            updateFreebieOptionBasedOnTotal();
 
             // Show the order confirmation modal
             const orderModal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'));
@@ -762,6 +764,25 @@ if ($result) {
                 });
             });
         });
+    </script>
+    <script>
+        function updateFreebieOptionBasedOnTotal() {
+            const totalText = $('#orderTotal').text().replace(/[^\d.]/g, ''); // Remove ₹ or commas
+            const total = parseFloat(totalText) || 0;
+
+            const freebieOption = $('#paymentMode option[value="freebie"]');
+
+            if (total > 0) {
+                freebieOption.prop('disabled', true);
+
+                // If currently selected, reset to blank
+                if ($('#paymentMode').val() === 'freebie') {
+                    $('#paymentMode').val('');
+                }
+            } else {
+                freebieOption.prop('disabled', false);
+            }
+        }
     </script>
 </body>
 

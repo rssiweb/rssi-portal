@@ -102,9 +102,9 @@ try {
                 throw new Exception('Failed to insert stock out record');
             }
         }
-
-        // Insert payment record ONCE per beneficiary (outside item loop)
-        $feePaymentQuery = "INSERT INTO fee_payments (
+        if ($paymentMode == 'online' || $paymentMode == 'cash') {
+            // Insert payment record ONCE per beneficiary (outside item loop)
+            $feePaymentQuery = "INSERT INTO fee_payments (
         student_id,
         amount,
         payment_type,
@@ -113,7 +113,8 @@ try {
         collection_date,
         notes,
         academic_year,
-        month
+        month,
+        source
     ) VALUES (
         $1,
         $2,
@@ -123,23 +124,25 @@ try {
         CURRENT_DATE,
         $6,
         $7,
-        $8
+        $8,
+        'eMart'  -- Assuming 'emart' is the source
     )";
 
-        $feePaymentParams = [
-            $beneficiary,
-            $totalAmount,
-            $paymentMode,
-            $transactionId,
-            $associatenumber,
-            $remarks,
-            $year,
-            date('F', mktime(0, 0, 0, $month, 10))
-        ];
+            $feePaymentParams = [
+                $beneficiary,
+                $totalAmount,
+                $paymentMode,
+                $transactionId,
+                $associatenumber,
+                $remarks,
+                $year,
+                date('F', mktime(0, 0, 0, $month, 10))
+            ];
 
-        $feePaymentResult = pg_query_params($con, $feePaymentQuery, $feePaymentParams);
-        if (!$feePaymentResult) {
-            throw new Exception('Failed to insert fee payment record');
+            $feePaymentResult = pg_query_params($con, $feePaymentQuery, $feePaymentParams);
+            if (!$feePaymentResult) {
+                throw new Exception('Failed to insert fee payment record');
+            }
         }
     }
 
