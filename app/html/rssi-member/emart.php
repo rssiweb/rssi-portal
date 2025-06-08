@@ -112,11 +112,11 @@ if ($result) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css" rel="stylesheet">
-
     <!-- In your head section -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -224,10 +224,10 @@ if ($result) {
 
                                                     if (products.length === 0) {
                                                         productList.innerHTML = `
-                        <div class="alert alert-info">
-                            No products available at the moment.
-                        </div>
-                    `;
+                                                            <div class="alert alert-info">
+                                                                No products available at the moment.
+                                                            </div>
+                                                        `;
                                                         return;
                                                     }
 
@@ -362,7 +362,7 @@ if ($result) {
 
     <!-- Order Confirmation Modal -->
     <div class="modal fade" id="orderConfirmationModal" tabindex="-1" aria-labelledby="orderConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="orderConfirmationModalLabel">Order Confirmation</h5>
@@ -397,20 +397,18 @@ if ($result) {
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <!-- Left Side: Beneficiary Selection -->
+                        <div class="col-md-6">
                             <label for="beneficiarySelect" class="form-label">Search and Select Beneficiaries</label>
-                            <select id="beneficiarySelect" name="beneficiaries[]" class="form-control js-data-ajax-multiple" multiple="multiple" required>
+                            <select id="beneficiarySelect" name="beneficiaries" class="form-select js-data-ajax-multiple" multiple="multiple" required>
                                 <!-- Beneficiaries will be loaded via AJAX -->
                             </select>
-                            <small class="text-muted">Start typing to search beneficiaries. You can select multiple beneficiaries.</small>
-                            <div class="invalid-feedback">Please select at least one beneficiary.</div>
-                            <!-- <div class="form-text text-muted">
+                            <div class="form-text text-muted">
                                 First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
-                            </div> -->
+                            </div>
+                            <div class="invalid-feedback">Please select at least one beneficiary.</div>
                         </div>
-                    </div>
 
-                    <div class="row mt-3">
                         <div class="col-md-6">
                             <label for="paymentMode" class="form-label">Payment Mode</label>
                             <select id="paymentMode" class="form-select" required>
@@ -419,12 +417,18 @@ if ($result) {
                                 <option value="online">Online Payment</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="row mt-3">
+
                         <div class="col-md-6" id="transactionIdContainer" style="display: none;">
                             <label for="transactionId" class="form-label">Transaction ID</label>
                             <input type="text" id="transactionId" class="form-control" placeholder="Enter transaction ID">
+                            <div class="form-text text-muted">
+                                Record payment for all selected purchases in one go. <a href="https://secure.paytmpayments.com/link/paymentForm/47760/LL_790393889" target="_blank">Quick Payment</a>
+                            </div>
                         </div>
                     </div>
-
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <label for="remarks" class="form-label">Remarks</label>
@@ -474,54 +478,6 @@ if ($result) {
                 // Prevent default behavior of Escape key
                 event.preventDefault();
             }
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2 when modal is shown
-            $('#orderConfirmationModal').on('shown.bs.modal', function() {
-                $('#beneficiarySelect').select2({
-                    dropdownParent: $(this), // Critical for Select2 to work properly in modal
-                    ajax: {
-                        url: 'search_beneficiaries.php',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                q: params.term // search term
-                            };
-                        },
-                        processResults: function(data) {
-                            return {
-                                results: data.results || []
-                            };
-                        }
-                    },
-                    minimumInputLength: 1,
-                    placeholder: 'Search beneficiaries by name, ID, or contact number',
-                    allowClear: true,
-                    closeOnSelect: false, // keep dropdown open for multiple selections
-                    width: '100%'
-                });
-
-                // Clear any previous selections when modal is opened
-                $('#beneficiarySelect').val(null).trigger('change');
-
-                // Handle validation
-                $('#beneficiarySelect').on('change', function() {
-                    if ($(this).val() && $(this).val().length > 0) {
-                        $(this).removeClass('is-invalid').addClass('is-valid');
-                    } else {
-                        $(this).removeClass('is-valid').addClass('is-invalid');
-                    }
-                });
-            });
-
-            // Destroy Select2 when modal is closed to prevent conflicts
-            $('#orderConfirmationModal').on('hidden.bs.modal', function() {
-                $('#beneficiarySelect').select2('destroy');
-            });
         });
     </script>
 
@@ -682,9 +638,9 @@ if ($result) {
                         }
                     },
                     minimumInputLength: 1,
-                    placeholder: 'Search beneficiaries by name or contact number',
-                    allowClear: true,
-                    closeOnSelect: false,
+                    placeholder: 'Search by name, ID, or contact',
+                    allowClear: false,
+                    closeOnSelect: true,
                     width: '100%'
                 });
 

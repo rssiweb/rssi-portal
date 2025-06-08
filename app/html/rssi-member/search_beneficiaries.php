@@ -35,7 +35,7 @@ if ($gender) {
 // 2. Query for rssimyprofile_student
 $studentQuery = "SELECT student_id AS id, studentname AS name, '' AS contact_number, 'student' AS source
                  FROM rssimyprofile_student
-                 WHERE filterstatus = 'Active' AND (studentname ILIKE $1 OR student_id ILIKE $1)";
+                 WHERE filterstatus='Active' AND (studentname ILIKE $1 OR student_id ILIKE $1 OR contact ILIKE $1)";
 $studentParams = ["%{$searchTerm}%"];
 
 if ($gender) {
@@ -46,7 +46,7 @@ if ($gender) {
 // 3. Query for rssimyaccount_members
 $memberQuery = "SELECT associatenumber AS id, fullname AS name, '' AS contact_number, 'member' AS source
                 FROM rssimyaccount_members
-                WHERE filterstatus = 'Active' AND (fullname ILIKE $1 OR associatenumber ILIKE $1)";
+                WHERE filterstatus='Active' AND (fullname ILIKE $1 OR associatenumber ILIKE $1 OR phone ILIKE $1)";
 $memberParams = ["%{$searchTerm}%"];
 
 if ($gender) {
@@ -86,15 +86,17 @@ try {
     $formattedResults = [];
     foreach ($results as $row) {
         $displayText = $row['name'];
-        
+
         // Add contact number if available
         if (!empty($row['contact_number'])) {
             $displayText .= ' (' . $row['contact_number'] . ')';
+        } else {
+            $displayText .= ' (' . $row['id'] . ')';
         }
-        
+
         // Add source indicator
-        $displayText .= ' [' . strtoupper($row['source']) . ']';
-        
+        //$displayText .= ' [' . strtoupper($row['source']) . ']';
+
         $formattedResults[] = [
             'id' => $row['id'],
             'text' => $displayText,
@@ -103,7 +105,7 @@ try {
     }
 
     // Sort results by name
-    usort($formattedResults, function($a, $b) {
+    usort($formattedResults, function ($a, $b) {
         return strcmp($a['text'], $b['text']);
     });
 
@@ -112,9 +114,7 @@ try {
 
     error_log("Returning " . count($formattedResults) . " beneficiaries");
     echo json_encode(['results' => $formattedResults]);
-
 } catch (Exception $e) {
     error_log("Error in search_beneficiaries.php: " . $e->getMessage());
     echo json_encode(['results' => []]);
 }
-?>

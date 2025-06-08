@@ -1634,18 +1634,6 @@ $result = pg_query($con, $query);
                     <input type="hidden" name="academic_year" value="<?php echo isset($_GET['academic_year']) ? htmlspecialchars($_GET['academic_year']) : ''; ?>">
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <!-- <div class="col-md-6">
-                                <label for="studentSelect" class="form-label">Beneficiaries</label>
-                                <select class="form-select" id="studentSelect" name="student_id" required>
-                                    <option value="">Select Beneficiary</option>
-                                    <?php foreach ($students as $student): ?>
-                                        <option value="<?= $student['id']; ?>"><?= $student['text']; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="form-text text-muted">
-                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
-                                </div>
-                            </div> -->
                             <div class="col-md-6">
                                 <label for="studentSelect" class="form-label">Beneficiaries</label>
                                 <select class="form-select js-data-ajax" id="studentSelect" name="student_id" required>
@@ -1730,17 +1718,6 @@ $result = pg_query($con, $query);
                     <?php endif; ?>
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <!-- <div class="col-md-6">
-                                <label for="periodStudentSelect" class="form-label">Beneficiary</label>
-                                <select class="form-select" id="periodStudentSelect" name="student_id" required>
-                                    <option value="">Select Beneficiary</option>
-                                    <?php foreach ($femaleStudents as $student): ?>
-                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small class="text-muted">Choose a beneficiary from the list.</small>
-                                <div class="invalid-feedback">Please select a beneficiary.</div>
-                            </div> -->
                             <div class="col-md-6">
                                 <label for="periodStudentSelect" class="form-label">Beneficiary</label>
                                 <select class="form-select js-data-ajax-female" id="periodStudentSelect" name="student_id" required>
