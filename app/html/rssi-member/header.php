@@ -349,6 +349,24 @@
       </li><!-- End Components Nav -->
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#csu" data-bs-toggle="collapse" href="#">
+          <span>Community Supply</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="csu" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="emart" href="emart.php">
+              <span>eMart</span>
+            </a>
+          </li>
+          <li>
+            <a id="emart_orders" href="emart_orders.php">
+              <span>eMart Orders</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#rostermanagement" data-bs-toggle="collapse" href="#">
           <span>Workforce Management</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -1070,6 +1088,14 @@
         id: 'iexploreedge',
         linkId: 'manage_category',
         url: 'manage_category.php'
+      }, {
+        id: 'csu',
+        linkId: 'emart',
+        url: 'emart.php'
+      }, {
+        id: 'csu',
+        linkId: 'emart_orders',
+        url: 'emart_orders.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
