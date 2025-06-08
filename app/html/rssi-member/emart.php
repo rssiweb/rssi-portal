@@ -609,7 +609,7 @@ if ($result) {
                 <td>₹${item.price}</td>
                 <td>₹${item.price * item.count}</td>
             </tr>
-        `;
+            `;
             });
 
             // Populate the modal with order details
@@ -744,7 +744,8 @@ if ($result) {
                         loadingModal.hide();
                         if (data.status === 'success') {
                             alert(data.message);
-                            window.location.href = window.location.href;
+                            // Redirect to order confirmation page with the new order ID
+                            window.location.href = `order_confirmation.php?id=${data.order_id}`;
                         } else {
                             alert(data.message);
                             $('#submitOrderBtn').prop('disabled', false);
