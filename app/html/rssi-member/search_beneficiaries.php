@@ -17,40 +17,104 @@ if ($gender && !in_array($gender, ['Male', 'Female', 'Other'])) {
     exit;
 }
 
-$query = "SELECT id, name, contact_number 
-          FROM public_health_records 
-          WHERE registration_completed = true AND name ILIKE $1";
+// Build queries for each table
+$queries = [];
+$params = [];
 
-$params = ["%{$searchTerm}%"];
+// 1. Query for public_health_records
+$phrQuery = "SELECT id, name, contact_number, 'public_health' AS source 
+             FROM public_health_records 
+             WHERE registration_completed = true AND (name ILIKE $1 OR contact_number ILIKE $1)";
+$phrParams = ["%{$searchTerm}%"];
 
 if ($gender) {
-    $query .= " AND gender = $2";
-    $params[] = $gender;
-    error_log("Applying gender filter: $gender");
+    $phrQuery .= " AND gender = $2";
+    $phrParams[] = $gender;
 }
 
-$query .= " ORDER BY name LIMIT 10";
+// 2. Query for rssimyprofile_student
+$studentQuery = "SELECT student_id AS id, studentname AS name, '' AS contact_number, 'student' AS source
+                 FROM rssimyprofile_student
+                 WHERE filterstatus = 'Active' AND (studentname ILIKE $1 OR student_id ILIKE $1)";
+$studentParams = ["%{$searchTerm}%"];
 
-error_log("Final query: $query");
-error_log("Query parameters: " . print_r($params, true));
+if ($gender) {
+    $studentQuery .= " AND gender = $2";
+    $studentParams[] = $gender;
+}
 
-$result = pg_query_params($con, $query, $params);
+// 3. Query for rssimyaccount_members
+$memberQuery = "SELECT associatenumber AS id, fullname AS name, '' AS contact_number, 'member' AS source
+                FROM rssimyaccount_members
+                WHERE filterstatus = 'Active' AND (fullname ILIKE $1 OR associatenumber ILIKE $1)";
+$memberParams = ["%{$searchTerm}%"];
 
-if (!$result) {
-    $error = pg_last_error($con);
-    error_log("Database query failed: $error");
+if ($gender) {
+    $memberQuery .= " AND gender = $2";
+    $memberParams[] = $gender;
+}
+
+// Execute all queries
+$results = [];
+
+try {
+    // Execute public_health_records query
+    $phrResult = pg_query_params($con, $phrQuery, $phrParams);
+    if ($phrResult) {
+        while ($row = pg_fetch_assoc($phrResult)) {
+            $results[] = $row;
+        }
+    }
+
+    // Execute student query
+    $studentResult = pg_query_params($con, $studentQuery, $studentParams);
+    if ($studentResult) {
+        while ($row = pg_fetch_assoc($studentResult)) {
+            $results[] = $row;
+        }
+    }
+
+    // Execute member query
+    $memberResult = pg_query_params($con, $memberQuery, $memberParams);
+    if ($memberResult) {
+        while ($row = pg_fetch_assoc($memberResult)) {
+            $results[] = $row;
+        }
+    }
+
+    // Format results for Select2
+    $formattedResults = [];
+    foreach ($results as $row) {
+        $displayText = $row['name'];
+        
+        // Add contact number if available
+        if (!empty($row['contact_number'])) {
+            $displayText .= ' (' . $row['contact_number'] . ')';
+        }
+        
+        // Add source indicator
+        $displayText .= ' [' . strtoupper($row['source']) . ']';
+        
+        $formattedResults[] = [
+            'id' => $row['id'],
+            'text' => $displayText,
+            'source' => $row['source'] // Optional: include source in the data
+        ];
+    }
+
+    // Sort results by name
+    usort($formattedResults, function($a, $b) {
+        return strcmp($a['text'], $b['text']);
+    });
+
+    // Limit to 10 results
+    $formattedResults = array_slice($formattedResults, 0, 10);
+
+    error_log("Returning " . count($formattedResults) . " beneficiaries");
+    echo json_encode(['results' => $formattedResults]);
+
+} catch (Exception $e) {
+    error_log("Error in search_beneficiaries.php: " . $e->getMessage());
     echo json_encode(['results' => []]);
-    exit;
 }
-
-$students = [];
-while ($row = pg_fetch_assoc($result)) {
-    $students[] = [
-        'id' => $row['id'],
-        'text' => $row['name'] . ' (' . $row['contact_number'] . ')'
-    ];
-}
-
-error_log("Returning " . count($students) . " students");
-echo json_encode(['results' => $students]);
 ?>

@@ -22,12 +22,18 @@ $status = $_GET['status'] ?? 'unsettled'; // 'unsettled' or 'settled'
 
 if ($status === 'unsettled') {
     // Get unsettled payments
-    $paymentsQuery = "SELECT p.*, s.studentname, s.class, m.fullname as collector_name
-                      FROM fee_payments p
-                      JOIN rssimyprofile_student s ON p.student_id = s.student_id
-                      JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
-                      WHERE p.is_settled = FALSE
-                      ORDER BY p.created_at DESC";
+$paymentsQuery = "
+SELECT p.*,
+       COALESCE(s.studentname, m.fullname, h.name) AS student_name,
+       s.class,
+       c.fullname AS collector_name
+FROM fee_payments p
+LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
+LEFT JOIN public_health_records h ON p.student_id = h.id::text
+JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
+WHERE p.is_settled = FALSE
+ORDER BY p.created_at DESC";
 
     $paymentsResult = pg_query($con, $paymentsQuery);
     $payments = pg_fetch_all($paymentsResult) ?? [];
@@ -44,10 +50,13 @@ if ($status === 'unsettled') {
     $summary = pg_fetch_assoc($summaryResult);
 } else {
     // Get settled payments
-    $settlementsQuery = "SELECT s.*, m.fullname as settled_by_name
-                         FROM settlements s
-                         JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
-                         ORDER BY s.settlement_date DESC";
+    $settlementsQuery = "
+SELECT s.*,
+       COALESCE(m.fullname, h.name) AS settled_by_name
+FROM settlements s
+LEFT JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
+LEFT JOIN public_health_records h ON s.settled_by = h.id::text
+ORDER BY s.settlement_date DESC";
 
     $settlementsResult = pg_query($con, $settlementsQuery);
     $settlements = pg_fetch_all($settlementsResult) ?? [];
@@ -212,7 +221,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                             </th>
                                                             <th>Payment ID</th>
                                                             <th>Date</th>
-                                                            <th>Student</th>
+                                                            <th>Payer</th>
                                                             <th>Class</th>
                                                             <th>Month</th>
                                                             <th>Year</th>
@@ -229,8 +238,8 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                                 <td><input type="checkbox" class="form-check-input payment-check" data-id="<?= $payment['id'] ?>"></td>
                                                                 <td><?= $payment['id'] ?></td>
                                                                 <td><?= date('d/m/Y', strtotime($payment['collection_date'])) ?></td>
-                                                                <td><?= htmlspecialchars($payment['studentname']) ?></td>
-                                                                <td><?= htmlspecialchars($payment['class']) ?></td>
+                                                                <td><?= htmlspecialchars($payment['student_name']) ?></td>
+                                                                <td><?= htmlspecialchars($payment['class'] ?? 'N/A') ?: 'N/A' ?></td>
                                                                 <td><?= $payment['month'] ?></td>
                                                                 <td><?= $payment['academic_year'] ?></td>
                                                                 <td>₹<?= number_format($payment['amount'], 2) ?></td>
