@@ -368,78 +368,80 @@ if ($result) {
                     <h5 class="modal-title" id="orderConfirmationModalLabel">Order Confirmation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5>Order Summary</h5>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Quantity</th>
-                                            <th>Unit Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="orderSummaryBody">
-                                        <!-- Order items will be inserted here -->
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th colspan="3" class="text-end">Total:</th>
-                                            <th id="orderTotal">₹0</th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                <form id="orderForm">
+                    <div class="modal-body">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>Order Summary</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Price</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="orderSummaryBody">
+                                            <!-- Order items will be inserted here -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th colspan="3" class="text-end">Total:</th>
+                                                <th id="orderTotal">₹0</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Left Side: Beneficiary Selection -->
+                            <div class="col-md-6">
+                                <label for="beneficiarySelect" class="form-label">Search and Select Beneficiaries</label>
+                                <select id="beneficiarySelect" name="beneficiaries" class="form-select js-data-ajax-multiple" multiple="multiple" required>
+                                    <!-- Beneficiaries will be loaded via AJAX -->
+                                </select>
+                                <div class="form-text text-muted">
+                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
+                                </div>
+                                <div class="invalid-feedback">Please select at least one beneficiary.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="paymentMode" class="form-label">Payment Mode</label>
+                                <select id="paymentMode" class="form-select" required>
+                                    <option value="">Select Payment Mode</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="online">Online Payment</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+
+                            <div class="col-md-6" id="transactionIdContainer" style="display: none;">
+                                <label for="transactionId" class="form-label">Transaction ID</label>
+                                <input type="text" id="transactionId" class="form-control" placeholder="Enter transaction ID">
+                                <div class="form-text text-muted">
+                                    Record payment for all selected purchases in one go. <a href="https://secure.paytmpayments.com/link/paymentForm/47760/LL_790393889" target="_blank">Quick Payment</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <label for="remarks" class="form-label">Remarks</label>
+                                <textarea id="remarks" class="form-control" rows="2" placeholder="Any additional remarks"></textarea>
                             </div>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <!-- Left Side: Beneficiary Selection -->
-                        <div class="col-md-6">
-                            <label for="beneficiarySelect" class="form-label">Search and Select Beneficiaries</label>
-                            <select id="beneficiarySelect" name="beneficiaries" class="form-select js-data-ajax-multiple" multiple="multiple" required>
-                                <!-- Beneficiaries will be loaded via AJAX -->
-                            </select>
-                            <div class="form-text text-muted">
-                                First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
-                            </div>
-                            <div class="invalid-feedback">Please select at least one beneficiary.</div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="paymentMode" class="form-label">Payment Mode</label>
-                            <select id="paymentMode" class="form-select" required>
-                                <option value="">Select Payment Mode</option>
-                                <option value="cash">Cash</option>
-                                <option value="online">Online Payment</option>
-                            </select>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="submitOrderBtn" class="btn btn-primary">Confirm Order</button>
                     </div>
-
-                    <div class="row mt-3">
-
-                        <div class="col-md-6" id="transactionIdContainer" style="display: none;">
-                            <label for="transactionId" class="form-label">Transaction ID</label>
-                            <input type="text" id="transactionId" class="form-control" placeholder="Enter transaction ID">
-                            <div class="form-text text-muted">
-                                Record payment for all selected purchases in one go. <a href="https://secure.paytmpayments.com/link/paymentForm/47760/LL_790393889" target="_blank">Quick Payment</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label for="remarks" class="form-label">Remarks</label>
-                            <textarea id="remarks" class="form-control" rows="2" placeholder="Any additional remarks"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="submitOrderBtn" class="btn btn-primary">Confirm Order</button>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -664,30 +666,21 @@ if ($result) {
                 }
             });
 
-            // Handle form submission
-            $('#submitOrderBtn').click(function(e) {
+            // Handle form submission using native validation
+            $('#orderForm').on('submit', function(e) {
                 e.preventDefault();
 
-                // Validate payment mode
-                if ($('#paymentMode').val() === '') {
-                    $('#paymentMode').addClass('is-invalid');
-                    return false;
-                } else {
-                    $('#paymentMode').removeClass('is-invalid');
+                // Native validation
+                if (!this.checkValidity()) {
+                    e.stopPropagation();
+                    this.classList.add('was-validated');
+                    return;
                 }
 
-                // Validate online payment transaction ID
-                if ($('#paymentMode').val() === 'online' && $('#transactionId').val().trim() === '') {
-                    $('#transactionId').addClass('is-invalid');
-                    return false;
-                } else {
-                    $('#transactionId').removeClass('is-invalid');
-                }
-
-                // Validate beneficiaries
+                // Custom check for Select2 (which isn't validated natively)
                 if (!$('#beneficiarySelect').val() || $('#beneficiarySelect').val().length === 0) {
                     $('#beneficiarySelect').addClass('is-invalid');
-                    return false;
+                    return;
                 } else {
                     $('#beneficiarySelect').removeClass('is-invalid');
                 }
@@ -697,20 +690,17 @@ if ($result) {
                     backdrop: 'static',
                     keyboard: false
                 });
-
                 loadingModal.show();
 
-                // Manually adjust backdrop to appear between the two modals
                 setTimeout(() => {
                     const backdrops = document.querySelectorAll('.modal-backdrop');
                     if (backdrops.length > 1) {
-                        // The loading modal backdrop is the last one
                         backdrops[backdrops.length - 1].style.zIndex = '1070';
                     }
-                }, 10); // Small delay to allow Bootstrap to create backdrops
+                }, 10);
 
                 // Disable the button
-                $(this).prop('disabled', true);
+                $('#submitOrderBtn').prop('disabled', true);
 
                 // Prepare data
                 const paymentMode = $('#paymentMode').val();
@@ -751,7 +741,7 @@ if ($result) {
                         loadingModal.hide();
                         if (data.status === 'success') {
                             alert(data.message);
-                            window.location.href = window.location.href; // reloads the current page
+                            window.location.href = window.location.href;
                         } else {
                             alert(data.message);
                             $('#submitOrderBtn').prop('disabled', false);
