@@ -22,7 +22,7 @@ $status = $_GET['status'] ?? 'unsettled'; // 'unsettled' or 'settled'
 
 if ($status === 'unsettled') {
     // Get unsettled payments
-$paymentsQuery = "
+    $paymentsQuery = "
 SELECT p.*,
        COALESCE(s.studentname, m.fullname, h.name) AS student_name,
        s.class,
@@ -224,10 +224,11 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                             <th>Payer</th>
                                                             <th>Class</th>
                                                             <th>Month</th>
-                                                            <th>Year</th>
+                                                            <!-- <th>Year</th> -->
                                                             <th>Amount</th>
                                                             <th>Type</th>
                                                             <th>Transaction ID</th>
+                                                            <th>Source</th>
                                                             <th>Collector</th>
                                                             <th>Data Entry Timestamp</th>
                                                         </tr>
@@ -240,11 +241,12 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                                 <td><?= date('d/m/Y', strtotime($payment['collection_date'])) ?></td>
                                                                 <td><?= htmlspecialchars($payment['student_name']) ?></td>
                                                                 <td><?= htmlspecialchars($payment['class'] ?? 'N/A') ?: 'N/A' ?></td>
-                                                                <td><?= $payment['month'] ?></td>
-                                                                <td><?= $payment['academic_year'] ?></td>
+                                                                <td><?= $payment['month'] ?>-<?= $payment['academic_year'] ?></td>
+                                                                <!-- <td><?= $payment['academic_year'] ?></td> -->
                                                                 <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                                                 <td><?= ucfirst($payment['payment_type']) ?></td>
                                                                 <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
+                                                                <td><?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?></td>
                                                                 <td><?= htmlspecialchars($payment['collector_name']) ?></td>
                                                                 <td><?= date('d/m/Y h:i A', strtotime($payment['created_at'])) ?></td>
                                                             </tr>

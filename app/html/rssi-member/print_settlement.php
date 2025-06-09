@@ -31,6 +31,7 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,17 +39,43 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         @media print {
-            body { padding: 20px; }
-            .no-print { display: none !important; }
-            .table { width: 100%; }
+            body {
+                padding: 20px;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .table {
+                width: 100%;
+            }
         }
-        .header { text-align: center; margin-bottom: 20px; }
-        .summary-card { border-left: 5px solid; margin-bottom: 20px; }
-        .summary-card.total { border-color: #007bff; }
-        .summary-card.cash { border-color: #28a745; }
-        .summary-card.online { border-color: #17a2b8; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            border-left: 5px solid;
+            margin-bottom: 20px;
+        }
+
+        .summary-card.total {
+            border-color: #007bff;
+        }
+
+        .summary-card.cash {
+            border-color: #28a745;
+        }
+
+        .summary-card.online {
+            border-color: #17a2b8;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="no-print text-center mb-3">
@@ -59,13 +86,13 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                 <i class="fas fa-times"></i> Close
             </button>
         </div>
-        
+
         <div class="header">
             <h2>Fee Settlement Receipt</h2>
             <h4>Settlement #<?= $settlement['id'] ?></h4>
             <p>Date: <?= date('d-M-Y', strtotime($settlement['settlement_date'])) ?></p>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card">
@@ -100,7 +127,7 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-success text-white">
@@ -114,13 +141,17 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                         <div class="row mb-2">
                             <div class="col-md-6 fw-bold">Cash Payments:</div>
                             <div class="col-md-6">
-                                <?= count(array_filter($payments, function($p) { return $p['payment_type'] === 'cash'; })) ?>
+                                <?= count(array_filter($payments, function ($p) {
+                                    return $p['payment_type'] === 'cash';
+                                })) ?>
                             </div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-6 fw-bold">Online Payments:</div>
                             <div class="col-md-6">
-                                <?= count(array_filter($payments, function($p) { return $p['payment_type'] === 'online'; })) ?>
+                                <?= count(array_filter($payments, function ($p) {
+                                    return $p['payment_type'] === 'online';
+                                })) ?>
                             </div>
                         </div>
                         <div class="row">
@@ -131,7 +162,7 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                 </div>
             </div>
         </div>
-        
+
         <div class="mb-4">
             <h5>Payment Details</h5>
             <?php if (empty($payments)): ?>
@@ -146,10 +177,11 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                 <th>Student</th>
                                 <th>Class</th>
                                 <th>Month</th>
-                                <th>Year</th>
+                                <!-- <th>Year</th> -->
                                 <th>Amount</th>
                                 <th>Type</th>
                                 <th>Transaction ID</th>
+                                <th>Source</th>
                                 <th>Collector</th>
                             </tr>
                         </thead>
@@ -160,11 +192,12 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                     <td><?= date('d-M-Y H:i', strtotime($payment['collection_date'])) ?></td>
                                     <td><?= htmlspecialchars($payment['studentname']) ?></td>
                                     <td><?= htmlspecialchars($payment['class']) ?></td>
-                                    <td><?= $payment['month'] ?></td>
-                                    <td><?= $payment['academic_year'] ?></td>
+                                    <td><?= $payment['month'] ?>-<?= $payment['academic_year'] ?></td>
+                                    <!-- <td><?= $payment['academic_year'] ?></td> -->
                                     <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                     <td><?= ucfirst($payment['payment_type']) ?></td>
                                     <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
+                                    <td><?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?></td>
                                     <td><?= htmlspecialchars($payment['collector_name']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -173,12 +206,12 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                 </div>
             <?php endif; ?>
         </div>
-        
+
         <div class="footer no-print mt-4 text-center">
             <p>Printed on: <?= date('d-M-Y H:i') ?></p>
         </div>
     </div>
-    
+
     <script>
         window.onload = function() {
             // Auto-print when page loads
@@ -188,4 +221,5 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
         };
     </script>
 </body>
+
 </html>

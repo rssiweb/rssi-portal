@@ -126,10 +126,11 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                 <th>Student</th>
                                 <th>Class</th>
                                 <th>Month</th>
-                                <th>Year</th>
+                                <!-- <th>Year</th> -->
                                 <th>Amount</th>
                                 <th>Type</th>
                                 <th>Transaction ID</th>
+                                <th>Source</th>
                                 <th>Collector</th>
                             </tr>
                         </thead>
@@ -140,11 +141,12 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                     <td><?= date('d-M-Y H:i', strtotime($payment['collection_date'])) ?></td>
                                     <td><?= htmlspecialchars($payment['studentname']) ?></td>
                                     <td><?= htmlspecialchars($payment['class']) ?></td>
-                                    <td><?= $payment['month'] ?></td>
-                                    <td><?= $payment['academic_year'] ?></td>
+                                    <td><?= $payment['month'] ?>-<?= $payment['academic_year'] ?></td>
+                                    <!-- <td><?= $payment['academic_year'] ?></td> -->
                                     <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                     <td><?= ucfirst($payment['payment_type']) ?></td>
                                     <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
+                                    <td><?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?></td>
                                     <td><?= htmlspecialchars($payment['collector_name']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
