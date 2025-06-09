@@ -382,14 +382,18 @@ validation();
 
             if (products.length === 0) {
                 productList.innerHTML = `
-                    <div class="alert alert-info">
-                        No products found matching your search.
-                    </div>
-                `;
+            <div class="alert alert-info">
+                No products found matching your search.
+            </div>
+        `;
                 return;
             }
 
             products.forEach(product => {
+                // Find this product in the cart to get current quantity
+                const cartItem = cart.find(item => item.id === product.id);
+                const currentQuantity = cartItem ? cartItem.count : 0;
+
                 const hasDiscount = product.discount_percentage > 0;
                 const displayPrice = hasDiscount ?
                     (product.original_price * (1 - product.discount_percentage / 100)).toFixed(2) :
@@ -401,94 +405,94 @@ validation();
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
                 productCard.innerHTML = `
-                    <div class="d-flex">
-                        <!-- Product Image -->
-                        <div class="col-6 me-3" style="height: 150px;">
-                            <img src="${product.image}" alt="${product.name}" 
-                                class="img-fluid h-100 w-100 object-fit-cover rounded">
+            <div class="d-flex">
+                <!-- Product Image -->
+                <div class="col-6 me-3" style="height: 150px;">
+                    <img src="${product.image}" alt="${product.name}" 
+                        class="img-fluid h-100 w-100 object-fit-cover rounded">
+                </div>
+                
+                <!-- Product Details -->
+                <div class="flex-grow-1">
+                    <!-- Product Name -->
+                    <h5 class="mb-1">${product.name}</h5>
+                    <small class="text-muted">Product Id- ${product.id}</small>
+                    
+                    <!-- Rating -->
+                    ${product.rating > 0 ? `
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="text-warning">
+                            ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
                         </div>
-                        
-                        <!-- Product Details -->
-                        <div class="flex-grow-1">
-                            <!-- Product Name -->
-                            <h5 class="mb-1">${product.name}</h5>
-                            <small class="text-muted">Product Id- ${product.id}</small>
-                            
-                            <!-- Rating -->
-                            ${product.rating > 0 ? `
-                            <div class="d-flex align-items-center mb-1">
-                                <div class="text-warning">
-                                    ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
-                                </div>
-                                <small class="text-muted ms-2">${product.review_count} reviews</small>
-                            </div>
-                            ` : ''}
-                            
-                            <!-- Description -->
-                            ${product.description ? `
-                            <p class="text-muted small mb-2 text-truncate-2" 
-                            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            ${product.description}
-                            </p>
-                            ` : ''}
-                            
-                            <!-- Pricing -->
-                            <div class="mb-2">
-                                ${hasDiscount ? `
-                                    <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
-                                    <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
-                                    <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
-                                ` : `
-                                    <span class="fs-5 fw-bold">₹${displayPrice}</span>
-                                `}
-                                <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
-                            </div>
-                            
-                            <!-- Stock Status -->
-                            ${stockStatus ? `
-                                <div class="text-danger mb-2">Out of Stock</div>
-                            ` : lowStock ? `
-                                <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
-                                <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="0" 
-                                        min="0" 
-                                        max="${product.in_stock}"
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            ` : `
-                                <div class="text-success mb-2">In Stock</div>
-                                <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="0" 
-                                        min="0" 
-                                        max="${product.in_stock}"
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            `}
-                        </div>
+                        <small class="text-muted ms-2">${product.review_count} reviews</small>
                     </div>
-                `;
+                    ` : ''}
+                    
+                    <!-- Description -->
+                    ${product.description ? `
+                    <p class="text-muted small mb-2 text-truncate-2" 
+                    style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    ${product.description}
+                    </p>
+                    ` : ''}
+                    
+                    <!-- Pricing -->
+                    <div class="mb-2">
+                        ${hasDiscount ? `
+                            <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
+                            <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
+                            <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
+                        ` : `
+                            <span class="fs-5 fw-bold">₹${displayPrice}</span>
+                        `}
+                        <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
+                    </div>
+                    
+                    <!-- Stock Status -->
+                    ${stockStatus ? `
+                        <div class="text-danger mb-2">Out of Stock</div>
+                    ` : lowStock ? `
+                        <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
+                        <div class="btn-quantity d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" 
+                                id="count${product.id}" 
+                                class="form-control mx-2 text-center stock-input" 
+                                value="${currentQuantity}" 
+                                min="0" 
+                                max="${product.in_stock}"
+                                onchange="validateQuantityInput(${product.id})"
+                                oninput="validateQuantityInput(${product.id})"
+                                style="width: 60px;">
+                            <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="text-success mb-2">In Stock</div>
+                        <div class="btn-quantity d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" 
+                                id="count${product.id}" 
+                                class="form-control mx-2 text-center stock-input" 
+                                value="${currentQuantity}" 
+                                min="0" 
+                                max="${product.in_stock}"
+                                onchange="validateQuantityInput(${product.id})"
+                                oninput="validateQuantityInput(${product.id})"
+                                style="width: 60px;">
+                            <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
                 productList.appendChild(productCard);
             });
         }
