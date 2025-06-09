@@ -530,7 +530,7 @@ validation();
         }
 
         // Cart functions
-        function updateCart(productId, productName, price, count) {
+        function updateCart(productId, productName, price, count, unit_name) {
             const existingIndex = cart.findIndex(item => item.id === productId);
 
             if (count > 0) {
@@ -538,7 +538,8 @@ validation();
                     id: productId,
                     name: productName,
                     price: price,
-                    count: count
+                    count: count,
+                    unit_name: unit_name
                 };
 
                 if (existingIndex >= 0) {
@@ -569,7 +570,7 @@ validation();
                 listItem.innerHTML = `
             <div>
                 ${item.name} x ${item.count}
-                <span class="text-muted ms-2">(₹${item.price.toFixed(2)} each)</span>
+                <span class="text-muted ms-2">(₹${item.price.toFixed(2)}/${item.unit_name})</span>
             </div>
             <div>
                 <span class="me-3">₹${itemTotal.toFixed(2)}</span>
@@ -602,7 +603,7 @@ validation();
 
             if (product && currentCount < product.in_stock) {
                 countInput.value = currentCount + 1;
-                updateCart(productId, product.name, product.price, currentCount + 1);
+                updateCart(productId, product.name, product.price, currentCount + 1, product.unit_name);
             } else if (product && currentCount >= product.in_stock) {
                 alert(`You cannot order more than ${product.in_stock} items of this product.`);
             }
@@ -616,7 +617,7 @@ validation();
             if (currentCount > 0) {
                 countInput.value = currentCount - 1;
                 if (product) {
-                    updateCart(productId, product.name, product.price, currentCount - 1);
+                    updateCart(productId, product.name, product.price, currentCount - 1, product.unit_name);
                 }
             }
         }
@@ -640,7 +641,7 @@ validation();
                 }
 
                 countInput.value = enteredValue;
-                updateCart(productId, product.name, product.price, enteredValue);
+                updateCart(productId, product.name, product.price, enteredValue, product.unit_name);
             }
         }
 
