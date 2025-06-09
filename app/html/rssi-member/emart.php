@@ -347,8 +347,8 @@ validation();
                 clearSearchBtn.style.display = searchTerm ? 'inline-block' : 'none';
             }
 
-            // Fetch products via AJAX
-            fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}`)
+            // Return the fetch Promise
+            return fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -356,14 +356,16 @@ validation();
                     return response.json();
                 })
                 .then(data => {
-                    products = data.products; // Store products for cart operations
+                    products = data.products;
                     renderProducts(data.products);
                     totalPages = data.totalPages;
                     renderPagination();
+                    return data; // Return data for chaining
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     productList.innerHTML = '<div class="alert alert-danger">Error loading products. Please try again.</div>';
+                    throw error; // Re-throw for error handling
                 });
         }
 
@@ -556,6 +558,10 @@ validation();
             }
 
             renderCart();
+            updateCartCount();
+
+            // Trigger AJAX refresh after cart update
+            // refreshProductList();
         }
 
         function renderCart() {
@@ -592,12 +598,25 @@ validation();
 
         // Add this new function to handle item removal
         function removeFromCart(index) {
-            // Remove the item at the specified index
-            cart.splice(index, 1);
-            // Re-render the cart
-            renderCart();
-            // Update cart count in navbar or elsewhere if needed
-            updateCartCount();
+            if (index >= 0 && index < cart.length) {
+                cart.splice(index, 1);
+                renderCart();
+                updateCartCount();
+
+                // Trigger AJAX refresh
+                loadProducts();
+            }
+        }
+
+        // Add this function to update cart count in navbar or elsewhere
+        function updateCartCount() {
+            const totalItems = cart.reduce((sum, item) => sum + item.count, 0);
+            const cartCountElements = document.querySelectorAll('.cart-count');
+
+            cartCountElements.forEach(element => {
+                element.textContent = totalItems;
+                element.style.display = totalItems > 0 ? 'inline-block' : 'none';
+            });
         }
 
         function increaseCount(productId) {
