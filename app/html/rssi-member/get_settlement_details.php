@@ -28,10 +28,12 @@ if (!$settlement) {
 }
 
 // Get payment details
-$paymentsQuery = "SELECT p.*, s.studentname, s.class, m.fullname as collector_name
+$paymentsQuery = "SELECT p.*, s.studentname, s.class, m.fullname as collector_name, eo.order_number,
+       eo.order_id
                   FROM fee_payments p
                   JOIN rssimyprofile_student s ON p.student_id = s.student_id
                   JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
+                  LEFT JOIN emart_orders eo ON p.id = eo.payment_id
                   WHERE p.settlement_id = $settlementId
                   ORDER BY p.collection_date";
 $paymentsResult = pg_query($con, $paymentsQuery);
@@ -146,7 +148,17 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                     <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                     <td><?= ucfirst($payment['payment_type']) ?></td>
                                     <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
-                                    <td><?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?></td>
+                                    <td>
+                                        <?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?>
+                                        &nbsp;
+                                        <?php if (!empty($payment['order_number']) && isset($payment['order_id'])): ?>
+                                            <a href="order_confirmation.php?id=<?= urlencode($payment['order_id']) ?>" target="_blank">
+                                                #<?= htmlspecialchars($payment['order_number']) ?>
+                                            </a>
+                                        <?php elseif (!empty($payment['order_number'])): ?>
+                                            #<?= htmlspecialchars($payment['order_number']) ?>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= htmlspecialchars($payment['collector_name']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
