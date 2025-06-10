@@ -643,7 +643,7 @@ $result = pg_query($con, $query);
                                                                     </td>
                                                                     <td><?= htmlspecialchars($row['name']) ?></td>
                                                                     <td><?= htmlspecialchars($row['contact_number']) ?></td>
-                                                                    <td><?= htmlspecialchars($row['email']) ?></td>
+                                                                    <td><?= isset($row['email']) ? htmlspecialchars($row['email']) : '' ?></td>
                                                                     <td>
                                                                         <?php
                                                                         $dob = new DateTime($row['date_of_birth']);

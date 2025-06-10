@@ -8,13 +8,21 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-// Fetch user's orders
-$ordersQuery = "SELECT o.* FROM emart_orders o 
-                --WHERE o.associatenumber = $1 
-                ORDER BY o.order_date DESC";
-//$ordersResult = pg_query_params($con, $ordersQuery, [$associatenumber]);
+$ordersQuery = "
+    SELECT 
+        o.*,
+        COALESCE(s.studentname, m.fullname, h.name) AS customer_name,
+        COALESCE(s.contact, m.phone, h.contact_number) AS customer_contact,
+        COALESCE(s.emailaddress, m.email, h.email) AS customer_email
+    FROM emart_orders o
+    LEFT JOIN rssimyprofile_student s ON o.beneficiary = s.student_id
+    LEFT JOIN rssimyaccount_members m ON o.beneficiary = m.associatenumber
+    LEFT JOIN public_health_records h ON o.beneficiary = h.id::text
+    ORDER BY o.order_date DESC
+";
 $ordersResult = pg_query($con, $ordersQuery);
 $orders = pg_fetch_all($ordersResult);
+
 ?>
 
 <!DOCTYPE html>
@@ -70,6 +78,7 @@ $orders = pg_fetch_all($ordersResult);
                                             <thead>
                                                 <tr>
                                                     <th>Order #</th>
+                                                    <th>Name</th>
                                                     <th>Date</th>
                                                     <th>Amount</th>
                                                     <th>Payment Method</th>
@@ -81,6 +90,7 @@ $orders = pg_fetch_all($ordersResult);
                                                 <?php foreach ($orders as $order): ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($order['order_number']) ?></td>
+                                                        <td><?= htmlspecialchars($order['customer_name']) ?></td>
                                                         <td><?= date('M j, Y', strtotime($order['order_date'])) ?></td>
                                                         <td>₹<?= number_format($order['total_amount'], 2) ?></td>
                                                         <td><?= ucfirst($order['payment_mode']) ?></td>
