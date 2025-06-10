@@ -10,9 +10,10 @@ if (!isLoggedIn("aid")) {
 
 // Fetch user's orders
 $ordersQuery = "SELECT o.* FROM emart_orders o 
-                WHERE o.associatenumber = $1 
+                --WHERE o.associatenumber = $1 
                 ORDER BY o.order_date DESC";
-$ordersResult = pg_query_params($con, $ordersQuery, [$associatenumber]);
+//$ordersResult = pg_query_params($con, $ordersQuery, [$associatenumber]);
+$ordersResult = pg_query($con, $ordersQuery);
 $orders = pg_fetch_all($ordersResult);
 ?>
 

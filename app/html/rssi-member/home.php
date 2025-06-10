@@ -393,7 +393,7 @@ if (!function_exists('makeClickableLinks')) {
                               <div class="poll-options">
                                 <?php foreach ($results as $option): ?>
                                   <div class="form-check mb-3">
-                                    <input class="form-check-input"
+                                    <input class="form-check-input no-required-mark"
                                       type="<?= $latest_poll['is_multiple_choice'] == 't' ? 'checkbox' : 'radio' ?>"
                                       name="<?= $latest_poll['is_multiple_choice'] == 't' ? 'option_id[]' : 'option_id' ?>"
                                       id="option_<?= $option['option_id'] ?>"
@@ -560,7 +560,7 @@ if (!function_exists('makeClickableLinks')) {
     $(document).ready(function() {
       // Add red asterisk to required fields
       $('form')
-        .find('input[required], select[required], textarea[required]')
+        .find('input[required]:not(.no-required-mark), select[required], textarea[required]')
         .each(function() {
           const label = $(this).closest('div').find('label'); // Ensure proper label selection
           if ($(this).prop('required') && label.length && !label.find('span').length) {

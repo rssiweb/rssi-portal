@@ -470,7 +470,7 @@
             </a>
           </li>
           <li>
-            <a id="orders" href="orders.php">
+            <a id="orders" href="book_orders.php">
               <span>Library Orders Management</span>
             </a>
           </li>
@@ -818,7 +818,7 @@
       {
         id: 'irc',
         linkId: 'orders',
-        url: 'orders.php'
+        url: 'book_orders.php'
       },
       {
         id: 'work',
