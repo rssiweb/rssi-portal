@@ -143,7 +143,7 @@ try {
             $paymentId = $paymentData['id'];
         }
 
-        // Insert the order record with payment_id
+        // Insert the order record with payment_id and beneficiary
         $orderNumber = uniqid();
         $orderQuery = "INSERT INTO emart_orders (
             order_number,
@@ -152,8 +152,9 @@ try {
             payment_mode,
             transaction_id,
             remarks,
-            payment_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING order_id";
+            payment_id,
+            beneficiary
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING order_id";
 
         $orderParams = [
             $orderNumber,
@@ -162,7 +163,8 @@ try {
             $paymentMode,
             $transactionId,
             $remarks,
-            $paymentId
+            $paymentId,
+            $beneficiary
         ];
 
         $orderResult = pg_query_params($con, $orderQuery, $orderParams);
