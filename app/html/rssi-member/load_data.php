@@ -61,7 +61,7 @@ switch ($view) {
                 d.transaction_out_id AS Ref,
                 d.date AS date_distribution,
                 d.distributed_to,
-                COALESCE(m.fullname, s.studentname) AS distributed_to_name,
+                COALESCE(m.fullname, s.studentname, h.name) AS distributed_to_name,
                 i.item_name,
                 d.quantity_distributed,
                 u.unit_name,
@@ -73,11 +73,12 @@ switch ($view) {
             JOIN stock_item_unit u ON u.unit_id = d.unit
             LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
             LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+            LEFT JOIN public_health_records h ON h.id::text = d.distributed_to
             GROUP BY 
                 d.transaction_out_id,
                 d.date,
                 d.distributed_to,
-                m.fullname, s.studentname,
+                m.fullname, s.studentname, h.name,
                 i.item_name,
                 d.quantity_distributed,
                 u.unit_name,
@@ -92,7 +93,7 @@ switch ($view) {
         $query = "
             SELECT
                 d.distributed_to,
-                COALESCE(m.fullname, s.studentname) AS distributed_to_name,
+                COALESCE(m.fullname, s.studentname, h.name) AS distributed_to_name,
                 i.item_name,
                 SUM(d.quantity_distributed) AS total_distributed_count,
                 u.unit_name,
@@ -103,6 +104,7 @@ switch ($view) {
             JOIN stock_item_unit u ON u.unit_id = d.unit
             LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
             LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+            LEFT JOIN public_health_records h ON h.id::text = d.distributed_to
         ";
 
         // Add WHERE clause for academic year filtering if selected
@@ -114,7 +116,7 @@ switch ($view) {
         }
 
         $query .= "
-            GROUP BY d.distributed_to, m.fullname, s.studentname, i.item_id, i.item_name, u.unit_id, u.unit_name
+            GROUP BY d.distributed_to, m.fullname, s.studentname, h.name, i.item_id, i.item_name, u.unit_id, u.unit_name
             ORDER BY d.distributed_to, i.item_id, u.unit_id;
         ";
         break;
