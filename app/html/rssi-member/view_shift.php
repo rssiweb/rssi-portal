@@ -17,13 +17,13 @@ $currentDate = date('Y-m-d');
 $filterStatus = isset($_GET['filter_status']) ? $_GET['filter_status'] : ['active'];
 $associateNumber = isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null;
 
-// Base query to fetch data
+// Base query to fetch data - ordered by start_date DESC to get latest first
 $query = "
-    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate, m.job_type,m.engagement
+    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate, m.job_type, m.engagement
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
     WHERE (COALESCE('$associateNumber', '') = '' OR s.associate_number = '$associateNumber')
-    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
+    ORDER BY s.associate_number, s.start_date DESC, s.timestamp DESC
 ";
 
 $result = pg_query($con, $query);
@@ -40,6 +40,7 @@ while ($row = pg_fetch_assoc($result)) {
     $exitTime = $row['exit_time'];
     $filterStatusDB = $row['filterstatus'];
     $effectiveDate = $row['effectivedate'];
+    $workdays = $row['workdays'] ?? ''; // Handle null workdays
 
     if (!isset($data[$associateNumber])) {
         $data[$associateNumber] = [];
@@ -58,9 +59,10 @@ while ($row = pg_fetch_assoc($result)) {
         'submittedby' => $row['submittedby'],
         'filterstatus' => $filterStatusDB,
         'effectivedate' => $effectiveDate,
+        'workdays' => $workdays,
     ];
 
-    // Get the previous entry for comparison
+    // Get the previous entry for comparison (which is actually the next chronological entry)
     $previousEntryIndex = count($data[$associateNumber]) - 1;
     if ($previousEntryIndex >= 0) {
         $previousEntry = &$data[$associateNumber][$previousEntryIndex];
@@ -68,14 +70,15 @@ while ($row = pg_fetch_assoc($result)) {
         // Check if the timing changes
         if (
             $previousEntry['reporting_time'] === $reportingTime &&
-            $previousEntry['exit_time'] === $exitTime
+            $previousEntry['exit_time'] === $exitTime &&
+            $previousEntry['workdays'] === $workdays
         ) {
-            // Extend the previous entry's end_date
-            $previousEntry['end_date'] = $startDate;
+            // Extend the previous entry's start_date to cover this one
+            // Since we're processing in reverse chronological order
             continue;
         } else {
-            // Finalize the previous entry's end_date as the day before the new start_date
-            $previousEntry['end_date'] = date('Y-m-d', strtotime("$startDate -1 day"));
+            // Set the current entry's end_date to the day before the next entry's start_date
+            $entry['end_date'] = date('Y-m-d', strtotime($previousEntry['start_date'] . ' -1 day'));
         }
     }
 
@@ -83,30 +86,32 @@ while ($row = pg_fetch_assoc($result)) {
     $data[$associateNumber][] = $entry;
 }
 
-// Finalize end_date for the last entry in each group
+// Finalize end_date for the first entry (latest) in each group
 foreach ($data as $associateNumber => &$entries) {
-    $lastEntryIndex = count($entries) - 1;
-
-    if ($lastEntryIndex >= 0) {
-        $lastEntry = &$entries[$lastEntryIndex];
-        if (isset($lastEntry['effectivedate'])) {
-            // Use effective date for end_date
-            $lastEntry['end_date'] = $lastEntry['effectivedate'];
-        } else {
-            // Extend to current date
-            $lastEntry['end_date'] = $currentDate;
+    if (count($entries) > 0) {
+        // The first entry is the most recent one
+        $firstEntry = &$entries[0];
+        if (empty($firstEntry['end_date'])) {
+            // If no end_date set, it's the current schedule - set to current date or effective date
+            $firstEntry['end_date'] = !empty($firstEntry['effectivedate']) ? 
+                $firstEntry['effectivedate'] : $currentDate;
+        }
+        
+        // Ensure all entries have valid end_dates
+        foreach ($entries as &$entry) {
+            if (empty($entry['end_date'])) {
+                $entry['end_date'] = $currentDate;
+            }
         }
     }
-
-    // Reverse entries for each associate to show latest first
-    $entries = array_reverse($entries);
 }
 
 // Filter the results based on selected statuses
 if (!empty($filterStatus)) {
     foreach ($data as $associateNumber => &$entries) {
         $entries = array_filter($entries, function ($entry) use ($filterStatus, $currentDate) {
-            $status = (strtotime($entry['end_date']) >= strtotime($currentDate)) ? 'active' : 'history';
+            $isActive = strtotime($entry['end_date']) >= strtotime($currentDate);
+            $status = $isActive ? 'active' : 'history';
             return in_array($status, $filterStatus);
         });
     }
@@ -125,7 +130,6 @@ pg_close($con); // Close the connection
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-
         function gtag() {
             dataLayer.push(arguments);
         }
@@ -184,14 +188,12 @@ pg_close($con); // Close the connection
                                 <form method="GET" action="" class="filter-form d-flex flex-wrap" style="gap: 10px;">
                                     <!-- Associate Number Input -->
                                     <div class="form-group">
-                                        <!-- <label for="associate_number" class="form-label">Associate Number</label> -->
                                         <input type="text" class="form-control" id="associate_number" name="associate_number"
                                             placeholder="Enter Associate Number" value="<?php echo htmlspecialchars($_GET['associate_number'] ?? ''); ?>">
                                     </div>
 
                                     <!-- Status Multiselect Dropdown -->
                                     <div class="form-group">
-                                        <!-- <label for="filter_status" class="form-label">Status</label> -->
                                         <select class="form-select" style="min-width: 200px;" id="filter_status" name="filter_status[]" multiple>
                                             <option value="active" <?php echo in_array('active', $_GET['filter_status'] ?? ['active']) ? 'selected' : ''; ?>>Active</option>
                                             <option value="history" <?php echo in_array('history', $_GET['filter_status'] ?? []) ? 'selected' : ''; ?>>History</option>
@@ -218,62 +220,52 @@ pg_close($con); // Close the connection
                                             <th>End Date</th>
                                             <th>Reporting Time</th>
                                             <th>Exit Time</th>
+                                            <th>Work Days</th>
                                             <th>Working Hours</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($data as $associateRows): ?>
                                             <?php foreach ($associateRows as $row): ?>
-                                                <tr>
+                                                <?php 
+                                                // Determine if this is an active record
+                                                $isActive = strtotime($row['end_date']) >= strtotime($currentDate);
+                                                $rowClass = $isActive ? 'table-success' : '';
+                                                ?>
+                                                <tr class="<?php echo $rowClass; ?>">
                                                     <td><?php echo htmlspecialchars($row['associate_number']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['fullname']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['job_type']); ?> -<?php echo htmlspecialchars($row['engagement']); ?></td>
                                                     <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
-                                                    <td><?php echo (date("d/m/Y", strtotime($row['end_date'])) === date("d/m/Y")) ? null : date("d/m/Y", strtotime($row['end_date'])); ?></td>
                                                     <td>
-                                                        <?php
-                                                        echo date("h:i A", strtotime($row['reporting_time'])); // Format as HH:MM AM/PM
+                                                        <?php 
+                                                        $endDate = $row['end_date'];
+                                                        if ($endDate && $endDate != $currentDate) {
+                                                            echo date("d/m/Y", strtotime($endDate));
+                                                        }
                                                         ?>
                                                     </td>
+                                                    <td><?php echo date("h:i A", strtotime($row['reporting_time'])); ?></td>
+                                                    <td><?php echo date("h:i A", strtotime($row['exit_time'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['workdays']); ?></td>
                                                     <td>
                                                         <?php
-                                                        echo date("h:i A", strtotime($row['exit_time'])); // Format as HH:MM AM/PM
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        $exit_time = $row['exit_time']; // e.g., "18:30:00"
-                                                        $reporting_time = $row['reporting_time']; // e.g., "10:45:00"
+                                                        $exit_time = $row['exit_time'];
+                                                        $reporting_time = $row['reporting_time'];
 
-                                                        // Convert time strings to seconds since the start of the day
                                                         $exit_seconds = strtotime($exit_time);
                                                         $reporting_seconds = strtotime($reporting_time);
 
-                                                        // Calculate the duration in seconds
                                                         if ($exit_seconds !== false && $reporting_seconds !== false) {
                                                             $duration = $exit_seconds - $reporting_seconds;
-
-                                                            // Convert the duration to a human-readable format
-                                                            if ($duration < 60) {
-                                                                // Less than 60 seconds
-                                                                echo htmlspecialchars($duration . ' seconds');
-                                                            } elseif ($duration < 3600) {
-                                                                // Less than 60 minutes
-                                                                $minutes = floor($duration / 60);
-                                                                $seconds = $duration % 60;
-                                                                echo htmlspecialchars($minutes . ' minutes ' . $seconds . ' seconds');
-                                                            } else {
-                                                                // 60 minutes or more
-                                                                $hours = floor($duration / 3600);
-                                                                $minutes = floor(($duration % 3600) / 60);
-                                                                echo htmlspecialchars($hours . ' hours ' . $minutes . ' minutes');
-                                                            }
+                                                            $hours = floor($duration / 3600);
+                                                            $minutes = floor(($duration % 3600) / 60);
+                                                            echo htmlspecialchars($hours . 'h ' . $minutes . 'm');
                                                         } else {
                                                             echo 'Invalid time format';
                                                         }
                                                         ?>
                                                     </td>
-
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php endforeach; ?>
@@ -294,17 +286,20 @@ pg_close($con); // Close the connection
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($result)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#scheduleTable').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
+            // Initialize DataTables
+            $('#scheduleTable').DataTable({
+                order: [], // Disable initial sorting
+                columnDefs: [
+                    { targets: [2, 3, 4, 5, 6, 7, 8], orderable: false } // Disable sorting on all columns except first two
+                ]
+            });
+            
+            // Initialize Select2 for status filter
+            $('#filter_status').select2({
+                placeholder: "Select status",
+                allowClear: true
+            });
         });
     </script>
 </body>
-
 </html>

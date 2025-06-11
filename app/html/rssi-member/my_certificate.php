@@ -309,7 +309,7 @@ $resultArr = pg_fetch_all($result);
             // Initialize Select2 for associatenumber dropdown
             $('#nominatedby').select2({
                 ajax: {
-                    url: 'fetch_associates.php', // Path to the PHP script
+                    url: 'fetch_associates.php?isMycertificate=true', // Path to the PHP script
                     dataType: 'json',
                     delay: 250, // Delay in milliseconds before sending the request
                     data: function(params) {

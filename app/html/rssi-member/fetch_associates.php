@@ -12,8 +12,10 @@ validation();
 
 // Get the search term from the AJAX request
 $searchTerm = $_GET['q'] ?? '';
+$isShiftPlanner = $_GET['isShiftPlanner'] ?? false;
+$isMycertificate = $_GET['isMycertificate'] ?? false;
 
-// Prepare the query to fetch associates
+// Prepare the base query
 $query = "
     SELECT 
         associatenumber, 
@@ -21,11 +23,15 @@ $query = "
     FROM 
         rssimyaccount_members 
     WHERE 
-        fullname ILIKE $1 OR 
-        associatenumber::text ILIKE $1 
-    ORDER BY 
-        fullname 
-    LIMIT 10"; // Limit results to 10 for performance
+        (fullname ILIKE $1 OR 
+        associatenumber::text ILIKE $1)";
+
+// Add filter for Active status only if it's the shift planner request
+if ($isShiftPlanner || $isMycertificate) {
+    $query .= " AND filterstatus = 'Active'";
+}
+
+$query .= " ORDER BY fullname LIMIT 10";
 
 // Prepare and execute the query
 $stmt = pg_prepare($con, "fetch_associates", $query);
@@ -36,8 +42,8 @@ $associates = [];
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
         $associates[] = [
-            'id' => $row['associatenumber'], // Value to be submitted
-            'text' => $row['text'] // Display text in the dropdown
+            'id' => $row['associatenumber'],
+            'text' => $row['text']
         ];
     }
 }

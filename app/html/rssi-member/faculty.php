@@ -144,12 +144,43 @@ $resultArr = pg_fetch_all($result);
             /* Black w/ opacity */
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#get_aaid').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                // multiple: true
+            });
+        });
+    </script>
 
 </head>
 
@@ -188,39 +219,63 @@ $resultArr = pg_fetch_all($result);
                                 </div>
                             </div>
 
-                            <form action="" method="POST">
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col2" style="display: inline-block;">
-                                        <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled>
-                                            <?php if ($id == null) { ?>
-                                                <option disabled selected hidden>Select Status</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $id ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>Active</option>
-                                            <option>Inactive</option>
-                                            <option>In Progress</option>
-                                        </select>
-                                        <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
+                            <form action="" method="POST" class="mb-4">
+                                <!-- First Row - Main Filters -->
+                                <div class="row g-3 align-items-end">
+                                    <!-- Status Dropdown -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <div class="form-group">
+                                            <label for="get_id" class="form-label">Status</label>
+                                            <select name="get_id" id="get_id" class="form-select" disabled>
+                                                <?php if ($id == null) { ?>
+                                                    <option disabled selected hidden>Select Status</option>
+                                                <?php } else { ?>
+                                                    <option hidden selected><?php echo $id ?></option>
+                                                <?php } ?>
+                                                <option>Active</option>
+                                                <option>Inactive</option>
+                                                <option>In Progress</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- AAID Dropdown -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <div class="form-group">
+                                            <label for="get_aaid" class="form-label">AAID</label>
+                                            <select class="form-select" id="get_aaid" name="get_aaid" required></select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Academic Year Dropdown -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <div class="form-group">
+                                            <label for="adj_academicyear" class="form-label">Academic Year</label>
+                                            <select name="adj_academicyear" id="adj_academicyear" class="form-select" required>
+                                                <?php if ($lyear != null) { ?>
+                                                    <option hidden selected><?php echo $lyear ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Search Button -->
+                                    <div class="col-md-2 col-lg-1">
+                                        <button type="submit" name="search_by_id" class="btn btn-success w-100">
+                                            <i class="bi bi-search"></i> Search
+                                        </button>
                                     </div>
                                 </div>
-                                <select name="adj_academicyear" id="adj_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                                    <?php if ($lyear != null) { ?>
-                                        <option hidden selected><?php echo $lyear ?></option>
-                                    <?php }
-                                    ?>
-                                </select>
 
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>
-                                </div>
-
-                                <div id="filter-checks">
-                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                    <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
+                                <!-- Second Row - Checkbox Filter -->
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="is_user" id="is_user" value="1"
+                                                <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                            <label for="is_user" class="form-check-label">Search by Associate ID</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </form>
                             <script>
