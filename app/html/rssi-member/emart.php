@@ -223,6 +223,9 @@ validation();
                             </div>
 
                             <div class="col-md-6">
+                                <div id="multipleBeneficiaryWarning" class="alert alert-danger mt-2" style="display: none;">
+                                    You have selected multiple beneficiaries. Please collect ₹<span id="totalCollectionAmount">0</span> (₹<span id="orderTotalPerBeneficiary">0</span> × <span id="beneficiaryCount">0</span> beneficiaries).
+                                </div>
                                 <label for="paymentMode" class="form-label">Payment Mode</label>
                                 <select id="paymentMode" class="form-select" required>
                                     <option value="">Select Payment Mode</option>
@@ -869,6 +872,39 @@ validation();
                     }
                 });
             });
+        });
+    </script>
+    <script>
+        // Add this inside your $(document).ready() function, after the Select2 initialization
+        $('#beneficiarySelect').on('change', function() {
+            const selectedBeneficiaries = $(this).val() || [];
+            const beneficiaryCount = selectedBeneficiaries.length;
+
+            // Get the order total (remove currency symbol and commas)
+            const orderTotalText = $('#orderTotal').text().replace(/[^\d.]/g, '');
+            const orderTotal = parseFloat(orderTotalText) || 0;
+
+            const warningDiv = $('#multipleBeneficiaryWarning');
+
+            if (beneficiaryCount > 1) {
+                const totalCollection = orderTotal * beneficiaryCount;
+
+                // Update the warning message
+                $('#totalCollectionAmount').text(totalCollection.toFixed(2));
+                $('#orderTotalPerBeneficiary').text(orderTotal.toFixed(2));
+                $('#beneficiaryCount').text(beneficiaryCount);
+
+                // Show the warning
+                warningDiv.show();
+            } else {
+                // Hide the warning if only one or zero beneficiaries selected
+                warningDiv.hide();
+            }
+        });
+
+        // Also trigger this when payment mode changes in case it affects the total
+        $('#paymentMode').change(function() {
+            $('#beneficiarySelect').trigger('change');
         });
     </script>
 </body>
