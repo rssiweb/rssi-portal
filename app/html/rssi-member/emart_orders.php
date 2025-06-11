@@ -8,76 +8,126 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-// Initialize variables for pagination and filtering
-$itemsPerPage = 10;
+// Initialize variables
+$itemsPerPage = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 20;
 $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($currentPage - 1) * $itemsPerPage;
 
-// Initialize filter variables
+// Filter variables
 $searchTerm = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
 $paymentMode = isset($_GET['payment_mode']) ? pg_escape_string($con, $_GET['payment_mode']) : '';
 $dateFrom = isset($_GET['date_from']) ? $_GET['date_from'] : '';
 $dateTo = isset($_GET['date_to']) ? $_GET['date_to'] : '';
 
-// Base query
-$baseQuery = "
+function buildFilteredOrdersQuery($searchTerm, $paymentMode, $dateFrom, $dateTo)
+{
+    $query = "
     SELECT 
-        o.*,
+        o.*, 
+        be.fullname AS billing_executive,
         COALESCE(s.studentname, m.fullname, h.name) AS customer_name,
         COALESCE(s.contact, m.phone, h.contact_number) AS customer_contact,
         COALESCE(s.emailaddress, m.email, h.email) AS customer_email
     FROM emart_orders o
+    -- Join for billing executive
+    LEFT JOIN rssimyaccount_members be ON o.associatenumber = be.associatenumber
+
+    -- Join to get beneficiary details
     LEFT JOIN rssimyprofile_student s ON o.beneficiary = s.student_id
     LEFT JOIN rssimyaccount_members m ON o.beneficiary = m.associatenumber
     LEFT JOIN public_health_records h ON o.beneficiary = h.id::text
-";
+    ";
 
-// Where conditions for filters
-$whereConditions = [];
-$queryParams = [];
+    $conditions = [];
 
-if (!empty($searchTerm)) {
-    $whereConditions[] = "(
-        o.order_number ILIKE '%$searchTerm%' OR 
-        COALESCE(s.studentname, m.fullname, h.name) ILIKE '%$searchTerm%' OR
-        COALESCE(s.emailaddress, m.email, h.email) ILIKE '%$searchTerm%' OR
-        COALESCE(s.contact, m.phone, h.contact_number) ILIKE '%$searchTerm%'
-    )";
+    if (!empty($searchTerm)) {
+        $conditions[] = "(
+            o.order_number ILIKE '%$searchTerm%' OR 
+            COALESCE(s.studentname, m.fullname, h.name) ILIKE '%$searchTerm%' OR
+            COALESCE(s.emailaddress, m.email, h.email) ILIKE '%$searchTerm%' OR
+            COALESCE(s.contact, m.phone, h.contact_number) ILIKE '%$searchTerm%'
+        )";
+    }
+
+    if (!empty($paymentMode)) {
+        $conditions[] = "o.payment_mode = '$paymentMode'";
+    }
+
+    if (!empty($dateFrom)) {
+        $conditions[] = "o.order_date >= '$dateFrom'";
+    }
+
+    if (!empty($dateTo)) {
+        $conditions[] = "o.order_date <= '$dateTo 23:59:59'";
+    }
+
+    if (!empty($conditions)) {
+        $query .= " WHERE " . implode(' AND ', $conditions);
+    }
+
+    return $query;
 }
 
-if (!empty($paymentMode)) {
-    $whereConditions[] = "o.payment_mode = '$paymentMode'";
+// EXPORT TO CSV
+if (isset($_GET['export'])) {
+    $exportQuery = buildFilteredOrdersQuery($searchTerm, $paymentMode, $dateFrom, $dateTo) . " ORDER BY o.order_date DESC";
+    $exportResult = pg_query($con, $exportQuery);
+    $exportData = pg_fetch_all($exportResult);
+
+    // Set headers
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="emart_orders_' . date('Y-m-d') . '.csv"');
+
+    // Output stream
+    $output = fopen('php://output', 'w');
+    fputcsv($output, [
+        'Order ID',
+        'Order Number',
+        'Customer Name',
+        'Order Date',
+        'Total Amount',
+        'Payment Method',
+        'Contact',
+        'Email',
+        'Billing Executive'
+    ]);
+
+    foreach ($exportData as $row) {
+        fputcsv($output, [
+            $row['order_id'],
+            $row['order_number'],
+            $row['customer_name'],
+            date('d/m/Y', strtotime($row['order_date'])),
+            $row['total_amount'],
+            ucfirst($row['payment_mode']),
+            $row['customer_contact'],
+            $row['customer_email'],
+            $row['billing_executive']
+        ]);
+    }
+
+    fclose($output);
+    exit;
 }
 
-if (!empty($dateFrom)) {
-    $whereConditions[] = "o.order_date >= '$dateFrom'";
-}
+// DISPLAY DATA WITH PAGINATION
+$baseQuery = buildFilteredOrdersQuery($searchTerm, $paymentMode, $dateFrom, $dateTo);
 
-if (!empty($dateTo)) {
-    $whereConditions[] = "o.order_date <= '$dateTo 23:59:59'";
-}
-
-// Combine where conditions
-if (!empty($whereConditions)) {
-    $baseQuery .= " WHERE " . implode(' AND ', $whereConditions);
-}
-
-// Count total records for pagination
+// Count total
 $countQuery = "SELECT COUNT(*) as total FROM ($baseQuery) as subquery";
 $countResult = pg_query($con, $countQuery);
 $totalRecords = pg_fetch_assoc($countResult)['total'];
 $totalPages = ceil($totalRecords / $itemsPerPage);
 
-// Add sorting and pagination to main query
+// Get paginated data
 $ordersQuery = $baseQuery . " ORDER BY o.order_date DESC LIMIT $itemsPerPage OFFSET $offset";
 $ordersResult = pg_query($con, $ordersQuery);
 $orders = pg_fetch_all($ordersResult);
 
-// Get unique payment modes for filter dropdown
+// Get payment modes for filter dropdown
 $paymentModesQuery = "SELECT DISTINCT payment_mode FROM emart_orders ORDER BY payment_mode";
 $paymentModesResult = pg_query($con, $paymentModesQuery);
 $paymentModes = pg_fetch_all($paymentModesResult);
-
 ?>
 
 <!DOCTYPE html>
@@ -122,6 +172,26 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                         <div class="card-body">
                             <br>
                             <main class="container py-4">
+                                <div class="col-md-12 text-end">
+                                    <form method="get" id="limitForm" class="form-inline d-inline-block mb-2">
+                                        <label for="limit" class="me-2">Records per page:</label>
+                                        <select name="limit" id="limit" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="10" <?= (isset($_GET['limit']) && $_GET['limit'] == 10) ? 'selected' : '' ?>>10</option>
+                                            <option value="20" <?= (!isset($_GET['limit']) || $_GET['limit'] == 20) ? 'selected' : '' ?>>20</option>
+                                            <option value="50" <?= (isset($_GET['limit']) && $_GET['limit'] == 50) ? 'selected' : '' ?>>50</option>
+                                            <option value="100" <?= (isset($_GET['limit']) && $_GET['limit'] == 100) ? 'selected' : '' ?>>100</option>
+                                        </select>
+
+                                        <!-- Preserve existing filters -->
+                                        <?php foreach (['search', 'payment_mode', 'date_from', 'date_to', 'page'] as $param): ?>
+                                            <?php if (isset($_GET[$param])): ?>
+                                                <input type="hidden" name="<?= $param ?>" value="<?= htmlspecialchars($_GET[$param]) ?>">
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </form>
+                                </div>
+
+
                                 <!-- Search and Filter Form -->
                                 <form method="get" class="mb-4">
                                     <div class="row g-3">
@@ -148,15 +218,27 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="bi bi-search"></i> Filter
                                             </button>
-                                            <!-- </div>
-                                    <div class="col-md-2"> -->
                                             <a href="<?= strtok($_SERVER["REQUEST_URI"], '?') ?>" class="btn btn-outline-secondary">
                                                 <i class="bi bi-arrow-counterclockwise"></i> Reset
                                             </a>
                                         </div>
                                     </div>
-                                </form>
+                                    <!-- Export Link -->
+                                    <div class="row mt-3">
+                                        <div class="col-md-12 text-end">
+                                            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 1])) ?>" class="text-decoration-underline text-secondary" style="cursor: pointer;" title="Download the filtered data as a CSV file">
+                                                <i class="bi bi-filetype-csv"></i> Export to CSV
+                                            </a>
+                                        </div>
+                                    </div>
 
+                                    <!-- Preserve existing filters -->
+                                    <?php foreach (['limit'] as $param): ?>
+                                        <?php if (isset($_GET[$param])): ?>
+                                            <input type="hidden" name="<?= $param ?>" value="<?= htmlspecialchars($_GET[$param]) ?>">
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </form>
 
                                 <?php if (empty($orders)): ?>
                                     <div class="alert alert-info">
@@ -173,7 +255,8 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                                     <th>Date</th>
                                                     <th>Amount</th>
                                                     <th>Payment Method</th>
-                                                    <th>Actions</th>
+                                                    <th>Billing Executive</th>
+                                                    <th>Invoice</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -182,9 +265,10 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                                         <td><?= htmlspecialchars($order['order_id']) ?></td>
                                                         <td><?= htmlspecialchars($order['order_number']) ?></td>
                                                         <td><?= htmlspecialchars($order['customer_name']) ?></td>
-                                                        <td><?= date('M j, Y', strtotime($order['order_date'])) ?></td>
+                                                        <td><?= date('d/m/Y', strtotime($order['order_date'])) ?></td>
                                                         <td>₹<?= number_format($order['total_amount'], 2) ?></td>
                                                         <td><?= ucfirst($order['payment_mode']) ?></td>
+                                                        <td><?= htmlspecialchars($order['billing_executive']) ?></td>
                                                         <td>
                                                             <a href="order_confirmation.php?id=<?= $order['order_id'] ?>"
                                                                 class="btn btn-sm btn-outline-primary" target="_blank">
