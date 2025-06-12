@@ -530,7 +530,7 @@ function student_export()
       $array['studentname'],
       $array['category'],
       $array['class'],
-      $array['age'],
+      (new DateTime($array['dateofbirth']))->diff(new DateTime())->y,
       $array['gender'],
       $array['contact'],
       $array['access_category'],
