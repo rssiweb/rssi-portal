@@ -269,6 +269,16 @@ if (@$_POST['form-type'] == "admission_admin") {
     }
 }
 ?>
+<?php
+// Fetch all class options with division info
+$classQuery = "SELECT value, class_name, division FROM school_classes ORDER BY id";
+$classResult = pg_query($con, $classQuery);
+$classes = pg_fetch_all($classResult) ?? [];
+
+// Existing selected class and division values (if editing)
+$selectedClass = $array['class'] ?? '';
+$selectedDivision = $array['division'] ?? '';
+?>
 <!doctype html>
 <html lang="en">
 
@@ -292,12 +302,45 @@ if (@$_POST['form-type'] == "admission_admin") {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Update Admission Form</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for student IDs
+            $('#student_id').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select student',
+                allowClear: true,
+                width: '100%' // Ensure proper width
+            });
+        });
+    </script>
 
     <!------ Include the above in your HEAD tag ---------->
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -394,16 +437,17 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 <form method="get" name="a_lookup" id="a_lookup">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <h3>Student Information Lookup</h3>
-                                        <!-- <a href="javascript:history.go(-1)">Go to previous link</a> -->
                                     </div>
                                     <hr>
+                                    <!-- StudentId Dropdown -->
                                     <div class="mb-3">
                                         <label for="student_id" class="form-label">Student ID:</label>
-                                        <input type="text" class="form-control" id="student_id" name="student_id" Value="<?php echo @$_GET['student_id'] ?>" placeholder="Enter student id" required>
+                                        <select class="form-select" id="student_id" name="student_id" required></select>
                                         <div class="form-text">Enter the student id to search for their information.</div>
                                     </div>
-                                    <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3"> <button type='button' id="lockButton" class="btn btn-primary mb-3" <?php if (empty($_GET['student_id']) || sizeof($resultArr) == 0)
-                                                                                                                                                                                            echo 'disabled'; ?>>Lock / Unlock Form</button>
+
+                                    <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3">
+                                    <button type='button' id="lockButton" class="btn btn-primary mb-3" <?php if (empty($_GET['student_id'])) echo 'disabled'; ?>>Lock / Unlock Form</button>
                                 </form>
                                 <br>
                                 <?php if (sizeof($resultArr) > 0) { ?>
@@ -603,13 +647,21 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                             <td>
                                                                 <label for="date-of-birth">Date of Birth:</label>
                                                             </td>
-                                                            <td>
-                                                                <input type="date" class="form-control" id="date-of-birth" name="date-of-birth" value="<?php echo $array['dateofbirth'] ?>" required>
-                                                                <small id="date-of-birth-help" class="form-text text-muted">Please enter the date of
-                                                                    birth
-                                                                    of the student.</small>
+                                                            <td class="d-flex flex-column">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <input type="date" class="form-control" id="date-of-birth" name="date-of-birth"
+                                                                        value="<?php echo $array['dateofbirth'] ?>" required style="max-width: 250px;">
+                                                                    <span id="age-display" class="text-secondary" style="white-space: nowrap;">
+                                                                        <!-- Age will be populated here -->
+                                                                    </span>
+                                                                </div>
+                                                                <small id="date-of-birth-help" class="form-text text-muted mt-1">
+                                                                    Please enter the date of birth of the student.
+                                                                </small>
                                                             </td>
+
                                                         </tr>
+
                                                         <tr>
                                                             <td>
                                                                 <label for="gender">Gender:</label>
@@ -1065,7 +1117,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                         of members in the student's family.</small>
                                                                 </td>
                                                             </tr>
-                                                            <tr>
+                                                            <!-- <tr>
                                                                 <td>
                                                                     <label for="payment-mode">Payment Mode:</label>
                                                                 </td>
@@ -1109,7 +1161,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     <small id="online-declaration-help" class="form-text text-muted">Please enter the
                                                                         transaction ID if you have paid the admission fee online.</small>
                                                                 </td>
-                                                            </tr>
+                                                            </tr> -->
                                                             <tr>
                                                                 <td>
                                                                     <label for="payment_type" class="form-label">Payment Type:</label>
@@ -1171,7 +1223,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     </select>
                                                                 </td>
                                                             </tr>
-                                                            <tr>
+                                                            <!-- <tr>
                                                                 <td>
                                                                     <label for="age">Age</label>
                                                                 </td>
@@ -1179,7 +1231,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     <input type="number" class="form-control" id="age" name="age" placeholder="Enter Age" value="<?php $today = new DateTime();
                                                                                                                                                                     echo $today->diff(new DateTime($array['dateofbirth']))->y ?>" readonly>
                                                                 </td>
-                                                            </tr>
+                                                            </tr> -->
 
                                                             <tr>
                                                                 <td>
@@ -1189,7 +1241,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     <input type="url" class="form-control" id="photo-url" name="photo-url" placeholder="Enter Photo URL" value="<?php echo $array['photourl'] ?>" required>
                                                                 </td>
                                                             </tr>
-                                                            <tr>
+                                                            <!-- <tr>
                                                                 <td>
                                                                     <label for="id-card-issued">ID Card Issued</label>
                                                                 </td>
@@ -1207,7 +1259,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                         <option value="No">No</option>
                                                                     </select>
                                                                 </td>
-                                                            </tr>
+                                                            </tr> -->
 
                                                             <tr>
                                                                 <td>
@@ -1292,10 +1344,8 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     </main><!-- End #main -->
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
@@ -1406,33 +1456,19 @@ if (@$_POST['form-type'] == "admission_admin") {
                         <small class="form-text text-muted">Please select the division you're applying for.</small>
                     </div>
 
+                    <!-- Class Dropdown -->
                     <div class="mb-3">
                         <label for="modal-class-select" class="form-label">Class:</label>
-                        <select class="form-select" id="modal-class-select" required>
-                            <?php if ($array['class'] == null) { ?>
-                                <option selected>--Select Class--</option>
+                        <select class="form-select" id="modal-class-select" name="class" required>
+                            <?php if (empty($array['class'])) { ?>
+                                <option value="" selected>--Select Class--</option>
                             <?php } else { ?>
                                 <option value="">--Select Class--</option>
                                 <option value="<?php echo $array['class']; ?>" selected><?php echo $array['class']; ?></option>
                             <?php } ?>
-                            <option value="Nursery">Nursery</option>
-                            <option value="LKG">LKG</option>
-                            <option value="UKG">UKG</option>
-                            <option value="1">Class 1</option>
-                            <option value="2">Class 2</option>
-                            <option value="3">Class 3</option>
-                            <option value="4">Class 4</option>
-                            <option value="5">Class 5</option>
-                            <option value="6">Class 6</option>
-                            <option value="7">Class 7</option>
-                            <option value="8">Class 8</option>
-                            <option value="9">Class 9</option>
-                            <option value="10">Class 10</option>
-                            <option value="11">Class 11</option>
-                            <option value="12">Class 12</option>
-                            <option value="Vocational training">Vocational training</option>
+                            <!-- Options will be populated by JavaScript -->
                         </select>
-                        <small class="form-text text-muted">Please select the class the student wants to join.</small>
+                        <small class="form-text text-muted" id="modal-class-help">Please select the class the student wants to join.</small>
                     </div>
 
                     <div class="mb-3">
@@ -1697,6 +1733,97 @@ if (@$_POST['form-type'] == "admission_admin") {
             }
         });
     </script>
+
+    <script>
+        const allClasses = <?= json_encode($classes) ?>;
+        const selectedClass = <?= json_encode($selectedClass) ?>;
+        const selectedDivision = <?= json_encode($selectedDivision) ?>;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const divisionSelect = document.getElementById('modal-division-select');
+            const classSelect = document.getElementById('modal-class-select');
+            const classHelp = document.getElementById('modal-class-help'); // Ensure this exists in HTML
+
+            function createSpinner() {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                return spinner;
+            }
+
+            function updateClassOptions() {
+                const selectedDiv = divisionSelect.value;
+
+                // Reset and disable dropdown during loading
+                classSelect.innerHTML = '<option value="">--Select Class--</option>';
+                classSelect.disabled = true;
+
+                // Show loading message with spinner
+                classHelp.innerHTML = 'Loading classes...';
+                const spinner = createSpinner();
+                classHelp.appendChild(spinner);
+
+                // Simulate a short delay like an async load (you can remove setTimeout if unnecessary)
+                setTimeout(() => {
+                    allClasses.forEach(cls => {
+                        if (cls.division === selectedDiv) {
+                            const option = document.createElement('option');
+                            option.value = cls.value;
+                            option.textContent = cls.class_name;
+                            if (cls.value === selectedClass) {
+                                option.selected = true;
+                            }
+                            classSelect.appendChild(option);
+                        }
+                    });
+
+                    // Enable the dropdown and reset help text
+                    classSelect.disabled = false;
+                    classHelp.textContent = 'Please select the class the student wants to join.';
+                }, 300); // adjust delay if needed
+            }
+
+            divisionSelect.addEventListener('change', function() {
+                updateClassOptions();
+            });
+
+            if (selectedDivision !== '') {
+                updateClassOptions();
+            }
+        });
+    </script>
+    <script>
+        function calculateAge(dobString) {
+            const dob = new Date(dobString);
+            if (isNaN(dob)) return '';
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            return age >= 0 ? `Age (as of today’s date): ${age} year${age !== 1 ? 's' : ''}` : '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dobInput = document.getElementById('date-of-birth');
+            const ageSpan = document.getElementById('age-display');
+
+            function updateAgeDisplay() {
+                const dobValue = dobInput.value;
+                ageSpan.textContent = calculateAge(dobValue);
+            }
+
+            // Initial update (if DOB is pre-filled)
+            updateAgeDisplay();
+
+            // Update on change
+            dobInput.addEventListener('input', updateAgeDisplay);
+        });
+    </script>
+
+
 </body>
 
 </html>

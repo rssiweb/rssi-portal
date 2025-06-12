@@ -183,10 +183,42 @@ $classlist = [
   </style>
   <!-- CSS Library Files -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
   <!-- JavaScript Library Files -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+
+  <!-- JavaScript Library Files -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Initialize Select2 for student IDs
+      $('#get_stid').select2({
+        ajax: {
+          url: 'fetch_students.php',
+          dataType: 'json',
+          delay: 250,
+          data: function(params) {
+            return {
+              q: params.term
+            };
+          },
+          processResults: function(data) {
+            return {
+              results: data.results || []
+            };
+          },
+          cache: true
+        },
+        minimumInputLength: 1,
+        placeholder: 'Select student',
+        allowClear: true,
+        width: '100%' // Ensure proper width
+      });
+    });
+  </script>
 </head>
 
 <body>
@@ -301,10 +333,18 @@ $classlist = [
                   </div>
 
                   <!-- Student ID (required when checkbox checked) -->
-                  <div class="d-flex flex-column" style="width: max-content;">
+                  <!-- <div class="d-flex flex-column" style="width: max-content;">
                     <input name="get_stid" id="get_stid" class="form-control"
                       placeholder="Student ID" value="<?php echo htmlspecialchars($stid ?? '') ?>">
                     <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
+                  </div> -->
+
+                  <!-- AAID Dropdown -->
+                  <div class="col-md-3 col-lg-2">
+                    <div class="form-group">
+                      <select class="form-select" id="get_stid" name="get_stid" required></select>
+                      <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
+                    </div>
                   </div>
 
                   <div class="d-flex flex-column">
