@@ -82,9 +82,9 @@ if (@$_POST['form-type'] == "admission_admin") {
     $medium = $_POST['medium'];
     $family_monthly_income = $_POST['income'];
     $total_family_members = $_POST['family-members'];
-    $payment_mode = $_POST['payment-mode'];
-    $c_authentication_code = $_POST['c-authentication-code'];
-    $transaction_id = $_POST['transaction-id'];
+    // $payment_mode = $_POST['payment-mode'];
+    // $c_authentication_code = $_POST['c-authentication-code'];
+    // $transaction_id = $_POST['transaction-id'];
     $subject_select = $_POST['subject-select'];
     // $access_category = $_POST['access_category'];
     $payment_type = $_POST['payment_type'];
@@ -92,9 +92,9 @@ if (@$_POST['form-type'] == "admission_admin") {
     $module = $_POST['module'];
     $category = $_POST['category'];
     $photo_url = $_POST['photo-url'];
-    $id_card_issued = $_POST['id-card-issued'];
+    // $id_card_issued = $_POST['id-card-issued'];
     $status = $_POST['status'];
-    $age = $_POST['age'];
+    // $age = $_POST['age'];
 
     if (!empty($_POST['effectivefrom'])) {
         $effective_from = $_POST['effectivefrom'];
@@ -158,21 +158,21 @@ if (@$_POST['form-type'] == "admission_admin") {
         "medium='$medium'",
         "familymonthlyincome='$family_monthly_income'",
         "totalnumberoffamilymembers='$total_family_members'",
-        "payment_mode='$payment_mode'",
-        "c_authentication_code='$c_authentication_code'",
-        "transaction_id='$transaction_id'",
+        // "payment_mode='$payment_mode'",
+        // "c_authentication_code='$c_authentication_code'",
+        // "transaction_id='$transaction_id'",
         "student_id='$student_id'",
         "nameofthesubjects='$subject_select'",
         "module='$module'",
         "category='$category'",
         "photourl='$photo_url'",
-        "id_card_issued='$id_card_issued'",
+        // "id_card_issued='$id_card_issued'",
         "filterstatus='$status'",
         "remarks='$remarks'",
         $effective_from_str,
         "scode='$scode'",
         "updated_by='$updated_by'",
-        "age='$age'",
+        // "age='$age'",
         "updated_on='$timestamp'",
         "payment_type='$payment_type'",
         "caste='$caste'"
@@ -876,7 +876,7 @@ $selectedDivision = $array['division'] ?? '';
                                                                     <textarea class="form-control" id="permanent-address" name="permanent-address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanentaddress'] ?? '' ?></textarea>
                                                                     <small id="permanent-address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
                                                                     <div>
-                                                                        <input type="checkbox" id="same-address" onclick="copyAddress()">
+                                                                        <input type="checkbox" class="form-check-input" id="same-address" onclick="copyAddress()">
                                                                         <label for="same-address">Same as current address</label>
                                                                     </div>
                                                                 </td>
@@ -1266,7 +1266,7 @@ $selectedDivision = $array['division'] ?? '';
                                                                     <label for="status">Status</label>
                                                                 </td>
                                                                 <td>
-                                                                    <select class="form-select" id="status" name="status" required>
+                                                                    <select class="form-select" id="status" name="status" required onchange="handleStatusChange(this)">
                                                                         <?php if ($array['filterstatus'] == null) { ?>
                                                                             <option selected>--Select Option--</option>
                                                                         <?php
@@ -1301,7 +1301,10 @@ $selectedDivision = $array['division'] ?? '';
                                                                     <label for="scode">Scode</label>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control" id="scode" name="scode" placeholder="Enter Scode" value="<?php echo $array['scode'] ?>">
+                                                                    <div class="input-group">
+                                                                        <input type="text" class="form-control" id="scode" name="scode" placeholder="Enter Scode" value="<?php echo $array['scode'] ?>">
+                                                                        <button class="btn btn-outline-secondary <?php echo !empty($array['scode']) ? 'disabled' : '' ?>" type="button" id="generateScode">Generate Code</button>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -1822,8 +1825,74 @@ $selectedDivision = $array['division'] ?? '';
             dobInput.addEventListener('input', updateAgeDisplay);
         });
     </script>
+    <script>
+        function handleStatusChange(selectElement) {
+            const newStatus = selectElement.value;
+            const effectiveFromInput = document.getElementById('effectivefrom');
+            const remarksTextarea = document.getElementById('remarks');
 
+            // Get current values
+            const currentEffectiveFrom = effectiveFromInput.value;
+            const currentRemarks = remarksTextarea.value;
 
+            // Prepare the new remark line
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            let newRemarkLine = `\n${today} - Status has been changed to ${newStatus}.`;
+
+            // If changing to Active, reset effective from date but mention previous date in remarks
+            if (newStatus === 'Active') {
+                if (currentEffectiveFrom) {
+                    newRemarkLine = `\nPrevious Effective From: ${currentEffectiveFrom}${newRemarkLine}`;
+                }
+                effectiveFromInput.value = ''; // Reset effective from date
+            }
+            // If changing to Inactive, set effective from date to today if empty
+            else if (newStatus === 'Inactive' && !currentEffectiveFrom) {
+                effectiveFromInput.value = today;
+            }
+
+            // Update remarks
+            remarksTextarea.value = currentRemarks + newRemarkLine;
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scodeInput = document.getElementById('scode');
+            const generateBtn = document.getElementById('generateScode');
+
+            // Disable generate button if scode already has a value
+            if (scodeInput.value.trim() !== '') {
+                generateBtn.disabled = true;
+            }
+
+            // Generate unique code when button is clicked
+            generateBtn.addEventListener('click', function() {
+                // Generate a unique code similar to PHP's uniqid()
+                const uniqueCode = generateUniqueId();
+                scodeInput.value = uniqueCode;
+                generateBtn.disabled = true;
+            });
+
+            // Enable/disable generate button based on input changes
+            scodeInput.addEventListener('input', function() {
+                generateBtn.disabled = this.value.trim() !== '';
+            });
+
+            // Function to generate a unique ID similar to PHP's uniqid()
+            function generateUniqueId() {
+                // Get current timestamp in microseconds (similar to PHP)
+                const now = new Date();
+                const seconds = Math.floor(now.getTime() / 1000).toString(16);
+                const microseconds = Math.floor(now.getMilliseconds() * 1000).toString(16).padStart(5, '0');
+
+                // Combine with some randomness
+                const randomPart = Math.floor(Math.random() * 1000000).toString(16).padStart(5, '0');
+
+                return seconds + microseconds + randomPart;
+            }
+        });
+    </script>
 </body>
 
 </html>
