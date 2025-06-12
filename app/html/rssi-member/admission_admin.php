@@ -1064,6 +1064,7 @@ $selectedDivision = $array['division'] ?? '';
                                                                         <option value="CBSE">CBSE</option>
                                                                         <option value="ICSE">ICSE</option>
                                                                         <option value="ISC">ISC</option>
+                                                                        <option value="NIOS">NIOS</option>
                                                                         <option value="State Board">State Board</option>
                                                                     </select>
                                                                     <small id="board-name-help" class="form-text text-muted">Please enter the name of
