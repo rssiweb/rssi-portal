@@ -109,7 +109,8 @@ try {
                 notes,
                 academic_year,
                 month,
-                source
+                source,
+                category_id
             ) VALUES (
                 $1,
                 $2,
@@ -120,7 +121,8 @@ try {
                 $6,
                 $7,
                 $8,
-                'eMart'
+                'eMart',
+                10
             ) RETURNING id";
 
             $feePaymentParams = [

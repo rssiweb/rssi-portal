@@ -40,7 +40,7 @@ $feeQuery = "SELECT fc.id, fc.category_name,
                  AND $3 BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
              )
              WHERE fc.is_active = TRUE
-             AND category_name NOT IN ('Miscellaneous')
+             AND fc.is_listed = TRUE
              ORDER BY fc.id";
 $feeResult = pg_query_params($con, $feeQuery, [$student['class'], $studentType, $firstDayOfMonth]);
 $feeItems = pg_fetch_all($feeResult) ?? [];

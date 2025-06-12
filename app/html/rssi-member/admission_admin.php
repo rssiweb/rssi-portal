@@ -42,6 +42,7 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // Get the form data
     $type_of_admission = $_POST['type_of_admission'];
+    $class = $_POST['class'];
     $effective_from_date = $_POST['effective_from_date'] ?? date('Y-m-d');
 
     // Validate effective date
@@ -54,6 +55,11 @@ if (@$_POST['form-type'] == "admission_admin") {
     } else {
         $effective_from_date = date('Y-m-d');
     }
+
+    // echo 'changedvalue'. $type_of_admission .', original value'. $original_type_of_admission;
+
+    // echo 'changedvalue'. $class .', original value'. $original_class;
+
 
     // Check if type of admission has changed
     $type_changed = ($type_of_admission != $original_type_of_admission);
@@ -75,7 +81,6 @@ if (@$_POST['form-type'] == "admission_admin") {
     $telephone_number = $_POST['telephone'];
     $email_address = $_POST['email'];
     $preferred_branch = $_POST['branch'];
-    $class = $_POST['class'];
     $school_admission_required = $_POST['school-required'];
     $school_name = htmlspecialchars($_POST['school-name'], ENT_QUOTES, 'UTF-8');
     $board_name = $_POST['board-name'];
