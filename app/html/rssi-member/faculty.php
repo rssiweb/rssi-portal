@@ -243,7 +243,11 @@ $resultArr = pg_fetch_all($result);
                                     <div class="col-md-3 col-lg-2">
                                         <div class="form-group">
                                             <label for="get_aaid" class="form-label">AAID</label>
-                                            <select class="form-select" id="get_aaid" name="get_aaid" required></select>
+                                            <select class="form-select" id="get_aaid" name="get_aaid" required>
+                                                <?php if (!empty($aaid)): ?>
+                                                    <option value="<?= $aaid ?>" selected><?= $aaid ?></option>
+                                                <?php endif; ?>
+                                            </select>
                                         </div>
                                     </div>
 

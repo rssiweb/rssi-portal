@@ -333,16 +333,15 @@ $classlist = [
                   </div>
 
                   <!-- Student ID (required when checkbox checked) -->
-                  <!-- <div class="d-flex flex-column" style="width: max-content;">
-                    <input name="get_stid" id="get_stid" class="form-control"
-                      placeholder="Student ID" value="<?php echo htmlspecialchars($stid ?? '') ?>">
-                    <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
-                  </div> -->
 
                   <!-- AAID Dropdown -->
                   <div class="col-md-3 col-lg-2">
                     <div class="form-group">
-                      <select class="form-select" id="get_stid" name="get_stid" required></select>
+                      <select class="form-select" id="get_stid" name="get_stid" required>
+                        <?php if (!empty($stid)): ?>
+                          <option value="<?= $stid ?>" selected><?= $stid ?></option>
+                        <?php endif; ?>
+                      </select>
                       <small class="form-text text-muted">Student ID<span id="stid-required" style="color:red; display:none">*</span></small>
                     </div>
                   </div>

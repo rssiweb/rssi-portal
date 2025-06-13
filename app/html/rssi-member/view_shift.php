@@ -93,10 +93,10 @@ foreach ($data as $associateNumber => &$entries) {
         $firstEntry = &$entries[0];
         if (empty($firstEntry['end_date'])) {
             // If no end_date set, it's the current schedule - set to current date or effective date
-            $firstEntry['end_date'] = !empty($firstEntry['effectivedate']) ? 
+            $firstEntry['end_date'] = !empty($firstEntry['effectivedate']) ?
                 $firstEntry['effectivedate'] : $currentDate;
         }
-        
+
         // Ensure all entries have valid end_dates
         foreach ($entries as &$entry) {
             if (empty($entry['end_date'])) {
@@ -130,6 +130,7 @@ pg_close($con); // Close the connection
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
+
         function gtag() {
             dataLayer.push(arguments);
         }
@@ -156,6 +157,36 @@ pg_close($con); // Close the connection
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#associate_number').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                multiple: false
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -187,9 +218,14 @@ pg_close($con); // Close the connection
                             <div class="container">
                                 <form method="GET" action="" class="filter-form d-flex flex-wrap" style="gap: 10px;">
                                     <!-- Associate Number Input -->
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="associate_number" name="associate_number"
-                                            placeholder="Enter Associate Number" value="<?php echo htmlspecialchars($_GET['associate_number'] ?? ''); ?>">
+                                    <div class="col-md-3 col-lg-2">
+                                        <div class="form-group">
+                                            <select class="form-control" id="associate_number" name="associate_number" required>
+                                                <?php if (!empty($associateNumber)): ?>
+                                                    <option value="<?= $associateNumber ?>" selected><?= $associateNumber ?></option>
+                                                <?php endif; ?>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <!-- Status Multiselect Dropdown -->
@@ -227,7 +263,7 @@ pg_close($con); // Close the connection
                                     <tbody>
                                         <?php foreach ($data as $associateRows): ?>
                                             <?php foreach ($associateRows as $row): ?>
-                                                <?php 
+                                                <?php
                                                 // Determine if this is an active record
                                                 $isActive = strtotime($row['end_date']) >= strtotime($currentDate);
                                                 $rowClass = $isActive ? 'table-success' : '';
@@ -238,7 +274,7 @@ pg_close($con); // Close the connection
                                                     <td><?php echo htmlspecialchars($row['job_type']); ?> -<?php echo htmlspecialchars($row['engagement']); ?></td>
                                                     <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
                                                     <td>
-                                                        <?php 
+                                                        <?php
                                                         $endDate = $row['end_date'];
                                                         if ($endDate && $endDate != $currentDate) {
                                                             echo date("d/m/Y", strtotime($endDate));
@@ -289,11 +325,13 @@ pg_close($con); // Close the connection
             // Initialize DataTables
             $('#scheduleTable').DataTable({
                 order: [], // Disable initial sorting
-                columnDefs: [
-                    { targets: [2, 3, 4, 5, 6, 7, 8], orderable: false } // Disable sorting on all columns except first two
+                columnDefs: [{
+                        targets: [2, 3, 4, 5, 6, 7, 8],
+                        orderable: false
+                    } // Disable sorting on all columns except first two
                 ]
             });
-            
+
             // Initialize Select2 for status filter
             $('#filter_status').select2({
                 placeholder: "Select status",
@@ -302,4 +340,5 @@ pg_close($con); // Close the connection
         });
     </script>
 </body>
+
 </html>

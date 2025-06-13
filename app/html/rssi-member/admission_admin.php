@@ -438,7 +438,11 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     <!-- StudentId Dropdown -->
                                     <div class="mb-3">
                                         <label for="student_id" class="form-label">Student ID:</label>
-                                        <select class="form-select" id="student_id" name="student_id" required></select>
+                                        <select class="form-select" id="student_id" name="student_id" required>
+                                            <?php if (!empty($student_id)): ?>
+                                                <option value="<?= $student_id ?>" selected><?= $student_id ?></option>
+                                            <?php endif; ?>
+                                        </select>
                                         <div class="form-text">Enter the student id to search for their information.</div>
                                     </div>
 
