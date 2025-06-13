@@ -274,16 +274,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     }
 }
 ?>
-<?php
-// Fetch all class options with division info
-$classQuery = "SELECT value, class_name, division FROM school_classes ORDER BY id";
-$classResult = pg_query($con, $classQuery);
-$classes = pg_fetch_all($classResult) ?? [];
 
-// Existing selected class and division values (if editing)
-$selectedClass = $array['class'] ?? '';
-$selectedDivision = $array['division'] ?? '';
-?>
 <!doctype html>
 <html lang="en">
 
@@ -1594,18 +1585,113 @@ $selectedDivision = $array['division'] ?? '';
                 $('#modal-type-of-admission').val($('#type-of-admission').val());
                 $('#modal-effective-from-date').val($('#effective-from-date').val());
 
-                // If division is already selected, load its plans
+                // If division is already selected, load its classes and plans
                 if ($('#modal-division-select').val()) {
+                    loadClassesForDivision($('#modal-division-select').val());
                     loadPlansForDivision($('#modal-division-select').val());
                 }
             });
 
-            // When division changes, load corresponding access categories
+            // When division changes, load corresponding classes and plans
             $('#modal-division-select').change(function() {
                 const division = $(this).val();
+                loadClassesForDivision(division);
                 loadPlansForDivision(division);
             });
 
+            function loadClassesForDivision(division) {
+                const classSelect = $('#modal-class-select')[0];
+                const helpText = $('#modal-class-help')[0];
+
+                // Reset and disable the select initially
+                classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+                classSelect.disabled = !division;
+
+                if (!division) {
+                    helpText.textContent = 'Please select a division first.';
+                    return;
+                }
+
+                // Create and show loading spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                helpText.innerHTML = 'Loading classes... ';
+                helpText.appendChild(spinner);
+
+                // Determine API URL based on host
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ?
+                    'http://localhost:8082/get_classes.php' :
+                    'https://login.rssi.in/get_classes.php';
+
+                // Fetch classes via AJAX
+                fetch(`${apiUrl}?division=${encodeURIComponent(division)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.error || 'Failed to load classes');
+                        }
+
+                        // Create new select with placeholder selected by default
+                        classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+
+                        if (data.data.length === 0) {
+                            const noOption = document.createElement('option');
+                            noOption.textContent = 'No classes available';
+                            noOption.disabled = true;
+                            classSelect.appendChild(noOption);
+                            helpText.textContent = 'No classes available for this division.';
+                            return;
+                        }
+
+                        data.data.forEach(classItem => {
+                            const option = document.createElement('option');
+                            option.value = classItem.value;
+                            option.textContent = classItem.class_name;
+                            classSelect.appendChild(option);
+                        });
+
+                        // If there was a previous selection, try to preserve it
+                        const previousSelection = $('#class-select').val();
+                        if (previousSelection) {
+                            // Check if the previous selection exists in the new options
+                            const optionExists = Array.from(classSelect.options).some(
+                                option => option.value === previousSelection
+                            );
+                            if (optionExists) {
+                                $(classSelect).val(previousSelection);
+                            }
+                        }
+
+                        classSelect.disabled = false;
+                        helpText.textContent = 'Please select the class the student wants to join.';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching classes:', error);
+                        classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+                        const errorOption = document.createElement('option');
+                        errorOption.textContent = 'Error loading classes';
+                        errorOption.disabled = true;
+                        classSelect.appendChild(errorOption);
+                        helpText.textContent = 'Failed to load classes. Please try again.';
+                    })
+                    .finally(() => {
+                        classSelect.disabled = false;
+                        // Remove spinner if it still exists
+                        if (spinner.parentNode === helpText) {
+                            helpText.removeChild(spinner);
+                        }
+                    });
+            }
+
+            // Keep your existing loadPlansForDivision function exactly as is
             function loadPlansForDivision(division) {
                 const admissionSelect = $('#modal-type-of-admission')[0];
                 const helpText = $('#modal-type-of-admission-help')[0];
@@ -1694,31 +1780,27 @@ $selectedDivision = $array['division'] ?? '';
                     });
             }
 
-            // Save changes from modal to main form
+            // Keep your existing save changes and date handling code
             $('#save-plan-changes').click(function() {
                 const division = $('#modal-division-select').val();
                 const classVal = $('#modal-class-select').val();
                 const admissionType = $('#modal-type-of-admission').val();
-                const effectiveMonth = $('#modal-effective-from-date').val(); // Format: YYYY-MM
+                const effectiveMonth = $('#modal-effective-from-date').val();
 
                 if (!division || !classVal || !admissionType || !effectiveMonth) {
                     alert('Please fill all fields');
                     return;
                 }
 
-                // Convert month selection to first day of month (YYYY-MM-DD)
                 const effectiveDate = effectiveMonth + '-01';
 
-                // Update hidden fields in main form
                 $('#division-select').val(division);
                 $('#class-select').val(classVal);
                 $('#type-of-admission').val(admissionType);
                 $('#effective-from-date').val(effectiveDate);
 
-                // Update display values
                 $('#current-admission-display').text(classVal + '/' + admissionType);
 
-                // Format date for display (show month and year only)
                 const [year, month] = effectiveMonth.split('-');
                 const dateObj = new Date(year, month - 1);
                 const monthName = dateObj.toLocaleString('default', {
@@ -1726,79 +1808,17 @@ $selectedDivision = $array['division'] ?? '';
                 });
                 $('#current-effective-date-display').text(monthName + ' ' + year);
 
-                // Close modal
                 $('#updatePlanModal').modal('hide');
             });
 
-            // Set default to next month (format: YYYY-MM)
+            // Set default to next month
             const today = new Date();
             const nextMonth = today.getMonth() === 11 ?
                 `${today.getFullYear() + 1}-01` :
                 `${today.getFullYear()}-${String(today.getMonth() + 2).padStart(2, '0')}`;
 
-            // Only set default if no existing value
             if (!$('#effective-from-date').val()) {
                 $('#modal-effective-from-date').val(nextMonth);
-            }
-        });
-    </script>
-
-    <script>
-        const allClasses = <?= json_encode($classes) ?>;
-        const selectedClass = <?= json_encode($selectedClass) ?>;
-        const selectedDivision = <?= json_encode($selectedDivision) ?>;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const divisionSelect = document.getElementById('modal-division-select');
-            const classSelect = document.getElementById('modal-class-select');
-            const classHelp = document.getElementById('modal-class-help'); // Ensure this exists in HTML
-
-            function createSpinner() {
-                const spinner = document.createElement('span');
-                spinner.className = 'spinner-border spinner-border-sm ms-2';
-                spinner.setAttribute('role', 'status');
-                spinner.setAttribute('aria-hidden', 'true');
-                return spinner;
-            }
-
-            function updateClassOptions() {
-                const selectedDiv = divisionSelect.value;
-
-                // Reset and disable dropdown during loading
-                classSelect.innerHTML = '<option value="">--Select Class--</option>';
-                classSelect.disabled = true;
-
-                // Show loading message with spinner
-                classHelp.innerHTML = 'Loading classes...';
-                const spinner = createSpinner();
-                classHelp.appendChild(spinner);
-
-                // Simulate a short delay like an async load (you can remove setTimeout if unnecessary)
-                setTimeout(() => {
-                    allClasses.forEach(cls => {
-                        if (cls.division === selectedDiv) {
-                            const option = document.createElement('option');
-                            option.value = cls.value;
-                            option.textContent = cls.class_name;
-                            if (cls.value === selectedClass) {
-                                option.selected = true;
-                            }
-                            classSelect.appendChild(option);
-                        }
-                    });
-
-                    // Enable the dropdown and reset help text
-                    classSelect.disabled = false;
-                    classHelp.textContent = 'Please select the class the student wants to join.';
-                }, 300); // adjust delay if needed
-            }
-
-            divisionSelect.addEventListener('change', function() {
-                updateClassOptions();
-            });
-
-            if (selectedDivision !== '') {
-                updateClassOptions();
             }
         });
     </script>
