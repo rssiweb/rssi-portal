@@ -29,11 +29,13 @@ if (!$settlement) {
 
 // Get payment details
 $paymentsQuery = "SELECT p.*, s.studentname, s.class, m.fullname as collector_name, eo.order_number,
-       eo.order_id
+       eo.order_id, fc.category_name AS source
                   FROM fee_payments p
                   JOIN rssimyprofile_student s ON p.student_id = s.student_id
                   JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
                   LEFT JOIN emart_orders eo ON p.id = eo.payment_id
+                  LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
+                  LEFT JOIN fee_categories fc ON fp.category_id=fc.id
                   WHERE p.settlement_id = $settlementId
                   ORDER BY p.collection_date";
 $paymentsResult = pg_query($con, $paymentsQuery);

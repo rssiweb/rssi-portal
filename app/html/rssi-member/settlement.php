@@ -28,12 +28,15 @@ SELECT p.*,
        s.class,
        c.fullname AS collector_name,
        eo.order_number,
-       eo.order_id
+       eo.order_id,
+       fc.category_name AS source
 FROM fee_payments p
 LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
 LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
 LEFT JOIN public_health_records h ON p.student_id = h.id::text
 LEFT JOIN emart_orders eo ON p.id = eo.payment_id
+LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
+LEFT JOIN fee_categories fc ON fp.category_id=fc.id
 JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
 WHERE p.is_settled = FALSE
 ORDER BY p.created_at DESC";
@@ -251,14 +254,14 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                                 <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
                                                                 <td>
                                                                     <?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?>
-                                                                    &nbsp;
+                                                                    <!-- &nbsp;
                                                                     <?php if (!empty($payment['order_number']) && isset($payment['order_id'])): ?>
                                                                         <a href="order_confirmation.php?id=<?= urlencode($payment['order_id']) ?>" target="_blank">
                                                                             #<?= htmlspecialchars($payment['order_number']) ?>
                                                                         </a>
                                                                     <?php elseif (!empty($payment['order_number'])): ?>
                                                                         #<?= htmlspecialchars($payment['order_number']) ?>
-                                                                    <?php endif; ?>
+                                                                    <?php endif; ?> -->
                                                                 </td>
 
                                                                 <td><?= htmlspecialchars($payment['collector_name']) ?></td>

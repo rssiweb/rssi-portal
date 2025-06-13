@@ -42,6 +42,7 @@ function buildFilteredOrdersQuery($searchTerm, $paymentMode, $dateFrom, $dateTo)
 
     if (!empty($searchTerm)) {
         $conditions[] = "(
+            CAST(o.payment_id AS TEXT) ILIKE '%$searchTerm%' OR
             o.order_number ILIKE '%$searchTerm%' OR 
             COALESCE(s.studentname, m.fullname, h.name) ILIKE '%$searchTerm%' OR
             COALESCE(s.emailaddress, m.email, h.email) ILIKE '%$searchTerm%' OR
@@ -86,6 +87,7 @@ if (isset($_GET['export'])) {
         'Customer Name',
         'Order Date',
         'Total Amount',
+        'Payment Id',
         'Payment Method',
         'Contact',
         'Email',
@@ -99,6 +101,7 @@ if (isset($_GET['export'])) {
             $row['customer_name'],
             date('d/m/Y', strtotime($row['order_date'])),
             $row['total_amount'],
+            $row['payment_id'] ?? '',
             ucfirst($row['payment_mode']),
             $row['customer_contact'],
             $row['customer_email'],
@@ -196,7 +199,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                 <form method="get" class="mb-4">
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <input type="text" name="search" class="form-control" placeholder="Search Order #, Name..." value="<?= htmlspecialchars($searchTerm) ?>">
+                                            <input type="text" name="search" class="form-control" placeholder="Search Order #, Name, Payment ID..." value="<?= htmlspecialchars($searchTerm) ?>">
                                         </div>
                                         <div class="col-md-2">
                                             <select name="payment_mode" class="form-select">
@@ -223,11 +226,12 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                             </a>
                                         </div>
                                     </div>
-                                    <!-- Export Link -->
-                                    <div class="row mt-3">
+
+                                    <!-- Export Button - Modern Flat UI -->
+                                    <div class="row mt-4">
                                         <div class="col-md-12 text-end">
-                                            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 1])) ?>" class="text-decoration-underline text-secondary" style="cursor: pointer;" title="Download the filtered data as a CSV file">
-                                                <i class="bi bi-filetype-csv"></i> Export to CSV
+                                            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 1])) ?>" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" title="Download the filtered data as a CSV file">
+                                                <i class="bi bi-download me-1"></i> Export CSV
                                             </a>
                                         </div>
                                     </div>
@@ -254,6 +258,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                                     <th>Name</th>
                                                     <th>Date</th>
                                                     <th>Amount</th>
+                                                    <th>Payment Id</th>
                                                     <th>Payment Method</th>
                                                     <th>Billing Executive</th>
                                                     <th>Invoice</th>
@@ -267,6 +272,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
                                                         <td><?= htmlspecialchars($order['customer_name']) ?></td>
                                                         <td><?= date('d/m/Y', strtotime($order['order_date'])) ?></td>
                                                         <td>₹<?= number_format($order['total_amount'], 2) ?></td>
+                                                        <td><?= isset($order['payment_id']) ? ucfirst($order['payment_id']) : '' ?></td>
                                                         <td><?= ucfirst($order['payment_mode']) ?></td>
                                                         <td><?= htmlspecialchars($order['billing_executive']) ?></td>
                                                         <td>
