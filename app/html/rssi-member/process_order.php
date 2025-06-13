@@ -109,7 +109,6 @@ try {
                 notes,
                 academic_year,
                 month,
-                source,
                 category_id
             ) VALUES (
                 $1,
@@ -121,7 +120,6 @@ try {
                 $6,
                 $7,
                 $8,
-                'eMart',
                 10
             ) RETURNING id";
 
