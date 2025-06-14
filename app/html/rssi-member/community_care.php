@@ -1087,7 +1087,16 @@ $result = pg_query($con, $query);
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>&lt;120/80</td>
+                                                                <td>&lt;90/60</td>
+                                                                <td>Low BP</td>
+                                                                <td>
+                                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                                                        <i class="bi bi-heart me-1"></i>Low BP
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>90-119/60-79</td>
                                                                 <td>Normal</td>
                                                                 <td>
                                                                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
