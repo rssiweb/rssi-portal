@@ -779,17 +779,27 @@ validation();
             const totalText = $('#orderTotal').text().replace(/[^\d.]/g, ''); // Remove ₹ or commas
             const total = parseFloat(totalText) || 0;
 
-            const freebieOption = $('#paymentMode option[value="freebie"]');
+            const paymentModeSelect = $('#paymentMode');
+            const freebieOption = paymentModeSelect.find('option[value="freebie"]');
+            const cashOption = paymentModeSelect.find('option[value="cash"]');
+            const onlineOption = paymentModeSelect.find('option[value="online"]');
+
+            // Reset selection whenever total changes
+            paymentModeSelect.val('');
 
             if (total > 0) {
+                // Enable cash and online, disable freebie
+                cashOption.prop('disabled', false);
+                onlineOption.prop('disabled', false);
                 freebieOption.prop('disabled', true);
-
-                // If currently selected, reset to blank
-                if ($('#paymentMode').val() === 'freebie') {
-                    $('#paymentMode').val('');
-                }
             } else {
+                // Disable cash and online, enable freebie
+                cashOption.prop('disabled', true);
+                onlineOption.prop('disabled', true);
                 freebieOption.prop('disabled', false);
+
+                // Auto-select freebie when total is zero
+                paymentModeSelect.val('freebie');
             }
         }
 
