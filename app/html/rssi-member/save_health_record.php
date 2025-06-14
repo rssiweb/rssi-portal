@@ -29,20 +29,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $health_notes = pg_escape_string($con, $_POST['health_notes']);
     $recorded_by = $associatenumber;
 
-    $query = "INSERT INTO student_health_records (
-                student_id, record_date, height_cm, weight_kg, bmi, 
-                blood_pressure, vision_left, vision_right, general_health_notes, recorded_by
-              ) VALUES (
-                '$student_id', '$record_date', $height_cm, $weight_kg, $bmi, 
-                '$blood_pressure', '$vision_left', '$vision_right', '$health_notes', '$recorded_by'
-              )";
+    // Start transaction
+    pg_query($con, "BEGIN");
 
-    $result = pg_query($con, $query);
+    try {
+        // Insert health record and get the returned ID
+        $query = "INSERT INTO student_health_records (
+                    student_id, record_date, height_cm, weight_kg, bmi, 
+                    blood_pressure, vision_left, vision_right, general_health_notes, recorded_by
+                  ) VALUES (
+                    '$student_id', '$record_date', $height_cm, $weight_kg, $bmi, 
+                    '$blood_pressure', '$vision_left', '$vision_right', '$health_notes', '$recorded_by'
+                  ) RETURNING id";
+        
+        $result = pg_query($con, $query);
+        
+        if (!$result) {
+            throw new Exception("Error saving health record: " . pg_last_error($con));
+        }
 
-    if ($result) {
-        $_SESSION['success_message'] = "Health record added successfully!";
-    } else {
-        $_SESSION['error_message'] = "Error saving health record: " . pg_last_error($con);
+        // Get the returned health_record_id
+        $row = pg_fetch_assoc($result);
+        $health_record_id = $row['id'];
+
+        // Process ABHA appointment if needed
+        if (isset($_POST['abha_status']) && $_POST['abha_status'] === 'no' 
+            && !empty($_POST['appointment_date']) && !empty($_POST['appointment_time'])) {
+            
+            $has_abha = 'no';
+            $appointment_date = pg_escape_string($con, $_POST['appointment_date']);
+            $appointment_time = pg_escape_string($con, $_POST['appointment_time']);
+
+            $appointment_query = "INSERT INTO abha_appointments (
+                                    health_record_id, has_abha, 
+                                    appointment_date, appointment_time
+                                  ) VALUES (
+                                    '$health_record_id', '$has_abha', 
+                                    '$appointment_date', '$appointment_time'
+                                  )";
+            
+            $appointment_result = pg_query($con, $appointment_query);
+            
+            if (!$appointment_result) {
+                throw new Exception("Error saving ABHA appointment: " . pg_last_error($con));
+            }
+        }
+
+        // Commit transaction
+        pg_query($con, "COMMIT");
+        $_SESSION['success_message'] = "Health record added successfully!" . 
+            (isset($appointment_result) ? " ABHA appointment scheduled." : "");
+
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        pg_query($con, "ROLLBACK");
+        $_SESSION['error_message'] = $e->getMessage();
     }
 
     // Reconstruct the original URL with all parameters

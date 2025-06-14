@@ -1672,6 +1672,36 @@ $result = pg_query($con, $query);
                             <label for="healthNotes" class="form-label">General Health Notes</label>
                             <textarea class="form-control" id="healthNotes" name="health_notes" rows="3"></textarea>
                         </div>
+                        <!-- ABHA Card Section -->
+                        <div class="mb-3 p-3 border rounded">
+                            <h6 class="mb-3">ABHA (Ayushman Bharat Health Account)</h6>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="abha_status" id="abhaYes" value="yes" required>
+                                <label class="form-check-label" for="abhaYes">Yes, I have an ABHA card</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="abha_status" id="abhaNo" value="no">
+                                <label class="form-check-label" for="abhaNo">No, I don't have one</label>
+                            </div>
+
+                            <!-- Appointment Section (Hidden by default) -->
+                            <div id="appointmentSection" class="mt-3 p-3 bg-light rounded" style="display: none;">
+                                <h6 class="mb-3">Book Appointment for ABHA Registration</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="appointmentDate" class="form-label">Date</label>
+                                        <input type="date" class="form-control" id="appointmentDate" name="appointment_date" min="<?php echo date('Y-m-d'); ?>">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="appointmentTime" class="form-label">Time</label>
+                                        <input type="time" class="form-control" id="appointmentTime" name="appointment_time">
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    Our team will help you create your ABHA card during this appointment.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -2659,6 +2689,26 @@ $result = pg_query($con, $query);
             $('.modal').on('hidden.bs.modal', function() {
                 $(this).find('select').select2('destroy');
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle appointment section based on ABHA status
+            const abhaYes = document.getElementById('abhaYes');
+            const abhaNo = document.getElementById('abhaNo');
+            const appointmentSection = document.getElementById('appointmentSection');
+
+            abhaYes.addEventListener('change', function() {
+                appointmentSection.style.display = 'none';
+            });
+
+            abhaNo.addEventListener('change', function() {
+                appointmentSection.style.display = 'block';
+            });
+
+            // Set minimum date for appointment (today)
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').min = today;
         });
     </script>
 </body>
