@@ -118,6 +118,20 @@ validation();
                     <div class="card">
                         <div class="card-body">
                             <br>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <label for="itemsPerPage" class="form-label mb-1">Items per page:</label>
+                                        <select class="form-select d-inline-block w-auto" id="itemsPerPage">
+                                            <option value="5">5</option>
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="container py-5">
                                 <div class="row">
                                     <!-- Left Section: Empty for alignment -->
@@ -287,14 +301,47 @@ validation();
 
     <script>
         // Global variables
-        let pageNumber = <?php echo isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1; ?>;
-        let currentSearchTerm = '<?php echo isset($_GET['search']) ? addslashes($_GET['search']) : ''; ?>';
+        let pageNumber = <?php echo isset($_GET['page']) ? max(1, intval($_GET['page'])) : (isset($_SESSION['emart_page']) ? $_SESSION['emart_page'] : 1); ?>;
+        let currentSearchTerm = '<?php echo isset($_GET['search']) ? addslashes($_GET['search']) : (isset($_SESSION['emart_search']) ? addslashes($_SESSION['emart_search']) : ''); ?>';
+        let itemsPerPage = <?php echo isset($_GET['itemsPerPage']) ? max(5, min(100, intval($_GET['itemsPerPage']))) : (isset($_SESSION['emart_items_per_page']) ? $_SESSION['emart_items_per_page'] : 5); ?>;
         let totalPages = 1;
         let cart = [];
         let products = []; // Store products for cart operations
 
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+
+            // Check URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.has('itemsPerPage')) {
+                itemsPerPage = parseInt(urlParams.get('itemsPerPage'));
+                // Update storage to match current URL
+                sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+            } else if (sessionStorage.getItem('emartItemsPerPage')) {
+                itemsPerPage = parseInt(sessionStorage.getItem('emartItemsPerPage'));
+            }
+
+            document.getElementById('itemsPerPage').value = itemsPerPage;
+
+            // Items per page change handler
+            document.getElementById('itemsPerPage').addEventListener('change', function() {
+                itemsPerPage = parseInt(this.value);
+
+                // Update client-side storage
+                sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+
+                // Update server-side session via AJAX
+                fetch('update_session.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `itemsPerPage=${itemsPerPage}`
+                });
+
+                loadProducts(1, currentSearchTerm); // Reset to page 1 when changing items per page
+            });
             // Load initial products
             loadProducts(pageNumber, currentSearchTerm);
 
@@ -327,6 +374,13 @@ validation();
                 const page = urlParams.get('page') || 1;
                 const searchTerm = urlParams.get('search') || '';
                 document.getElementById('searchInput').value = searchTerm;
+                const newItemsPerPage = urlParams.get('itemsPerPage') || 5;
+                if (newItemsPerPage != itemsPerPage) {
+                    itemsPerPage = newItemsPerPage;
+                    document.getElementById('itemsPerPage').value = itemsPerPage;
+                }
+
+                document.getElementById('searchInput').value = searchTerm;
                 loadProducts(page, searchTerm);
             });
         });
@@ -344,14 +398,8 @@ validation();
             pageNumber = page;
             currentSearchTerm = searchTerm;
 
-            // Show/hide clear button
-            const clearSearchBtn = document.getElementById('clearSearch');
-            if (clearSearchBtn) {
-                clearSearchBtn.style.display = searchTerm ? 'inline-block' : 'none';
-            }
-
             // Return the fetch Promise
-            return fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}`)
+            return fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}&itemsPerPage=${itemsPerPage}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -377,6 +425,7 @@ validation();
             const urlParams = new URLSearchParams();
             if (page > 1) urlParams.set('page', page);
             if (searchTerm) urlParams.set('search', searchTerm);
+            if (itemsPerPage != 5) urlParams.set('itemsPerPage', itemsPerPage); // Only include if not default
             history.pushState(null, '', urlParams.toString() ? `?${urlParams}` : window.location.pathname);
         }
 
@@ -676,6 +725,13 @@ validation();
             const urlParams = new URLSearchParams(window.location.search);
             const pageNumber = urlParams.get('page') || 1;
             const searchTerm = urlParams.get('search') || '';
+
+            // Store current pagination settings
+            sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+            sessionStorage.setItem('emartPage', pageNumber);
+            if (currentSearchTerm) {
+                sessionStorage.setItem('emartSearch', currentSearchTerm);
+            }
 
             // Store them in session storage to restore after order
             sessionStorage.setItem('emartPage', pageNumber);

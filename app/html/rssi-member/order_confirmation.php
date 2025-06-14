@@ -36,6 +36,12 @@ $itemsQuery = "SELECT oi.*, i.item_name, i.image_url
 $itemsResult = pg_query_params($con, $itemsQuery, [$orderId]);
 $items = pg_fetch_all($itemsResult);
 ?>
+<?php
+// Get stored values from session
+$itemsPerPage = $_SESSION['emart_items_per_page'] ?? 5; // Default to 5 if not set
+$page = $_SESSION['emart_page'] ?? 1;
+$searchTerm = $_SESSION['emart_search'] ?? '';
+?>
 
 <!DOCTYPE html>
 <html>
@@ -156,7 +162,8 @@ $items = pg_fetch_all($itemsResult);
                 <button onclick="window.print()" class="btn btn-primary me-2">
                     <i class="bi bi-printer"></i> Print Receipt
                 </button>
-                <a href="emart.php" class="btn btn-outline-secondary">
+                <a href="emart.php?itemsPerPage=<?php echo $itemsPerPage; ?>&page=<?php echo $page; ?><?php echo $searchTerm ? '&search=' . urlencode($searchTerm) : ''; ?>"
+                    class="btn btn-outline-secondary">
                     <i class="bi bi-list-ul"></i> Continue Shopping
                 </a>
             </div>
