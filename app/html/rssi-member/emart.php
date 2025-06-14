@@ -444,11 +444,11 @@ validation();
                     <!-- Pricing -->
                     <div class="mb-2">
                         ${hasDiscount ? `
-                            <span class="text-danger fs-5 fw-bold">₹${displayPrice}</span>
+                            <span class="text-danger fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
                             <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
                             <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
                         ` : `
-                            <span class="fs-5 fw-bold">₹${displayPrice}</span>
+                            <span class="fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
                         `}
                         <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
                     </div>
@@ -690,6 +690,11 @@ validation();
 
             // Calculate total
             const totalPoints = cart.reduce((sum, item) => sum + item.price * item.count, 0);
+
+            if (totalPoints < 0) {
+                alert('Invalid cart total! The total cannot be negative.');
+                return;
+            }
 
             // Prepare order summary HTML
             let orderSummary = '';
