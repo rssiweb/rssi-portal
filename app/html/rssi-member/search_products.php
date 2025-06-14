@@ -4,7 +4,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 header('Content-Type: application/json');
 
 // Get pagination and search parameters
-$itemsPerPage = 5;
+$itemsPerPage = 20;
 $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 
