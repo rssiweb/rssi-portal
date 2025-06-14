@@ -226,45 +226,6 @@ if ($activeTab == 'dashboard') {
 ?>
 
 <?php
-// Function to fetch students based on conditions
-function fetchStudents($con, $gender = null)
-{
-    // Base query
-    $query = "SELECT student_id, studentname, class 
-              FROM rssimyprofile_student 
-              WHERE filterstatus='Active'";
-
-    // Add gender condition if provided
-    if ($gender) {
-        $query .= " AND gender = '" . pg_escape_string($con, $gender) . "'";
-    }
-
-    // Order by class and student name
-    $query .= " ORDER BY class, studentname";
-
-    // Execute the query
-    $result = pg_query($con, $query);
-    $students = [];
-
-    // Fetch and format the results
-    while ($row = pg_fetch_assoc($result)) {
-        $students[] = [
-            'id' => $row['student_id'],
-            'text' => $row['studentname'] . ' (' . $row['student_id'] . ')'
-        ];
-    }
-
-    return $students;
-}
-
-// Fetch female students
-$femaleStudents = fetchStudents($con, 'Female');
-
-// Fetch all active students
-$students = fetchStudents($con);
-?>
-
-<?php
 function getBaseFilterUrl()
 {
     $url = $_SERVER['REQUEST_URI'];
@@ -1254,16 +1215,10 @@ function getBaseFilterUrl()
                                             <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
 
                                             <div class="row mb-3">
+
                                                 <div class="col-md-4">
-                                                    <select class="form-select" id="studentGrowth" name="student_id" required>
+                                                    <select class="form-select js-data-ajax-all" id="studentGrowth" name="student_id" required>
                                                         <option value="">Select Student</option>
-                                                        <?php foreach ($students as $student): ?>
-                                                            <option
-                                                                value="<?= htmlspecialchars($student['id']); ?>"
-                                                                <?= (isset($_GET['student_id']) && $_GET['student_id'] == $student['id']) ? 'selected' : '' ?>>
-                                                                <?= htmlspecialchars($student['text']); ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
                                                     </select>
                                                     <small class="text-muted">Choose a student from the list.</small>
                                                     <div class="invalid-feedback">Please select a student.</div>
@@ -1342,14 +1297,16 @@ function getBaseFilterUrl()
                     <input type="hidden" name="academic_year" value="<?php echo isset($_GET['academic_year']) ? htmlspecialchars($_GET['academic_year']) : ''; ?>">
                     <div class="modal-body">
                         <div class="row mb-3">
+
                             <div class="col-md-6">
                                 <label for="studentSelect" class="form-label">Student</label>
-                                <select class="form-select" id="studentSelect" name="student_id" required>
+                                <select class="form-select js-data-ajax" id="studentSelect" name="student_id" required>
                                     <option value="">Select Student</option>
-                                    <?php foreach ($students as $student): ?>
-                                        <option value="<?= $student['id']; ?>"><?= $student['text']; ?></option>
-                                    <?php endforeach; ?>
+                                    <!-- Initial options can be kept or removed -->
                                 </select>
+                                <!-- <div class="form-text text-muted">
+                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
+                                </div> -->
                             </div>
 
                             <div class="col-md-6">
@@ -1425,13 +1382,11 @@ function getBaseFilterUrl()
                     <?php endif; ?>
                     <div class="modal-body">
                         <div class="row mb-3">
+
                             <div class="col-md-6">
                                 <label for="periodStudentSelect" class="form-label">Student</label>
-                                <select class="form-select" id="periodStudentSelect" name="student_id" required>
+                                <select class="form-select js-data-ajax-female" id="periodStudentSelect" name="student_id" required>
                                     <option value="">Select Student</option>
-                                    <?php foreach ($femaleStudents as $student): ?>
-                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
-                                    <?php endforeach; ?>
                                 </select>
                                 <small class="text-muted">Choose a student from the list.</small>
                                 <div class="invalid-feedback">Please select a student.</div>
@@ -1506,10 +1461,7 @@ function getBaseFilterUrl()
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label for="padStudentSelect" class="form-label">Search and Select Students</label>
-                                <select id="padStudentSelect" name="student_ids[]" class="form-control" multiple="multiple" required>
-                                    <?php foreach ($femaleStudents as $student): ?>
-                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
-                                    <?php endforeach; ?>
+                                <select id="padStudentSelect" name="student_ids[]" class="form-control js-data-ajax-female-multiple" multiple="multiple" required>
                                 </select>
                                 <small class="text-muted">Start typing to search students. You can select multiple students.</small>
                                 <div class="invalid-feedback">Please select at least one student.</div>
@@ -2316,7 +2268,115 @@ function getBaseFilterUrl()
         handleFormSubmit('periodRecordForm', 'submitPeriodBtn');
         handleFormSubmit('padDistributionForm', 'submitPadBtn');
     </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize the non-modal select (studentGrowth) - STUDENTS ONLY
+            $('#studentGrowth').select2({
+                ajax: {
+                    url: 'search_beneficiaries.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            sources: 'student' // Only students
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    }
+                },
+                minimumInputLength: 1,
+                allowClear: true,
+                placeholder: 'Search by name'
+            });
 
+            // Initialize modal selects when their modals are shown
+            $('#addHealthRecordModal').on('shown.bs.modal', function() {
+                $('#studentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                sources: 'student' // All sources
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    placeholder: 'Search by name'
+                });
+            });
+
+            $('#addPeriodRecordModal').on('shown.bs.modal', function() {
+                $('#periodStudentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                gender: 'Female',
+                                sources: 'student' // All sources but filtered by gender
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    placeholder: 'Search female students'
+                });
+            });
+
+            $('#addPadDistributionModal').on('shown.bs.modal', function() {
+                $('#padStudentSelect').select2({
+                    dropdownParent: $(this),
+                    ajax: {
+                        url: 'search_beneficiaries.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                gender: 'Female',
+                                sources: 'student' // All sources but filtered by gender
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results || []
+                            };
+                        }
+                    },
+                    minimumInputLength: 1,
+                    placeholder: 'Search female students',
+                    closeOnSelect: true
+                });
+            });
+
+            // Destroy Select2 when modals close to prevent memory leaks
+            $('.modal').on('hidden.bs.modal', function() {
+                $(this).find('select').select2('destroy');
+            });
+        });
+    </script>
 </body>
 
 </html>

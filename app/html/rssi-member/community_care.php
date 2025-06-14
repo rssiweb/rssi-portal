@@ -1532,7 +1532,7 @@ $result = pg_query($con, $query);
 
                                 <div class="card">
                                     <div class="card-header">
-                                        <h5 class="mb-0">Student Growth Trends</h5>
+                                        <h5 class="mb-0">Beneficiary Growth Trends</h5>
                                     </div>
                                     <div class="card-body">
                                         <form method="GET" action="">
@@ -1540,26 +1540,12 @@ $result = pg_query($con, $query);
                                             <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
 
                                             <div class="row mb-3">
-                                                <!-- <div class="col-md-4">
-                                                    <select class="form-select" id="studentGrowth" name="student_id" required>
-                                                        <option value="">Select Student</option>
-                                                        <?php foreach ($students as $student): ?>
-                                                            <option
-                                                                value="<?= htmlspecialchars($student['id']); ?>"
-                                                                <?= (isset($_GET['student_id']) && $_GET['student_id'] == $student['id']) ? 'selected' : '' ?>>
-                                                                <?= htmlspecialchars($student['text']); ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <small class="text-muted">Choose a student from the list.</small>
-                                                    <div class="invalid-feedback">Please select a student.</div>
-                                                </div> -->
                                                 <div class="col-md-4">
                                                     <select class="form-select js-data-ajax-all" id="studentGrowth" name="student_id" required>
                                                         <option value="">Select Student</option>
                                                     </select>
-                                                    <small class="text-muted">Choose a student from the list.</small>
-                                                    <div class="invalid-feedback">Please select a student.</div>
+                                                    <small class="text-muted">Choose a beneficiary from the list.</small>
+                                                    <div class="invalid-feedback">Please select a beneficiary.</div>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <select class="form-select" name="metric">
@@ -1793,16 +1779,7 @@ $result = pg_query($con, $query);
 
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <!-- <div class="col-md-12">
-                                <label for="padStudentSelect" class="form-label">Search and Select Beneficiaries</label>
-                                <select id="padStudentSelect" name="student_ids[]" class="form-control" multiple="multiple" required>
-                                    <?php foreach ($femaleStudents as $student): ?>
-                                        <option value="<?= htmlspecialchars($student['id']); ?>"><?= htmlspecialchars($student['text']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small class="text-muted">Start typing to search beneficiaries. You can select multiple beneficiaries.</small>
-                                <div class="invalid-feedback">Please select at least one beneficiary.</div>
-                            </div> -->
+
                             <div class="col-md-12">
                                 <label for="padStudentSelect" class="form-label">Search and Select Beneficiaries</label>
                                 <select id="padStudentSelect" name="student_ids[]" class="form-control js-data-ajax-female-multiple" multiple="multiple" required>
@@ -1820,7 +1797,7 @@ $result = pg_query($con, $query);
                         </div>
 
                         <div class="mb-3">
-                            <label for="padQuantity" class="form-label">Quantity per Student</label>
+                            <label for="padQuantity" class="form-label">Quantity per beneficiary</label>
                             <input type="number" class="form-control" id="padQuantity" name="quantity" value="1" min="1" required>
                         </div>
 
@@ -2577,7 +2554,7 @@ $result = pg_query($con, $query);
     </script>
     <script>
         $(document).ready(function() {
-            // Initialize the non-modal select (studentGrowth)
+            // Initialize the non-modal select (studentGrowth) - STUDENTS ONLY
             $('#studentGrowth').select2({
                 ajax: {
                     url: 'search_beneficiaries.php',
@@ -2585,7 +2562,8 @@ $result = pg_query($con, $query);
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term
+                            q: params.term,
+                            sources: 'public_health' // Only students
                         };
                     },
                     processResults: function(data) {
@@ -2596,7 +2574,7 @@ $result = pg_query($con, $query);
                 },
                 minimumInputLength: 1,
                 allowClear: true,
-                placeholder: 'Search all students'
+                placeholder: 'Search by name'
             });
 
             // Initialize modal selects when their modals are shown
@@ -2609,7 +2587,8 @@ $result = pg_query($con, $query);
                         delay: 250,
                         data: function(params) {
                             return {
-                                q: params.term
+                                q: params.term,
+                                sources: 'public_health' // All sources
                             };
                         },
                         processResults: function(data) {
@@ -2624,7 +2603,7 @@ $result = pg_query($con, $query);
                 });
             });
 
-            $('#addPeriodRecordModal').on('shown.bs.modal', function() { // Make sure this matches your female select modal ID
+            $('#addPeriodRecordModal').on('shown.bs.modal', function() {
                 $('#periodStudentSelect').select2({
                     dropdownParent: $(this),
                     ajax: {
@@ -2634,7 +2613,8 @@ $result = pg_query($con, $query);
                         data: function(params) {
                             return {
                                 q: params.term,
-                                gender: 'Female'
+                                gender: 'Female',
+                                sources: 'public_health' // All sources but filtered by gender
                             };
                         },
                         processResults: function(data) {
@@ -2649,7 +2629,7 @@ $result = pg_query($con, $query);
                 });
             });
 
-            $('#addPadDistributionModal').on('shown.bs.modal', function() { // Make sure this matches your multiple select modal ID
+            $('#addPadDistributionModal').on('shown.bs.modal', function() {
                 $('#padStudentSelect').select2({
                     dropdownParent: $(this),
                     ajax: {
@@ -2659,7 +2639,8 @@ $result = pg_query($con, $query);
                         data: function(params) {
                             return {
                                 q: params.term,
-                                gender: 'Female'
+                                gender: 'Female',
+                                sources: 'public_health' // All sources but filtered by gender
                             };
                         },
                         processResults: function(data) {
@@ -2670,7 +2651,7 @@ $result = pg_query($con, $query);
                     },
                     minimumInputLength: 1,
                     placeholder: 'Search female beneficiaries',
-                    closeOnSelect: false
+                    closeOnSelect: true
                 });
             });
 
