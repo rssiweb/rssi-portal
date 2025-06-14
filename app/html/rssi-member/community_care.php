@@ -909,6 +909,14 @@ $result = pg_query($con, $query);
                                                 'icon' => 'heart',
                                                 'description' => '120-129/<85 mmHg'
                                             ];
+                                        } elseif ($systolic < 90 || $diastolic < 60) { // Low BP condition
+                                            $statuses[] = [
+                                                'type' => 'BP',
+                                                'status' => 'Low BP',
+                                                'class' => 'info', // or 'primary' or whatever class you prefer
+                                                'icon' => 'heart',
+                                                'description' => '<90/60 mmHg'
+                                            ];
                                         }
                                     }
 
