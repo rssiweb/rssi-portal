@@ -48,24 +48,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Error saving health record: " . pg_last_error($con));
         }
 
-        // Get the returned health_record_id
+        // Get the returned beneficiary_id
         $row = pg_fetch_assoc($result);
-        $health_record_id = $row['id'];
+        $beneficiary_id = $student_id; // student_id is the beneficiary_id
 
         // Process ABHA appointment if needed
         if (isset($_POST['abha_status']) && $_POST['abha_status'] === 'no' 
             && !empty($_POST['appointment_date']) && !empty($_POST['appointment_time'])) {
             
-            $has_abha = 'no';
+            $appointment_for = 'ABHA Registration';
             $appointment_date = pg_escape_string($con, $_POST['appointment_date']);
             $appointment_time = pg_escape_string($con, $_POST['appointment_time']);
 
-            $appointment_query = "INSERT INTO abha_appointments (
-                                    health_record_id, has_abha, 
-                                    appointment_date, appointment_time
+            $appointment_query = "INSERT INTO appointments (
+                                    beneficiary_id, appointment_for, 
+                                    appointment_date, appointment_time, created_by
                                   ) VALUES (
-                                    '$health_record_id', '$has_abha', 
-                                    '$appointment_date', '$appointment_time'
+                                    '$beneficiary_id', '$appointment_for', 
+                                    '$appointment_date', '$appointment_time', '$associatenumber'
                                   )";
             
             $appointment_result = pg_query($con, $appointment_query);
