@@ -404,6 +404,11 @@
               <span>View Survey Results</span>
             </a>
           </li>
+          <li>
+            <a id="appointments" href="appointments.php">
+              <span>View Appointments</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -1019,6 +1024,10 @@
         id: 'survey',
         linkId: 'create_survey',
         url: 'survey.php'
+      }, {
+        id: 'survey',
+        linkId: 'appointments',
+        url: 'appointments.php'
       },
       {
         id: 'survey',
