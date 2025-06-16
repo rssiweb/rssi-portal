@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -9,8 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-?>
-<?php
+
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Initialize connection to PostgreSQL database
@@ -40,16 +39,147 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $surveyorId = $associatenumber;
         $timestamp = date("Y-m-d H:i:s");
 
+        // Citizen services data
+        $needAssistance = $_POST['needAssistance'];
+        $servicesNeeded = isset($_POST['servicesNeeded']) ? $_POST['servicesNeeded'] : [];
+        $otherService = isset($_POST['otherService']) ? $_POST['otherService'] : null;
+        $bookAppointment = isset($_POST['bookAppointment']) ? $_POST['bookAppointment'] : 'no';
+
+        // Process "Other" service if selected
+        if (in_array('Other', $servicesNeeded) && !empty($otherService)) {
+            // Replace "Other" with the specified service
+            $servicesNeeded = array_filter($servicesNeeded, function ($value) {
+                return $value !== 'Other';
+            });
+            $servicesNeeded[] = $otherService;
+        }
+
         // Build the SQL query for survey data insertion
-        $query = "INSERT INTO survey_data (parent_name, address, contact, house_stay, family_members, earning_source, additional_info, surveyor_id, family_id, alt_contact, interest_in_admission, timestamp, other_earning_source_input) 
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)";
+        $query = "INSERT INTO survey_data (
+                    parent_name, address, contact, house_stay, family_members, 
+                    earning_source, additional_info, surveyor_id, family_id, 
+                    alt_contact, interest_in_admission, timestamp, other_earning_source_input,
+                    need_assistance, services_needed, book_appointment
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                )";
 
         // Execute the query for survey data insertion
-        $result = pg_query_params($con, $query, array($parentName, $address, $contact, $houseStay, $familyMembers, $earningSource, $additionalInfo, $surveyorId, $family_id, $altcontact, $interestInAdmission, $timestamp, $otherEarningSourceInput));
+        $result = pg_query_params($con, $query, array(
+            $parentName,
+            $address,
+            $contact,
+            $houseStay,
+            $familyMembers,
+            $earningSource,
+            $additionalInfo,
+            $surveyorId,
+            $family_id,
+            $altcontact,
+            $interestInAdmission,
+            $timestamp,
+            $otherEarningSourceInput,
+            $needAssistance,
+            json_encode($servicesNeeded),
+            $bookAppointment
+        ));
 
         // Check if the query was successful
         if (!$result) {
             throw new Exception("Failed to insert survey data");
+        }
+
+        // Check if we need to create a public health record and appointment
+        if ($needAssistance === 'yes' && $bookAppointment === 'yes' && !empty($servicesNeeded)) {
+            // Get personal info for appointment
+            $dob = $_POST['dob'] ?? null;
+            $gender = $_POST['gender'] ?? null;
+            $email = $_POST['email'] ?? null;
+            $appointmentDate = $_POST['appointmentDate'] ?? null;
+            $appointmentTime = $_POST['appointmentTime'] ?? null;
+            $photoData = $_POST['photo_data'] ?? null;
+
+            // Handle photo upload if exists
+            $photoUrl = null;
+            if (!empty($photoData)) {
+                $photoData = str_replace('data:image/jpeg;base64,', '', $photoData);
+                $photoData = str_replace(' ', '+', $photoData);
+                $data = base64_decode($photoData);
+
+                // Create a temporary file
+                $tempFileName = 'temp_profile_' . $contact . '_' . time() . '.jpg';
+                $tempFilePath = sys_get_temp_dir() . '/' . $tempFileName;
+                file_put_contents($tempFilePath, $data);
+
+                // Prepare file for Google Drive upload
+                $uploadedFile = [
+                    'name' => 'profile_' . $contact . '_' . time() . '.jpg',
+                    'type' => 'image/jpeg',
+                    'tmp_name' => $tempFilePath,
+                    'error' => 0,
+                    'size' => filesize($tempFilePath)
+                ];
+
+                // Google Drive folder ID where you want to store photos
+                $parentFolderId = '1LtKZNkfWzxrgMTN2GSHF1O-d6AmFsLRD';
+
+                // Upload to Google Drive
+                $photoUrl = uploadeToDrive($uploadedFile, $parentFolderId, 'profile_' . $contact);
+
+                // Delete the temporary file
+                unlink($tempFilePath);
+            }
+
+            // Insert into public_health_records
+            $phrQuery = "INSERT INTO public_health_records (
+                            contact_number, name, email, date_of_birth, 
+                            gender, referral_source, profile_photo, 
+                            registration_completed, created_at
+                        ) VALUES (
+                            $1, $2, $3, $4, $5, $6, $7, true, $8
+                        ) RETURNING id";
+
+            $phrResult = pg_query_params($con, $phrQuery, array(
+                $contact,
+                $parentName,
+                $email,
+                $dob,
+                $gender,
+                'Survey',
+                $photoUrl,
+                $timestamp
+            ));
+
+            if (!$phrResult) {
+                throw new Exception("Failed to insert public health record");
+            }
+
+            $phrRow = pg_fetch_assoc($phrResult);
+            $beneficiary_id = $phrRow['id'];
+
+            // Create appointment
+            if (!empty($appointmentDate) && !empty($appointmentTime)) {
+                $appointmentFor = implode(', ', $servicesNeeded);
+
+                $appointmentQuery = "INSERT INTO appointments (
+                                        beneficiary_id, appointment_for, 
+                                        appointment_date, appointment_time, created_by
+                                    ) VALUES (
+                                        $1, $2, $3, $4, $5
+                                    )";
+
+                $appointmentResult = pg_query_params($con, $appointmentQuery, array(
+                    $beneficiary_id,
+                    $appointmentFor,
+                    $appointmentDate,
+                    $appointmentTime,
+                    $associatenumber
+                ));
+
+                if (!$appointmentResult) {
+                    throw new Exception("Failed to insert appointment");
+                }
+            }
         }
 
         // Check if student data is available and interest in admission is "Yes"
@@ -67,7 +197,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
 
                 // Execute the query for student data insertion
-                $studentResult = pg_query_params($con, $studentQuery, array($family_id, $student['name'], $student['age'], $gender, $grade, $alreadyGoingSchool, isset($student['school_type']) ? $student['school_type'] : null, $alreadyCoaching, isset($student['coaching_name']) ? $student['coaching_name'] : null));
+                $studentResult = pg_query_params($con, $studentQuery, array(
+                    $family_id,
+                    $student['name'],
+                    $student['age'],
+                    $gender,
+                    $grade,
+                    $alreadyGoingSchool,
+                    isset($student['school_type']) ? $student['school_type'] : null,
+                    $alreadyCoaching,
+                    isset($student['coaching_name']) ? $student['coaching_name'] : null
+                ));
 
                 // Check if the query was successful
                 if (!$studentResult) {
@@ -263,6 +403,112 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         placeholder="Enter any additional information"></textarea>
                                                 </div>
 
+                                                <!-- Citizen Services Section -->
+                                                <div class="card mb-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Citizen Services Assistance</h5>
+
+                                                        <!-- Need Assistance -->
+                                                        <div class="mb-3">
+                                                            <label for="needAssistance" class="form-label">Do you need any assistance regarding Citizen Services (Aadhar, PAN, Shram Card, ABHA, etc.)?</label>
+                                                            <select class="form-select" id="needAssistance" name="needAssistance" onchange="toggleAppointmentSection()" required>
+                                                                <option value="" selected disabled>Select option</option>
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Services Needed -->
+                                                        <div id="servicesNeededSection" style="display: none;" class="mb-3">
+                                                            <label for="servicesNeeded" class="form-label">Which services do you need assistance with? (Select all that apply)</label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="serviceAadhar" name="servicesNeeded[]" value="Aadhar Card">
+                                                                <label class="form-check-label" for="serviceAadhar">Aadhar Card</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="servicePAN" name="servicesNeeded[]" value="PAN Card">
+                                                                <label class="form-check-label" for="servicePAN">PAN Card</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="serviceShram" name="servicesNeeded[]" value="Shram Card">
+                                                                <label class="form-check-label" for="serviceShram">Shram Card</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="serviceABHA" name="servicesNeeded[]" value="ABHA Card">
+                                                                <label class="form-check-label" for="serviceABHA">ABHA Card</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="serviceOther" name="servicesNeeded[]" value="Other">
+                                                                <label class="form-check-label" for="serviceOther">Other (please specify)</label>
+                                                                <input type="text" class="form-control mt-2" id="otherService" name="otherService" style="display: none;">
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Book Appointment -->
+                                                        <div id="bookAppointmentSection" style="display: none;" class="mb-3">
+                                                            <label for="bookAppointment" class="form-label">Would you like to book an appointment for these services?</label>
+                                                            <select class="form-select" id="bookAppointment" name="bookAppointment" onchange="togglePersonalInfoSection()">
+                                                                <option value="" selected disabled>Select option</option>
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Personal Information for Appointment -->
+                                                <div id="personalInfoSection" style="display: none;">
+                                                    <div class="card mb-4">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Personal Information for Appointment</h5>
+
+                                                            <!-- Date of Birth -->
+                                                            <div class="mb-3">
+                                                                <label for="dob" class="form-label">Date of Birth</label>
+                                                                <input type="date" class="form-control" id="dob" name="dob">
+                                                            </div>
+
+                                                            <!-- Gender -->
+                                                            <div class="mb-3">
+                                                                <label for="gender" class="form-label">Gender</label>
+                                                                <select class="form-select" id="gender" name="gender">
+                                                                    <option value="" selected disabled>Select gender</option>
+                                                                    <option value="Male">Male</option>
+                                                                    <option value="Female">Female</option>
+                                                                    <option value="Other">Other</option>
+                                                                    <option value="Prefer not to say">Prefer not to say</option>
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Email -->
+                                                            <div class="mb-3">
+                                                                <label for="email" class="form-label">Email</label>
+                                                                <input type="email" class="form-control" id="email" name="email">
+                                                            </div>
+
+                                                            <!-- Appointment Date -->
+                                                            <div class="mb-3">
+                                                                <label for="appointmentDate" class="form-label">Preferred Appointment Date</label>
+                                                                <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
+                                                            </div>
+
+                                                            <!-- Appointment Time -->
+                                                            <div class="mb-3">
+                                                                <label for="appointmentTime" class="form-label">Preferred Appointment Time</label>
+                                                                <input type="time" class="form-control" id="appointmentTime" name="appointmentTime">
+                                                            </div>
+
+                                                            <!-- Profile Photo -->
+                                                            <div class="mb-3">
+                                                                <label for="profilePhoto" class="form-label">Profile Photo</label>
+                                                                <input type="file" class="form-control" id="profilePhoto" name="profilePhoto" accept="image/*" capture="camera">
+                                                                <input type="hidden" id="photo_data" name="photo_data">
+                                                                <small class="text-muted">Take or upload a clear photo</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="card">
                                                     <div class="card-body">
                                                         <!-- Checkbox for Interest in Admission -->
@@ -395,7 +641,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 </div>
 
                                                 <script>
-                                                    document.addEventListener("DOMContentLoaded", function () {
+                                                    document.addEventListener("DOMContentLoaded", function() {
                                                         toggleStudentFields();
                                                         document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
                                                     });
@@ -406,7 +652,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                         if (dropdown.value === 'yes') {
                                                             document.getElementById('studentsContainer').style.display = 'block';
-                                                            studentFields.forEach(function (field) {
+                                                            studentFields.forEach(function(field) {
                                                                 // Check if the field is the coachingName input
                                                                 if (field.id !== 'coachingName' && field.id !== 'schoolType') {
                                                                     // If it's not the coachingName input, mark it as required
@@ -415,7 +661,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                             });
                                                         } else {
                                                             document.getElementById('studentsContainer').style.display = 'none';
-                                                            studentFields.forEach(function (field) {
+                                                            studentFields.forEach(function(field) {
                                                                 field.required = false;
                                                                 field.value = ''; // Reset field value
                                                             });
@@ -457,10 +703,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
     <script>
-        document.getElementById('getAddressBtn').addEventListener('click', function () {
+        document.getElementById('getAddressBtn').addEventListener('click', function() {
             // Check if Geolocation is supported
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
+                navigator.geolocation.getCurrentPosition(function(position) {
                     // Retrieve latitude and longitude
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
@@ -470,7 +716,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     var latlng = new google.maps.LatLng(lat, lng);
                     geocoder.geocode({
                         'location': latlng
-                    }, function (results, status) {
+                    }, function(results, status) {
                         if (status === google.maps.GeocoderStatus.OK) {
                             if (results[0]) {
                                 // Update the address field with the retrieved address
@@ -499,17 +745,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             var studentDetails = document.querySelector('.student-details').cloneNode(true);
 
             // Clear the input values in the cloned student details
-            studentDetails.querySelectorAll('input').forEach(function (input) {
+            studentDetails.querySelectorAll('input').forEach(function(input) {
                 input.value = '';
             });
 
             // Clear the select values in the cloned student details
-            studentDetails.querySelectorAll('select').forEach(function (select) {
+            studentDetails.querySelectorAll('select').forEach(function(select) {
                 select.selectedIndex = 0; // Reset to the default option
             });
 
             // Update input field names and IDs
-            studentDetails.querySelectorAll('input, select').forEach(function (input) {
+            studentDetails.querySelectorAll('input, select').forEach(function(input) {
                 var oldName = input.getAttribute('name');
                 var newName = oldName.replace('[0]', '[' + studentCount + ']');
                 input.setAttribute('name', newName);
@@ -526,7 +772,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             removeButton.textContent = 'Remove Student';
             removeButton.type = 'button';
             removeButton.classList.add('btn', 'btn-danger');
-            removeButton.addEventListener('click', function () {
+            removeButton.addEventListener('click', function() {
                 removeStudentDetails(this);
             });
             studentDetails.appendChild(removeButton);
@@ -561,7 +807,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             var requiredElements = document.querySelectorAll('input[required], select[required], textarea[required]');
 
             // Loop through each required element
-            requiredElements.forEach(function (element) {
+            requiredElements.forEach(function(element) {
                 // Get the ID of the element
                 var elementId = element.id;
 
@@ -576,14 +822,85 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Run the function initially when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             updateLabels();
         });
 
         // Use event delegation to handle dynamically added elements
-        document.body.addEventListener('change', function (event) {
+        document.body.addEventListener('change', function(event) {
             // Update the labels whenever a change occurs
             updateLabels();
+        });
+    </script>
+
+    <script>
+        // Function to toggle services needed section
+        function toggleAppointmentSection() {
+            const needAssistance = document.getElementById('needAssistance').value;
+            const servicesNeededSection = document.getElementById('servicesNeededSection');
+            const bookAppointmentSection = document.getElementById('bookAppointmentSection');
+            const personalInfoSection = document.getElementById('personalInfoSection');
+
+            if (needAssistance === 'yes') {
+                servicesNeededSection.style.display = 'block';
+                bookAppointmentSection.style.display = 'block';
+            } else {
+                servicesNeededSection.style.display = 'none';
+                bookAppointmentSection.style.display = 'none';
+                personalInfoSection.style.display = 'none';
+                // Reset all related fields
+                document.querySelectorAll('#servicesNeededSection input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                document.getElementById('otherService').style.display = 'none';
+                document.getElementById('bookAppointment').value = '';
+            }
+        }
+
+        // Function to toggle personal info section
+        function togglePersonalInfoSection() {
+            const bookAppointment = document.getElementById('bookAppointment').value;
+            const personalInfoSection = document.getElementById('personalInfoSection');
+
+            if (bookAppointment === 'yes') {
+                personalInfoSection.style.display = 'block';
+            } else {
+                personalInfoSection.style.display = 'none';
+                // Reset personal info fields
+                document.getElementById('dob').value = '';
+                document.getElementById('gender').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('appointmentDate').value = '';
+                document.getElementById('appointmentTime').value = '';
+                document.getElementById('photo_data').value = '';
+                document.getElementById('profilePhoto').value = '';
+            }
+        }
+
+        // Handle "Other" service checkbox
+        document.getElementById('serviceOther').addEventListener('change', function() {
+            const otherServiceInput = document.getElementById('otherService');
+            otherServiceInput.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) otherServiceInput.value = '';
+        });
+
+        // Handle photo capture
+        document.getElementById('profilePhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('photo_data').value = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners for the main toggles
+            document.getElementById('needAssistance').addEventListener('change', toggleAppointmentSection);
+            document.getElementById('bookAppointment').addEventListener('change', togglePersonalInfoSection);
         });
     </script>
 </body>
