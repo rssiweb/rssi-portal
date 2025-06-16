@@ -2,7 +2,6 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 include("../../util/email.php");
-include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -14,121 +13,135 @@ if (!isLoggedIn("aid")) {
 validation();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['external_score_id'], $_POST['action_type'], $_POST['remarks'])) {
-        $externalScoreId = intval($_POST['external_score_id']);
-        $action = ($_POST['action_type'] === 'approve') ? 'approved' : 'rejected';
-        $remarks = trim($_POST['remarks']);
+    // Handle bulk approval/rejection
+    if (isset($_POST['bulk_status'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
+        $selected_ids = explode(',', $_POST['selected_ids']);
+        $bulk_status = ($_POST['bulk_status'] === 'Approved') ? 'approved' : 'rejected';
+        $bulk_remarks = trim($_POST['bulk_remarks']);
+        $reviewer_id = $associatenumber;
 
-        // Fetch the external score record
-        $query = "
-            SELECT e.*, m.fullname, m.email, w.coursename
-            FROM external_exam_scores e
-            LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
-            LEFT JOIN wbt w ON e.course_id = w.courseid
-            WHERE e.id = $1
-        ";
-        $stmt = pg_prepare($con, "fetch_external_score", $query);
-        $result = pg_execute($con, "fetch_external_score", [$externalScoreId]);
+        if (!empty($selected_ids) && !empty($bulk_status)) {
+            // Escape and format the ID list properly
+            $escaped_ids = array_map(function ($id) use ($con) {
+                return "'" . pg_escape_string($con, trim($id)) . "'";
+            }, $selected_ids);
+            $ids_string = implode(',', $escaped_ids);
 
-        if ($result && pg_num_rows($result) > 0) {
-            $row = pg_fetch_assoc($result);
-            $courseId = $row['course_id'];
-            $applicantid = $row['associate_number'];
-            $email = $row['email'];
-            $fullname = $row['fullname'];
-
-            if ($action === 'approved') {
-                // Insert data into wbt_status
-                $timestamp = $row['completion_date'];
-                $fScore = $row['score'] / 100;
-
-                $insertQuery = "
-                    INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email) 
-                    VALUES ($1, $2, $3, $4, $5)
-                ";
-                $insertStmt = pg_prepare($con, "insert_wbt_status", $insertQuery);
-                $insertResult = pg_execute($con, "insert_wbt_status", [$applicantid, $courseId, $timestamp, $fScore, $email]);
-
-                if (!$insertResult) {
-                    echo "<script>alert('Error: Failed to insert into wbt_status.');</script>";
-                    exit;
-                }
-            }
-
-            // Update the external_exam_scores table
-            $updateQuery = "
-                UPDATE external_exam_scores
-                SET 
-                    status = $1,
-                    reviewed_by = $2,
-                    reviewed_on = $3,
-                    remarks = $4
-                WHERE id = $5
+            // First, fetch all records to be updated for email notifications
+            $query_fetch = "
+                SELECT e.*, m.fullname, m.email, w.coursename
+                FROM external_exam_scores e
+                LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
+                LEFT JOIN wbt w ON e.course_id = w.courseid
+                WHERE e.id IN ($ids_string)
             ";
-            $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
-            $updateResult = pg_execute($con, "update_external_score", [
-                $action,
-                $associatenumber,
-                date('Y-m-d H:i:s'),
-                $remarks,
-                $externalScoreId
-            ]);
+            $result_fetch = pg_query($con, $query_fetch);
 
-            if ($updateResult) {
+            if ($result_fetch) {
+                // Process each record
+                while ($row = pg_fetch_assoc($result_fetch)) {
+                    $externalScoreId = $row['id'];
+                    $courseId = $row['course_id'];
+                    $applicantid = $row['associate_number'];
+                    $email = $row['email'];
+                    $fullname = $row['fullname'];
+                    $coursename = $row['coursename'];
 
-                // Send email for rejected requests
-                if ($action === 'rejected') {
-                    $emailQuery = "SELECT email FROM rssimyaccount_members WHERE associatenumber = $1";
-                    $emailStmt = pg_prepare($con, "fetch_email", $emailQuery);
-                    $emailResult = pg_execute($con, "fetch_email", [$applicantid]);
+                    if ($bulk_status === 'approved') {
+                        // Insert data into wbt_status for approved requests
+                        $timestamp = $row['completion_date'];
+                        $fScore = $row['score'] / 100;
 
-                    if ($emailResult && pg_num_rows($emailResult) > 0) {
-                        $emailRow = pg_fetch_assoc($emailResult);
-                        $associate_email = $emailRow['email'];
+                        $insertQuery = "
+                            INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email) 
+                            VALUES ($1, $2, $3, $4, $5)
+                        ";
+                        $insertStmt = pg_prepare($con, "insert_wbt_status", $insertQuery);
+                        $insertResult = pg_execute($con, "insert_wbt_status", [
+                            $applicantid,
+                            $courseId,
+                            $timestamp,
+                            $fScore,
+                            $email
+                        ]);
 
-                        // Send rejection email
-                        sendEmail("external_course_reject", [
-                            "courseId" => $courseId,
-                            "applicantid" => $applicantid,
-                            "name" => $fullname,
-                            "date" => date('Y-m-d H:i:s'),
-                            "remarks" => $remarks,
-                        ], $associate_email, false);
-                    } else {
-                        error_log("No associate email found for rejection.");
+                        if (!$insertResult) {
+                            error_log("Error inserting into wbt_status for ID: $externalScoreId");
+                        }
+                    }
+
+                    // Update the external_exam_scores table
+                    $updateQuery = "
+                        UPDATE external_exam_scores
+                        SET 
+                            status = $1,
+                            reviewed_by = $2,
+                            reviewed_on = $3,
+                            remarks = $4
+                        WHERE id = $5
+                    ";
+                    $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
+                    $updateResult = pg_execute($con, "update_external_score", [
+                        $bulk_status,
+                        $reviewer_id,
+                        date('Y-m-d H:i:s'),
+                        $bulk_remarks,
+                        $externalScoreId
+                    ]);
+
+                    if ($updateResult) {
+                        // Send email notification
+                        if (!empty($email) && $bulk_status === 'rejected') {
+                            $emailData = [
+                                "template" => "external_course_reject",
+                                "data" => [
+                                    "courseId" => $courseId,
+                                    "coursename" => $coursename,
+                                    "applicantid" => $applicantid,
+                                    "name" => $fullname,
+                                    "date" => date('Y-m-d H:i:s'),
+                                    "remarks" => $bulk_remarks,
+                                    "score" => $row['score']
+                                ],
+                                "email" => $email
+                            ];
+
+                            sendEmail($emailData['template'], $emailData['data'], $emailData['email'], false);
+                        }
                     }
                 }
 
-                echo "<script>alert('Request $action successfully!'); 
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
-                }
-                window.location.reload();
-                </script>";
-                exit;
-            } else {
-                echo "<script>alert('Error: Failed to update external_exam_scores.');</script>";
-                exit;
+                echo "<script>alert('Bulk review applied successfully.'); window.location.href = window.location.href;</script>";
+                //exit;
             }
-        } else {
-            echo "<script>alert('Error: External score record not found.');</script>";
-            exit;
         }
     }
 }
 
-// Fetch latest pending external score requests per course and associate
+// Fetch only the latest external score requests per course and associate
 $query = "
-    WITH latest_submissions AS (
-        SELECT DISTINCT ON (e.course_id, e.associate_number)
-            e.*, m.fullname, w.coursename
+    WITH latest_status_per_combination AS (
+        SELECT 
+            e.course_id,
+            e.associate_number,
+            MAX(e.submission_time) as latest_submission_time,
+            MAX(e.status) as latest_status
         FROM external_exam_scores e
+        GROUP BY e.course_id, e.associate_number
+    ),
+    pending_latest_submissions AS (
+        SELECT e.*, m.fullname, w.coursename
+        FROM external_exam_scores e
+        JOIN latest_status_per_combination l ON 
+            e.course_id = l.course_id AND 
+            e.associate_number = l.associate_number AND
+            e.submission_time = l.latest_submission_time
         LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
         LEFT JOIN wbt w ON e.course_id = w.courseid
-        WHERE e.status IS NULL OR e.status = 'pending'
-        ORDER BY e.course_id, e.associate_number, e.submission_time DESC
+        WHERE l.latest_status IS NULL OR l.latest_status = 'pending'
     )
-    SELECT * FROM latest_submissions
+    SELECT * FROM pending_latest_submissions
+    ORDER BY submission_time DESC
 ";
 $result = pg_query($con, $query);
 
@@ -136,9 +149,6 @@ if (!$result) {
     die("Error fetching external score requests.");
 }
 ?>
-
-<!doctype html>
-<html lang="en">
 
 <head>
     <!-- Google tag (gtag.js) -->
@@ -183,7 +193,24 @@ if (!$result) {
             }
         }
     </style>
+    <!-- Add DataTables CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <style>
+        tbody tr {
+            cursor: pointer;
+        }
 
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .form-check-input {
+            margin-left: 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -191,7 +218,6 @@ if (!$result) {
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
-
         <div class="pagetitle">
             <h1>iExplore Worklist</h1>
             <nav>
@@ -205,34 +231,47 @@ if (!$result) {
 
         <section class="section dashboard">
             <div class="row">
-
-                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
                             <br>
-                            <div class="container mt-5">
-                                <!-- <h1 class="mb-4">Approve External Scores</h1> -->
-                                <table class="table">
+                            <?php if ($role == 'Admin') { ?>
+                                <div class="row mb-3">
+                                    <div class="col-md-12 text-end">
+                                        <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
+                                    </div>
+                                </div>
+                            <?php } ?>
+
+                            <div class="table-responsive">
+                                <table class="table" id="worklist-table">
                                     <thead>
                                         <tr>
+                                            <th></th>
                                             <th>ID</th>
                                             <th>Course Name</th>
                                             <th>Associate Name</th>
                                             <th>Completion Date</th>
                                             <th>Score</th>
                                             <th>Supporting File</th>
-                                            <th>Action</th>
+                                            <th>Submission Timestamp</th>
+                                            <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php while ($row = pg_fetch_assoc($result)) : ?>
                                             <tr>
+                                                <td>
+                                                    <input type="checkbox"
+                                                        class="form-check-input"
+                                                        name="selected_ids[]"
+                                                        value="<?= htmlspecialchars($row['id']); ?>"
+                                                        <?= ($row['status'] === 'approved' || $row['status'] === 'rejected') ? 'disabled' : ''; ?>>
+                                                </td>
                                                 <td><?= htmlspecialchars($row['id']); ?></td>
                                                 <td><?= htmlspecialchars($row['coursename']); ?></td>
                                                 <td><?= htmlspecialchars($row['fullname']); ?></td>
-                                                <td><?= htmlspecialchars($row['completion_date']); ?></td>
+                                                <td><?= date('d/m/Y', strtotime($row['completion_date'])); ?></td>
                                                 <td><?= htmlspecialchars($row['score']); ?>%</td>
                                                 <td>
                                                     <?php if ($row['supporting_file']) : ?>
@@ -241,47 +280,8 @@ if (!$result) {
                                                         No file
                                                     <?php endif; ?>
                                                 </td>
-                                                <td>
-                                                    <!-- Approve/Reject Buttons -->
-                                                    <button type="button" class="btn btn-success btn-sm" onclick="openModal('Approve', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Approve</button>
-                                                    <button type="button" class="btn btn-danger btn-sm" onclick="openModal('Reject', '<?= $row['coursename']; ?>', '<?= $row['fullname']; ?>', '<?= $row['score']; ?>', '<?= $row['completion_date']; ?>', <?= $row['id']; ?>)">Reject</button>
-
-                                                    <!-- Bootstrap Modal -->
-                                                    <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="modalLabel">Action Confirmation</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <form method="POST" action="#">
-                                                                    <div class="modal-body">
-                                                                        <input type="hidden" name="external_score_id" id="external_score_id">
-                                                                        <input type="hidden" name="action_type" id="action_type">
-
-                                                                        <!-- Display Details for User Understanding -->
-                                                                        <div class="mb-3">
-                                                                            <p><strong>Course Name:</strong> <span id="courseName"></span></p>
-                                                                            <p><strong>Applicant Name:</strong> <span id="applicantName"></span></p>
-                                                                            <p><strong>Score:</strong> <span id="score"></span></p>
-                                                                            <p><strong>Completion Date:</strong> <span id="completionDate"></span></p>
-                                                                        </div>
-
-                                                                        <!-- Remarks Field -->
-                                                                        <div class="mb-3">
-                                                                            <label id="remarksLabel" class="form-label">Remarks for:</label>
-                                                                            <textarea name="remarks" id="remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="modal-footer">
-                                                                        <button type="submit" class="btn btn-primary">Submit</button>
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                                <td><?= date('d/m/Y h:i A', strtotime($row['submission_time'])); ?></td>
+                                                <td><?= htmlspecialchars($row['status'] ?? 'Pending'); ?></td>
                                             </tr>
                                         <?php endwhile; ?>
                                     </tbody>
@@ -289,12 +289,42 @@ if (!$result) {
                             </div>
                         </div>
                     </div>
-                </div><!-- End Reports -->
+                </div>
             </div>
         </section>
+    </main>
 
-    </main><!-- End #main -->
+    <!-- Bulk Review Modal -->
+    <div class="modal fade" id="bulkReviewModal" tabindex="-1" aria-labelledby="bulkReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkReviewModalLabel">Bulk Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bulk-review-form" method="POST" action="#">
+                        <input type="hidden" name="selected_ids" id="selected-ids">
+                        <div class="mb-3">
+                            <label for="bulk-status" class="form-label">Status</label>
+                            <select name="bulk_status" id="bulk-status" class="form-select" required>
+                                <option disabled selected hidden>Select Status</option>
+                                <option value="Approved">Approve</option>
+                                <option value="Rejected">Reject</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bulk-remarks" class="form-label">Remarks</label>
+                            <textarea name="bulk_remarks" id="bulk-remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- [Keep your existing scripts] -->
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
@@ -326,6 +356,58 @@ if (!$result) {
             var modal = new bootstrap.Modal(document.getElementById('approvalModal'));
             modal.show();
         }
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#worklist-table').DataTable({
+                "order": [], // Disable initial sorting
+                "columnDefs": [{
+                        "orderable": false,
+                        //"targets": [0, 6]
+                    } // Disable sorting for checkbox and action columns
+                ]
+            });
+
+            // Make rows clickable (except for checkboxes and links)
+            $('#worklist-table tbody').on('click', 'tr', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A') {
+                    const checkbox = $(this).find('td:first-child .form-check-input');
+                    if (checkbox.length && !checkbox.prop('disabled')) {
+                        checkbox.prop('checked', !checkbox.prop('checked'));
+                        updateBulkReviewButton();
+                    }
+                }
+            });
+
+            // Update bulk review button
+            function updateBulkReviewButton() {
+                const selectedCount = $('#worklist-table tbody .form-check-input:checked').length;
+                const bulkReviewButton = $('#bulk-review-button');
+                bulkReviewButton.text(`Bulk Review (${selectedCount})`);
+                bulkReviewButton.prop('disabled', selectedCount === 0);
+            }
+
+            // Attach event listeners to checkboxes
+            $('#worklist-table tbody').on('change', '.form-check-input', updateBulkReviewButton);
+
+            // Initialize bulk review modal
+            $('#bulk-review-button').click(function() {
+                const selectedIds = [];
+                $('#worklist-table tbody .form-check-input:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    $('#selected-ids').val(selectedIds.join(','));
+                    const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModal'));
+                    bulkReviewModal.show();
+                } else {
+                    alert('Please select at least one request to proceed.');
+                }
+            });
+        });
     </script>
 </body>
 
