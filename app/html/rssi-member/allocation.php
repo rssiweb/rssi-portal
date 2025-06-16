@@ -83,28 +83,49 @@ employee_workdays AS (
     SELECT 
         m.associatenumber,
         COUNT(h.attendance_date) AS workdays_employee,
-        MIN(h.attendance_date) AS start_date, -- First date of counting
-        MAX(h.attendance_date) AS end_date    -- Last date of counting
+        MIN(h.attendance_date) AS start_date,
+        MAX(h.attendance_date) AS end_date
     FROM 
         holidays_excluded h
     INNER JOIN 
         rssimyaccount_members m
         ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
+            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
             AND 
             LEAST(
                 CASE 
-                    -- If today is in the same month as attendance_date, use today
                     WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
+                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of today's date (if in the same month) or the associate's effective date
-             LEFT JOIN 
+            )
+    LEFT JOIN LATERAL (
+        SELECT s.workdays, s.start_date AS schedule_start
+        FROM associate_schedule s
+        WHERE s.associate_number = m.associatenumber
+        AND s.start_date <= h.attendance_date
+        ORDER BY s.start_date DESC
+        LIMIT 1
+    ) sched ON true
+    LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        (DATE_PART('dow', h.attendance_date) != 0 OR w.is_workday IS NOT NULL) -- Exclude Sundays unless they are marked as workdays
+        -- If schedule exists, check if day is in workdays
+        (sched.workdays IS NOT NULL AND 
+         CASE 
+             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
+             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
+             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
+             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
+             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
+             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
+             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
+         END)
+        OR
+        -- If no schedule exists, use default logic (Mon-Fri for employees)
+        (sched.workdays IS NULL AND 
+         (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 5 OR w.is_workday IS NOT NULL))
     GROUP BY 
         m.associatenumber
 ),
@@ -112,28 +133,49 @@ others_workdays AS (
     SELECT 
         m.associatenumber,
         COUNT(h.attendance_date) AS workdays_others,
-        MIN(h.attendance_date) AS start_date, -- First date of counting
-        MAX(h.attendance_date) AS end_date    -- Last date of counting
+        MIN(h.attendance_date) AS start_date,
+        MAX(h.attendance_date) AS end_date
     FROM 
         holidays_excluded h
     INNER JOIN 
         rssimyaccount_members m
         ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
+            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
             AND 
             LEAST(
                 CASE 
-                    -- If today is in the same month as attendance_date, use today
                     WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
+                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of today's date (if in the same month) or the associate's effective date
-             LEFT JOIN 
+            )
+    LEFT JOIN LATERAL (
+        SELECT s.workdays, s.start_date AS schedule_start
+        FROM associate_schedule s
+        WHERE s.associate_number = m.associatenumber
+        AND s.start_date <= h.attendance_date
+        ORDER BY s.start_date DESC
+        LIMIT 1
+    ) sched ON true
+    LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 OR w.is_workday IS NOT NULL)-- Monday to Thursday
+        -- If schedule exists, check if day is in workdays
+        (sched.workdays IS NOT NULL AND 
+         CASE 
+             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
+             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
+             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
+             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
+             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
+             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
+             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
+         END)
+        OR
+        -- If no schedule exists, use default logic (Mon-Thu for others)
+        (sched.workdays IS NULL AND 
+         (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 OR w.is_workday IS NOT NULL))
     GROUP BY 
         m.associatenumber
 ),
