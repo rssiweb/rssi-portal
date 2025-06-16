@@ -264,21 +264,36 @@ if ($selected_academic_year !== 'all') {
     $query_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
 }
 
-// Count total appointments
+// Count total appointments for the selected academic year (regardless of status filter)
 $count_query = "SELECT COUNT(*) AS total FROM appointments aa";
-if (!empty($query_where)) {
-    $count_query .= " WHERE " . implode(" AND ", $query_where);
+$count_where = [];
+
+if ($selected_academic_year !== 'all') {
+    list($start_year, $end_year) = explode('-', $selected_academic_year);
+    $count_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
 }
-$count_result = pg_query_params($con, $count_query, $query_params);
+
+if (!empty($count_where)) {
+    $count_query .= " WHERE " . implode(" AND ", $count_where);
+}
+$count_result = pg_query($con, $count_query);
 $total_appointments = pg_fetch_result($count_result, 0, 'total');
 
-// Get status statistics
+// Get status statistics - ONLY filter by academic year
 $stats_query = "SELECT status, COUNT(*) as count FROM appointments aa";
-if (!empty($query_where)) {
-    $stats_query .= " WHERE " . implode(" AND ", $query_where);
+$stats_where = [];
+
+if ($selected_academic_year !== 'all') {
+    list($start_year, $end_year) = explode('-', $selected_academic_year);
+    $stats_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
 }
+
+if (!empty($stats_where)) {
+    $stats_query .= " WHERE " . implode(" AND ", $stats_where);
+}
+
 $stats_query .= " GROUP BY status";
-$stats_result = pg_query_params($con, $stats_query, $query_params);
+$stats_result = pg_query($con, $stats_query);
 $stats = ['scheduled' => 0, 'completed' => 0, 'cancelled' => 0];
 while ($stat_row = pg_fetch_assoc($stats_result)) {
     $stats[$stat_row['status']] = $stat_row['count'];
@@ -332,7 +347,6 @@ function getStatusBadgeClass($status)
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
 
@@ -733,8 +747,8 @@ function getStatusBadgeClass($status)
                                                                             </td>
                                                                             <td>
                                                                                 <span class="badge py-1 px-2 bg-<?=
-                                                                                                                                ($row['status'] ?? 'scheduled') == 'scheduled' ? 'primary' : (($row['status'] ?? '') == 'completed' ? 'success' : 'danger')
-                                                                                                                                ?>">
+                                                                                                                ($row['status'] ?? 'scheduled') == 'scheduled' ? 'primary' : (($row['status'] ?? '') == 'completed' ? 'success' : 'danger')
+                                                                                                                ?>">
                                                                                     <?= ucfirst($row['status'] ?? 'scheduled') ?>
                                                                                 </span>
                                                                             </td>
