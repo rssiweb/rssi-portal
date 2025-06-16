@@ -11,7 +11,7 @@ if (!isLoggedIn("aid")) {
 // Get order ID from URL
 $orderId = $_GET['id'] ?? null;
 if (!$orderId) {
-    header("Location: my_orders.php");
+    header("Location: emart_orders.php");
     exit;
 }
 
