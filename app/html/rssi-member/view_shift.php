@@ -222,7 +222,7 @@ pg_close($con); // Close the connection
                                         <div class="form-group">
                                             <select class="form-control" id="associate_number" name="associate_number" required>
                                                 <?php if (!empty($associateNumber)): ?>
-                                                    <option value="<?= $associateNumber ?>" selected><?= $associateNumber ?></option>
+                                                    <option value="<?= isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null ?>" selected><?= isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null ?></option>
                                                 <?php endif; ?>
                                             </select>
                                         </div>
