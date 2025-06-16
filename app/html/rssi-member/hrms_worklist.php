@@ -100,12 +100,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Commit transaction
                 pg_query($con, "COMMIT");
-                echo json_encode(['status' => 'success', 'message' => 'Bulk action completed successfully']);
+
+                // Store success message in session
+                $_SESSION['bulk_action_status'] = [
+                    'status' => 'success',
+                    'message' => 'Bulk action completed successfully'
+                ];
+
+                // Redirect to avoid form resubmission
+                header("Location: " . $_SERVER['PHP_SELF']);
                 exit;
             } catch (Exception $e) {
                 // Rollback on error
                 pg_query($con, "ROLLBACK");
-                echo json_encode(['status' => 'error', 'message' => 'Error processing bulk action: ' . $e->getMessage()]);
+
+                // Store error message in session
+                $_SESSION['bulk_action_status'] = [
+                    'status' => 'error',
+                    'message' => 'Error processing bulk action: ' . $e->getMessage()
+                ];
+
+                // Redirect to avoid form resubmission
+                header("Location: " . $_SERVER['PHP_SELF']);
                 exit;
             }
         }
@@ -315,8 +331,8 @@ if ($result) {
                     <h5 class="modal-title" id="bulkReviewModalLabel">Bulk Review</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="bulk-review-form">
+                <form id="bulk-review-form" method="POST" action="#">
+                    <div class="modal-body">
                         <input type="hidden" name="selected_ids" id="selected-ids">
                         <div class="mb-3">
                             <label for="bulk-action" class="form-label">Action</label>
@@ -328,14 +344,14 @@ if ($result) {
                         </div>
                         <div class="mb-3">
                             <label for="bulk-remarks" class="form-label">Remarks</label>
-                            <textarea name="bulk_remarks" id="bulk-remarks" class="form-control" placeholder="Enter remarks..."></textarea>
+                            <textarea name="bulk_remarks" id="bulk-remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="confirm-bulk-action">Submit</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -392,40 +408,16 @@ if ($result) {
                     alert('Please select at least one request to proceed.');
                 }
             });
-
-            // Handle bulk action submission
-            $('#confirm-bulk-action').click(function() {
-                const selectedIds = $('#selected-ids').val();
-                const bulkAction = $('#bulk-action').val();
-                const bulkRemarks = $('#bulk-remarks').val();
-
-                if (!bulkAction) {
-                    alert('Please select an action');
-                    return;
-                }
-
-                $.ajax({
-                    url: 'hrms_worklist.php',
-                    method: 'POST',
-                    data: {
-                        bulk_action: bulkAction,
-                        selected_ids: selectedIds,
-                        bulk_remarks: bulkRemarks
-                    },
-                    success: function(response) {
-                        const result = JSON.parse(response);
-                        alert(result.message);
-                        if (result.status === 'success') {
-                            window.location.reload();
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        alert("An error occurred: " + error);
-                    }
-                });
-            });
         });
     </script>
+    <?php if (isset($_SESSION['bulk_action_status'])): ?>
+        <script>
+            $(document).ready(function() {
+                alert('<?php echo addslashes($_SESSION['bulk_action_status']['message']); ?>');
+                <?php unset($_SESSION['bulk_action_status']); ?>
+            });
+        </script>
+    <?php endif; ?>
 </body>
 
 </html>
