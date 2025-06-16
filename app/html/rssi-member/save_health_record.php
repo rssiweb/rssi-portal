@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_POST['abha_status']) && $_POST['abha_status'] === 'no' 
             && !empty($_POST['appointment_date']) && !empty($_POST['appointment_time'])) {
             
-            $appointment_for = 'ABHA Registration';
+            $appointment_for = 'ABHA Card';
             $appointment_date = pg_escape_string($con, $_POST['appointment_date']);
             $appointment_time = pg_escape_string($con, $_POST['appointment_time']);
 
