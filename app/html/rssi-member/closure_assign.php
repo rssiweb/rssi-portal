@@ -149,7 +149,7 @@ echo "<script>var userRole = '$role';</script>";
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Workforce Management</a></li>
+                    <li class="breadcrumb-item"><a href="#">Schedule Hub</a></li>
                     <li class="breadcrumb-item active">Closing Duty Roster</li>
                 </ol>
             </nav>

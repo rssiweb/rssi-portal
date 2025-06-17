@@ -4,24 +4,49 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-
     header("Location: index.php");
     exit;
 }
 validation();
 ?>
+
 <?php
+// Get filter parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+$selectedCategories = isset($_GET['categories']) ? $_GET['categories'] : [];
 
 // Calculate the start and end dates of the month
 $startDate = date("Y-m-01", strtotime($month));
 $endDate = date("Y-m-t", strtotime($month));
 
+// Get all available categories for the dropdown
+$categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
+$categoriesResult = pg_query($con, $categoriesQuery);
+$allCategories = pg_fetch_all_columns($categoriesResult, 0);
+
+// Validate selected categories against available categories
+$validCategories = [];
+foreach ($selectedCategories as $cat) {
+    if (in_array($cat, $allCategories)) {
+        $validCategories[] = pg_escape_string($con, $cat);
+    }
+}
+
+// Build SQL conditions
 $idCondition = "";
 if ($id != null) {
     $idCondition = "AND s.filterstatus = '$id'";
 }
+
+$categoryCondition = "";
+if (!empty($validCategories)) {
+    $categoryList = "'" . implode("','", $validCategories) . "'";
+    $categoryCondition = "AND s.category IN ($categoryList)";
+}
+
+// Check if at least one category is selected
+$requireCategorySelection = empty($validCategories);
 
 $query = "WITH date_range AS (
     SELECT generate_series(
@@ -46,11 +71,11 @@ attendance_data AS (
                         SELECT COUNT(*) FROM attendance att WHERE att.date = d.attendance_date
                      ) > 0
                      AND (
-                        SELECT COUNT(*) FROM category_workdays cw
+                        SELECT COUNT(*) FROM student_class_days cw
                         WHERE cw.category = s.category
                           AND cw.effective_from <= d.attendance_date
                           AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                          AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.workdays) > 0
+                          AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
                      ) > 0
                      AND s.doa <= d.attendance_date
                      THEN 'A'
@@ -71,6 +96,7 @@ attendance_data AS (
         )
         AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
+        $categoryCondition
 )
 SELECT
     student_id,
@@ -109,20 +135,24 @@ ORDER BY
     attendance_date;
 ";
 
-$result = pg_query($con, $query);
+// Only execute query if categories are selected
+$studentIDCount = null;
+if (!$requireCategorySelection) {
+    $result = pg_query($con, $query);
+    if (!$result) {
+        echo "Query failed.";
+        exit();
+    }
 
-if (!$result) {
-    echo "Query failed.";
-    exit();
+    // Fetch attendance data
+    $attendanceData = pg_fetch_all($result);
+    $uniqueStudentIDs = array_unique(array_column($attendanceData, 'student_id'));
+    $studentIDCount = count($uniqueStudentIDs);
 }
 
-// Fetch attendance data
-$attendanceData = pg_fetch_all($result);
-$uniqueStudentIDs = array_unique(array_column($attendanceData, 'student_id'));
-$studentIDCount = count($uniqueStudentIDs);
-
 // Close the connection
-pg_close($con); ?>
+pg_close($con);
+?>
 
 <!doctype html>
 <html lang="en">
@@ -168,6 +198,18 @@ pg_close($con); ?>
     <!-- Include jQuery UI CSS and JavaScript -->
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- Initialize the multi-select plugin (using Select2 as example) -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#categories').select2({
+                placeholder: "Select categories...",
+                width: '100%'
+            });
+        });
+    </script>
 
     <style>
         .blink-text {
@@ -220,10 +262,14 @@ pg_close($con); ?>
                                     <input type="hidden" value="monthly_attd" name="export_type" />
                                     <input type="hidden" value="<?php echo $id ?>" name="id" />
                                     <input type="hidden" value="<?php echo $month ?>" name="month" />
+                                    <!-- Add hidden field for selected categories -->
+                                    <?php foreach ($selectedCategories as $cat): ?>
+                                        <input type="hidden" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>">
+                                    <?php endforeach; ?>
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Export CSV">
+                                    padding: 0px;
+                                    border: none;" title="Export CSV">
                                         <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
                                     </button>
                                 </form>
@@ -234,6 +280,7 @@ pg_close($con); ?>
                                     Record count:&nbsp;<?php echo $studentIDCount ?>
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
+                                <!-- HTML Form -->
                                 <form action="" method="GET" class="row g-2 align-items-center">
                                     <div class="row">
                                         <div class="col-12 col-sm-2">
@@ -241,11 +288,9 @@ pg_close($con); ?>
                                                 <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
                                                     <?php if ($id == null) { ?>
                                                         <option disabled selected hidden>Select Status</option>
-                                                    <?php
-                                                    } else { ?>
+                                                    <?php } else { ?>
                                                         <option hidden selected><?php echo $id ?></option>
-                                                    <?php }
-                                                    ?>
+                                                    <?php } ?>
                                                     <option>Active</option>
                                                     <option>Inactive</option>
                                                 </select>
@@ -259,14 +304,34 @@ pg_close($con); ?>
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
+
+                                        <div class="col-12 col-sm-2">
+                                            <div class="form-group">
+                                                <select name="categories[]" id="categories" class="form-select" multiple="multiple" required>
+                                                    <?php foreach ($allCategories as $category): ?>
+                                                        <option value="<?php echo htmlspecialchars($category); ?>"
+                                                            <?php echo in_array($category, $selectedCategories) ? 'selected' : '' ?>>
+                                                            <?php echo htmlspecialchars($category); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <small class="form-text text-muted">Select one or more categories (required)</small>
+                                            </div>
+                                        </div>
+
                                         <div class="col-12 col-sm-2">
                                             <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
                                                 <i class="bi bi-search"></i> Search
                                             </button>
                                         </div>
                                     </div>
-
                                 </form>
+                                <?php if ($requireCategorySelection): ?>
+                                    <div class="alert alert-warning mt-3">
+                                        Please select at least one category to view attendance data.
+                                    </div>
+                                    <?php exit; ?>
+                                <?php endif; ?>
                                 <?php
                                 // Explode the month into year and month components
                                 $components = explode("-", $month);

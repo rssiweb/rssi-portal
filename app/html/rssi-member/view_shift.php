@@ -200,7 +200,7 @@ pg_close($con); // Close the connection
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Workforce Management</a></li>
+                    <li class="breadcrumb-item"><a href="#">Schedule Hub</a></li>
                     <li class="breadcrumb-item active">View Shift</li>
                 </ol>
             </nav>

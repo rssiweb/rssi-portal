@@ -368,7 +368,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#rostermanagement" data-bs-toggle="collapse" href="#">
-          <span>Workforce Management</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>Schedule Hub</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="rostermanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -384,6 +384,11 @@
           <li>
             <a id="closure_assign" href="closure_assign.php">
               <span>Closing Duty Roster</span>
+            </a>
+          </li>
+          <li>
+            <a id="student_class_days" href="student_class_days.php">
+              <span>Student Class Days</span>
             </a>
           </li>
         </ul>
@@ -1019,6 +1024,10 @@
         id: 'rostermanagement',
         linkId: 'closure_assign',
         url: 'closure_assign.php'
+      }, {
+        id: 'rostermanagement',
+        linkId: 'student_class_days',
+        url: 'student_class_days.php'
       },
       {
         id: 'survey',

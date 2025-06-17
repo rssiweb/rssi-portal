@@ -124,7 +124,7 @@ pg_close($con);
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Workforce Management</a></li>
+                    <li class="breadcrumb-item"><a href="#">Schedule Hub</a></li>
                     <li class="breadcrumb-item active">Shift Planner</li>
                 </ol>
             </nav>
