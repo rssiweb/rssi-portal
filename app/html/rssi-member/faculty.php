@@ -29,13 +29,13 @@ $commonJoins = "
     LEFT JOIN (SELECT taggedto FROM gps where asset_status='Active') gps ON rssimyaccount_members.associatenumber = gps.taggedto
     LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS sltd FROM leavedb_leavedb WHERE typeofleave = 'Sick Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber = sltaken.applicantid
     LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS cltd FROM leavedb_leavedb WHERE typeofleave = 'Casual Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber = cltaken.applicantid
-    LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS lwptd FROM leavedb_leavedb WHERE typeofleave = 'Leave Without Pay' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber = lwptaken.applicantid
+    LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS lwptd FROM leavedb_leavedb WHERE (typeofleave = 'Leave Without Pay'OR typeofleave = 'Adjustment Leave') AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber = lwptaken.applicantid
     LEFT JOIN (SELECT applicantid, 1 AS onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear = '$lyear' AND status = 'Approved') onleave ON rssimyaccount_members.associatenumber = onleave.applicantid
     LEFT JOIN (SELECT allo_applicantid, COALESCE(SUM(allo_daycount), 0) AS slad FROM leaveallocation WHERE allo_leavetype = 'Sick Leave' AND allo_academicyear = '$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber = slallo.allo_applicantid
     LEFT JOIN (SELECT allo_applicantid, COALESCE(SUM(allo_daycount), 0) AS clad FROM leaveallocation WHERE allo_leavetype = 'Casual Leave' AND allo_academicyear = '$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber = clallo.allo_applicantid
     LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS sladd FROM leaveadjustment WHERE adj_leavetype = 'Sick Leave' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber = sladj.adj_applicantid
     LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS cladd FROM leaveadjustment WHERE adj_leavetype = 'Casual Leave' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber = cladj.adj_applicantid
-    LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS lwpadd FROM leaveadjustment WHERE adj_leavetype = 'Leave Without Pay' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber = lwpadj.adj_applicantid
+    LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS lwpadd FROM leaveadjustment WHERE (adj_leavetype = 'Leave Without Pay' OR adj_leavetype = 'Adjustment Leave') AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber = lwpadj.adj_applicantid
     LEFT JOIN (SELECT onboarding_associate_id, onboard_initiated_by, onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber = onboarding.onboarding_associate_id
     LEFT JOIN (SELECT exit_associate_id, exit_initiated_by, exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber = associate_exit.exit_associate_id
 ";
@@ -466,7 +466,7 @@ $resultArr = pg_fetch_all($result);
                                                     </td>
 
                                                     <td>
-                                                        <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?>
+                                                        <?php echo 'LWP/Adj&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?>
                                                     </td>
                                                     <td style="white-space: unset;">
 

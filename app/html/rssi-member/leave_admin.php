@@ -111,8 +111,8 @@ if ($id != null) {
     $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
     $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
 
-    $lwptaken = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid'AND typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved')");
-    $lwpadj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear'");
+    $lwptaken = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid'AND (typeofleave='Leave Without Pay' OR typeofleave='Adjustment Leave') AND lyear='$lyear' AND (status='Approved')");
+    $lwpadj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND (adj_leavetype='Leave Without Pay' OR adj_leavetype='Adjustment Leave') AND adj_academicyear='$lyear'");
 
 
     $resultArrsl = pg_fetch_result($totalsl, 0, 0); //sltaken        (resultArrrsl+resultArr_sladj)-$resultArrsl
@@ -266,6 +266,7 @@ if (!$result) {
                                                 <option value="Sick Leave">Sick Leave</option>
                                                 <option value="Casual Leave">Casual Leave</option>
                                                 <option value="Leave Without Pay">Leave Without Pay</option>
+                                                <option value="Adjustment Leave">Adjustment Leave</option>
                                             </select>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave</small>
                                         </span>
@@ -337,7 +338,7 @@ if (!$result) {
                                             ];
                                         } else if (x === "Casual Leave") {
                                             items = ["Late entry", "Timesheet leave", "Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"]
-                                        } else if (x === "Leave Without Pay") {
+                                        } else if (x === "Leave Without Pay" || x === "Adjustment Leave") {
                                             items = ["Late entry", "Timesheet leave", "Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"]
                                         } else {
                                             items = ["--Select--"]
@@ -439,7 +440,7 @@ if (!$result) {
 
                                                     Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
                                                     <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
-                                                    <br>Leave Without Pay - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj ?>)
+                                                    <br>Leave Without Pay/Adj - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj ?>)
                                                 <?php } ?>
                                             </td>
 
@@ -448,7 +449,7 @@ if (!$result) {
 
                                                     Sick Leave - <?php echo $resultArrsl ?>
                                                     <br>Casual Leave - <?php echo $resultArrcl ?>
-                                                    <br>Leave Without Pay - <?php echo $resultArr_lwptaken ?>
+                                                    <br>Leave Without Pay/Adj - <?php echo $resultArr_lwptaken ?>
                                                 <?php } ?>
                                             </td>
                                             <td>
