@@ -41,9 +41,20 @@ attendance_data AS (
         COALESCE(
             CASE
                 WHEN a.user_id IS NOT NULL THEN 'P'
-                WHEN a.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-                WHEN s.doa > d.attendance_date THEN NULL
-                ELSE 'A'
+                WHEN a.user_id IS NULL
+                     AND (
+                        SELECT COUNT(*) FROM attendance att WHERE att.date = d.attendance_date
+                     ) > 0
+                     AND (
+                        SELECT COUNT(*) FROM category_workdays cw
+                        WHERE cw.category = s.category
+                          AND cw.effective_from <= d.attendance_date
+                          AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+                          AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.workdays) > 0
+                     ) > 0
+                     AND s.doa <= d.attendance_date
+                     THEN 'A'
+                ELSE NULL
             END
         ) AS attendance_status
     FROM
@@ -55,14 +66,11 @@ attendance_data AS (
         ON s.student_id = a.user_id AND a.date = d.attendance_date
     WHERE
         (
-    s.effectivefrom IS NULL OR 
-    DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-)
-AND 
-DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
---AND 
---s.category != 'LG4'
-$idCondition
+            s.effectivefrom IS NULL OR 
+            DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        )
+        AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        $idCondition
 )
 SELECT
     student_id,
