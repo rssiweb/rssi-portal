@@ -38,9 +38,26 @@ if (!$startMonth || !$endMonth) {
     } else {
         // Quarter 3: December to March (spanning two years)
         $startMonth = $currentMonth >= 12 ? "$currentYear-12" : ($currentYear - 1) . "-12";
-        $endMonth = "$currentYear-" . str_pad($currentMonth, 2, '0', STR_PAD_LEFT);
+        $endMonth = "$currentYear-03";
     }
+
+    // Adjust endMonth if it's in the future
+    $endMonthTimestamp = strtotime($endMonth . '-01');
+    $currentMonthTimestamp = strtotime(date('Y-m-01'));
+    if ($endMonthTimestamp > $currentMonthTimestamp) {
+        $endMonth = date('Y-m');
+    }
+
+    // Set the start and end dates based on the adjusted months
+    $startDate = $startMonth . '-01';
+    $endDate = date('Y-m-t', strtotime($endMonth . '-01'));
+
+    // Also update the month variables to match the adjusted dates
+    $startMonth = date('Y-m', strtotime($startDate));
+    $endMonth = date('Y-m', strtotime($endDate));
 }
+
+//echo "Start Month: $startMonth, End Month: $endMonth<br>";
 
 // Extract year and month for SQL query
 list($startYear, $startMonthNum) = explode('-', $startMonth);
@@ -510,13 +527,13 @@ LEFT JOIN
 WHERE 
     mode = 'Offline'
     AND grade!='D'
-    AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', $1::date)
+    AND m.doj <= $1::DATE  -- Now using endDate
 GROUP BY 
     m.associatenumber, m.fullname, m.engagement, h.holiday_dates
 ORDER BY 
     m.associatenumber;
 ";
-$result = pg_query_params($con, $query, [$startDate]);
+$result = pg_query_params($con, $query, [$endDate]);
 
 if (!$result) {
     echo "Query failed: " . pg_last_error($con);

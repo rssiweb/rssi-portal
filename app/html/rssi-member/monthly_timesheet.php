@@ -833,7 +833,7 @@ pg_close($con);
                                             <?php foreach ($attendanceData as $row): ?>
                                                 <tr>
                                                     <td><?php echo $row['associatenumber'];
-                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) != $row['work_schedule']) { // Or any other status you want to check
+                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) < $row['work_schedule']) { // Or any other status you want to check
                                                             echo '&nbsp;<span class="status-indicator yellow"></span>';
                                                         }
                                                         ?>
