@@ -29,248 +29,264 @@ if (!$result) {
 ?>
 <?php
 if (@$_POST['form-type'] == "admission_admin") {
-
     // First, fetch the current student data including DOA
     $student_id = $_POST['student-id'];
-    $currentStudentQuery = "SELECT type_of_admission, doa, class FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    $currentStudentQuery = "SELECT * FROM rssimyprofile_student WHERE student_id = '$student_id'";
     $currentStudentResult = pg_query($con, $currentStudentQuery);
     $currentStudentData = pg_fetch_assoc($currentStudentResult);
 
-    $original_type_of_admission = $currentStudentData['type_of_admission'] ?? '';
-    $original_class = $currentStudentData['class'] ?? '';
-    $original_doa = $currentStudentData['doa'] ?? date('Y-m-d'); // Fallback to today if not set
-
-    // Get the form data
-    $type_of_admission = $_POST['type_of_admission'];
-    $class = $_POST['class'];
-    $effective_from_date = $_POST['effective_from_date'] ?? date('Y-m-d');
-
-    // Validate effective date
-    if (!empty($_POST['effective_from_date'])) {
-        $effective_from_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
-        // Ensure effective date isn't before DOA
-        if (strtotime($effective_from_date) < strtotime($original_doa)) {
-            $effective_from_date = $original_doa;
+    // Array to track changed fields
+    $changedFields = array();
+    
+    // Get the form data and compare with original values
+    $updates = array();
+    
+    // Helper function to compare and track changes
+    function checkAndAddUpdate(&$updates, &$changedFields, $fieldName, $newValue, $originalValue, $isFile = false) {
+        if ($isFile) {
+            // For files, we'll handle separately as they have different structure
+            return;
         }
-    } else {
-        $effective_from_date = date('Y-m-d');
+        
+        $newValue = trim($newValue);
+        $originalValue = trim($originalValue ?? '');
+        
+        if ($newValue != $originalValue) {
+            $updates[] = "$fieldName=" . ($newValue !== '' ? "'$newValue'" : "NULL");
+            $changedFields[] = $fieldName;
+        }
     }
-
-    // echo 'changedvalue'. $type_of_admission .', original value'. $original_type_of_admission;
-
-    // echo 'changedvalue'. $class .', original value'. $original_class;
-
-
-    // Check if type of admission has changed
-    $type_changed = ($type_of_admission != $original_type_of_admission);
-    $class_changed = ($class != $original_class);
-
-    $student_name = $_POST['student-name'];
-    $date_of_birth = $_POST['date-of-birth'];
-    $gender = $_POST['gender'];
-
-    $aadhar_available = $_POST['aadhar-card'];
-    $aadhar_card = $_POST['aadhar-number']; // This should be a string, not an array
-
-    $guardian_name = $_POST['guardian-name'];
-    $guardian_relation = $_POST['relation'];
-    $guardian_aadhar = $_POST['guardian-aadhar-number'];
-    $state_of_domicile = $_POST['state'];
-    $postal_address = htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8');
-    $permanent_address = htmlspecialchars($_POST['permanent-address'], ENT_QUOTES, 'UTF-8');
-    $telephone_number = $_POST['telephone'];
-    $email_address = $_POST['email'];
-    $preferred_branch = $_POST['branch'];
-    $school_admission_required = $_POST['school-required'];
-    $school_name = htmlspecialchars($_POST['school-name'], ENT_QUOTES, 'UTF-8');
-    $board_name = $_POST['board-name'];
-    $medium = $_POST['medium'];
-    $family_monthly_income = $_POST['income'];
-    $total_family_members = $_POST['family-members'];
-    // $payment_mode = $_POST['payment-mode'];
-    // $c_authentication_code = $_POST['c-authentication-code'];
-    // $transaction_id = $_POST['transaction-id'];
-    $subject_select = $_POST['subject-select'];
-    // $access_category = $_POST['access_category'];
-    $payment_type = $_POST['payment_type'];
-
-    $module = $_POST['module'];
-    $category = $_POST['category'];
-    $photo_url = $_POST['photo-url'];
-    // $id_card_issued = $_POST['id-card-issued'];
-    $status = $_POST['status'];
-    // $age = $_POST['age'];
-
+    
+    // Check each field for changes
+    checkAndAddUpdate($updates, $changedFields, 'type_of_admission', $_POST['type_of_admission'], $currentStudentData['type_of_admission']);
+    checkAndAddUpdate($updates, $changedFields, 'studentname', $_POST['student-name'], $currentStudentData['studentname']);
+    checkAndAddUpdate($updates, $changedFields, 'dateofbirth', $_POST['date-of-birth'], $currentStudentData['dateofbirth']);
+    checkAndAddUpdate($updates, $changedFields, 'gender', $_POST['gender'], $currentStudentData['gender']);
+    checkAndAddUpdate($updates, $changedFields, 'aadhar_available', $_POST['aadhar-card'], $currentStudentData['aadhar_available']);
+    checkAndAddUpdate($updates, $changedFields, 'studentaadhar', $_POST['aadhar-number'], $currentStudentData['studentaadhar']);
+    checkAndAddUpdate($updates, $changedFields, 'guardiansname', $_POST['guardian-name'], $currentStudentData['guardiansname']);
+    checkAndAddUpdate($updates, $changedFields, 'relationwithstudent', $_POST['relation'], $currentStudentData['relationwithstudent']);
+    checkAndAddUpdate($updates, $changedFields, 'guardianaadhar', $_POST['guardian-aadhar-number'], $currentStudentData['guardianaadhar']);
+    checkAndAddUpdate($updates, $changedFields, 'stateofdomicile', $_POST['state'], $currentStudentData['stateofdomicile']);
+    checkAndAddUpdate($updates, $changedFields, 'postaladdress', htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8'), $currentStudentData['postaladdress']);
+    checkAndAddUpdate($updates, $changedFields, 'permanentaddress', htmlspecialchars($_POST['permanent-address'], ENT_QUOTES, 'UTF-8'), $currentStudentData['permanentaddress']);
+    checkAndAddUpdate($updates, $changedFields, 'contact', $_POST['telephone'], $currentStudentData['contact']);
+    checkAndAddUpdate($updates, $changedFields, 'emailaddress', $_POST['email'], $currentStudentData['emailaddress']);
+    checkAndAddUpdate($updates, $changedFields, 'preferredbranch', $_POST['branch'], $currentStudentData['preferredbranch']);
+    checkAndAddUpdate($updates, $changedFields, 'class', $_POST['class'], $currentStudentData['class']);
+    checkAndAddUpdate($updates, $changedFields, 'schooladmissionrequired', $_POST['school-required'], $currentStudentData['schooladmissionrequired']);
+    checkAndAddUpdate($updates, $changedFields, 'nameoftheschool', htmlspecialchars($_POST['school-name'], ENT_QUOTES, 'UTF-8'), $currentStudentData['nameoftheschool']);
+    checkAndAddUpdate($updates, $changedFields, 'nameoftheboard', $_POST['board-name'], $currentStudentData['nameoftheboard']);
+    checkAndAddUpdate($updates, $changedFields, 'medium', $_POST['medium'], $currentStudentData['medium']);
+    checkAndAddUpdate($updates, $changedFields, 'familymonthlyincome', $_POST['income'], $currentStudentData['familymonthlyincome']);
+    checkAndAddUpdate($updates, $changedFields, 'totalnumberoffamilymembers', $_POST['family-members'], $currentStudentData['totalnumberoffamilymembers']);
+    checkAndAddUpdate($updates, $changedFields, 'nameofthesubjects', $_POST['subject-select'], $currentStudentData['nameofthesubjects']);
+    checkAndAddUpdate($updates, $changedFields, 'module', $_POST['module'], $currentStudentData['module']);
+    checkAndAddUpdate($updates, $changedFields, 'category', $_POST['category'], $currentStudentData['category']);
+    checkAndAddUpdate($updates, $changedFields, 'photourl', $_POST['photo-url'], $currentStudentData['photourl']);
+    checkAndAddUpdate($updates, $changedFields, 'filterstatus', $_POST['status'], $currentStudentData['filterstatus']);
+    checkAndAddUpdate($updates, $changedFields, 'remarks', htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8'), $currentStudentData['remarks']);
+    checkAndAddUpdate($updates, $changedFields, 'scode', $_POST['scode'], $currentStudentData['scode']);
+    checkAndAddUpdate($updates, $changedFields, 'payment_type', $_POST['payment_type'], $currentStudentData['payment_type']);
+    checkAndAddUpdate($updates, $changedFields, 'caste', $_POST['caste'], $currentStudentData['caste']);
+    
+    // Handle effective_from_date separately
+    $original_doa = $currentStudentData['doa'] ?? date('Y-m-d');
+    $effective_from_date = !empty($_POST['effective_from_date']) ? date('Y-m-d', strtotime($_POST['effective_from_date'])) : date('Y-m-d');
+    
+    if (strtotime($effective_from_date) < strtotime($original_doa)) {
+        $effective_from_date = $original_doa;
+    }
+    
     if (!empty($_POST['effectivefrom'])) {
         $effective_from = $_POST['effectivefrom'];
-        $effective_from_str = "effectivefrom='$effective_from'";
+        if ($effective_from != $currentStudentData['effectivefrom']) {
+            $updates[] = "effectivefrom='$effective_from'";
+            $changedFields[] = 'effectivefrom';
+        }
     } else {
-        $effective_from_str = "effectivefrom=NULL";
+        if ($currentStudentData['effectivefrom'] !== null) {
+            $updates[] = "effectivefrom=NULL";
+            $changedFields[] = 'effectivefrom';
+        }
     }
-
-    $remarks = htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8');
-    $scode = $_POST['scode'];
-    $updated_by = $_POST['updatedby'];
-    $student_id = $_POST['student-id'];
-    @$timestamp = date('Y-m-d H:i:s');
+    
+    // Handle file uploads
+    $timestamp = date('Y-m-d H:i:s');
     $student_photo = $_FILES['student-photo'] ?? null;
     $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
     $caste_document = $_FILES['caste-document'] ?? null;
-    $caste = $_POST['caste'];
-
-    $doclink_student_photo = null;
+    
+    // Check if new files were uploaded
     if (!empty($student_photo['name'])) {
         $filename = "photo_" . $student_id . "_" . $timestamp;
         $parent = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
         $doclink_student_photo = uploadeToDrive($student_photo, $parent, $filename);
+        $updates[] = "student_photo_raw='$doclink_student_photo'";
+        $changedFields[] = 'student_photo';
     }
-
-    $doclink_aadhar_card = null;
+    
     if (!empty($aadhar_card_upload['name'])) {
         $filename = "aadhar_" . $student_id . "_" . $timestamp;
         $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
         $doclink_aadhar_card = uploadeToDrive($aadhar_card_upload, $parent, $filename);
+        $updates[] = "upload_aadhar_card='$doclink_aadhar_card'";
+        $changedFields[] = 'aadhar_card_upload';
     }
-
-    $doclink_caste_document = null;
+    
     if (!empty($caste_document['name'])) {
         $filename = "caste_" . $student_id . "_" . $timestamp;
         $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
         $doclink_caste_document = uploadeToDrive($caste_document, $parent, $filename);
+        $updates[] = "caste_document='$doclink_caste_document'";
+        $changedFields[] = 'caste_document';
     }
-
-    // Build the SQL query conditionally
-    $fields = [
-        "type_of_admission='$type_of_admission'",
-        "studentname='$student_name'",
-        "dateofbirth='$date_of_birth'",
-        "gender='$gender'",
-        "aadhar_available='$aadhar_available'",
-        "studentaadhar=" . ($aadhar_card ? "'$aadhar_card'" : "NULL"), // Handle aadhar card
-        "guardiansname='$guardian_name'",
-        "relationwithstudent='$guardian_relation'",
-        "guardianaadhar='$guardian_aadhar'",
-        "stateofdomicile='$state_of_domicile'",
-        "postaladdress='$postal_address'",
-        "permanentaddress='$permanent_address'",
-        "contact='$telephone_number'",
-        "emailaddress='$email_address'",
-        "preferredbranch='$preferred_branch'",
-        "class='$class'",
-        "schooladmissionrequired='$school_admission_required'",
-        "nameoftheschool='$school_name'",
-        "nameoftheboard='$board_name'",
-        "medium='$medium'",
-        "familymonthlyincome='$family_monthly_income'",
-        "totalnumberoffamilymembers='$total_family_members'",
-        // "payment_mode='$payment_mode'",
-        // "c_authentication_code='$c_authentication_code'",
-        // "transaction_id='$transaction_id'",
-        "student_id='$student_id'",
-        "nameofthesubjects='$subject_select'",
-        "module='$module'",
-        "category='$category'",
-        "photourl='$photo_url'",
-        // "id_card_issued='$id_card_issued'",
-        "filterstatus='$status'",
-        "remarks='$remarks'",
-        $effective_from_str,
-        "scode='$scode'",
-        "updated_by='$updated_by'",
-        // "age='$age'",
-        "updated_on='$timestamp'",
-        "payment_type='$payment_type'",
-        "caste='$caste'"
-        // "access_category='$access_category'"
-    ];
-
-    // Include file links only if they are set
-    if ($doclink_student_photo) {
-        $fields[] = "student_photo_raw='$doclink_student_photo'";
-    }
-
-    if ($doclink_aadhar_card) {
-        $fields[] = "upload_aadhar_card='$doclink_aadhar_card'";
-    }
-
-    if ($doclink_caste_document) {
-        $fields[] = "caste_document='$doclink_caste_document'";
-    }
-
-    // Ensure fields are strings and concatenate them
-    $field_string = implode(", ", $fields);
-
-    @$student_update = "UPDATE rssimyprofile_student SET $field_string WHERE student_id = '$student_id'";
-    $resultt = pg_query($con, $student_update);
-    $cmdtuples = pg_affected_rows($resultt);
-
-    // If type of admission changed, update the history table
-    if (($type_changed || $class_changed) && $cmdtuples > 0) {
-        $category_type = $type_of_admission;
-
-        // 4. For new admissions, ensure complete history from admission date
-        $checkInitialRecord = "SELECT 1 FROM student_category_history 
-            WHERE student_id = '$student_id' 
-            AND effective_from = DATE '$original_doa'";
-        $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
-
-        if (!$initialRecordExists) {
-            $insertInitialHistory = "INSERT INTO student_category_history (
-                  student_id, 
-                  category_type, 
-                  effective_from, 
-                  effective_until,
-                  created_by,
-                  class
-                ) VALUES (
-                  '$student_id', 
-                  '$original_type_of_admission', 
-                  DATE '$original_doa', 
-                  DATE '$effective_from_date' - INTERVAL '1 day',
-                  '$updated_by',
-                  '$original_class'
-                )";
-            pg_query($con, $insertInitialHistory);
-        }
-
-        // 0. First close ALL existing active records (where effective_until is NULL)
-        $closeAllActiveRecords = "UPDATE student_category_history 
+    
+    // Always update these fields
+    $updates[] = "updated_by='".$_POST['updatedby']."'";
+    $updates[] = "updated_on='$timestamp'";
+    
+    // Only proceed with update if there are changes
+    if (!empty($updates)) {
+        $field_string = implode(", ", $updates);
+        $student_update = "UPDATE rssimyprofile_student SET $field_string WHERE student_id = '$student_id'";
+        $resultt = pg_query($con, $student_update);
+        $cmdtuples = pg_affected_rows($resultt);
+        
+        // Check if type of admission or class changed
+        $type_changed = in_array('type_of_admission', $changedFields);
+        $class_changed = in_array('class', $changedFields);
+        
+        // If type of admission or class changed, update the history table
+        if (($type_changed || $class_changed) && $cmdtuples > 0) {
+            $type_of_admission = $_POST['type_of_admission'];
+            $class = $_POST['class'];
+            $updated_by = $_POST['updatedby'];
+            
+            // 4. For new admissions, ensure complete history from admission date
+            $checkInitialRecord = "SELECT 1 FROM student_category_history 
+                WHERE student_id = '$student_id' 
+                AND effective_from = DATE '$original_doa'";
+            $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
+            
+            if (!$initialRecordExists) {
+                $insertInitialHistory = "INSERT INTO student_category_history (
+                      student_id, 
+                      category_type, 
+                      effective_from, 
+                      effective_until,
+                      created_by,
+                      class
+                    ) VALUES (
+                      '$student_id', 
+                      '".$currentStudentData['type_of_admission']."', 
+                      DATE '$original_doa', 
+                      DATE '$effective_from_date' - INTERVAL '1 day',
+                      '$updated_by',
+                      '".$currentStudentData['class']."'
+                    )";
+                pg_query($con, $insertInitialHistory);
+            }
+            
+            // 0. First close ALL existing active records (where effective_until is NULL)
+            $closeAllActiveRecords = "UPDATE student_category_history 
+                                SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
+                                WHERE student_id = '$student_id'
+                                AND effective_until IS NULL";
+            pg_query($con, $closeAllActiveRecords);
+            
+            // 1. Close any records that overlap with the new effective date
+            $closeHistoryQuery = "UPDATE student_category_history 
                             SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
-                            WHERE student_id = '$student_id'
-                            AND effective_until IS NULL";
-        pg_query($con, $closeAllActiveRecords);
-
-        // 1. Close any records that overlap with the new effective date
-        // (This handles cases where records might have explicit effective_until dates)
-        $closeHistoryQuery = "UPDATE student_category_history 
-                        SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
-                        WHERE student_id = '$student_id' 
-                        AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
-                        AND effective_from < DATE '$effective_from_date'";
-        pg_query($con, $closeHistoryQuery);
-
-        // 2. Adjust any future-dated records
-        $adjustFutureRecords = "UPDATE student_category_history 
-                          SET effective_from = DATE '$effective_from_date'
-                          WHERE student_id = '$student_id' 
-                          AND effective_from >= DATE '$effective_from_date'";
-        pg_query($con, $adjustFutureRecords);
-
-        // 3. Insert the new record
-        $insertHistoryQuery = "INSERT INTO student_category_history (
-                            student_id, 
-                            category_type, 
-                            effective_from, 
-                            created_by,
-                            class
-                          ) VALUES (
-                            '$student_id', 
-                            '$category_type', 
-                            DATE '$effective_from_date', 
-                            '$updated_by',
-                            '$class'
-                          )";
-        pg_query($con, $insertHistoryQuery);
+                            WHERE student_id = '$student_id' 
+                            AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
+                            AND effective_from < DATE '$effective_from_date'";
+            pg_query($con, $closeHistoryQuery);
+            
+            // 2. Adjust any future-dated records
+            $adjustFutureRecords = "UPDATE student_category_history 
+                              SET effective_from = DATE '$effective_from_date'
+                              WHERE student_id = '$student_id' 
+                              AND effective_from >= DATE '$effective_from_date'";
+            pg_query($con, $adjustFutureRecords);
+            
+            // 3. Insert the new record
+            $insertHistoryQuery = "INSERT INTO student_category_history (
+                                student_id, 
+                                category_type, 
+                                effective_from, 
+                                created_by,
+                                class
+                              ) VALUES (
+                                '$student_id', 
+                                '$type_of_admission', 
+                                DATE '$effective_from_date', 
+                                '$updated_by',
+                                '$class'
+                              )";
+            pg_query($con, $insertHistoryQuery);
+        }
+        
+        // Prepare JavaScript to show changed fields
+        if (!empty($changedFields)) {
+            $changedFieldsList = implode(", ", array_map(function($field) {
+                // Map database field names to more user-friendly names
+                $fieldNames = [
+                    'type_of_admission' => 'Type of Admission',
+                    'studentname' => 'Student Name',
+                    'dateofbirth' => 'Date of Birth',
+                    'gender' => 'Gender',
+                    'aadhar_available' => 'Aadhar Available',
+                    'studentaadhar' => 'Aadhar Number',
+                    'guardiansname' => 'Guardian Name',
+                    'relationwithstudent' => 'Relation with Student',
+                    'guardianaadhar' => 'Guardian Aadhar',
+                    'stateofdomicile' => 'State of Domicile',
+                    'postaladdress' => 'Postal Address',
+                    'permanentaddress' => 'Permanent Address',
+                    'contact' => 'Telephone Number',
+                    'emailaddress' => 'Email Address',
+                    'preferredbranch' => 'Preferred Branch',
+                    'class' => 'Class',
+                    'schooladmissionrequired' => 'School Admission Required',
+                    'nameoftheschool' => 'School Name',
+                    'nameoftheboard' => 'Board Name',
+                    'medium' => 'Medium',
+                    'familymonthlyincome' => 'Family Monthly Income',
+                    'totalnumberoffamilymembers' => 'Total Family Members',
+                    'nameofthesubjects' => 'Subjects',
+                    'module' => 'Module',
+                    'category' => 'Category',
+                    'photourl' => 'Photo URL',
+                    'filterstatus' => 'Status',
+                    'remarks' => 'Remarks',
+                    'effectivefrom' => 'Effective From',
+                    'scode' => 'Scode',
+                    'payment_type' => 'Payment Type',
+                    'caste' => 'Caste',
+                    'student_photo' => 'Student Photo',
+                    'aadhar_card_upload' => 'Aadhar Card Upload',
+                    'caste_document' => 'Caste Document'
+                ];
+                
+                return $fieldNames[$field] ?? $field;
+            }, $changedFields));
+            
+            echo "<script>
+                alert('Student record updated successfully. Changed fields: $changedFieldsList');
+                window.location.href = 'admission_admin.php?student_id=$student_id';
+            </script>";
+        } else {
+            echo "<script>
+                alert('No changes detected in the student record.');
+                window.location.href = 'admission_admin.php?student_id=$student_id';
+            </script>";
+        }
+    } else {
+        echo "<script>
+            alert('No changes detected in the student record.');
+            window.location.href = 'admission_admin.php?student_id=$student_id';
+        </script>";
     }
 }
 ?>
@@ -1220,7 +1236,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                         <option value="LG2-B">LG2-B</option>
                                                                         <option value="LG2-C">LG2-C</option>
                                                                         <option value="LG3">LG3</option>
-                                                                        <option value="LG3">LG4</option>
+                                                                        <option value="LG4">LG4</option>
                                                                     </select>
                                                                 </td>
                                                             </tr>
