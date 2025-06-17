@@ -16,6 +16,7 @@ $query = "
     SELECT
     i.item_id,
     i.item_name,
+    i.category,
     u.unit_id,
     u.unit_name,
     COALESCE((SELECT SUM(quantity_received) 
@@ -110,6 +111,7 @@ while ($row = pg_fetch_assoc($result)) {
                                                     <tr>
                                                         <th>Item ID</th>
                                                         <th>Item Name</th>
+                                                        <th>Category</th>
                                                         <th>Unit</th>
                                                         <th>Total Added Count</th>
                                                         <th>Total Distributed Count</th>
@@ -121,6 +123,7 @@ while ($row = pg_fetch_assoc($result)) {
                                                         <tr>
                                                             <td><?php echo htmlspecialchars($stock['item_id']); ?></td>
                                                             <td><?php echo htmlspecialchars($stock['item_name']); ?></td>
+                                                            <td><?php echo isset($stock['category']) && $stock['category'] !== '' ? htmlspecialchars($stock['category']) : null; ?></td>
                                                             <td><?php echo htmlspecialchars($stock['unit_name']); ?></td>
                                                             <td><?php echo htmlspecialchars($stock['total_added_count']); ?></td>
                                                             <td><?php echo htmlspecialchars($stock['total_distributed_count']); ?></td>

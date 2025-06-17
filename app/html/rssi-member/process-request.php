@@ -35,13 +35,14 @@ if (isset($_POST["typeofleave"])) {
             "Varicose veins of other sites",
         ),
         "Casual Leave" => array("Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"),
-        "Leave Without Pay" => array("")
+        "Leave Without Pay" => array(""),
+        "Adjustment Leave" => array("")
     );
 
     if ($typeofleave !== 'Select') {
         echo "<div class='form-group mb-2'>";
         echo "<label for='creason' class='form-label'>Leave Category</label>";
-        if ($typeofleave !== 'Leave Without Pay') {
+        if ($typeofleave !== 'Leave Without Pay' && $typeofleave !== 'Adjustment Leave') {
             echo "<select name='creason' id='creason' class='form-select' required>";
         } else {
             echo "<select name='creason' id='creason' class='form-select'>";

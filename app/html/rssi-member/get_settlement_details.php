@@ -28,16 +28,18 @@ if (!$settlement) {
 }
 
 // Get payment details
-$paymentsQuery = "SELECT p.*, s.studentname, s.class, m.fullname as collector_name, eo.order_number,
+$paymentsQuery = "SELECT p.*, COALESCE(s.studentname, m.fullname, h.name) AS studentname, s.class, c.fullname as collector_name, eo.order_number,
        eo.order_id, fc.category_name AS source
                   FROM fee_payments p
-                  JOIN rssimyprofile_student s ON p.student_id = s.student_id
-                  JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
+                  LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+                  LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
+                  LEFT JOIN public_health_records h ON p.student_id = h.id::text
+                  JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
                   LEFT JOIN emart_orders eo ON p.id = eo.payment_id
                   LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
                   LEFT JOIN fee_categories fc ON fp.category_id=fc.id
                   WHERE p.settlement_id = $settlementId
-                  ORDER BY p.collection_date";
+                  ORDER BY p.id DESC";
 $paymentsResult = pg_query($con, $paymentsQuery);
 $payments = pg_fetch_all($paymentsResult) ?? [];
 ?>
@@ -130,7 +132,6 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                                 <th>Student</th>
                                 <th>Class</th>
                                 <th>Month</th>
-                                <!-- <th>Year</th> -->
                                 <th>Amount</th>
                                 <th>Type</th>
                                 <th>Transaction ID</th>
@@ -142,24 +143,15 @@ $payments = pg_fetch_all($paymentsResult) ?? [];
                             <?php foreach ($payments as $payment): ?>
                                 <tr>
                                     <td><?= $payment['id'] ?></td>
-                                    <td><?= date('d-M-Y H:i', strtotime($payment['collection_date'])) ?></td>
+                                    <td><?= date('d-M-Y', strtotime($payment['collection_date'])) ?></td>
                                     <td><?= htmlspecialchars($payment['studentname']) ?></td>
-                                    <td><?= htmlspecialchars($payment['class']) ?></td>
+                                    <td><?= isset($payment['class']) ? htmlspecialchars($payment['class']) : 'N/A' ?></td>
                                     <td><?= $payment['month'] ?>-<?= $payment['academic_year'] ?></td>
-                                    <!-- <td><?= $payment['academic_year'] ?></td> -->
                                     <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                     <td><?= ucfirst($payment['payment_type']) ?></td>
                                     <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
                                     <td>
                                         <?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?>
-                                        &nbsp;
-                                        <?php if (!empty($payment['order_number']) && isset($payment['order_id'])): ?>
-                                            <a href="order_confirmation.php?id=<?= urlencode($payment['order_id']) ?>" target="_blank">
-                                                #<?= htmlspecialchars($payment['order_number']) ?>
-                                            </a>
-                                        <?php elseif (!empty($payment['order_number'])): ?>
-                                            #<?= htmlspecialchars($payment['order_number']) ?>
-                                        <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars($payment['collector_name']) ?></td>
                                 </tr>

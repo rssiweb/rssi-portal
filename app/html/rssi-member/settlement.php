@@ -39,7 +39,7 @@ LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
 LEFT JOIN fee_categories fc ON fp.category_id=fc.id
 JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
 WHERE p.is_settled = FALSE
-ORDER BY p.created_at DESC";
+ORDER BY p.id DESC";
 
     $paymentsResult = pg_query($con, $paymentsQuery);
     $payments = pg_fetch_all($paymentsResult) ?? [];
@@ -230,7 +230,6 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                             <th>Payer</th>
                                                             <th>Class</th>
                                                             <th>Month</th>
-                                                            <!-- <th>Year</th> -->
                                                             <th>Amount</th>
                                                             <th>Type</th>
                                                             <th>Transaction ID</th>
@@ -248,20 +247,11 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                                 <td><?= htmlspecialchars($payment['student_name']) ?></td>
                                                                 <td><?= htmlspecialchars($payment['class'] ?? 'N/A') ?: 'N/A' ?></td>
                                                                 <td><?= $payment['month'] ?>-<?= $payment['academic_year'] ?></td>
-                                                                <!-- <td><?= $payment['academic_year'] ?></td> -->
                                                                 <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                                                 <td><?= ucfirst($payment['payment_type']) ?></td>
                                                                 <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
                                                                 <td>
                                                                     <?= isset($payment['source']) ? htmlspecialchars($payment['source']) : '' ?>
-                                                                    <!-- &nbsp;
-                                                                    <?php if (!empty($payment['order_number']) && isset($payment['order_id'])): ?>
-                                                                        <a href="order_confirmation.php?id=<?= urlencode($payment['order_id']) ?>" target="_blank">
-                                                                            #<?= htmlspecialchars($payment['order_number']) ?>
-                                                                        </a>
-                                                                    <?php elseif (!empty($payment['order_number'])): ?>
-                                                                        #<?= htmlspecialchars($payment['order_number']) ?>
-                                                                    <?php endif; ?> -->
                                                                 </td>
 
                                                                 <td><?= htmlspecialchars($payment['collector_name']) ?></td>
@@ -441,8 +431,8 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         online = 0;
                     checkedPayments.each(function() {
                         const row = $(this).closest("tr");
-                        const amount = parseFloat(row.find("td:eq(7)").text().replace(/[^0-9.]/g, ''));
-                        const type = row.find("td:eq(8)").text().toLowerCase();
+                        const amount = parseFloat(row.find("td:eq(6)").text().replace(/[^0-9.]/g, ''));
+                        const type = row.find("td:eq(7)").text().toLowerCase();
 
                         total += amount;
                         if (type === 'cash') {

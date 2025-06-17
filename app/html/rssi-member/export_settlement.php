@@ -12,19 +12,30 @@ $output = fopen('php://output', 'w');
 if ($status === 'unsettled') {
     // Export unsettled payments
     fputcsv($output, [
-        'Payment ID', 'Date', 'Student ID', 'Student Name', 'Class', 
-        'Month', 'Year', 'Amount', 'Type', 'Transaction ID', 'Collector'
+        'Payment ID',
+        'Date',
+        'Student ID',
+        'Student Name',
+        'Class',
+        'Month',
+        'Year',
+        'Amount',
+        'Type',
+        'Transaction ID',
+        'Collector'
     ]);
-    
-    $query = "SELECT p.id, p.collection_date, p.student_id, s.studentname, s.class, 
+
+    $query = "SELECT p.id, p.collection_date, p.student_id, COALESCE(s.studentname, m.fullname, h.name) AS studentname, s.class, 
                      p.month, p.academic_year, p.amount, p.payment_type, 
-                     p.transaction_id, m.fullname as collector_name
+                     p.transaction_id, c.fullname as collector_name
               FROM fee_payments p
-              JOIN rssimyprofile_student s ON p.student_id = s.student_id
-              JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
+              LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+              LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
+              LEFT JOIN public_health_records h ON p.student_id = h.id::text
+              JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
               WHERE p.is_settled = FALSE
-              ORDER BY p.collection_date";
-    
+              ORDER BY p.id DESC";
+
     $result = pg_query($con, $query);
     while ($row = pg_fetch_assoc($result)) {
         fputcsv($output, [
@@ -44,16 +55,21 @@ if ($status === 'unsettled') {
 } else {
     // Export settled payments
     fputcsv($output, [
-        'Settlement ID', 'Date', 'Total Amount', 'Cash Amount', 
-        'Online Amount', 'Settled By', 'Notes'
+        'Settlement ID',
+        'Date',
+        'Total Amount',
+        'Cash Amount',
+        'Online Amount',
+        'Settled By',
+        'Notes'
     ]);
-    
+
     $query = "SELECT s.id, s.settlement_date, s.total_amount, s.cash_amount, 
                      s.online_amount, m.fullname as settled_by_name, s.notes
               FROM settlements s
               JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
               ORDER BY s.settlement_date DESC";
-    
+
     $result = pg_query($con, $query);
     while ($row = pg_fetch_assoc($result)) {
         fputcsv($output, [

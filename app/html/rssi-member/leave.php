@@ -117,7 +117,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     // Validate leave balance and process application
     if (($slbalance >= $day && $typeofleave === "Sick Leave") ||
         ($clbalance >= $day && $typeofleave === "Casual Leave") ||
-        $typeofleave === "Leave Without Pay"
+        $typeofleave === "Leave Without Pay" || "Adjustment Leave"
     ) {
 
         $doclink = !empty($uploadedFile['name'])
@@ -398,8 +398,14 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                             <option disabled selected hidden value="">Select</option>
                                                             <option value="Sick Leave">Sick Leave</option>
                                                             <option value="Casual Leave">Casual Leave</option>
-                                                            <option value="Leave Without Pay">Leave Without Pay</option>
-                                                            <!-- <option value="uk">United Kingdom</option> -->
+
+                                                            <?php if ($position !== 'Intern'): ?>
+                                                                <option value="Leave Without Pay">Leave Without Pay</option>
+                                                            <?php endif; ?>
+
+                                                            <?php if ($position === 'Intern'): ?>
+                                                                <option value="Adjustment Leave">Adjustment Leave</option>
+                                                            <?php endif; ?>
                                                         </select>
                                                     </div>
                                                     <span name="hidden-panel_creason" id="hidden-panel_creason">
@@ -605,7 +611,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     </script>
     <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
     <script>
-        if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Casual Leave") {
+        if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Adjustment Leave" && document.getElementById('typeofleave').value == "Casual Leave") {
 
             document.getElementById("ack").required = false;
         } else {
@@ -683,7 +689,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                     $("#hidden-panel").hide();
                     $("#hidden-panel_ack").hide();
                     $("#hidden-panel_creason").show();
-                } else if (leaveType == "Leave Without Pay") {
+                } else if (leaveType == "Leave Without Pay" || leaveType == "Adjustment Leave") {
                     $("#hidden-panel").hide();
                     $("#hidden-panel_ack").hide();
                     $("#hidden-panel_creason").hide();
