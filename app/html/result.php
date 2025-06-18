@@ -274,7 +274,6 @@ $class_category_data = pg_fetch_assoc($class_category_result);
 ?>
 <?php
 if ($class_category_data) {
-
     // Step 1: Find grouped exam IDs for the exam type and academic year
     $class_group_query = "
     SELECT DISTINCT emd.exam_id
@@ -284,76 +283,65 @@ if ($class_category_data) {
       AND e.academic_year = $2
     GROUP BY emd.exam_id
     HAVING COUNT(DISTINCT emd.class) > 1;
-";
+    ";
 
     $class_group_result = pg_query_params($con, $class_group_query, [$exam_type, $academic_year]);
-    if (!$class_group_result) {
-        die('Query failed: ' . pg_last_error($con));
-    }
 
     $grouped_exam_ids = [];
-    while ($row = pg_fetch_assoc($class_group_result)) {
-        $grouped_exam_ids[] = $row['exam_id'];
-    }
-
-    // Debugging grouped exam IDs
-    // var_dump($grouped_exam_ids);
-    // exit;
-
-    // Step 2: Build dynamic placeholders for IN clause
-    if (empty($grouped_exam_ids)) {
-        die('No grouped exam IDs found.');
-    }
-
-    $placeholders = [];
-    foreach ($grouped_exam_ids as $index => $id) {
-        $placeholders[] = '$' . ($index + 3); // +3 because $1 and $2 are already used
-    }
-    $placeholders_str = implode(',', $placeholders);
-
-    // Step 3: Create the query to fetch student ranks across grouped classes
-    $class_group_query = "
-    SELECT emd.student_id, 
-           ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
-    FROM exam_marks_data emd
-    JOIN exams e ON emd.exam_id = e.exam_id
-    WHERE e.exam_type = $1
-      AND e.academic_year = $2
-      AND emd.exam_id IN ($placeholders_str)
-    GROUP BY emd.student_id
-    ORDER BY total_marks DESC;
-";
-
-    // Merge parameters for pg_query_params
-    $params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
-
-    // Step 4: Execute the query
-    $class_group_result = pg_query_params($con, $class_group_query, $params);
-    if (!$class_group_result) {
-        die('Query failed: ' . pg_last_error($con));
-    }
-
-    // Step 5: Process results and find student rank
-    $class_marks = [];
-    while ($row = pg_fetch_assoc($class_group_result)) {
-        $class_marks[] = $row;
-    }
-
-    // Debugging: Print class marks array
-    // echo "<pre>";
-    // print_r($class_marks);
-    // echo "</pre>";
-
-    // Find the rank of the specific student
-    $rank = 'N/A';
-    foreach ($class_marks as $index => $student) {
-        if ($student['student_id'] == $student_id) {
-            $rank = $index + 1; // Adjusted to give correct 1-based rank
-            break;
+    if ($class_group_result) {
+        while ($row = pg_fetch_assoc($class_group_result)) {
+            $grouped_exam_ids[] = $row['exam_id'];
         }
     }
 
-    // If the student is not in a grouped class, calculate rank within their own class
+    $rank = 'N/A';
+
+    // Only proceed with grouped ranking if we found grouped exams
+    if (!empty($grouped_exam_ids)) {
+        // Step 2: Build dynamic placeholders for IN clause
+        $placeholders = [];
+        foreach ($grouped_exam_ids as $index => $id) {
+            $placeholders[] = '$' . ($index + 3);
+        }
+        $placeholders_str = implode(',', $placeholders);
+
+        // Step 3: Create the query to fetch student ranks across grouped classes
+        $class_group_query = "
+        SELECT emd.student_id, 
+               ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
+        FROM exam_marks_data emd
+        JOIN exams e ON emd.exam_id = e.exam_id
+        WHERE e.exam_type = $1
+          AND e.academic_year = $2
+          AND emd.exam_id IN ($placeholders_str)
+        GROUP BY emd.student_id
+        ORDER BY total_marks DESC;
+        ";
+
+        // Merge parameters for pg_query_params
+        $params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
+
+        // Step 4: Execute the query
+        $class_group_result = pg_query_params($con, $class_group_query, $params);
+
+        if ($class_group_result) {
+            $class_marks = [];
+            while ($row = pg_fetch_assoc($class_group_result)) {
+                $class_marks[] = $row;
+            }
+
+            // Find the rank of the specific student
+            foreach ($class_marks as $index => $student) {
+                if ($student['student_id'] == $student_id) {
+                    $rank = $index + 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    // If we didn't find the student in grouped classes or there were no grouped classes,
+    // calculate rank within their own class
     if ($rank === 'N/A') {
         $individual_class_query = "
         SELECT emd.student_id, 
@@ -365,9 +353,14 @@ if ($class_category_data) {
           AND emd.class = (SELECT emd.class FROM exam_marks_data emd WHERE emd.student_id = $3 LIMIT 1)
         GROUP BY emd.student_id
         ORDER BY total_marks DESC;
-    ";
+        ";
 
-        $individual_class_result = pg_query_params($con, $individual_class_query, [$exam_type, $academic_year, $student_id]);
+        $individual_class_result = pg_query_params(
+            $con,
+            $individual_class_query,
+            [$exam_type, $academic_year, $student_id]
+        );
+
         if ($individual_class_result) {
             $class_marks = [];
             while ($row = pg_fetch_assoc($individual_class_result)) {
