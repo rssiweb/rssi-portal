@@ -181,20 +181,6 @@ if (@$_POST['form-type'] == "exam") {
             }
           </script>";
 }
-
-$query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
-$result = pg_query($con, $query);
-
-if (!$result) {
-    die("Error in SQL query: " . pg_last_error());
-}
-
-$teachers = array();
-while ($row = pg_fetch_assoc($result)) {
-    $teachers[] = $row;
-}
-
-pg_free_result($result);
 ?>
 <!doctype html>
 <html lang="en">
@@ -423,10 +409,9 @@ pg_free_result($result);
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
     <script>
         $(document).ready(function() {
-            // Initialize Select2
+            // Initialize Select2 for multiple selects
             $('select[multiple]').select2();
             $('select:not([multiple])').select2({
                 minimumResultsForSearch: Infinity
@@ -448,72 +433,221 @@ pg_free_result($result);
                 currentYear--;
             }
 
-            // Handle subject selection
-            $('#subject_select').on('change', function() {
-                var selectedSubjects = $(this).val() || [];
+            // Store all subject data
+            var subjectData = {};
+
+            // Main function to rebuild the table
+            // Replace the rebuildExamTable() function with this version:
+
+            function rebuildExamTable() {
+                var selectedSubjects = $('#subject_select').val() || [];
                 var examModes = $('#exam_mode').val() || [];
                 var container = $('#subject_details_container');
-                container.empty();
 
-                // Create a table for subject details
-                var table = $('<table class="table table-bordered subject-table">');
-                var thead = $('<thead><tr>' +
-                    '<th>Subject</th>' +
-                    (examModes.includes('Written') ?
-                        '<th>Full Marks Written</th>' +
+                // Create table structure if it doesn't exist
+                var table = container.find('table.subject-table');
+                if (table.length === 0) {
+                    table = $('<table class="table table-bordered subject-table">');
+                    container.append(table);
+                }
+
+                // Build table header
+                var thead = $('<thead><tr>');
+                thead.append('<th>Subject</th>');
+
+                if (examModes.includes('Written')) {
+                    thead.append(
+                        '<th style="width: 10%">Full Marks Written</th>' +
                         '<th>Written Exam Date</th>' +
-                        '<th>Written Teacher</th>' : '') +
-                    (examModes.includes('Viva') ?
-                        '<th>Full Marks Viva</th>' +
-                        '<th>Viva Exam Date</th>' +
-                        '<th>Viva Teacher</th>' : '') +
-                    '</tr></thead>');
+                        '<th>Written Teacher</th>'
+                    );
+                }
 
+                if (examModes.includes('Viva')) {
+                    thead.append(
+                        '<th style="width: 10%">Full Marks Viva</th>' +
+                        '<th>Viva Exam Date</th>' +
+                        '<th>Viva Teacher</th>'
+                    );
+                }
+
+                thead.append('</tr></thead>');
+                table.empty().append(thead);
+
+                // Build table body
                 var tbody = $('<tbody>');
 
-                // Add rows for each selected subject
-                selectedSubjects.forEach(function(subject, index) {
+                selectedSubjects.forEach(function(subject) {
+                    // Get existing data or initialize new entry
+                    if (!subjectData[subject]) {
+                        subjectData[subject] = {
+                            written: {
+                                marks: '',
+                                date: '',
+                                teacher: ''
+                            },
+                            viva: {
+                                marks: '',
+                                date: '',
+                                teacher: ''
+                            }
+                        };
+                    }
+
                     var row = $('<tr>');
                     row.append('<td>' + subject + '<input type="hidden" name="subject[]" value="' + subject + '"></td>');
 
+                    // Written exam columns
                     if (examModes.includes('Written')) {
-                        row.append('<td><input type="number" class="form-control" name="full_marks_written[]" required></td>');
-                        row.append('<td><input type="date" class="form-control" name="exam_date_written[]" required></td>');
-                        row.append('<td><select class="form-select" name="teacher_id_written[]" required>' +
-                            '<option value="" selected disabled>Select Teacher</option>' +
-                            <?php foreach ($teachers as $teacher): ?> '<option value="<?= $teacher['associatenumber'] ?>"><?= $teacher['associatenumber'] ?> - <?= $teacher['fullname'] ?></option>' +
-                            <?php endforeach; ?> '</select></td>');
+                        row.append(
+                            '<td><input type="number" class="form-control" name="full_marks_written[]" min="1" value="' +
+                            subjectData[subject].written.marks + '" required></td>' +
+                            '<td><input type="date" class="form-control" name="exam_date_written[]" value="' +
+                            subjectData[subject].written.date + '" required></td>'
+                        );
+
+                        // Handle teacher selection separately to preserve it
+                        var writtenTeacherCell = $('<td></td>');
+                        var writtenTeacherSelect = $('<select class="form-select teacher-select" name="teacher_id_written[]" required>' +
+                            '<option value="" selected disabled>Select Teacher</option></select>');
+
+                        if (subjectData[subject].written.teacher) {
+                            // If we have a saved teacher, add it as a selected option
+                            writtenTeacherSelect.append(
+                                '<option value="' + subjectData[subject].written.teacher + '" selected>' +
+                                subjectData[subject].written.teacher + '</option>'
+                            );
+                        }
+
+                        writtenTeacherCell.append(writtenTeacherSelect);
+                        row.append(writtenTeacherCell);
                     }
 
+                    // Viva exam columns
                     if (examModes.includes('Viva')) {
-                        row.append('<td><input type="number" class="form-control" name="full_marks_viva[]" required></td>');
-                        row.append('<td><input type="date" class="form-control" name="exam_date_viva[]" required></td>');
-                        row.append('<td><select class="form-select" name="teacher_id_viva[]" required>' +
-                            '<option value="" selected disabled>Select Teacher</option>' +
-                            <?php foreach ($teachers as $teacher): ?> '<option value="<?= $teacher['associatenumber'] ?>"><?= $teacher['associatenumber'] ?> - <?= $teacher['fullname'] ?></option>' +
-                            <?php endforeach; ?> '</select></td>');
+                        row.append(
+                            '<td><input type="number" class="form-control" name="full_marks_viva[]" min="1" value="' +
+                            subjectData[subject].viva.marks + '" required></td>' +
+                            '<td><input type="date" class="form-control" name="exam_date_viva[]" value="' +
+                            subjectData[subject].viva.date + '" required></td>'
+                        );
+
+                        // Handle teacher selection separately to preserve it
+                        var vivaTeacherCell = $('<td></td>');
+                        var vivaTeacherSelect = $('<select class="form-select teacher-select" name="teacher_id_viva[]" required>' +
+                            '<option value="" selected disabled>Select Teacher</option></select>');
+
+                        if (subjectData[subject].viva.teacher) {
+                            // If we have a saved teacher, add it as a selected option
+                            vivaTeacherSelect.append(
+                                '<option value="' + subjectData[subject].viva.teacher + '" selected>' +
+                                subjectData[subject].viva.teacher + '</option>'
+                            );
+                        }
+
+                        vivaTeacherCell.append(vivaTeacherSelect);
+                        row.append(vivaTeacherCell);
                     }
 
                     tbody.append(row);
                 });
 
-                table.append(thead).append(tbody);
-                container.append(table);
+                table.append(tbody);
 
-                // Initialize Select2 for teacher dropdowns in the new rows
-                $('select[name="teacher_id_written[]"], select[name="teacher_id_viva[]"]').select2({
-                    minimumResultsForSearch: Infinity
+                // Initialize Select2 for all teacher dropdowns
+                $('.teacher-select').each(function() {
+                    initializeTeacherSelect($(this));
+
+                    // Set the correct selected value after initialization
+                    var subject = $(this).closest('tr').find('input[name="subject[]"]').val();
+                    var examType = $(this).attr('name').includes('written') ? 'written' : 'viva';
+                    var savedTeacher = subjectData[subject][examType].teacher;
+
+                    if (savedTeacher) {
+                        $(this).val(savedTeacher).trigger('change');
+                    }
                 });
+            }
+
+            // Save data before any changes
+            function saveCurrentData() {
+                $('#subject_details_container tbody tr').each(function() {
+                    var subject = $(this).find('input[name="subject[]"]').val();
+                    subjectData[subject] = {
+                        written: {
+                            marks: $(this).find('input[name="full_marks_written[]"]').val(),
+                            date: $(this).find('input[name="exam_date_written[]"]').val(),
+                            teacher: $(this).find('select[name="teacher_id_written[]"]').val()
+                        },
+                        viva: {
+                            marks: $(this).find('input[name="full_marks_viva[]"]').val(),
+                            date: $(this).find('input[name="exam_date_viva[]"]').val(),
+                            teacher: $(this).find('select[name="teacher_id_viva[]"]').val()
+                        }
+                    };
+                });
+            }
+
+            // Handle subject selection changes
+            $('#subject_select').on('change', function() {
+                saveCurrentData();
+                rebuildExamTable();
             });
 
-            // Update subject details when exam modes change
+            // Handle exam mode changes
             $('#exam_mode').on('change', function() {
-                if ($('#subject_select').val() && $('#subject_select').val().length > 0) {
-                    $('#subject_select').trigger('change');
-                }
+                saveCurrentData();
+                rebuildExamTable();
+            });
+
+            // Function to initialize teacher select dropdowns
+            function initializeTeacherSelect(selector) {
+                selector.select2({
+                    ajax: {
+                        url: 'fetch_associates.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                isShiftPlanner: true
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 1,
+                    placeholder: 'Select teacher',
+                    allowClear: true,
+                    templateResult: function(teacher) {
+                        if (teacher.loading) return teacher.text;
+                        return $('<span>').text(teacher.text);
+                    },
+                    templateSelection: function(teacher) {
+                        return teacher.text;
+                    }
+                }).on('change', function() {
+                    // Save teacher selection immediately
+                    var subject = $(this).closest('tr').find('input[name="subject[]"]').val();
+                    var examType = $(this).attr('name').includes('written') ? 'written' : 'viva';
+                    subjectData[subject][examType].teacher = $(this).val();
+                });
+            }
+
+            // Save input changes on blur
+            $(document).on('blur', 'input[name^="full_marks_"], input[name^="exam_date_"]', function() {
+                var subject = $(this).closest('tr').find('input[name="subject[]"]').val();
+                var fieldType = $(this).attr('name').includes('written') ? 'written' : 'viva';
+                var fieldName = $(this).attr('name').includes('marks') ? 'marks' : 'date';
+                subjectData[subject][fieldType][fieldName] = $(this).val();
             });
         });
     </script>
+
 </body>
 
 </html>
