@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $email = $row['email'];
                     $fullname = $row['fullname'];
                     $coursename = $row['coursename'];
+                    $supportingfile = $row['supporting_file'];
 
                     if ($bulk_status === 'approved') {
                         // Insert data into wbt_status for approved requests
@@ -101,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     "name" => $fullname,
                                     "date" => date('Y-m-d H:i:s'),
                                     "remarks" => $bulk_remarks,
-                                    "score" => $row['score']
+                                    "score" => $row['score'],
+                                    "doclink" => $supportingfile
                                 ],
                                 "email" => $email
                             ];

@@ -94,12 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     // Only execute the query if a filter is provided
-    if ($filterProvided || $role === 'Admin' || $role === 'Offline Manager') {
+    if ($filterProvided) {
         // Add filter for Teacher ID (applies to both teacher_id_viva and teacher_id_written)
         if (!empty($_GET['teacher_id_viva'])) {
             $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 1) . ")";
-            $params[] = $_GET['teacher_id_viva']; // for viva
-            $filterProvided = true;
+            $params[] = $_GET['teacher_id_viva'];
         }
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
@@ -220,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                         <div class="col-md-3">
                                             <label for="exam_type" class="form-label">Exam Type</label>
                                             <select class="form-select" id="exam_type" name="exam_type" required>
-                                                <option disabled <?php echo !isset($_GET['exam_type']) ? 'selected' : ''; ?>>Select Exam Type</option>
+                                                <option value="" disabled selected>Select Exam Type</option>
                                                 <option value="First Term" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'First Term') ? 'selected' : ''; ?>>First Term</option>
                                                 <option value="Half Yearly" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Half Yearly') ? 'selected' : ''; ?>>Half Yearly</option>
                                                 <option value="Annual" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Annual') ? 'selected' : ''; ?>>Annual</option>
@@ -264,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             </div>
                                         <?php } ?>
                                         <div id="filter-checks">
-                                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                             <label for="is_user" style="font-weight: 400;">Search by Exam ID</label>
                                         </div>
                                         <div class="col-md-3 align-self-end">
@@ -378,8 +377,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             </tbody>
                                         </table>
                                     </div>
-                                <?php elseif (empty($_GET['exam_type']) && !isset($_GET['is_user'])) : ?>
-                                    <p class="mt-4">Please select exam type to fetch data.</p>
+                                <?php elseif (empty($_GET) || (!isset($_GET['is_user']) && empty($_GET['exam_type']))) : ?>
+                                    <div class="alert alert-info mt-4">
+                                        <i class="bi bi-info-circle"></i> Please select at least one filter to view exam data.
+                                    </div>
                                 <?php else : ?>
                                     <p class="mt-4">No records match your selected filters or you are not authorized to access this exam ID. Please try adjusting your filters or contact your instructor or administrator.</p>
                                 <?php endif; ?>
@@ -534,6 +535,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         })
                         .catch(error => console.error('Error!', error.message));
                 });
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById("filter_form");
+
+            form.addEventListener("submit", function(e) {
+                if (!document.getElementById("is_user").checked &&
+                    !document.getElementById("exam_type").value) {
+                    e.preventDefault();
+                    alert("Please select an Exam Type or check 'Search by Exam ID'");
+                    document.getElementById("exam_type").focus();
+                }
             });
         });
     </script>
