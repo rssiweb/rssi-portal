@@ -273,80 +273,127 @@ if (@$_POST['form-type'] == "exam") {
                         <div class="card-body">
                             <br>
                             <div class="container mt-5">
-                                <h1 class="mb-4">Select Student</h1>
-                                <form id="filterForm" method="post" action="">
+                                <?php
+                                // Define class and category options in arrays for easy management
+                                $class_options = [
+                                    'Nursery' => 'Nursery',
+                                    'LKG' => 'LKG',
+                                    'UKG' => 'UKG',
+                                    '1' => '1',
+                                    '2' => '2',
+                                    '3' => '3',
+                                    '4' => '4',
+                                    '5' => '5',
+                                    '6' => '6'
+                                ];
+
+                                $category_options = [
+                                    'LG1' => 'LG1',
+                                    'LG2-A' => 'LG2-A',
+                                    'LG2-B' => 'LG2-B'
+                                ];
+
+                                // Function to generate selected attribute
+                                function is_selected($value, $field)
+                                {
+                                    return (isset($_POST[$field]) && in_array($value, $_POST[$field])) ? 'selected' : '';
+                                }
+                                ?>
+
+                                <h4>Select Students</h4>
+                                <div class="mb-3 py-2">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Filter students for exam creation using any combination of the filters below.
+                                </div>
+                                <form id="filterForm" method="post" action="" class="row g-2 align-items-end mb-4">
                                     <input type="hidden" name="form-type" value="exam_filter">
-                                    <div class="mb-3">
-                                        <label for="class" class="form-label">Class</label>
-                                        <select class="form-select" id="class" name="class[]" multiple>
-                                            <option value="Nursery" <?= (isset($_POST['class']) && in_array('Nursery', $_POST['class'])) ? 'selected' : '' ?>>Nursery</option>
-                                            <option value="LKG" <?= (isset($_POST['class']) && in_array('LKG', $_POST['class'])) ? 'selected' : '' ?>>LKG</option>
-                                            <option value="1" <?= (isset($_POST['class']) && in_array('1', $_POST['class'])) ? 'selected' : '' ?>>1</option>
-                                            <option value="2" <?= (isset($_POST['class']) && in_array('2', $_POST['class'])) ? 'selected' : '' ?>>2</option>
-                                            <option value="3" <?= (isset($_POST['class']) && in_array('3', $_POST['class'])) ? 'selected' : '' ?>>3</option>
-                                            <option value="4" <?= (isset($_POST['class']) && in_array('4', $_POST['class'])) ? 'selected' : '' ?>>4</option>
-                                            <option value="5" <?= (isset($_POST['class']) && in_array('5', $_POST['class'])) ? 'selected' : '' ?>>5</option>
-                                            <option value="6" <?= (isset($_POST['class']) && in_array('6', $_POST['class'])) ? 'selected' : '' ?>>6</option>
+
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                        <label for="class" class="form-label small mb-1">Class</label>
+                                        <select class="form-select" id="class" name="class[]" multiple data-placeholder="Select class(es)">
+                                            <?php foreach ($class_options as $value => $label): ?>
+                                                <option value="<?= $value ?>" <?= is_selected($value, 'class') ?>>
+                                                    <?= $label ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="category" class="form-label">Category</label>
-                                        <select class="form-select" id="category" name="category[]" multiple>
-                                            <option value="LG1" <?= (isset($_POST['category']) && in_array('LG1', $_POST['category'])) ? 'selected' : '' ?>>LG1</option>
-                                            <option value="LG2-A" <?= (isset($_POST['category']) && in_array('LG2-A', $_POST['category'])) ? 'selected' : '' ?>>LG2-A</option>
-                                            <option value="LG2-B" <?= (isset($_POST['category']) && in_array('LG2-B', $_POST['category'])) ? 'selected' : '' ?>>LG2-B</option>
+
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                        <label for="category" class="form-label small mb-1">Category</label>
+                                        <select class="form-select" id="category" name="category[]" multiple data-placeholder="Select category(ies)">
+                                            <?php foreach ($category_options as $value => $label): ?>
+                                                <option value="<?= $value ?>" <?= is_selected($value, 'category') ?>>
+                                                    <?= $label ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="student_ids" class="form-label">Student IDs (comma separated)</label>
-                                        <input type="text" class="form-control" id="student_ids" name="student_ids" value="<?= isset($_POST['student_ids']) ? htmlspecialchars($_POST['student_ids']) : '' ?>">
+
+                                    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                                        <label for="student_ids" class="form-label small mb-1">Include Student IDs</label>
+                                        <input type="text" class="form-control" id="student_ids" name="student_ids"
+                                            placeholder="e.g., RSSI001, RSSI002"
+                                            value="<?= htmlspecialchars($_POST['student_ids'] ?? '') ?>">
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="excluded_ids" class="form-label">Excluded IDs (comma separated)</label>
-                                        <input type="text" class="form-control" id="excluded_ids" name="excluded_ids" value="<?= isset($_POST['excluded_ids']) ? htmlspecialchars($_POST['excluded_ids']) : '' ?>">
+
+                                    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                                        <label for="excluded_ids" class="form-label small mb-1">Exclude Student IDs</label>
+                                        <input type="text" class="form-control" id="excluded_ids" name="excluded_ids"
+                                            placeholder="e.g., RSSI003, RSSI004"
+                                            value="<?= htmlspecialchars($_POST['excluded_ids'] ?? '') ?>">
                                     </div>
-                                    <div class="text-end">
-                                        <button type="submit" class="btn btn-primary mb-3">Filter</button>
+
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-funnel-fill me-1"></i> Filter
+                                        </button>
                                     </div>
                                 </form>
-                                <h1 class="mb-4">Creating Exams for</h1>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Student ID</th>
-                                                <th scope="col">Student Name</th>
-                                                <th scope="col">Category</th>
-                                                <th scope="col">Class</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php if (isset($resultArr) && !empty($resultArr)) : ?>
-                                                <?php foreach ($resultArr as $student) : ?>
-                                                    <tr>
-                                                        <td><?= htmlspecialchars($student['student_id']) ?></td>
-                                                        <td><?= htmlspecialchars($student['studentname']) ?></td>
-                                                        <td><?= htmlspecialchars($student['category']) ?></td>
-                                                        <td><?= htmlspecialchars($student['class']) ?></td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            <?php else : ?>
+                                <?php if (isset($resultArr)) : ?>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 class="mb-0">Creating Exams for</h4>
+                                        <span>Total Students: <?= count($resultArr) ?></span>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered table-hover">
+                                            <thead class="table-light">
                                                 <tr>
-                                                    <td class="text-center" colspan="4">No active students found.</td>
+                                                    <th scope="col" style="width:15%">Student ID</th>
+                                                    <th scope="col" style="width:35%">Student Name</th>
+                                                    <th scope="col" style="width:25%">Category</th>
+                                                    <th scope="col" style="width:25%">Class</th>
                                                 </tr>
-                                            <?php endif; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (!empty($resultArr)) : ?>
+                                                    <?php foreach ($resultArr as $student) : ?>
+                                                        <tr>
+                                                            <td><?= htmlspecialchars($student['student_id']) ?></td>
+                                                            <td><?= htmlspecialchars($student['studentname']) ?></td>
+                                                            <td><?= htmlspecialchars($student['category']) ?></td>
+                                                            <td><?= htmlspecialchars($student['class']) ?></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else : ?>
+                                                    <tr>
+                                                        <td class="text-center py-3" colspan="4">No active students found matching your criteria.</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if (isset($resultArr) && !empty($resultArr)) : ?>
-                                    <h1 class="mb-4">Exam Parameters</h1>
+                                    <h4 class="mb-4">Exam Parameters</h4>
                                     <form action="exam_create.php" name="exam" id="exam" method="post">
                                         <input type="hidden" name="form-type" value="exam">
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
                                                 <label for="exam_type" class="form-label">Exam Type<span class="asterisk">*</span></label>
                                                 <select class="form-select" id="exam_type" name="exam_type" required>
-                                                    <option disabled selected>Select Exam Type</option>
+                                                    <option disabled selected value="">Select Exam Type</option>
                                                     <option value="First Term">First Term</option>
                                                     <option value="Half Yearly">Half Yearly</option>
                                                     <option value="Annual">Annual</option>
@@ -369,7 +416,7 @@ if (@$_POST['form-type'] == "exam") {
                                         <div class="row">
                                             <div class="col-md-12 mb-3">
                                                 <label for="subject_select" class="form-label">Select Subjects<span class="asterisk">*</span></label>
-                                                <select class="form-select" id="subject_select" name="subject_select[]" multiple>
+                                                <select class="form-select" id="subject_select" name="subject_select[]" multiple required>
                                                     <option value="Hindi">Hindi</option>
                                                     <option value="English">English</option>
                                                     <option value="Mathematics">Mathematics</option>
