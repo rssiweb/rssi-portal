@@ -302,7 +302,6 @@ if (@$_POST['form-type'] == "exam") {
 
                                 <h4>Select Students</h4>
                                 <div class="mb-3 py-2">
-                                    <i class="bi bi-info-circle me-2"></i>
                                     Filter students for exam creation using any combination of the filters below.
                                 </div>
                                 <form id="filterForm" method="post" action="" class="row g-2 align-items-end mb-4">
