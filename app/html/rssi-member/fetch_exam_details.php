@@ -19,12 +19,13 @@ if (!isset($_GET['exam_id']) || empty($_GET['exam_id'])) {
 $exam_id = pg_escape_string($con, $_GET['exam_id']);
 
 // Fetch exam details
-$query = "SELECT exam_id, exam_type, academic_year, subject, exam_mode, 
+$query = "SELECT exams.exam_id, exam_type, academic_year, subject, exam_mode, 
                  full_marks_written, full_marks_viva, 
                  exam_date_written, exam_date_viva,
-                 teacher_id_written, teacher_id_viva
+                 teacher_id_written, teacher_id_viva, class
           FROM exams 
-          WHERE exam_id = $1";
+          LEFT JOIN exam_marks_data em ON exams.exam_id = em.exam_id
+          WHERE exams.exam_id = $1";
 
 $result = pg_query_params($con, $query, [$exam_id]);
 
@@ -61,6 +62,7 @@ $response = [
     'full_marks_viva' => $exam['full_marks_viva'],
     'exam_date_written' => $exam['exam_date_written'],
     'exam_date_viva' => $exam['exam_date_viva'],
+    'class' => $exam['class'],
     'teacher_written' => $teachers[$exam['teacher_id_written']] ?? null,
     'teacher_viva' => $teachers[$exam['teacher_id_viva']] ?? null
 ];

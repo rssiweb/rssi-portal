@@ -167,7 +167,7 @@ if (@$_POST['form-type'] == "add_students") {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Students to Exam</title>
+    <title>Add Students</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -244,12 +244,12 @@ if (@$_POST['form-type'] == "add_students") {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Add Students to Exam</h1>
+            <h1>Add Students</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item">Academic</li>
-                    <li class="breadcrumb-item active">Add Students to Exam</li>
+                    <li class="breadcrumb-item active">Add Students (Post Exam Creation)</li>
                 </ol>
             </nav>
         </div>
@@ -625,8 +625,9 @@ if (@$_POST['form-type'] == "add_students") {
                 // Update exam details display
                 $('#examDetailsSlider').html(`
                     <div class="exam-details">
-                        <h6 class="mb-2">${exam.academic_year} - ${exam.exam_type} - ${exam.subject}</h6>
+                        <h6 class="mb-2">${exam.academic_year} - ${exam.exam_type} - ${exam.class} - ${exam.subject}</h6>
                         <div class="small">
+                            <div>Id- ${(exam.exam_id)}</div>
                             <div>Mode: ${formatExamModes(exam.exam_mode)}</div>
                             <div>Written: ${formatExamDetail(exam.full_marks_written, exam.exam_date_written, exam.teacher_written)}</div>
                             <div>Viva: ${formatExamDetail(exam.full_marks_viva, exam.exam_date_viva, exam.teacher_viva)}</div>

@@ -141,11 +141,11 @@
               <span>Re-examination Records</span>
             </a>
           </li>
-          <!-- <li>
-            <a id="uploadMarks" href="exam_marks_upload.php">
-              <span>Upload Marks</span>
+          <li>
+            <a id="append-students" href="append-students">
+              <span>Add Students (Post Exam Creation)</span>
             </a>
-          </li> -->
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -679,6 +679,10 @@
         id: 'acadamis',
         linkId: 'examLink',
         url: 'exam.php'
+      }, {
+        id: 'acadamis',
+        linkId: 'append-students',
+        url: 'append-students.php'
       }, {
         id: 'acadamis',
         linkId: 'createExam',
