@@ -31,7 +31,12 @@ $category_options = [
 ];
 
 // Fetch existing exams for dropdown
-$exams_query = "SELECT exam_id, exam_type, academic_year, subject FROM exams ORDER BY academic_year DESC, exam_type, subject";
+$exams_query = "
+    SELECT e.exam_id, exam_type, academic_year, ed.class, subject 
+    FROM exams e
+    LEFT JOIN exam_marks_data ed ON ed.exam_id = e.exam_id
+    ORDER BY academic_year DESC, exam_type, subject
+";
 $exams_result = pg_query($con, $exams_query);
 $exams = pg_fetch_all($exams_result) ?: [];
 
@@ -168,6 +173,11 @@ if (@$_POST['form-type'] == "add_students") {
             margin-right: 5px;
             margin-bottom: 5px;
         }
+
+        /* Add to your existing styles */
+        .table-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
     </style>
 </head>
 
@@ -206,8 +216,9 @@ if (@$_POST['form-type'] == "add_students") {
                                                 <select class="form-select" id="exam_id" name="exam_id[]" multiple required>
                                                     <?php foreach ($exams as $exam): ?>
                                                         <option value="<?= $exam['exam_id'] ?>">
-                                                            <?= htmlspecialchars($exam['academic_year']) ?> -
-                                                            <?= htmlspecialchars($exam['exam_type']) ?> -
+                                                            <?= htmlspecialchars($exam['academic_year']) ?>-
+                                                            <?= htmlspecialchars($exam['exam_type']) ?>-
+                                                            <?= htmlspecialchars($exam['class']) ?>-
                                                             <?= htmlspecialchars($exam['subject']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -525,29 +536,34 @@ if (@$_POST['form-type'] == "add_students") {
             }
 
             // Helper function to populate student table
+            // Modify the populateStudentTable function:
             function populateStudentTable(students) {
                 const $tbody = $('#studentTableBody');
                 $tbody.empty();
 
                 students.forEach(student => {
+                    const isEnrolled = student.exam_count > 0;
+                    const rowClass = isEnrolled ? 'table-warning' : '';
+                    const statusText = isEnrolled ? '<span class="badge bg-warning text-dark">Already in exam</span>' : '';
+
                     $tbody.append(`
-                        <tr>
-                            <td><input type="checkbox" name="student_ids[]" value="${student.student_id}" class="student-checkbox"></td>
-                            <td>${student.student_id}</td>
-                            <td>${student.studentname}</td>
-                            <td>${student.category}</td>
-                            <td>${student.class}</td>
-                        </tr>
-                    `);
+            <tr class="${rowClass}">
+                <td>
+                    <input type="checkbox" name="student_ids[]" 
+                           value="${student.student_id}" 
+                           class="student-checkbox"
+                           ${isEnrolled ? 'disabled' : ''}>
+                </td>
+                <td>${student.student_id} ${statusText}</td>
+                <td>${student.studentname}</td>
+                <td>${student.category}</td>
+                <td>${student.class}</td>
+            </tr>
+        `);
                 });
 
                 $('#totalCount').text(`Total: ${students.length}`);
                 updateSelectedCount();
-
-                // Enable/disable add button based on checkboxes
-                $('.student-checkbox').change(function() {
-                    updateSelectedCount();
-                });
             }
 
             // Helper function for smooth scrolling
@@ -572,15 +588,21 @@ if (@$_POST['form-type'] == "add_students") {
             }
 
             // Select all/none functionality
+            // Modify the selectAll change handler:
             $('#selectAll').change(function() {
-                $('.student-checkbox').prop('checked', this.checked);
+                $('.student-checkbox:not(:disabled)').prop('checked', this.checked);
                 updateSelectedCount();
             });
 
             function updateSelectedCount() {
                 const count = $('.student-checkbox:checked').length;
+                const disabledCount = $('.student-checkbox:disabled').length;
                 $('#selectedCount').text(`Selected: ${count}`);
                 $('#addStudentsBtn').prop('disabled', count === 0);
+
+                if (disabledCount > 0) {
+                    $('#selectedCount').append(` <span class="text-muted">(${disabledCount} already enrolled)</span>`);
+                }
             }
 
             // Handle form submission for adding students

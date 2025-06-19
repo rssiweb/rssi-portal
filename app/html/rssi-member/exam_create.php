@@ -456,7 +456,7 @@ if (@$_POST['form-type'] == "exam") {
             }
             ?>
             var currentYear = <?= $currentYear ?>;
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < 1; i++) {
                 var next = currentYear + 1;
                 var year = currentYear + '-' + next;
                 $('#academic_year').append(new Option(year, year));

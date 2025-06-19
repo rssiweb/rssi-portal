@@ -12,6 +12,24 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// Prepare statements once before any processing
+$insertQuery = "
+    INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email) 
+    VALUES ($1, $2, $3, $4, $5)
+";
+pg_prepare($con, "insert_wbt_status", $insertQuery);
+
+$updateQuery = "
+    UPDATE external_exam_scores
+    SET 
+        status = $1,
+        reviewed_by = $2,
+        reviewed_on = $3,
+        remarks = $4
+    WHERE id = $5
+";
+pg_prepare($con, "update_external_score", $updateQuery);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle bulk approval/rejection
     if (isset($_POST['bulk_status'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
@@ -53,11 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $timestamp = $row['completion_date'];
                         $fScore = $row['score'] / 100;
 
-                        $insertQuery = "
-                            INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email) 
-                            VALUES ($1, $2, $3, $4, $5)
-                        ";
-                        $insertStmt = pg_prepare($con, "insert_wbt_status", $insertQuery);
                         $insertResult = pg_execute($con, "insert_wbt_status", [
                             $applicantid,
                             $courseId,
@@ -72,16 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Update the external_exam_scores table
-                    $updateQuery = "
-                        UPDATE external_exam_scores
-                        SET 
-                            status = $1,
-                            reviewed_by = $2,
-                            reviewed_on = $3,
-                            remarks = $4
-                        WHERE id = $5
-                    ";
-                    $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
                     $updateResult = pg_execute($con, "update_external_score", [
                         $bulk_status,
                         $reviewer_id,
@@ -91,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
 
                     if ($updateResult) {
-                        // Send email notification
+                        // Send email notification only for rejected requests
                         if (!empty($email) && $bulk_status === 'rejected') {
                             $emailData = [
                                 "template" => "external_course_reject",
@@ -114,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 echo "<script>alert('Bulk review applied successfully.'); window.location.href = window.location.href;</script>";
-                //exit;
             }
         }
     }

@@ -11,47 +11,70 @@ if (!isLoggedIn("aid")) {
 validation();
 
 // Get filter parameters
-$exam_id = $_POST['exam_id'] ?? null;
+$exam_ids = $_POST['exam_id'] ?? '';
 $class = $_POST['class'] ?? [];
 $category = $_POST['category'] ?? [];
 $student_ids = $_POST['student_ids'] ?? '';
 $excluded_ids = $_POST['excluded_ids'] ?? '';
 
-// Build the query
-$query = "SELECT student_id, studentname, category, class 
-          FROM rssimyprofile_student 
-          WHERE filterstatus = 'Active'";
+// Convert comma-separated exam_ids to array and properly format for PostgreSQL
+$exam_id_array = explode(',', $exam_ids);
+$exam_id_array = array_map('trim', $exam_id_array);
+$exam_id_array = array_filter($exam_id_array); // Remove empty values
+
+// Build the base query
+$query = "SELECT s.student_id, s.studentname, s.category, s.class,
+          (SELECT COUNT(*) FROM exam_marks_data em 
+           WHERE em.student_id = s.student_id 
+           AND em.exam_id = ANY($1)) AS exam_count
+          FROM rssimyprofile_student s
+          WHERE s.filterstatus = 'Active'";
 
 $params = [];
-$types = '';
 $conditions = [];
 
+// Format exam IDs for PostgreSQL array
+$exam_ids_param = '{' . implode(',', $exam_id_array) . '}';
+$params[] = $exam_ids_param;
+
+// Fix for the class condition
 if (!empty($class)) {
-    $placeholders = implode(',', array_map(function($i) { return '$'.$i; }, range(count($params)+1, count($params)+count($class))));
-    $conditions[] = "class IN ($placeholders)";
+    $class_placeholders = implode(',', array_map(function($i) use ($params) { 
+        return '$' . (count($params) + $i + 1); 
+    }, array_keys($class)));
+    $conditions[] = "s.class IN ($class_placeholders)";
     $params = array_merge($params, $class);
 }
 
+// Fix for the category condition
 if (!empty($category)) {
-    $placeholders = implode(',', array_map(function($i) { return '$'.$i; }, range(count($params)+1, count($params)+count($category))));
-    $conditions[] = "category IN ($placeholders)";
+    $category_placeholders = implode(',', array_map(function($i) use ($params) { 
+        return '$' . (count($params) + $i + 1); 
+    }, array_keys($category)));
+    $conditions[] = "s.category IN ($category_placeholders)";
     $params = array_merge($params, $category);
 }
 
+// Fix for the student_ids condition
 if (!empty($student_ids)) {
     $idList = array_filter(array_map('trim', explode(',', $student_ids)));
     if (!empty($idList)) {
-        $placeholders = implode(',', array_map(function($i) { return '$'.$i; }, range(count($params)+1, count($params)+count($idList))));
-        $conditions[] = "student_id IN ($placeholders)";
+        $student_placeholders = implode(',', array_map(function($i) use ($params) { 
+            return '$' . (count($params) + $i + 1); 
+        }, array_keys($idList)));
+        $conditions[] = "s.student_id IN ($student_placeholders)";
         $params = array_merge($params, $idList);
     }
 }
 
+// Fix for the excluded_ids condition
 if (!empty($excluded_ids)) {
     $idList = array_filter(array_map('trim', explode(',', $excluded_ids)));
     if (!empty($idList)) {
-        $placeholders = implode(',', array_map(function($i) { return '$'.$i; }, range(count($params)+1, count($params)+count($idList))));
-        $conditions[] = "student_id NOT IN ($placeholders)";
+        $exclude_placeholders = implode(',', array_map(function($i) use ($params) { 
+            return '$' . (count($params) + $i + 1); 
+        }, array_keys($idList)));
+        $conditions[] = "s.student_id NOT IN ($exclude_placeholders)";
         $params = array_merge($params, $idList);
     }
 }
@@ -60,13 +83,12 @@ if (count($conditions) > 0) {
     $query .= " AND " . implode(" AND ", $conditions);
 }
 
-$query .= " ORDER BY studentname";
+$query .= " ORDER BY s.studentname";
 
-// Debugging (you can remove this after testing)
+// Debugging (remove in production)
 error_log("Query: " . $query);
 error_log("Params: " . print_r($params, true));
 
-// Execute query
 $result = pg_query_params($con, $query, $params);
 
 if (!$result) {
