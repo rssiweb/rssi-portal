@@ -22,6 +22,27 @@ $exam_id_array = explode(',', $exam_ids);
 $exam_id_array = array_map('trim', $exam_id_array);
 $exam_id_array = array_filter($exam_id_array); // Remove empty values
 
+// Validate that all selected exams are for the same class
+$exam_classes_query = "SELECT DISTINCT class FROM exams 
+LEFT JOIN exam_marks_data em ON exams.exam_id = em.exam_id
+WHERE exams.exam_id = ANY($1)";
+$exam_classes_result = pg_query_params($con, $exam_classes_query, ['{' . implode(',', $exam_id_array) . '}']);
+$exam_classes = pg_fetch_all($exam_classes_result, PGSQL_ASSOC) ?: [];
+
+if (count($exam_classes) > 1) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Selected exams must be for the same class']);
+    exit;
+}
+
+if (count($exam_classes) === 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'No valid exams found']);
+    exit;
+}
+
+$required_class = $exam_classes[0]['class'];
+
 // Build the base query
 $query = "SELECT s.student_id, s.studentname, s.category, s.class,
           (SELECT COUNT(*) FROM exam_marks_data em 
@@ -37,16 +58,21 @@ $conditions = [];
 $exam_ids_param = '{' . implode(',', $exam_id_array) . '}';
 $params[] = $exam_ids_param;
 
-// Fix for the class condition
+// Automatically add class filter based on exam's class
+$conditions[] = "s.class = $" . (count($params) + 1);
+$params[] = $required_class;
+
+// Additional filters (will be combined with AND)
 if (!empty($class)) {
-    $class_placeholders = implode(',', array_map(function($i) use ($params) { 
-        return '$' . (count($params) + $i + 1); 
-    }, array_keys($class)));
-    $conditions[] = "s.class IN ($class_placeholders)";
-    $params = array_merge($params, $class);
+    // Warn if user is trying to filter by different class than exam's class
+    $invalid_classes = array_diff($class, [$required_class]);
+    if (!empty($invalid_classes)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Cannot filter by different class than exam class']);
+        exit;
+    }
 }
 
-// Fix for the category condition
 if (!empty($category)) {
     $category_placeholders = implode(',', array_map(function($i) use ($params) { 
         return '$' . (count($params) + $i + 1); 
@@ -55,7 +81,6 @@ if (!empty($category)) {
     $params = array_merge($params, $category);
 }
 
-// Fix for the student_ids condition
 if (!empty($student_ids)) {
     $idList = array_filter(array_map('trim', explode(',', $student_ids)));
     if (!empty($idList)) {
@@ -67,7 +92,6 @@ if (!empty($student_ids)) {
     }
 }
 
-// Fix for the excluded_ids condition
 if (!empty($excluded_ids)) {
     $idList = array_filter(array_map('trim', explode(',', $excluded_ids)));
     if (!empty($idList)) {

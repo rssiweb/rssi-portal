@@ -3,6 +3,8 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/email.php");
 include("../../util/login_util.php");
 
+ob_start();
+
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
@@ -30,7 +32,7 @@ $category_options = [
     'LG2-B' => 'LG2-B'
 ];
 
-// Fetch existing exams for dropdown - MODIFIED QUERY
+// Fetch existing exams for dropdown
 $exams_query = "
     SELECT DISTINCT academic_year 
     FROM exams 
@@ -44,36 +46,68 @@ $academic_years = pg_fetch_all($academic_years_result) ?: [];
 
 // Process form submission for adding students
 if (@$_POST['form-type'] == "add_students") {
-    $exam_ids = $_POST['exam_id'] ?? [];
-    $student_ids = $_POST['student_ids'] ?? [];
+    // Handle exam IDs - ensure it's an array
+    $exam_ids = is_array($_POST['exam_id']) ? $_POST['exam_id'] : [$_POST['exam_id'] ?? ''];
+    $exam_ids = array_filter(array_map('trim', $exam_ids), 'strlen');
+
+    // Handle student IDs - ensure it's an array
+    $student_ids = is_array($_POST['student_ids']) ? $_POST['student_ids'] : [$_POST['student_ids'] ?? ''];
+    $student_ids = array_filter(array_map('trim', $student_ids), 'strlen');
 
     if (empty($exam_ids)) {
-        echo "<script>alert('Please select at least one exam');</script>";
+        echo json_encode(['error' => 'Please select at least one exam']);
+        exit;
     } elseif (empty($student_ids)) {
-        echo "<script>alert('Please select at least one student');</script>";
-    } else {
-        $success_count = 0;
-        $error_count = 0;
-        $errors = [];
+        echo json_encode(['error' => 'Please select at least one student']);
+        exit;
+    }
+
+    // Start transaction
+    pg_query($con, "BEGIN");
+
+    $success_count = 0;
+    $error_count = 0;
+    $errors = [];
+    $added_combinations = [];
+
+    try {
+        // First get all student details at once
+        $student_ids_str = implode("','", array_map(function ($id) use ($con) {
+            return pg_escape_string($con, $id);
+        }, $student_ids));
+        $student_query = "SELECT student_id, studentname, category, class 
+                         FROM rssimyprofile_student 
+                         WHERE student_id IN ('$student_ids_str')";
+        $student_result = pg_query($con, $student_query);
+        $students = pg_fetch_all($student_result) ?: [];
+        $students = array_column($students, null, 'student_id');
 
         foreach ($exam_ids as $exam_id) {
             foreach ($student_ids as $student_id) {
-                // Check if student already exists in this exam
-                $check_query = "SELECT 1 FROM exam_marks_data WHERE exam_id = $1 AND student_id = $2";
-                $check_result = pg_query_params($con, $check_query, [$exam_id, $student_id]);
+                $key = "$exam_id-$student_id";
+                if (isset($added_combinations[$key])) {
+                    continue;
+                }
+
+                // Check if student exists in this specific exam
+                $check_query = "SELECT 1 FROM exam_marks_data 
+                                WHERE exam_id = $1 
+                                AND LOWER(TRIM(student_id)) = LOWER(TRIM($2))";
+                $check_result = pg_query_params($con, $check_query, [
+                    $exam_id,
+                    $student_id
+                ]);
 
                 if (pg_num_rows($check_result) > 0) {
                     $error_count++;
                     $errors[] = "Student $student_id already exists in exam $exam_id";
+                    $added_combinations[$key] = false;
                     continue;
                 }
 
-                // Get student details
-                $student_query = "SELECT studentname, category, class FROM rssimyprofile_student WHERE student_id = $1";
-                $student_result = pg_query_params($con, $student_query, [$student_id]);
-                $student = pg_fetch_assoc($student_result);
-
-                if ($student) {
+                // Insert if student exists and not already in exam
+                if (isset($students[$student_id])) {
+                    $student = $students[$student_id];
                     $insert_query = "INSERT INTO exam_marks_data (exam_id, student_id, category, class) 
                                     VALUES ($1, $2, $3, $4)";
                     $insert_result = pg_query_params($con, $insert_query, [
@@ -85,27 +119,34 @@ if (@$_POST['form-type'] == "add_students") {
 
                     if ($insert_result) {
                         $success_count++;
+                        $added_combinations[$key] = true;
                     } else {
-                        $error_count++;
-                        $errors[] = "Failed to add student $student_id to exam $exam_id";
+                        throw new Exception("Failed to add student $student_id to exam $exam_id");
                     }
                 } else {
                     $error_count++;
                     $errors[] = "Student $student_id not found";
+                    $added_combinations[$key] = false;
                 }
             }
         }
 
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => $success_count,
-            'errors' => $error_count,
-            'message' => "Successfully added $success_count student-exam combinations." .
-                ($error_count > 0 ? " $error_count combinations had errors." : ""),
-            'error_details' => $errors
-        ]);
+        pg_query($con, "COMMIT");
+    } catch (Exception $e) {
+        pg_query($con, "ROLLBACK");
+        echo json_encode(['error' => $e->getMessage()]);
         exit;
     }
+    ob_end_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => $success_count,
+        'errors' => $error_count,
+        'message' => "Successfully added $success_count student-exam combinations." .
+            ($error_count > 0 ? " $error_count combinations had errors." : ""),
+        'error_details' => $errors
+    ]);
+    exit;
 }
 ?>
 
@@ -179,6 +220,21 @@ if (@$_POST['form-type'] == "add_students") {
         .loading-spinner {
             display: none;
         }
+
+        .exam-tag {
+            display: inline-block;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            padding: 2px 5px;
+            margin: 2px;
+            font-size: 0.8em;
+            color: #555;
+        }
+
+        .exam-tag.subject {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
     </style>
 </head>
 
@@ -204,9 +260,6 @@ if (@$_POST['form-type'] == "add_students") {
                     <div class="card">
                         <div class="card-body">
                             <div class="container mt-3">
-                                <!-- Alert container -->
-                                <div id="alertContainer"></div>
-
                                 <!-- Exam Selection Section -->
                                 <div class="row mb-4">
                                     <div class="col-md-8">
@@ -244,11 +297,8 @@ if (@$_POST['form-type'] == "add_students") {
                                             <div class="col-md-12">
                                                 <button type="button" id="loadExamBtn" class="btn btn-primary">
                                                     <i class="bi bi-search me-1"></i> Load Exam(s)
+                                                    <span id="loadExamBtnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                                 </button>
-                                                <span id="loadingAcademic" class="loading-spinner ms-2">
-                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                    Loading...
-                                                </span>
                                             </div>
                                         </form>
                                     </div>
@@ -273,8 +323,7 @@ if (@$_POST['form-type'] == "add_students") {
                                 <!-- Student Filter Section -->
                                 <div id="studentFilterSection" style="display:none;">
                                     <h4>Select Students to Add</h4>
-                                    <div class="alert alert-info mb-3 py-2">
-                                        <i class="bi bi-info-circle me-2"></i>
+                                    <div class="mb-3">
                                         Filter students to add to the selected exam(s).
                                     </div>
 
@@ -310,13 +359,10 @@ if (@$_POST['form-type'] == "add_students") {
                                         </div>
 
                                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                            <button type="button" id="filterBtn" class="btn btn-primary w-100">
-                                                <i class="bi bi-funnel-fill me-1"></i> Filter
+                                            <button type="button" id="filterBtn" class="btn btn-primary">
+                                                <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+                                                <span id="filterBtnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                             </button>
-                                            <span id="loadingFilter" class="loading-spinner" style="display: none;">
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                Loading...
-                                            </span>
                                         </div>
                                     </form>
                                 </div>
@@ -333,7 +379,7 @@ if (@$_POST['form-type'] == "add_students") {
 
                                     <form id="addStudentsForm" method="post" action="">
                                         <input type="hidden" name="form-type" value="add_students">
-                                        <input type="hidden" name="exam_id[]" id="form_exam_id">
+                                        <div id="examIdContainer"></div>
 
                                         <div class="table-responsive">
                                             <table class="table table-sm table-bordered table-hover">
@@ -344,6 +390,7 @@ if (@$_POST['form-type'] == "add_students") {
                                                         <th>Student Name</th>
                                                         <th>Category</th>
                                                         <th>Class</th>
+                                                        <th>Status</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="studentTableBody"></tbody>
@@ -353,11 +400,8 @@ if (@$_POST['form-type'] == "add_students") {
                                         <div class="text-end mt-3">
                                             <button type="submit" class="btn btn-success" id="addStudentsBtn" disabled>
                                                 <i class="bi bi-plus-circle"></i> Add Selected Students
+                                                <span id="loadingAdd" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                             </button>
-                                            <span id="loadingAdd" class="loading-spinner ms-2" style="display: none;">
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                Processing...
-                                            </span>
                                         </div>
                                     </form>
                                 </div>
@@ -393,14 +437,8 @@ if (@$_POST['form-type'] == "add_students") {
             let examDetailsData = [];
 
             // Helper functions
-            function showAlert(message, type) {
-                const alert = $(`
-                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
-                $('#alertContainer').empty().append(alert);
+            function showAlert(message, type = 'info') {
+                alert(message); // Using simple JavaScript alert
             }
 
             function scrollToElement(selector) {
@@ -414,22 +452,23 @@ if (@$_POST['form-type'] == "add_students") {
 
             function updateSelectedCount() {
                 const count = $('.student-checkbox:checked').length;
-                const disabledCount = $('.student-checkbox:disabled').length;
                 $('#selectedCount').text(`Selected: ${count}`);
                 $('#addStudentsBtn').prop('disabled', count === 0);
 
-                if (disabledCount > 0) {
-                    $('#selectedCount').append(` <span class="text-muted">(${disabledCount} already enrolled)</span>`);
-                }
+                // Update "Select All" checkbox state
+                const allChecked = $('.student-checkbox:not(:disabled)').length > 0 &&
+                    $('.student-checkbox:not(:checked):not(:disabled)').length === 0;
+                $('#selectAll').prop('checked', allChecked);
             }
 
-            function toggleLoading(element, show) {
-                if (show) {
-                    element.next('.loading-spinner').show();
-                    element.prop('disabled', true);
+            function toggleLoading(button, isLoading) {
+                const loadingElement = button.find('.spinner-border');
+                if (isLoading) {
+                    loadingElement.removeClass('d-none');
+                    button.prop('disabled', true);
                 } else {
-                    element.next('.loading-spinner').hide();
-                    element.prop('disabled', false);
+                    loadingElement.addClass('d-none');
+                    button.prop('disabled', false);
                 }
             }
 
@@ -447,7 +486,6 @@ if (@$_POST['form-type'] == "add_students") {
                         academic_year: year
                     })
                     .done(function(data) {
-                        console.log("Received exam types:", data); // <-- Add this
                         $('#exam_type').empty().append('<option value="">Select exam type</option>');
                         data.forEach(type => {
                             $('#exam_type').append(`<option value="${type}">${type}</option>`);
@@ -455,7 +493,7 @@ if (@$_POST['form-type'] == "add_students") {
                         $('#exam_type').prop('disabled', false);
                     })
                     .fail(function() {
-                        showAlert('Error loading exam types', 'danger');
+                        showAlert('Error loading exam types');
                     })
                     .always(function() {
                         toggleLoading($('#academic_year'), false);
@@ -482,7 +520,7 @@ if (@$_POST['form-type'] == "add_students") {
                         });
                     })
                     .fail(function() {
-                        showAlert('Error loading classes', 'danger');
+                        showAlert('Error loading classes');
                     })
                     .always(function() {
                         toggleLoading($('#exam_type'), false);
@@ -504,7 +542,7 @@ if (@$_POST['form-type'] == "add_students") {
                         class: cls
                     })
                     .done(function(data) {
-                        $('#subject').prop('disabled', false); // ✅ Enable the dropdown here
+                        $('#subject').prop('disabled', false);
                         $('#subject').empty().select2({
                             placeholder: "Select subject(s)",
                             width: '100%',
@@ -516,7 +554,7 @@ if (@$_POST['form-type'] == "add_students") {
                         });
                     })
                     .fail(function() {
-                        showAlert('Error loading subjects', 'danger');
+                        showAlert('Error loading subjects');
                     })
                     .always(function() {
                         toggleLoading($('#class'), false);
@@ -527,33 +565,24 @@ if (@$_POST['form-type'] == "add_students") {
             $('#loadExamBtn').click(function() {
                 const examIds = $('#subject').val();
                 if (!examIds || examIds.length === 0) {
-                    showAlert('Please select at least one subject first', 'warning');
+                    showAlert('Please select at least one subject first');
                     return;
                 }
 
-                toggleLoading($('#loadExamBtn'), true);
+                toggleLoading($(this), true);
                 examDetailsData = [];
                 $('#examDetailsSlider').empty();
 
-                // Create an array of promises for all exam details
-                const loadPromises = examIds.map(examId => {
-                    return $.ajax({
-                        url: 'fetch_exam_details.php',
-                        method: 'GET',
-                        data: {
-                            exam_id: examId
-                        },
-                        dataType: 'json'
-                    });
-                });
-
                 // Load all exam details
-                Promise.all(loadPromises)
+                Promise.all(examIds.map(examId =>
+                        $.get('fetch_exam_details.php', {
+                            exam_id: examId
+                        })
+                    ))
                     .then(responses => {
-                        examDetailsData = responses.filter(r => r); // Filter out any failed requests
-
+                        examDetailsData = responses.filter(r => r);
                         if (examDetailsData.length === 0) {
-                            showAlert('No valid exam data could be loaded', 'warning');
+                            showAlert('No valid exam data could be loaded');
                             return;
                         }
 
@@ -563,16 +592,19 @@ if (@$_POST['form-type'] == "add_students") {
 
                         $('#studentFilterSection').show();
                         $('#selected_exam_id').val(examIds.join(','));
-                        $('#form_exam_id').val(examIds.join(','));
+                        $('#examIdContainer').empty();
+                        examIds.forEach(id => {
+                            $('#examIdContainer').append(`<input type="hidden" name="exam_id[]" value="${id}">`);
+                        });
 
                         $('#examInfoCard').show();
                         scrollToElement('#studentFilterSection');
                     })
                     .catch(error => {
-                        showAlert('Error loading some exam details: ' + error, 'danger');
+                        showAlert('Error loading some exam details: ' + error);
                         console.error('Error:', error);
                     })
-                    .always(() => {
+                    .finally(() => {
                         toggleLoading($('#loadExamBtn'), false);
                     });
             });
@@ -635,42 +667,44 @@ if (@$_POST['form-type'] == "add_students") {
             $('#filterBtn').click(function() {
                 const examIds = $('#selected_exam_id').val();
                 if (!examIds) {
-                    showAlert('Please select and load exam(s) first', 'warning');
+                    showAlert('Please select and load exam(s) first');
                     return;
                 }
 
-                toggleLoading($('#filterBtn'), true);
+                toggleLoading($(this), true);
 
-                const classFilter = $('#filter_class').val() || [];
-                const categoryFilter = $('#category').val() || [];
-                const includeIds = $('#student_ids').val() || '';
-                const excludeIds = $('#excluded_ids').val() || '';
+                const formData = {
+                    exam_id: examIds,
+                    class: $('#filter_class').val() || [],
+                    category: $('#category').val() || [],
+                    student_ids: $('#student_ids').val() || '',
+                    excluded_ids: $('#excluded_ids').val() || ''
+                };
 
-                $.ajax({
-                        url: 'fetch_exam_students.php',
-                        method: 'POST',
-                        data: {
-                            exam_id: examIds,
-                            class: classFilter,
-                            category: categoryFilter,
-                            student_ids: includeIds,
-                            excluded_ids: excludeIds
-                        },
-                        dataType: 'json'
-                    })
+                $.post('fetch_exam_students.php', formData)
                     .done(function(data) {
+                        if (data.error) {
+                            showAlert(data.error);
+                            return;
+                        }
+
                         if (data && data.length > 0) {
                             populateStudentTable(data, examIds.split(','));
                             $('#studentTableContainer').show();
                             scrollToElement('#studentTableContainer');
                         } else {
-                            showAlert('No students found matching your criteria', 'info');
+                            showAlert('No students found matching your criteria');
                             $('#studentTableContainer').hide();
                         }
                     })
-                    .fail(function(xhr, status, error) {
-                        showAlert('Error filtering students: ' + error, 'danger');
-                        console.error('Error:', error);
+                    .fail(function(xhr) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            showAlert(response.error || 'Error filtering students');
+                        } catch (e) {
+                            showAlert('Error filtering students: ' + xhr.statusText);
+                        }
+                        console.error('Error:', xhr.responseText);
                     })
                     .always(function() {
                         toggleLoading($('#filterBtn'), false);
@@ -683,28 +717,36 @@ if (@$_POST['form-type'] == "add_students") {
                 $tbody.empty();
 
                 if (!students || students.length === 0) {
-                    $tbody.append('<tr><td colspan="5" class="text-center">No students found</td></tr>');
+                    $tbody.append('<tr><td colspan="6" class="text-center">No students found</td></tr>');
                     return;
                 }
 
                 const studentIds = students.map(s => s.student_id);
 
-                $.ajax({
-                        url: 'fetch_student_exam_status.php',
-                        method: 'POST',
-                        data: {
-                            student_ids: studentIds.join(','),
-                            exam_ids: examIds.join(',')
-                        },
-                        dataType: 'json'
+                $.post('fetch_student_exam_status.php', {
+                        student_ids: studentIds.join(','),
+                        exam_ids: examIds.join(',')
                     })
-                    .done(function(enrollmentData) {
+                    .done(function(response) {
+                        if (response.error) {
+                            showAlert(response.error);
+                            return;
+                        }
+
+                        const enrollmentData = Array.isArray(response) ? response : [];
+
                         students.forEach(student => {
-                            const enrolledExams = enrollmentData.filter(e => e.student_id === student.student_id);
+                            const enrolledExams = enrollmentData.filter(e =>
+                                String(e.student_id).toLowerCase() === String(student.student_id).toLowerCase()
+                            );
+
                             const isEnrolled = enrolledExams.length > 0;
                             const rowClass = isEnrolled ? 'table-warning' : '';
-                            const statusText = isEnrolled ?
-                                `<span class="badge bg-warning text-dark">Already in ${enrolledExams.map(e => e.subject).join(', ')}</span>` : '';
+
+                            // Create tags for each exam the student is enrolled in
+                            const examTags = enrolledExams.map(e =>
+                                `<span class="exam-tag subject">${e.subject || 'Unknown'}</span>`
+                            ).join('');
 
                             $tbody.append(`
                             <tr class="${rowClass}">
@@ -714,10 +756,11 @@ if (@$_POST['form-type'] == "add_students") {
                                            class="student-checkbox"
                                            ${isEnrolled ? 'disabled' : ''}>
                                 </td>
-                                <td>${student.student_id} ${statusText}</td>
+                                <td>${student.student_id}</td>
                                 <td>${student.studentname}</td>
                                 <td>${student.category}</td>
                                 <td>${student.class}</td>
+                                <td>${examTags || '<span class="text-success">Available</span>'}</td>
                             </tr>
                         `);
                         });
@@ -725,8 +768,16 @@ if (@$_POST['form-type'] == "add_students") {
                         $('#totalCount').text(`Total: ${students.length}`);
                         updateSelectedCount();
                     })
-                    .fail(function() {
-                        showAlert('Error checking enrollment status', 'danger');
+                    .fail(function(jqXHR) {
+                        let errorMsg = 'Error checking enrollment status';
+                        try {
+                            const errResponse = JSON.parse(jqXHR.responseText);
+                            if (errResponse.error) errorMsg += ': ' + errResponse.error;
+                        } catch (e) {
+                            errorMsg += ' (Invalid server response)';
+                        }
+                        showAlert(errorMsg);
+                        $tbody.append(`<tr><td colspan="6" class="text-center text-danger">${errorMsg}</td></tr>`);
                     });
             }
 
@@ -739,10 +790,9 @@ if (@$_POST['form-type'] == "add_students") {
             // Form submission
             $('#addStudentsForm').submit(function(e) {
                 e.preventDefault();
-
                 const selectedStudents = $('.student-checkbox:checked');
                 if (selectedStudents.length === 0) {
-                    showAlert('Please select at least one student to add', 'warning');
+                    showAlert('Please select at least one student to add');
                     return;
                 }
 
@@ -755,28 +805,46 @@ if (@$_POST['form-type'] == "add_students") {
                         dataType: 'json'
                     })
                     .done(function(response) {
-                        if (response.success > 0 || response.errors > 0) {
-                            const alertType = response.errors > 0 ? 'info' : 'success';
-                            showAlert(response.message, alertType);
-
-                            if (response.error_details && response.error_details.length > 0) {
-                                console.log('Error details:', response.error_details);
-                            }
+                        let message = response.message;
+                        if (response.error_details && response.error_details.length > 0) {
+                            message += "\n\nError details:\n" + response.error_details.join("\n");
                         }
-                        // Refresh the student list
-                        $('#filterBtn').click();
+                        showAlert(message);
+                        $('#filterBtn').click(); // Refresh the student list
                     })
                     .fail(function(xhr) {
                         try {
                             const response = JSON.parse(xhr.responseText);
-                            showAlert(response.message || 'Error adding students', 'danger');
+                            showAlert(response.message || 'Error adding students');
                         } catch (e) {
-                            showAlert('Error adding students', 'danger');
+                            showAlert('Error adding students');
                         }
                     })
                     .always(function() {
                         toggleLoading($('#addStudentsBtn'), false);
                     });
+            });
+
+            // Row click handler
+            $('#studentTableBody').on('click', 'tr', function(e) {
+                if ($(e.target).is('a, button, input, select, textarea')) return;
+                const checkbox = $(this).find('.student-checkbox');
+                if (!checkbox.is(':disabled')) {
+                    checkbox.prop('checked', !checkbox.is(':checked'));
+                    updateSelectedCount();
+                }
+            });
+
+            // Reset form when changing filters
+            $('#academic_year, #exam_type, #class, #subject').change(function() {
+                $('#studentFilterSection, #studentTableContainer').hide();
+                $('#filterForm')[0].reset();
+                $('#studentTableBody').empty();
+                $('#totalCount').text('Total: 0');
+                $('#selectedCount').text('Selected: 0');
+                $('#addStudentsBtn').prop('disabled', true);
+                $('#examInfoCard').hide();
+                examDetailsData = [];
             });
         });
     </script>
