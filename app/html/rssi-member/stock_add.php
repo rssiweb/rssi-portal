@@ -89,84 +89,71 @@ while ($row = pg_fetch_assoc($result)) {
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'AW-11316670180');
-    </script>
+    <!-- Your existing meta tags and scripts -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Add Stock</title>
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
-    <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Include Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
     <style>
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
+        /* Improved locked unit styling */
+        .select2-container--locked .select2-selection {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
         }
 
-        #passwordHelpBlock {
-            display: block;
+        .select2-container--locked .select2-selection__arrow {
+            display: none !important;
         }
 
-        .input-help {
-            vertical-align: top;
-            display: inline-block;
+        /* Professional delete button styling */
+        .btn-delete-row {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 50%;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            transition: all 0.2s;
         }
 
-        .readonly-select {
-            pointer-events: none;
-            background-color: #e9ecef;
+        .btn-delete-row:hover {
+            background-color: #bb2d3b;
+            transform: scale(1.05);
+        }
+
+        .btn-delete-row:disabled {
+            opacity: 0.5;
+            background-color: #6c757d;
+            cursor: not-allowed;
         }
 
         .item-row {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+            margin-bottom: 1rem;
+            padding: 1rem;
             background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
         }
 
-        .remove-row {
-            color: #dc3545;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .remove-row:hover {
-            color: #bb2d3b;
-        }
-    </style>
-    <style>
-        .locked-unit {
-            /* This class is for JavaScript to identify locked units */
-        }
-
-        .select2-container--default .select2-selection--single.locked-unit {
-            background-color: #e9ecef !important;
-            cursor: not-allowed !important;
+        .item-row:hover {
+            background-color: #f1f3f5;
         }
     </style>
 </head>
@@ -185,7 +172,7 @@ while ($row = pg_fetch_assoc($result)) {
                     <li class="breadcrumb-item active">Add Stock</li>
                 </ol>
             </nav>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
@@ -194,16 +181,16 @@ while ($row = pg_fetch_assoc($result)) {
                         <div class="card-body">
                             <br>
                             <?php if ($_POST && !$success) { ?>
-                                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Error: <?php echo isset($error_message) ? $error_message : 'Something went wrong.'; ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>Error: <?php echo isset($error_message) ? $error_message : 'Something went wrong.'; ?></span>
                                 </div>
                             <?php } elseif ($_POST && $success) { ?>
-                                <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                <div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Stock items successfully added.
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2-circle"></i>
-                                    <span>Stock items successfully added.</span>
                                 </div>
                                 <script>
                                     if (window.history.replaceState) {
@@ -212,80 +199,71 @@ while ($row = pg_fetch_assoc($result)) {
                                 </script>
                             <?php } ?>
 
-                            <div class="container my-5">
-                                <div class="row justify-content-center">
-                                    <div class="col-lg-10">
-                                        <form method="POST" enctype="multipart/form-data" id="stockForm">
-                                            <!-- Date Received -->
-                                            <div class="mb-3">
-                                                <label for="date_received" class="form-label">Date Received</label>
-                                                <input type="date" class="form-control" id="date_received" name="date_received" required value="<?php echo date('Y-m-d'); ?>">
-                                            </div>
+                            <div class="container">
+                                <form method="POST" id="stockForm">
+                                    <div class="mb-3">
+                                        <label for="date_received" class="form-label">Date Received</label>
+                                        <input type="date" class="form-control" id="date_received" name="date_received" required value="<?php echo date('Y-m-d'); ?>">
+                                    </div>
 
-                                            <!-- Source -->
-                                            <div class="mb-3">
-                                                <label for="source" class="form-label">Source</label>
-                                                <select id="source" name="source" class="form-select" required>
-                                                    <option value="">Select Source</option>
-                                                    <option value="Donation">Donation</option>
-                                                    <option value="Purchased">Purchased</option>
+                                    <div class="mb-3">
+                                        <label for="source" class="form-label">Source</label>
+                                        <select id="source" name="source" class="form-select" required>
+                                            <option value="">Select Source</option>
+                                            <option value="Donation">Donation</option>
+                                            <option value="Purchased">Purchased</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Description (Optional)</label>
+                                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                    </div>
+
+                                    <hr>
+
+                                    <h5>Items</h5>
+                                    <div id="items-container">
+                                        <!-- Initial row -->
+                                        <div class="item-row row g-3 align-items-end">
+                                            <div class="col-md-5">
+                                                <label class="form-label">Item Name</label>
+                                                <select name="item_id[]" class="form-select item-select" required>
+                                                    <option value="">Select Item</option>
+                                                    <?php foreach ($items as $item): ?>
+                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
-
-                                            <!-- Description -->
-                                            <div class="mb-3">
-                                                <label for="description" class="form-label">Description (Optional)</label>
-                                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Unit</label>
+                                                <select name="unit_id[]" class="form-select unit-select" required>
+                                                    <option value="">Select Unit</option>
+                                                    <?php foreach ($units as $unit): ?>
+                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
                                             </div>
-
-                                            <hr>
-
-                                            <!-- Items Section -->
-                                            <div class="mb-3">
-                                                <h5>Items</h5>
-                                                <div id="items-container">
-                                                    <!-- First row will be added by default -->
-                                                    <div class="item-row" data-row="0">
-                                                        <div class="row">
-                                                            <div class="col-md-5">
-                                                                <label class="form-label">Item Name</label>
-                                                                <select name="item_id[]" class="form-control item-select" required>
-                                                                    <option value="">Select Item</option>
-                                                                    <?php foreach ($items as $item): ?>
-                                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Unit</label>
-                                                                <select name="unit_id[]" class="form-control unit-select" required>
-                                                                    <option value="">Select Unit</option>
-                                                                    <?php foreach ($units as $unit): ?>
-                                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Quantity</label>
-                                                                <input type="number" name="quantity_received[]" class="form-control" min="1" required>
-                                                            </div>
-                                                            <div class="col-md-1 d-flex align-items-end">
-                                                                <span class="remove-row"><i class="bi bi-trash"></i></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button" id="add-item" class="btn btn-secondary mt-2">
-                                                    <i class="bi bi-plus-circle"></i> Add Another Item
+                                            <div class="col-md-3">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" name="quantity_received[]" class="form-control" min="1" required>
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end justify-content-end">
+                                                <button type="button" class="btn-delete-row" disabled>
+                                                    ×
                                                 </button>
                                             </div>
-
-                                            <div class="text-center mt-4">
-                                                <button type="submit" class="btn btn-primary">Submit</button>
-                                            </div>
-                                        </form>
+                                        </div>
                                     </div>
-                                </div>
+
+                                    <button type="button" id="add-item" class="btn btn-outline-secondary mt-3">
+                                        <i class="bi bi-plus-circle"></i> Add Another Item
+                                    </button>
+
+                                    <div class="text-center mt-4">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -294,29 +272,28 @@ while ($row = pg_fetch_assoc($result)) {
         </section>
     </main>
 
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Convert PHP item_units to JS object
             const itemUnits = <?php echo json_encode($item_units); ?>;
-            let rowCount = 1;
 
-            // Initialize the first row
-            initRow($('.item-row'));
+            // Initialize Select2
+            $('.item-select, .unit-select').select2({
+                width: '100%'
+            });
 
             // Add new item row
             $('#add-item').click(function() {
                 const newRow = $(`
-                <div class="item-row" data-row="${rowCount}">
-                    <div class="row">
+                    <div class="item-row row g-3 align-items-end mt-2">
                         <div class="col-md-5">
-                            <label class="form-label">Item Name</label>
-                            <select name="item_id[]" class="form-control item-select" required>
+                            <select name="item_id[]" class="form-select item-select" required>
                                 <option value="">Select Item</option>
                                 <?php foreach ($items as $item): ?>
                                     <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
@@ -324,8 +301,7 @@ while ($row = pg_fetch_assoc($result)) {
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Unit</label>
-                            <select name="unit_id[]" class="form-control unit-select" required>
+                            <select name="unit_id[]" class="form-select unit-select" required>
                                 <option value="">Select Unit</option>
                                 <?php foreach ($units as $unit): ?>
                                     <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
@@ -333,126 +309,87 @@ while ($row = pg_fetch_assoc($result)) {
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" name="quantity_received[]" class="form-control qty-input" min="1" required>
+                            <input type="number" name="quantity_received[]" class="form-control" min="1" required>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <span class="remove-row"><i class="bi bi-trash"></i></span>
+                        <div class="col-md-1 d-flex align-items-end justify-content-end">
+                            <button type="button" class="btn-delete-row">
+                                ×
+                            </button>
                         </div>
                     </div>
-                </div>
-            `);
+                `);
 
                 $('#items-container').append(newRow);
-                initRow(newRow);
-                rowCount++;
+                newRow.find('.item-select, .unit-select').select2({
+                    width: '100%'
+                });
+
+                // Enable all delete buttons if more than one row exists
+                if ($('.item-row').length > 1) {
+                    $('.btn-delete-row').prop('disabled', false);
+                }
             });
 
             // Remove row
-            $(document).on('click', '.remove-row', function() {
+            $(document).on('click', '.btn-delete-row:not(:disabled)', function() {
                 if ($('.item-row').length > 1) {
                     $(this).closest('.item-row').remove();
-                } else {
-                    // Reset the single remaining row instead of removing it
-                    resetRow($(this).closest('.item-row'));
+
+                    // Disable delete button if only one row remains
+                    if ($('.item-row').length === 1) {
+                        $('.btn-delete-row').prop('disabled', true);
+                    }
                 }
             });
 
-            // Function to reset a row's unit and quantity fields
-            function resetRow(row) {
+            // Handle item selection to lock units
+            $(document).on('change', '.item-select', function() {
+                const selectedItem = $(this).val();
+                const row = $(this).closest('.item-row');
                 const unitSelect = row.find('.unit-select');
-                const qtyInput = row.find('.qty-input');
+                const select2Container = unitSelect.next('.select2-container');
 
-                unitSelect.val('').trigger('change').removeClass('locked-unit');
-                qtyInput.val('');
+                if (selectedItem && itemUnits[selectedItem]) {
+                    // Lock the unit visually and functionally
+                    unitSelect.val(itemUnits[selectedItem]).trigger('change');
+                    select2Container.addClass('select2-container--locked');
 
-                // Reset Select2 styling and enable interactions
-                unitSelect.next('.select2-container').find('.select2-selection').css({
-                    'background-color': '',
-                    'cursor': ''
-                });
-                unitSelect.off('select2:opening');
-            }
+                    // Prevent any changes
+                    unitSelect.prop('disabled', false); // Keep enabled for submission
+                    select2Container.find('.select2-selection').css('pointer-events', 'none');
 
-            // Initialize a row (item select and unit handling)
-            function initRow(row) {
-                const itemSelect = row.find('.item-select');
-                const unitSelect = row.find('.unit-select');
+                    // Special handling for Select2
+                    unitSelect.on('select2:opening', function(e) {
+                        e.preventDefault();
+                    });
+                } else {
+                    // Unlock the unit
+                    select2Container.removeClass('select2-container--locked');
+                    select2Container.find('.select2-selection').css('pointer-events', '');
+                    unitSelect.off('select2:opening');
+                }
+            });
 
-                // Initialize Select2 for item select
-                itemSelect.select2({
-                    placeholder: "Select an item",
-                    allowClear: true,
-                    width: '100%'
-                }).on('change', function() {
-                    const selectedItem = $(this).val();
-                    const row = $(this).closest('.item-row');
-                    const unitSelect = row.find('.unit-select');
-                    const qtyInput = row.find('.qty-input');
-
-                    if (!selectedItem) {
-                        // Item was cleared - immediately reset unit and quantity
-                        resetRow(row);
-                        return;
-                    }
-
-                    if (itemUnits[selectedItem]) {
-                        // Item has a predefined unit - lock it visually
-                        unitSelect.val(itemUnits[selectedItem]).trigger('change');
-                        unitSelect.addClass('locked-unit');
-
-                        // Style to look disabled
-                        unitSelect.next('.select2-container').find('.select2-selection').css({
-                            'background-color': '#e9ecef',
-                            'cursor': 'not-allowed'
-                        });
-
-                        // Prevent opening dropdown
-                        unitSelect.on('select2:opening', function(e) {
-                            e.preventDefault();
-                        });
-                    } else {
-                        // New item - allow selection
-                        unitSelect.removeClass('locked-unit');
-                        unitSelect.next('.select2-container').find('.select2-selection').css({
-                            'background-color': '',
-                            'cursor': ''
-                        });
-                        unitSelect.off('select2:opening');
-                    }
-                });
-
-                // Initialize Select2 for unit select
-                unitSelect.select2({
-                    placeholder: "Select unit",
-                    width: '100%'
-                });
-            }
-
-            // Form validation before submission
+            // Form validation
             $('#stockForm').on('submit', function(e) {
-                let valid = true;
-
-                // Check each row for completeness
+                let isValid = true;
                 $('.item-row').each(function() {
-                    const itemSelect = $(this).find('.item-select');
-                    const unitSelect = $(this).find('.unit-select');
-                    const quantityInput = $(this).find('.qty-input');
+                    const item = $(this).find('.item-select').val();
+                    const unit = $(this).find('.unit-select').val();
+                    const qty = $(this).find('input[type="number"]').val();
 
-                    if (!itemSelect.val() || !unitSelect.val() || !quantityInput.val()) {
-                        valid = false;
-                        $(this).css('border-color', '#dc3545');
+                    if (!item || !unit || !qty) {
+                        isValid = false;
+                        $(this).addClass('border border-danger');
                     } else {
-                        $(this).css('border-color', '#dee2e6');
+                        $(this).removeClass('border border-danger');
                     }
                 });
 
-                if (!valid) {
+                if (!isValid) {
                     e.preventDefault();
                     alert('Please complete all fields in each item row before submitting.');
                 }
-
-                return valid;
             });
         });
     </script>
