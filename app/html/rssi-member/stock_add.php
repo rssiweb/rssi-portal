@@ -22,37 +22,81 @@ if ($_POST) {
     $added_by = $associatenumber;
     $timestamp = date('Y-m-d H:i:s');
 
-    // Loop through each selected item and insert into the database
-    $success = true;
+    // Server-side validation: Check if any item already exists with a different unit
+    $validation_errors = [];
     foreach ($_POST['item_id'] as $item_id) {
-        $transaction_id = uniqid();
-        $query = "INSERT INTO stock_add (transaction_id, date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
-                  VALUES ('$transaction_id', '$date_received', '$source', '$item_id', '$unit_id', '$description', '$quantity_received', '$timestamp', '$added_by')";
+        $check_query = "SELECT unit_id FROM stock_item WHERE item_id = '$item_id'";
+        $check_result = pg_query($con, $check_query);
+        if ($check_result && pg_num_rows($check_result) > 0) {
+            $existing_unit = pg_fetch_assoc($check_result)['unit_id'];
+            if ($existing_unit && $existing_unit != $unit_id) {
+                $item_name_query = "SELECT item_name FROM stock_item WHERE item_id = '$item_id'";
+                $item_name_result = pg_query($con, $item_name_query);
+                $item_name = pg_fetch_assoc($item_name_result)['item_name'];
 
-        $result = pg_query($con, $query);
-        if (!$result) {
-            $success = false;
-            break;
+                $unit_name_query = "SELECT unit_name FROM stock_item_unit WHERE unit_id = '$existing_unit'";
+                $unit_name_result = pg_query($con, $unit_name_query);
+                $unit_name = pg_fetch_assoc($unit_name_result)['unit_name'];
+
+                $validation_errors[] = "Item '$item_name' already uses unit '$unit_name'. Please use the same unit.";
+            }
+        }
+    }
+
+    if (!empty($validation_errors)) {
+        $success = false;
+        $error_message = implode("<br>", $validation_errors);
+    } else {
+        // Proceed with insertion if validation passes
+        $success = true;
+        foreach ($_POST['item_id'] as $item_id) {
+            $transaction_id = uniqid();
+            $query = "INSERT INTO stock_add (transaction_id, date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
+                      VALUES ('$transaction_id', '$date_received', '$source', '$item_id', '$unit_id', '$description', '$quantity_received', '$timestamp', '$added_by')";
+
+            $result = pg_query($con, $query);
+            if (!$result) {
+                $success = false;
+                break;
+            }
+
+            // Update the item's unit if it wasn't set before
+            $update_query = "UPDATE stock_item SET unit_id = '$unit_id' WHERE item_id = '$item_id' AND unit_id IS NULL";
+            pg_query($con, $update_query);
         }
     }
 }
 
 // Fetch items and units for dropdowns
-$item_query = "SELECT item_id, item_name FROM stock_item";
-$unit_query = "SELECT unit_id, unit_name FROM stock_item_unit";
+$item_query = "SELECT item_id, item_name FROM stock_item ORDER BY item_name";
+$unit_query = "SELECT unit_id, unit_name FROM stock_item_unit ORDER BY unit_name";
 
 $item_result = pg_query($con, $item_query);
 $unit_result = pg_query($con, $unit_query);
 
 $items = [];
 $units = [];
+$item_units = []; // To store existing item-unit mappings
 
+// Get all items
 while ($row = pg_fetch_assoc($item_result)) {
     $items[] = ['id' => $row['item_id'], 'text' => $row['item_name']];
 }
 
+// Get all units
 while ($row = pg_fetch_assoc($unit_result)) {
     $units[] = ['id' => $row['unit_id'], 'text' => $row['unit_name']];
+}
+
+// Get the most recent unit used for each item from stock_add
+$item_unit_query = "SELECT DISTINCT ON (item_id) item_id, unit_id 
+                    FROM stock_add 
+                    WHERE unit_id IS NOT NULL 
+                    ORDER BY item_id, timestamp DESC";
+$item_unit_result = pg_query($con, $item_unit_query);
+
+while ($row = pg_fetch_assoc($item_unit_result)) {
+    $item_units[$row['item_id']] = $row['unit_id'];
 }
 ?>
 
@@ -106,8 +150,18 @@ while ($row = pg_fetch_assoc($unit_result)) {
             vertical-align: top;
             display: inline-block;
         }
-    </style>
 
+        .unit-locked {
+            background-color: #f8f9fa;
+            pointer-events: none;
+        }
+
+        .validation-error {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -140,7 +194,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                 <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     <i class="bi bi-exclamation-triangle"></i>
-                                    <span>Error: Something went wrong.</span>
+                                    <span>Error: <?php echo isset($error_message) ? $error_message : 'Something went wrong.'; ?></span>
                                 </div>
                             <?php } elseif ($_POST && $success) { ?>
                                 <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
@@ -158,7 +212,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                             <div class="container my-5">
                                 <div class="row justify-content-center">
                                     <div class="col-lg-8">
-                                        <form method="POST" enctype="multipart/form-data">
+                                        <form method="POST" enctype="multipart/form-data" id="stockForm">
                                             <!-- Date Received -->
                                             <div class="mb-3">
                                                 <label for="date_received" class="form-label">Date Received</label>
@@ -193,6 +247,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                                         <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
+                                                <div id="unitValidation" class="validation-error"></div>
                                             </div>
 
                                             <!-- Quantity Received -->
@@ -230,11 +285,81 @@ while ($row = pg_fetch_assoc($unit_result)) {
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for item_id and unit_id
+            // Initialize Select2 for item_id
             $('#item_id').select2({
                 data: <?php echo json_encode($items); ?>,
                 placeholder: "Select items",
                 allowClear: true
+            });
+
+            // Convert PHP item_units to JS object
+            const itemUnits = <?php echo json_encode($item_units); ?>;
+            let requiredUnitId = null;
+            let validationError = false;
+
+            // When items are selected
+            $('#item_id').on('change', function() {
+                const selectedItems = $(this).val() || [];
+                const unitSelect = $('#unit_id');
+                const unitValidation = $('#unitValidation');
+
+                // Reset state
+                unitSelect.removeClass('unit-locked');
+                unitSelect.prop('disabled', false);
+                requiredUnitId = null;
+                validationError = false;
+                unitValidation.text('');
+
+                // Check each selected item for existing unit
+                selectedItems.forEach(itemId => {
+                    if (itemUnits[itemId]) {
+                        if (!requiredUnitId) {
+                            // First item with a unit - lock to this unit
+                            requiredUnitId = itemUnits[itemId];
+                        } else if (itemUnits[itemId] !== requiredUnitId) {
+                            // Conflict - different units required
+                            validationError = true;
+                        }
+                    }
+                });
+
+                if (validationError) {
+                    unitValidation.text('Selected items have conflicting units. Please select items that use the same unit.');
+                    return;
+                }
+
+                if (requiredUnitId) {
+                    // Lock the unit selection to the required unit
+                    unitSelect.val(requiredUnitId).trigger('change');
+                    unitSelect.addClass('unit-locked');
+                    unitSelect.prop('disabled', true);
+                    unitValidation.text('Unit is locked because some selected items already have a defined unit.');
+                }
+            });
+
+            // Form submission validation
+            $('#stockForm').on('submit', function(e) {
+                const selectedItems = $('#item_id').val() || [];
+                const selectedUnit = $('#unit_id').val();
+                let error = false;
+                let errorMessage = '';
+
+                // Client-side validation
+                selectedItems.forEach(itemId => {
+                    if (itemUnits[itemId] && itemUnits[itemId] != selectedUnit) {
+                        error = true;
+                        const itemName = $('#item_id').select2('data').find(item => item.id == itemId).text;
+                        errorMessage += `Item ${itemName} already uses a different unit. `;
+                    }
+                });
+
+                if (error) {
+                    e.preventDefault();
+                    alert('Validation Error: ' + errorMessage + 'Please correct and try again.');
+                    return false;
+                }
+
+                return true;
             });
         });
     </script>
