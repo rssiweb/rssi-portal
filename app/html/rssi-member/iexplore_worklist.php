@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $courseId = $row['course_id'];
                     $applicantid = $row['associate_number'];
                     $email = $row['email'];
-                    $fullname = $row['fullname'];
+                    $applicantname = $row['fullname'];
                     $coursename = $row['coursename'];
                     $supportingfile = $row['supporting_file'];
 
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     "courseId" => $courseId,
                                     "coursename" => $coursename,
                                     "applicantid" => $applicantid,
-                                    "name" => $fullname,
+                                    "name" => $applicantname,
                                     "date" => date('Y-m-d H:i:s'),
                                     "remarks" => $bulk_remarks,
                                     "score" => $row['score'],
@@ -116,7 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                echo "<script>alert('Bulk review applied successfully.'); window.location.href = window.location.href;</script>";
+                echo "<script>alert('Bulk review applied successfully.'); if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload();</script>";
             }
         }
     }

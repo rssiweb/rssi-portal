@@ -414,9 +414,13 @@ if ($result) {
         <script>
             $(document).ready(function() {
                 alert('<?php echo addslashes($_SESSION['bulk_action_status']['message']); ?>');
-                <?php unset($_SESSION['bulk_action_status']); ?>
+
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
             });
         </script>
+        <?php unset($_SESSION['bulk_action_status']); ?>
     <?php endif; ?>
 </body>
 
