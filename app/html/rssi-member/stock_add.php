@@ -103,57 +103,79 @@ while ($row = pg_fetch_assoc($result)) {
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-
     <style>
-        /* Improved locked unit styling */
-        .select2-container--locked .select2-selection {
-            background-color: #e9ecef !important;
-            cursor: not-allowed !important;
-            opacity: 1 !important;
+        /* Table styling */
+        .stock-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
         }
 
-        .select2-container--locked .select2-selection__arrow {
-            display: none !important;
+        .stock-table th {
+            background-color: #f1f3f5;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 500;
+            border-bottom: 1px solid #dee2e6;
         }
 
-        /* Professional delete button styling */
-        .btn-delete-row {
+        .stock-table td {
+            padding: 8px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .stock-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Form controls */
+        .table-select {
+            width: 100%;
+            min-width: 150px;
+            padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+        }
+
+        .table-input {
+            width: 80px;
+            padding: 0.375rem 0.75rem;
+        }
+
+        /* Action buttons */
+        .btn-action {
             width: 28px;
             height: 28px;
             padding: 0;
-            border-radius: 50%;
-            background-color: #dc3545;
-            color: white;
-            border: none;
+            border-radius: 4px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            line-height: 1;
-            transition: all 0.2s;
         }
 
-        .btn-delete-row:hover {
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .btn-delete:hover {
             background-color: #bb2d3b;
-            transform: scale(1.05);
         }
 
-        .btn-delete-row:disabled {
-            opacity: 0.5;
+        .btn-delete:disabled {
             background-color: #6c757d;
-            cursor: not-allowed;
+            opacity: 0.65;
         }
 
-        .item-row {
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0.25rem;
-            transition: all 0.2s;
+        /* Locked unit styling */
+        .is-locked .select2-selection {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
         }
 
-        .item-row:hover {
-            background-color: #f1f3f5;
+        .is-locked .select2-selection__arrow {
+            display: none !important;
         }
     </style>
 </head>
@@ -201,63 +223,70 @@ while ($row = pg_fetch_assoc($result)) {
 
                             <div class="container">
                                 <form method="POST" id="stockForm">
-                                    <div class="mb-3">
-                                        <label for="date_received" class="form-label">Date Received</label>
-                                        <input type="date" class="form-control" id="date_received" name="date_received" required value="<?php echo date('Y-m-d'); ?>">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="source" class="form-label">Source</label>
-                                        <select id="source" name="source" class="form-select" required>
-                                            <option value="">Select Source</option>
-                                            <option value="Donation">Donation</option>
-                                            <option value="Purchased">Purchased</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Description (Optional)</label>
-                                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Date Received</label>
+                                            <input type="date" class="form-control" name="date_received" required value="<?php echo date('Y-m-d'); ?>">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Source</label>
+                                            <select name="source" class="form-select" required>
+                                                <option value="">Select Source</option>
+                                                <option value="Donation">Donation</option>
+                                                <option value="Purchased">Purchased</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="description" class="form-label">Description (Optional)</label>
+                                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                        </div>
                                     </div>
 
                                     <hr>
 
                                     <h5>Items</h5>
-                                    <div id="items-container">
-                                        <!-- Initial row -->
-                                        <div class="item-row row g-3 align-items-end">
-                                            <div class="col-md-5">
-                                                <label class="form-label">Item Name</label>
-                                                <select name="item_id[]" class="form-select item-select" required>
-                                                    <option value="">Select Item</option>
-                                                    <?php foreach ($items as $item): ?>
-                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Unit</label>
-                                                <select name="unit_id[]" class="form-select unit-select" required>
-                                                    <option value="">Select Unit</option>
-                                                    <?php foreach ($units as $unit): ?>
-                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Quantity</label>
-                                                <input type="number" name="quantity_received[]" class="form-control" min="1" required>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-end justify-content-end">
-                                                <button type="button" class="btn-delete-row" disabled>
-                                                    ×
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <table class="stock-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Item Name</th>
+                                                <th>Unit</th>
+                                                <th>Quantity</th>
+                                                <th style="width: 40px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="items-container">
+                                            <!-- Initial row -->
+                                            <tr>
+                                                <td>
+                                                    <select name="item_id[]" class="form-select table-select item-select" required>
+                                                        <option value="">Select Item</option>
+                                                        <?php foreach ($items as $item): ?>
+                                                            <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select name="unit_id[]" class="form-select table-select unit-select" required>
+                                                        <option value="">Select Unit</option>
+                                                        <?php foreach ($units as $unit): ?>
+                                                            <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn-action btn-delete" disabled>
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
 
-                                    <button type="button" id="add-item" class="btn btn-outline-secondary mt-3">
-                                        <i class="bi bi-plus-circle"></i> Add Another Item
+                                    <button type="button" id="add-item" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Add Row
                                     </button>
 
                                     <div class="text-center mt-4">
@@ -336,113 +365,160 @@ while ($row = pg_fetch_assoc($result)) {
     <script>
         $(document).ready(function() {
             const itemUnits = <?php echo json_encode($item_units); ?>;
+            let selectedItems = new Set();
 
             // Initialize Select2
             $('.item-select, .unit-select').select2({
-                width: '100%'
+                width: '100%',
+                minimumResultsForSearch: 6
+            });
+
+            // Track initial selected item if any
+            $('.item-select').each(function() {
+                if ($(this).val()) {
+                    selectedItems.add($(this).val());
+                }
             });
 
             // Add new item row
             $('#add-item').click(function() {
                 const newRow = $(`
-                    <div class="item-row row g-3 align-items-end mt-2">
-                        <div class="col-md-5">
-                            <select name="item_id[]" class="form-select item-select" required>
+                    <tr>
+                        <td>
+                            <select name="item_id[]" class="form-select table-select item-select" required>
                                 <option value="">Select Item</option>
                                 <?php foreach ($items as $item): ?>
-                                    <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                    <option value="<?php echo $item['id']; ?>" ${selectedItems.has('<?php echo $item['id']; ?>') ? 'disabled' : ''}>
+                                        <?php echo $item['text']; ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="unit_id[]" class="form-select unit-select" required>
+                        </td>
+                        <td>
+                            <select name="unit_id[]" class="form-select table-select unit-select" required>
                                 <option value="">Select Unit</option>
                                 <?php foreach ($units as $unit): ?>
                                     <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
                                 <?php endforeach; ?>
                             </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="quantity_received[]" class="form-control" min="1" required>
-                        </div>
-                        <div class="col-md-1 d-flex align-items-end justify-content-end">
-                            <button type="button" class="btn-delete-row">
-                                ×
+                        </td>
+                        <td>
+                            <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
+                        </td>
+                        <td>
+                            <button type="button" class="btn-action btn-delete">
+                                <i class="bi bi-x-lg"></i>
                             </button>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `);
 
                 $('#items-container').append(newRow);
                 newRow.find('.item-select, .unit-select').select2({
-                    width: '100%'
+                    width: '100%',
+                    minimumResultsForSearch: 6
                 });
 
-                // Enable all delete buttons if more than one row exists
-                if ($('.item-row').length > 1) {
-                    $('.btn-delete-row').prop('disabled', false);
-                }
+                // Enable all delete buttons
+                $('.btn-delete').prop('disabled', false);
             });
 
             // Remove row
-            $(document).on('click', '.btn-delete-row:not(:disabled)', function() {
-                if ($('.item-row').length > 1) {
-                    $(this).closest('.item-row').remove();
+            $(document).on('click', '.btn-delete', function() {
+                const row = $(this).closest('tr');
+                const itemSelect = row.find('.item-select');
+                const itemId = itemSelect.val();
+
+                if (itemId) {
+                    selectedItems.delete(itemId);
+                    updateItemAvailability();
+                }
+
+                if ($('#items-container tr').length > 1) {
+                    row.remove();
 
                     // Disable delete button if only one row remains
-                    if ($('.item-row').length === 1) {
-                        $('.btn-delete-row').prop('disabled', true);
+                    if ($('#items-container tr').length === 1) {
+                        $('.btn-delete').prop('disabled', true);
                     }
                 }
             });
 
-            // Handle item selection to lock units
+            // Handle item selection changes
             $(document).on('change', '.item-select', function() {
-                const selectedItem = $(this).val();
-                const row = $(this).closest('.item-row');
+                const row = $(this).closest('tr');
+                const previousValue = row.data('previous-item');
+                const newValue = $(this).val();
                 const unitSelect = row.find('.unit-select');
                 const select2Container = unitSelect.next('.select2-container');
 
-                if (selectedItem && itemUnits[selectedItem]) {
-                    // Lock the unit visually and functionally
-                    unitSelect.val(itemUnits[selectedItem]).trigger('change');
-                    select2Container.addClass('select2-container--locked');
+                // Update selected items set
+                if (previousValue) {
+                    selectedItems.delete(previousValue);
+                }
+                if (newValue) {
+                    selectedItems.add(newValue);
+                }
+                row.data('previous-item', newValue);
 
-                    // Prevent any changes
-                    unitSelect.prop('disabled', false); // Keep enabled for submission
+                // Update availability in all dropdowns
+                updateItemAvailability();
+
+                // Handle unit locking
+                if (newValue && itemUnits[newValue]) {
+                    // Lock the unit
+                    unitSelect.val(itemUnits[newValue]).trigger('change');
+                    select2Container.addClass('is-locked');
+                    unitSelect.prop('disabled', false);
                     select2Container.find('.select2-selection').css('pointer-events', 'none');
-
-                    // Special handling for Select2
                     unitSelect.on('select2:opening', function(e) {
                         e.preventDefault();
                     });
                 } else {
                     // Unlock the unit
-                    select2Container.removeClass('select2-container--locked');
+                    select2Container.removeClass('is-locked');
                     select2Container.find('.select2-selection').css('pointer-events', '');
                     unitSelect.off('select2:opening');
                 }
             });
 
+            // Update item availability in all dropdowns
+            function updateItemAvailability() {
+                $('.item-select').each(function() {
+                    const currentValue = $(this).val();
+                    $(this).find('option').each(function() {
+                        const optionValue = $(this).val();
+                        if (optionValue && optionValue !== currentValue) {
+                            $(this).prop('disabled', selectedItems.has(optionValue));
+                        }
+                    });
+
+                    // Trigger Select2 update if it's initialized
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).trigger('change.select2');
+                    }
+                });
+            }
+
             // Form validation
             $('#stockForm').on('submit', function(e) {
                 let isValid = true;
-                $('.item-row').each(function() {
+                $('#items-container tr').each(function() {
                     const item = $(this).find('.item-select').val();
                     const unit = $(this).find('.unit-select').val();
-                    const qty = $(this).find('input[type="number"]').val();
+                    const qty = $(this).find('.table-input').val();
 
                     if (!item || !unit || !qty) {
                         isValid = false;
-                        $(this).addClass('border border-danger');
+                        $(this).addClass('table-danger');
                     } else {
-                        $(this).removeClass('border border-danger');
+                        $(this).removeClass('table-danger');
                     }
                 });
 
                 if (!isValid) {
                     e.preventDefault();
-                    alert('Please complete all fields in each item row before submitting.');
+                    alert('Please complete all fields in each row before submitting.');
                 }
             });
         });
