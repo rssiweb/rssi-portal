@@ -22,23 +22,29 @@ if ($_POST) {
     $added_by = $associatenumber;
     $timestamp = date('Y-m-d H:i:s');
 
-    // Server-side validation: Check if any item already exists with a different unit
+    // Server-side validation: Check if any item already exists with a different unit in stock_add
     $validation_errors = [];
     foreach ($_POST['item_id'] as $item_id) {
-        $check_query = "SELECT unit_id FROM stock_item WHERE item_id = '$item_id'";
+        // Get the most recently used unit for this item from stock_add
+        $check_query = "SELECT unit_id FROM stock_add 
+                   WHERE item_id = '$item_id' AND unit_id IS NOT NULL 
+                   ORDER BY timestamp DESC LIMIT 1";
         $check_result = pg_query($con, $check_query);
+
         if ($check_result && pg_num_rows($check_result) > 0) {
             $existing_unit = pg_fetch_assoc($check_result)['unit_id'];
             if ($existing_unit && $existing_unit != $unit_id) {
+                // Get item name for error message
                 $item_name_query = "SELECT item_name FROM stock_item WHERE item_id = '$item_id'";
                 $item_name_result = pg_query($con, $item_name_query);
                 $item_name = pg_fetch_assoc($item_name_result)['item_name'];
 
+                // Get unit name for error message
                 $unit_name_query = "SELECT unit_name FROM stock_item_unit WHERE unit_id = '$existing_unit'";
                 $unit_name_result = pg_query($con, $unit_name_query);
                 $unit_name = pg_fetch_assoc($unit_name_result)['unit_name'];
 
-                $validation_errors[] = "Item '$item_name' already uses unit '$unit_name'. Please use the same unit.";
+                $validation_errors[] = "Item '$item_name' was previously added with unit '$unit_name'. Please use the same unit for consistency.";
             }
         }
     }
@@ -151,15 +157,10 @@ while ($row = pg_fetch_assoc($item_unit_result)) {
             display: inline-block;
         }
 
-        .unit-locked {
-            background-color: #f8f9fa;
+        .readonly-select {
             pointer-events: none;
-        }
-
-        .validation-error {
-            color: #dc3545;
-            font-size: 0.875em;
-            margin-top: 0.25rem;
+            background-color: #e9ecef;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -247,7 +248,7 @@ while ($row = pg_fetch_assoc($item_unit_result)) {
                                                         <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
-                                                <div id="unitValidation" class="validation-error"></div>
+                                                <div id="unitValidation" class="text-danger"></div>
                                             </div>
 
                                             <!-- Quantity Received -->
@@ -294,8 +295,8 @@ while ($row = pg_fetch_assoc($item_unit_result)) {
 
             // Convert PHP item_units to JS object
             const itemUnits = <?php echo json_encode($item_units); ?>;
-            let requiredUnitId = null;
-            let validationError = false;
+            let lockedUnitId = null;
+            let previouslySelectedItems = [];
 
             // When items are selected
             $('#item_id').on('change', function() {
@@ -303,63 +304,56 @@ while ($row = pg_fetch_assoc($item_unit_result)) {
                 const unitSelect = $('#unit_id');
                 const unitValidation = $('#unitValidation');
 
-                // Reset state
-                unitSelect.removeClass('unit-locked');
-                unitSelect.prop('disabled', false);
-                requiredUnitId = null;
-                validationError = false;
+                // Reset validation and select state
                 unitValidation.text('');
+                unitSelect.removeClass('readonly-select');
 
-                // Check each selected item for existing unit
-                selectedItems.forEach(itemId => {
-                    if (itemUnits[itemId]) {
-                        if (!requiredUnitId) {
-                            // First item with a unit - lock to this unit
-                            requiredUnitId = itemUnits[itemId];
-                        } else if (itemUnits[itemId] !== requiredUnitId) {
-                            // Conflict - different units required
-                            validationError = true;
-                        }
+                // Detect newly added items
+                const newlyAddedItems = selectedItems.filter(item => !previouslySelectedItems.includes(item));
+
+                // Check for any items with predefined units
+                const allItemsWithUnits = selectedItems.filter(itemId => itemUnits[itemId]);
+
+                if (allItemsWithUnits.length > 0) {
+                    // Determine which unit to lock to (prioritize existing locked unit)
+                    const requiredUnitId = lockedUnitId || itemUnits[allItemsWithUnits[0]];
+                    const requiredUnitName = unitSelect.find(`option[value="${requiredUnitId}"]`).text();
+
+                    // Check for conflicts in newly added items first
+                    const newConflicts = newlyAddedItems.filter(itemId =>
+                        itemUnits[itemId] && itemUnits[itemId] !== requiredUnitId
+                    );
+
+                    // If no new conflicts, check all items
+                    const allConflicts = newConflicts.length > 0 ? newConflicts :
+                        selectedItems.filter(itemId => itemUnits[itemId] && itemUnits[itemId] !== requiredUnitId);
+
+                    if (allConflicts.length > 0) {
+                        // Get the first conflicting item (prioritize newly added ones)
+                        const conflictingItem = newConflicts[0] || allConflicts[0];
+                        const itemName = $('#item_id').select2('data').find(item => item.id == conflictingItem).text;
+
+                        // Show alert
+                        alert(`${itemName} cannot be added because it uses a different unit.`);
+
+                        // Remove only the conflicting item
+                        const updatedSelection = selectedItems.filter(itemId => itemId !== conflictingItem);
+                        $(this).val(updatedSelection).trigger('change');
+                        previouslySelectedItems = updatedSelection;
+                        return;
                     }
-                });
 
-                if (validationError) {
-                    unitValidation.text('Selected items have conflicting units. Please select items that use the same unit.');
-                    return;
+                    // Lock the unit to the required unit (readonly style)
+                    lockedUnitId = requiredUnitId;
+                    unitSelect.val(lockedUnitId).addClass('readonly-select');
+                    unitValidation.text(`Unit is locked to ${requiredUnitName} for selected items`);
+                } else {
+                    // No predefined units - unlock the field
+                    lockedUnitId = null;
+                    unitSelect.removeClass('readonly-select');
                 }
 
-                if (requiredUnitId) {
-                    // Lock the unit selection to the required unit
-                    unitSelect.val(requiredUnitId).trigger('change');
-                    unitSelect.addClass('unit-locked');
-                    unitSelect.prop('disabled', true);
-                    unitValidation.text('Unit is locked because some selected items already have a defined unit.');
-                }
-            });
-
-            // Form submission validation
-            $('#stockForm').on('submit', function(e) {
-                const selectedItems = $('#item_id').val() || [];
-                const selectedUnit = $('#unit_id').val();
-                let error = false;
-                let errorMessage = '';
-
-                // Client-side validation
-                selectedItems.forEach(itemId => {
-                    if (itemUnits[itemId] && itemUnits[itemId] != selectedUnit) {
-                        error = true;
-                        const itemName = $('#item_id').select2('data').find(item => item.id == itemId).text;
-                        errorMessage += `Item ${itemName} already uses a different unit. `;
-                    }
-                });
-
-                if (error) {
-                    e.preventDefault();
-                    alert('Validation Error: ' + errorMessage + 'Please correct and try again.');
-                    return false;
-                }
-
-                return true;
+                previouslySelectedItems = selectedItems;
             });
         });
     </script>

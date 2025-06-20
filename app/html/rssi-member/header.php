@@ -142,7 +142,7 @@
             </a>
           </li>
           <li>
-            <a id="append-students" href="append-students">
+            <a id="append-students" href="append-students.php">
               <span>Add Students (Post Exam Creation)</span>
             </a>
           </li>
