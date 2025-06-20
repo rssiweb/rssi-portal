@@ -207,6 +207,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'father_name',
             'mother_name',
             'blood_group',
+            'emergency_contact1',
+            'emergency_contact2',
+            'contact_person1',
+            'contact_person2'
         ];
 
         $fields_requiring_approval = [
@@ -367,7 +371,7 @@ $accessible_cards = isset($card_access[$role]) ? $card_access[$role] : [];
 
 // Non-Admin specific logic
 if ($search_id === $associatenumber) {
-    $accessible_cards = ['address_details', 'national_identifier', 'religion-caste', 'qualification', 'experience', 'social']; // Non-Admin can edit these cards only for their own data
+    $accessible_cards = ['address_details', 'national_identifier', 'religion-caste', 'qualification', 'experience', 'social', 'emergency_contacts']; // Non-Admin can edit these cards only for their own data
 }
 ?>
 <?php
@@ -1022,6 +1026,84 @@ echo "<script>
                                                                 </div>
                                                             </div>
                                                         </div>
+
+
+                                                        <div class="card" id="emergency_contacts">
+                                                            <div class="card-header">
+                                                                Emergency Contact Details
+                                                                <?php if (in_array('emergency_contacts', $accessible_cards)) : ?>
+                                                                    <span class="edit-icon" onclick="toggleEdit('emergency_contacts')">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </span>
+                                                                    <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                        <i class="bi bi-save"></i>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <!-- Emergency Contact Set 1 -->
+                                                                            <tr>
+                                                                                <td><label for="contact_person1">Emergency Contact Person 1:</label></td>
+                                                                                <td>
+                                                                                    <span id="contactPerson1Text"><?php echo $array['contact_person1']; ?></span>
+                                                                                    <input type="text" name="contact_person1" id="contact_person1"
+                                                                                        placeholder="Name of Contact Person 1"
+                                                                                        value="<?php echo $array['contact_person1']; ?>"
+                                                                                        disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="emergency_contact1">Emergency Contact Number 1:</label></td>
+                                                                                <td>
+                                                                                    <span id="emergencyContact1Text"><?php echo $array['emergency_contact1']; ?></span>
+                                                                                    <input type="text" name="emergency_contact1" id="emergency_contact1"
+                                                                                        placeholder="Contact Number 1"
+                                                                                        value="<?php echo $array['emergency_contact1']; ?>"
+                                                                                        disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Toggle Button to Show/Hide Second Emergency Contact (only shown when contact2 is empty in view mode) -->
+                                                                            <tr id="toggleSecondContactRow" <?php echo (!empty($array['contact_person2'])) ? 'style="display:none;"' : ''; ?>>
+                                                                                <td colspan="2">
+                                                                                    <button type="button" class="btn btn-link" id="addSecondContact" onclick="showSecondEmergencyContact()">
+                                                                                        <i class="bi bi-plus-circle"></i> Show Second Emergency Contact
+                                                                                    </button>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Emergency Contact Set 2 (shown if data exists or in edit mode) -->
+                                                                            <tr id="secondContactRow1"
+                                                                                <?php echo (empty($array['contact_person2'])) ? 'style="display:none;"' : '' ?>>
+                                                                                <td><label for="contact_person2">Emergency Contact Person 2:</label></td>
+                                                                                <td>
+                                                                                    <span id="contactPerson2Text"><?php echo $array['contact_person2']; ?></span>
+                                                                                    <input type="text" name="contact_person2" id="contact_person2"
+                                                                                        placeholder="Name of Contact Person 2"
+                                                                                        value="<?php echo $array['contact_person2']; ?>"
+                                                                                        disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr id="secondContactRow2"
+                                                                                <?php echo (empty($array['contact_person2'])) ? 'style="display:none;"' : '' ?>>
+                                                                                <td><label for="emergency_contact2">Emergency Contact Number 2:</label></td>
+                                                                                <td>
+                                                                                    <span id="emergencyContact2Text"><?php echo $array['emergency_contact2']; ?></span>
+                                                                                    <input type="text" name="emergency_contact2" id="emergency_contact2"
+                                                                                        placeholder="Contact Number 2"
+                                                                                        value="<?php echo $array['emergency_contact2']; ?>"
+                                                                                        disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         <div class="card" id="religion-caste">
                                                             <div class="card-header">
                                                                 Religion and Caste Details
@@ -2316,6 +2398,30 @@ echo "<script>
             });
         });
     </script>
+    <script>
+        let isSecondContactVisible = false;
+
+        function showSecondEmergencyContact() {
+            const row1 = document.getElementById('secondContactRow1');
+            const row2 = document.getElementById('secondContactRow2');
+            const btn = document.getElementById('addSecondContact');
+
+            if (!isSecondContactVisible) {
+                // Show second contact fields
+                row1.style.display = '';
+                row2.style.display = '';
+                btn.innerHTML = '<i class="bi bi-x-circle"></i> Hide Second Emergency Contact';
+                isSecondContactVisible = true;
+            } else {
+                // Hide second contact fields
+                row1.style.display = 'none';
+                row2.style.display = 'none';
+                btn.innerHTML = '<i class="bi bi-plus-circle"></i> Show Second Emergency Contact';
+                isSecondContactVisible = false;
+            }
+        }
+    </script>
+
 </body>
 
 </html>
