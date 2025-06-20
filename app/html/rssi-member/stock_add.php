@@ -16,16 +16,19 @@ validation();
 if ($_POST) {
     $date_received = $_POST['date_received'];
     $source = htmlspecialchars($_POST['source'], ENT_QUOTES, 'UTF-8');
-    $unit_id = $_POST['unit_id'];
     $description = htmlspecialchars($_POST['description'], ENT_QUOTES, 'UTF-8');
-    $quantity_received = $_POST['quantity_received'];
     $added_by = $associatenumber;
     $timestamp = date('Y-m-d H:i:s');
 
-    // Server-side validation
-    $validation_errors = [];
-    foreach ($_POST['item_id'] as $item_id) {
-        // Get the most recently used unit for this item
+    $success = true;
+    $error_message = '';
+
+    // Process each item row
+    foreach ($_POST['item_id'] as $index => $item_id) {
+        $unit_id = $_POST['unit_id'][$index];
+        $quantity_received = $_POST['quantity_received'][$index];
+
+        // Validate unit consistency for existing items
         $check_query = "SELECT unit_id FROM stock_add 
                        WHERE item_id = '$item_id' AND unit_id IS NOT NULL 
                        ORDER BY timestamp DESC LIMIT 1";
@@ -43,30 +46,25 @@ if ($_POST) {
                     "SELECT unit_name FROM stock_item_unit WHERE unit_id = '$existing_unit'"
                 ), 0, 0);
 
-                $validation_errors[] = "Item '$item_name' was previously added with unit '$unit_name'. Please use the same unit.";
-            }
-        }
-    }
-
-    if (!empty($validation_errors)) {
-        $success = false;
-        $error_message = implode("<br>", $validation_errors);
-    } else {
-        // Proceed with insertion
-        $success = true;
-        foreach ($_POST['item_id'] as $item_id) {
-            $transaction_id = uniqid();
-            $result = pg_query_params(
-                $con,
-                "INSERT INTO stock_add (transaction_id, date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-                [$transaction_id, $date_received, $source, $item_id, $unit_id, $description, $quantity_received, $timestamp, $added_by]
-            );
-
-            if (!$result) {
                 $success = false;
+                $error_message = "Item '$item_name' was previously added with unit '$unit_name'. Please use the same unit.";
                 break;
             }
+        }
+
+        // Insert the record
+        $transaction_id = uniqid();
+        $result = pg_query_params(
+            $con,
+            "INSERT INTO stock_add (transaction_id, date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            [$transaction_id, $date_received, $source, $item_id, $unit_id, $description, $quantity_received, $timestamp, $added_by]
+        );
+
+        if (!$result) {
+            $success = false;
+            $error_message = "Error inserting record for item ID $item_id";
+            break;
         }
     }
 }
@@ -142,6 +140,34 @@ while ($row = pg_fetch_assoc($result)) {
             pointer-events: none;
             background-color: #e9ecef;
         }
+
+        .item-row {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .remove-row {
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .remove-row:hover {
+            color: #bb2d3b;
+        }
+    </style>
+    <style>
+        .locked-unit {
+            /* This class is for JavaScript to identify locked units */
+        }
+
+        .select2-container--default .select2-selection--single.locked-unit {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+        }
     </style>
 </head>
 
@@ -188,12 +214,12 @@ while ($row = pg_fetch_assoc($result)) {
 
                             <div class="container my-5">
                                 <div class="row justify-content-center">
-                                    <div class="col-lg-8">
+                                    <div class="col-lg-10">
                                         <form method="POST" enctype="multipart/form-data" id="stockForm">
                                             <!-- Date Received -->
                                             <div class="mb-3">
                                                 <label for="date_received" class="form-label">Date Received</label>
-                                                <input type="date" class="form-control" id="date_received" name="date_received" required>
+                                                <input type="date" class="form-control" id="date_received" name="date_received" required value="<?php echo date('Y-m-d'); ?>">
                                             </div>
 
                                             <!-- Source -->
@@ -206,40 +232,55 @@ while ($row = pg_fetch_assoc($result)) {
                                                 </select>
                                             </div>
 
-                                            <!-- Item Name -->
-                                            <div class="mb-3">
-                                                <label for="item_id" class="form-label">Item Name</label>
-                                                <select id="item_id" name="item_id[]" class="form-control" multiple="multiple" required>
-                                                    <?php foreach ($items as $item): ?>
-                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                            <!-- Unit -->
-                                            <div class="mb-3">
-                                                <label for="unit_id" class="form-label">Unit</label>
-                                                <select id="unit_id" name="unit_id" class="form-select" required>
-                                                    <?php foreach ($units as $unit): ?>
-                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                                <div id="unitValidation" class="text-danger"></div>
-                                            </div>
-
-                                            <!-- Quantity Received -->
-                                            <div class="mb-3">
-                                                <label for="quantity_received" class="form-label">Quantity Received</label>
-                                                <input type="number" class="form-control" id="quantity_received" name="quantity_received" required>
-                                            </div>
-
                                             <!-- Description -->
                                             <div class="mb-3">
                                                 <label for="description" class="form-label">Description (Optional)</label>
                                                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                                             </div>
 
-                                            <div class="text-center">
+                                            <hr>
+
+                                            <!-- Items Section -->
+                                            <div class="mb-3">
+                                                <h5>Items</h5>
+                                                <div id="items-container">
+                                                    <!-- First row will be added by default -->
+                                                    <div class="item-row" data-row="0">
+                                                        <div class="row">
+                                                            <div class="col-md-5">
+                                                                <label class="form-label">Item Name</label>
+                                                                <select name="item_id[]" class="form-control item-select" required>
+                                                                    <option value="">Select Item</option>
+                                                                    <?php foreach ($items as $item): ?>
+                                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="form-label">Unit</label>
+                                                                <select name="unit_id[]" class="form-control unit-select" required>
+                                                                    <option value="">Select Unit</option>
+                                                                    <?php foreach ($units as $unit): ?>
+                                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="form-label">Quantity</label>
+                                                                <input type="number" name="quantity_received[]" class="form-control" min="1" required>
+                                                            </div>
+                                                            <div class="col-md-1 d-flex align-items-end">
+                                                                <span class="remove-row"><i class="bi bi-trash"></i></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" id="add-item" class="btn btn-secondary mt-2">
+                                                    <i class="bi bi-plus-circle"></i> Add Another Item
+                                                </button>
+                                            </div>
+
+                                            <div class="text-center mt-4">
                                                 <button type="submit" class="btn btn-primary">Submit</button>
                                             </div>
                                         </form>
@@ -259,62 +300,159 @@ while ($row = pg_fetch_assoc($result)) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
-
     <script>
         $(document).ready(function() {
+            // Convert PHP item_units to JS object
             const itemUnits = <?php echo json_encode($item_units); ?>;
-            let lockedUnitId = null;
-            let currentSelection = [];
+            let rowCount = 1;
 
-            $('#item_id').select2({
-                data: <?php echo json_encode($items); ?>,
-                placeholder: "Select items",
-                allowClear: true
+            // Initialize the first row
+            initRow($('.item-row'));
+
+            // Add new item row
+            $('#add-item').click(function() {
+                const newRow = $(`
+                <div class="item-row" data-row="${rowCount}">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label class="form-label">Item Name</label>
+                            <select name="item_id[]" class="form-control item-select" required>
+                                <option value="">Select Item</option>
+                                <?php foreach ($items as $item): ?>
+                                    <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Unit</label>
+                            <select name="unit_id[]" class="form-control unit-select" required>
+                                <option value="">Select Unit</option>
+                                <?php foreach ($units as $unit): ?>
+                                    <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="quantity_received[]" class="form-control qty-input" min="1" required>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <span class="remove-row"><i class="bi bi-trash"></i></span>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+                $('#items-container').append(newRow);
+                initRow(newRow);
+                rowCount++;
             });
 
-            $('#item_id').on('change', function() {
-                const selectedItems = $(this).val() || [];
-                const unitSelect = $('#unit_id');
-                const unitValidation = $('#unitValidation');
+            // Remove row
+            $(document).on('click', '.remove-row', function() {
+                if ($('.item-row').length > 1) {
+                    $(this).closest('.item-row').remove();
+                } else {
+                    // Reset the single remaining row instead of removing it
+                    resetRow($(this).closest('.item-row'));
+                }
+            });
 
-                // Reset UI
-                unitSelect.removeClass('readonly-select');
-                unitValidation.text('');
+            // Function to reset a row's unit and quantity fields
+            function resetRow(row) {
+                const unitSelect = row.find('.unit-select');
+                const qtyInput = row.find('.qty-input');
 
-                // Find newly added items
-                const newItems = selectedItems.filter(id => !currentSelection.includes(id));
+                unitSelect.val('').trigger('change').removeClass('locked-unit');
+                qtyInput.val('');
 
-                // Check for unit conflicts
-                let requiredUnit = lockedUnitId;
-                let conflictFound = false;
+                // Reset Select2 styling and enable interactions
+                unitSelect.next('.select2-container').find('.select2-selection').css({
+                    'background-color': '',
+                    'cursor': ''
+                });
+                unitSelect.off('select2:opening');
+            }
 
-                for (const itemId of newItems) {
-                    if (itemUnits[itemId]) {
-                        if (!requiredUnit) {
-                            requiredUnit = itemUnits[itemId];
-                        } else if (itemUnits[itemId] !== requiredUnit) {
-                            conflictFound = true;
-                            const itemName = $(this).select2('data').find(i => i.id == itemId).text;
-                            const unitName = unitSelect.find(`option[value="${itemUnits[itemId]}"]`).text();
+            // Initialize a row (item select and unit handling)
+            function initRow(row) {
+                const itemSelect = row.find('.item-select');
+                const unitSelect = row.find('.unit-select');
 
-                            alert(`${itemName} uses ${unitName} and cannot be added with the current selection.`);
+                // Initialize Select2 for item select
+                itemSelect.select2({
+                    placeholder: "Select an item",
+                    allowClear: true,
+                    width: '100%'
+                }).on('change', function() {
+                    const selectedItem = $(this).val();
+                    const row = $(this).closest('.item-row');
+                    const unitSelect = row.find('.unit-select');
+                    const qtyInput = row.find('.qty-input');
 
-                            // Remove the conflicting item
-                            $(this).val(selectedItems.filter(id => id !== itemId)).trigger('change');
-                            return;
-                        }
+                    if (!selectedItem) {
+                        // Item was cleared - immediately reset unit and quantity
+                        resetRow(row);
+                        return;
                     }
+
+                    if (itemUnits[selectedItem]) {
+                        // Item has a predefined unit - lock it visually
+                        unitSelect.val(itemUnits[selectedItem]).trigger('change');
+                        unitSelect.addClass('locked-unit');
+
+                        // Style to look disabled
+                        unitSelect.next('.select2-container').find('.select2-selection').css({
+                            'background-color': '#e9ecef',
+                            'cursor': 'not-allowed'
+                        });
+
+                        // Prevent opening dropdown
+                        unitSelect.on('select2:opening', function(e) {
+                            e.preventDefault();
+                        });
+                    } else {
+                        // New item - allow selection
+                        unitSelect.removeClass('locked-unit');
+                        unitSelect.next('.select2-container').find('.select2-selection').css({
+                            'background-color': '',
+                            'cursor': ''
+                        });
+                        unitSelect.off('select2:opening');
+                    }
+                });
+
+                // Initialize Select2 for unit select
+                unitSelect.select2({
+                    placeholder: "Select unit",
+                    width: '100%'
+                });
+            }
+
+            // Form validation before submission
+            $('#stockForm').on('submit', function(e) {
+                let valid = true;
+
+                // Check each row for completeness
+                $('.item-row').each(function() {
+                    const itemSelect = $(this).find('.item-select');
+                    const unitSelect = $(this).find('.unit-select');
+                    const quantityInput = $(this).find('.qty-input');
+
+                    if (!itemSelect.val() || !unitSelect.val() || !quantityInput.val()) {
+                        valid = false;
+                        $(this).css('border-color', '#dc3545');
+                    } else {
+                        $(this).css('border-color', '#dee2e6');
+                    }
+                });
+
+                if (!valid) {
+                    e.preventDefault();
+                    alert('Please complete all fields in each item row before submitting.');
                 }
 
-                // Update locked state if needed
-                if (requiredUnit) {
-                    lockedUnitId = requiredUnit;
-                    unitSelect.val(lockedUnitId).addClass('readonly-select');
-                    const unitName = unitSelect.find('option:selected').text();
-                    unitValidation.text(`Unit locked to: ${unitName}`);
-                }
-
-                currentSelection = selectedItems;
+                return valid;
             });
         });
     </script>
