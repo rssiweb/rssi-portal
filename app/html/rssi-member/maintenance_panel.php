@@ -139,7 +139,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                         <td><?php echo $pageName; ?></td>
                                                         <td>
                                                             <?php if ($isEditMode): ?>
-                                                                <input type="checkbox" name="maintenance[<?php echo $pageName; ?>]" value="1" <?php echo $isChecked; ?>>
+                                                                <input type="checkbox" class="form-check-input" name="maintenance[<?php echo $pageName; ?>]" value="1" <?php echo $isChecked; ?>>
                                                             <?php else: ?>
                                                                 <span><?php echo $isChecked ? 'Yes' : 'No'; ?></span>
                                                             <?php endif; ?>
@@ -219,6 +219,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                         if (maintenanceSpan) {
                             const checkbox = document.createElement('input');
                             checkbox.type = 'checkbox';
+                            checkbox.classList.add('form-check-input');
                             checkbox.name = `maintenance[${pageName}]`;
                             checkbox.value = '1';
                             checkbox.checked = maintenanceSpan.textContent.trim() === 'Yes';
