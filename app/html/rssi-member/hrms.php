@@ -209,8 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'emergency_contact1',
             'emergency_contact2',
             'contact_person1',
-            'contact_person2',
-            'college_name'
+            'contact_person2'
         ];
 
         $fields_requiring_approval = [
@@ -222,7 +221,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email',
             'alt_email',
             'panno',
-            'raw_photo'
+            'raw_photo',
+            'college_name',
+            'enrollment_number'
         ];
 
         // Process each field once

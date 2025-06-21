@@ -39,6 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     $postal_address = isset($_POST['postal_address']) ? pg_escape_string($con, $_POST['postal_address']) : null;
     $permanent_address = isset($_POST['permanent_address']) ? pg_escape_string($con, $_POST['permanent_address']) : null;
     $education_qualification = isset($_POST['education_qualification']) ? pg_escape_string($con, $_POST['education_qualification']) : null;
+    $college_name = isset($_POST['college_name']) ? pg_escape_string($con, $_POST['college_name']) : null;
+    $enrollment_number = isset($_POST['enrollment_number']) ? pg_escape_string($con, $_POST['enrollment_number']) : null;
     $specialization = isset($_POST['specialization']) ? pg_escape_string($con, $_POST['specialization']) : null;
     $work_experience = isset($_POST['work_experience']) ? pg_escape_string($con, $_POST['work_experience']) : null;
     $caste = isset($_POST['caste']) ? pg_escape_string($con, $_POST['caste']) : null;
@@ -103,6 +105,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
         'postal_address',
         'permanent_address',
         'education_qualification',
+        'college_name',
+        'enrollment_number',
         'specialization',
         'work_experience',
         'caste'
@@ -381,7 +385,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <textarea class="form-control" id="permanent_address" name="permanent_address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanent_address'] ?? '' ?></textarea>
                                                                 <small id="permanent_address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
                                                                 <div>
-                                                                    <input type="checkbox" id="same-address" onclick="copyAddress()">
+                                                                    <input type="checkbox" class="form-check-input" id="same-address" onclick="copyAddress()">
                                                                     <label for="same-address">Same as current address</label>
                                                                 </div>
                                                             </td>
@@ -410,6 +414,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     }
                                                                     ?>
                                                                 </select>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="college_name" class="form-label">College/University Name:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control"
+                                                                    id="college_name"
+                                                                    name="college_name"
+                                                                    placeholder="e.g., Harvard University, University of Tokyo"
+                                                                    value="<?php echo htmlspecialchars($array['college_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                                    required>
+                                                                <small id="college-help" class="form-text text-muted">
+                                                                    Please write the full name of the college or university you are currently attending or most recently attended.
+                                                                </small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="enrollment_number" class="form-label">Enrolment Number:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control"
+                                                                    id="enrollment_number"
+                                                                    name="enrollment_number"
+                                                                    placeholder="e.g., 2024CS12345"
+                                                                    value="<?php echo htmlspecialchars($array['enrollment_number'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                                    required>
+                                                                <small id="enrollment-help" class="form-text text-muted">
+                                                                    Please enter your official enrolment/registration number at the college/university.
+                                                                </small>
                                                             </td>
                                                         </tr>
                                                         <tr>

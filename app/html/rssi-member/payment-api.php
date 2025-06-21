@@ -1396,6 +1396,8 @@ if (@$_POST['form-type'] == "signup") {
   $specialization = pg_escape_string($con, trim($_POST['specialization']));
   $work_experience = pg_escape_string($con, trim($_POST['work-experience']));
   $consent = !empty($_POST['consent']) ? 1 : 0;
+  $college_name = $_POST['college_name'];
+  $enrollment_number = $_POST['enrollment_number'];
   // SQL query to generate the application number
   $sql = "
     SELECT CONCAT(
@@ -1454,8 +1456,8 @@ if (@$_POST['form-type'] == "signup") {
 
 
   // Build the SQL query
-  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, password,default_pass_updated_on,postal_address,permanent_address,education_qualification,specialization,work_experience,application_status";
-  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$newpass_hash','$timestamp','$postal_address', '$permanent_address', '$education_qualification', '$specialization', '$work_experience','Application Submitted'";
+  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, password,default_pass_updated_on,postal_address,permanent_address,education_qualification,specialization,work_experience,application_status,college_name,enrollment_number";
+  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$newpass_hash','$timestamp','$postal_address', '$permanent_address', '$education_qualification', '$specialization', '$work_experience','Application Submitted', '$college_name','$enrollment_number'";
 
   // Conditionally add duration to columns and values
   if ($duration != null) {

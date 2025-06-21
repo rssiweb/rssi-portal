@@ -140,7 +140,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 eduq,
                 mjorsub,
                 approvedby,
-                associatenumber
+                associatenumber,
+                college_name,
+                enrollment_number
             )
             SELECT 
                 applicant_name AS fullname,
@@ -171,7 +173,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     FROM rssimyaccount_members
                     )::text, 3, '0' -- Adding +1 to the total count
                 )
-            ) AS associatenumber
+            ) AS associatenumber,
+            college_name,
+            enrollment_number
             FROM signup 
             WHERE application_number = '$application_number';
             ";
@@ -492,6 +496,22 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <?php echo $array["education_qualification"] ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="college_name" class="form-label">College/University Name:</label>
+                                                            </td>
+                                                            <td>
+                                                                <?php echo $array["college_name"] ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="enrollment_number" class="form-label">Enrolment Number:</label>
+                                                            </td>
+                                                            <td>
+                                                                <?php echo $array["enrollment_number"] ?>
                                                             </td>
                                                         </tr>
                                                         <tr>
