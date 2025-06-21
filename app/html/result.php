@@ -144,10 +144,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         SELECT
             s.student_id,
             dr.attendance_date,
-            CASE
-                WHEN a.user_id IS NOT NULL THEN 'P'
-                ELSE 'A'
-            END AS attendance_status
+            COALESCE(
+                CASE
+                    WHEN a.user_id IS NOT NULL THEN 'P'
+                    WHEN a.user_id IS NULL
+                         AND (
+                            SELECT COUNT(*) FROM attendance att WHERE att.date = dr.attendance_date
+                         ) > 0
+                         AND (
+                            SELECT COUNT(*) FROM student_class_days cw
+                            WHERE cw.category = s.category
+                              AND cw.effective_from <= dr.attendance_date
+                              AND (cw.effective_to IS NULL OR cw.effective_to >= dr.attendance_date)
+                              AND POSITION(TO_CHAR(dr.attendance_date, 'Dy') IN cw.class_days) > 0
+                         ) > 0
+                         AND s.doa <= dr.attendance_date
+                         THEN 'A'
+                    ELSE NULL
+                END
+            ) AS attendance_status
         FROM date_range dr
         CROSS JOIN rssimyprofile_student s
         LEFT JOIN (
@@ -165,19 +180,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         student_id,
         attendance_date,
         attendance_status,
-        (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data) AS subquery) AS total_classes,
+        (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) AS total_classes,
         (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) AS attended_classes,
         CASE
-            WHEN (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data) AS subquery) = 0 THEN NULL
+            WHEN (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) = 0 THEN NULL
             ELSE CONCAT(
                 ROUND(
                     ((SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) * 100.0) /
-                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data) AS subquery), 2
+                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery), 2
                 ),
                 '%'
             )
         END AS attendance_percentage,
-         (SELECT first_attendance_date FROM first_attendance) AS first_attendance_date -- Ensure proper usage of subquery
+        (SELECT first_attendance_date FROM first_attendance) AS first_attendance_date
     FROM attendance_data
     ORDER BY attendance_date
 ";
