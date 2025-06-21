@@ -906,14 +906,20 @@ echo "<script>
                                                                                 <td><label for="phone">Telephone Number:</label></td>
                                                                                 <td>
                                                                                     <span id="phoneText"><?php echo $array['phone']; ?></span>
-                                                                                    <input class="form-control" type="number" name="phone" id="phone" value="<?php echo $array['phone']; ?>" disabled style="display:none;">
+                                                                                    <input class="form-control" type="text" name="phone" id="phone"
+                                                                                        value="<?php echo $array['phone']; ?>" disabled style="display:none;"
+                                                                                        maxlength="10" pattern="\d{10}" title="Enter a valid 10-digit phone number"
+                                                                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="alt_phone">Telephone Number (Alt):</label></td>
                                                                                 <td>
                                                                                     <span id="alt_phoneText"><?php echo $array['alt_phone']; ?></span>
-                                                                                    <input class="form-control" type="number" name="alt_phone" id="alt_phone" value="<?php echo $array['alt_phone']; ?>" disabled style="display:none;">
+                                                                                    <input class="form-control" type="text" name="alt_phone" id="alt_phone"
+                                                                                        value="<?php echo $array['alt_phone']; ?>" disabled style="display:none;"
+                                                                                        maxlength="10" pattern="\d{10}" title="Enter a valid 10-digit alternate phone number"
+                                                                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1065,7 +1071,9 @@ echo "<script>
                                                                                     <input type="text" name="emergency_contact1" id="emergency_contact1"
                                                                                         placeholder="Contact Number 1"
                                                                                         value="<?php echo $array['emergency_contact1']; ?>"
-                                                                                        disabled class="form-control" style="display:none;">
+                                                                                        disabled class="form-control" style="display:none;"
+                                                                                        maxlength="10" pattern="\d{10}" title="Enter a valid 10-digit contact number"
+                                                                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                                                                 </td>
                                                                             </tr>
 
@@ -1098,7 +1106,9 @@ echo "<script>
                                                                                     <input type="text" name="emergency_contact2" id="emergency_contact2"
                                                                                         placeholder="Contact Number 2"
                                                                                         value="<?php echo $array['emergency_contact2']; ?>"
-                                                                                        disabled class="form-control" style="display:none;">
+                                                                                        disabled class="form-control" style="display:none;"
+                                                                                        maxlength="10" pattern="\d{10}" title="Enter a valid 10-digit contact number"
+                                                                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
