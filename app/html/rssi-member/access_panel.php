@@ -16,14 +16,16 @@ $page_files = array_diff(scandir($directory_path), array('.', '..'));
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $page_categories = $_POST['page_category'] ?? [];
+    $profile_checks = $_POST['profile_check'] ?? [];
     $roles_data = $_POST['roles'] ?? [];
     $allSuccess = true; // Tracks overall success
 
     // SQL Queries
-    $insertPageSQL = "INSERT INTO pages (page_name, page_category) 
-                      VALUES ($1, $2) 
+    $insertPageSQL = "INSERT INTO pages (page_name, page_category,profile_check) 
+                      VALUES ($1, $2, $3) 
                       ON CONFLICT (page_name) 
-                      DO UPDATE SET page_category = EXCLUDED.page_category 
+                      DO UPDATE SET page_category = EXCLUDED.page_category,
+                      profile_check = EXCLUDED.profile_check  
                       RETURNING id;";
     $insertRoleSQL = "INSERT INTO roles (role_name) 
                       VALUES ($1) 
@@ -54,8 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Process pages and roles
     foreach ($roles_data as $pageName => $roleAccess) {
         $pageCategory = $page_categories[$pageName] ?? null;
+        $profileCheck = $profile_checks[$pageName] ?? null;
 
-        $result = pg_query_params($con, $insertPageSQL, [$pageName, $pageCategory]);
+        $result = pg_query_params($con, $insertPageSQL, [$pageName, $pageCategory, $profileCheck]);
         $pageId = $result ? pg_fetch_result($result, 0, 'id') : null;
 
         if ($pageId) {
@@ -154,6 +157,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                 <tr>
                                                     <th>Page Name</th>
                                                     <th>Page Category</th>
+                                                    <th>Profile Check</th>
                                                     <th>Admin</th>
                                                     <th>Offline Manager</th>
                                                     <th>Advanced User</th>
@@ -164,7 +168,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                 <?php
                                                 foreach ($page_files as $file) {
                                                     $pageName = htmlspecialchars($file);  // Ensure this is correctly sanitized
-                                                    $selectSQL = "SELECT p.page_category, 
+                                                    $selectSQL = "SELECT p.page_category, p.profile_check,
                                                     COALESCE(json_object_agg(r.role_name, pr.has_access) FILTER (WHERE r.role_name IS NOT NULL), '{}') AS roles 
                                                     FROM pages p 
                                                     LEFT JOIN page_roles pr ON p.id = pr.page_id 
@@ -175,6 +179,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                     $row = $result && pg_num_rows($result) > 0 ? pg_fetch_assoc($result) : null;
 
                                                     $pageCategory = $row['page_category'] ?? '';
+                                                    $profile_check = $row['profile_check'] ?? '';
                                                     $roles = json_decode($row['roles'] ?? '{}', true);
 
                                                     echo '<tr>';
@@ -187,6 +192,18 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                         echo "<td><span class='form-control-plaintext page-category' data-page-name='$pageName'>" . htmlspecialchars($pageCategory) . "</span></td>";
                                                     }
 
+                                                    // Show either a checkbox or Yes/No text for page validation depending on mode
+                                                    if ($isEditMode) {
+                                                        $checked = ($profile_check === 't') ? 'checked' : '';
+                                                        echo "<td class='text-center'>
+                                                        <input type='hidden' name='profile_check[$pageName]' value='f'>
+                                                        <input type='checkbox' class='form-check-input page-validation' name='profile_check[$pageName]' value='t' $checked data-page-name='$pageName'>
+                                                    </td>";
+                                                    } else {
+                                                        $validationText = ($profile_check === 't') ? 'Yes' : 'No';
+                                                        echo "<td class='text-center'><span class='form-control-plaintext page-validation' data-page-name='$pageName'>" . htmlspecialchars($validationText) . "</span></td>";
+                                                    }
+
                                                     // Loop through roles to check if the role has access
                                                     foreach (['Admin', 'Offline Manager', 'Advanced User', 'User'] as $role) {
                                                         // Check the current role access (if it exists and is true)
@@ -195,7 +212,7 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                                                         // Add hidden input to handle unchecked values
                                                         echo "<td>";
                                                         echo "<input type='hidden' name='roles[$pageName][$role]' value='0'>";  // Hidden input with value 0 for unchecked
-                                                        echo "<input type='checkbox' name='roles[$pageName][$role]' value='1' $checked>"; // Checkbox input
+                                                        echo "<input type='checkbox' class='form-check-input' name='roles[$pageName][$role]' value='1' $checked>"; // Checkbox input
                                                         echo "<span class='role-text'>" . ($checked ? 'Yes' : 'No') . "</span>"; // Text representation
                                                         echo "</td>";
                                                     }
@@ -278,34 +295,33 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
         });
     </script>
     <script>
-        let isEditMode = <?php echo $isEditMode ? 'true' : 'false'; ?>; // Set based on PHP
+        let isEditMode = <?php echo $isEditMode ? 'true' : 'false'; ?>;
 
         document.addEventListener('DOMContentLoaded', function() {
             const toggleButton = document.getElementById('toggleButton');
             const submitButton = document.getElementById('submitButton');
-            const pageCategoryElements = document.querySelectorAll('.page-category'); // Target Page Category elements
+            const pageCategoryElements = document.querySelectorAll('.page-category');
+            const pageValidationElements = document.querySelectorAll('.page-validation');
             const inputs = document.querySelectorAll('input[type="checkbox"], input[type="text"], .role-text');
 
-            // Function to toggle between editable and non-editable modes
             toggleButton.addEventListener('click', function() {
-                isEditMode = !isEditMode; // Toggle edit mode
+                isEditMode = !isEditMode;
                 toggleFormMode();
             });
 
-            // Function to update the form mode (editable or non-editable)
             function toggleFormMode() {
-                // Toggle input fields
+                // Toggle regular input fields
                 inputs.forEach(input => {
                     if (isEditMode) {
                         if (input.classList.contains('role-text')) {
-                            input.style.display = 'none'; // Hide text data in editable mode
+                            input.style.display = 'none';
                         } else {
                             input.removeAttribute('readonly');
                             input.removeAttribute('disabled');
                         }
                     } else {
                         if (input.classList.contains('role-text')) {
-                            input.style.display = 'inline'; // Show text data in non-editable mode
+                            input.style.display = 'inline';
                         } else {
                             input.setAttribute('readonly', true);
                             input.setAttribute('disabled', true);
@@ -313,36 +329,69 @@ $isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condit
                     }
                 });
 
-                // Handle the page category field visibility (input vs text)
+                // Handle page category fields
                 pageCategoryElements.forEach(element => {
-                    const pageName = element.getAttribute('data-page-name'); // Get the page name dynamically from data attribute
-
+                    const pageName = element.getAttribute('data-page-name');
                     if (isEditMode) {
-                        // If it's a span (non-editable mode), convert it to an input (editable mode)
                         if (element.tagName === 'SPAN') {
                             const input = document.createElement('input');
                             input.type = 'text';
                             input.classList.add('form-control');
                             input.value = element.textContent.trim();
-
-                            // Set the name attribute dynamically
-                            input.name = `page_category[${pageName}]`; // Dynamically set the name attribute
-                            input.setAttribute('data-page-name', pageName); // Store pageName for later use
-
-                            element.replaceWith(input); // Replace span with input
+                            input.name = `page_category[${pageName}]`;
+                            input.setAttribute('data-page-name', pageName);
+                            element.replaceWith(input);
                         }
                     } else {
-                        // If it's an input, replace it with a span (non-editable mode)
                         if (element.tagName === 'INPUT') {
                             const span = document.createElement('span');
                             span.classList.add('form-control-plaintext');
                             span.textContent = element.value;
+                            span.setAttribute('data-page-name', pageName);
+                            element.replaceWith(span);
+                        }
+                    }
+                });
 
-                            // Store pageName in a data attribute for later use
-                            const pageName = element.name.split('[')[1].split(']')[0]; // Extract pageName from input name
-                            span.setAttribute('data-page-name', pageName); // Store pageName in data attribute
+                // Handle page validation fields (simple checkbox)
+                pageValidationElements.forEach(element => {
+                    const pageName = element.getAttribute('data-page-name');
+                    if (isEditMode) {
+                        if (element.tagName === 'SPAN') {
+                            const isChecked = element.textContent.trim() === 'Yes';
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.classList.add('form-check-input', 'page-validation');
+                            checkbox.name = `profile_check[${pageName}]`;
+                            checkbox.value = '1';
+                            if (isChecked) checkbox.checked = true;
+                            checkbox.setAttribute('data-page-name', pageName);
 
-                            element.replaceWith(span); // Replace input with span
+                            // Add hidden input to ensure value is submitted when unchecked
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = `profile_check[${pageName}]`;
+                            hiddenInput.value = '0';
+
+                            const container = document.createElement('div');
+                            container.appendChild(hiddenInput);
+                            container.appendChild(checkbox);
+                            element.replaceWith(container);
+                        }
+                    } else {
+                        if (element.tagName === 'INPUT' && element.type === 'checkbox') {
+                            const span = document.createElement('span');
+                            span.classList.add('form-control-plaintext');
+                            span.textContent = element.checked ? 'Yes' : 'No';
+                            span.setAttribute('data-page-name', pageName);
+                            element.replaceWith(span);
+                        } else if (element.parentNode && element.parentNode.querySelector('input[type="checkbox"]')) {
+                            const checkbox = element.parentNode.querySelector('input[type="checkbox"]');
+                            const span = document.createElement('span');
+                            span.classList.add('form-control-plaintext');
+                            span.textContent = checkbox.checked ? 'Yes' : 'No';
+                            span.setAttribute('data-page-name', pageName);
+                            element.parentNode.replaceWith(span);
                         }
                     }
                 });

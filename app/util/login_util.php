@@ -133,23 +133,6 @@ function checkPageAccess()
     return "allow";
 }
 
-function validation()
-{
-    global $password_updated_by;
-    global $password_updated_on;
-    global $default_pass_updated_on;
-    // Check default password
-    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
-
-    $checkPageAccessResult = checkPageAccess();
-    if ($checkPageAccessResult != "allow") {
-        echo '<script type="text/javascript">';
-        echo 'alert("' . $checkPageAccessResult . '");';
-        echo 'window.location.href = "home.php";';
-        echo '</script>';
-        exit; // Exit to prevent further execution
-    }
-}
 function checkMaintenanceStatus($pageName)
 {
     global $con; // Ensure the database connection is available
@@ -171,4 +154,126 @@ function checkMaintenanceStatus($pageName)
 $currentPage = basename($_SERVER['PHP_SELF']); // Get the current page name
 checkMaintenanceStatus($currentPage);
 
-// Rest of your existing code in login_util.php
+function checkHRMSValidation($associatenumber, $currentPage)
+{
+    global $con;
+
+    // First check if the current page requires profile completion validation
+    $query = "SELECT profile_check FROM pages WHERE page_name = $1";
+    $result = pg_query_params($con, $query, [$currentPage]);
+
+    $requiresValidation = false;
+    if ($result && pg_num_rows($result) > 0) {
+        $row = pg_fetch_assoc($result);
+        $requiresValidation = ($row['profile_check'] === 't');
+    }
+
+    // Skip validation if not required for this page
+    if (!$requiresValidation) {
+        return;
+    }
+
+    $mandatoryFields = [
+        'currentaddress',
+        'permanentaddress',
+        'religion',
+        'caste',
+        'father_name',
+        'mother_name',
+        'blood_group',
+        'emergency_contact1',
+        'contact_person1'
+    ];
+
+    $conditionalFields = [
+        'workexperience',
+        'eduq',
+        'mjorsub',
+        'phone',
+        'email',
+        'panno',
+        'college_name',
+        'enrollment_number'
+    ];
+
+    $missingMandatory = [];
+    $missingConditional = [];
+
+    // Check mandatory fields
+    foreach ($mandatoryFields as $field) {
+        $query = "SELECT $field FROM rssimyaccount_members WHERE associatenumber = $1";
+        $result = pg_query_params($con, $query, [$associatenumber]);
+        if ($result && pg_num_rows($result) > 0) {
+            $row = pg_fetch_assoc($result);
+            if (empty($row[$field])) {
+                $missingMandatory[] = $field;
+            }
+        }
+    }
+
+    // Check conditional fields
+    foreach ($conditionalFields as $field) {
+        $query = "SELECT $field FROM rssimyaccount_members WHERE associatenumber = $1";
+        $result = pg_query_params($con, $query, [$associatenumber]);
+        $isEmpty = false;
+
+        if ($result && pg_num_rows($result) > 0) {
+            $row = pg_fetch_assoc($result);
+            $isEmpty = empty($row[$field]);
+        }
+
+        if ($isEmpty) {
+            $query = "SELECT reviewer_status FROM hrms_workflow 
+                     WHERE associatenumber = $1 AND fieldname = $2 
+                     ORDER BY submission_timestamp DESC LIMIT 1";
+            $result = pg_query_params($con, $query, [$associatenumber, $field]);
+
+            $hasPending = false;
+            if ($result && pg_num_rows($result) > 0) {
+                $row = pg_fetch_assoc($result);
+                $hasPending = ($row['reviewer_status'] === 'Pending');
+            }
+
+            if (!$hasPending) {
+                $missingConditional[] = $field;
+            }
+        }
+    }
+
+    // If any fields are missing, show combined alert
+    if (!empty($missingMandatory) || !empty($missingConditional)) {
+        $allMissingFields = array_merge($missingMandatory, $missingConditional);
+        $message = "Please update these fields: " . implode(", ", $allMissingFields);
+
+        echo '<script type="text/javascript">
+            alert(' . json_encode($message) . ');
+            window.location.href = "hrms.php";
+          </script>';
+        exit();
+    }
+}
+
+function validation()
+{
+    global $password_updated_by;
+    global $password_updated_on;
+    global $default_pass_updated_on;
+    global $associatenumber; // added to check HRMS validation
+    // Check default password
+    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
+
+    $checkPageAccessResult = checkPageAccess();
+    if ($checkPageAccessResult != "allow") {
+        echo '<script type="text/javascript">';
+        echo 'alert("' . $checkPageAccessResult . '");';
+        echo 'window.location.href = "home.php";';
+        echo '</script>';
+        exit; // Exit to prevent further execution
+    }
+
+    // Check HRMS validation if user is logged in
+    if (isset($associatenumber)) {
+        $currentPage = basename($_SERVER['PHP_SELF']);
+        checkHRMSValidation($associatenumber, $currentPage);
+    }
+}
