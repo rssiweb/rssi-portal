@@ -1158,4 +1158,5 @@
     toggleCollapsedClass('attendance-analytics.php', 'attendX');
     toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
+    toggleCollapsedClass('student_attendance_summary.php', 'attendX');
   </script>

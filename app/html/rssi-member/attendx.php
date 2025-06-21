@@ -138,6 +138,17 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
+                                        <a href="student_attendance_summary.php.php" class="card-link">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <i class="bi bi-clipboard-check icon"></i>
+                                                    <h5 class="card-title mt-3">Student Attendance Summary</h5>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-4">
                                         <a href="attendance-analytics.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
