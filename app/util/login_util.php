@@ -193,7 +193,7 @@ function checkHRMSValidation($associatenumber, $currentPage)
         'email',
         'panno',
         'college_name',
-        'enrollment_number'
+        //'enrollment_number'
     ];
 
     $missingMandatory = [];

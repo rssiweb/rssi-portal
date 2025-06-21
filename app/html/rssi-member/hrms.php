@@ -209,7 +209,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'emergency_contact1',
             'emergency_contact2',
             'contact_person1',
-            'contact_person2'
+            'contact_person2',
+            'college_name',
+            'enrollment_number'
         ];
 
         $fields_requiring_approval = [
@@ -1547,6 +1549,13 @@ echo "<script>
                                                                                 <td>
                                                                                     <span id="college_nameText"><?php echo is_null($array['college_name']) ? 'N/A' : $array['college_name']; ?></span>
                                                                                     <input type="text" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="enrollment_number">Enrolment Number:</label></td>
+                                                                                <td>
+                                                                                    <span id="enrollment_numberText"><?php echo is_null($array['enrollment_number']) ? 'N/A' : $array['enrollment_number']; ?></span>
+                                                                                    <input type="text" name="enrollment_number" id="enrollment_number" value="<?php echo $array["enrollment_number"]; ?>" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
