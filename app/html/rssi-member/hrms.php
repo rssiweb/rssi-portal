@@ -186,8 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'remarks',
             'scode',
             'photo',
-            'security_deposit',
-            'college_name'
+            'security_deposit'
         ];
 
         $user_editable_fields = [
@@ -210,7 +209,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'emergency_contact1',
             'emergency_contact2',
             'contact_person1',
-            'contact_person2'
+            'contact_person2',
+            'college_name'
         ];
 
         $fields_requiring_approval = [
@@ -1542,6 +1542,13 @@ echo "<script>
                                                                     <table class="table table-borderless">
                                                                         <tbody>
                                                                             <tr>
+                                                                                <td><label for="college_name">College name:</label></td>
+                                                                                <td>
+                                                                                    <span id="college_nameText"><?php echo is_null($array['college_name']) ? 'N/A' : $array['college_name']; ?></span>
+                                                                                    <input type="text" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
                                                                                 <td><label for="eduq">Educational Qualification:</label></td>
                                                                                 <td>
                                                                                     <span id="eduqText"><?php echo $array['eduq']; ?></span>
@@ -1854,13 +1861,6 @@ echo "<script>
                                                                     <div class="table-responsive">
                                                                         <table class="table table-borderless">
                                                                             <tbody>
-                                                                                <tr>
-                                                                                    <td><label for="college_name">College name:</label></td>
-                                                                                    <td>
-                                                                                        <span id="college_nameText"><?php echo is_null($array['college_name']) ? 'N/A' : $array['college_name']; ?></span>
-                                                                                        <input type="text" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
-                                                                                    </td>
-                                                                                </tr>
                                                                                 <tr>
                                                                                     <td><label for="security_deposit">Security Deposit:</label></td>
                                                                                     <td>
