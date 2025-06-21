@@ -1366,7 +1366,7 @@ echo "<script>
                                                                             </tr>
                                                                             <!-- Work Experience -->
                                                                             <tr>
-                                                                                <td><label for="workexperience">Work Experience:</label></td>
+                                                                                <td><label for="duration_of_service">Duration of Service:</label></td>
                                                                                 <td>
                                                                                     <?php
                                                                                     // Example input dates
@@ -1647,7 +1647,6 @@ echo "<script>
                                                                                 <td>
                                                                                     <span id="workexperienceText"><?php echo $array['workexperience']; ?></span>
                                                                                     <textarea name="workexperience" id="workexperience" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['workexperience']) ? $array['workexperience'] : ''; ?></textarea>
-                                                                                    </select>
                                                                                 </td>
                                                                             </tr>
                                                                             <!-- Checkbox for Relevant Previous Experience -->
