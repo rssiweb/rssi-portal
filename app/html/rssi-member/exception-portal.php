@@ -16,46 +16,87 @@ validation();
 // Get current timestamp
 $now = date('Y-m-d H:i:s');
 $success = true;
+$duplicateRequest = false;
+$existingStatus = '';
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Generate a unique ID for the request
-    $id = uniqid(); // Generate a unique ID with 'REQ_' prefix
-
     // Retrieve form data
     $exceptionType = $_POST['exceptionType'];
     $subExceptionType = $_POST['subExceptionType'];
     $startDateTime = !empty($_POST['startDateTime']) ? $_POST['startDateTime'] : null;
     $endDateTime = !empty($_POST['endDateTime']) ? $_POST['endDateTime'] : null;
     $reason = htmlspecialchars($_POST['reason'], ENT_QUOTES, 'UTF-8');
-    $submittedBy = $associatenumber; // Replace with actual user information (e.g., session data)
+    $submittedBy = $associatenumber;
 
-    // Prepare SQL statement for insertion
-    $sql = "INSERT INTO exception_requests (id, exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by) 
-    VALUES ('$id', '$exceptionType', '$subExceptionType'," .
-        ($startDateTime ? "'$startDateTime'" : "NULL") . ", " .
-        ($endDateTime ? "'$endDateTime'" : "NULL") . ", " .
-        "'$reason', '$now', '$submittedBy')";
+    // Extract just the date portion (YYYY-MM-DD) for comparison
+    $startDate = $startDateTime ? substr($startDateTime, 0, 10) : null;
+    $endDate = $endDateTime ? substr($endDateTime, 0, 10) : null;
 
-    // Execute the SQL query
-    $result = pg_query($con, $sql);
+    // Check for existing non-rejected requests with same parameters on same date(s)
+    $checkSql = "SELECT status FROM exception_requests 
+                WHERE submitted_by = '$submittedBy' 
+                AND exception_type = '$exceptionType' 
+                AND sub_exception_type = '$subExceptionType'";
 
-    // Check if the insertion was successful
-    if (!$result) {
+    if ($startDate) {
+        $checkSql .= " AND (start_date_time::date = '$startDate'";
+        if ($endDate) {
+            $checkSql .= " OR end_date_time::date = '$endDate')";
+        } else {
+            $checkSql .= ")";
+        }
+    } else if ($endDate) {
+        $checkSql .= " AND end_date_time::date = '$endDate'";
+    } else {
+        // If no dates provided at all, just check type/subtype
+        $checkSql .= " AND start_date_time IS NULL AND end_date_time IS NULL";
+    }
+
+    $checkSql .= " AND status != 'Rejected'";
+
+    $checkResult = pg_query($con, $checkSql);
+
+    if (pg_num_rows($checkResult) > 0) {
+        $existingRequest = pg_fetch_assoc($checkResult);
+        $existingStatus = $existingRequest['status'];
+        $duplicateRequest = true;
         $success = false;
     }
-    if ($success && $email != "") {
-        sendEmail("exceptionapply", array(
-            "id" => $id,
-            "submittedBy" => $submittedBy,
-            "applicantname" => @$fullname,
-            "dateTime" => !empty($startDateTime)
-                ? @date("d/m/Y g:i a", strtotime($startDateTime))
-                : (!empty($endDateTime) ? @date("d/m/Y g:i a", strtotime($endDateTime)) : ''),
-            "exceptionType" => $subExceptionType,
-            "reason" => $reason,
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
+
+    // Only proceed if no existing pending/approved request found for same date(s)
+    if (!$duplicateRequest) {
+        // Generate a unique ID for the request
+        $id = uniqid();
+
+        // Prepare SQL statement for insertion
+        $sql = "INSERT INTO exception_requests (id, exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by, status) 
+        VALUES ('$id', '$exceptionType', '$subExceptionType'," .
+            ($startDateTime ? "'$startDateTime'" : "NULL") . ", " .
+            ($endDateTime ? "'$endDateTime'" : "NULL") . ", " .
+            "'$reason', '$now', '$submittedBy', 'Pending')";
+
+        // Execute the SQL query
+        $result = pg_query($con, $sql);
+
+        // Check if the insertion was successful
+        if (!$result) {
+            $success = false;
+        }
+
+        if ($success && $email != "") {
+            sendEmail("exceptionapply", array(
+                "id" => $id,
+                "submittedBy" => $submittedBy,
+                "applicantname" => @$fullname,
+                "dateTime" => !empty($startDateTime)
+                    ? @date("d/m/Y g:i a", strtotime($startDateTime))
+                    : (!empty($endDateTime) ? @date("d/m/Y g:i a", strtotime($endDateTime)) : ''),
+                "exceptionType" => $subExceptionType,
+                "reason" => $reason,
+                "now" => @date("d/m/Y g:i a", strtotime($now))
+            ), $email);
+        }
     }
 }
 // Fetch the latest reporting_time and exit_time for the associate
@@ -120,7 +161,11 @@ if ($result && pg_num_rows($result) > 0) {
                             <?php if ($_POST && !$success) { ?>
                                 <script>
                                     // Show error message in a JavaScript alert
-                                    alert("An error occurred while submitting the request.");
+                                    <?php if ($duplicateRequest) { ?>
+                                        alert("A similar request already exists with status: <?php echo $existingStatus ?>. Only rejected requests can be resubmitted.");
+                                    <?php } else { ?>
+                                        alert("An error occurred while submitting the request.");
+                                    <?php } ?>
                                 </script>
                             <?php } elseif ($_POST && $success) { ?>
                                 <script>

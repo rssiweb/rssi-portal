@@ -138,7 +138,7 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="student_attendance_summary.php.php" class="card-link">
+                                        <a href="student_attendance_summary.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-clipboard-check icon"></i>
