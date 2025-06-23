@@ -20,30 +20,36 @@ $selectedCategories = isset($_GET['categories']) ? $_GET['categories'] : [];
 $startDate = date("Y-m-01", strtotime($month));
 $endDate = date("Y-m-t", strtotime($month));
 
-// Get all available categories for the dropdown
-$categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
-$categoriesResult = pg_query($con, $categoriesQuery);
-$allCategories = pg_fetch_all_columns($categoriesResult, 0);
-
-// Validate selected categories against available categories
 $validCategories = [];
-foreach ($selectedCategories as $cat) {
-    if (in_array($cat, $allCategories)) {
-        $validCategories[] = pg_escape_string($con, $cat);
+
+if (!empty($selectedCategories)) {
+    $placeholders = implode(',', array_map(
+        fn($i) => '$' . ($i + 1),
+        array_keys($selectedCategories)
+    ));
+
+    $sql = "SELECT category_value FROM school_categories WHERE category_value IN ($placeholders)";
+    $result = pg_query_params($con, $sql, $selectedCategories);
+
+    if ($result) {
+        $validCategories = array_column(pg_fetch_all($result) ?: [], 'category_value');
     }
 }
 
 // Build SQL conditions
-$idCondition = "";
-if ($id != null) {
-    $idCondition = "AND s.filterstatus = '$id'";
+$conditions = [];
+
+if (!empty($id)) {
+    $conditions[] = "s.filterstatus = '" . pg_escape_string($con, $id) . "'";
 }
 
-$categoryCondition = "";
 if (!empty($validCategories)) {
-    $categoryList = "'" . implode("','", $validCategories) . "'";
-    $categoryCondition = "AND s.category IN ($categoryList)";
+    $escaped = array_map(fn($c) => pg_escape_string($con, $c), $validCategories);
+    $categoryList = "'" . implode("','", $escaped) . "'";
+    $conditions[] = "s.category IN ($categoryList)";
 }
+
+$whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
 
 // Check if at least one category is selected
 $requireCategorySelection = empty($validCategories);
@@ -95,8 +101,7 @@ attendance_data AS (
             DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         )
         AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        $idCondition
-        $categoryCondition
+        $whereClause
 )
 SELECT
     student_id,
@@ -195,17 +200,31 @@ pg_close($con);
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
-    <!-- Include jQuery UI CSS and JavaScript -->
-    <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
-
     <!-- Initialize the multi-select plugin (using Select2 as example) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
+
+        <script>
         $(document).ready(function() {
             $('#categories').select2({
-                placeholder: "Select categories...",
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by category',
                 width: '100%'
             });
         });
@@ -307,11 +326,11 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
+                                                <!-- <label>Categories</label> -->
                                                 <select name="categories[]" id="categories" class="form-select" multiple="multiple" required>
-                                                    <?php foreach ($allCategories as $category): ?>
-                                                        <option value="<?php echo htmlspecialchars($category); ?>"
-                                                            <?php echo in_array($category, $selectedCategories) ? 'selected' : '' ?>>
-                                                            <?php echo htmlspecialchars($category); ?>
+                                                    <?php foreach ($validCategories as $category): ?>
+                                                        <option value="<?= htmlspecialchars($category) ?>" selected>
+                                                            <?= htmlspecialchars($category) ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -422,7 +441,6 @@ pg_close($con);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
 </body>
 
 </html>
