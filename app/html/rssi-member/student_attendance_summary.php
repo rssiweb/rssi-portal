@@ -9,43 +9,47 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Get filter parameters
+// Start timer for performance monitoring
+$startTime = microtime(true);
+
+// Get filter parameters with validation
 $status = isset($_GET['status']) ? $_GET['status'] : 'Active';
 $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
-$selectedCategories = isset($_GET['categories']) ? $_GET['categories'] : [];
-$selectedClasses = isset($_GET['classes']) ? $_GET['classes'] : []; // New class filter
-$selectedStudents = isset($_GET['students']) ? $_GET['students'] : [];
+
+// Initialize filter arrays
+$selectedCategories = isset($_GET['categories']) ? (array)$_GET['categories'] : [];
+$selectedClasses = isset($_GET['classes']) ? (array)$_GET['classes'] : [];
+$selectedStudents = isset($_GET['students']) ? (array)$_GET['students'] : [];
 
 // Get all available categories, classes, and students
 $categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
 $categoriesResult = pg_query($con, $categoriesQuery);
 $allCategories = pg_fetch_all_columns($categoriesResult, 0);
 
-// New query for classes
+// Get all available classes
 $classesQuery = "SELECT DISTINCT class FROM rssimyprofile_student WHERE class IS NOT NULL ORDER BY class";
 $classesResult = pg_query($con, $classesQuery);
 $allClasses = pg_fetch_all_columns($classesResult, 0);
 
-$studentsQuery = "SELECT student_id, studentname FROM rssimyprofile_student ORDER BY studentname";
+// Get students (limited to 1000 for performance)
+$studentsQuery = "SELECT student_id, studentname FROM rssimyprofile_student ORDER BY studentname LIMIT 1000";
 $studentsResult = pg_query($con, $studentsQuery);
 $allStudents = pg_fetch_all($studentsResult);
 
-// Validate selections
+// Validate selections against available options
 $validCategories = array_filter($selectedCategories, fn($cat) => in_array($cat, $allCategories));
-$validClasses = array_filter($selectedClasses, fn($cls) => in_array($cls, $allClasses)); // Validate classes
-$validStudents = array_filter($selectedStudents, fn($id) => in_array($id, array_column($allStudents, 'student_id')));
+$validClasses = array_filter($selectedClasses, fn($cls) => in_array($cls, $allClasses));
+$validStudents = array_filter($selectedStudents, fn($id) => in_array($id, array_column($allStudents ?: [], 'student_id')));
 
-// Build SQL conditions
-$conditions = [];
-$conditions[] = "s.filterstatus = '" . pg_escape_string($con, $status) . "'";
+// Build SQL conditions with proper escaping
+$conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
 
 if (!empty($validCategories)) {
     $categoryList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validCategories)) . "'";
     $conditions[] = "s.category IN ($categoryList)";
 }
 
-// Add class condition
 if (!empty($validClasses)) {
     $classList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validClasses)) . "'";
     $conditions[] = "s.class IN ($classList)";
@@ -58,45 +62,55 @@ if (!empty($validStudents)) {
 
 $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-// Main query to get attendance summary by month
+// Main optimized query (same as before)
 $query = "
 WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date, '$endDate'::date, '1 day'::interval
     )::date AS attendance_date
 ),
+filtered_students AS (
+    SELECT student_id, studentname, category, class, doa
+    FROM rssimyprofile_student s
+    $whereClause
+),
+student_class_days_filtered AS (
+    SELECT 
+        fs.student_id,
+        fs.studentname,
+        fs.category,
+        fs.class,
+        d.attendance_date,
+        TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
+        EXISTS (
+            SELECT 1 FROM student_class_days cw
+            WHERE cw.category = fs.category
+              AND cw.effective_from <= d.attendance_date
+              AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+              AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
+        ) AS is_class_day,
+        EXISTS (
+            SELECT 1 FROM attendance a 
+            WHERE a.user_id = fs.student_id 
+            AND a.date = d.attendance_date
+        ) AS is_present
+    FROM date_range d
+    JOIN filtered_students fs ON d.attendance_date >= fs.doa
+),
 attendance_data AS (
     SELECT
-        s.student_id,
-        s.studentname,
-        s.category,
-        s.class,
-        TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
-        d.attendance_date,
-        COALESCE(
-            CASE
-                WHEN a.user_id IS NOT NULL THEN 'P'
-                WHEN a.user_id IS NULL
-                     AND (
-                        (SELECT COUNT(*) FROM attendance att WHERE att.date = d.attendance_date) > 0
-                        AND (
-                            SELECT COUNT(*) FROM student_class_days cw
-                            WHERE cw.category = s.category
-                              AND cw.effective_from <= d.attendance_date
-                              AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                              AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
-                        ) > 0
-                        AND s.doa <= d.attendance_date
-                     )
-                THEN 'A'
-                ELSE NULL
-            END
-        ) AS attendance_status
-    FROM date_range d
-    CROSS JOIN rssimyprofile_student s
-    LEFT JOIN attendance a ON s.student_id = a.user_id AND a.date = d.attendance_date
-    $whereClause
-    AND d.attendance_date >= s.doa
+        student_id,
+        studentname,
+        category,
+        class,
+        month_year,
+        attendance_date,
+        CASE
+            WHEN is_present THEN 'P'
+            WHEN is_class_day AND EXISTS (SELECT 1 FROM attendance WHERE date = attendance_date) THEN 'A'
+            ELSE NULL
+        END AS attendance_status
+    FROM student_class_days_filtered
 )
 SELECT 
     student_id,
@@ -120,7 +134,7 @@ ORDER BY studentname, month_year;
 ";
 
 $result = pg_query($con, $query);
-$attendanceData = pg_fetch_all($result);
+$attendanceData = pg_fetch_all($result) ?: [];
 
 // Calculate average percentage
 $totalPercentage = 0;
@@ -133,8 +147,7 @@ foreach ($attendanceData as $row) {
 }
 $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
 
-
-// Handle CSV export
+// Handle CSV export - THIS IS THE FIXED SECTION
 if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=attendance_summary_' . date('Y-m-d') . '.csv');
@@ -144,8 +157,15 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     // Write CSV headers
     $headers = ['Sl. No.', 'Student ID', 'Student Name', 'Category', 'Class'];
 
-    // Add month columns
-    $months = array_unique(array_column($attendanceData, 'month_year'));
+    // Get unique months from the FILTERED data
+    $months = [];
+    foreach ($attendanceData as $row) {
+        if (!in_array($row['month_year'], $months)) {
+            $months[] = $row['month_year'];
+        }
+    }
+    sort($months);
+
     foreach ($months as $month) {
         $headers[] = date('M Y', strtotime($month . '-01')) . ' Present';
         $headers[] = date('M Y', strtotime($month . '-01')) . ' Total';
@@ -155,33 +175,37 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 
     fputcsv($output, $headers);
 
-    // Write data rows
+    // Group FILTERED data by student
     $students = [];
     foreach ($attendanceData as $row) {
-        $students[$row['student_id']]['info'] = [
-            'studentname' => $row['studentname'],
-            'category' => $row['category'],
-            'class' => $row['class']
-        ];
-        $students[$row['student_id']]['months'][$row['month_year']] = [
-            'present' => $row['attended_classes'],
-            'total' => $row['total_classes'],
-            'percentage' => $row['attendance_percentage']
-        ];
+        $studentId = $row['student_id'];
+        if (!isset($students[$studentId])) {
+            $students[$studentId] = [
+                'info' => [
+                    'studentname' => $row['studentname'],
+                    'category' => $row['category'],
+                    'class' => $row['class']
+                ],
+                'months' => [],
+                'total_present' => 0,
+                'total_classes' => 0
+            ];
+        }
+
+        if ($row['month_year']) {
+            $students[$studentId]['months'][$row['month_year']] = [
+                'present' => $row['attended_classes'],
+                'total' => $row['total_classes'],
+                'percentage' => $row['attendance_percentage']
+            ];
+            $students[$studentId]['total_present'] += $row['attended_classes'];
+            $students[$studentId]['total_classes'] += $row['total_classes'];
+        }
     }
 
+    // Write student rows from FILTERED data
     $slNo = 1;
     foreach ($students as $studentId => $data) {
-        // Calculate overall stats
-        $totalPresent = 0;
-        $totalClasses = 0;
-        foreach ($data['months'] as $month) {
-            $totalPresent += $month['present'];
-            $totalClasses += $month['total'];
-        }
-        $overallPercentage = $totalClasses > 0 ? round(($totalPresent / $totalClasses) * 100, 2) : 0;
-
-        // Prepare row data
         $rowData = [
             $slNo++,
             $studentId,
@@ -195,9 +219,13 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             $monthData = $data['months'][$month] ?? null;
             $rowData[] = $monthData ? $monthData['present'] : '';
             $rowData[] = $monthData ? $monthData['total'] : '';
-            $rowData[] = $monthData ? $monthData['percentage'] . '%' : '';
+            $rowData[] = $monthData ? ($monthData['percentage'] . '%') : '';
         }
 
+        // Calculate overall percentage from FILTERED data
+        $overallPercentage = $data['total_classes'] > 0
+            ? round(($data['total_present'] / $data['total_classes']) * 100, 2)
+            : 0;
         $rowData[] = $overallPercentage . '%';
 
         fputcsv($output, $rowData);
@@ -206,6 +234,9 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     fclose($output);
     exit;
 }
+
+// Log performance metrics
+error_log("Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds");
 ?>
 
 <!doctype html>
