@@ -12,52 +12,59 @@ validation();
 // Start timer for performance monitoring
 $startTime = microtime(true);
 
-// Get filter parameters with validation
-$status = isset($_GET['status']) ? $_GET['status'] : 'Active';
-$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
-$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
+// Helper: generate SQL placeholders
+function makePlaceholders($array)
+{
+    return implode(',', array_map(fn($i) => '$' . ($i + 1), array_keys($array)));
+}
 
-// Initialize filter arrays
-$selectedCategories = isset($_GET['categories']) ? (array)$_GET['categories'] : [];
-$selectedClasses = isset($_GET['classes']) ? (array)$_GET['classes'] : [];
-$selectedStudents = isset($_GET['students']) ? (array)$_GET['students'] : [];
+// Get filter parameters
+$status = $_GET['status'] ?? 'Active';
+$startDate = $_GET['start_date'] ?? date('Y-m-01');
+$endDate = $_GET['end_date'] ?? date('Y-m-t');
+$selectedCategories = (array)($_GET['categories'] ?? []);
+$selectedClasses = (array)($_GET['classes'] ?? []);
+$selectedStudents = (array)($_GET['students'] ?? []);
 
-// Get all available categories, classes, and students
-$categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
-$categoriesResult = pg_query($con, $categoriesQuery);
-$allCategories = pg_fetch_all_columns($categoriesResult, 0);
-
-// Get all available classes
-$classesQuery = "SELECT DISTINCT class FROM rssimyprofile_student WHERE class IS NOT NULL ORDER BY class";
-$classesResult = pg_query($con, $classesQuery);
-$allClasses = pg_fetch_all_columns($classesResult, 0);
-
-// Validate selections against available options
-$validCategories = array_filter($selectedCategories, fn($cat) => in_array($cat, $allCategories));
-$validClasses = array_filter($selectedClasses, fn($cls) => in_array($cls, $allClasses));
-$validStudents = [];
-
-if (!empty($selectedStudents)) {
-    // Use placeholders for prepared statement
-    $placeholders = [];
-    for ($i = 0; $i < count($selectedStudents); $i++) {
-        $placeholders[] = '$' . ($i + 1);
-    }
-    $placeholders = implode(',', $placeholders);
-
-    $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($placeholders)";
-    $result = pg_query_params($con, $sql, $selectedStudents);
-    if ($result) {
-        $validStudents = pg_fetch_all($result) ?: [];
+// Validate selected categories
+$validCategories = [];
+if (!empty($selectedCategories)) {
+    $ph = makePlaceholders($selectedCategories);
+    $sql = "SELECT category_value FROM school_categories WHERE category_value IN ($ph)";
+    $res = pg_query_params($con, $sql, $selectedCategories);
+    if ($res) {
+        $validCategories = array_column(pg_fetch_all($res) ?: [], 'category_value');
     }
 }
 
-// Build SQL conditions with proper escaping
+// Validate selected classes
+$validClasses = [];
+if (!empty($selectedClasses)) {
+    $ph = makePlaceholders($selectedClasses);
+    $sql = "SELECT value FROM school_classes WHERE value IN ($ph)";
+    $res = pg_query_params($con, $sql, $selectedClasses);
+    if ($res) {
+        $validClasses = array_column(pg_fetch_all($res) ?: [], 'value');
+    }
+}
+
+// Validate selected students
+$validStudents = [];
+if (!empty($selectedStudents)) {
+    $ph = makePlaceholders($selectedStudents);
+    $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($ph)";
+    $res = pg_query_params($con, $sql, $selectedStudents);
+    if ($res) {
+        $validStudents = pg_fetch_all($res) ?: [];
+    }
+}
+
+// Build dynamic WHERE conditions
 $conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
 
 if (!empty($validCategories)) {
-    $categoryList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validCategories)) . "'";
-    $conditions[] = "s.category IN ($categoryList)";
+    $catList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validCategories)) . "'";
+    $conditions[] = "s.category IN ($catList)";
 }
 
 if (!empty($validClasses)) {
@@ -71,14 +78,12 @@ if (!empty($validStudents)) {
     $conditions[] = "s.student_id IN ($studentList)";
 }
 
-$whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+$whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-// Main optimized query (same as before)
+// Main optimized attendance query
 $query = "
 WITH date_range AS (
-    SELECT generate_series(
-        '$startDate'::date, '$endDate'::date, '1 day'::interval
-    )::date AS attendance_date
+    SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
 ),
 filtered_students AS (
     SELECT student_id, studentname, category, class, doa
@@ -87,10 +92,7 @@ filtered_students AS (
 ),
 student_class_days_filtered AS (
     SELECT 
-        fs.student_id,
-        fs.studentname,
-        fs.category,
-        fs.class,
+        fs.student_id, fs.studentname, fs.category, fs.class,
         d.attendance_date,
         TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
         EXISTS (
@@ -102,20 +104,14 @@ student_class_days_filtered AS (
         ) AS is_class_day,
         EXISTS (
             SELECT 1 FROM attendance a 
-            WHERE a.user_id = fs.student_id 
-            AND a.date = d.attendance_date
+            WHERE a.user_id = fs.student_id AND a.date = d.attendance_date
         ) AS is_present
     FROM date_range d
     JOIN filtered_students fs ON d.attendance_date >= fs.doa
 ),
 attendance_data AS (
     SELECT
-        student_id,
-        studentname,
-        category,
-        class,
-        month_year,
-        attendance_date,
+        student_id, studentname, category, class, month_year, attendance_date,
         CASE
             WHEN is_present THEN 'P'
             WHEN is_class_day AND EXISTS (SELECT 1 FROM attendance WHERE date = attendance_date) THEN 'A'
@@ -124,19 +120,14 @@ attendance_data AS (
     FROM student_class_days_filtered
 )
 SELECT 
-    student_id,
-    studentname,
-    category,
-    class,
-    month_year,
+    student_id, studentname, category, class, month_year,
     COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) AS total_classes,
     COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) AS attended_classes,
     CASE 
         WHEN COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) = 0 THEN NULL
         ELSE ROUND(
             (COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) * 100.0) /
-            COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END), 
-            2
+            COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END), 2
         )
     END AS attendance_percentage
 FROM attendance_data
@@ -158,40 +149,30 @@ foreach ($attendanceData as $row) {
 }
 $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
 
-// Handle CSV export - THIS IS THE FIXED SECTION
-if (isset($_GET['export']) && $_GET['export'] == 'csv') {
+// CSV Export
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=attendance_summary_' . date('Y-m-d') . '.csv');
-
     $output = fopen('php://output', 'w');
 
-    // Write CSV headers
     $headers = ['Sl. No.', 'Student ID', 'Student Name', 'Category', 'Class'];
-
-    // Get unique months from the FILTERED data
-    $months = [];
-    foreach ($attendanceData as $row) {
-        if (!in_array($row['month_year'], $months)) {
-            $months[] = $row['month_year'];
-        }
-    }
+    $months = array_unique(array_column($attendanceData, 'month_year'));
     sort($months);
 
     foreach ($months as $month) {
-        $headers[] = date('M Y', strtotime($month . '-01')) . ' Present';
-        $headers[] = date('M Y', strtotime($month . '-01')) . ' Total';
-        $headers[] = date('M Y', strtotime($month . '-01')) . ' Percentage';
+        $label = date('M Y', strtotime($month . '-01'));
+        $headers[] = "$label Present";
+        $headers[] = "$label Total";
+        $headers[] = "$label Percentage";
     }
     $headers[] = 'Overall Percentage';
-
     fputcsv($output, $headers);
 
-    // Group FILTERED data by student
     $students = [];
     foreach ($attendanceData as $row) {
-        $studentId = $row['student_id'];
-        if (!isset($students[$studentId])) {
-            $students[$studentId] = [
+        $id = $row['student_id'];
+        if (!isset($students[$id])) {
+            $students[$id] = [
                 'info' => [
                     'studentname' => $row['studentname'],
                     'category' => $row['category'],
@@ -203,50 +184,44 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             ];
         }
 
-        if ($row['month_year']) {
-            $students[$studentId]['months'][$row['month_year']] = [
-                'present' => $row['attended_classes'],
-                'total' => $row['total_classes'],
-                'percentage' => $row['attendance_percentage']
-            ];
-            $students[$studentId]['total_present'] += $row['attended_classes'];
-            $students[$studentId]['total_classes'] += $row['total_classes'];
-        }
+        $students[$id]['months'][$row['month_year']] = [
+            'present' => $row['attended_classes'],
+            'total' => $row['total_classes'],
+            'percentage' => $row['attendance_percentage']
+        ];
+        $students[$id]['total_present'] += $row['attended_classes'];
+        $students[$id]['total_classes'] += $row['total_classes'];
     }
 
-    // Write student rows from FILTERED data
-    $slNo = 1;
-    foreach ($students as $studentId => $data) {
-        $rowData = [
-            $slNo++,
-            $studentId,
+    $sl = 1;
+    foreach ($students as $id => $data) {
+        $row = [
+            $sl++,
+            $id,
             $data['info']['studentname'],
             $data['info']['category'],
             $data['info']['class']
         ];
 
-        // Add monthly data
-        foreach ($months as $month) {
-            $monthData = $data['months'][$month] ?? null;
-            $rowData[] = $monthData ? $monthData['present'] : '';
-            $rowData[] = $monthData ? $monthData['total'] : '';
-            $rowData[] = $monthData ? ($monthData['percentage'] . '%') : '';
+        foreach ($months as $m) {
+            $month = $data['months'][$m] ?? ['present' => '', 'total' => '', 'percentage' => ''];
+            $row[] = $month['present'];
+            $row[] = $month['total'];
+            $row[] = $month['percentage'] !== '' ? $month['percentage'] . '%' : '';
         }
 
-        // Calculate overall percentage from FILTERED data
-        $overallPercentage = $data['total_classes'] > 0
-            ? round(($data['total_present'] / $data['total_classes']) * 100, 2)
-            : 0;
-        $rowData[] = $overallPercentage . '%';
-
-        fputcsv($output, $rowData);
+        $overall = $data['total_classes'] > 0
+            ? round(($data['total_present'] / $data['total_classes']) * 100, 2) . '%'
+            : '0%';
+        $row[] = $overall;
+        fputcsv($output, $row);
     }
 
     fclose($output);
     exit;
 }
 
-// Log performance metrics
+// Log query time
 error_log("Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds");
 ?>
 
@@ -317,13 +292,11 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                     <input type="date" name="end_date" class="form-control" value="<?= $endDate ?>">
                                 </div>
 
-                                <!-- New Class Filter -->
                                 <div class="col-md-2">
                                     <label>Class</label>
                                     <select name="classes[]" id="classes" class="form-select" multiple>
-                                        <?php foreach ($allClasses as $class): ?>
-                                            <option value="<?= htmlspecialchars($class) ?>"
-                                                <?= in_array($class, $selectedClasses) ? 'selected' : '' ?>>
+                                        <?php foreach ($validClasses as $class): ?>
+                                            <option value="<?= htmlspecialchars($class) ?>" selected>
                                                 <?= htmlspecialchars($class) ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -333,16 +306,15 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 <div class="col-md-2">
                                     <label>Categories</label>
                                     <select name="categories[]" id="categories" class="form-select" multiple>
-                                        <?php foreach ($allCategories as $category): ?>
-                                            <option value="<?= htmlspecialchars($category) ?>"
-                                                <?= in_array($category, $selectedCategories) ? 'selected' : '' ?>>
+                                        <?php foreach ($validCategories as $category): ?>
+                                            <option value="<?= htmlspecialchars($category) ?>" selected>
                                                 <?= htmlspecialchars($category) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label>Students (Optional)</label>
                                     <select name="students[]" id="students" class="form-select" multiple>
                                         <?php foreach ($validStudents as $student): ?>
@@ -354,9 +326,16 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 </div>
 
                                 <div class="col-md-12">
-                                    <button type="submit" class="btn btn-primary">Generate Report</button>
-                                    <button type="submit" name="export" value="csv" class="btn btn-success">
-                                        <i class="bi bi-file-earmark-excel"></i> Export CSV
+                                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                                        <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                                        <span class="btn-text">Generate Report</span>
+                                    </button>
+
+                                    <button type="submit" name="export" value="csv" class="btn btn-success" id="exportBtn">
+                                        <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                                        <span class="btn-text">
+                                            <i class="bi bi-file-earmark-excel"></i> Export CSV
+                                        </span>
                                     </button>
                                 </div>
                             </form>
@@ -379,8 +358,12 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                                 <th>Category</th>
                                                 <th>Class</th>
                                                 <?php
-                                                // Get unique months in the date range
+                                                // Get unique months in the date range and SORT THEM PROPERLY
                                                 $months = array_unique(array_column($attendanceData, 'month_year'));
+                                                usort($months, function ($a, $b) {
+                                                    return strtotime($a . '-01') <=> strtotime($b . '-01');
+                                                });
+
                                                 foreach ($months as $month) {
                                                     echo "<th>" . date('M Y', strtotime($month . '-01')) . "<br>Present/Total</th>";
                                                 }
@@ -453,14 +436,6 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            $('#classes, #categories').select2({
-                placeholder: "Select...",
-                width: '100%'
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
             $('#students').select2({
                 ajax: {
                     url: 'fetch_students.php',
@@ -468,7 +443,7 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term // search term
+                            q: params.term
                         };
                     },
                     processResults: function(data) {
@@ -482,8 +457,53 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                 placeholder: 'Search by name or ID',
                 width: '100%'
             });
+
+            $('#categories').select2({
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by category',
+                width: '100%'
+            });
+
+            $('#classes').select2({
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by class',
+                width: '100%'
+            });
         });
     </script>
+
 </body>
 
 </html>
