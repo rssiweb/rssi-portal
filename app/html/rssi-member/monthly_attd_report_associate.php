@@ -11,24 +11,38 @@ if (!isLoggedIn("aid")) {
 validation();
 
 if ($role == 'Admin') {
-    // Fetching the data and populating the $teachers array
-    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' 
-    --AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'
-    AND engagement IN ('Employee', 'Intern')
-    ";
-    $result = pg_query($con, $query);
+    // Get pre-selected teachers from GET
+    $selectedTeachers = $_GET['teacher_id_viva'] ?? [];
 
-    if (!$result) {
-        die("Error in SQL query: " . pg_last_error());
+    // Only fetch data for selected teachers (for preloading into Select2)
+    $teachers = [];
+
+    if (!empty($selectedTeachers)) {
+        $placeholders = implode(',', array_map(
+            fn($i) => '$' . ($i + 1),
+            array_keys($selectedTeachers)
+        ));
+
+        $query = "
+            SELECT associatenumber, fullname 
+            FROM rssimyaccount_members 
+            WHERE associatenumber IN ($placeholders) 
+              AND filterstatus = 'Active' 
+              AND engagement IN ('Employee', 'Intern')
+        ";
+
+        $result = pg_query_params($con, $query, $selectedTeachers);
+
+        if (!$result) {
+            die("Error in SQL query: " . pg_last_error());
+        }
+
+        while ($row = pg_fetch_assoc($result)) {
+            $teachers[] = $row;
+        }
+
+        pg_free_result($result);
     }
-
-    $teachers = array();
-    while ($row = pg_fetch_assoc($result)) {
-        $teachers[] = $row;
-    }
-
-    // Free resultset
-    pg_free_result($result);
 }
 
 // Get filter values from GET parameters
@@ -416,10 +430,48 @@ pg_close($con);
         });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
-    <!-- Include jQuery UI CSS and JavaScript -->
-    <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#teacher_id_viva').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                // allowClear: true,
+                multiple: true
+            });
+            // Prepopulate selected values (on form reload)
+            <?php if (!empty($_GET['teacher_id_viva'])): ?>
+                var selectedTeachers = <?php echo json_encode($_GET['teacher_id_viva']); ?>;
+                <?php foreach ($teachers as $teacher): ?>
+                    <?php if (in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])): ?>
+                        var option = new Option("<?= $teacher['associatenumber'] . ' - ' . $teacher['fullname'] ?>", "<?= $teacher['associatenumber'] ?>", true, true);
+                        $('#teacher_id_viva').append(option).trigger('change');
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        });
+    </script>
 
     <style>
         .blink-text {
@@ -515,14 +567,8 @@ pg_close($con);
                                             </div>
 
                                             <div class="col-md-3">
-                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]"
-                                                    multiple>
-                                                    <option disabled hidden>Select Teacher's ID</option>
-                                                    <?php foreach ($teachers as $teacher) { ?>
-                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])) ? 'selected' : ''; ?>>
-                                                            <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
-                                                        </option>
-                                                    <?php } ?>
+                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]" multiple="multiple">
+                                                    <!-- Leave empty; Select2 will load options dynamically -->
                                                 </select>
                                                 <small class="form-text text-muted">Teacher ID</small>
                                             </div>
@@ -530,7 +576,7 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                            <input type="month" name="get_month" id="get_month" class="form-control"
+                                                <input type="month" name="get_month" id="get_month" class="form-control"
                                                     placeholder="Month"
                                                     value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
