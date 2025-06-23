@@ -241,7 +241,7 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                             <!-- Quantity Distributed -->
                                             <div class="mb-3">
                                                 <label for="quantity_distributed" class="form-label">Quantity Distributed</label>
-                                                <input type="number" class="form-control" id="quantity_distributed" name="quantity_distributed" required>
+                                                <input type="number" step="any" class="form-control" id="quantity_distributed" name="quantity_distributed" required>
                                             </div>
 
                                             <!-- Distributed To -->

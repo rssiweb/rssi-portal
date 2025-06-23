@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Initialize the base query with LEFT JOIN for viva and written teacher
         $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.teacher_id_viva, e.teacher_id_written,
                          e.full_marks_written, e.full_marks_viva, e.estatus, emd.id, emd.student_id, emd.viva_marks, emd.written_marks, 
-                         s.studentname, s.category, s.class, 
+                         s.studentname, emd.category, emd.class, 
                          viva_teacher.fullname AS fullname_viva,
                          written_teacher.fullname AS fullname_written
                   FROM exams e
@@ -368,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <table class="table table-bordered">
                                                     <thead>
                                                         <tr>
-                                                            <th>#</th>
+                                                            <th>Sl. No.</th>
                                                             <th>Student ID</th>
                                                             <th>Student Name</th>
                                                             <th>Category</th>

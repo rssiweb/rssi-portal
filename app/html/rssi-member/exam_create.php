@@ -12,32 +12,35 @@ if (!isLoggedIn("aid")) {
 validation();
 
 if (@$_POST['form-type'] == "exam_filter") {
-    $class = isset($_POST['class']) ? $_POST['class'] : [];
-    $category = isset($_POST['category']) ? $_POST['category'] : [];
-    $student_ids = isset($_POST['student_ids']) ? $_POST['student_ids'] : '';
-    $excluded_ids = isset($_POST['excluded_ids']) ? $_POST['excluded_ids'] : '';
+    $class = $_POST['class'] ?? [];
+    $category = $_POST['category'] ?? [];
+    $student_ids = $_POST['student_ids'] ?? [];
+    $excluded_ids = $_POST['excluded_ids'] ?? [];
 
     $query = "SELECT student_id, studentname, category, class FROM rssimyprofile_student WHERE filterstatus='Active'";
     $conditions = [];
 
     if (!empty($class)) {
-        $class_list = implode("','", $class);
+        $class_list = implode("','", array_map(fn($c) => pg_escape_string($con, $c), $class));
         $conditions[] = "class IN ('$class_list')";
     }
+
     if (!empty($category)) {
-        $category_list = implode("','", $category);
+        $category_list = implode("','", array_map(fn($c) => pg_escape_string($con, $c), $category));
         $conditions[] = "category IN ('$category_list')";
     }
+
     if (!empty($student_ids)) {
-        $student_ids_list = implode("','", array_map('trim', explode(',', $student_ids)));
+        $student_ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $student_ids));
         $conditions[] = "student_id IN ('$student_ids_list')";
     }
+
     if (!empty($excluded_ids)) {
-        $excluded_ids_list = implode("','", array_map('trim', explode(',', $excluded_ids)));
+        $excluded_ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $excluded_ids));
         $conditions[] = "student_id NOT IN ('$excluded_ids_list')";
     }
 
-    if (count($conditions) > 0) {
+    if (!empty($conditions)) {
         $query .= " AND " . implode(" AND ", $conditions);
     } else {
         $resultArr = null;
@@ -50,7 +53,7 @@ if (@$_POST['form-type'] == "exam_filter") {
         exit;
     }
 
-    if (count($conditions) > 0) {
+    if (!empty($conditions)) {
         $resultArr = pg_fetch_all($result);
         $_SESSION['filtered_results'] = $resultArr;
     }
@@ -123,52 +126,42 @@ if (@$_POST['form-type'] == "exam") {
         // Send emails to examiners
         $examiner_ids = array_filter([$teacher_id_viva, $teacher_id_written]);
         if (!empty($examiner_ids)) {
-            $examiner_data_query = pg_query($con, "SELECT associatenumber, phone, email, fullname 
-                                           FROM rssimyaccount_members 
-                                           WHERE associatenumber IN ('" . implode("','", $examiner_ids) . "')");
+            $examiner_data = pg_query($con, "SELECT associatenumber, email, fullname 
+                                   FROM rssimyaccount_members 
+                                   WHERE associatenumber IN ('" . implode("','", $examiner_ids) . "')");
+            $examiners = pg_fetch_all($examiner_data, PGSQL_ASSOC) ?: [];
 
-            $examiners = [];
-            while ($row = pg_fetch_assoc($examiner_data_query)) {
-                $examiners[$row['associatenumber']] = $row;
+            // Create examiner lookup array
+            $examiner_lookup = array_column($examiners, null, 'associatenumber');
+
+            // Determine which modes to notify for each examiner
+            $notifications = [];
+
+            if ($teacher_id_viva && in_array('Viva', $exam_modes)) {
+                $notifications[$teacher_id_viva]['modes'][] = 'Viva';
             }
 
-            // Send email to viva examiner if different from written examiner
-            if (!empty($teacher_id_viva)) {
-                $examiner_email = $examiners[$teacher_id_viva]['email'] ?? null;
-                $examiner_name = $examiners[$teacher_id_viva]['fullname'] ?? null;
+            if ($teacher_id_written && in_array('Written', $exam_modes)) {
+                $notifications[$teacher_id_written]['modes'][] = 'Written';
+            }
 
-                if ($cmdtuples == 1 && !empty($examiner_email)) {
+            // Send notifications
+            foreach ($notifications as $teacher_id => $data) {
+                if (isset($examiner_lookup[$teacher_id]) && $cmdtuples == 1) {
+                    $examiner = $examiner_lookup[$teacher_id];
+                    $exam_mode = count($data['modes']) > 1 ? implode(' + ', $data['modes']) : $data['modes'][0];
+
                     sendEmail("exam_create", [
                         "exam_id" => $exam_id,
                         "exam_type" => $exam_type,
                         "academic_year" => $academic_year,
                         "subject" => $subject,
                         "class" => $class,
-                        "exam_mode" => in_array('Viva', $exam_modes) ? 'Viva' : '',
+                        "exam_mode" => $exam_mode,
                         "full_marks_written" => $full_marks_written,
                         "full_marks_viva" => $full_marks_viva,
-                        "examiner_name" => $examiner_name,
-                    ], $examiner_email);
-                }
-            }
-
-            // Send email to written examiner if different from viva examiner
-            if (!empty($teacher_id_written) && $teacher_id_written != $teacher_id_viva) {
-                $examiner_email_written = $examiners[$teacher_id_written]['email'] ?? null;
-                $examiner_name_written = $examiners[$teacher_id_written]['fullname'] ?? null;
-
-                if ($cmdtuples == 1 && !empty($examiner_email_written)) {
-                    sendEmail("exam_create", [
-                        "exam_id" => $exam_id,
-                        "exam_type" => $exam_type,
-                        "academic_year" => $academic_year,
-                        "subject" => $subject,
-                        "class" => $class,
-                        "exam_mode" => in_array('Written', $exam_modes) ? 'Written' : '',
-                        "full_marks_written" => $full_marks_written,
-                        "full_marks_viva" => $full_marks_viva,
-                        "examiner_name" => $examiner_name_written,
-                    ], $examiner_email_written);
+                        "examiner_name" => $examiner['fullname'],
+                    ], $examiner['email'], false);
                 }
             }
         }
@@ -257,32 +250,6 @@ if (@$_POST['form-type'] == "exam") {
                         <div class="card-body">
                             <br>
                             <div class="container mt-5">
-                                <?php
-                                // Define class and category options in arrays for easy management
-                                $class_options = [
-                                    'Nursery' => 'Nursery',
-                                    'LKG' => 'LKG',
-                                    'UKG' => 'UKG',
-                                    '1' => '1',
-                                    '2' => '2',
-                                    '3' => '3',
-                                    '4' => '4',
-                                    '5' => '5',
-                                    '6' => '6'
-                                ];
-
-                                $category_options = [
-                                    'LG1' => 'LG1',
-                                    'LG2-A' => 'LG2-A',
-                                    'LG2-B' => 'LG2-B'
-                                ];
-
-                                // Function to generate selected attribute
-                                function is_selected($value, $field)
-                                {
-                                    return (isset($_POST[$field]) && in_array($value, $_POST[$field])) ? 'selected' : '';
-                                }
-                                ?>
 
                                 <h4>Select Students</h4>
                                 <div class="mb-3 py-2">
@@ -292,39 +259,23 @@ if (@$_POST['form-type'] == "exam") {
                                     <input type="hidden" name="form-type" value="exam_filter">
 
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="class" class="form-label small mb-1">Class</label>
-                                        <select class="form-select" id="class" name="class[]" multiple data-placeholder="Select class(es)">
-                                            <?php foreach ($class_options as $value => $label): ?>
-                                                <option value="<?= $value ?>" <?= is_selected($value, 'class') ?>>
-                                                    <?= $label ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <label for="classes" class="form-label small mb-1">Class</label>
+                                        <select class="form-select" id="classes" name="class[]" multiple></select>
                                     </div>
 
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="category" class="form-label small mb-1">Category</label>
-                                        <select class="form-select" id="category" name="category[]" multiple data-placeholder="Select category(ies)">
-                                            <?php foreach ($category_options as $value => $label): ?>
-                                                <option value="<?= $value ?>" <?= is_selected($value, 'category') ?>>
-                                                    <?= $label ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <label for="categories" class="form-label small mb-1">Category</label>
+                                        <select class="form-select" id="categories" name="category[]" multiple></select>
                                     </div>
 
                                     <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
                                         <label for="student_ids" class="form-label small mb-1">Include Student IDs</label>
-                                        <input type="text" class="form-control" id="student_ids" name="student_ids"
-                                            placeholder="e.g., RSSI001, RSSI002"
-                                            value="<?= htmlspecialchars($_POST['student_ids'] ?? '') ?>">
+                                        <select class="form-select" id="student_ids" name="student_ids[]" multiple></select>
                                     </div>
 
                                     <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
                                         <label for="excluded_ids" class="form-label small mb-1">Exclude Student IDs</label>
-                                        <input type="text" class="form-control" id="excluded_ids" name="excluded_ids"
-                                            placeholder="e.g., RSSI003, RSSI004"
-                                            value="<?= htmlspecialchars($_POST['excluded_ids'] ?? '') ?>">
+                                        <select class="form-select" id="excluded_ids" name="excluded_ids[]" multiple></select>
                                     </div>
 
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
@@ -333,6 +284,7 @@ if (@$_POST['form-type'] == "exam") {
                                         </button>
                                     </div>
                                 </form>
+
                                 <?php if (isset($resultArr)) : ?>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h4 class="mb-0">Creating Exams for</h4>
@@ -675,6 +627,121 @@ if (@$_POST['form-type'] == "exam") {
                 var fieldName = $(this).attr('name').includes('marks') ? 'marks' : 'date';
                 subjectData[subject][fieldType][fieldName] = $(this).val();
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Include Student IDs
+            $('#student_ids').select2({
+                ajax: {
+                    url: 'fetch_students.php?isActive=true',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by name or ID',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
+            });
+
+            // Exclude Student IDs
+            $('#excluded_ids').select2({
+                ajax: {
+                    url: 'fetch_students.php?isActive=true',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by name or ID',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
+            });
+
+            // Categories
+            $('#categories').select2({
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by category',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
+            });
+
+            // Classes
+            $('#classes').select2({
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by class',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            const selectedClasses = <?= json_encode($_POST['class'] ?? []) ?>;
+            const selectedCategories = <?= json_encode($_POST['category'] ?? []) ?>;
+            const selectedStudentIds = <?= json_encode($_POST['student_ids'] ?? []) ?>;
+            const excludedStudentIds = <?= json_encode($_POST['excluded_ids'] ?? []) ?>;
+
+            function prepopulateSelect2(selector, values, fetchUrl) {
+                values.forEach(val => {
+                    $.ajax({
+                        type: 'GET',
+                        url: fetchUrl,
+                        data: {
+                            q: val
+                        },
+                        dataType: 'json'
+                    }).then(data => {
+                        const match = data.results.find(option => option.id == val);
+                        if (match) {
+                            const newOption = new Option(match.text, match.id, true, true);
+                            $(selector).append(newOption).trigger('change');
+                        }
+                    });
+                });
+            }
+
+            prepopulateSelect2('#classes', selectedClasses, 'fetch_class.php');
+            prepopulateSelect2('#categories', selectedCategories, 'fetch_category.php');
+            prepopulateSelect2('#student_ids', selectedStudentIds, 'fetch_students.php?isActive=true');
+            prepopulateSelect2('#excluded_ids', excludedStudentIds, 'fetch_students.php?isActive=true');
         });
     </script>
 

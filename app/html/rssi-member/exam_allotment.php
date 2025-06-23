@@ -369,7 +369,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td>
-                                                                <a href="exam_data_update.php?fetch_exam_id=<?php echo $row['exam_id'] ?>" target="_blank">Edit</a>
+                                                                <?php if (strtolower($row['estatus']) !== 'disabled'): ?>
+                                                                    <a href="exam_data_update.php?fetch_exam_id=<?= urlencode($row['exam_id']) ?>" target="_blank">Edit</a>
+                                                                <?php endif; ?>
                                                             </td>
                                                         <?php endif; ?>
                                                     </tr>
@@ -379,7 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                     </div>
                                 <?php elseif (empty($_GET) || (!isset($_GET['is_user']) && empty($_GET['exam_type']))) : ?>
                                     <div class="alert alert-info mt-4">
-                                        <i class="bi bi-info-circle"></i> Please select at least one filter to view exam data.
+                                        <i class="bi bi-info-circle"></i> Please select Exam Type to view exam data.
                                     </div>
                                 <?php else : ?>
                                     <p class="mt-4">No records match your selected filters or you are not authorized to access this exam ID. Please try adjusting your filters or contact your instructor or administrator.</p>
