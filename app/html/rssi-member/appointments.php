@@ -53,6 +53,78 @@ function getAcademicYear($date)
     }
 }
 
+// Function to build the base appointments query
+function buildAppointmentsQuery($con, $status_filter, $selected_academic_year)
+{
+    $query_params = [];
+    $query_where = [];
+
+    $query = "
+        SELECT 
+            aa.id AS appointment_id,
+            aa.beneficiary_id,
+            aa.appointment_for,
+            aa.appointment_date,
+            aa.appointment_time,
+            aa.status,
+            aa.remarks,
+            aa.created_at AS appointment_created_at,
+            aa.updated_at,
+            aa.workflow,
+            creator.fullname AS created_by_name,
+            updater.fullname AS updated_by_name,
+            COALESCE(
+                (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
+                (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
+                (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
+                (SELECT parent_name FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
+            ) AS beneficiary_name,
+            COALESCE(
+                (SELECT contact FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
+                (SELECT phone FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
+                (SELECT contact_number FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
+                (SELECT contact FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
+            ) AS beneficiary_contact
+        FROM appointments aa
+        LEFT JOIN rssimyaccount_members creator ON creator.associatenumber = aa.created_by
+        LEFT JOIN rssimyaccount_members updater ON updater.associatenumber = aa.updated_by
+    ";
+
+    if ($status_filter !== 'all') {
+        $query_where[] = "aa.status = $" . (count($query_params) + 1);
+        $query_params[] = $status_filter;
+    }
+
+    if ($selected_academic_year !== 'all') {
+        list($start_year, $end_year) = explode('-', $selected_academic_year);
+        $query_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
+    }
+
+    if (!empty($query_where)) {
+        $query .= " WHERE " . implode(" AND ", $query_where);
+    }
+
+    return [
+        'query' => $query,
+        'params' => $query_params
+    ];
+}
+
+// Function to get status badge class
+function getStatusBadgeClass($status)
+{
+    switch ($status) {
+        case 'scheduled':
+            return 'primary';
+        case 'completed':
+            return 'success';
+        case 'cancelled':
+            return 'danger';
+        default:
+            return 'secondary';
+    }
+}
+
 // Get current academic year
 $current_date = date('Y-m-d');
 $current_academic_year = getAcademicYear($current_date);
@@ -158,6 +230,7 @@ if (isset($_GET['export'])) {
         'Appointment For',
         'Date',
         'Time',
+        'Contact',
         'Status',
         'Remarks',
         'Created By',
@@ -167,52 +240,10 @@ if (isset($_GET['export'])) {
         'Workflow History'
     ]);
 
-    // Build export query with filters
-    $export_query = "
-        SELECT 
-            aa.id AS appointment_id,
-            aa.beneficiary_id,
-            aa.appointment_for,
-            aa.appointment_date,
-            aa.appointment_time,
-            aa.status,
-            aa.remarks,
-            aa.created_at AS appointment_created_at,
-            aa.updated_at,
-            creator.fullname AS created_by_name,
-            updater.fullname AS updated_by_name,
-            aa.workflow,
-            COALESCE(
-                (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
-                (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
-                (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
-                (SELECT parent_name FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
-            ) AS beneficiary_name
-        FROM appointments aa
-        LEFT JOIN rssimyaccount_members creator ON creator.associatenumber = aa.created_by
-        LEFT JOIN rssimyaccount_members updater ON updater.associatenumber = aa.updated_by
-    ";
-
-    $query_where = [];
-    $query_params = [];
-
-    if ($status_filter !== 'all') {
-        $query_where[] = "aa.status = $" . (count($query_params) + 1);
-        $query_params[] = $status_filter;
-    }
-
-    if ($selected_academic_year !== 'all') {
-        list($start_year, $end_year) = explode('-', $selected_academic_year);
-        $query_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
-    }
-
-    if (!empty($query_where)) {
-        $export_query .= " WHERE " . implode(" AND ", $query_where);
-    }
-
-    $export_query .= " ORDER BY aa.appointment_date DESC, aa.appointment_time DESC";
-
-    $export_result = pg_query_params($con, $export_query, $query_params);
+    // Build and execute export query
+    $query_builder = buildAppointmentsQuery($con, $status_filter, $selected_academic_year);
+    $export_query = $query_builder['query'] . " ORDER BY aa.appointment_date DESC, aa.appointment_time DESC";
+    $export_result = pg_query_params($con, $export_query, $query_builder['params']);
 
     while ($row = pg_fetch_assoc($export_result)) {
         $workflow_history = '';
@@ -236,6 +267,7 @@ if (isset($_GET['export'])) {
             $row['appointment_for'],
             $row['appointment_date'],
             $row['appointment_time'],
+            $row['beneficiary_contact'],
             $row['status'],
             $row['remarks'],
             $row['created_by_name'],
@@ -250,47 +282,25 @@ if (isset($_GET['export'])) {
     exit;
 }
 
-// Build the main query with filters
-$query_params = [];
-$query_where = [];
-
-if ($status_filter !== 'all') {
-    $query_where[] = "aa.status = $" . (count($query_params) + 1);
-    $query_params[] = $status_filter;
-}
-
-if ($selected_academic_year !== 'all') {
-    list($start_year, $end_year) = explode('-', $selected_academic_year);
-    $query_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
-}
-
-// Count total appointments for the selected academic year (regardless of status filter)
+// Get statistics and counts
 $count_query = "SELECT COUNT(*) AS total FROM appointments aa";
-$count_where = [];
+$stats_query = "SELECT status, COUNT(*) as count FROM appointments aa";
+$count_where = $stats_where = [];
 
 if ($selected_academic_year !== 'all') {
     list($start_year, $end_year) = explode('-', $selected_academic_year);
-    $count_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
+    $date_condition = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
+    $count_where[] = $date_condition;
+    $stats_where[] = $date_condition;
 }
 
 if (!empty($count_where)) {
     $count_query .= " WHERE " . implode(" AND ", $count_where);
-}
-$count_result = pg_query($con, $count_query);
-$total_appointments = pg_fetch_result($count_result, 0, 'total');
-
-// Get status statistics - ONLY filter by academic year
-$stats_query = "SELECT status, COUNT(*) as count FROM appointments aa";
-$stats_where = [];
-
-if ($selected_academic_year !== 'all') {
-    list($start_year, $end_year) = explode('-', $selected_academic_year);
-    $stats_where[] = "(aa.appointment_date >= '$start_year-04-01' AND aa.appointment_date <= '$end_year-03-31')";
-}
-
-if (!empty($stats_where)) {
     $stats_query .= " WHERE " . implode(" AND ", $stats_where);
 }
+
+$count_result = pg_query($con, $count_query);
+$total_appointments = pg_fetch_result($count_result, 0, 'total');
 
 $stats_query .= " GROUP BY status";
 $stats_result = pg_query($con, $stats_query);
@@ -299,53 +309,10 @@ while ($stat_row = pg_fetch_assoc($stats_result)) {
     $stats[$stat_row['status']] = $stat_row['count'];
 }
 
-// Build the main query
-$query = "
-    SELECT 
-        aa.id AS appointment_id,
-        aa.beneficiary_id,
-        aa.appointment_for,
-        aa.appointment_date,
-        aa.appointment_time,
-        aa.status,
-        aa.remarks,
-        aa.created_at AS appointment_created_at,
-        aa.updated_at,
-        aa.workflow,
-        creator.fullname AS created_by_name,
-        updater.fullname AS updated_by_name,
-        COALESCE(
-            (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
-            (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
-            (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
-            (SELECT parent_name FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
-        ) AS beneficiary_name
-    FROM appointments aa
-    LEFT JOIN rssimyaccount_members creator ON creator.associatenumber = aa.created_by
-    LEFT JOIN rssimyaccount_members updater ON updater.associatenumber = aa.updated_by
-";
-
-if (!empty($query_where)) {
-    $query .= " WHERE " . implode(" AND ", $query_where);
-}
-
-$query .= " ORDER BY aa.appointment_date asc, aa.created_at asc";
-
-$result = pg_query_params($con, $query, $query_params);
-
-function getStatusBadgeClass($status)
-{
-    switch ($status) {
-        case 'scheduled':
-            return 'primary';
-        case 'completed':
-            return 'success';
-        case 'cancelled':
-            return 'danger';
-        default:
-            return 'secondary';
-    }
-}
+// Build and execute main query
+$query_builder = buildAppointmentsQuery($con, $status_filter, $selected_academic_year);
+$query = $query_builder['query'] . " ORDER BY aa.appointment_date asc, aa.created_at asc";
+$result = pg_query_params($con, $query, $query_builder['params']);
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -367,6 +334,11 @@ function getStatusBadgeClass($status)
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+
+    <!-- In your head section -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
         :root {
             --primary-color: #4e73df;
@@ -693,14 +665,22 @@ function getStatusBadgeClass($status)
                                         <div class="col-md-9">
                                             <div class="card shadow-sm border-0 h-100">
                                                 <div class="card-header bg-white border-bottom-0 py-3">
-                                                    <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
                                                         <h5 class="mb-0 fw-semibold">Appointments</h5>
-                                                        <div>
-                                                            <a href="?export=1&<?= http_build_query($_GET) ?>" class="btn btn-sm btn-outline-secondary">
+
+                                                        <div class="d-flex gap-2 ms-auto">
+                                                            <!-- Quick Create Appointment Button -->
+                                                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createAppointmentModal">
+                                                                <i class="bi bi-calendar-plus"></i> Create Appointment
+                                                            </button>
+
+                                                            <!-- Export Button -->
+                                                            <a href="?export=1&<?= http_build_query($_GET) ?>" class="btn btn-outline-secondary">
                                                                 <i class="bi bi-download"></i> Export
                                                             </a>
                                                         </div>
                                                     </div>
+
                                                 </div>
                                                 <div class="card-body p-0">
                                                     <div class="table-responsive">
@@ -708,13 +688,12 @@ function getStatusBadgeClass($status)
                                                             <thead class="bg-light">
                                                                 <tr>
                                                                     <th class="text-nowrap ps-3">SL</th> <!-- New Serial Number Column -->
-                                                                    <th class="text-nowrap ps-3">Appt ID</th>
                                                                     <th class="text-nowrap">Beneficiary</th>
                                                                     <th class="text-nowrap">Date & Time</th>
                                                                     <th class="text-nowrap">Purpose</th>
+                                                                    <th class="text-nowrap">Contact</th>
                                                                     <th class="text-nowrap">Status</th>
                                                                     <th class="text-nowrap">Created By</th>
-                                                                    <th class="text-nowrap">Created On</th>
                                                                     <th class="text-nowrap pe-3">Actions</th>
                                                                 </tr>
                                                             </thead>
@@ -727,13 +706,11 @@ function getStatusBadgeClass($status)
                                                                             <td class="ps-3">
                                                                                 <span><?= $sl++ ?></span> <!-- Display and increment SL number -->
                                                                             </td>
-                                                                            <td class="ps-3">
-                                                                                <span><?= htmlspecialchars($row['appointment_id']) ?></span>
-                                                                            </td>
                                                                             <td>
                                                                                 <div class="d-flex flex-column">
                                                                                     <span class="fw-medium"><?= htmlspecialchars($row['beneficiary_name']) ?></span>
-                                                                                    <small class="text-muted">ID: <?= htmlspecialchars($row['beneficiary_id']) ?></small>
+                                                                                    <small class="text-muted">Ben ID: <?= htmlspecialchars($row['beneficiary_id']) ?></small>
+                                                                                    <small class="text-muted">Appt ID: <?= htmlspecialchars($row['appointment_id']) ?></small>
                                                                                 </div>
                                                                             </td>
                                                                             <td>
@@ -745,6 +722,9 @@ function getStatusBadgeClass($status)
                                                                             <td class="ps-3">
                                                                                 <span><?= htmlspecialchars($row['appointment_for']) ?></span>
                                                                             </td>
+                                                                            <td class="ps-3">
+                                                                                <span><?= htmlspecialchars($row['beneficiary_contact']) ?></span>
+                                                                            </td>
                                                                             <td>
                                                                                 <span class="badge py-1 px-2 bg-<?=
                                                                                                                 ($row['status'] ?? 'scheduled') == 'scheduled' ? 'primary' : (($row['status'] ?? '') == 'completed' ? 'success' : 'danger')
@@ -752,8 +732,7 @@ function getStatusBadgeClass($status)
                                                                                     <?= ucfirst($row['status'] ?? 'scheduled') ?>
                                                                                 </span>
                                                                             </td>
-                                                                            <td><?= isset($row['created_by_name']) ? htmlspecialchars($row['created_by_name']) : '' ?></td>
-                                                                            <td>
+                                                                            <td><small><?= isset($row['created_by_name']) ? htmlspecialchars($row['created_by_name']) : '' ?></small><br>
                                                                                 <small><?= date('d M Y', strtotime($row['appointment_created_at'])) ?></small>
                                                                             </td>
                                                                             <td class="pe-3">
@@ -782,8 +761,32 @@ function getStatusBadgeClass($status)
                                                                                         <h5 class="modal-title fs-6">Update Appointment Status</h5>
                                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                                     </div>
+
                                                                                     <form method="POST">
                                                                                         <div class="modal-body">
+
+                                                                                            <?php if ($role === 'Admin'): ?>
+                                                                                                <?php
+                                                                                                $beneficiaryName = $row['beneficiary_name'];
+                                                                                                $contactNumber = preg_replace('/[^0-9]/', '', $row['beneficiary_contact']); // ensure only digits
+                                                                                                $appointmentFor = htmlspecialchars($row['appointment_for']);
+                                                                                                $appointmentDateTime = date('d/m/Y \को h:i A', strtotime($row['appointment_date'] . ' ' . $row['appointment_time']));
+
+                                                                                                $whatsappMessage = "प्रिय {$beneficiaryName},\n\n"
+                                                                                                    . "आपकी \"{$appointmentFor}\" की अपॉइंटमेंट {$appointmentDateTime} बजे निर्धारित की गई है। कृपया समय पर उपस्थित हों और नीचे दिए गए दस्तावेज़ साथ लेकर आएं:\n\n"
+                                                                                                    . "- आधार कार्ड\n"
+                                                                                                    . "- आधार से लिंक किया गया मोबाइल फोन\n\n"
+                                                                                                    . "यह संदेश RSSI NGO की ओर से है।\nधन्यवाद।\n\nयह एक स्वचालित संदेश है।";
+
+                                                                                                $encodedMessage = urlencode($whatsappMessage);
+                                                                                                $whatsappURL = "https://wa.me/91{$contactNumber}?text={$encodedMessage}";
+                                                                                                ?>
+
+                                                                                                <div class="text-end">
+                                                                                                    <a href="<?= $whatsappURL ?>" target="_blank">Send WhatsApp Reminder</a>
+                                                                                                </div>
+                                                                                            <?php endif; ?>
+
                                                                                             <input type="hidden" name="appointment_id" value="<?= htmlspecialchars($row['appointment_id']) ?>">
 
                                                                                             <div class="mb-3">
@@ -932,6 +935,217 @@ function getStatusBadgeClass($status)
                     // other options...
                 });
             <?php endif; ?>
+        });
+    </script>
+
+    <!-- Modal -->
+    <div class="modal fade" id="createAppointmentModal" tabindex="-1" aria-labelledby="createAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAppointmentModalLabel">Create New Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="quickAppointmentForm" method="POST" action="process_appointment.php">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <!-- Beneficiary Selection -->
+                            <div class="col-md-12">
+                                <label for="beneficiarySelect" class="form-label">Search and Select Beneficiary</label>
+                                <select id="beneficiarySelect" name="beneficiary_id" class="form-select js-data-ajax" required>
+                                    <!-- Beneficiary will be loaded via AJAX -->
+                                </select>
+                                <div class="form-text text-muted">
+                                    First-time user? <a href="register_beneficiary.php" target="_blank">Register here</a>
+                                </div>
+                                <div class="invalid-feedback">Please select a beneficiary.</div>
+                            </div>
+
+                            <!-- Services Needed Section -->
+                            <div class="col-md-12">
+                                <label class="form-label">Which services do you need assistance with? (Select all that apply)</label>
+                                <div class="form-check">
+                                    <input class="form-check-input service-checkbox" type="checkbox" id="serviceAadhar" name="servicesNeeded[]" value="Aadhar Card">
+                                    <label class="form-check-label" for="serviceAadhar">Aadhar Card</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input service-checkbox" type="checkbox" id="servicePAN" name="servicesNeeded[]" value="PAN Card">
+                                    <label class="form-check-label" for="servicePAN">PAN Card</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input service-checkbox" type="checkbox" id="serviceShram" name="servicesNeeded[]" value="Shram Card">
+                                    <label class="form-check-label" for="serviceShram">Shram Card</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input service-checkbox" type="checkbox" id="serviceABHA" name="servicesNeeded[]" value="ABHA Card">
+                                    <label class="form-check-label" for="serviceABHA">ABHA Card</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input service-checkbox" type="checkbox" id="serviceOther" name="servicesNeeded[]" value="Other">
+                                    <label class="form-check-label" for="serviceOther">Other (please specify)</label>
+                                    <input type="text" class="form-control mt-2" id="otherService" name="otherService" style="display: none;">
+                                </div>
+                                <input type="hidden" id="appointmentFor" name="appointment_for">
+                            </div>
+
+                            <!-- Appointment Details -->
+                            <div class="col-md-6">
+                                <label for="appointmentDate" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="appointmentDate" name="appointment_date" required>
+                                <div class="invalid-feedback">Please select a date.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="appointmentTime" class="form-label">Time</label>
+                                <input type="time" class="form-control" id="appointmentTime" name="appointment_time" required>
+                                <div class="invalid-feedback">Please select a time.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="appointmentRemarks" class="form-label">Remarks</label>
+                                <textarea class="form-control" id="appointmentRemarks" name="remarks" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <!-- Add ID to target it in JS -->
+                        <button type="submit" class="btn btn-primary" id="submitAppointmentBtn">
+                            <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true" id="submitSpinner"></span>
+                            <span id="submitBtnText">Create Appointment</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for beneficiary search
+            $('#beneficiarySelect').select2({
+                dropdownParent: $('#createAppointmentModal'),
+                ajax: {
+                    url: 'search_beneficiaries.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    }
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by name, ID, or contact',
+                allowClear: false,
+                closeOnSelect: true,
+                width: '100%'
+            });
+
+            // Show/hide other service text input
+            $('#serviceOther').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#otherService').show();
+                } else {
+                    $('#otherService').hide().val('');
+                }
+            });
+
+            // Update appointment_for hidden field when checkboxes change
+            $('.service-checkbox').change(function() {
+                updateAppointmentForField();
+            });
+
+            // Function to update the appointment_for field
+            function updateAppointmentForField() {
+                const selectedServices = [];
+                $('.service-checkbox:checked').each(function() {
+                    if ($(this).val() === 'Other' && $('#otherService').val()) {
+                        selectedServices.push($('#otherService').val());
+                    } else if ($(this).val() !== 'Other') {
+                        selectedServices.push($(this).val());
+                    }
+                });
+                $('#appointmentFor').val(selectedServices.join(', '));
+            }
+
+            // Also update when other service text changes
+            $('#otherService').on('input', function() {
+                updateAppointmentForField();
+            });
+
+            // Form validation
+            $('#quickAppointmentForm').on('submit', function(e) {
+                // Check if at least one service is selected
+                if ($('.service-checkbox:checked').length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one service');
+                    return false;
+                }
+
+                if (this.checkValidity() === false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+
+            // Set default date to today
+            $('#appointmentDate').val(new Date().toISOString().split('T')[0]);
+
+            // Set default time to next hour
+            const now = new Date();
+            const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+            $('#appointmentTime').val(nextHour.toTimeString().substring(0, 5));
+        });
+    </script>
+    <script>
+        $('#quickAppointmentForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+
+            if (form.checkValidity() === false) {
+                e.stopPropagation();
+                return;
+            }
+
+            // Disable button and show spinner
+            const $btn = $('#submitAppointmentBtn');
+            $btn.prop('disabled', true);
+            $('#submitSpinner').removeClass('d-none');
+            $('#submitBtnText').text('Submitting...');
+
+            $.ajax({
+                url: 'process_appointment.php',
+                type: 'POST',
+                data: $(form).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    // Re-enable and reset button
+                    $btn.prop('disabled', false);
+                    $('#submitSpinner').addClass('d-none');
+                    $('#submitBtnText').text('Create Appointment');
+
+                    if (response.success) {
+                        alert(response.message);
+                        $('#createAppointmentModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $btn.prop('disabled', false);
+                    $('#submitSpinner').addClass('d-none');
+                    $('#submitBtnText').text('Create Appointment');
+                    alert('An error occurred: ' + (xhr.responseText || error));
+                }
+            });
         });
     </script>
 
