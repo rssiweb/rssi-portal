@@ -8,35 +8,26 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-?>
 
-<?php
-// Get filter parameters
-$id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
-$month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
-$selectedCategories = isset($_GET['categories']) ? $_GET['categories'] : [];
+// Get filters
+$id = $_GET['get_aid'] ?? 'Active';
+$month = $_GET['get_month'] ?? date('Y-m');
+$selectedCategories = $_GET['categories'] ?? [];
 
-// Calculate the start and end dates of the month
+// Date range
 $startDate = date("Y-m-01", strtotime($month));
 $endDate = date("Y-m-t", strtotime($month));
 
+// Validate selected categories
 $validCategories = [];
-
 if (!empty($selectedCategories)) {
-    $placeholders = implode(',', array_map(
-        fn($i) => '$' . ($i + 1),
-        array_keys($selectedCategories)
-    ));
-
+    $placeholders = implode(',', array_map(fn($i) => '$' . ($i + 1), array_keys($selectedCategories)));
     $sql = "SELECT category_value FROM school_categories WHERE category_value IN ($placeholders)";
     $result = pg_query_params($con, $sql, $selectedCategories);
-
-    if ($result) {
-        $validCategories = array_column(pg_fetch_all($result) ?: [], 'category_value');
-    }
+    $validCategories = $result ? array_column(pg_fetch_all($result) ?: [], 'category_value') : [];
 }
 
-// Build SQL conditions
+// Build SQL WHERE clause
 $conditions = [];
 
 if (!empty($id)) {
@@ -44,20 +35,17 @@ if (!empty($id)) {
 }
 
 if (!empty($validCategories)) {
-    $escaped = array_map(fn($c) => pg_escape_string($con, $c), $validCategories);
-    $categoryList = "'" . implode("','", $escaped) . "'";
-    $conditions[] = "s.category IN ($categoryList)";
+    $escaped = array_map(fn($c) => pg_escape_literal($con, $c), $validCategories);
+    $conditions[] = "s.category IN (" . implode(',', $escaped) . ")";
 }
 
 $whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
-
-// Check if at least one category is selected
 $requireCategorySelection = empty($validCategories);
 
-$query = "WITH date_range AS (
-    SELECT generate_series(
-        '$startDate'::date, '$endDate'::date, '1 day'::interval
-    )::date AS attendance_date
+// Main query (same logic)
+$query = "
+WITH date_range AS (
+    SELECT generate_series('$startDate'::date, '$endDate'::date, interval '1 day')::date AS attendance_date
 ),
 attendance_data AS (
     SELECT
@@ -73,16 +61,14 @@ attendance_data AS (
             CASE
                 WHEN a.user_id IS NOT NULL THEN 'P'
                 WHEN a.user_id IS NULL
-                     AND (
-                        SELECT COUNT(*) FROM attendance att WHERE att.date = d.attendance_date
-                     ) > 0
-                     AND (
-                        SELECT COUNT(*) FROM student_class_days cw
+                     AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = d.attendance_date)
+                     AND EXISTS (
+                        SELECT 1 FROM student_class_days cw
                         WHERE cw.category = s.category
                           AND cw.effective_from <= d.attendance_date
                           AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
                           AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
-                     ) > 0
+                     )
                      AND s.doa <= d.attendance_date
                      THEN 'A'
                 ELSE NULL
@@ -93,14 +79,13 @@ attendance_data AS (
     CROSS JOIN
         rssimyprofile_student s
     LEFT JOIN
-        attendance a
-        ON s.student_id = a.user_id AND a.date = d.attendance_date
+        attendance a ON s.student_id = a.user_id AND a.date = d.attendance_date
     WHERE
         (
             s.effectivefrom IS NULL OR 
-            DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            DATE_TRUNC('month', s.effectivefrom) = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))
         )
-        AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        AND DATE_TRUNC('month', s.doa) <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))
         $whereClause
 )
 SELECT
@@ -111,14 +96,14 @@ SELECT
     class,
     attendance_date,
     attendance_status,
-    COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id) AS total_classes,
+    COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id) AS total_classes,
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) AS attended_classes,
     CASE
-        WHEN COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id) = 0 THEN NULL
+        WHEN COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id) = 0 THEN NULL
         ELSE CONCAT(
             ROUND(
                 (COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) * 100.0) /
-                COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id), 2
+                COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id), 2
             ),
             '%'
         )
@@ -140,7 +125,7 @@ ORDER BY
     attendance_date;
 ";
 
-// Only execute query if categories are selected
+// Execute query if category is selected
 $studentIDCount = null;
 if (!$requireCategorySelection) {
     $result = pg_query($con, $query);
@@ -148,14 +133,10 @@ if (!$requireCategorySelection) {
         echo "Query failed.";
         exit();
     }
-
-    // Fetch attendance data
     $attendanceData = pg_fetch_all($result);
-    $uniqueStudentIDs = array_unique(array_column($attendanceData, 'student_id'));
-    $studentIDCount = count($uniqueStudentIDs);
+    $studentIDCount = count(array_unique(array_column($attendanceData, 'student_id')));
 }
 
-// Close the connection
 pg_close($con);
 ?>
 
@@ -204,7 +185,7 @@ pg_close($con);
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-        <script>
+    <script>
         $(document).ready(function() {
             $('#categories').select2({
                 ajax: {

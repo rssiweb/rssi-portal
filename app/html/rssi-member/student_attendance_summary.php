@@ -9,16 +9,13 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Start timer for performance monitoring
 $startTime = microtime(true);
 
-// Helper: generate SQL placeholders
 function makePlaceholders($array)
 {
     return implode(',', array_map(fn($i) => '$' . ($i + 1), array_keys($array)));
 }
 
-// Get filter parameters
 $status = $_GET['status'] ?? 'Active';
 $startDate = $_GET['start_date'] ?? date('Y-m-01');
 $endDate = $_GET['end_date'] ?? date('Y-m-t');
@@ -26,61 +23,41 @@ $selectedCategories = (array)($_GET['categories'] ?? []);
 $selectedClasses = (array)($_GET['classes'] ?? []);
 $selectedStudents = (array)($_GET['students'] ?? []);
 
-// Validate selected categories
-$validCategories = [];
-if (!empty($selectedCategories)) {
-    $ph = makePlaceholders($selectedCategories);
-    $sql = "SELECT category_value FROM school_categories WHERE category_value IN ($ph)";
-    $res = pg_query_params($con, $sql, $selectedCategories);
-    if ($res) {
-        $validCategories = array_column(pg_fetch_all($res) ?: [], 'category_value');
-    }
+function validateSelection($con, $table, $column, $values)
+{
+    if (empty($values)) return [];
+    $ph = makePlaceholders($values);
+    $sql = "SELECT $column FROM $table WHERE $column IN ($ph)";
+    $res = pg_query_params($con, $sql, $values);
+    return $res ? array_column(pg_fetch_all($res) ?: [], $column) : [];
 }
 
-// Validate selected classes
-$validClasses = [];
-if (!empty($selectedClasses)) {
-    $ph = makePlaceholders($selectedClasses);
-    $sql = "SELECT value FROM school_classes WHERE value IN ($ph)";
-    $res = pg_query_params($con, $sql, $selectedClasses);
-    if ($res) {
-        $validClasses = array_column(pg_fetch_all($res) ?: [], 'value');
-    }
-}
-
-// Validate selected students
+$validCategories = validateSelection($con, 'school_categories', 'category_value', $selectedCategories);
+$validClasses = validateSelection($con, 'school_classes', 'value', $selectedClasses);
 $validStudents = [];
 if (!empty($selectedStudents)) {
     $ph = makePlaceholders($selectedStudents);
     $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($ph)";
     $res = pg_query_params($con, $sql, $selectedStudents);
-    if ($res) {
-        $validStudents = pg_fetch_all($res) ?: [];
-    }
+    $validStudents = $res ? pg_fetch_all($res) ?: [] : [];
 }
 
-// Build dynamic WHERE conditions
 $conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
-
 if (!empty($validCategories)) {
-    $catList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validCategories)) . "'";
-    $conditions[] = "s.category IN ($catList)";
+    $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $validCategories));
+    $conditions[] = "s.category IN ('$list')";
 }
-
 if (!empty($validClasses)) {
-    $classList = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $validClasses)) . "'";
-    $conditions[] = "s.class IN ($classList)";
+    $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $validClasses));
+    $conditions[] = "s.class IN ('$list')";
 }
-
 if (!empty($validStudents)) {
-    $studentIds = array_column($validStudents, 'student_id');
-    $studentList = "'" . implode("','", array_map(fn($s) => pg_escape_string($con, $s), $studentIds)) . "'";
-    $conditions[] = "s.student_id IN ($studentList)";
+    $ids = array_column($validStudents, 'student_id');
+    $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $ids));
+    $conditions[] = "s.student_id IN ('$list')";
 }
-
 $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-// Main optimized attendance query
 $query = "
 WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
@@ -138,7 +115,6 @@ ORDER BY studentname, month_year;
 $result = pg_query($con, $query);
 $attendanceData = pg_fetch_all($result) ?: [];
 
-// Calculate average percentage
 $totalPercentage = 0;
 $monthCount = 0;
 foreach ($attendanceData as $row) {
@@ -149,7 +125,6 @@ foreach ($attendanceData as $row) {
 }
 $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
 
-// CSV Export
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=attendance_summary_' . date('Y-m-d') . '.csv');
@@ -183,7 +158,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
                 'total_classes' => 0
             ];
         }
-
         $students[$id]['months'][$row['month_year']] = [
             'present' => $row['attended_classes'],
             'total' => $row['total_classes'],
@@ -202,14 +176,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
             $data['info']['category'],
             $data['info']['class']
         ];
-
         foreach ($months as $m) {
             $month = $data['months'][$m] ?? ['present' => '', 'total' => '', 'percentage' => ''];
             $row[] = $month['present'];
             $row[] = $month['total'];
             $row[] = $month['percentage'] !== '' ? $month['percentage'] . '%' : '';
         }
-
         $overall = $data['total_classes'] > 0
             ? round(($data['total_present'] / $data['total_classes']) * 100, 2) . '%'
             : '0%';
@@ -221,7 +193,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     exit;
 }
 
-// Log query time
 error_log("Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds");
 ?>
 
