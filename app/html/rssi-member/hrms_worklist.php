@@ -233,8 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Determine table headers based on action type
-                    $valueHeader1 = ($bulk_action === 'Approved') ? 'Old Value' : 'Current Value';
-                    $valueHeader2 = ($bulk_action === 'Approved') ? 'New Value' : 'Requested Change';
+                    $valueHeader1 = ($bulk_action === 'Approved') ? 'Previous Value' : 'Current Value';
+                    $valueHeader2 = ($bulk_action === 'Approved') ? 'Updated Value' : 'Requested Change';
 
                     // Construct the full table HTML
                     $fullTable = "
