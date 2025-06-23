@@ -32,15 +32,25 @@ $classesQuery = "SELECT DISTINCT class FROM rssimyprofile_student WHERE class IS
 $classesResult = pg_query($con, $classesQuery);
 $allClasses = pg_fetch_all_columns($classesResult, 0);
 
-// Get students (limited to 1000 for performance)
-$studentsQuery = "SELECT student_id, studentname FROM rssimyprofile_student ORDER BY studentname LIMIT 1000";
-$studentsResult = pg_query($con, $studentsQuery);
-$allStudents = pg_fetch_all($studentsResult);
-
 // Validate selections against available options
 $validCategories = array_filter($selectedCategories, fn($cat) => in_array($cat, $allCategories));
 $validClasses = array_filter($selectedClasses, fn($cls) => in_array($cls, $allClasses));
-$validStudents = array_filter($selectedStudents, fn($id) => in_array($id, array_column($allStudents ?: [], 'student_id')));
+$validStudents = [];
+
+if (!empty($selectedStudents)) {
+    // Use placeholders for prepared statement
+    $placeholders = [];
+    for ($i = 0; $i < count($selectedStudents); $i++) {
+        $placeholders[] = '$' . ($i + 1);
+    }
+    $placeholders = implode(',', $placeholders);
+
+    $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($placeholders)";
+    $result = pg_query_params($con, $sql, $selectedStudents);
+    if ($result) {
+        $validStudents = pg_fetch_all($result) ?: [];
+    }
+}
 
 // Build SQL conditions with proper escaping
 $conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
@@ -56,7 +66,8 @@ if (!empty($validClasses)) {
 }
 
 if (!empty($validStudents)) {
-    $studentList = "'" . implode("','", array_map(fn($s) => pg_escape_string($con, $s), $validStudents)) . "'";
+    $studentIds = array_column($validStudents, 'student_id');
+    $studentList = "'" . implode("','", array_map(fn($s) => pg_escape_string($con, $s), $studentIds)) . "'";
     $conditions[] = "s.student_id IN ($studentList)";
 }
 
@@ -334,10 +345,9 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 <div class="col-md-6">
                                     <label>Students (Optional)</label>
                                     <select name="students[]" id="students" class="form-select" multiple>
-                                        <?php foreach ($allStudents as $student): ?>
-                                            <option value="<?= htmlspecialchars($student['student_id']) ?>"
-                                                <?= in_array($student['student_id'], $selectedStudents) ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($student['studentname']) ?> (<?= htmlspecialchars($student['student_id']) ?>)
+                                        <?php foreach ($validStudents as $student): ?>
+                                            <option value="<?= htmlspecialchars($student['student_id']) ?>" selected>
+                                                <?= htmlspecialchars($student['studentname']) ?> - <?= htmlspecialchars($student['student_id']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -443,8 +453,33 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            $('#classes, #categories, #students').select2({
+            $('#classes, #categories').select2({
                 placeholder: "Select...",
+                width: '100%'
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#students').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term // search term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by name or ID',
                 width: '100%'
             });
         });
