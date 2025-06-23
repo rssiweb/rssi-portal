@@ -211,6 +211,8 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Include Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
     <style>
         .summary-card {
             background: #f8f9fa;
@@ -234,6 +236,8 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Class details</a></li>
+                    <li class="breadcrumb-item"><a href="attendx.php">AttendX</a></li>
                     <li class="breadcrumb-item active">Attendance Summary</li>
                 </ol>
             </nav>
@@ -247,7 +251,7 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                             <br>
                             <form action="" method="GET" class="row g-3 top-5">
                                 <div class="col-md-2">
-                                    <label>Status</label>
+                                    <label class="form-label">Status</label>
                                     <select name="status" class="form-select">
                                         <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active</option>
                                         <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive</option>
@@ -255,17 +259,16 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 </div>
 
                                 <div class="col-md-2">
-                                    <label>Start Date</label>
-                                    <input type="date" name="start_date" class="form-control" value="<?= $startDate ?>">
+                                    <label class="form-label">Date Range</label>
+                                    <input type="text" name="date_range" class="form-control date-range-picker"
+                                        placeholder="Select date range"
+                                        value="<?= !empty($startDate) && !empty($endDate) ? htmlspecialchars("$startDate - $endDate") : '' ?>">
+                                    <input type="hidden" name="start_date" value="<?= htmlspecialchars($startDate) ?>">
+                                    <input type="hidden" name="end_date" value="<?= htmlspecialchars($endDate) ?>">
                                 </div>
 
                                 <div class="col-md-2">
-                                    <label>End Date</label>
-                                    <input type="date" name="end_date" class="form-control" value="<?= $endDate ?>">
-                                </div>
-
-                                <div class="col-md-2">
-                                    <label>Class</label>
+                                    <label class="form-label">Class</label>
                                     <select name="classes[]" id="classes" class="form-select" multiple>
                                         <?php foreach ($validClasses as $class): ?>
                                             <option value="<?= htmlspecialchars($class) ?>" selected>
@@ -276,7 +279,7 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 </div>
 
                                 <div class="col-md-2">
-                                    <label>Categories</label>
+                                    <label class="form-label">Categories</label>
                                     <select name="categories[]" id="categories" class="form-select" multiple>
                                         <?php foreach ($validCategories as $category): ?>
                                             <option value="<?= htmlspecialchars($category) ?>" selected>
@@ -287,7 +290,7 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label>Students (Optional)</label>
+                                    <label class="form-label">Students (Optional)</label>
                                     <select name="students[]" id="students" class="form-select" multiple>
                                         <?php foreach ($validStudents as $student): ?>
                                             <option value="<?= htmlspecialchars($student['student_id']) ?>" selected>
@@ -297,13 +300,13 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                                     </select>
                                 </div>
 
-                                <div class="col-md-12">
+                                <div class="col-md-12 mt-3">
                                     <button type="submit" class="btn btn-primary" id="generateBtn">
                                         <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
                                         <span class="btn-text">Generate Report</span>
                                     </button>
 
-                                    <button type="submit" name="export" value="csv" class="btn btn-success" id="exportBtn">
+                                    <button type="submit" name="export" value="csv" class="btn btn-outline-success ms-2" id="exportBtn">
                                         <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
                                         <span class="btn-text">
                                             <i class="bi bi-file-earmark-excel"></i> Export CSV
@@ -404,8 +407,11 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             $('#students').select2({
@@ -472,6 +478,30 @@ error_log("Attendance summary generated in " . round((microtime(true) - $startTi
                 minimumInputLength: 1,
                 placeholder: 'Search by class',
                 width: '100%'
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('.date-range-picker').daterangepicker({
+                opens: 'right',
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'YYYY-MM-DD'
+                }
+            });
+
+            $('.date-range-picker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                $('input[name="start_date"]').val(picker.startDate.format('YYYY-MM-DD'));
+                $('input[name="end_date"]').val(picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('.date-range-picker').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('input[name="start_date"]').val('');
+                $('input[name="end_date"]').val('');
             });
         });
     </script>
