@@ -138,11 +138,11 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="student_attendance_summary.php" class="card-link">
+                                        <a href="sas.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-clipboard-check icon"></i>
-                                                    <h5 class="card-title mt-3">Student Attendance Summary</h5>
+                                                    <h5 class="card-title mt-3">Student Attendance Summary (SAS)</h5>
                                                 </div>
                                             </div>
                                         </a>

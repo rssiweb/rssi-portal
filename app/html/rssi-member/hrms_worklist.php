@@ -16,6 +16,118 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     // Handle bulk approval/rejection
+//     if (isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
+//         $selected_ids = explode(',', $_POST['selected_ids']);
+//         $bulk_action = $_POST['bulk_action'];
+//         $bulk_remarks = trim($_POST['bulk_remarks']);
+//         $reviewer_id = $associatenumber;
+
+//         if (!empty($selected_ids) && !empty($bulk_action)) {
+//             // Begin transaction
+//             pg_query($con, "BEGIN");
+
+//             try {
+//                 // Process each selected ID
+//                 foreach ($selected_ids as $workflow_id) {
+//                     $workflow_id = pg_escape_string($con, trim($workflow_id));
+
+//                     // First get the basic workflow details
+//                     $details_query = "SELECT 
+//                         w.associatenumber, 
+//                         w.fieldname, 
+//                         w.submitted_value, 
+//                         m.fullname, 
+//                         m.email
+//                     FROM hrms_workflow w
+//                     JOIN rssimyaccount_members m ON w.associatenumber = m.associatenumber
+//                     WHERE w.workflow_id = '$workflow_id'";
+
+//                     $details_result = pg_query($con, $details_query);
+//                     $details_row = pg_fetch_assoc($details_result);
+
+//                     if ($details_row) {
+//                         $associatenumber = $details_row['associatenumber'];
+//                         $fieldname = $details_row['fieldname'];
+//                         $submitted_value = $details_row['submitted_value'];
+//                         $requestedby_name = $details_row['fullname'];
+//                         $requestedby_email = $details_row['email'];
+//                         $requested_on = date('d/m/Y h:i A');
+
+//                         // Now get the current value using the proper fieldname
+//                         $currentValueQuery = "SELECT $fieldname AS current_value 
+//                                             FROM rssimyaccount_members 
+//                                             WHERE associatenumber = '$associatenumber'";
+//                         $currentValueResult = pg_query($con, $currentValueQuery);
+//                         $currentValueRow = pg_fetch_assoc($currentValueResult);
+//                         $current_value = $currentValueRow['current_value'] ?? null;
+
+//                         // Update workflow status
+//                         $update_query = "UPDATE hrms_workflow
+//                             SET reviewer_status = '$bulk_action', 
+//                                 reviewer_id = '$reviewer_id', 
+//                                 reviewed_on = NOW(),
+//                                 remarks = '$bulk_remarks'
+//                             WHERE workflow_id = '$workflow_id'";
+
+//                         $update_result = pg_query($con, $update_query);
+
+//                         if ($bulk_action === 'Approved' && $update_result) {
+//                             // Update member record if approved
+//                             $fieldname_escaped = pg_escape_string($con, $fieldname);
+//                             $member_update = "UPDATE rssimyaccount_members 
+//                                 SET $fieldname_escaped = '$submitted_value' 
+//                                 WHERE associatenumber = '$associatenumber'";
+//                             pg_query($con, $member_update);
+//                         }
+
+//                         // Send email notification
+//                         if (!empty($requestedby_email)) {
+//                             sendEmail("hrms_review", [
+//                                 "requested_by_name" => $requestedby_name,
+//                                 "requested_on" => $requested_on,
+//                                 "reviewer_status" => $bulk_action,
+//                                 "fieldname" => $fieldname,
+//                                 "oldvalue" => $current_value,
+//                                 "newvalue" => $submitted_value,
+//                                 "hide_approve" => 'style="display: none;"',
+//                                 "remarks" => $bulk_remarks
+//                             ], $requestedby_email, false);
+//                         }
+//                     }
+//                 }
+
+//                 // Commit transaction
+//                 pg_query($con, "COMMIT");
+
+//                 // Store success message in session
+//                 $_SESSION['bulk_action_status'] = [
+//                     'status' => 'success',
+//                     'message' => 'Bulk action completed successfully'
+//                 ];
+
+//                 // Redirect to avoid form resubmission
+//                 header("Location: " . $_SERVER['PHP_SELF']);
+//                 exit;
+//             } catch (Exception $e) {
+//                 // Rollback on error
+//                 pg_query($con, "ROLLBACK");
+
+//                 // Store error message in session
+//                 $_SESSION['bulk_action_status'] = [
+//                     'status' => 'error',
+//                     'message' => 'Error processing bulk action: ' . $e->getMessage()
+//                 ];
+
+//                 // Redirect to avoid form resubmission
+//                 header("Location: " . $_SERVER['PHP_SELF']);
+//                 exit;
+//             }
+//         }
+//     }
+// }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle bulk approval/rejection
     if (isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
@@ -29,11 +141,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             pg_query($con, "BEGIN");
 
             try {
+                // Group requests by email
+                $emailGroups = [];
+
                 // Process each selected ID
                 foreach ($selected_ids as $workflow_id) {
                     $workflow_id = pg_escape_string($con, trim($workflow_id));
 
-                    // First get the basic workflow details
+                    // Get the basic workflow details
                     $details_query = "SELECT 
                         w.associatenumber, 
                         w.fieldname, 
@@ -55,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $requestedby_email = $details_row['email'];
                         $requested_on = date('d/m/Y h:i A');
 
-                        // Now get the current value using the proper fieldname
+                        // Get the current value
                         $currentValueQuery = "SELECT $fieldname AS current_value 
                                             FROM rssimyaccount_members 
                                             WHERE associatenumber = '$associatenumber'";
@@ -82,24 +197,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             pg_query($con, $member_update);
                         }
 
-                        // Send email notification
+                        // Add to email groups instead of sending immediately
                         if (!empty($requestedby_email)) {
-                            sendEmail("hrms_review", [
-                                "requested_by_name" => $requestedby_name,
-                                "requested_on" => $requested_on,
-                                "reviewer_status" => $bulk_action,
-                                "fieldname" => $fieldname,
-                                "oldvalue" => $current_value,
-                                "newvalue" => $submitted_value,
-                                "hide_approve" => 'style="display: none;"',
-                                "remarks" => $bulk_remarks
-                            ], $requestedby_email, false);
+                            if (!isset($emailGroups[$requestedby_email])) {
+                                $emailGroups[$requestedby_email] = [
+                                    'name' => $requestedby_name,
+                                    'requests' => []
+                                ];
+                            }
+
+                            $emailGroups[$requestedby_email]['requests'][] = [
+                                'fieldname' => $fieldname,
+                                'oldvalue' => $current_value,
+                                'newvalue' => $submitted_value,
+                                'requested_on' => $requested_on
+                            ];
                         }
                     }
                 }
 
                 // Commit transaction
                 pg_query($con, "COMMIT");
+
+                // Send grouped emails
+                foreach ($emailGroups as $email => $group) {
+                    // Build HTML table for all requests
+                    $tableRows = '';
+                    foreach ($group['requests'] as $request) {
+                        $tableRows .= "
+                        <tr>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>{$request['fieldname']}</td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>{$request['oldvalue']}</td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>{$request['newvalue']}</td>
+                        </tr>";
+                    }
+
+                    // Determine table headers based on action type
+                    $valueHeader1 = ($bulk_action === 'Approved') ? 'Old Value' : 'Current Value';
+                    $valueHeader2 = ($bulk_action === 'Approved') ? 'New Value' : 'Requested Change';
+
+                    // Construct the full table HTML
+                    $fullTable = "
+                    <table style='width: 100%; border-collapse: collapse; margin-top: 10px;'>
+                    <tr>
+                        <th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Field Name</th>
+                        <th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>{$valueHeader1}</th>
+                        <th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>{$valueHeader2}</th>
+                    </tr>
+                    {$tableRows}
+                    </table>";
+
+                    // Prepare data for the existing email template
+                    $emailData = [
+                        "requested_by_name" => $group['name'],
+                        "requested_on" => date('d/m/Y h:i A'),
+                        "reviewer_status" => $bulk_action,
+                        "fieldname" => "Multiple Fields", // Static text
+                        "oldvalue" => "", // Leave empty
+                        "newvalue" => $fullTable, // Inject the full HTML table
+                        "hide_approve" => 'style="display: none;"',
+                        "remarks" => $bulk_remarks,
+                        "email_subject" => count($group['requests']) > 1
+                            ? "HRMS: " . count($group['requests']) . " Requests " . ucfirst($bulk_action)
+                            : "HRMS: Your Change Request has been " . ucfirst($bulk_action)
+                    ];
+
+                    sendEmail("hrms_review", $emailData, $email, false);
+                }
 
                 // Store success message in session
                 $_SESSION['bulk_action_status'] = [
