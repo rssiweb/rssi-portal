@@ -369,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td>
-                                                                <?php if (strtolower($row['estatus']) !== 'disabled'): ?>
+                                                                <?php if (!isset($row['estatus'])): ?>
                                                                     <a href="exam_data_update.php?fetch_exam_id=<?= urlencode($row['exam_id']) ?>" target="_blank">Edit</a>
                                                                 <?php endif; ?>
                                                             </td>
