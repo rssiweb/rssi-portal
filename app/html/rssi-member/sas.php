@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
             exit;
         }
 
-        error_log("Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds");
+        echo "<script>console.log('Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds');</script>";
     } else {
         $message = "No valid filters selected. Please check your filter values.";
     }
