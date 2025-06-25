@@ -302,6 +302,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert pending approval fields into the workflow table
         foreach ($pending_approval_fields as $field) {
             $new_value = pg_escape_string($con, $_POST[$field]);
+
+            // First check if there's already a pending request for this field
+            $check_pending_query = "SELECT 1 FROM hrms_workflow 
+                          WHERE associatenumber = $1 
+                          AND fieldname = $2 
+                          AND reviewer_status = 'Pending'
+                          ORDER BY submission_timestamp DESC
+                          LIMIT 1";
+            $check_pending_result = pg_query_params($con, $check_pending_query, [$search_id, $field]);
+
+            if (pg_num_rows($check_pending_result) > 0) {
+                // Remove this field from pending_approval_fields as it already has a pending request
+                $key = array_search($field, $pending_approval_fields);
+                if ($key !== false) {
+                    unset($pending_approval_fields[$key]);
+                }
+
+                // Show alert for this specific field
+                echo "<script>
+            alert('You already have a pending request for $field. Please wait for approval or rejection before submitting a new request.');
+        </script>";
+                continue;
+            }
+
+            // If no pending request exists, proceed with insertion
+
             $workflow_query = "INSERT INTO hrms_workflow (associatenumber, fieldname, submitted_value, submission_timestamp, reviewer_status) VALUES ($1, $2, $3, NOW(), 'Pending')";
             $workflow_result = pg_query_params($con, $workflow_query, [$search_id, $field, $new_value]);
 
@@ -313,6 +339,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         }
+
+        // Re-index the array after potential removals
+        $pending_approval_fields = array_values($pending_approval_fields);
 
         // Show the alert for pending approval fields outside the $update_result check
         if (!empty($pending_approval_fields)) {
