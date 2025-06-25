@@ -391,6 +391,11 @@
               <span>Student Class Days</span>
             </a>
           </li>
+          <li>
+            <a id="exception_view" href="exception_view.php">
+              <span>Class Days Exceptions</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -1032,6 +1037,14 @@
         id: 'rostermanagement',
         linkId: 'student_class_days',
         url: 'student_class_days.php'
+      },{
+        id: 'rostermanagement',
+        linkId: 'exception_view',
+        url: 'exception_view.php'
+      },{
+        id: 'rostermanagement',
+        linkId: 'exception_view',
+        url: 'class_days_exception.php'
       },
       {
         id: 'survey',
