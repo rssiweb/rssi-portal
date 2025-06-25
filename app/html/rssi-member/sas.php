@@ -83,58 +83,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
     // Main query (only executed if we have valid filters)
     if (!empty($conditions)) {
         $query = "
-        WITH date_range AS (
-            SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
-        ),
-        filtered_students AS (
-            SELECT student_id, studentname, category, class, doa
-            FROM rssimyprofile_student s
-            $whereClause
-        ),
-        student_class_days_filtered AS (
-            SELECT 
-                fs.student_id, fs.studentname, fs.category, fs.class,
-                d.attendance_date,
-                TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
-                EXISTS (
-                    SELECT 1 FROM student_class_days cw
-                    WHERE cw.category = fs.category
-                      AND cw.effective_from <= d.attendance_date
-                      AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                      AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
-                ) AS is_class_day,
-                EXISTS (
-                    SELECT 1 FROM attendance a 
-                    WHERE a.user_id = fs.student_id AND a.date = d.attendance_date
-                ) AS is_present
-            FROM date_range d
-            JOIN filtered_students fs ON d.attendance_date >= fs.doa
-        ),
-        attendance_data AS (
-            SELECT
-                student_id, studentname, category, class, month_year, attendance_date,
-                CASE
-                    WHEN is_present THEN 'P'
-                    WHEN is_class_day AND EXISTS (SELECT 1 FROM attendance WHERE date = attendance_date) THEN 'A'
-                    ELSE NULL
-                END AS attendance_status
-            FROM student_class_days_filtered
-        )
+    WITH date_range AS (
+        SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
+    ),
+    holidays AS (
+        SELECT holiday_date FROM holidays 
+        WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
+    ),
+    student_exceptions AS (
         SELECT 
-            student_id, studentname, category, class, month_year,
-            COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) AS total_classes,
-            COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) AS attended_classes,
-            CASE 
-                WHEN COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) = 0 THEN NULL
-                ELSE ROUND(
-                    (COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) * 100.0) /
-                    COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END), 2
-                )
-            END AS attendance_percentage
-        FROM attendance_data
-        GROUP BY student_id, studentname, category, class, month_year
-        ORDER BY studentname, month_year;
-        ";
+            m.student_id,
+            e.exception_date AS attendance_date
+        FROM 
+            student_class_days_exceptions e
+        JOIN 
+            student_exception_mapping m ON e.exception_id = m.exception_id
+        WHERE 
+            e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
+    ),
+    filtered_students AS (
+        SELECT student_id, studentname, category, class, doa
+        FROM rssimyprofile_student s
+        $whereClause
+    ),
+    student_class_days_filtered AS (
+        SELECT 
+            fs.student_id, fs.studentname, fs.category, fs.class,
+            d.attendance_date,
+            TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
+            EXISTS (
+                SELECT 1 FROM student_class_days cw
+                WHERE cw.category = fs.category
+                  AND cw.effective_from <= d.attendance_date
+                  AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+                  AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
+            ) AS is_class_day,
+            EXISTS (
+                SELECT 1 FROM attendance a 
+                WHERE a.user_id = fs.student_id AND a.date = d.attendance_date
+            ) AS is_present,
+            EXISTS (
+                SELECT 1 FROM holidays h 
+                WHERE h.holiday_date = d.attendance_date
+            ) AS is_holiday,
+            EXISTS (
+                SELECT 1 FROM student_exceptions se
+                WHERE se.student_id = fs.student_id AND se.attendance_date = d.attendance_date
+            ) AS has_exception
+        FROM date_range d
+        JOIN filtered_students fs ON d.attendance_date >= fs.doa
+    ),
+    attendance_data AS (
+        SELECT
+            student_id, studentname, category, class, month_year, attendance_date,
+            CASE
+                WHEN is_present THEN 'P'
+                WHEN is_holiday THEN NULL
+                WHEN has_exception THEN NULL
+                WHEN is_class_day AND EXISTS (SELECT 1 FROM attendance WHERE date = attendance_date) THEN 'A'
+                ELSE NULL
+            END AS attendance_status
+        FROM student_class_days_filtered
+    )
+    SELECT 
+        student_id, studentname, category, class, month_year,
+        COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) AS total_classes,
+        COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) AS attended_classes,
+        CASE 
+            WHEN COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) = 0 THEN NULL
+            ELSE ROUND(
+                (COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) * 100.0) /
+                COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END), 2
+            )
+        END AS attendance_percentage
+    FROM attendance_data
+    GROUP BY student_id, studentname, category, class, month_year
+    ORDER BY studentname, month_year;
+";
 
         $result = pg_query($con, $query);
         $attendanceData = pg_fetch_all($result) ?: [];

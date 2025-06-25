@@ -140,27 +140,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         FROM attendance a
         WHERE a.date BETWEEN '$start_date' AND '$end_date'
     ),
+    holidays AS (
+        SELECT holiday_date FROM holidays 
+        WHERE holiday_date BETWEEN '$start_date' AND '$end_date'
+    ),
+    student_exceptions AS (
+        SELECT 
+            m.student_id,
+            e.exception_date AS attendance_date
+        FROM 
+            student_class_days_exceptions e
+        JOIN 
+            student_exception_mapping m ON e.exception_id = m.exception_id
+        WHERE 
+            e.exception_date BETWEEN '$start_date' AND '$end_date'
+            AND m.student_id = $1
+    ),
     attendance_data AS (
         SELECT
             s.student_id,
             dr.attendance_date,
             COALESCE(
                 CASE
-                    WHEN a.user_id IS NOT NULL THEN 'P'
+                    WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
+                    WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
+                    WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
                     WHEN a.user_id IS NULL
-                         AND (
-                            SELECT COUNT(*) FROM attendance att WHERE att.date = dr.attendance_date
-                         ) > 0
-                         AND (
-                            SELECT COUNT(*) FROM student_class_days cw
+                         AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = dr.attendance_date)
+                         AND EXISTS (
+                            SELECT 1 FROM student_class_days cw
                             WHERE cw.category = s.category
                               AND cw.effective_from <= dr.attendance_date
                               AND (cw.effective_to IS NULL OR cw.effective_to >= dr.attendance_date)
                               AND POSITION(TO_CHAR(dr.attendance_date, 'Dy') IN cw.class_days) > 0
-                         ) > 0
+                         )
                          AND s.doa <= dr.attendance_date
-                         THEN 'A'
-                    ELSE NULL
+                         THEN 'A' -- Absent only if it's a class day and not holiday/exception
+                    ELSE NULL -- NULL for non-class days
                 END
             ) AS attendance_status
         FROM date_range dr
@@ -169,6 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             SELECT DISTINCT user_id, date
             FROM attendance
         ) a ON s.student_id = a.user_id AND a.date = dr.attendance_date
+        LEFT JOIN holidays h ON dr.attendance_date = h.holiday_date
+        LEFT JOIN student_exceptions ex ON dr.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
         WHERE s.student_id = $1
           AND dr.attendance_date >= s.doa
     ),

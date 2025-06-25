@@ -47,6 +47,21 @@ $query = "
 WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, interval '1 day')::date AS attendance_date
 ),
+holidays AS (
+    SELECT holiday_date FROM holidays 
+    WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
+),
+student_exceptions AS (
+    SELECT 
+        m.student_id,
+        e.exception_date AS attendance_date
+    FROM 
+        student_class_days_exceptions e
+    JOIN 
+        student_exception_mapping m ON e.exception_id = m.exception_id
+    WHERE 
+        e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
+),
 attendance_data AS (
     SELECT
         s.student_id,
@@ -59,7 +74,9 @@ attendance_data AS (
         d.attendance_date,
         COALESCE(
             CASE
-                WHEN a.user_id IS NOT NULL THEN 'P'
+                WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
+                WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
+                WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
                 WHEN a.user_id IS NULL
                      AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = d.attendance_date)
                      AND EXISTS (
@@ -70,8 +87,8 @@ attendance_data AS (
                           AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
                      )
                      AND s.doa <= d.attendance_date
-                     THEN 'A'
-                ELSE NULL
+                     THEN 'A' -- Absent only if it's a class day and not holiday/exception
+                ELSE NULL -- NULL for non-class days
             END
         ) AS attendance_status
     FROM
@@ -80,6 +97,10 @@ attendance_data AS (
         rssimyprofile_student s
     LEFT JOIN
         attendance a ON s.student_id = a.user_id AND a.date = d.attendance_date
+    LEFT JOIN
+        holidays h ON d.attendance_date = h.holiday_date
+    LEFT JOIN
+        student_exceptions ex ON d.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
     WHERE
         (
             s.effectivefrom IS NULL OR 
