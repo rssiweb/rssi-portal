@@ -15,18 +15,23 @@ validation();
 
 if ($_POST) {
     $date = $_POST['date'];
-    $items_distributed = $_POST['item_distributed']; // This will be an array
-    $unit = htmlspecialchars($_POST['unit'], ENT_QUOTES, 'UTF-8');
+    $items_distributed = $_POST['item_distributed']; // Array of item IDs
+    $units = $_POST['unit']; // Array of unit IDs
+    $quantities_distributed = $_POST['quantity_distributed']; // Array of quantities
     $description = htmlspecialchars($_POST['description'], ENT_QUOTES, 'UTF-8');
-    $quantity_distributed = $_POST['quantity_distributed'];
-    $distributed_by = $associatenumber; // Assuming $associatenumber is set correctly
+    $distributed_by = $associatenumber;
     $timestamp = date('Y-m-d H:i:s');
 
     $success = true;
 
     // Check if any items and recipients are selected
     if (!empty($items_distributed) && !empty($_POST['distributed_to'])) {
-        foreach ($items_distributed as $item_distributed) {
+        // Loop through each item
+        foreach ($items_distributed as $index => $item_distributed) {
+            $unit = $units[$index];
+            $quantity_distributed = $quantities_distributed[$index];
+
+            // Loop through each recipient for this item
             foreach ($_POST['distributed_to'] as $distributed_to) {
                 // Generate a unique transaction_out_id for each row
                 $transaction_out_id = uniqid();
@@ -45,83 +50,15 @@ if ($_POST) {
     }
 }
 
-// Fetch items, units, and recipients for dropdowns
-$item_query = "
-    SELECT
-        i.item_id,
-        i.item_name,
-        u.unit_id,
-        u.unit_name,
-        COALESCE((SELECT SUM(quantity_received) 
-                  FROM stock_add 
-                  WHERE item_id = i.item_id 
-                  AND unit_id = u.unit_id), 0) AS total_added_count,
-        COALESCE((SELECT SUM(quantity_distributed) 
-                  FROM stock_out 
-                  WHERE item_distributed = i.item_id 
-                  AND unit = u.unit_id), 0) AS total_distributed_count,
-        (COALESCE((SELECT SUM(quantity_received) 
-                  FROM stock_add 
-                  WHERE item_id = i.item_id 
-                  AND unit_id = u.unit_id), 0) 
-         - 
-         COALESCE((SELECT SUM(quantity_distributed) 
-                  FROM stock_out 
-                  WHERE item_distributed = i.item_id 
-                  AND unit = u.unit_id), 0)) AS in_stock
-    FROM 
-        stock_item i
-    JOIN 
-        stock_item_unit u 
-    ON 
-        EXISTS (
-            SELECT 1 
-            FROM stock_add a 
-            WHERE a.item_id = i.item_id 
-            AND a.unit_id = u.unit_id
-        )
-    ORDER BY 
-        i.item_id, u.unit_id;
-";
-
+// Fetch units for dropdowns
 $unit_query = "SELECT unit_id, unit_name FROM stock_item_unit";
-$recipient_query = "
-    SELECT associatenumber AS id, fullname AS name FROM rssimyaccount_members WHERE filterstatus = 'Active'
-    UNION
-    SELECT student_id AS id, studentname AS name FROM rssimyprofile_student WHERE filterstatus = 'Active'
-";
-
-$item_result = pg_query($con, $item_query);
 $unit_result = pg_query($con, $unit_query);
-$recipient_result = pg_query($con, $recipient_query);
-
-$items = [];
 $units = [];
-$recipients = [];
-
-while ($row = pg_fetch_assoc($item_result)) {
-    $is_out_of_stock = $row['in_stock'] <= 0;
-    $items[] = [
-        'item_id' => $row['item_id'],
-        'item_name' => $row['item_name'],
-        'unit_id' => $row['unit_id'],
-        'unit_name' => $row['unit_name'],
-        'in_stock' => $row['in_stock'],
-        'is_out_of_stock' => $is_out_of_stock
-    ];
-}
 
 while ($row = pg_fetch_assoc($unit_result)) {
     $units[] = [
         'id' => $row['unit_id'],
         'text' => $row['unit_name']
-    ];
-}
-
-while ($row = pg_fetch_assoc($recipient_result)) {
-    $recipients[] = [
-        'id' => $row['id'],
-        'text' => $row['name'] . ' (' . $row['id'] . ')'
     ];
 }
 ?>
@@ -145,20 +82,24 @@ while ($row = pg_fetch_assoc($recipient_result)) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Distribute Stock</title>
     <link href="../img/favicon.ico" rel="icon">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
-        .readonly-select {
-            pointer-events: none;
-            /* Prevent user from interacting with the select box */
-            background-color: #e9ecef;
-            /* Optional: Change background color to indicate read-only state */
+        .bag-container {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .empty-bag-message {
             color: #6c757d;
-            /* Optional: Change text color to indicate read-only state */
+            text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
@@ -176,7 +117,7 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                     <li class="breadcrumb-item active">Distribute Stock</li>
                 </ol>
             </nav>
-        </div><!-- End Page Title -->
+        </div>
         <section class="section dashboard">
             <div class="row">
                 <div class="col-12">
@@ -204,54 +145,17 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                             <div class="container my-5">
                                 <div class="row justify-content-center">
                                     <div class="col-lg-8">
-                                        <form method="POST">
+                                        <form method="POST" id="distributionForm">
                                             <!-- Date -->
                                             <div class="mb-3">
                                                 <label for="date" class="form-label">Date</label>
                                                 <input type="date" class="form-control" id="date" name="date" required>
                                             </div>
 
-                                            <!-- Item Distributed -->
-                                            <div class="mb-3">
-                                                <label for="item_distributed" class="form-label">Item Distributed</label>
-                                                <select id="item_distributed" name="item_distributed[]" class="form-control" multiple="multiple" required>
-                                                    <?php foreach ($items as $item): ?>
-                                                        <option value="<?php echo htmlspecialchars($item['item_id']); ?>" data-unit="<?php echo htmlspecialchars($item['unit_id']); ?>" <?php echo $item['is_out_of_stock'] ? 'disabled' : ''; ?>>
-                                                            <?php echo htmlspecialchars($item['item_name']); ?> - <?php echo htmlspecialchars($item['unit_name']); ?>
-                                                            (<?php echo htmlspecialchars($item['in_stock']); ?> in stock)
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                            <!-- Unit -->
-                                            <div class="mb-3">
-                                                <label for="unit" class="form-label">Unit</label>
-                                                <select id="unit" name="unit" class="form-control readonly-select" required>
-                                                    <option disabled selected>Select Unit</option>
-                                                    <?php foreach ($units as $unit): ?>
-                                                        <option value="<?php echo htmlspecialchars($unit['id']); ?>"><?php echo htmlspecialchars($unit['text']); ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                                <!-- Help text to indicate the field is auto-populated -->
-                                                <small class="form-text text-muted">This field is auto-populated based on your selection.</small>
-                                            </div>
-
-
-                                            <!-- Quantity Distributed -->
-                                            <div class="mb-3">
-                                                <label for="quantity_distributed" class="form-label">Quantity Distributed</label>
-                                                <input type="number" step="any" class="form-control" id="quantity_distributed" name="quantity_distributed" required>
-                                            </div>
-
                                             <!-- Distributed To -->
                                             <div class="mb-3">
                                                 <label for="distributed_to" class="form-label">Distributed To</label>
-                                                <select id="distributed_to" name="distributed_to[]" class="form-control" multiple="multiple" required>
-                                                    <?php foreach ($recipients as $recipient): ?>
-                                                        <option value="<?php echo htmlspecialchars($recipient['id']); ?>"><?php echo htmlspecialchars($recipient['text']); ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
+                                                <select id="distributed_to" name="distributed_to[]" class="form-control" multiple="multiple" required></select>
                                             </div>
 
                                             <!-- Description -->
@@ -260,8 +164,42 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                                             </div>
 
-                                            <div class="text-center">
-                                                <button type="submit" class="btn btn-primary">Submit</button>
+                                            <hr class="my-4">
+
+                                            <h5 class="mb-3">Items to Distribute</h5>
+
+                                            <!-- New Item Form -->
+                                            <div class="row g-3 mb-4">
+                                                <div class="col-md-5">
+                                                    <label for="new_item" class="form-label">Item</label>
+                                                    <select id="new_item" class="form-control">
+                                                        <option value="">Select Item</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="new_unit" class="form-label">Unit</label>
+                                                    <input type="text" id="new_unit" class="form-control" readonly>
+                                                    <input type="hidden" id="new_unit_id">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="new_quantity" class="form-label">Quantity</label>
+                                                    <input type="number" step="any" class="form-control" id="new_quantity" min="0.01">
+                                                </div>
+                                                <div class="col-md-1 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-primary" id="addItemBtn">Add</button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Items Bag -->
+                                            <h5 class="mb-3">Items Bag</h5>
+                                            <div class="bag-container">
+                                                <div id="itemsBag">
+                                                    <div class="empty-bag-message">No items added yet</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center mt-4">
+                                                <button type="submit" class="btn btn-primary">Distribute Items</button>
                                             </div>
                                         </form>
                                     </div>
@@ -272,105 +210,182 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                 </div>
             </div>
         </section>
-    </main><!-- End #main -->
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    </main>
 
-    <!-- Template Main JS File -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2
-            $('#item_distributed').select2();
-            $('#distributed_to').select2();
+            // Initialize Select2 for beneficiaries
+            $('#distributed_to').select2({
+                ajax: {
+                    url: 'search_beneficiaries.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            isStockout: true
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select beneficiary(s)',
+                allowClear: true,
+                multiple: true
+            });
 
-            // Track previously selected items
-            let previousSelection = $('#item_distributed').val() || [];
-
-            // Handle item selection change
-            $('#item_distributed').on('change', function(event) {
-                let selectedItems = $(this).val(); // Currently selected items
-                let unitDropdown = $('#unit');
-                let allUnits = {};
-
-                // Gather all selected items' units from the previous selection
-                previousSelection.forEach(itemId => {
-                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
-                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
-                });
-
-                // Get the newly selected item
-                let newlySelectedItem = selectedItems.filter(item => !previousSelection.includes(item))[0];
-                if (newlySelectedItem) {
-                    let newItemUnit = $(`#item_distributed option[value="${newlySelectedItem}"]`).data('unit');
-
-                    // Check if the newly selected item belongs to a different unit
-                    if (Object.keys(allUnits).length > 0 && !allUnits.hasOwnProperty(newItemUnit)) {
-                        alert('Please select items from the same unit only.');
-
-                        // Remove the last selected item that triggered the alert
-                        selectedItems = selectedItems.filter(item => item !== newlySelectedItem);
-                        $(this).val(selectedItems).trigger('change');
-                        return;
-                    }
-                }
-
-                // Update the previous selection
-                previousSelection = selectedItems;
-
-                // Gather all selected items' units after the change
-                selectedItems.forEach(itemId => {
-                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
-                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
-                });
-
-                // Auto-select unit if only one unit is selected
-                if (Object.keys(allUnits).length === 1) {
-                    let unitId = Object.keys(allUnits)[0];
-                    unitDropdown.val(unitId).trigger('change');
+            // Initialize Select2 for items
+            $('#new_item').select2({
+                ajax: {
+                    url: 'search_products.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term,
+                            for_stock_management: true,
+                        };
+                    },
+                    processResults: function(data) {
+                        var items = data.products || data.results || [];
+                        return {
+                            results: $.map(items, function(item) {
+                                return {
+                                    id: item.id || item.item_id,
+                                    text: (item.name || item.item_name) + ' - ' + (item.unit_name || '') + ' (' + (item.in_stock || 0) + ' in stock)',
+                                    unitId: item.unit_id,
+                                    unitName: item.unit_name,
+                                    inStock: item.in_stock,
+                                    disabled: item.soldOut || (item.in_stock <= 0)
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select an item',
+                templateResult: function(item) {
+                    if (item.loading) return item.text;
+                    var $container = $('<div>' + item.text + '</div>');
+                    if (item.disabled) $container.addClass('text-muted');
+                    return $container;
                 }
             });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2
-            $('#item_distributed').select2();
-            $('#distributed_to').select2();
 
-            // Handle item selection change
-            $('#item_distributed').on('change', function() {
-                let selectedItems = $(this).val(); // Currently selected items
-                let unitDropdown = $('#unit');
-                let allUnits = {};
+            // Track items in the bag
+            let itemsBag = [];
 
-                // Gather all selected items' units
-                selectedItems.forEach(itemId => {
-                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
-                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
-                });
+            // When an item is selected
+            $('#new_item').on('change', function() {
+                const selectedItem = $(this).select2('data')[0];
+                if (selectedItem) {
+                    $('#new_unit').val(selectedItem.unitName);
+                    $('#new_unit_id').val(selectedItem.unitId);
+                    $('#new_quantity').val('');
+                    $('#new_quantity').attr('max', selectedItem.inStock);
+                }
+            });
 
-                // If multiple units are selected, prevent further selection
-                if (Object.keys(allUnits).length > 1) {
-                    alert('Please select items from the same unit only.');
-
-                    // Remove the last selected item that triggered the alert
-                    let newlySelectedItem = selectedItems[selectedItems.length - 1];
-                    selectedItems = selectedItems.filter(item => item !== newlySelectedItem);
-                    $(this).val(selectedItems).trigger('change');
+            // Add item to bag
+            $('#addItemBtn').on('click', function() {
+                const selectedItem = $('#new_item').select2('data')[0];
+                if (!selectedItem) {
+                    alert('Please select an item');
                     return;
                 }
 
-                // Auto-select unit if only one unit is selected
-                if (Object.keys(allUnits).length === 1) {
-                    let unitId = Object.keys(allUnits)[0];
-                    unitDropdown.val(unitId).trigger('change');
-                } else {
-                    // If no items are selected, set the dropdown to "Select Unit"
-                    unitDropdown.val('').trigger('change');
+                const quantity = $('#new_quantity').val();
+                if (!quantity) {
+                    alert('Please enter quantity');
+                    return;
                 }
+
+                if (parseFloat(quantity) > selectedItem.inStock) {
+                    alert('Quantity cannot exceed available stock');
+                    return;
+                }
+
+                // Generate unique ID for this item in the bag
+                const itemUniqueId = 'item_' + Date.now() + Math.floor(Math.random() * 1000);
+
+                // Add to itemsBag array with complete display text
+                itemsBag.push({
+                    id: itemUniqueId,
+                    itemId: selectedItem.id,
+                    displayText: selectedItem.text.split(' -')[0], // Name + Unit without stock info
+                    quantity: quantity,
+                    unitName: selectedItem.unitName,
+                    unitId: selectedItem.unitId
+                });
+
+                updateBagDisplay();
+                $('#new_item').val('').trigger('change');
+                $('#new_quantity').val('');
             });
+
+            // Remove item from bag
+            $(document).on('click', '.remove-item-btn', function() {
+                const itemId = $(this).data('item-id');
+                itemsBag = itemsBag.filter(item => item.id !== itemId);
+                updateBagDisplay();
+            });
+
+            // Update the bag display with minimalist format
+            function updateBagDisplay() {
+                const bagContainer = $('#itemsBag');
+                bagContainer.empty();
+
+                // Add item count header
+                const itemCount = itemsBag.length;
+                bagContainer.append(`<div class="bag-header mb-2">Items in Bag (${itemCount})</div>`);
+
+                if (itemCount === 0) {
+                    bagContainer.append('<div class="empty-bag-message">No items added yet</div>');
+                    return;
+                }
+
+                itemsBag.forEach((item, index) => {
+                    const itemRow = `
+                    <div class="item-row" data-item-id="${item.id}">
+                        <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
+                            <div class="item-info">
+                                ${item.displayText} - ${item.quantity} ${item.unitName}
+                                <input type="hidden" name="item_distributed[]" value="${item.itemId}">
+                                <input type="hidden" name="unit[]" value="${item.unitId}">
+                                <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
+                            </div>
+                            <button type="button" class="btn btn-outline-danger remove-item-btn" 
+                                    data-item-id="${item.id}">
+                                <i class="bi bi-bag-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                    bagContainer.append(itemRow);
+                });
+            }
+
+            // Form submission validation
+            $('#distributionForm').on('submit', function(e) {
+                if (itemsBag.length === 0) {
+                    alert('Please add at least one item to distribute');
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            });
+
+            // Set default date to today
+            $('#date').val(new Date().toISOString().split('T')[0]);
         });
     </script>
 </body>

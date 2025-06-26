@@ -6,10 +6,17 @@ header('Content-Type: application/json');
 
 $searchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
 $gender = isset($_GET['gender']) ? trim($_GET['gender']) : null;
-$sources = isset($_GET['sources']) ? explode(',', trim($_GET['sources'])) : ['public_health', 'student', 'member'];
+$isStockout = isset($_GET['isStockout']) && $_GET['isStockout'] == 'true';
+
+// If this is a stock-out request, only include active members and students
+if ($isStockout) {
+    $sources = ['student', 'member'];
+} else {
+    $sources = isset($_GET['sources']) ? explode(',', trim($_GET['sources'])) : ['public_health', 'student', 'member'];
+}
 
 // Debugging output
-error_log("Received request with searchTerm: '$searchTerm', gender: '$gender', sources: " . implode(',', $sources));
+error_log("Received request with searchTerm: '$searchTerm', gender: '$gender', isStockout: " . ($isStockout ? 'true' : 'false'));
 
 // Validate gender if provided
 if ($gender && !in_array($gender, ['Male', 'Female', 'Other'])) {
@@ -94,8 +101,12 @@ try {
     foreach ($results as $row) {
         $displayText = $row['name'];
 
-        // Add contact number if available
-        if (!empty($row['contact_number'])) {
+        // For stock-out, show ID in parentheses
+        if ($isStockout) {
+            $displayText .= ' (' . $row['id'] . ')';
+        } 
+        // For other cases, show contact number if available
+        elseif (!empty($row['contact_number'])) {
             $displayText .= ' (' . $row['contact_number'] . ')';
         } else {
             $displayText .= ' (' . $row['id'] . ')';
