@@ -69,11 +69,10 @@ if ($_POST) {
     }
 }
 
-// Fetch data for dropdowns
-$items = pg_fetch_all(pg_query($con, "SELECT item_id as id, item_name as text FROM stock_item ORDER BY item_name")) ?: [];
+// Keep the units query:
 $units = pg_fetch_all(pg_query($con, "SELECT unit_id as id, unit_name as text FROM stock_item_unit ORDER BY unit_name")) ?: [];
 
-// Get existing item-unit mappings
+// Keep the item_units mapping as it's needed for validation
 $item_units = [];
 $result = pg_query(
     $con,
@@ -259,10 +258,7 @@ while ($row = pg_fetch_assoc($result)) {
                                             <tr>
                                                 <td>
                                                     <select name="item_id[]" class="form-select table-select item-select" required>
-                                                        <option value="">Select Item</option>
-                                                        <?php foreach ($items as $item): ?>
-                                                            <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
-                                                        <?php endforeach; ?>
+                                                        <option value="">Search and select item...</option> <!-- Changed from "Select Item" -->
                                                     </select>
                                                 </td>
                                                 <td>
@@ -367,14 +363,60 @@ while ($row = pg_fetch_assoc($result)) {
             const itemUnits = <?php echo json_encode($item_units); ?>;
             let selectedItems = new Set();
 
-            // Initialize Select2
-            $('.item-select, .unit-select').select2({
-                width: '100%',
-                minimumResultsForSearch: 6
+            // Initialize Select2 for units (since we have these locally)
+            $('.unit-select').select2({
+                width: '100%'
             });
 
-            // Track initial selected item if any
+            // Initialize Select2 for items with AJAX search
+            function initializeItemSelect2(selectElement) {
+                $(selectElement).select2({
+                    width: '100%',
+                    placeholder: 'Search and select item...',
+                    allowClear: true,
+                    minimumInputLength: 1,
+                    ajax: {
+                        url: 'search_products.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                search: params.term, // search term
+                                add_stock: 'true' // our new flag
+                            };
+                        },
+                        processResults: function(data) {
+                            // Map the results to Select2 format
+                            return {
+                                results: data.results.map(item => ({
+                                    id: item.id,
+                                    text: item.name
+                                }))
+                            };
+                        },
+                        cache: true
+                    },
+                    templateResult: formatItem,
+                    templateSelection: formatItemSelection
+                });
+            }
+
+            // Format how items appear in the dropdown
+            function formatItem(item) {
+                if (item.loading) {
+                    return item.text;
+                }
+                return $('<span>').text(item.text);
+            }
+
+            // Format how the selected item appears
+            function formatItemSelection(item) {
+                return item.text;
+            }
+
+            // Initialize existing item selects
             $('.item-select').each(function() {
+                initializeItemSelect2(this);
                 if ($(this).val()) {
                     selectedItems.add($(this).val());
                 }
@@ -383,41 +425,38 @@ while ($row = pg_fetch_assoc($result)) {
             // Add new item row
             $('#add-item').click(function() {
                 const newRow = $(`
-                    <tr>
-                        <td>
-                            <select name="item_id[]" class="form-select table-select item-select" required>
-                                <option value="">Select Item</option>
-                                <?php foreach ($items as $item): ?>
-                                    <option value="<?php echo $item['id']; ?>" ${selectedItems.has('<?php echo $item['id']; ?>') ? 'disabled' : ''}>
-                                        <?php echo $item['text']; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="unit_id[]" class="form-select table-select unit-select" required>
-                                <option value="">Select Unit</option>
-                                <?php foreach ($units as $unit): ?>
-                                    <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
-                        </td>
-                        <td>
-                            <button type="button" class="btn-action btn-delete">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `);
+            <tr>
+                <td>
+                    <select name="item_id[]" class="form-select table-select item-select" required>
+                        <option value="">Search and select item...</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="unit_id[]" class="form-select table-select unit-select" required>
+                        <option value="">Select Unit</option>
+                        <?php foreach ($units as $unit): ?>
+                            <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
+                </td>
+                <td>
+                    <button type="button" class="btn-action btn-delete">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
 
                 $('#items-container').append(newRow);
-                newRow.find('.item-select, .unit-select').select2({
-                    width: '100%',
-                    minimumResultsForSearch: 6
+                newRow.find('.unit-select').select2({
+                    width: '100%'
                 });
+
+                // Initialize the new item select with AJAX search
+                initializeItemSelect2(newRow.find('.item-select'));
 
                 // Enable all delete buttons
                 $('.btn-delete').prop('disabled', false);
@@ -461,9 +500,6 @@ while ($row = pg_fetch_assoc($result)) {
                 }
                 row.data('previous-item', newValue);
 
-                // Update availability in all dropdowns
-                updateItemAvailability();
-
                 // Handle unit locking
                 if (newValue && itemUnits[newValue]) {
                     // Lock the unit
@@ -484,20 +520,8 @@ while ($row = pg_fetch_assoc($result)) {
 
             // Update item availability in all dropdowns
             function updateItemAvailability() {
-                $('.item-select').each(function() {
-                    const currentValue = $(this).val();
-                    $(this).find('option').each(function() {
-                        const optionValue = $(this).val();
-                        if (optionValue && optionValue !== currentValue) {
-                            $(this).prop('disabled', selectedItems.has(optionValue));
-                        }
-                    });
-
-                    // Trigger Select2 update if it's initialized
-                    if ($(this).hasClass('select2-hidden-accessible')) {
-                        $(this).trigger('change.select2');
-                    }
-                });
+                // With AJAX search, we don't need to disable options in the dropdown
+                // because each search is fresh and we can filter server-side
             }
 
             // Form validation

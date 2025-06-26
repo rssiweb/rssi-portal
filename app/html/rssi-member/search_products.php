@@ -5,55 +5,83 @@ header('Content-Type: application/json');
 
 // Get parameters
 $forStockManagement = isset($_GET['for_stock_management']) && $_GET['for_stock_management'] == 'true';
+$addStock = isset($_GET['add_stock']) && $_GET['add_stock'] == 'true';
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Build the base query
-$query = "SELECT
-    i.item_id,
-    i.item_name,
-    i.image_url,
-    i.description,
-    u.unit_id,
-    u.unit_name,
-    p.unit_quantity,
-    COALESCE((SELECT SUM(quantity_received) FROM stock_add WHERE item_id = i.item_id AND unit_id = u.unit_id), 0) -
-    COALESCE((SELECT SUM(quantity_distributed) FROM stock_out WHERE item_distributed = i.item_id AND unit = u.unit_id), 0) AS in_stock,
-    p.price_per_unit,
-    p.discount_percentage,
-    p.original_price,
-    i.rating,
-    i.review_count,
-    i.is_featured
-FROM 
-    stock_item i
-LEFT JOIN stock_add sa ON i.item_id = sa.item_id
-LEFT JOIN stock_out so ON i.item_id = so.item_distributed
-JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
-LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
-    AND p.unit_id = u.unit_id
-    AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-WHERE 1=1";
-
-// Apply access scope filter
-if ($forStockManagement) {
-    $query .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
+if ($addStock) {
+    // Special simplified query for add_stock that gets all items
+    $query = "SELECT
+        i.item_id,
+        i.item_name,
+        i.image_url,
+        i.description,
+        NULL as unit_id,
+        NULL as unit_name,
+        1 as unit_quantity,
+        0 as in_stock,
+        NULL as price_per_unit,
+        NULL as discount_percentage,
+        NULL as original_price,
+        i.rating,
+        i.review_count,
+        i.is_featured
+    FROM stock_item i
+    WHERE 1=1";
+    
+    if (!empty($searchTerm)) {
+        $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
+    }
+    
+    $query .= " ORDER BY i.item_name";
 } else {
-    $query .= " AND i.access_scope = 'public'";
+    // Original query for all other cases
+    $query = "SELECT
+        i.item_id,
+        i.item_name,
+        i.image_url,
+        i.description,
+        u.unit_id,
+        u.unit_name,
+        p.unit_quantity,
+        COALESCE((SELECT SUM(quantity_received) FROM stock_add WHERE item_id = i.item_id AND unit_id = u.unit_id), 0) -
+        COALESCE((SELECT SUM(quantity_distributed) FROM stock_out WHERE item_distributed = i.item_id AND unit = u.unit_id), 0) AS in_stock,
+        p.price_per_unit,
+        p.discount_percentage,
+        p.original_price,
+        i.rating,
+        i.review_count,
+        i.is_featured
+    FROM 
+        stock_item i
+    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
+    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
+    JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
+    LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
+        AND p.unit_id = u.unit_id
+        AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
+    WHERE 1=1";
+
+    // Apply access scope filter
+    if ($forStockManagement) {
+        $query .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
+    } else {
+        $query .= " AND i.access_scope = 'public'";
+    }
+
+    // Add search condition
+    if (!empty($searchTerm)) {
+        $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
+    }
+
+    $query .= " GROUP BY 
+        i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
+        u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
+    ORDER BY 
+        i.is_featured DESC, i.item_name";
 }
 
-// Add search condition
-if (!empty($searchTerm)) {
-    $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
-}
-
-$query .= " GROUP BY 
-    i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
-    u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
-ORDER BY 
-    i.is_featured DESC, i.item_name";
-
-// Only apply pagination for non-stock management cases
-if (!$forStockManagement) {
+// Only apply pagination for non-stock management and non-add_stock cases
+if (!$forStockManagement && !$addStock) {
     // Get total count for pagination
     $countQuery = "SELECT COUNT(DISTINCT i.item_id) as total FROM stock_item i 
                    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
@@ -105,7 +133,7 @@ if ($result) {
 }
 
 // Return different response formats based on context
-if ($forStockManagement) {
+if ($forStockManagement || $addStock) {
     echo json_encode([
         'results' => $products
     ]);
