@@ -408,7 +408,7 @@ if (isset($_GET['edit'])) {
                     <div class="row">
                         <div class="col-md-3">
                             <div class="mb-2">
-                                <label for="edit_fees_submission_date" class="form-label">Fees Date</label>
+                                <label for="edit_fees_submission_date" class="form-label">Date of fees submission</label>
                                 <input type="date" class="form-control" id="edit_fees_submission_date" name="fees_submission_date" value="<?= isset($row['fees_submission_date']) ? $row['fees_submission_date'] : '' ?>">
                             </div>
                         </div>
@@ -427,7 +427,7 @@ if (isset($_GET['edit'])) {
                         <div class="col-md-3">
                             <div class="mb-2">
                                 <label for="edit_due_amount" class="form-label">Due</label>
-                                <input type="number" class="form-control" id="edit_due_amount" name="due_amount" min="0" step="0.01" value="<?= isset($row['due_amount']) ? $row['due_amount'] : '' ?>" readonly>
+                                <input type="number" class="form-control" id="edit_due_amount" name="due_amount" min="0" step="0.01" value="<?= isset($row['due_amount']) ? $row['due_amount'] : '' ?>">
                             </div>
                         </div>
                     </div>
@@ -436,7 +436,7 @@ if (isset($_GET['edit'])) {
                         <div class="col-md-4">
                             <div class="mb-2">
                                 <label for="edit_fees_month" class="form-label">Fees Month</label>
-                                <input type="text" class="form-control" id="edit_fees_month" name="fees_month" placeholder="e.g., April 2023" value="<?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : '' ?>">
+                                <input type="month" class="form-control" id="edit_fees_month" name="fees_month" placeholder="e.g., April 2023" value="<?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : '' ?>">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -537,7 +537,7 @@ if (isset($_GET['view'])) {
                             <td><?= isset($row['visit_type']) ? ucfirst($row['visit_type']) : 'N/A' ?></td>
                         </tr>
                         <tr>
-                            <th>Previous School</th>
+                            <th>School Name</th>
                             <td><?= isset($row['previous_school']) ? htmlspecialchars($row['previous_school']) : 'N/A' ?></td>
                         </tr>
                     </table>
@@ -550,7 +550,7 @@ if (isset($_GET['view'])) {
                             <td><?= isset($row['current_address']) ? nl2br(htmlspecialchars($row['current_address'])) : 'N/A' ?></td>
                         </tr>
                         <tr>
-                            <th>Aadhar Submitted By</th>
+                            <th>Whose Aadhar Card Submitted?</th>
                             <td><?= isset($row['aadhar_submitted_by']) ? ucwords(str_replace('_', ' ', $row['aadhar_submitted_by'])) : 'N/A' ?></td>
                         </tr>
                         <tr>
@@ -588,7 +588,7 @@ if (isset($_GET['view'])) {
                         <h5>Fee Information</h5>
                         <table class="table table-sm">
                             <tr>
-                                <th width="40%">Fees Date</th>
+                                <th width="40%">Date of fees submission</th>
                                 <td><?= isset($row['fees_submission_date']) ? date('d M Y', strtotime($row['fees_submission_date'])) : 'N/A' ?></td>
                             </tr>
                             <tr>
@@ -621,7 +621,7 @@ if (isset($_GET['view'])) {
                             </tr>
                             <tr>
                                 <th>Fees Month</th>
-                                <td><?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : 'N/A' ?></td>
+                                <td><?= !empty($row['fees_month']) ? (DateTime::createFromFormat('Y-m', $row['fees_month'])?->format('F, Y') ?? htmlspecialchars($row['fees_month'])) : 'N/A' ?></td>
                             </tr>
                         </table>
                     </div>
@@ -852,7 +852,7 @@ if (isset($_GET['view'])) {
                                             <div class="row">
                                                 <div class="col-md-3">
                                                     <div class="mb-2">
-                                                        <label for="fees_submission_date" class="form-label">Fees Date</label>
+                                                        <label for="fees_submission_date" class="form-label">Date of fees submission</label>
                                                         <input type="date" class="form-control" id="fees_submission_date" name="fees_submission_date">
                                                     </div>
                                                 </div>
@@ -880,7 +880,7 @@ if (isset($_GET['view'])) {
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
                                                         <label for="fees_month" class="form-label">Fees Month</label>
-                                                        <input type="text" class="form-control" id="fees_month" name="fees_month" placeholder="e.g., April 2023">
+                                                        <input type="month" class="form-control" id="fees_month" name="fees_month" placeholder="e.g., April 2023">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
@@ -1107,7 +1107,7 @@ if (isset($_GET['view'])) {
 
     <!-- Edit Record Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Record</h5>
@@ -1126,7 +1126,7 @@ if (isset($_GET['view'])) {
 
     <!-- View Details Modal -->
     <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Record Details</h5>
