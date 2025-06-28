@@ -1337,6 +1337,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             const year = $("select[name='year']").val();
             const classFilter = $("#classSelect").val() || [];
             const studentId = $("input[name='student_id']").val();
+            const searchTerm = $("input[name='search_term']").val();
 
             // Build export URL with all current filters
             let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`;
@@ -1351,6 +1352,11 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             // Add student ID if provided
             if (studentId) {
                 exportUrl += `&student_id=${encodeURIComponent(studentId)}`;
+            }
+
+            // Add search term if provided
+            if (searchTerm) {
+                exportUrl += `&search_term=${encodeURIComponent(searchTerm)}`;
             }
 
             // Open in new tab to trigger download
