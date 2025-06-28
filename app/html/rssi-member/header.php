@@ -419,6 +419,11 @@
               <span>View Appointments</span>
             </a>
           </li>
+          <li>
+            <a id="enquiry_portal" href="enquiry_portal.php">
+              <span>Enquiry Portal</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -1063,6 +1068,10 @@
         id: 'survey',
         linkId: 'appointments',
         url: 'appointments.php'
+      },{
+        id: 'survey',
+        linkId: 'enquiry_portal',
+        url: 'enquiry_portal.php'
       },
       {
         id: 'survey',

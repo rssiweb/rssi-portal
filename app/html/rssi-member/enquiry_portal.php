@@ -464,34 +464,6 @@ if (isset($_GET['edit'])) {
                 <button type="submit" name="update_record" class="btn btn-primary">Update Record</button>
             </div>
         </form>
-
-        <script>
-            // Show/hide admission fields based on visit type
-            document.getElementById('edit_visit_type').addEventListener('change', function() {
-                const admissionFields = document.getElementById('editAdmissionFields');
-                admissionFields.style.display = this.value === 'taking admission' ? 'block' : 'none';
-            });
-
-            // Show/hide transaction ID field based on payment mode
-            document.getElementById('edit_payment_mode').addEventListener('change', function() {
-                const transactionIdField = document.getElementById('editTransactionIdField');
-                transactionIdField.style.display = this.value === 'online' ? 'block' : 'none';
-            });
-
-            // Calculate due amount automatically
-            document.getElementById('edit_total_fee').addEventListener('input', calculateEditDue);
-            document.getElementById('edit_deposited_amount').addEventListener('input', calculateEditDue);
-
-            function calculateEditDue() {
-                const totalFee = parseFloat(document.getElementById('edit_total_fee').value) || 0;
-                const deposited = parseFloat(document.getElementById('edit_deposited_amount').value) || 0;
-                const due = totalFee - deposited;
-                document.getElementById('edit_due_amount').value = due.toFixed(2);
-            }
-
-            // Initialize due calculation
-            calculateEditDue();
-        </script>
 <?php
     }
     exit;
@@ -648,7 +620,9 @@ if (isset($_GET['view'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Admission/Enquiry Portal</title>
+    <title>Enquiry Portal</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -731,11 +705,12 @@ if (isset($_GET['view'])) {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Parent Admission/Enquiry Portal</h1>
+            <h1>Enquiry Portal</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item active">Admissions</li>
+                    <li class="breadcrumb-item">Survey</li>
+                    <li class="breadcrumb-item active">Enquiry Portal</li>
                 </ol>
             </nav>
         </div>
@@ -1228,7 +1203,7 @@ if (isset($_GET['view'])) {
             }
         }
 
-        // Load edit form via AJAX
+        // Modify your loadEditForm function to trigger calculations after loading:
         function loadEditForm(recordId) {
             const editModalBody = document.getElementById('editModalBody');
             editModalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -1237,6 +1212,10 @@ if (isset($_GET['view'])) {
                 .then(response => response.text())
                 .then(data => {
                     editModalBody.innerHTML = data;
+                    // Trigger initial calculations
+                    if (typeof calculateEditDue === 'function') {
+                        calculateEditDue();
+                    }
                 })
                 .catch(error => {
                     editModalBody.innerHTML = '<div class="alert alert-danger">Error loading edit form</div>';
@@ -1268,6 +1247,38 @@ if (isset($_GET['view'])) {
                 });
         }
     </script>
+            <script>
+            // Replace the inline script in your edit modal with this:
+            document.addEventListener('DOMContentLoaded', function() {
+                // Delegate events for the edit modal
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.id === 'edit_visit_type') {
+                        const admissionFields = document.getElementById('editAdmissionFields');
+                        admissionFields.style.display = e.target.value === 'taking admission' ? 'block' : 'none';
+                    }
+
+                    if (e.target && e.target.id === 'edit_payment_mode') {
+                        const transactionIdField = document.getElementById('editTransactionIdField');
+                        transactionIdField.style.display = e.target.value === 'online' ? 'block' : 'none';
+                    }
+                });
+
+                // Delegate input events for calculation
+                document.addEventListener('input', function(e) {
+                    if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
+                        calculateEditDue();
+                    }
+                });
+
+                function calculateEditDue() {
+                    const totalFee = parseFloat(document.getElementById('edit_total_fee')?.value) || 0;
+                    const deposited = parseFloat(document.getElementById('edit_deposited_amount')?.value) || 0;
+                    const due = totalFee - deposited;
+                    const dueField = document.getElementById('edit_due_amount');
+                    if (dueField) dueField.value = due.toFixed(2);
+                }
+            });
+        </script>
 </body>
 
 </html>
