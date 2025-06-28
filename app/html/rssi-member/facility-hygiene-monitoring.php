@@ -388,8 +388,8 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                             <label for="location" class="form-label">Facility Location</label>
                                                             <select class="form-select" id="location" name="location" required>
                                                                 <option value="">Select location</option>
-                                                                <option value="Ground Floor - Student">Ground Floor - Student</option>
-                                                                <option value="Ground Floor - Teacher">Ground Floor - Teacher</option>
+                                                                <option value="Ground Floor - Student Washroom">Ground Floor - Student Washroom</option>
+                                                                <option value="Ground Floor - Teacher Washroom">Ground Floor - Teacher Washroom</option>
                                                             </select>
                                                         </div>
 
