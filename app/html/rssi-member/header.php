@@ -562,6 +562,11 @@
             </a>
           </li>
           <li>
+            <a id="facility-hygiene-monitoring" href="facility-hygiene-monitoring.php">
+              <span>Facility Hygiene Monitoring</span>
+            </a>
+          </li>
+          <li>
             <a id="archive_approval" href="archive_approval.php">
               <span>Document Approval</span>
             </a>
@@ -814,6 +819,10 @@
         id: 'work',
         linkId: 'studentLink',
         url: 'student.php'
+      },{
+        id: 'work',
+        linkId: 'facility-hygiene-monitoring',
+        url: 'facility-hygiene-monitoring.php'
       }, {
         id: 'work',
         linkId: 'studentLink',
