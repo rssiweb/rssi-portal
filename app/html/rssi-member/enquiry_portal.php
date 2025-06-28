@@ -497,6 +497,151 @@ if (isset($_GET['edit'])) {
     exit;
 }
 ?>
+
+<?php
+// Check if we're loading view details via AJAX
+if (isset($_GET['view'])) {
+    $record_id = intval($_GET['view']);
+    $query = "SELECT pa.*, sc.class_name, sc.value, 
+             creator.fullname as created_by_name,
+             closer.fullname as closed_by_name
+             FROM parent_admissions pa
+             LEFT JOIN school_classes sc ON pa.class_id = sc.id
+             LEFT JOIN rssimyaccount_members creator ON pa.created_by = creator.associatenumber
+             LEFT JOIN rssimyaccount_members closer ON pa.closed_by = closer.associatenumber
+             WHERE pa.id = $1";
+
+    $result = pg_query_params($con, $query, [$record_id]);
+
+    if ($row = pg_fetch_assoc($result)) {
+?>
+        <div class="view-details">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Basic Information</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Name</th>
+                            <td><?= isset($row['name']) ? htmlspecialchars($row['name']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Mobile</th>
+                            <td><?= isset($row['mobile']) ? htmlspecialchars($row['mobile']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Class</th>
+                            <td><?= isset($row['class_name']) ? htmlspecialchars($row['value']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Visit Type</th>
+                            <td><?= isset($row['visit_type']) ? ucfirst($row['visit_type']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Previous School</th>
+                            <td><?= isset($row['previous_school']) ? htmlspecialchars($row['previous_school']) : 'N/A' ?></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>Additional Information</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Address</th>
+                            <td><?= isset($row['current_address']) ? nl2br(htmlspecialchars($row['current_address'])) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Aadhar Submitted By</th>
+                            <td><?= isset($row['aadhar_submitted_by']) ? ucwords(str_replace('_', ' ', $row['aadhar_submitted_by'])) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Aadhar Number</th>
+                            <td><?= isset($row['aadhar_number']) ? htmlspecialchars($row['aadhar_number']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Created By</th>
+                            <td><?= isset($row['created_by_name']) ? htmlspecialchars($row['created_by_name']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Created On</th>
+                            <td><?= isset($row['created_at']) ? date('d M Y H:i', strtotime($row['created_at'])) : 'N/A' ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <?php if ($row['visit_type'] == 'taking admission'): ?>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h5>Family Information</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Family Member Count</th>
+                                <td><?= isset($row['family_member_count']) ? $row['family_member_count'] : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Monthly Income</th>
+                                <td><?= isset($row['monthly_income']) ? '₹' . number_format($row['monthly_income'], 2) : 'N/A' ?></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Fee Information</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Fees Date</th>
+                                <td><?= isset($row['fees_submission_date']) ? date('d M Y', strtotime($row['fees_submission_date'])) : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Total Fee</th>
+                                <td><?= isset($row['total_fee']) ? '₹' . number_format($row['total_fee'], 2) : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Deposited Amount</th>
+                                <td><?= isset($row['deposited_amount']) ? '₹' . number_format($row['deposited_amount'], 2) : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Due Amount</th>
+                                <td><?= isset($row['due_amount']) ? '₹' . number_format($row['due_amount'], 2) : 'N/A' ?></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Payment Information</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Payment Mode</th>
+                                <td><?= isset($row['payment_mode']) ? ucfirst($row['payment_mode']) : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <td><?= isset($row['transaction_id']) ? htmlspecialchars($row['transaction_id']) : 'N/A' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Fees Month</th>
+                                <td><?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : 'N/A' ?></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($row['remarks'])): ?>
+                <div class="mt-3">
+                    <h5>Remarks</h5>
+                    <div class="alert alert-light p-2">
+                        <?= nl2br(htmlspecialchars($row['remarks'])) ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+<?php
+    }
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -897,6 +1042,11 @@ if (isset($_GET['edit'])) {
                                                                 echo '<i class="bi bi-pencil"></i> Edit';
                                                                 echo '</button>';
                                                             }
+
+                                                            // In your records display loop, where you have the action buttons:
+                                                            echo '&nbsp;<button type="button" class="btn btn-sm btn-info me-1" data-bs-toggle="modal" data-bs-target="#viewModal" onclick="loadViewDetails(' . $row['id'] . ')">';
+                                                            echo '<i class="bi bi-eye"></i> View';
+                                                            echo '</button>';
                                                         }
                                                         echo '</div>';
                                                         echo '</div>';
@@ -969,6 +1119,28 @@ if (isset($_GET['edit'])) {
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -1078,6 +1250,23 @@ if (isset($_GET['edit'])) {
                 loadArchiveContent();
             }
         });
+    </script>
+    <script>
+        // Load view details via AJAX
+        function loadViewDetails(recordId) {
+            const viewModalBody = document.getElementById('viewModalBody');
+            viewModalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+            fetch(window.location.pathname + '?view=' + recordId)
+                .then(response => response.text())
+                .then(data => {
+                    viewModalBody.innerHTML = data;
+                })
+                .catch(error => {
+                    viewModalBody.innerHTML = '<div class="alert alert-danger">Error loading details</div>';
+                    console.error('Error:', error);
+                });
+        }
     </script>
 </body>
 
