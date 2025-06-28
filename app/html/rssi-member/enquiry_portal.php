@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $classes_result = pg_query($con, "SELECT id, class_name, value FROM school_classes ORDER BY value");
 $classes = [];
 while ($row = pg_fetch_assoc($classes_result)) {
-    $classes[$row['id']] = $row['class_name'] . " (" . $row['value'] . ")";
+    $classes[$row['id']] = $row['class_name'];
 }
 
 // Academic year filter
@@ -354,12 +354,12 @@ if (isset($_GET['edit'])) {
                     </div>
 
                     <div class="mb-2">
-                        <label for="edit_previous_school" class="form-label">Previous School</label>
+                        <label for="edit_previous_school" class="form-label">School Name (If applicable)</label>
                         <input type="text" class="form-control" id="edit_previous_school" name="previous_school" value="<?= isset($row['previous_school']) ? htmlspecialchars($row['previous_school']) : '' ?>">
                     </div>
 
                     <div class="mb-2">
-                        <label for="edit_aadhar_submitted_by" class="form-label">Aadhar Submitted By</label>
+                        <label for="edit_aadhar_submitted_by" class="form-label">Whose Aadhar Card Submitted?</label>
                         <select class="form-select" id="edit_aadhar_submitted_by" name="aadhar_submitted_by">
                             <option value="">Select</option>
                             <option value="self" <?= isset($row['aadhar_submitted_by']) && $row['aadhar_submitted_by'] == 'self' ? 'selected' : '' ?>>Self</option>
@@ -653,12 +653,12 @@ if (isset($_GET['edit'])) {
                                             </div>
 
                                             <div class="mb-2">
-                                                <label for="previous_school" class="form-label">Previous School</label>
+                                                <label for="previous_school" class="form-label">School Name (If applicable)</label>
                                                 <input type="text" class="form-control" id="previous_school" name="previous_school">
                                             </div>
 
                                             <div class="mb-2">
-                                                <label for="aadhar_submitted_by" class="form-label">Aadhar Submitted By</label>
+                                                <label for="aadhar_submitted_by" class="form-label">Whose Aadhar Card Submitted?</label>
                                                 <select class="form-select" id="aadhar_submitted_by" name="aadhar_submitted_by">
                                                     <option value="">Select</option>
                                                     <option value="self">Self</option>
