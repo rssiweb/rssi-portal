@@ -378,12 +378,12 @@ if (isset($_GET['edit'])) {
 
                     <div class="mb-2">
                         <label for="edit_current_address" class="form-label">Address</label>
-                        <textarea class="form-control" id="edit_current_address" name="current_address" rows="1"><?= isset($row['current_address']) ? htmlspecialchars($row['current_address']) : '' ?></textarea>
+                        <textarea class="form-control" id="edit_current_address" name="current_address" rows="3"><?= isset($row['current_address']) ? htmlspecialchars($row['current_address']) : '' ?></textarea>
                     </div>
 
                     <div class="mb-2">
                         <label for="edit_remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="edit_remarks" name="remarks" rows="1"><?= isset($row['remarks']) ? htmlspecialchars($row['remarks']) : '' ?></textarea>
+                        <textarea class="form-control" id="edit_remarks" name="remarks" rows="3"><?= isset($row['remarks']) ? htmlspecialchars($row['remarks']) : '' ?></textarea>
                     </div>
                 </div>
             </div>
@@ -427,7 +427,7 @@ if (isset($_GET['edit'])) {
                         <div class="col-md-3">
                             <div class="mb-2">
                                 <label for="edit_due_amount" class="form-label">Due</label>
-                                <input type="number" class="form-control" id="edit_due_amount" name="due_amount" min="0" step="0.01" value="<?= isset($row['due_amount']) ? $row['due_amount'] : '' ?>">
+                                <input type="number" class="form-control" id="edit_due_amount" name="due_amount" min="0" step="0.01" value="<?= isset($row['due_amount']) ? $row['due_amount'] : '' ?>" readonly>
                             </div>
                         </div>
                     </div>
@@ -721,7 +721,7 @@ if (isset($_GET['view'])) {
                     <div class="card">
                         <div class="card-body">
                             <?php if (isset($_SESSION['success_message'])): ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
                                     <?= $_SESSION['success_message'] ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
@@ -729,14 +729,14 @@ if (isset($_GET['view'])) {
                             <?php endif; ?>
 
                             <?php if (isset($_SESSION['error_message'])): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
                                     <?= $_SESSION['error_message'] ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                                 <?php unset($_SESSION['error_message']); ?>
                             <?php endif; ?>
 
-                            <div class="form-section compact-form mt-3 mb-4">
+                            <div class="form-section mt-3 mb-4">
                                 <h5><i class="bi bi-person-plus"></i> New Admission/Enquiry</h5>
                                 <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>">
                                     <div class="row">
@@ -797,12 +797,12 @@ if (isset($_GET['view'])) {
 
                                             <div class="mb-2">
                                                 <label for="current_address" class="form-label">Address</label>
-                                                <textarea class="form-control" id="current_address" name="current_address" rows="1"></textarea>
+                                                <textarea class="form-control" id="current_address" name="current_address" rows="3"></textarea>
                                             </div>
 
                                             <div class="mb-2">
                                                 <label for="remarks" class="form-label">Remarks</label>
-                                                <textarea class="form-control" id="remarks" name="remarks" rows="1"></textarea>
+                                                <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -1124,29 +1124,76 @@ if (isset($_GET['view'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
     <script>
-        // Show/hide admission fields based on visit type
+        // Show/hide admission fields based on visit type with reset functionality
         document.getElementById('visit_type').addEventListener('change', function() {
             const admissionFields = document.getElementById('admissionFields');
-            admissionFields.style.display = this.value === 'taking admission' ? 'block' : 'none';
+            const isAdmission = this.value === 'taking admission';
 
-            // Make fields required for admission
-            const requiredFields = ['family_member_count', 'monthly_income', 'fees_submission_date',
-                'total_fee', 'deposited_amount', 'fees_month', 'payment_mode'
+            // Toggle visibility
+            admissionFields.style.display = isAdmission ? 'block' : 'none';
+
+            // List of all admission-related fields
+            const admissionFieldsList = [
+                'family_member_count',
+                'monthly_income',
+                'fees_submission_date',
+                'total_fee',
+                'deposited_amount',
+                'due_amount',
+                'fees_month',
+                'payment_mode',
+                'transaction_id'
             ];
 
-            requiredFields.forEach(field => {
+            // Handle field requirements and reset values
+            admissionFieldsList.forEach(field => {
                 const element = document.getElementById(field);
                 if (element) {
-                    element.required = this.value === 'taking admission';
+                    // Set required status only for admission
+                    if (['family_member_count', 'monthly_income', 'fees_submission_date',
+                            'total_fee', 'deposited_amount', 'fees_month', 'payment_mode'
+                        ].includes(field)) {
+                        element.required = isAdmission;
+                    }
+
+                    // Reset values when switching to inquiry
+                    if (!isAdmission) {
+                        if (element.tagName === 'SELECT') {
+                            element.selectedIndex = 0; // Reset select to first option
+                        } else {
+                            element.value = ''; // Clear input fields
+                        }
+
+                        // Special case for payment mode - hide transaction ID field
+                        if (field === 'payment_mode') {
+                            document.getElementById('transactionIdField').style.display = 'none';
+                            document.getElementById('transaction_id').required = false;
+                        }
+                    }
                 }
             });
+
+            // Recalculate due amount if needed
+            if (isAdmission) {
+                calculateDue();
+            } else {
+                // Clear due amount when not admission
+                const dueAmountField = document.getElementById('due_amount');
+                if (dueAmountField) dueAmountField.value = '';
+            }
         });
 
         // Show/hide transaction ID field based on payment mode
         document.getElementById('payment_mode').addEventListener('change', function() {
             const transactionIdField = document.getElementById('transactionIdField');
-            transactionIdField.style.display = this.value === 'online' ? 'block' : 'none';
-            document.getElementById('transaction_id').required = this.value === 'online';
+            const showTransactionId = this.value === 'online';
+            transactionIdField.style.display = showTransactionId ? 'block' : 'none';
+            document.getElementById('transaction_id').required = showTransactionId;
+
+            // Clear transaction ID if not online
+            if (!showTransactionId) {
+                document.getElementById('transaction_id').value = '';
+            }
         });
 
         // Calculate due amount automatically
@@ -1189,7 +1236,7 @@ if (isset($_GET['view'])) {
         function loadArchiveContent() {
             const archiveContent = document.getElementById('archiveContent');
             if (archiveContent && archiveContent.innerHTML.trim() === '') {
-                archiveContent.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+                archiveContent.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary, role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
                 fetch(window.location.pathname + '?ajax=archive')
                     .then(response => response.text())
@@ -1203,7 +1250,7 @@ if (isset($_GET['view'])) {
             }
         }
 
-        // Modify your loadEditForm function to trigger calculations after loading:
+        // Load edit form with calculations
         function loadEditForm(recordId) {
             const editModalBody = document.getElementById('editModalBody');
             editModalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -1247,38 +1294,155 @@ if (isset($_GET['view'])) {
                 });
         }
     </script>
-            <script>
-            // Replace the inline script in your edit modal with this:
-            document.addEventListener('DOMContentLoaded', function() {
-                // Delegate events for the edit modal
-                document.addEventListener('change', function(e) {
-                    if (e.target && e.target.id === 'edit_visit_type') {
-                        const admissionFields = document.getElementById('editAdmissionFields');
-                        admissionFields.style.display = e.target.value === 'taking admission' ? 'block' : 'none';
-                    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to update required fields based on current form state
+            function updateRequiredFields() {
+                const isAdmission = document.getElementById('edit_visit_type')?.value === 'taking admission';
+                const isOnlinePayment = document.getElementById('edit_payment_mode')?.value === 'online';
 
-                    if (e.target && e.target.id === 'edit_payment_mode') {
-                        const transactionIdField = document.getElementById('editTransactionIdField');
-                        transactionIdField.style.display = e.target.value === 'online' ? 'block' : 'none';
+                const admissionFields = [
+                    'edit_family_member_count',
+                    'edit_monthly_income',
+                    'edit_fees_submission_date',
+                    'edit_total_fee',
+                    'edit_deposited_amount',
+                    'edit_fees_month',
+                    'edit_payment_mode'
+                ];
+
+                // Update required status for all admission fields
+                admissionFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (element) {
+                        element.required = isAdmission;
                     }
                 });
 
-                // Delegate input events for calculation
-                document.addEventListener('input', function(e) {
-                    if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
-                        calculateEditDue();
-                    }
-                });
+                // Special handling for transaction ID
+                const transactionIdField = document.getElementById('edit_transaction_id');
+                if (transactionIdField) {
+                    transactionIdField.required = isAdmission && isOnlinePayment;
+                }
+            }
 
-                function calculateEditDue() {
-                    const totalFee = parseFloat(document.getElementById('edit_total_fee')?.value) || 0;
-                    const deposited = parseFloat(document.getElementById('edit_deposited_amount')?.value) || 0;
-                    const due = totalFee - deposited;
-                    const dueField = document.getElementById('edit_due_amount');
-                    if (dueField) dueField.value = due.toFixed(2);
+            // Delegate events for the edit modal
+            document.addEventListener('change', function(e) {
+                // Handle visit type change
+                if (e.target && e.target.id === 'edit_visit_type') {
+                    const admissionFields = document.getElementById('editAdmissionFields');
+                    const isAdmission = e.target.value === 'taking admission';
+
+                    // Toggle visibility
+                    admissionFields.style.display = isAdmission ? 'block' : 'none';
+
+                    // List of all admission-related fields to reset
+                    const admissionFieldsList = [
+                        'edit_family_member_count',
+                        'edit_monthly_income',
+                        'edit_fees_submission_date',
+                        'edit_total_fee',
+                        'edit_deposited_amount',
+                        'edit_due_amount',
+                        'edit_fees_month',
+                        'edit_payment_mode',
+                        'edit_transaction_id'
+                    ];
+
+                    // Reset fields when switching to inquiry
+                    if (!isAdmission) {
+                        admissionFieldsList.forEach(field => {
+                            const element = document.getElementById(field);
+                            if (element) {
+                                if (element.tagName === 'SELECT') {
+                                    element.selectedIndex = 0;
+                                } else {
+                                    element.value = '';
+                                }
+                            }
+                        });
+
+                        // Hide transaction ID field
+                        document.getElementById('editTransactionIdField').style.display = 'none';
+                    }
+
+                    // Update required fields
+                    updateRequiredFields();
+                }
+
+                // Handle payment mode change
+                if (e.target && e.target.id === 'edit_payment_mode') {
+                    const transactionIdField = document.getElementById('editTransactionIdField');
+                    const showTransactionId = e.target.value === 'online';
+                    transactionIdField.style.display = showTransactionId ? 'block' : 'none';
+
+                    // Clear transaction ID if not online
+                    if (!showTransactionId) {
+                        document.getElementById('edit_transaction_id').value = '';
+                    }
+
+                    // Update required fields
+                    updateRequiredFields();
                 }
             });
-        </script>
+
+            // Update required fields on any input change
+            document.addEventListener('input', function(e) {
+                // For calculation fields
+                if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
+                    calculateEditDue();
+                }
+
+                // Update required status for any field change
+                updateRequiredFields();
+            });
+
+            function calculateEditDue() {
+                const totalFee = parseFloat(document.getElementById('edit_total_fee')?.value) || 0;
+                const deposited = parseFloat(document.getElementById('edit_deposited_amount')?.value) || 0;
+                const due = totalFee - deposited;
+                const dueField = document.getElementById('edit_due_amount');
+                if (dueField) dueField.value = due.toFixed(2);
+            }
+
+            // Form submission validation - modified to use browser's native validation
+            document.getElementById('editModal')?.addEventListener('submit', function(e) {
+                updateRequiredFields(); // Final check before submission
+
+                const form = this.querySelector('form');
+                if (form) {
+                    // First remove any previously prevented submissions
+                    form.addEventListener('submit', function(submitEvent) {
+                        submitEvent.preventDefault();
+                        submitEvent.stopPropagation();
+                    }, {
+                        once: true
+                    });
+
+                    // Trigger browser validation
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        form.reportValidity(); // This forces the browser to show validation messages
+
+                        // Find and focus first invalid field
+                        const firstInvalid = form.querySelector(':invalid');
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                        }
+                    }
+                }
+            });
+
+            // Initialize when modal opens
+            document.getElementById('editModal')?.addEventListener('shown.bs.modal', function() {
+                if (typeof calculateEditDue === 'function') {
+                    calculateEditDue();
+                }
+                updateRequiredFields();
+            });
+        });
+    </script>
 </body>
 
 </html>
