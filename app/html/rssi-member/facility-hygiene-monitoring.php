@@ -501,8 +501,9 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                         </span>
                                                     </button>
                                                 </li>
+                                                <!-- In the HTML part, modify the completed tab button to include a data attribute -->
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                                                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" data-load-on-click="true">
                                                         Completed <span class="badge bg-success ms-1">
                                                             <?php
                                                             $count_query = "SELECT COUNT(*) FROM washroom_cleaning WHERE current_status IN ('FINAL_APPROVED', 'REJECTED')";
@@ -542,32 +543,17 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     ?>
                                                 </div>
 
+                                                <!-- Modify the completed tab content to have a loading indicator -->
                                                 <div class="tab-pane fade" id="completed" role="tabpanel">
                                                     <h5 class="mb-3">Completed Cleanings</h5>
-                                                    <?php
-                                                    $query = "SELECT wc.*, 
-                                                            a.fullname as cleaner_name,
-                                                            s.fullname as submitted_by_name,
-                                                            l1.fullname as level1_approver_name,
-                                                            l2.fullname as level2_approver_name,
-                                                            l3.fullname as level3_approver_name
-                                                            FROM washroom_cleaning wc
-                                                            LEFT JOIN rssimyaccount_members a ON wc.cleaner_id = a.associatenumber
-                                                            LEFT JOIN rssimyaccount_members s ON wc.submitted_by = s.associatenumber
-                                                            LEFT JOIN rssimyaccount_members l1 ON wc.level1_approver = l1.associatenumber
-                                                            LEFT JOIN rssimyaccount_members l2 ON wc.level2_approver = l2.associatenumber
-                                                            LEFT JOIN rssimyaccount_members l3 ON wc.level3_approver = l3.associatenumber
-                                                            WHERE wc.current_status IN ('FINAL_APPROVED', 'REJECTED')";
-
-                                                    if ($selected_academic_year) {
-                                                        $query .= getAcademicYearCondition($selected_academic_year, 'wc');
-                                                    }
-
-                                                    $query .= " ORDER BY wc.cleaning_date DESC";
-
-                                                    $records = pg_query($con, $query);
-                                                    displayCleaningRecords($records, null);
-                                                    ?>
+                                                    <div id="completed-content">
+                                                        <div class="text-center py-4">
+                                                            <div class="spinner-border text-primary" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                            <p class="mt-2">Loading completed records...</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -683,6 +669,50 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                 // Initialize with correct parameters on page load
                 if (initialTab || academicYear) {
                     updateUrlParameters(initialTab || 'pending');
+                }
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Handle tab click events for lazy loading
+                document.getElementById('completed-tab').addEventListener('shown.bs.tab', function(e) {
+                    const tabPane = document.getElementById('completed-content');
+
+                    // Only load if content hasn't been loaded yet
+                    if (tabPane.dataset.loaded !== 'true') {
+                        loadCompletedData();
+                    }
+                });
+
+                function loadCompletedData() {
+                    const academicYear = document.getElementById('academic_year').value;
+                    const contentDiv = document.getElementById('completed-content');
+
+                    // Show loading state
+                    contentDiv.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading completed records...</p>
+            </div>
+        `;
+
+                    // Fetch data via AJAX
+                    fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear))
+                        .then(response => response.text())
+                        .then(data => {
+                            contentDiv.innerHTML = data;
+                            contentDiv.dataset.loaded = 'true';
+                        })
+                        .catch(error => {
+                            contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading completed records. Please try again.
+                    </div>
+                `;
+                            console.error('Error:', error);
+                        });
                 }
             });
         </script>
