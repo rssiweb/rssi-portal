@@ -23,8 +23,8 @@ $selected_tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
 // Check if form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['submit_cleaning'])) {
-        // Process form submission
-        $location = pg_escape_string($con, $_POST['location']);
+        // Process form submission for multiple locations
+        $locations = $_POST['location'];
         $cleaning_date = pg_escape_string($con, $_POST['cleaning_date']);
         $is_cleaned = isset($_POST['is_cleaned']) ? 'true' : 'false';
         $is_sanitized = isset($_POST['is_sanitized']) ? 'true' : 'false';
@@ -32,28 +32,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $issues_found = pg_escape_string($con, $_POST['issues_found']);
         $cleaner_id = pg_escape_string($con, $_POST['cleaner_id']);
 
-        $query = "INSERT INTO washroom_cleaning (
-            washroom_location, cleaner_id, cleaning_date, 
-            is_cleaned, is_sanitized, is_restocked, 
-            issues_found, submitted_by, current_status
-        ) VALUES (
-            '$location', '$cleaner_id', '$cleaning_date', 
-            $is_cleaned, $is_sanitized, $is_restocked, 
-            '$issues_found', '$user_id', 'SUBMITTED'
-        ) RETURNING id";
+        $success_count = 0;
 
-        $result = pg_query($con, $query);
+        // Add server-side validation
+        if (!isset($_POST['is_cleaned']) && !isset($_POST['is_sanitized']) && !isset($_POST['is_restocked'])) {
+            $_SESSION['error_message'] = "Please select at least one option (Cleaned, Sanitized, or Restocked)";
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
 
-        if ($result) {
-            $cleaning_id = pg_fetch_result($result, 0, 0);
-            $_SESSION['success_message'] = "Cleaning record submitted successfully! ID: $cleaning_id";
+        foreach ($locations as $location) {
+            $location = pg_escape_string($con, $location);
+            $query = "INSERT INTO washroom_cleaning (
+                washroom_location, cleaner_id, cleaning_date, 
+                is_cleaned, is_sanitized, is_restocked, 
+                issues_found, submitted_by, current_status
+            ) VALUES (
+                '$location', '$cleaner_id', '$cleaning_date', 
+                $is_cleaned, $is_sanitized, $is_restocked, 
+                '$issues_found', '$user_id', 'SUBMITTED'
+            ) RETURNING id";
+
+            $result = pg_query($con, $query);
+
+            if ($result) {
+                $success_count++;
+            }
+        }
+
+        if ($success_count > 0) {
+            $_SESSION['success_message'] = "Submitted $success_count cleaning record(s) successfully!";
             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
         } else {
             $_SESSION['error_message'] = "Error submitting cleaning record: " . pg_last_error($con);
         }
     } elseif (isset($_POST['approve_action'])) {
-        // Process approval/rejection
+        // Process approval/rejection (unchanged)
         $cleaning_id = pg_escape_string($con, $_POST['cleaning_id']);
         $comments = pg_escape_string($con, $_POST['comments']);
         $action = pg_escape_string($con, $_POST['approve_action']);
@@ -241,6 +256,8 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
@@ -290,11 +307,6 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .form-check-input:checked {
-            background-color: #198754;
-            border-color: #198754;
-        }
-
         .bg-orange {
             background-color: #fd7e14;
         }
@@ -316,6 +328,19 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
 
         .help-link:hover {
             color: #0b5ed7;
+        }
+
+        /* Select2 styling */
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            min-height: calc(1.5em + 0.75rem + 2px);
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            color: #495057;
         }
     </style>
 </head>
@@ -383,11 +408,10 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     <h5 class="card-title text-light mb-0"><i class="bi bi-plus-circle"></i> New Cleaning Record</h5>
                                                 </div>
                                                 <div class="card-body">
-                                                    <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>">
+                                                    <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>" id="cleaningForm" onsubmit="return validateCheckboxes()">
                                                         <div class="mb-3">
                                                             <label for="location" class="form-label">Facility Location</label>
-                                                            <select class="form-select" id="location" name="location" required>
-                                                                <option value="">Select location</option>
+                                                            <select class="form-select select2-multiple" id="location" name="location[]" multiple="multiple" required>
                                                                 <option value="Ground Floor - Student Washroom">Ground Floor - Student Washroom</option>
                                                                 <option value="Ground Floor - Teacher Washroom">Ground Floor - Teacher Washroom</option>
                                                             </select>
@@ -404,29 +428,33 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="cleaning_date" class="form-label">Cleaning Date & Time</label>
-                                                            <input type="datetime-local" class="form-control" id="cleaning_date" name="cleaning_date" required>
+                                                            <label for="cleaning_date" class="form-label">Cleaning Date</label>
+                                                            <input type="date" class="form-control" id="cleaning_date" name="cleaning_date" required>
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" id="is_cleaned" name="is_cleaned" checked>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="is_cleaned" name="is_cleaned">
                                                                 <label class="form-check-label" for="is_cleaned">Cleaned</label>
                                                             </div>
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" id="is_sanitized" name="is_sanitized" checked>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="is_sanitized" name="is_sanitized">
                                                                 <label class="form-check-label" for="is_sanitized">Sanitized</label>
                                                             </div>
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" id="is_restocked" name="is_restocked" checked>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="is_restocked" name="is_restocked">
                                                                 <label class="form-check-label" for="is_restocked">Restocked</label>
                                                             </div>
+                                                        </div>
+
+                                                        <div id="checkboxError" class="alert alert-danger d-none mb-3">
+                                                            Please select at least one option (Cleaned, Sanitized, or Restocked)
                                                         </div>
 
                                                         <div class="mb-3">
@@ -460,7 +488,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
 
                                             <ul class="nav nav-tabs" id="cleaningTabs" role="tablist">
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                                                    <button class="nav-link <?= $selected_tab == 'pending' ? 'active' : '' ?>" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="<?= $selected_tab == 'pending' ? 'true' : 'false' ?>">
                                                         Pending Approval <span class="badge bg-warning ms-1">
                                                             <?php
                                                             $count_query = "SELECT COUNT(*) FROM washroom_cleaning WHERE current_status = 'SUBMITTED'";
@@ -474,7 +502,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     </button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="level1-tab" data-bs-toggle="tab" data-bs-target="#level1" type="button" role="tab">
+                                                    <button class="nav-link <?= $selected_tab == 'level1' ? 'active' : '' ?>" id="level1-tab" data-bs-toggle="tab" data-bs-target="#level1" type="button" role="tab" aria-controls="level1" aria-selected="<?= $selected_tab == 'level1' ? 'true' : 'false' ?>">
                                                         Level 1 Approved <span class="badge bg-orange ms-1">
                                                             <?php
                                                             $count_query = "SELECT COUNT(*) FROM washroom_cleaning WHERE current_status = 'LEVEL1_APPROVED'";
@@ -488,7 +516,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     </button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="level2-tab" data-bs-toggle="tab" data-bs-target="#level2" type="button" role="tab">
+                                                    <button class="nav-link <?= $selected_tab == 'level2' ? 'active' : '' ?>" id="level2-tab" data-bs-toggle="tab" data-bs-target="#level2" type="button" role="tab" aria-controls="level2" aria-selected="<?= $selected_tab == 'level2' ? 'true' : 'false' ?>">
                                                         Level 2 Approved <span class="badge bg-primary ms-1">
                                                             <?php
                                                             $count_query = "SELECT COUNT(*) FROM washroom_cleaning WHERE current_status = 'LEVEL2_APPROVED'";
@@ -501,9 +529,8 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                         </span>
                                                     </button>
                                                 </li>
-                                                <!-- In the HTML part, modify the completed tab button to include a data attribute -->
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" data-load-on-click="true">
+                                                    <button class="nav-link <?= $selected_tab == 'completed' ? 'active' : '' ?>" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="<?= $selected_tab == 'completed' ? 'true' : 'false' ?>" data-load-on-click="true">
                                                         Completed <span class="badge bg-success ms-1">
                                                             <?php
                                                             $count_query = "SELECT COUNT(*) FROM washroom_cleaning WHERE current_status IN ('FINAL_APPROVED', 'REJECTED')";
@@ -519,7 +546,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                             </ul>
 
                                             <div class="tab-content p-3 border border-top-0 rounded-bottom" id="cleaningTabsContent">
-                                                <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                                                <div class="tab-pane fade <?= $selected_tab == 'pending' ? 'show active' : '' ?>" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                                                     <h5 class="mb-3">Pending Approval</h5>
                                                     <?php
                                                     $records = getCleaningRecords($con, 'SUBMITTED', $user_id, $user_role, $position, $selected_academic_year);
@@ -527,7 +554,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     ?>
                                                 </div>
 
-                                                <div class="tab-pane fade" id="level1" role="tabpanel">
+                                                <div class="tab-pane fade <?= $selected_tab == 'level1' ? 'show active' : '' ?>" id="level1" role="tabpanel" aria-labelledby="level1-tab">
                                                     <h5 class="mb-3">Level 1 Approved</h5>
                                                     <?php
                                                     $records = getCleaningRecords($con, 'LEVEL1_APPROVED', $user_id, $user_role, $position, $selected_academic_year);
@@ -535,7 +562,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     ?>
                                                 </div>
 
-                                                <div class="tab-pane fade" id="level2" role="tabpanel">
+                                                <div class="tab-pane fade <?= $selected_tab == 'level2' ? 'show active' : '' ?>" id="level2" role="tabpanel" aria-labelledby="level2-tab">
                                                     <h5 class="mb-3">Level 2 Approved</h5>
                                                     <?php
                                                     $records = getCleaningRecords($con, 'LEVEL2_APPROVED', $user_id, $user_role, $position, $selected_academic_year);
@@ -543,16 +570,36 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     ?>
                                                 </div>
 
-                                                <!-- Modify the completed tab content to have a loading indicator -->
-                                                <div class="tab-pane fade" id="completed" role="tabpanel">
+                                                <div class="tab-pane fade <?= $selected_tab == 'completed' ? 'show active' : '' ?>" id="completed" role="tabpanel" aria-labelledby="completed-tab">
                                                     <h5 class="mb-3">Completed Cleanings</h5>
                                                     <div id="completed-content">
-                                                        <div class="text-center py-4">
-                                                            <div class="spinner-border text-primary" role="status">
-                                                                <span class="visually-hidden">Loading...</span>
+                                                        <?php if ($selected_tab == 'completed'): ?>
+                                                            <?php
+                                                            $records = pg_query($con, "SELECT wc.*, 
+                                                                a.fullname as cleaner_name,
+                                                                s.fullname as submitted_by_name,
+                                                                l1.fullname as level1_approver_name,
+                                                                l2.fullname as level2_approver_name,
+                                                                l3.fullname as level3_approver_name
+                                                                FROM washroom_cleaning wc
+                                                                LEFT JOIN rssimyaccount_members a ON wc.cleaner_id = a.associatenumber
+                                                                LEFT JOIN rssimyaccount_members s ON wc.submitted_by = s.associatenumber
+                                                                LEFT JOIN rssimyaccount_members l1 ON wc.level1_approver = l1.associatenumber
+                                                                LEFT JOIN rssimyaccount_members l2 ON wc.level2_approver = l2.associatenumber
+                                                                LEFT JOIN rssimyaccount_members l3 ON wc.level3_approver = l3.associatenumber
+                                                                WHERE wc.current_status IN ('FINAL_APPROVED', 'REJECTED')" .
+                                                                ($selected_academic_year ? getAcademicYearCondition($selected_academic_year, 'wc') : '') .
+                                                                " ORDER BY wc.cleaning_date DESC");
+                                                            displayCleaningRecords($records, null);
+                                                            ?>
+                                                        <?php else: ?>
+                                                            <div class="text-center py-4">
+                                                                <div class="spinner-border text-primary" role="status">
+                                                                    <span class="visually-hidden">Loading...</span>
+                                                                </div>
+                                                                <p class="mt-2">Loading completed records...</p>
                                                             </div>
-                                                            <p class="mt-2">Loading completed records...</p>
-                                                        </div>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -604,10 +651,71 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
             </div>
         </div>
 
+        <!-- Help Modal -->
+        <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="helpModalLabel"><i class="bi bi-info-circle"></i> How the Facility Hygiene Monitoring Works</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="workflow-step">
+                            <h5>1. Submission</h5>
+                            <p>Any user can submit new cleaning records by filling out the form on the left.</p>
+                            <p>You can select multiple facility locations at once using the multi-select dropdown.</p>
+                            <p>Submitted records appear in the <span class="badge bg-warning">Pending Approval</span> tab.</p>
+                        </div>
+
+                        <div class="workflow-step">
+                            <h5>2. Approval Process</h5>
+                            <p>The cleaning records go through a 3-level approval process:</p>
+
+                            <div class="ms-3 mb-3">
+                                <p><span class="approval-level">Level 1 Approval</span> - Can be processed by <strong>Assistant Teachers</strong> only</p>
+                                <p><span class="approval-level">Level 2 Approval</span> - Can be processed by <strong>Offline Managers</strong> only</p>
+                                <p><span class="approval-level">Level 3 Approval</span> - Can be processed by <strong>Admins</strong> only</p>
+                            </div>
+
+                            <p>At each level, approvers can either approve (moving to next level) or reject (ending the workflow).</p>
+                        </div>
+
+                        <div class="workflow-step">
+                            <h5>3. Final Status</h5>
+                            <p>After all approvals are complete, records move to the <span class="badge bg-success">Completed</span> tab.</p>
+                            <p>If rejected at any level, records immediately go to the <span class="badge bg-danger">Completed</span> tab with Rejected status.</p>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> All users can view all tabs to track progress, but only authorized users can perform approvals at each level.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <!-- Template Main JS File -->
         <script src="../assets_new/js/main.js"></script>
         <script>
+            // Initialize Select2 for multi-select
+            $(document).ready(function() {
+                $('.select2-multiple').select2({
+                    placeholder: "Select facility location(s)",
+                    allowClear: true
+                });
+
+                // Set today's date as default
+                document.getElementById('cleaning_date').valueAsDate = new Date();
+            });
+
             function showApprovalModal(cleaningId, level) {
                 document.getElementById('cleaning_id').value = cleaningId;
                 document.getElementById('approval_level').value = level;
@@ -651,6 +759,11 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                     tabLink.addEventListener('shown.bs.tab', function(event) {
                         const tabName = event.target.getAttribute('data-bs-target').replace('#', '');
                         updateUrlParameters(tabName);
+
+                        // Load completed tab content if it's the active tab
+                        if (tabName === 'completed') {
+                            loadCompletedData();
+                        }
                     });
                 });
 
@@ -670,104 +783,79 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                 if (initialTab || academicYear) {
                     updateUrlParameters(initialTab || 'pending');
                 }
-            });
-        </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Handle tab click events for lazy loading
-                document.getElementById('completed-tab').addEventListener('shown.bs.tab', function(e) {
-                    const tabPane = document.getElementById('completed-content');
 
-                    // Only load if content hasn't been loaded yet
-                    if (tabPane.dataset.loaded !== 'true') {
-                        loadCompletedData();
-                    }
-                });
-
-                function loadCompletedData() {
-                    const academicYear = document.getElementById('academic_year').value;
-                    const contentDiv = document.getElementById('completed-content');
-
-                    // Show loading state
-                    contentDiv.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Loading completed records...</p>
-            </div>
-        `;
-
-                    // Fetch data via AJAX
-                    fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear))
-                        .then(response => response.text())
-                        .then(data => {
-                            contentDiv.innerHTML = data;
-                            contentDiv.dataset.loaded = 'true';
-                        })
-                        .catch(error => {
-                            contentDiv.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading completed records. Please try again.
-                    </div>
-                `;
-                            console.error('Error:', error);
-                        });
+                // Load completed data if completed tab is active on page load
+                if (initialTab === 'completed') {
+                    loadCompletedData();
                 }
             });
+
+            function loadCompletedData() {
+                const academicYear = document.getElementById('academic_year').value;
+                const contentDiv = document.getElementById('completed-content');
+
+                // Only load if content hasn't been loaded yet
+                if (contentDiv.dataset.loaded === 'true') {
+                    return;
+                }
+
+                // Show loading state
+                contentDiv.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading completed records...</p>
+                    </div>
+                `;
+
+                // Fetch data via AJAX
+                fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear))
+                    .then(response => response.text())
+                    .then(data => {
+                        contentDiv.innerHTML = data;
+                        contentDiv.dataset.loaded = 'true';
+                    })
+                    .catch(error => {
+                        contentDiv.innerHTML = `
+                            <div class="alert alert-danger">
+                                Error loading completed records. Please try again.
+                            </div>
+                        `;
+                        console.error('Error:', error);
+                    });
+            }
         </script>
-        <!-- Help Modal -->
-        <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="helpModalLabel"><i class="bi bi-info-circle"></i> How the Washroom Cleaning Tracker Works</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="workflow-step">
-                            <h5>1. Submission</h5>
-                            <p>Any user can submit a new cleaning record by filling out the form on the left.</p>
-                            <p>Submitted records appear in the <span class="badge bg-warning">Pending Approval</span> tab.</p>
-                        </div>
+        <script>
+            function validateCheckboxes() {
+                const isCleaned = document.getElementById('is_cleaned').checked;
+                const isSanitized = document.getElementById('is_sanitized').checked;
+                const isRestocked = document.getElementById('is_restocked').checked;
+                const errorDiv = document.getElementById('checkboxError');
 
-                        <div class="workflow-step">
-                            <h5>2. Approval Process</h5>
-                            <p>The cleaning records go through a 3-level approval process:</p>
+                if (!isCleaned && !isSanitized && !isRestocked) {
+                    errorDiv.classList.remove('d-none');
+                    return false; // Prevent form submission
+                }
 
-                            <div class="ms-3 mb-3">
-                                <p><span class="approval-level">Level 1 Approval</span> - Can be processed by <strong>Assistant Teachers</strong> only</p>
-                                <p><span class="approval-level">Level 2 Approval</span> - Can be processed by <strong>Offline Managers</strong> only</p>
-                                <p><span class="approval-level">Level 3 Approval</span> - Can be processed by <strong>Admins</strong> only</p>
-                            </div>
+                errorDiv.classList.add('d-none');
+                return true; // Allow form submission
+            }
 
-                            <p>At each level, approvers can either approve (moving to next level) or reject (ending the workflow).</p>
-                        </div>
+            // Also add event listeners to hide error when any checkbox is checked
+            document.addEventListener('DOMContentLoaded', function() {
+                const checkboxes = document.querySelectorAll('.form-check-input');
+                const errorDiv = document.getElementById('checkboxError');
 
-                        <div class="workflow-step">
-                            <h5>3. Final Status</h5>
-                            <p>After all approvals are complete, records move to the <span class="badge bg-success">Completed</span> tab.</p>
-                            <p>If rejected at any level, records immediately go to the <span class="badge bg-danger">Completed</span> tab with Rejected status.</p>
-                        </div>
-
-                        <div class="workflow-step">
-                            <h5>Visual Workflow</h5>
-                            <div class="text-center mb-3">
-                                <p class="mb-1">Submitted → <span class="approval-level">Level 1</span> → <span class="approval-level">Level 2</span> → <span class="approval-level">Level 3</span> → Completed</p>
-                                <p class="rejection-path">(Can be rejected at any point → Completed)</p>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <strong>Note:</strong> All users can view all tabs to track progress, but only authorized users can perform approvals at each level.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            errorDiv.classList.add('d-none');
+                        }
+                    });
+                });
+            });
+        </script>
     </body>
 
 </html>
@@ -813,17 +901,23 @@ function displayCleaningRecords($records, $approval_level)
         echo '<div>';
         echo '<h5 class="card-title">' . htmlspecialchars($row['washroom_location']) . '</h5>';
         echo '<p class="card-text mb-1"><small class="text-muted">Cleaned by: ' . htmlspecialchars($row['cleaner_name']) . '</small></p>';
-        echo '<p class="card-text mb-1"><small class="text-muted">Date: ' . date('d M Y H:i', strtotime($row['cleaning_date'])) . '</small></p>';
+        echo '<p class="card-text mb-1"><small class="text-muted">Date: ' . date('d M Y', strtotime($row['cleaning_date'])) . '</small></p>';
         echo '</div>';
         echo '<span class="badge ' . $status_class . '">' . $status_text . '</span>';
         echo '</div>';
 
-        // Display cleaning details
+        // Display cleaning details only if checked
         echo '<div class="row mt-2">';
         echo '<div class="col-md-6">';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_cleaned'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Cleaned</p>';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_sanitized'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Sanitized</p>';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_restocked'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Restocked</p>';
+        if ($row['is_cleaned'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Cleaned</p>';
+        }
+        if ($row['is_sanitized'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Sanitized</p>';
+        }
+        if ($row['is_restocked'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Restocked</p>';
+        }
         echo '</div>';
         echo '<div class="col-md-6">';
         if (!empty($row['issues_found'])) {
