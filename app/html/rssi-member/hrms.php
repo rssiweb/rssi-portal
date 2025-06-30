@@ -303,27 +303,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($pending_approval_fields as $field) {
             $new_value = pg_escape_string($con, $_POST[$field]);
 
-            // First check if there's already a pending request for this field
-            $check_pending_query = "SELECT 1 FROM hrms_workflow 
-                          WHERE associatenumber = $1 
-                          AND fieldname = $2 
-                          AND reviewer_status = 'Pending'
-                          ORDER BY submission_timestamp DESC
-                          LIMIT 1";
-            $check_pending_result = pg_query_params($con, $check_pending_query, [$search_id, $field]);
+            // Check the status of the most recent request for this field
+            $check_status_query = "SELECT reviewer_status FROM hrms_workflow 
+                      WHERE associatenumber = $1 
+                      AND fieldname = $2 
+                      ORDER BY submission_timestamp DESC
+                      LIMIT 1";
+            $check_status_result = pg_query_params($con, $check_status_query, [$search_id, $field]);
 
-            if (pg_num_rows($check_pending_result) > 0) {
-                // Remove this field from pending_approval_fields as it already has a pending request
-                $key = array_search($field, $pending_approval_fields);
-                if ($key !== false) {
-                    unset($pending_approval_fields[$key]);
+            if (pg_num_rows($check_status_result) > 0) {
+                $row = pg_fetch_assoc($check_status_result);
+                $latest_status = $row['reviewer_status'];
+
+                if ($latest_status === 'Pending') {
+                    // Remove this field from pending_approval_fields as it already has a pending request
+                    $key = array_search($field, $pending_approval_fields);
+                    if ($key !== false) {
+                        unset($pending_approval_fields[$key]);
+                    }
+
+                    // Show alert for this specific field
+                    echo "<script>
+                alert('You already have a pending request for $field. Please wait for approval or rejection before submitting a new request.');
+            </script>";
+                    continue;
                 }
-
-                // Show alert for this specific field
-                echo "<script>
-            alert('You already have a pending request for $field. Please wait for approval or rejection before submitting a new request.');
-        </script>";
-                continue;
             }
 
             // If no pending request exists, proceed with insertion
