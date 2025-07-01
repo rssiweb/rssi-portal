@@ -254,10 +254,10 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
     <title>Facility Hygiene Monitoring</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
@@ -329,19 +329,6 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
         .help-link:hover {
             color: #0b5ed7;
         }
-
-        /* Select2 styling */
-        .select2-container--default .select2-selection--multiple {
-            border: 1px solid #ced4da;
-            padding: 0.375rem 0.75rem;
-            min-height: calc(1.5em + 0.75rem + 2px);
-        }
-
-        .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
-            color: #495057;
-        }
     </style>
 </head>
 
@@ -411,7 +398,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>" id="cleaningForm" onsubmit="return validateCheckboxes()">
                                                         <div class="mb-3">
                                                             <label for="location" class="form-label">Facility Location</label>
-                                                            <select class="form-select select2-multiple" id="location" name="location[]" multiple="multiple" required>
+                                                            <select id="location" name="location[]" multiple required>
                                                                 <option value="Ground Floor - Student Washroom">Ground Floor - Student Washroom</option>
                                                                 <option value="Ground Floor - Teacher Washroom">Ground Floor - Teacher Washroom</option>
                                                             </select>
@@ -696,20 +683,18 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                 </div>
             </div>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <!-- Select2 JS -->
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
         <!-- Template Main JS File -->
         <script src="../assets_new/js/main.js"></script>
         <script>
             // Initialize Select2 for multi-select
             $(document).ready(function() {
-                $('.select2-multiple').select2({
+                $('#location').select2({
                     placeholder: "Select facility location(s)",
-                    allowClear: true
+                    width: '100%'
+                    //allowClear: true
                 });
 
                 // Set today's date as default
