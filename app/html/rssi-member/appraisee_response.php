@@ -156,7 +156,7 @@ if (!$result) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="container mt-5">
         <?php
         // Get the current hour of the day
@@ -925,13 +925,22 @@ if (!$result) {
         var submit1Button = document.getElementById('submit1');
         var submit2Button = document.getElementById('submit2');
 
-        // Add event listeners to the submit buttons
+        // Handle Save button
         submit1Button.addEventListener('click', function() {
-            form.action = 'aresponse_save.php'; // Set the form action to submit1.php
+            form.action = 'aresponse_save.php';
+            form.submit(); // optional if you're not using <button type="submit">
         });
 
-        submit2Button.addEventListener('click', function() {
-            form.action = 'aresponse_submit.php'; // Set the form action to submit2.php
+        // Handle Submit button with confirmation
+        submit2Button.addEventListener('click', function(e) {
+            e.preventDefault(); // prevent default form submission
+
+            var confirmSubmit = confirm("Are you sure you want to submit the Goalsheet?\n\nPlease note:\n- Once submitted, you will not be able to modify it again.\n- If you wish to save your data without submitting, click 'Save'.\n\nClick 'OK' to submit or 'Cancel' to go back.");
+
+            if (confirmSubmit) {
+                form.action = 'aresponse_submit.php';
+                form.submit(); // manually submit if user confirms
+            }
         });
     </script>
     <script>
