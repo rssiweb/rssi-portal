@@ -50,7 +50,7 @@ if (isset($_GET['scode']) && !empty($_GET['scode'])) {
         LEFT JOIN (SELECT associatenumber, scode, fullname FROM rssimyaccount_members) faculty 
         ON certificate.awarded_to_id = faculty.associatenumber 
         WHERE (scode = '$id' OR out_scode = '$id') 
-        AND badge_name NOT IN ('Experience Letter', 'Offer Letter', 'Joining Letter') 
+        AND badge_name NOT IN ('Offer Letter', 'Joining Letter') 
         ORDER BY issuedon DESC
     ";
     
