@@ -21,11 +21,13 @@ if ($role == 'Admin') {
     @$id = strtoupper($_GET['get_id']);
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
     $resultt = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'");
+    $target_associatenumber = $id;
 }
 
 if ($role != 'Admin') {
 
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'"); //select query for viewing users.
+    $target_associatenumber = $associatenumber;
 }
 
 
@@ -37,6 +39,25 @@ if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
+$ipf_result = pg_query($con, "
+    SELECT ar1.ipf
+    FROM appraisee_response ar1
+    INNER JOIN (
+        SELECT 
+            appraisee_associatenumber,
+            MAX(goalsheet_created_on) AS max_date
+        FROM appraisee_response
+        WHERE ipf IS NOT NULL
+        GROUP BY appraisee_associatenumber
+    ) ar2 
+    ON ar1.appraisee_associatenumber = ar2.appraisee_associatenumber 
+    AND ar1.goalsheet_created_on = ar2.max_date
+    WHERE ar1.appraisee_associatenumber = '$target_associatenumber'
+");
+
+$ipf_data = pg_fetch_assoc($ipf_result);
+$current_ipf = $ipf_data['ipf'] ?? null;
 
 ?>
 
@@ -240,8 +261,10 @@ if (!$result) {
                                     <?php } else { ?> <?php echo 'Present' ?>
                                         <?php } ?>(date in dd/mm/yyyy).<br><br>
 
-                                        <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
-                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
+                                        <?php if ($current_ipf > 3.75): ?>
+                                            <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
+                                            <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
+                                        <?php endif; ?>
                                         We wish <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> all the best for <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> future endeavors.<br><br>
 
                                         Sincerely,<br><br><br><br>
