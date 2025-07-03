@@ -9,7 +9,7 @@ $certificateData = null;
 // Check if scode parameter exists and is not empty
 if (isset($_GET['scode']) && !empty($_GET['scode'])) {
     $id = $_GET['scode'];
-    
+
     // Fetch associate information
     $associateQuery = "
         SELECT 
@@ -43,17 +43,23 @@ if (isset($_GET['scode']) && !empty($_GET['scode'])) {
         LEFT JOIN rssimyaccount_members interviewer ON interviewer.associatenumber = e.exit_submitted_by
         WHERE m.scode = '$id'
     ";
-    
+
     // Fetch certificate information
     $certificateQuery = "
-        SELECT * FROM certificate 
-        LEFT JOIN (SELECT associatenumber, scode, fullname FROM rssimyaccount_members) faculty 
-        ON certificate.awarded_to_id = faculty.associatenumber 
-        WHERE (scode = '$id' OR out_scode = '$id') 
-        AND badge_name NOT IN ('Offer Letter', 'Joining Letter') 
-        ORDER BY issuedon DESC
-    ";
-    
+    SELECT 
+        c.*,
+        nominated_by.fullname AS nominated_by_name
+    FROM certificate c
+    LEFT JOIN (
+        SELECT associatenumber, scode, fullname 
+        FROM rssimyaccount_members
+    ) faculty ON c.awarded_to_id = faculty.associatenumber
+    LEFT JOIN rssimyaccount_members nominated_by ON c.nominatedby = nominated_by.associatenumber
+    WHERE (faculty.scode = '$id' OR c.out_scode = '$id') 
+    AND c.badge_name NOT IN ('Offer Letter', 'Joining Letter') 
+    ORDER BY c.issuedon DESC
+";
+
     $associateResult = pg_query($con, $associateQuery);
     $certificateResult = pg_query($con, $certificateQuery);
 
@@ -62,7 +68,7 @@ if (isset($_GET['scode']) && !empty($_GET['scode'])) {
     } else {
         $associateData = pg_fetch_assoc($associateResult);
         $certificateData = pg_fetch_all($certificateResult);
-        
+
         if (!$associateData && !$certificateData) {
             $error = "No data found for the specified ID.";
         }
@@ -71,9 +77,10 @@ if (isset($_GET['scode']) && !empty($_GET['scode'])) {
     $error = "No verification code provided.";
 }
 
-function calculateExperience($doj, $effectivedate = null) {
+function calculateExperience($doj, $effectivedate = null)
+{
     if (empty($doj)) return "DOJ not available";
-    
+
     try {
         $dojDate = new DateTime($doj);
         $currentDate = new DateTime();
@@ -86,9 +93,9 @@ function calculateExperience($doj, $effectivedate = null) {
         $months = $interval->m;
         $days = $interval->d;
 
-        if ($years > 0) return number_format($years + ($months/12), 2)." year(s)";
-        elseif ($months > 0) return number_format($months + ($days/30), 2)." month(s)";
-        else return number_format($days, 2)." day(s)";
+        if ($years > 0) return number_format($years + ($months / 12), 2) . " year(s)";
+        elseif ($months > 0) return number_format($months + ($days / 30), 2) . " month(s)";
+        else return number_format($days, 2) . " day(s)";
     } catch (Exception $e) {
         return "Invalid date format";
     }
@@ -97,6 +104,7 @@ function calculateExperience($doj, $effectivedate = null) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -109,34 +117,42 @@ function calculateExperience($doj, $effectivedate = null) {
             background-color: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
         }
+
         .profile-img {
             max-width: 120px;
             border: 3px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .certificate-card {
             transition: all 0.3s ease;
             border-left: 4px solid #0d6efd;
         }
+
         .certificate-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .status-badge {
             font-size: 0.8rem;
             padding: 0.35em 0.65em;
         }
+
         @media (max-width: 768px) {
             .table-responsive {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .profile-section, .certificate-section {
+
+            .profile-section,
+            .certificate-section {
                 padding: 15px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="verification-header py-3 mb-4">
         <div class="container text-center">
@@ -170,10 +186,10 @@ function calculateExperience($doj, $effectivedate = null) {
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>Designation:</strong> <?= htmlspecialchars($associateData['position']) ?></p>
-                                    <p><strong>Status:</strong> 
+                                    <p><strong>Status:</strong>
                                         <?= htmlspecialchars($associateData['filterstatus']) ?>
                                     </p>
-                                    <p><strong>Service Period:</strong> 
+                                    <p><strong>Service Period:</strong>
                                         <?= htmlspecialchars($associateData['doj']) ?> to <?= htmlspecialchars($associateData['effectivedate'] ?? 'Present') ?>
                                     </p>
                                 </div>
@@ -182,18 +198,18 @@ function calculateExperience($doj, $effectivedate = null) {
                                 <div class="col-12">
                                     <div class="d-flex flex-wrap justify-content-between">
                                         <div class="me-3">
-                                            <strong>Years of Service:</strong> 
+                                            <strong>Years of Service:</strong>
                                             <?= htmlspecialchars(calculateExperience($associateData['doj'], $associateData['effectivedate'])) ?>
                                         </div>
                                         <div class="me-3">
-                                            <strong>IPF Score:</strong> 
-                                            <?= $associateData['ipf'] !== null ? htmlspecialchars($associateData['ipf'])." / 5" : "N/A" ?>
+                                            <strong>IPF Score:</strong>
+                                            <?= $associateData['ipf'] !== null ? htmlspecialchars($associateData['ipf']) . " / 5" : "N/A" ?>
                                         </div>
                                         <div>
-                                            <strong>Exit Interview Conducted By:</strong> 
+                                            <strong>Exit Interview Conducted By:</strong>
                                             <?= $associateData['filterstatus'] === 'Active' ? 'N/A (Currently Active)'
                                                 : (empty($associateData['exit_submitted_by_name']) ? 'Formal exit not recorded'
-                                                : htmlspecialchars($associateData['exit_submitted_by_name'])) ?>
+                                                    : htmlspecialchars($associateData['exit_submitted_by_name'])) ?>
                                         </div>
                                     </div>
                                 </div>
@@ -228,13 +244,13 @@ function calculateExperience($doj, $effectivedate = null) {
                                             <td><?= htmlspecialchars($cert['certificate_no']) ?></td>
                                             <td><?= htmlspecialchars($cert['badge_name']) ?></td>
                                             <td><?= $cert['issuedon'] ? date("d/m/Y", strtotime($cert['issuedon'])) : 'N/A' ?></td>
-                                            <td><?= htmlspecialchars($cert['nominatedby']) ?></td>
+                                            <td><?= htmlspecialchars($cert['nominated_by_name']) ?></td>
                                             <td><?= htmlspecialchars($cert['comment'] ?? '') ?></td>
                                             <td>
                                                 <?php if ($cert['certificate_url']): ?>
-                                                    <a href="<?= htmlspecialchars($cert['certificate_url']) ?>" 
-                                                       target="_blank" 
-                                                       class="btn btn-sm btn-outline-primary">
+                                                    <a href="<?= htmlspecialchars($cert['certificate_url']) ?>"
+                                                        target="_blank"
+                                                        class="btn btn-sm btn-outline-primary">
                                                         <i class="bi bi-file-earmark-pdf"></i> View
                                                     </a>
                                                 <?php else: ?>
@@ -256,7 +272,7 @@ function calculateExperience($doj, $effectivedate = null) {
             <div class="mt-4 text-center text-muted small">
                 <p>This is an auto-generated verification report. For official inquiries, please contact:</p>
                 <p>Rina Shiksha Sahayak Foundation<br>
-                Email: info@rssi.in | Phone: +91-7980168159 / 9717445551</p>
+                    Email: info@rssi.in | Phone: +91-7980168159 / 9717445551</p>
                 <p class="mt-3">Report generated on: <?= date('d/m/Y H:i:s') ?></p>
             </div>
         <?php endif; ?>
@@ -264,4 +280,5 @@ function calculateExperience($doj, $effectivedate = null) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
