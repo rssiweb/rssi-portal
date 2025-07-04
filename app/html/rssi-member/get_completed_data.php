@@ -6,8 +6,26 @@ if (!isLoggedIn("aid")) {
     die("Unauthorized access");
 }
 
+// Pagination parameters
+$records_per_page = 3;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
 
+// First query to get total count
+$count_query = "SELECT COUNT(*) as total FROM washroom_cleaning wc 
+                WHERE wc.current_status IN ('FINAL_APPROVED', 'REJECTED')";
+
+if ($selected_academic_year) {
+    $count_query .= getAcademicYearCondition($selected_academic_year, 'wc');
+}
+
+$count_result = pg_query($con, $count_query);
+$total_rows = pg_fetch_assoc($count_result)['total'];
+$total_pages = ceil($total_rows / $records_per_page);
+
+// Main query with pagination
 $query = "SELECT wc.*, 
         a.fullname as cleaner_name,
         s.fullname as submitted_by_name,
@@ -26,10 +44,40 @@ if ($selected_academic_year) {
     $query .= getAcademicYearCondition($selected_academic_year, 'wc');
 }
 
-$query .= " ORDER BY wc.cleaning_date DESC";
+$query .= " ORDER BY wc.cleaning_date DESC LIMIT $records_per_page OFFSET $offset";
 
 $records = pg_query($con, $query);
 displayCleaningRecords($records, null);
+
+// Display pagination controls
+echo '<nav aria-label="Page navigation">';
+echo '<ul class="pagination justify-content-center">';
+
+// Previous button
+if ($page > 1) {
+    echo '<li class="page-item"><a class="page-link" href="#" onclick="loadCompletedPage(' . ($page - 1) . ')">Previous</a></li>';
+} else {
+    echo '<li class="page-item disabled"><span class="page-link">Previous</span></li>';
+}
+
+// Page numbers
+for ($i = 1; $i <= $total_pages; $i++) {
+    if ($i == $page) {
+        echo '<li class="page-item active"><span class="page-link">' . $i . '</span></li>';
+    } else {
+        echo '<li class="page-item"><a class="page-link" href="#" onclick="loadCompletedPage(' . $i . ')">' . $i . '</a></li>';
+    }
+}
+
+// Next button
+if ($page < $total_pages) {
+    echo '<li class="page-item"><a class="page-link" href="#" onclick="loadCompletedPage(' . ($page + 1) . ')">Next</a></li>';
+} else {
+    echo '<li class="page-item disabled"><span class="page-link">Next</span></li>';
+}
+
+echo '</ul>';
+echo '</nav>';
 
 function getAcademicYearCondition($selected_academic_year, $table_alias = '')
 {

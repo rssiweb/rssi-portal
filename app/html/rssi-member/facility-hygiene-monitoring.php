@@ -756,40 +756,48 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                 }
             });
 
-            function loadCompletedData() {
+            function loadCompletedData(page = 1) {
                 const academicYear = document.getElementById('academic_year').value;
                 const contentDiv = document.getElementById('completed-content');
 
-                // Only load if content hasn't been loaded yet
-                if (contentDiv.dataset.loaded === 'true') {
-                    return;
-                }
-
                 // Show loading state
                 contentDiv.innerHTML = `
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading completed records...</p>
-                    </div>
-                `;
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading completed records...</p>
+        </div>
+    `;
 
                 // Fetch data via AJAX
-                fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear))
+                fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear) + '&page=' + page)
                     .then(response => response.text())
                     .then(data => {
                         contentDiv.innerHTML = data;
                         contentDiv.dataset.loaded = 'true';
+                        // Update URL with current page
+                        updateCompletedPageInUrl(page);
                     })
                     .catch(error => {
                         contentDiv.innerHTML = `
-                            <div class="alert alert-danger">
-                                Error loading completed records. Please try again.
-                            </div>
-                        `;
+                <div class="alert alert-danger">
+                    Error loading completed records. Please try again.
+                </div>
+            `;
                         console.error('Error:', error);
                     });
+            }
+
+            function loadCompletedPage(page) {
+                loadCompletedData(page);
+                return false; // Prevent default anchor behavior
+            }
+
+            function updateCompletedPageInUrl(page) {
+                const url = new URL(window.location);
+                url.searchParams.set('completed_page', page);
+                window.history.replaceState({}, '', url);
             }
         </script>
         <script>
@@ -820,6 +828,13 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                         }
                     });
                 });
+
+                // Load completed data with correct page if specified in URL
+                if (initialTab === 'completed') {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const completedPage = urlParams.get('completed_page') || 1;
+                    loadCompletedData(completedPage);
+                }
             });
         </script>
     </body>
