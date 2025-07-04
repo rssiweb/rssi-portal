@@ -40,8 +40,7 @@ $status = $_GET['status'] ?? 'Active';
 $month = $_GET['month'] ?? date('F');
 $year = $_GET['year'] ?? date('Y');
 $class = $_GET['class'] ?? [];
-$student_id = $_GET['student_id'] ?? '';
-$search_term = $_GET['search_term'] ?? '';
+$student_ids = $_GET['student_ids'] ?? []; // Changed from student_id to student_ids array
 
 // Handle class parameter - could be string or array
 if (!is_array($class) && !empty($class)) {
@@ -50,12 +49,17 @@ if (!is_array($class) && !empty($class)) {
     $class = [];
 }
 
+// Handle student IDs parameter - ensure it's always an array
+if (!is_array($student_ids)) {
+    $student_ids = !empty($student_ids) ? [$student_ids] : [];
+}
+
 // Check if we have any filters
-$hasFilters = !empty($class) || !empty($student_id) || !empty($search_term);
+$hasFilters = !empty($class) || !empty($student_ids);
 
 if (!$hasFilters) {
     header('Content-Type: text/plain');
-    echo "Error: Please select at least one class or enter a student ID to export data.";
+    echo "Error: Please select at least one class or student to export data.";
     exit;
 }
 
@@ -82,15 +86,13 @@ if (!empty($class)) {
     $query .= " AND s.class IN ('$classList')";
 }
 
-// Add student ID filter if provided
-if (!empty($student_id)) {
-    $query .= " AND s.student_id = '" . pg_escape_string($con, $student_id) . "'";
-}
-
-// Add search term filter if provided
-if (!empty($search_term)) {
-    $escaped_search = pg_escape_string($con, $search_term);
-    $query .= " AND (s.student_id = '$escaped_search' OR s.studentname ILIKE '%$escaped_search%')";
+// Add student IDs filter if provided (changed from single student_id)
+if (!empty($student_ids)) {
+    $escapedIds = array_map(function ($id) use ($con) {
+        return pg_escape_string($con, $id);
+    }, $student_ids);
+    $idList = implode("','", $escapedIds);
+    $query .= " AND s.student_id IN ('$idList')";
 }
 
 $query .= " ORDER BY s.class, s.studentname";

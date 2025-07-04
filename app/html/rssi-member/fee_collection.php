@@ -42,7 +42,7 @@ $status = $_GET['status'] ?? 'Active';
 $month = $_GET['month'] ?? date('F');
 $year = $_GET['year'] ?? date('Y');
 $class = $_GET['class'] ?? [];
-$search_term = $_GET['search_term'] ?? '';
+$studentIds = $_GET['student_ids'] ?? [];
 
 // Handle class parameter - could be string or array
 if (!is_array($class) && !empty($class)) {
@@ -51,15 +51,19 @@ if (!is_array($class) && !empty($class)) {
     $class = [];
 }
 
+// Handle student IDs parameter
+if (!is_array($studentIds)) {
+    $studentIds = !empty($studentIds) ? [$studentIds] : [];
+}
+
 // Convert month name to number and get date range
 $monthNumber = date('m', strtotime("$month 1, $year"));
 $firstDayOfMonth = "$year-$monthNumber-01";
 $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
-// After getting filter parameters, add this check:
-$hasFilters = !empty($class) || !empty($search_term);
+// Check if filters are applied
+$hasFilters = !empty($class) || !empty($studentIds);
 
-// Then modify the student data query section:
 if ($hasFilters) {
     // Get student data
     $query = "SELECT s.student_id, s.studentname, s.category, s.class, s.doa, 
@@ -79,10 +83,13 @@ if ($hasFilters) {
         $query .= " AND s.class IN ('$classList')";
     }
 
-    // Add search term filter if provided
-    if (!empty($search_term)) {
-        $escaped_search = pg_escape_string($con, $search_term);
-        $query .= " AND (s.student_id = '$escaped_search' OR s.studentname ILIKE '%$escaped_search%')";
+    // Add student IDs filter if provided
+    if (!empty($studentIds)) {
+        $escapedIds = array_map(function ($id) use ($con) {
+            return pg_escape_string($con, $id);
+        }, $studentIds);
+        $idList = implode("','", $escapedIds);
+        $query .= " AND s.student_id IN ('$idList')";
     }
 
     $query .= " ORDER BY s.class, s.studentname";
@@ -98,7 +105,8 @@ $categories = pg_fetch_all(pg_query(
     $con,
     "SELECT id, category_name, fee_type 
      FROM fee_categories 
-     WHERE is_active = TRUE 
+     WHERE is_active = TRUE
+     AND category_type='structured'
      ORDER BY id"
 )) ?? [];
 
@@ -556,7 +564,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-md-1">
                                                 <select name="year" class="form-select">
                                                     <?php for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++): ?>
                                                         <option value="<?= $y ?>" <?= $year == $y ? 'selected' : '' ?>><?= $y ?></option>
@@ -564,16 +572,43 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
-                                                <select name="class[]" class="form-select" multiple="multiple" id="classSelect">
-                                                    <?php foreach ($classes as $classItem): ?>
-                                                        <option value="<?= $classItem['class'] ?>" <?= in_array($classItem['class'], $class) ? 'selected' : '' ?>>
-                                                            <?= $classItem['class'] ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                                <select name="class[]" class="form-select select2-classes" multiple="multiple" id="classSelect">
+                                                    <?php
+                                                    // Pre-select any existing classes
+                                                    if (!empty($class)) {
+                                                        foreach ($class as $selectedClass) {
+                                                            $classInfo = pg_fetch_assoc(pg_query_params(
+                                                                $con,
+                                                                "SELECT class_name, value FROM school_classes WHERE value = $1",
+                                                                array($selectedClass)
+                                                            ));
+                                                            if ($classInfo) {
+                                                                echo '<option value="' . $classInfo['value'] . '" selected>' . $classInfo['class_name'] . ' (' . $classInfo['value'] . ')</option>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
-                                                <input type="text" name="search_term" class="form-control" placeholder="Search by Student ID or Name" value="<?= htmlspecialchars($search_term) ?>">
+                                            <div class="col-md-3">
+                                                <select name="student_ids[]" id="student-select" class="form-control select2" multiple="multiple">
+                                                    <?php
+                                                    // Always output selected options, not just when $search_term exists
+                                                    $studentIds = is_array($_GET['student_ids'] ?? []) ? $_GET['student_ids'] : [];
+                                                    foreach ($studentIds as $id) {
+                                                        $student = pg_fetch_assoc(pg_query_params(
+                                                            $con,
+                                                            "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id = $1",
+                                                            array($id)
+                                                        ));
+                                                        if ($student) {
+                                                            echo '<option value="' . $student['student_id'] . '" selected>' .
+                                                                htmlspecialchars($student['studentname']) . ' - ' .
+                                                                htmlspecialchars($student['student_id']) . '</option>';
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
                                             </div>
                                             <div class="col-md-1">
                                                 <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
@@ -1327,7 +1362,6 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
     <script>
         // Export button handler
-        // Update the export button handler in fee_collection.php
         $("#exportReport").click(function(e) {
             e.preventDefault();
 
@@ -1336,8 +1370,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             const month = $("select[name='month']").val();
             const year = $("select[name='year']").val();
             const classFilter = $("#classSelect").val() || [];
-            const studentId = $("input[name='student_id']").val();
-            const searchTerm = $("input[name='search_term']").val();
+            const studentIds = $("#student-select").val() || []; // Changed from student_id to studentIds array
 
             // Build export URL with all current filters
             let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`;
@@ -1349,14 +1382,11 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 });
             }
 
-            // Add student ID if provided
-            if (studentId) {
-                exportUrl += `&student_id=${encodeURIComponent(studentId)}`;
-            }
-
-            // Add search term if provided
-            if (searchTerm) {
-                exportUrl += `&search_term=${encodeURIComponent(searchTerm)}`;
+            // Add student IDs if provided (changed from single student_id)
+            if (studentIds.length > 0) {
+                studentIds.forEach(id => {
+                    exportUrl += `&student_ids[]=${encodeURIComponent(id)}`;
+                });
             }
 
             // Open in new tab to trigger download
@@ -1366,9 +1396,28 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     <!-- Initialize the multi-select plugin -->
     <script>
         $(document).ready(function() {
+            // Initialize class select2 with AJAX
             $('#classSelect').select2({
-                placeholder: "Select class(es)",
-                allowClear: true
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: "Search and select class(es)",
+                // allowClear: true,
+                minimumInputLength: 0,
+                width: '100%'
             });
 
             // Prevent form submission if no filters are selected
@@ -1408,6 +1457,33 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
         // Call the function on page load
         document.addEventListener("DOMContentLoaded", setEffectiveDates);
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#student-select').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term, // search term
+                            isActive: true // or false depending on your needs
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Search by Student ID or Name',
+                // allowClear: true,
+                width: '100%'
+            });
+        });
     </script>
 </body>
 
