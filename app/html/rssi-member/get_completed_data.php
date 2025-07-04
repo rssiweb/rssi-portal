@@ -97,12 +97,18 @@ function displayCleaningRecords($records, $approval_level)
         echo '<span class="badge ' . $status_class . '">' . $status_text . '</span>';
         echo '</div>';
 
-        // Display cleaning details
+        // Display cleaning details only if checked
         echo '<div class="row mt-2">';
         echo '<div class="col-md-6">';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_cleaned'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Cleaned</p>';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_sanitized'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Sanitized</p>';
-        echo '<p class="mb-1"><i class="bi ' . ($row['is_restocked'] == 't' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger') . '"></i> Restocked</p>';
+        if ($row['is_cleaned'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Cleaned</p>';
+        }
+        if ($row['is_sanitized'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Sanitized</p>';
+        }
+        if ($row['is_restocked'] == 't') {
+            echo '<p class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Restocked</p>';
+        }
         echo '</div>';
         echo '<div class="col-md-6">';
         if (!empty($row['issues_found'])) {
@@ -152,4 +158,3 @@ function displayCleaningRecords($records, $approval_level)
         echo '</div>';
     }
 }
-?>

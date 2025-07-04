@@ -561,25 +561,6 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                     <h5 class="mb-3">Completed Cleanings</h5>
                                                     <div id="completed-content">
                                                         <?php if ($selected_tab == 'completed'): ?>
-                                                            <?php
-                                                            $records = pg_query($con, "SELECT wc.*, 
-                                                                a.fullname as cleaner_name,
-                                                                s.fullname as submitted_by_name,
-                                                                l1.fullname as level1_approver_name,
-                                                                l2.fullname as level2_approver_name,
-                                                                l3.fullname as level3_approver_name
-                                                                FROM washroom_cleaning wc
-                                                                LEFT JOIN rssimyaccount_members a ON wc.cleaner_id = a.associatenumber
-                                                                LEFT JOIN rssimyaccount_members s ON wc.submitted_by = s.associatenumber
-                                                                LEFT JOIN rssimyaccount_members l1 ON wc.level1_approver = l1.associatenumber
-                                                                LEFT JOIN rssimyaccount_members l2 ON wc.level2_approver = l2.associatenumber
-                                                                LEFT JOIN rssimyaccount_members l3 ON wc.level3_approver = l3.associatenumber
-                                                                WHERE wc.current_status IN ('FINAL_APPROVED', 'REJECTED')" .
-                                                                ($selected_academic_year ? getAcademicYearCondition($selected_academic_year, 'wc') : '') .
-                                                                " ORDER BY wc.cleaning_date DESC");
-                                                            displayCleaningRecords($records, null);
-                                                            ?>
-                                                        <?php else: ?>
                                                             <div class="text-center py-4">
                                                                 <div class="spinner-border text-primary" role="status">
                                                                     <span class="visually-hidden">Loading...</span>
