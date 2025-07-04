@@ -1038,6 +1038,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                     <div class="fee-notice mb-4 p-3 bg-light border-start border-4 border-primary">
                                         <p class="mb-0 text-muted">
                                             Dues can be collected either as an Admission Fee or a Monthly Fee.
+                                            You can split payments between cash and online methods.
                                         </p>
                                     </div>
                                     <div id="feeActions" class="d-flex justify-content-end mb-3"></div>
@@ -1045,7 +1046,9 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                         <thead>
                                             <tr>
                                                 <th>Category</th>
+                                                <th>Payment Method</th>
                                                 <th>Pay Now</th>
+                                                <th>Reference No (if online)</th>
                                             </tr>
                                         </thead>
                                         <tbody id="feeBreakdown">
@@ -1053,12 +1056,20 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-primary">
-                                                <th>Total Due</th>
-                                                <th id="totalDueAmount">₹0.00</th>
+                                                <th colspan="2">Total Due</th>
+                                                <th colspan="2" id="totalDueAmount">₹0.00</th>
                                             </tr>
                                             <tr class="table-primary">
-                                                <th>Total Pay Now</th>
-                                                <th id="totalPayNow">₹0.00</th>
+                                                <th colspan="2">Total Pay Now</th>
+                                                <th colspan="2" id="totalPayNow">₹0.00</th>
+                                            </tr>
+                                            <tr class="table-info">
+                                                <th colspan="2">Total Cash Payment</th>
+                                                <th colspan="2" id="totalCashAmount">₹0.00</th>
+                                            </tr>
+                                            <tr class="table-info">
+                                                <th colspan="2">Total Online Payment</th>
+                                                <th colspan="2" id="totalOnlineAmount">₹0.00</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -1069,24 +1080,10 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <!-- Payment Details -->
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label for="paymentType" class="form-label">Payment Type:</label>
-                                <select class="form-select" id="paymentType" name="payment_type" required>
-                                    <option value="cash">Cash</option>
-                                    <option value="online">Online</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4" id="transactionIdContainer">
-                                <label for="transactionId" class="form-label">Reference No:</label>
-                                <input type="text" class="form-control" id="transactionId" name="transaction_id">
-                            </div>
-                            <div class="col-md-4">
                                 <label for="paymentDate" class="form-label">Payment Date:</label>
                                 <input type="date" class="form-control" id="paymentDate" name="payment_date" value="<?= date('Y-m-d') ?>" required>
                             </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="collectorId" class="form-label">Collector:</label>
                                 <select class="form-select" id="collectorId" name="collected_by" required <?= ($role !== 'Admin') ? 'disabled' : '' ?>>
                                     <?php if ($role === 'Admin'): ?>
@@ -1105,7 +1102,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                     <input type="hidden" name="collected_by" value="<?= $associatenumber ?>">
                                 <?php endif; ?>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="paymentNotes" class="form-label">Notes:</label>
                                 <textarea class="form-control" id="paymentNotes" name="notes" rows="2"></textarea>
                             </div>
@@ -1119,6 +1116,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             </div>
         </div>
     </div>
+
     <script>
         $(document).ready(function() {
             let allCategories = []; // Store all categories for reference
@@ -1148,13 +1146,13 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
                 // Show loading state
                 const loadingHtml = `
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading fee details...</p>
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-            `;
+                <p class="mt-2">Loading fee details...</p>
+            </div>
+        `;
                 $(".fee-table-container").before(loadingHtml);
 
                 // Fetch fee breakdown via AJAX
@@ -1175,27 +1173,44 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         breakdown.empty();
 
                         let totalPayNow = 0;
+                        let totalCash = 0;
+                        let totalOnline = 0;
 
                         // Populate categories
                         allCategories = response.categories;
 
                         response.categories.forEach((category) => {
                             const row = `
-                            <tr class="fee-category-row" data-category-id="${category.id}">
-                                <td>${category.name}</td>
-                                <td>
-                                    <div class="input-group">
-                                        <span class="input-group-text">₹</span>
-                                        <input type="number" class="form-control pay-now text-end" 
-                                               data-category-id="${category.id}" 
-                                               name="payment_amounts[${category.id}]"
-                                               value="0.00"
-                                               min="0"
-                                               step="0.01">
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                        <tr class="fee-category-row" data-category-id="${category.id}">
+                            <td>${category.name}</td>
+                            <td>
+                                <select class="form-select payment-method" 
+                                       data-category-id="${category.id}" 
+                                       name="payment_methods[${category.id}]">
+                                    <option value="cash">Cash</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control pay-now text-end" 
+                                           data-category-id="${category.id}" 
+                                           name="payment_amounts[${category.id}]"
+                                           value="0.00"
+                                           min="0"
+                                           max="${category.due_amount || ''}"
+                                           step="0.01">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control reference-number d-none" 
+                                       data-category-id="${category.id}" 
+                                       name="reference_numbers[${category.id}]"
+                                       placeholder="Enter reference no">
+                            </td>
+                        </tr>
+                    `;
                             breakdown.append(row);
                         });
 
@@ -1208,47 +1223,54 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                             .removeClass("text-danger text-success fw-bold")
                             .addClass(currentDueAmount > 0 ? "text-danger fw-bold" : "text-success fw-bold");
 
-                        // Update Total Pay Now dynamically
-                        $(".pay-now").on("input", function() {
-                            totalPayNow = $(".pay-now")
-                                .toArray()
-                                .reduce((total, input) => {
-                                    const value = parseFloat($(input).val()) || 0;
-                                    return total + value;
-                                }, 0);
+                        // Handle payment method changes
+                        $(".payment-method").change(function() {
+                            const categoryId = $(this).data("category-id");
+                            const method = $(this).val();
+
+                            $(`.reference-number[data-category-id="${categoryId}"]`)
+                                .toggleClass("d-none", method !== "online")
+                                .prop("required", method === "online");
+                        });
+
+                        // Update payment totals when amounts change
+                        $(".pay-now, .payment-method").on("input change", function() {
+                            totalPayNow = 0;
+                            totalCash = 0;
+                            totalOnline = 0;
+
+                            $(".fee-category-row").each(function() {
+                                const categoryId = $(this).data("category-id");
+                                const amount = parseFloat($(this).find(".pay-now").val()) || 0;
+                                const method = $(this).find(".payment-method").val();
+
+                                totalPayNow += amount;
+
+                                if (method === "cash") {
+                                    totalCash += amount;
+                                } else {
+                                    totalOnline += amount;
+                                }
+                            });
+
                             $("#totalPayNow").text("₹" + totalPayNow.toFixed(2));
+                            $("#totalCashAmount").text("₹" + totalCash.toFixed(2));
+                            $("#totalOnlineAmount").text("₹" + totalOnline.toFixed(2));
                         });
                     },
                     error: function() {
                         $(".fee-table-container").prev().remove();
                         $(".fee-table-container").before(`
-                        <div class="text-center text-danger py-4">
-                            Error loading fee details. Please try again.
-                        </div>
-                    `);
+                    <div class="text-center text-danger py-4">
+                        Error loading fee details. Please try again.
+                    </div>
+                `);
                     }
                 });
 
                 const paymentModal = new bootstrap.Modal(document.getElementById("paymentModal"));
                 paymentModal.show();
             });
-
-            // Toggle transaction ID field based on payment type
-            $("#paymentType").change(function() {
-                if ($(this).val() === "online") {
-                    $("#transactionIdContainer").show();
-                    $("#transactionId").prop("required", true);
-                } else {
-                    $("#transactionIdContainer").hide();
-                    $("#transactionId").prop("required", false);
-                }
-            }).trigger("change");
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-            // ... existing code ...
 
             // Payment form submission handler
             $('#paymentForm').on('submit', function(e) {
@@ -1257,19 +1279,50 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 const form = $(this);
                 let formData = form.serialize();
 
+                // Validate that at least one payment amount is greater than 0
+                let hasPayment = false;
+                $(".pay-now").each(function() {
+                    if (parseFloat($(this).val()) > 0) {
+                        hasPayment = true;
+                        return false; // break the loop
+                    }
+                });
+
+                if (!hasPayment) {
+                    alert("Please enter at least one payment amount greater than 0");
+                    return;
+                }
+
+                // Validate online payments have reference numbers
+                let valid = true;
+                $(".payment-method").each(function() {
+                    const method = $(this).val();
+                    const amount = parseFloat($(this).closest('tr').find('.pay-now').val()) || 0;
+
+                    if (method === "online" && amount > 0) {
+                        const refNo = $(this).closest('tr').find('.reference-number').val();
+                        if (!refNo || refNo.trim() === "") {
+                            valid = false;
+                            return false; // break the loop
+                        }
+                    }
+                });
+
+                if (!valid) {
+                    alert("Please enter reference numbers for all online payments");
+                    return;
+                }
+
                 // Get current URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
                 // Add all parameters to form data
                 urlParams.forEach((value, key) => {
-                    // Handle array parameters (like class[])
                     if (key.endsWith('[]')) {
-                        // Get all values for this array parameter
                         const values = urlParams.getAll(key);
                         values.forEach(val => {
                             formData += `&${key}=${encodeURIComponent(val)}`;
                         });
                     } else {
-                        // Handle regular parameters
                         formData += `&${key}=${encodeURIComponent(value)}`;
                     }
                 });
@@ -1315,8 +1368,6 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                     }
                 });
             });
-
-            // ... rest of your existing JavaScript ...
         });
     </script>
     <script>

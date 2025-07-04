@@ -46,7 +46,7 @@ function buildRedirectUrl($params) {
 }
 
 // Validate required fields
-$requiredFields = ['student_id', 'month', 'year', 'payment_type', 'collected_by'];
+$requiredFields = ['student_id', 'month', 'year', 'collected_by'];
 foreach ($requiredFields as $field) {
     if (empty($_POST[$field])) {
         http_response_code(400);
@@ -63,12 +63,14 @@ foreach ($requiredFields as $field) {
 $studentId = pg_escape_string($con, $_POST['student_id']);
 $month = pg_escape_string($con, $_POST['month']);
 $year = pg_escape_string($con, $_POST['year']);
-$paymentType = pg_escape_string($con, $_POST['payment_type']);
-$transactionId = !empty($_POST['transaction_id']) ? pg_escape_string($con, $_POST['transaction_id']) : null;
 $paymentDate = !empty($_POST['payment_date']) ? $_POST['payment_date'] : date('Y-m-d');
 $collectedBy = pg_escape_string($con, $_POST['collected_by']);
 $notes = !empty($_POST['notes']) ? pg_escape_string($con, $_POST['notes']) : null;
+
+// Get payment data - now handling multiple methods per category
 $paymentAmounts = $_POST['payment_amounts'] ?? [];
+$paymentMethods = $_POST['payment_methods'] ?? [];
+$referenceNumbers = $_POST['reference_numbers'] ?? [];
 
 // Validate payment date
 if (!DateTime::createFromFormat('Y-m-d', $paymentDate)) {
@@ -79,6 +81,38 @@ if (!DateTime::createFromFormat('Y-m-d', $paymentDate)) {
         'redirect' => 'fee_collection.php?' . http_build_query($redirectParams)
     ]);
     exit;
+}
+
+// Validate at least one payment amount > 0
+$hasPayment = false;
+foreach ($paymentAmounts as $amount) {
+    if ((float)$amount > 0) {
+        $hasPayment = true;
+        break;
+    }
+}
+if (!$hasPayment) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'At least one payment amount must be greater than 0',
+        'redirect' => 'fee_collection.php?' . http_build_query($redirectParams)
+    ]);
+    exit;
+}
+
+// Validate online payments have reference numbers
+foreach ($paymentMethods as $categoryId => $method) {
+    $amount = (float)($paymentAmounts[$categoryId] ?? 0);
+    if ($method === 'online' && $amount > 0 && empty($referenceNumbers[$categoryId])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Reference number is required for online payments',
+            'redirect' => 'fee_collection.php?' . http_build_query($redirectParams)
+        ]);
+        exit;
+    }
 }
 
 // Start transaction
@@ -143,6 +177,9 @@ try {
         $amount = (float)$amount;
         if ($amount <= 0) continue;
         
+        $method = $paymentMethods[$categoryId] ?? 'cash';
+        $refNo = ($method === 'online') ? ($referenceNumbers[$categoryId] ?? '') : null;
+        
         $dueAfterPayment = 0;
         $currentCarryForward = 0;
 
@@ -175,8 +212,8 @@ try {
             $amount,
             $dueAfterPayment,
             ($categoryId == $monthlyFeeCategoryId || $categoryId === 'previous_due') ? $currentCarryForward : 0,
-            $paymentType,
-            $transactionId,
+            $method, // Now using per-category payment method
+            $refNo,  // Reference number for online payments
             $collectedBy,
             $paymentDate,
             $notes
