@@ -12,51 +12,63 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get and validate all required parameters
+// Function to clean and unique array parameters
+function cleanArrayParam($param)
+{
+    if (is_array($param)) {
+        // Remove empty values and get unique values
+        return array_unique(array_filter($param, function ($value) {
+            return $value !== '' && $value !== null;
+        }));
+    }
+    return $param;
+}
+
+// Get and validate all required parameters - with proper array handling
 $redirectParams = [
     'status' => $_REQUEST['status'] ?? 'Active',
     'month' => $_REQUEST['month'] ?? date('F'),
     'year' => $_REQUEST['year'] ?? date('Y'),
     'search_term' => $_REQUEST['search_term'] ?? ''
 ];
+
 // Handle class parameter (can be array or string)
-if (isset($_REQUEST['class']) && is_array($_REQUEST['class'])) {
-    $redirectParams['class'] = $_REQUEST['class'];
-} elseif (isset($_REQUEST['class']) && !empty($_REQUEST['class'])) {
-    $redirectParams['class'] = [$_REQUEST['class']];
+if (isset($_REQUEST['class'])) {
+    $redirectParams['class'] = is_array($_REQUEST['class'])
+        ? cleanArrayParam($_REQUEST['class'])
+        : [$_REQUEST['class']];
 } else {
     $redirectParams['class'] = [];
 }
 
-// Function to build redirect URL with proper parameter handling
-function buildRedirectUrl($params) {
-    $queryParams = [];
-    
-    foreach ($params as $key => $value) {
-        if (is_array($value)) {
-            foreach ($value as $item) {
-                $queryParams[] = urlencode($key.'[]') . '=' . urlencode($item);
-            }
-        } elseif ($value !== '' && $value !== null) {
-            $queryParams[] = urlencode($key) . '=' . urlencode($value);
-        }
-    }
-    
-    return 'fee_collection.php?' . implode('&', $queryParams);
+// Handle student_ids parameter - ensure unique values
+if (isset($_REQUEST['student_ids'])) {
+    $redirectParams['student_ids'] = is_array($_REQUEST['student_ids'])
+        ? cleanArrayParam($_REQUEST['student_ids'])
+        : [$_REQUEST['student_ids']];
+} else {
+    $redirectParams['student_ids'] = [];
 }
 
-// Validate required fields
-$requiredFields = ['student_id', 'month', 'year', 'collected_by'];
-foreach ($requiredFields as $field) {
-    if (empty($_POST[$field])) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => "Required field '$field' is missing",
-            'redirect' => 'fee_collection.php?' . http_build_query($redirectParams)
-        ]);
-        exit;
+// Improved function to build redirect URL with proper parameter handling
+function buildRedirectUrl($params)
+{
+    $queryParts = [];
+
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            // Handle array parameters (like student_ids[])
+            foreach (array_unique($value) as $item) {
+                if ($item !== '' && $item !== null) {
+                    $queryParts[] = urlencode($key . '[]') . '=' . urlencode($item);
+                }
+            }
+        } elseif ($value !== '' && $value !== null) {
+            $queryParts[] = urlencode($key) . '=' . urlencode($value);
+        }
     }
+
+    return 'fee_collection.php?' . implode('&', $queryParts);
 }
 
 // Sanitize inputs
@@ -142,8 +154,11 @@ try {
                          WHERE student_id = $1
                          AND category_id = $2
                          AND (academic_year < $3 OR (academic_year = $3 AND month != $4))";
-    $carryForwardResult = pg_query_params($con, $carryForwardQuery, 
-        [$studentId, $monthlyFeeCategoryId, $year, $month]);
+    $carryForwardResult = pg_query_params(
+        $con,
+        $carryForwardQuery,
+        [$studentId, $monthlyFeeCategoryId, $year, $month]
+    );
     $carryForward = (float)(pg_fetch_assoc($carryForwardResult)['total_carry_forward'] ?? 0);
 
     // Get current monthly fee amount
@@ -153,8 +168,11 @@ try {
                        WHERE fs.category_id = $1
                        AND s.student_id = $2
                        AND $3 BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')";
-    $monthlyFeeResult = pg_query_params($con, $monthlyFeeQuery, 
-        [$monthlyFeeCategoryId, $studentId, "$year-$month-01"]);
+    $monthlyFeeResult = pg_query_params(
+        $con,
+        $monthlyFeeQuery,
+        [$monthlyFeeCategoryId, $studentId, "$year-$month-01"]
+    );
     $monthlyFeeAmount = (float)(pg_fetch_assoc($monthlyFeeResult)['amount'] ?? 0);
 
     // Calculate adjusted monthly fee with carry forward
@@ -176,10 +194,10 @@ try {
     foreach ($paymentAmounts as $categoryId => $amount) {
         $amount = (float)$amount;
         if ($amount <= 0) continue;
-        
+
         $method = $paymentMethods[$categoryId] ?? 'cash';
         $refNo = ($method === 'online') ? ($referenceNumbers[$categoryId] ?? '') : null;
-        
+
         $dueAfterPayment = 0;
         $currentCarryForward = 0;
 
@@ -187,7 +205,7 @@ try {
         if ($categoryId == $monthlyFeeCategoryId) {
             $dueAfterPayment = max($adjustedMonthlyFee - $amount, 0);
             $currentCarryForward = $adjustedMonthlyFee - $amount;
-        } 
+        }
         // Handle previous dues
         elseif ($categoryId === 'previous_due') {
             $dueAfterPayment = max($carryForward - $amount, 0);
@@ -203,7 +221,7 @@ try {
             $categoryAmount = (float)(pg_fetch_assoc($categoryResult)['amount'] ?? 0);
             $dueAfterPayment = max($categoryAmount - $amount, 0);
         }
-        
+
         $params = [
             $studentId,
             $year,
@@ -218,7 +236,7 @@ try {
             $paymentDate,
             $notes
         ];
-        
+
         $result = pg_execute($con, "insert_payment", $params);
         if (!$result) {
             throw new Exception("Failed to record payment for category $categoryId: " . pg_last_error($con));
@@ -236,14 +254,13 @@ try {
 
     // Store success message in session
     $_SESSION['success_message'] = "Payment recorded successfully";
-    
+
     // Return success response
     echo json_encode([
         'success' => true,
         'message' => 'Payment processed successfully',
         'redirect' => buildRedirectUrl($redirectParams)
     ]);
-    
 } catch (Exception $e) {
     pg_query($con, "ROLLBACK");
     http_response_code(500);
