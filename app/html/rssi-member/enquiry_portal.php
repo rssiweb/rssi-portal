@@ -173,6 +173,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit;
+    } elseif (isset($_POST['move_to_active'])) {
+        if ($user_role == 'Admin') {
+            $record_id = $_POST['record_id'];
+            $query = "UPDATE parent_admissions SET system_process_completed = FALSE WHERE id = $1";
+            $result = pg_query_params($con, $query, [$record_id]);
+
+            if ($result) {
+                $_SESSION['success_message'] = "Record moved back to Active status!";
+            } else {
+                $_SESSION['error_message'] = "Error updating record: " . pg_last_error($con);
+            }
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
     }
 }
 
@@ -199,7 +213,10 @@ for ($i = 0; $i < 5; $i++) {
 // Academic year filter condition
 $academic_year_condition = "";
 $selected_tab = isset($_GET['tab']) ? $_GET['tab'] : 'active';
+$academic_year_filter_applied = isset($_GET['academic_year']);
+
 if ($selected_tab != 'archive') {
+    // For active and admin tabs, always filter by academic year
     $start_date = $selected_academic_year . '-04-01';
     $end_date = ($selected_academic_year + 1) . '-03-31';
     $academic_year_condition = "AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
@@ -208,10 +225,28 @@ if ($selected_tab != 'archive') {
 // Get records based on status
 $active_where = "pa.is_closed = FALSE AND (pa.system_process_completed = FALSE OR pa.system_process_completed IS NULL) $academic_year_condition";
 $archive_where = "pa.is_closed = TRUE";
+
+// Apply academic year filter to archive (same as other tabs)
+if ($selected_tab == 'archive') {
+    $start_date = $selected_academic_year . '-04-01';
+    $end_date = ($selected_academic_year + 1) . '-03-31';
+    $archive_where .= " AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
+}
+
+// Update the count query for archive to match the same conditions
+$tabs['archive']['count'] = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where"), 0, 0);
+
 $admin_where = "pa.is_closed = FALSE AND pa.system_process_completed = TRUE $academic_year_condition";
 
 if ($user_role != 'Admin') {
     $admin_where .= " AND FALSE"; // Non-admins shouldn't see admin tab
+}
+
+// Pagination settings
+$records_per_page = 3;
+$current_page = isset($_GET['archive_page']) ? (int)$_GET['archive_page'] : 1;
+if ($current_page < 1) {
+    $current_page = 1;
 }
 
 $tabs = [
@@ -236,6 +271,18 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
 
 // Check if we're loading archive content via AJAX
 if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
+    $current_page = isset($_GET['archive_page']) ? (int)$_GET['archive_page'] : 1;
+    $offset = ($current_page - 1) * $records_per_page;
+
+    // Get the selected academic year from the request
+    $selected_academic_year = isset($_GET['academic_year']) ? intval($_GET['academic_year']) : $academic_year;
+
+    // Build the archive WHERE clause with academic year filter
+    $archive_where = "pa.is_closed = TRUE";
+    $start_date = $selected_academic_year . '-04-01';
+    $end_date = ($selected_academic_year + 1) . '-03-31';
+    $archive_where .= " AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
+
     $query = "SELECT pa.*, sc.class_name, sc.value, 
              creator.fullname as created_by_name,
              closer.fullname as closed_by_name
@@ -244,9 +291,15 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
              LEFT JOIN rssimyaccount_members creator ON pa.created_by = creator.associatenumber
              LEFT JOIN rssimyaccount_members closer ON pa.closed_by = closer.associatenumber
              WHERE $archive_where
-             ORDER BY pa.created_at DESC";
+             ORDER BY pa.created_at DESC
+             LIMIT $records_per_page OFFSET $offset";
 
     $result = pg_query($con, $query);
+
+    // Get total count for pagination (using the same WHERE conditions)
+    $count_query = "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where";
+    $total_records = pg_fetch_result(pg_query($con, $count_query), 0, 0);
+    $total_pages = ceil($total_records / $records_per_page);
 
     if (pg_num_rows($result) == 0) {
         echo '<div class="alert alert-info">No archived records found.</div>';
@@ -307,6 +360,72 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
             echo '</div>';
             echo '</div>';
         }
+        // Pagination controls
+        echo '<nav aria-label="Archive pagination">';
+        echo '<ul class="pagination justify-content-center mt-3">';
+
+        // Previous button
+        if ($current_page > 1) {
+            echo '<li class="page-item">';
+            echo '<a class="page-link" href="#" onclick="loadArchivePage(' . ($current_page - 1) . ')">Previous</a>';
+            echo '</li>';
+        } else {
+            echo '<li class="page-item disabled">';
+            echo '<span class="page-link">Previous</span>';
+            echo '</li>';
+        }
+
+        // Page numbers
+        $start_page = max(1, $current_page - 2);
+        $end_page = min($total_pages, $current_page + 2);
+
+        if ($start_page > 1) {
+            echo '<li class="page-item">';
+            echo '<a class="page-link" href="#" onclick="loadArchivePage(1)">1</a>';
+            echo '</li>';
+            if ($start_page > 2) {
+                echo '<li class="page-item disabled">';
+                echo '<span class="page-link">...</span>';
+                echo '</li>';
+            }
+        }
+
+        for ($i = $start_page; $i <= $end_page; $i++) {
+            if ($i == $current_page) {
+                echo '<li class="page-item active" aria-current="page">';
+                echo '<span class="page-link">' . $i . '</span>';
+                echo '</li>';
+            } else {
+                echo '<li class="page-item">';
+                echo '<a class="page-link" href="#" onclick="loadArchivePage(' . $i . ')">' . $i . '</a>';
+                echo '</li>';
+            }
+        }
+
+        if ($end_page < $total_pages) {
+            if ($end_page < $total_pages - 1) {
+                echo '<li class="page-item disabled">';
+                echo '<span class="page-link">...</span>';
+                echo '</li>';
+            }
+            echo '<li class="page-item">';
+            echo '<a class="page-link" href="#" onclick="loadArchivePage(' . $total_pages . ')">' . $total_pages . '</a>';
+            echo '</li>';
+        }
+
+        // Next button
+        if ($current_page < $total_pages) {
+            echo '<li class="page-item">';
+            echo '<a class="page-link" href="#" onclick="loadArchivePage(' . ($current_page + 1) . ')">Next</a>';
+            echo '</li>';
+        } else {
+            echo '<li class="page-item disabled">';
+            echo '<span class="page-link">Next</span>';
+            echo '</li>';
+        }
+
+        echo '</ul>';
+        echo '</nav>';
     }
     exit;
 }
@@ -608,6 +727,17 @@ if (isset($_GET['view'])) {
                     </div>
                 </div>
             <?php endif; ?>
+
+            <?php if ($user_role == 'Admin' && $row['is_closed'] == false && $row['system_process_completed'] == true): ?>
+                <div class="mt-3 text-end">
+                    <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>" style="display: inline;">
+                        <input type="hidden" name="record_id" value="<?= $row['id'] ?>">
+                        <button type="submit" name="move_to_active" class="btn btn-warning btn-sm">
+                            <i class="bi bi-arrow-counterclockwise"></i> Move to Active
+                        </button>
+                    </form>
+                </div>
+            <?php endif; ?>
         </div>
 <?php
     }
@@ -904,16 +1034,15 @@ if (isset($_GET['view'])) {
                                     <?php endforeach; ?>
                                 </ul>
 
-                                <?php if ($selected_tab != 'archive'): ?>
-                                    <div class="d-flex align-items-center">
-                                        <label for="academic_year" class="form-label me-2 mb-0">Academic Year:</label>
-                                        <select class="form-select form-select-sm" id="academic_year" style="width: 120px;">
-                                            <?php foreach ($academic_years as $year => $label): ?>
-                                                <option value="<?= $year ?>" <?= $year == $selected_academic_year ? 'selected' : '' ?>><?= $label ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                <?php endif; ?>
+                                <!-- In the HTML, remove the disabled attribute from the academic year filter -->
+                                <div class="d-flex align-items-center">
+                                    <label for="academic_year" class="form-label me-2 mb-0">Academic Year:</label>
+                                    <select class="form-select form-select-sm" id="academic_year" style="width: 120px;">
+                                        <?php foreach ($academic_years as $year => $label): ?>
+                                            <option value="<?= $year ?>" <?= $year == $selected_academic_year ? 'selected' : '' ?>><?= $label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="tab-content p-3 border border-top-0 rounded-bottom" id="admissionTabsContent">
@@ -921,154 +1050,115 @@ if (isset($_GET['view'])) {
                                     <?php if ($tab_id != 'admin' || $user_role == 'Admin'): ?>
                                         <div class="tab-pane fade <?= $selected_tab == $tab_id ? 'show active' : '' ?>" id="<?= $tab_id ?>" role="tabpanel">
                                             <?php if ($tab_id == 'archive'): ?>
-                                                <div class="alert alert-info">
-                                                    <i class="bi bi-info-circle"></i> Archived records are shown here. Use filters to find specific records.
+                                                <div id="archiveContent">
+                                                    <?php if ($selected_tab == 'archive'): ?>
+                                                        <div class="text-center py-4">
+                                                            <div class="spinner-border text-primary" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                            <p class="mt-2">Loading archive records...</p>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php else: ?>
-                                                <h5 class="mb-3"><?= $tab['name'] ?> Records (<?= $academic_years[$selected_academic_year] ?>)</h5>
-                                            <?php endif; ?>
-
-                                            <?php
-                                            if ($tab_id != 'archive') {
-                                                $query = "SELECT pa.*, sc.class_name, sc.value, 
-                                                         creator.fullname as created_by_name,
-                                                         closer.fullname as closed_by_name
+                                                <?php
+                                                $query = "SELECT pa.*, sc.class_name, sc.value 
                                                          FROM parent_admissions pa
                                                          LEFT JOIN school_classes sc ON pa.class_id = sc.id
-                                                         LEFT JOIN rssimyaccount_members creator ON pa.created_by = creator.associatenumber
-                                                         LEFT JOIN rssimyaccount_members closer ON pa.closed_by = closer.associatenumber
                                                          WHERE {$tab['where']}
                                                          ORDER BY pa.created_at DESC";
-
                                                 $result = pg_query($con, $query);
+                                                ?>
 
-                                                if (pg_num_rows($result) == 0) {
-                                                    echo '<div class="alert alert-info">No records found.</div>';
-                                                } else {
-                                                    while ($row = pg_fetch_assoc($result)) {
-                                                        $status_class = $row['is_closed'] == 't' ? 'status-closed' : ($row['system_process_completed'] == 't' ? 'status-completed' : 'status-active');
-                                                        $status_text = $row['is_closed'] == 't' ? 'Closed' : ($row['system_process_completed'] == 't' ? 'Completed' : 'Active');
+                                                <?php if (pg_num_rows($result) == 0): ?>
+                                                    <div class="alert alert-info">No records found.</div>
+                                                <?php else: ?>
+                                                    <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                        <div class="card record-card">
+                                                            <div class="card-body">
+                                                                <div class="d-flex justify-content-between align-items-start">
+                                                                    <div>
+                                                                        <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
+                                                                        <p class="card-text mb-1"><small class="text-muted">Mobile: <?= htmlspecialchars($row['mobile']) ?></small></p>
+                                                                        <?php if ($row['class_name']): ?>
+                                                                            <p class="card-text mb-1"><small class="text-muted">Class: <?= htmlspecialchars($row['class_name']) ?> (<?= htmlspecialchars($row['value']) ?>)</small></p>
+                                                                        <?php endif; ?>
+                                                                        <p class="card-text mb-1"><small class="text-muted">Visit Type: <?= ucfirst($row['visit_type']) ?></small></p>
+                                                                    </div>
+                                                                    <span class="badge <?= $tab_id == 'active' ? 'status-active' : ($tab_id == 'admin' ? 'status-completed' : 'status-closed') ?>">
+                                                                        <?= $tab['name'] ?>
+                                                                    </span>
+                                                                </div>
 
-                                                        echo '<div class="card record-card">';
-                                                        echo '<div class="card-body">';
-                                                        echo '<div class="d-flex justify-content-between align-items-start">';
-                                                        echo '<div>';
-                                                        echo '<h5 class="card-title">' . htmlspecialchars($row['name']) . '</h5>';
-                                                        echo '<p class="card-text mb-1"><small class="text-muted">Mobile: ' . htmlspecialchars($row['mobile']) . '</small></p>';
-                                                        if ($row['class_name']) {
-                                                            echo '<p class="card-text mb-1"><small class="text-muted">Class: ' . htmlspecialchars($row['class_name']) . ' (' . htmlspecialchars($row['value']) . ')</small></p>';
-                                                        }
-                                                        echo '<p class="card-text mb-1"><small class="text-muted">Visit Type: ' . ucfirst($row['visit_type']) . '</small></p>';
-                                                        echo '</div>';
-                                                        echo '<span class="badge ' . $status_class . '">' . $status_text . '</span>';
-                                                        echo '</div>';
+                                                                <?php if ($row['visit_type'] == 'taking admission'): ?>
+                                                                    <div class="row mt-2">
+                                                                        <div class="col-md-4">
+                                                                            <p class="mb-1 small"><strong>Family Info:</strong>
+                                                                                Members: <?= $row['family_member_count'] ?: 'N/A' ?><br>
+                                                                                Income: <?= $row['monthly_income'] ? '₹' . $row['monthly_income'] : 'N/A' ?></p>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <p class="mb-1 small"><strong>Fees:</strong>
+                                                                                Submitted: <?= $row['fees_submission_date'] ? date('d M Y', strtotime($row['fees_submission_date'])) : 'N/A' ?><br>
+                                                                                Total: <?= $row['total_fee'] ? '₹' . $row['total_fee'] : 'N/A' ?></p>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <p class="mb-1 small"><strong>Payment:</strong>
+                                                                                Deposited: <?= $row['deposited_amount'] ? '₹' . $row['deposited_amount'] : 'N/A' ?><br>
+                                                                                Due: <?= $row['due_amount'] ? '₹' . $row['due_amount'] : 'N/A' ?><br>
+                                                                                Mode: <?= $row['payment_mode'] ? ucfirst($row['payment_mode']) : 'N/A' ?></p>
+                                                                        </div>
+                                                                    </div>
+                                                                <?php endif; ?>
 
-                                                        // Display additional information
-                                                        if ($row['visit_type'] == 'taking admission') {
-                                                            echo '<div class="row mt-2">';
-                                                            echo '<div class="col-md-4">';
-                                                            echo '<p class="mb-1 small"><strong>Family Info:</strong> ';
-                                                            echo 'Members: ' . ($row['family_member_count'] ?: 'N/A') . '<br>';
-                                                            echo 'Income: ' . ($row['monthly_income'] ? '₹' . $row['monthly_income'] : 'N/A') . '</p>';
-                                                            echo '</div>';
-                                                            echo '<div class="col-md-4">';
-                                                            echo '<p class="mb-1 small"><strong>Fees:</strong> ';
-                                                            echo 'Submitted: ' . ($row['fees_submission_date'] ? date('d M Y', strtotime($row['fees_submission_date'])) : 'N/A') . '<br>';
-                                                            echo 'Total: ' . ($row['total_fee'] ? '₹' . $row['total_fee'] : 'N/A') . '</p>';
-                                                            echo '</div>';
-                                                            echo '<div class="col-md-4">';
-                                                            echo '<p class="mb-1 small"><strong>Payment:</strong> ';
-                                                            echo 'Deposited: ' . ($row['deposited_amount'] ? '₹' . $row['deposited_amount'] : 'N/A') . '<br>';
-                                                            echo 'Due: ' . ($row['due_amount'] ? '₹' . $row['due_amount'] : 'N/A') . '<br>';
-                                                            echo 'Mode: ' . ($row['payment_mode'] ? ucfirst($row['payment_mode']) : 'N/A') . '</p>';
-                                                            echo '</div>';
-                                                            echo '</div>';
-                                                        }
+                                                                <?php if (!empty($row['remarks'])): ?>
+                                                                    <div class="alert alert-light mt-2 p-2">
+                                                                        <strong>Remarks:</strong> <?= nl2br(htmlspecialchars($row['remarks'])) ?>
+                                                                    </div>
+                                                                <?php endif; ?>
 
-                                                        // Display action buttons
-                                                        echo '<div class="d-flex justify-content-between mt-2">';
-                                                        echo '<div>';
-                                                        echo '<small class="text-muted">Created by: ' . htmlspecialchars($row['created_by_name']) . ' on ' . date('d M Y H:i', strtotime($row['created_at'])) . '</small>';
-                                                        if ($row['closed_by_name']) {
-                                                            echo '<br><small class="text-muted">Closed by: ' . htmlspecialchars($row['closed_by_name']) . ' on ' . date('d M Y H:i', strtotime($row['closed_at'])) . '</small>';
-                                                        }
-                                                        echo '</div>';
+                                                                <div class="d-flex justify-content-between mt-2">
+                                                                    <div>
+                                                                        <small class="text-muted">Created on <?= date('d M Y H:i', strtotime($row['created_at'])) ?></small>
+                                                                    </div>
+                                                                    <div>
+                                                                        <?php if ($tab_id == 'active' && $row['created_by'] == $user_id): ?>
+                                                                            <button class="btn btn-sm btn-outline-primary me-1" onclick="loadEditForm(<?= $row['id'] ?>)" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                                                <i class="bi bi-pencil"></i> Edit
+                                                                            </button>
+                                                                        <?php endif; ?>
 
-                                                        echo '<div>';
-                                                        if ($row['is_closed'] == 'f') {
-                                                            if ($row['system_process_completed'] == 't' && $user_role == 'Admin') {
-                                                                // Admin can close completed records
-                                                                echo '<button type="button" class="btn btn-sm btn-danger me-1" data-bs-toggle="modal" data-bs-target="#closeModal' . $row['id'] . '">';
-                                                                echo '<i class="bi bi-archive"></i> Close';
-                                                                echo '</button>';
-                                                            } elseif ($row['system_process_completed'] == 'f' && $row['created_by'] == $user_id && $tab_id == 'active') {
-                                                                // Creator can mark as completed (only in active tab)
-                                                                echo '<form method="POST" style="display: inline;" class="me-1">';
-                                                                echo '<input type="hidden" name="record_id" value="' . $row['id'] . '">';
-                                                                echo '<button type="submit" name="mark_completed" class="btn btn-sm btn-success">';
-                                                                echo '<i class="bi bi-check-circle"></i> Mark Completed';
-                                                                echo '</button>';
-                                                                echo '</form>';
-                                                            }
+                                                                        <button class="btn btn-sm btn-outline-secondary" onclick="loadViewDetails(<?= $row['id'] ?>)" data-bs-toggle="modal" data-bs-target="#viewModal">
+                                                                            <i class="bi bi-eye"></i> View
+                                                                        </button>
 
-                                                            // Edit button for active records
-                                                            if ($row['created_by'] == $user_id && $tab_id == 'active') {
-                                                                echo '<button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal" onclick="loadEditForm(' . $row['id'] . ')">';
-                                                                echo '<i class="bi bi-pencil"></i> Edit';
-                                                                echo '</button>';
-                                                            }
+                                                                        <?php if ($tab_id == 'active' && $row['created_by'] == $user_id): ?>
+                                                                            <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>" style="display: inline;">
+                                                                                <input type="hidden" name="record_id" value="<?= $row['id'] ?>">
+                                                                                <button type="submit" name="mark_completed" class="btn btn-sm btn-success ms-1">
+                                                                                    <i class="bi bi-check-circle"></i> Mark Completed
+                                                                                </button>
+                                                                            </form>
+                                                                        <?php endif; ?>
 
-                                                            // In your records display loop, where you have the action buttons:
-                                                            echo '&nbsp;<button type="button" class="btn btn-sm btn-info me-1" data-bs-toggle="modal" data-bs-target="#viewModal" onclick="loadViewDetails(' . $row['id'] . ')">';
-                                                            echo '<i class="bi bi-eye"></i> View';
-                                                            echo '</button>';
-                                                        }
-                                                        echo '</div>';
-                                                        echo '</div>';
-
-                                                        // Display remarks if exists
-                                                        if (!empty($row['remarks'])) {
-                                                            echo '<div class="alert alert-light mt-2 p-2">';
-                                                            echo '<strong>Remarks:</strong> ' . nl2br(htmlspecialchars($row['remarks']));
-                                                            echo '</div>';
-                                                        }
-
-                                                        // Close modal for each record
-                                                        if ($user_role == 'Admin' && $row['system_process_completed'] == 't' && $row['is_closed'] == 'f') {
-                                                            echo '<div class="modal fade" id="closeModal' . $row['id'] . '" tabindex="-1" aria-hidden="true">';
-                                                            echo '<div class="modal-dialog">';
-                                                            echo '<div class="modal-content">';
-                                                            echo '<form method="POST">';
-                                                            echo '<input type="hidden" name="record_id" value="' . $row['id'] . '">';
-                                                            echo '<div class="modal-header">';
-                                                            echo '<h5 class="modal-title">Close Record</h5>';
-                                                            echo '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
-                                                            echo '</div>';
-                                                            echo '<div class="modal-body">';
-                                                            echo '<div class="mb-3">';
-                                                            echo '<label for="close_remarks' . $row['id'] . '" class="form-label">Remarks</label>';
-                                                            echo '<textarea class="form-control" id="close_remarks' . $row['id'] . '" name="close_remarks" rows="3"></textarea>';
-                                                            echo '</div>';
-                                                            echo '</div>';
-                                                            echo '<div class="modal-footer">';
-                                                            echo '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
-                                                            echo '<button type="submit" name="close_record" class="btn btn-primary">Confirm Close</button>';
-                                                            echo '</div>';
-                                                            echo '</form>';
-                                                            echo '</div>';
-                                                            echo '</div>';
-                                                            echo '</div>';
-                                                        }
-
-                                                        echo '</div>';
-                                                        echo '</div>';
-                                                    }
-                                                }
-                                            } else {
-                                                // Archive tab - will be loaded via AJAX
-                                                echo '<div id="archiveContent"></div>';
-                                            }
-                                            ?>
+                                                                        <?php if ($tab_id == 'admin' && $user_role == 'Admin'): ?>
+                                                                            <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>" style="display: inline;">
+                                                                                <input type="hidden" name="record_id" value="<?= $row['id'] ?>">
+                                                                                <button type="submit" name="move_to_active" class="btn btn-sm btn-warning ms-1">
+                                                                                    <i class="bi bi-arrow-counterclockwise"></i> Move to Active
+                                                                                </button>
+                                                                            </form>
+                                                                            <button class="btn btn-sm btn-outline-danger ms-1" onclick="showCloseModal(<?= $row['id'] ?>)">
+                                                                                <i class="bi bi-archive"></i> Close
+                                                                            </button>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <?php endwhile; ?>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
@@ -1121,11 +1211,58 @@ if (isset($_GET['view'])) {
         </div>
     </div>
 
+    <!-- Close Record Modal -->
+    <div class="modal fade" id="closeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Close Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>">
+                    <div class="modal-body">
+                        <input type="hidden" name="record_id" id="closeRecordId">
+                        <div class="mb-3">
+                            <label for="close_remarks" class="form-label">Remarks (Optional)</label>
+                            <textarea class="form-control" id="close_remarks" name="close_remarks" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="close_record" class="btn btn-danger">Confirm Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
     <script>
-        // Show/hide admission fields based on visit type with reset functionality
-        document.getElementById('visit_type').addEventListener('change', function() {
+        // Main form field handlers
+        function setupFormFieldHandlers() {
+            // Show/hide admission fields based on visit type
+            const visitTypeField = document.getElementById('visit_type');
+            if (visitTypeField) {
+                visitTypeField.addEventListener('change', handleVisitTypeChange);
+            }
+
+            // Show/hide transaction ID field based on payment mode
+            const paymentModeField = document.getElementById('payment_mode');
+            if (paymentModeField) {
+                paymentModeField.addEventListener('change', handlePaymentModeChange);
+            }
+
+            // Calculate due amount automatically
+            const totalFeeField = document.getElementById('total_fee');
+            const depositedAmountField = document.getElementById('deposited_amount');
+            if (totalFeeField && depositedAmountField) {
+                totalFeeField.addEventListener('input', calculateDue);
+                depositedAmountField.addEventListener('input', calculateDue);
+            }
+        }
+
+        function handleVisitTypeChange() {
             const admissionFields = document.getElementById('admissionFields');
             const isAdmission = this.value === 'taking admission';
 
@@ -1134,41 +1271,38 @@ if (isset($_GET['view'])) {
 
             // List of all admission-related fields
             const admissionFieldsList = [
-                'family_member_count',
-                'monthly_income',
-                'fees_submission_date',
-                'total_fee',
-                'deposited_amount',
-                'due_amount',
-                'fees_month',
-                'payment_mode',
-                'transaction_id'
+                'family_member_count', 'monthly_income', 'fees_submission_date',
+                'total_fee', 'deposited_amount', 'due_amount', 'fees_month',
+                'payment_mode', 'transaction_id'
             ];
 
             // Handle field requirements and reset values
             admissionFieldsList.forEach(field => {
                 const element = document.getElementById(field);
-                if (element) {
-                    // Set required status only for admission
-                    if (['family_member_count', 'monthly_income', 'fees_submission_date',
-                            'total_fee', 'deposited_amount', 'fees_month', 'payment_mode'
-                        ].includes(field)) {
-                        element.required = isAdmission;
+                if (!element) return;
+
+                // Set required status for relevant fields
+                const requiredFields = [
+                    'family_member_count', 'monthly_income', 'fees_submission_date',
+                    'total_fee', 'deposited_amount', 'fees_month', 'payment_mode'
+                ];
+
+                if (requiredFields.includes(field)) {
+                    element.required = isAdmission;
+                }
+
+                // Reset values when switching to inquiry
+                if (!isAdmission) {
+                    if (element.tagName === 'SELECT') {
+                        element.selectedIndex = 0;
+                    } else {
+                        element.value = '';
                     }
 
-                    // Reset values when switching to inquiry
-                    if (!isAdmission) {
-                        if (element.tagName === 'SELECT') {
-                            element.selectedIndex = 0; // Reset select to first option
-                        } else {
-                            element.value = ''; // Clear input fields
-                        }
-
-                        // Special case for payment mode - hide transaction ID field
-                        if (field === 'payment_mode') {
-                            document.getElementById('transactionIdField').style.display = 'none';
-                            document.getElementById('transaction_id').required = false;
-                        }
+                    // Special handling for payment mode
+                    if (field === 'payment_mode') {
+                        document.getElementById('transactionIdField').style.display = 'none';
+                        document.getElementById('transaction_id').required = false;
                     }
                 }
             });
@@ -1177,122 +1311,219 @@ if (isset($_GET['view'])) {
             if (isAdmission) {
                 calculateDue();
             } else {
-                // Clear due amount when not admission
                 const dueAmountField = document.getElementById('due_amount');
                 if (dueAmountField) dueAmountField.value = '';
             }
-        });
-
-        // Show/hide transaction ID field based on payment mode
-        document.getElementById('payment_mode').addEventListener('change', function() {
-            const transactionIdField = document.getElementById('transactionIdField');
-            const showTransactionId = this.value === 'online';
-            transactionIdField.style.display = showTransactionId ? 'block' : 'none';
-            document.getElementById('transaction_id').required = showTransactionId;
-
-            // Clear transaction ID if not online
-            if (!showTransactionId) {
-                document.getElementById('transaction_id').value = '';
-            }
-        });
-
-        // Calculate due amount automatically
-        document.getElementById('total_fee').addEventListener('input', calculateDue);
-        document.getElementById('deposited_amount').addEventListener('input', calculateDue);
-
-        function calculateDue() {
-            const totalFee = parseFloat(document.getElementById('total_fee').value) || 0;
-            const deposited = parseFloat(document.getElementById('deposited_amount').value) || 0;
-            const due = totalFee - deposited;
-            document.getElementById('due_amount').value = due.toFixed(2);
         }
 
-        // Update URL when tabs are changed
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function(event) {
-                const tabName = event.target.getAttribute('data-bs-target').replace('#', '');
-                updateUrlParameter('tab', tabName);
+        function handlePaymentModeChange() {
+            const transactionIdField = document.getElementById('transactionIdField');
+            const transactionIdInput = document.getElementById('transaction_id');
+            const showTransactionId = this.value === 'online';
 
-                // Load archive content when tab is shown
-                if (tabName === 'archive') {
-                    loadArchiveContent();
-                }
+            transactionIdField.style.display = showTransactionId ? 'block' : 'none';
+            transactionIdInput.required = showTransactionId;
+
+            if (!showTransactionId) {
+                transactionIdInput.value = '';
+            }
+        }
+
+        function calculateDue() {
+            try {
+                const totalFee = parseFloat(document.getElementById('total_fee').value) || 0;
+                const deposited = parseFloat(document.getElementById('deposited_amount').value) || 0;
+                const due = totalFee - deposited;
+                document.getElementById('due_amount').value = due.toFixed(2);
+            } catch (error) {
+                console.error('Error calculating due amount:', error);
+            }
+        }
+
+        // Tab and academic year handling
+        function setupTabHandlers() {
+            // Tab change event
+            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', handleTabChange);
             });
-        });
 
-        // Academic year filter change
-        document.getElementById('academic_year').addEventListener('change', function() {
-            updateUrlParameter('academic_year', this.value);
-            window.location.reload();
-        });
+            // Academic year change event
+            const academicYearField = document.getElementById('academic_year');
+            if (academicYearField) {
+                academicYearField.addEventListener('change', handleAcademicYearChange);
+            }
+        }
 
+        function handleTabChange(event) {
+            const tabName = event.target.getAttribute('data-bs-target').replace('#', '');
+            const academicYear = document.getElementById('academic_year').value;
+
+            updateUrlParameter('tab', tabName);
+            updateUrlParameter('academic_year', academicYear);
+
+            if (tabName === 'archive') {
+                loadArchiveContent();
+            } else {
+                window.location.search = new URLSearchParams({
+                    tab: tabName,
+                    academic_year: academicYear
+                }).toString();
+            }
+        }
+
+        function handleAcademicYearChange() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get('tab') || 'active';
+            const academicYear = this.value;
+
+            updateUrlParameter('academic_year', academicYear);
+
+            if (currentTab === 'archive') {
+                loadArchiveContent(1);
+            } else {
+                window.location.search = new URLSearchParams({
+                    tab: currentTab,
+                    academic_year: academicYear
+                }).toString();
+            }
+        }
+
+        // Archive content loading
+        function loadArchiveContent(page = 1) {
+            const archiveContent = document.getElementById('archiveContent');
+            if (!archiveContent) return;
+
+            archiveContent.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading archive records...</p>
+            </div>
+        `;
+
+            const academicYear = document.getElementById('academic_year').value;
+
+            // Update URL without reloading
+            const url = new URL(window.location);
+            url.searchParams.set('archive_page', page);
+            url.searchParams.set('academic_year', academicYear);
+            window.history.pushState({}, '', url);
+
+            fetch(`<?= $_SERVER['PHP_SELF'] ?>?ajax=archive&archive_page=${page}&academic_year=${academicYear}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(data => {
+                    archiveContent.innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading archive data:', error);
+                    archiveContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading archive data. Please try again.
+                    </div>
+                `;
+                });
+        }
+
+        function loadArchivePage(page) {
+            loadArchiveContent(page);
+            return false;
+        }
+
+        // Modal loading functions
+        function loadEditForm(recordId) {
+            const editModalBody = document.getElementById('editModalBody');
+            if (!editModalBody) return;
+
+            editModalBody.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+
+            fetch(`<?= $_SERVER['PHP_SELF'] ?>?edit=${recordId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(data => {
+                    editModalBody.innerHTML = data;
+                    if (typeof calculateEditDue === 'function') {
+                        calculateEditDue();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading edit form:', error);
+                    editModalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading form. Please try again.
+                    </div>
+                `;
+                });
+        }
+
+        function loadViewDetails(recordId) {
+            const viewModalBody = document.getElementById('viewModalBody');
+            if (!viewModalBody) return;
+
+            viewModalBody.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+
+            fetch(`<?= $_SERVER['PHP_SELF'] ?>?view=${recordId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(data => {
+                    viewModalBody.innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading details:', error);
+                    viewModalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading details. Please try again.
+                    </div>
+                `;
+                });
+        }
+
+        function showCloseModal(recordId) {
+            const closeRecordIdField = document.getElementById('closeRecordId');
+            if (closeRecordIdField) {
+                closeRecordIdField.value = recordId;
+                const closeModal = new bootstrap.Modal(document.getElementById('closeModal'));
+                closeModal.show();
+            }
+        }
+
+        // Utility functions
         function updateUrlParameter(key, value) {
             const url = new URL(window.location);
             url.searchParams.set(key, value);
             window.history.replaceState({}, '', url);
         }
 
-        // Load archive content via AJAX
-        function loadArchiveContent() {
-            const archiveContent = document.getElementById('archiveContent');
-            if (archiveContent && archiveContent.innerHTML.trim() === '') {
-                archiveContent.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary, role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-                fetch(window.location.pathname + '?ajax=archive')
-                    .then(response => response.text())
-                    .then(data => {
-                        archiveContent.innerHTML = data;
-                    })
-                    .catch(error => {
-                        archiveContent.innerHTML = '<div class="alert alert-danger">Error loading archive data</div>';
-                        console.error('Error:', error);
-                    });
-            }
-        }
-
-        // Load edit form with calculations
-        function loadEditForm(recordId) {
-            const editModalBody = document.getElementById('editModalBody');
-            editModalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-            fetch(window.location.pathname + '?edit=' + recordId)
-                .then(response => response.text())
-                .then(data => {
-                    editModalBody.innerHTML = data;
-                    // Trigger initial calculations
-                    if (typeof calculateEditDue === 'function') {
-                        calculateEditDue();
-                    }
-                })
-                .catch(error => {
-                    editModalBody.innerHTML = '<div class="alert alert-danger">Error loading edit form</div>';
-                    console.error('Error:', error);
-                });
-        }
-
-        // Initialize - load archive if it's the active tab
+        // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            setupFormFieldHandlers();
+            setupTabHandlers();
+
             if (window.location.href.includes('tab=archive')) {
-                loadArchiveContent();
+                const urlParams = new URLSearchParams(window.location.search);
+                const archivePage = urlParams.get('archive_page') || 1;
+                loadArchiveContent(archivePage);
             }
         });
-    </script>
-    <script>
-        // Load view details via AJAX
-        function loadViewDetails(recordId) {
-            const viewModalBody = document.getElementById('viewModalBody');
-            viewModalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-            fetch(window.location.pathname + '?view=' + recordId)
-                .then(response => response.text())
-                .then(data => {
-                    viewModalBody.innerHTML = data;
-                })
-                .catch(error => {
-                    viewModalBody.innerHTML = '<div class="alert alert-danger">Error loading details</div>';
-                    console.error('Error:', error);
-                });
-        }
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
