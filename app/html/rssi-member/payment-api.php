@@ -92,6 +92,22 @@ if ($formtype == "policybodyedit") {
   $result = pg_query($con, $policybodyeditt);
 }
 
+if ($formtype == "toggleInactive") {
+  $policyid = $_POST['policyid'];
+  $is_inactive = $_POST['is_inactive'] === 'true' ? 'true' : 'false';
+
+  // Update the is_inactive status
+  $toggleQuery = "UPDATE policy SET is_inactive = $is_inactive WHERE policyid = '$policyid'";
+  $result = pg_query($con, $toggleQuery);
+
+  if ($result) {
+    echo json_encode(['success' => true]);
+  } else {
+    echo json_encode(['success' => false, 'error' => pg_last_error($con)]);
+  }
+  exit;
+}
+
 
 if ($formtype == "short_description" || $formtype == "long_description") {
   // Get the ticket ID and the new value from the form
