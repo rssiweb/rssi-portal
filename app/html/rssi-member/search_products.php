@@ -26,12 +26,13 @@ if ($addStock) {
         i.review_count,
         i.is_featured
     FROM stock_item i
-    WHERE 1=1";
-    
+    WHERE 1=1
+    AND is_active = true";
+
     if (!empty($searchTerm)) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
     }
-    
+
     $query .= " ORDER BY i.item_name";
 } else {
     // Original query for all other cases
@@ -88,7 +89,7 @@ if (!$forStockManagement && !$addStock) {
                    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
                    JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
                    WHERE 1=1";
-    
+
     if ($forStockManagement) {
         $countQuery .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
     } else {
