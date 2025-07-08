@@ -128,28 +128,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch only the latest external score requests per course and associate
 $query = "
-    WITH latest_status_per_combination AS (
-        SELECT 
-            e.course_id,
-            e.associate_number,
-            MAX(e.submission_time) as latest_submission_time,
-            MAX(e.status) as latest_status
-        FROM external_exam_scores e
-        GROUP BY e.course_id, e.associate_number
-    ),
-    pending_latest_submissions AS (
-        SELECT e.*, m.fullname, w.coursename
-        FROM external_exam_scores e
-        JOIN latest_status_per_combination l ON 
-            e.course_id = l.course_id AND 
-            e.associate_number = l.associate_number AND
-            e.submission_time = l.latest_submission_time
-        LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
-        LEFT JOIN wbt w ON e.course_id = w.courseid
-        WHERE l.latest_status IS NULL OR l.latest_status = 'pending'
-    )
-    SELECT * FROM pending_latest_submissions
-    ORDER BY submission_time DESC
+WITH ranked_submissions AS (
+    SELECT 
+        e.*,
+        m.fullname,
+        w.coursename,
+        ROW_NUMBER() OVER (
+            PARTITION BY e.course_id, e.associate_number 
+            ORDER BY e.submission_time DESC
+        ) as rn
+    FROM external_exam_scores e
+    LEFT JOIN rssimyaccount_members m ON e.associate_number = m.associatenumber
+    LEFT JOIN wbt w ON e.course_id = w.courseid
+),
+latest_pending_submissions AS (
+    SELECT * FROM ranked_submissions 
+    WHERE rn = 1 AND (status IS NULL OR status = 'pending')
+)
+SELECT * FROM latest_pending_submissions
+ORDER BY submission_time DESC;
 ";
 $result = pg_query($con, $query);
 
