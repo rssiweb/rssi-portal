@@ -1219,7 +1219,7 @@ if (isset($_GET['view'])) {
                     <h5 class="modal-title">Close Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>">
+                <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>">
                     <div class="modal-body">
                         <input type="hidden" name="record_id" id="closeRecordId">
                         <div class="mb-3">
