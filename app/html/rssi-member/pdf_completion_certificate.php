@@ -166,15 +166,15 @@ if (!$result) {
         $pdf->SetFont('cambria', '', 12); // Set font size for grade
 
         // Grade (with font size 25)
-        $pdf->SetXY(15, 158); // Position for grade
+        $pdf->SetXY(15, 153); // Position for grade
         $pdf->Cell(0, 0, $fullname, 0, 1, 'C'); // Center aligned text
 
         // Project Name (example, use a dynamic value if available)
-        $pdf->SetXY(15, 163); // Position for project name
+        $pdf->SetXY(15, 158); // Position for project name
         $pdf->Cell(0, 0, $position, 0, 1, 'C'); // Center aligned text
 
         // Project Name (example, use a dynamic value if available)
-        $pdf->SetXY(15, 170); // Position for project name
+        $pdf->SetXY(15, 165); // Position for project name
         $pdf->Cell(0, 0, date("d/m/Y", strtotime(date('Y-m-d H:i:s'))), 0, 1, 'C'); // Center aligned text
 
         // Generate the QR code URL dynamically
