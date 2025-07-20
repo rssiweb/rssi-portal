@@ -385,7 +385,7 @@ if (@$_POST['form-type'] == "add_students") {
                                             <table class="table table-sm table-bordered table-hover">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th width="40"><input type="checkbox" id="selectAll"></th>
+                                                        <th width="40"><input class="form-check-input" type="checkbox" id="selectAll"></th>
                                                         <th>Student ID</th>
                                                         <th>Student Name</th>
                                                         <th>Category</th>
@@ -754,7 +754,7 @@ if (@$_POST['form-type'] == "add_students") {
                                 <td>
                                     <input type="checkbox" name="student_ids[]" 
                                            value="${student.student_id}" 
-                                           class="student-checkbox"
+                                           class="form-check-input student-checkbox"
                                            ${isEnrolled ? 'disabled' : ''}>
                                 </td>
                                 <td>${student.student_id}</td>
