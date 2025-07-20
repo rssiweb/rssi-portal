@@ -624,16 +624,16 @@ if (@$_POST['form-type'] == "add_students") {
 
                 // Update exam details display
                 $('#examDetailsSlider').html(`
-                    <div class="exam-details">
-                        <h6 class="mb-2">${exam.academic_year} - ${exam.exam_type} - ${exam.class} - ${exam.subject}</h6>
-                        <div class="small">
-                            <div>Id- ${(exam.exam_id)}</div>
-                            <div>Mode: ${formatExamModes(exam.exam_mode)}</div>
-                            <div>Written: ${formatExamDetail(exam.full_marks_written, exam.exam_date_written, exam.teacher_written)}</div>
-                            <div>Viva: ${formatExamDetail(exam.full_marks_viva, exam.exam_date_viva, exam.teacher_viva)}</div>
-                        </div>
+                <div class="exam-details">
+                    <h6 class="mb-2">${exam.academic_year} - ${exam.exam_type} - ${exam.class} - ${exam.subject}</h6>
+                    <div class="small">
+                        <div>Id- ${(exam.exam_id)}</div>
+                        <div>Mode: ${formatExamModes(exam.exam_mode)}</div>
+                        <div>Written: ${formatExamDetail(exam.full_marks_written, exam.exam_date_written, exam.teacher_written)}</div>
+                        <div>Viva: ${formatExamDetail(exam.full_marks_viva, exam.exam_date_viva, exam.teacher_viva)}</div>
                     </div>
-                `);
+                </div>
+            `);
             }
 
             function formatExamModes(modes) {

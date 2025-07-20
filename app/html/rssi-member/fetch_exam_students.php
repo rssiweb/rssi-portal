@@ -12,36 +12,43 @@ validation();
 
 // Get filter parameters
 $exam_ids = $_POST['exam_id'] ?? '';
-$class = $_POST['class'] ?? [];
+$class_filter = $_POST['class'] ?? []; // User-specified class filter
 $category = $_POST['category'] ?? [];
 $student_ids = $_POST['student_ids'] ?? '';
 $excluded_ids = $_POST['excluded_ids'] ?? '';
 
-// Convert comma-separated exam_ids to array and properly format for PostgreSQL
+// Convert comma-separated exam_ids to array
 $exam_id_array = explode(',', $exam_ids);
 $exam_id_array = array_map('trim', $exam_id_array);
 $exam_id_array = array_filter($exam_id_array); // Remove empty values
 
-// Validate that all selected exams are for the same class
-$exam_classes_query = "SELECT DISTINCT class FROM exams 
-LEFT JOIN exam_marks_data em ON exams.exam_id = em.exam_id
-WHERE exams.exam_id = ANY($1)";
+// Get all classes associated with these exams from exam_marks_data
+$exam_classes_query = "SELECT DISTINCT class FROM exam_marks_data 
+                      WHERE exam_id = ANY($1)";
 $exam_classes_result = pg_query_params($con, $exam_classes_query, ['{' . implode(',', $exam_id_array) . '}']);
 $exam_classes = pg_fetch_all($exam_classes_result, PGSQL_ASSOC) ?: [];
 
-if (count($exam_classes) > 1) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Selected exams must be for the same class']);
-    exit;
-}
-
 if (count($exam_classes) === 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'No valid exams found']);
+    echo json_encode(['error' => 'No classes found for selected exams']);
     exit;
 }
 
-$required_class = $exam_classes[0]['class'];
+// Extract just the class values
+$exam_class_values = array_column($exam_classes, 'class');
+
+// If user specified class filter, validate it's a subset of exam classes
+if (!empty($class_filter)) {
+    $invalid_classes = array_diff($class_filter, $exam_class_values);
+    if (!empty($invalid_classes)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Cannot filter by classes not associated with selected exams']);
+        exit;
+    }
+    $applicable_classes = $class_filter;
+} else {
+    $applicable_classes = $exam_class_values;
+}
 
 // Build the base query
 $query = "SELECT s.student_id, s.studentname, s.category, s.class,
@@ -58,21 +65,14 @@ $conditions = [];
 $exam_ids_param = '{' . implode(',', $exam_id_array) . '}';
 $params[] = $exam_ids_param;
 
-// Automatically add class filter based on exam's class
-$conditions[] = "s.class = $" . (count($params) + 1);
-$params[] = $required_class;
+// Add class filter (using exam's classes or user-specified subset)
+$class_placeholders = implode(',', array_map(function($i) use ($params) { 
+    return '$' . (count($params) + $i + 1); 
+}, array_keys($applicable_classes)));
+$conditions[] = "s.class IN ($class_placeholders)";
+$params = array_merge($params, $applicable_classes);
 
-// Additional filters (will be combined with AND)
-if (!empty($class)) {
-    // Warn if user is trying to filter by different class than exam's class
-    $invalid_classes = array_diff($class, [$required_class]);
-    if (!empty($invalid_classes)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Cannot filter by different class than exam class']);
-        exit;
-    }
-}
-
+// Additional filters
 if (!empty($category)) {
     $category_placeholders = implode(',', array_map(function($i) use ($params) { 
         return '$' . (count($params) + $i + 1); 
@@ -108,10 +108,6 @@ if (count($conditions) > 0) {
 }
 
 $query .= " ORDER BY s.studentname";
-
-// Debugging (remove in production)
-error_log("Query: " . $query);
-error_log("Params: " . print_r($params, true));
 
 $result = pg_query_params($con, $query, $params);
 
