@@ -126,6 +126,7 @@ $student = pg_fetch_assoc(pg_query($con, $studentQuery));
                             <tr>
                                 <th>Category</th>
                                 <th>Amount</th>
+                                <th>Concession Category</th>
                                 <th>Reason</th>
                                 <th>Effective From</th>
                                 <th>Effective Until</th>
@@ -138,6 +139,7 @@ $student = pg_fetch_assoc(pg_query($con, $studentQuery));
                                 <tr>
                                     <td><?= $concession['category_name'] ?? 'General' ?></td>
                                     <td class="text-end">₹<?= number_format($concession['concession_amount'], 2) ?></td>
+                                    <td><?= $concession['concession_category'] ?></td>
                                     <td><?= $concession['reason'] ?></td>
                                     <td><?= date('d-M-Y', strtotime($concession['effective_from'])) ?></td>
                                     <td><?= $concession['effective_until'] ? date('d-M-Y', strtotime($concession['effective_until'])) : 'Ongoing' ?></td>

@@ -12,25 +12,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Function to build redirect URL with proper parameter handling
-function buildRedirectUrl($params)
+// Function to clean and unique array parameters
+function cleanArrayParam($param)
 {
-    $queryParams = [];
-
-    foreach ($params as $key => $value) {
-        if (is_array($value)) {
-            foreach ($value as $item) {
-                $queryParams[] = urlencode($key . '[]') . '=' . urlencode($item);
-            }
-        } elseif ($value !== '' && $value !== null) {
-            $queryParams[] = urlencode($key) . '=' . urlencode($value);
-        }
+    if (is_array($param)) {
+        // Remove empty values and get unique values
+        return array_unique(array_filter($param, function ($value) {
+            return $value !== '' && $value !== null;
+        }));
     }
-
-    return 'fee_collection.php?' . implode('&', $queryParams);
+    return $param;
 }
 
-// Get and validate all parameters
+// Get and validate all required parameters - with proper array handling
 $redirectParams = [
     'status' => $_REQUEST['status'] ?? 'Active',
     'month' => $_REQUEST['month'] ?? date('F'),
@@ -39,16 +33,46 @@ $redirectParams = [
 ];
 
 // Handle class parameter (can be array or string)
-if (isset($_REQUEST['class']) && is_array($_REQUEST['class'])) {
-    $redirectParams['class'] = $_REQUEST['class'];
-} elseif (isset($_REQUEST['class']) && !empty($_REQUEST['class'])) {
-    $redirectParams['class'] = [$_REQUEST['class']];
+if (isset($_REQUEST['class'])) {
+    $redirectParams['class'] = is_array($_REQUEST['class'])
+        ? cleanArrayParam($_REQUEST['class'])
+        : [$_REQUEST['class']];
 } else {
     $redirectParams['class'] = [];
 }
 
+// Handle student_ids parameter - ensure unique values
+if (isset($_REQUEST['student_ids'])) {
+    $redirectParams['student_ids'] = is_array($_REQUEST['student_ids'])
+        ? cleanArrayParam($_REQUEST['student_ids'])
+        : [$_REQUEST['student_ids']];
+} else {
+    $redirectParams['student_ids'] = [];
+}
+
+// Improved function to build redirect URL with proper parameter handling
+function buildRedirectUrl($params)
+{
+    $queryParts = [];
+
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            // Handle array parameters (like student_ids[])
+            foreach (array_unique($value) as $item) {
+                if ($item !== '' && $item !== null) {
+                    $queryParts[] = urlencode($key . '[]') . '=' . urlencode($item);
+                }
+            }
+        } elseif ($value !== '' && $value !== null) {
+            $queryParts[] = urlencode($key) . '=' . urlencode($value);
+        }
+    }
+
+    return 'fee_collection.php?' . implode('&', $queryParts);
+}
+
 // Input validation
-$requiredFields = ['student_id', 'reason', 'effective_from', 'category_ids', 'concession_amounts'];
+$requiredFields = ['student_id', 'concession_category', 'reason', 'effective_from', 'category_ids', 'concession_amounts'];
 foreach ($requiredFields as $field) {
     if (empty($_POST[$field])) {
         http_response_code(400);
@@ -63,6 +87,7 @@ foreach ($requiredFields as $field) {
 
 // Extract and sanitize inputs
 $studentId = pg_escape_string($con, $_POST['student_id']);
+$concession_category = pg_escape_string($con, $_POST['concession_category']);
 $reason = pg_escape_string($con, $_POST['reason']);
 $effectiveFrom = $_POST['effective_from'];
 $effectiveUntil = !empty($_POST['effective_until']) ? $_POST['effective_until'] : null;
@@ -104,8 +129,8 @@ if (!pg_query($con, "BEGIN")) {
 try {
     $insertedCount = 0;
     $insertQuery = "INSERT INTO student_concessions 
-                   (student_id, category_id, concession_amount, reason, effective_from, effective_until, created_by)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7)";
+                   (student_id, category_id, concession_amount, reason, effective_from, effective_until, created_by,concession_category)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7,$8)";
 
     // Prepare statement
     $stmt = pg_prepare($con, "insert_concession", $insertQuery);
@@ -125,7 +150,8 @@ try {
             $reason,
             $effectiveFrom,
             $effectiveUntil,
-            $associatenumber
+            $associatenumber,
+            $concession_category
         ];
 
         $result = pg_execute($con, "insert_concession", $params);

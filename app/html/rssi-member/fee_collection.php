@@ -875,23 +875,33 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <!-- Dropdown + Info Button -->
+                            <div class="col-md-12">
+                                <label for="concessionCategory" class="form-label">Concession Category</label>
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select me-2" id="concessionCategory" name="concession_category" required>
+                                        <option value="">-- Select Category --</option>
+                                        <option value="admission_month">Admission Month Adjustment</option>
+                                        <option value="rounding_off">Rounding Off Adjustment</option>
+                                        <option value="financial_hardship">Financial Hardship / Economic Background</option>
+                                        <option value="sibling">Sibling Concession</option>
+                                        <option value="staff_child">Staff Child Concession</option>
+                                        <option value="special_talent">Special Talent / Merit-Based</option>
+                                        <option value="early_bird">Promotional / Early Bird Offer</option>
+                                        <option value="scholarship">Scholarship-Based</option>
+                                        <option value="referral">Referral / Community Support</option>
+                                        <option value="special_case">Special Cases / Discretionary</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#concessionInfoModal">
+                                        <i class="bi bi-info-circle"></i> Category Info
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
                                 <label for="concessionReason" class="form-label">Reason</label>
                                 <textarea class="form-control" id="concessionReason" name="reason" rows="3" required></textarea>
                             </div>
                         </div>
-
-                        <!-- <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="concessionFrom" class="form-label">Effective From</label>
-                                <input type="date" class="form-control" id="concessionFrom" name="effective_from"
-                                    value="<?= date('Y-m-d') ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="concessionUntil" class="form-label">Effective Until (optional)</label>
-                                <input type="date" class="form-control" id="concessionUntil" name="effective_until">
-                            </div>
-                        </div> -->.
 
                         <div class="row mb-3">
                             <div class="col-md-4">
@@ -1113,6 +1123,32 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <button type="submit" class="btn btn-primary">Submit Payment</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="concessionInfoModal" tabindex="-1" aria-labelledby="concessionInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="concessionInfoModalLabel">Concession Category Explanation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ol>
+                        <li><strong>Admission Month Adjustment:</strong> For students admitted after the academic year begins. E.g., admission in July means April–June fees are waived.</li>
+                        <li><strong>Rounding Off Adjustment:</strong> Small fee reductions for rounding convenience (e.g., ₹4510 becomes ₹4500).</li>
+                        <li><strong>Financial Hardship / Economic Background:</strong> Support for students from economically weaker backgrounds. May require documentation.</li>
+                        <li><strong>Sibling Concession:</strong> Discount for families with multiple children enrolled. Typically applies to the 2nd or 3rd child.</li>
+                        <li><strong>Staff Child Concession:</strong> Reduced fees for children of school staff or teachers.</li>
+                        <li><strong>Special Talent / Merit-Based:</strong> Given for academic or extracurricular excellence (e.g., scoring 90%+ or excelling in sports).</li>
+                        <li><strong>Promotional / Early Bird Offer:</strong> Time-limited discount for early enrollments or during specific campaigns.</li>
+                        <li><strong>Scholarship-Based:</strong> Based on internal tests or government scholarship eligibility. Requires verification.</li>
+                        <li><strong>Referral / Community Support:</strong> Offered when a student joins due to a parent referral or NGO/community initiative.</li>
+                        <li><strong>Special Cases / Discretionary:</strong> Unique cases like parent death, medical emergencies, orphan students, etc. Requires approval.</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
@@ -1536,6 +1572,16 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             });
         });
     </script>
+    <!-- <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll("input[required], select[required], textarea[required]").forEach(function(field) {
+                const label = document.querySelector("label[for='" + field.id + "']");
+                if (label && !label.innerHTML.includes("*")) {
+                    label.innerHTML += ' <span style="color: red">*</span>';
+                }
+            });
+        });
+    </script> -->
 </body>
 
 </html>
