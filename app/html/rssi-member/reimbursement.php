@@ -281,7 +281,7 @@ foreach ($accountNatures as $accountNature) {
                                                             </span>
 
                                                             <div id="filter-checksh">
-                                                                <input type="checkbox" name="ack" id="ack" value="1" required />
+                                                                <input class="form-check-input" type="checkbox" name="ack" id="ack" value="1" required />
                                                                 <label for="ack" style="font-weight: 400;">I, hereby authorize Insurer/TPA to audit/investigate my claims also authorize to share the claim details with Government authorities/IRDA for audit requirements. I also agree and certify that all of the information pertaining to this claim is true and correct if it is found to be false and/or if it is proved that claim documents are manipulated then, I understand and agree that RSSI will initiate appropriate disciplinary proceedings which may also lead to termination of my employment with RSSI.</label>
                                                             </div>
                                                             </span>
