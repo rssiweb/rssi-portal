@@ -532,7 +532,7 @@ if ($formtype == "donation_form") {
           "transactionid" => $transactionId,
           "currency" => $currency,
           "amount" => $donationAmount
-        ), $email, false);
+        ), $email);
       }
     }
 

@@ -286,7 +286,7 @@ if (!$result) {
 
                                         <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
                                         <div id="filter-checksh">
-                                            <input type="checkbox" name="is_userh" id="is_userh" value="1" <?php if (isset($_POST['is_userh'])) echo "checked='checked'"; ?> />
+                                            <input class="form-check-input" type="checkbox" name="is_userh" id="is_userh" value="1" <?php if (isset($_POST['is_userh'])) echo "checked='checked'"; ?> />
                                             <label for="is_userh" style="font-weight: 400;">Half day</label>
                                         </div>
                                     </div>
@@ -387,7 +387,7 @@ if (!$result) {
                                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                                     </div>
                                                     <div id="filter-checks">
-                                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
                                                         <label for="is_user" style="font-weight: 400;">Search by Leave ID</label>
                                                     </div>
                                                 </form>
@@ -638,7 +638,7 @@ if (!$result) {
                                                         <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
                                                     </span>
                                                     <div id="filter-checkshr">
-                                                        <input type="checkbox" name="is_userhr" id="" />
+                                                        <input class="form-check-input" type="checkbox" name="is_userhr" id="" />
                                                         <label for="is_userhr" style="font-weight: 400;">Half day</label>
                                                     </div>
                                                     <br>
@@ -717,7 +717,7 @@ if (!$result) {
                                         profile = document.getElementById("is_userhr" + mydata["leaveid"])
                                         profile.value = mydata["halfday"]
 
-                                        $('input[type="checkbox"]').on('change', function() {
+                                        $('input[class="form-check-input" type="checkbox"]').on('change', function() {
                                             this.value ^= 1;
                                         });
 
