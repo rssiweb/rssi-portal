@@ -881,7 +881,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                 <div class="d-flex align-items-center">
                                     <select class="form-select me-2" id="concessionCategory" name="concession_category" required>
                                         <option value="">-- Select Category --</option>
-                                        <option value="admission_month">Admission Month Adjustment</option>
+                                        <option value="non_billable">Non-Billable Adjustment</option>
                                         <option value="rounding_off">Rounding Off Adjustment</option>
                                         <option value="financial_hardship">Financial Hardship / Economic Background</option>
                                         <option value="sibling">Sibling Concession</option>
@@ -1137,7 +1137,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 </div>
                 <div class="modal-body">
                     <ol>
-                        <li><strong>Admission Month Adjustment:</strong> For students admitted after the academic year begins. E.g., admission in July means April–June fees are waived.</li>
+                        <li><strong>Non-Billable Adjustment:</strong> Amount deducted from the total payable fee due to reasons like system alignment, late admission, or other administrative factors. This is not a concession but a reflection of the actual chargeable period or scope.</li>
                         <li><strong>Rounding Off Adjustment:</strong> Small fee reductions for rounding convenience (e.g., ₹4510 becomes ₹4500).</li>
                         <li><strong>Financial Hardship / Economic Background:</strong> Support for students from economically weaker backgrounds. May require documentation.</li>
                         <li><strong>Sibling Concession:</strong> Discount for families with multiple children enrolled. Typically applies to the 2nd or 3rd child.</li>

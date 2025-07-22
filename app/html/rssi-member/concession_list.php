@@ -10,6 +10,16 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// Set current academic year as default if no filter specified
+if (empty($_GET['academic_year'])) {
+    $currentYear = date('Y');
+    $currentMonth = date('m');
+    $academicYear = ($currentMonth >= 4) ?
+        $currentYear . '-' . ($currentYear + 1) : ($currentYear - 1) . '-' . $currentYear;
+
+    $_GET['academic_year'] = [$academicYear];
+}
+
 // Function to determine academic year based on date
 function getAcademicYear($date)
 {
@@ -112,10 +122,14 @@ $stats = [
 ];
 
 if (!empty($concessions)) {
-    $stats['total_concessions'] = count($concessions);
-
     foreach ($concessions as $concession) {
+        // Skip non-billable concessions
+        if ($concession['concession_category'] === 'non_billable') {
+            continue;
+        }
+
         // Calculate total amount
+        $stats['total_concessions']++;
         $stats['total_amount'] += floatval($concession['concession_amount']);
 
         // Count by category
@@ -845,7 +859,7 @@ pg_free_result($categoriesResult);
             // Helper: generate category options
             function generateOptions(selected) {
                 const options = [
-                    ['admission_month', 'Admission Month Adjustment'],
+                    ['non_billable', 'Non-Billable Adjustment'],
                     ['rounding_off', 'Rounding Off Adjustment'],
                     ['financial_hardship', 'Financial Hardship / Economic Background'],
                     ['sibling', 'Sibling Concession'],

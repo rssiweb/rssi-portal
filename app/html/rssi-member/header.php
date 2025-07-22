@@ -462,6 +462,11 @@
             </a>
           </li>
           <li>
+            <a id="concession_list" href="concession_list.php">
+              <span>Student Concessions</span>
+            </a>
+          </li>
+          <li>
             <a id="settlement" href="settlement.php">
               <span>Fee Settlement</span>
             </a>
@@ -1102,11 +1107,15 @@
         linkId: 'rtet',
         url: 'rtet.php'
       },
-
-      {
+{
         id: 'feePortal',
         linkId: 'fee_collection',
         url: 'fee_collection.php'
+      },
+      {
+        id: 'feePortal',
+        linkId: 'concession_list',
+        url: 'concession_list.php'
       }, {
         id: 'feePortal',
         linkId: 'fee_structure_management',
