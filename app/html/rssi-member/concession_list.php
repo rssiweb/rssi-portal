@@ -200,6 +200,12 @@ function generateAcademicYears($numYears = 5)
 
 $academicYearOptions = generateAcademicYears(5); // Current + 4 previous
 $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] : [];
+
+// Determine active tab from URL
+$activeTab = 'billable'; // Default
+if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable'])) {
+    $activeTab = $_GET['tab'];
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -514,18 +520,22 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
                                     <div class="card-body">
                                         <ul class="nav nav-tabs" id="concessionTabs" role="tablist">
                                             <li class="nav-item" role="presentation">
-                                                <button class="nav-link active" id="billable-tab" data-bs-toggle="tab" data-bs-target="#billable" type="button" role="tab" aria-controls="billable" aria-selected="true">
+                                                <a class="nav-link <?= $activeTab === 'billable' ? 'active' : '' ?>" href="?tab=billable" id="billable-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#billable" type="button" role="tab"
+                                                    aria-controls="billable" aria-selected="true">
                                                     Billable Concessions
-                                                </button>
+                                                </a>
                                             </li>
                                             <li class="nav-item" role="presentation">
-                                                <button class="nav-link" id="non-billable-tab" data-bs-toggle="tab" data-bs-target="#non-billable" type="button" role="tab" aria-controls="non-billable" aria-selected="false">
+                                                <a class="nav-link <?= $activeTab === 'non-billable' ? 'active' : '' ?>" href="?tab=non-billable" id="non-billable-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#non-billable" type="button" role="tab"
+                                                    aria-controls="non-billable" aria-selected="false">
                                                     Non-Billable (Audit)
-                                                </button>
+                                                </a>
                                             </li>
                                         </ul>
                                         <div class="tab-content" id="concessionTabsContent">
-                                            <div class="tab-pane fade show active" id="billable" role="tabpanel" aria-labelledby="billable-tab">
+                                            <div class="tab-pane fade <?= $activeTab === 'billable' ? 'show active' : '' ?>" id="billable" role="tabpanel" aria-labelledby="billable-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-striped table-hover" id="billableTable">
                                                         <thead>
@@ -567,10 +577,12 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
                                                                         <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
                                                                         <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-primary edit-concession"
-                                                                                data-id="<?= $concession['id'] ?>">
-                                                                                <i class="bi bi-pencil"></i> Edit
-                                                                            </button>
+                                                                            <?php if ($role === 'Admin'): ?>
+                                                                                <button class="btn btn-sm btn-primary edit-concession"
+                                                                                    data-id="<?= $concession['id'] ?>">
+                                                                                    <i class="bi bi-pencil"></i> Edit
+                                                                                </button>
+                                                                            <?php endif; ?>
                                                                             <button class="btn btn-sm btn-info history-concession"
                                                                                 data-id="<?= $concession['id'] ?>">
                                                                                 <i class="bi bi-clock-history"></i> History
@@ -587,7 +599,7 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
                                                     </table>
                                                 </div>
                                             </div>
-                                            <div class="tab-pane fade" id="non-billable" role="tabpanel" aria-labelledby="non-billable-tab">
+                                            <div class="tab-pane fade <?= $activeTab === 'non-billable' ? 'show active' : '' ?>" id="non-billable" role="tabpanel" aria-labelledby="non-billable-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-striped table-hover" id="nonBillableTable">
                                                         <thead>
@@ -629,10 +641,12 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
                                                                         <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
                                                                         <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-primary edit-concession"
-                                                                                data-id="<?= $concession['id'] ?>">
-                                                                                <i class="bi bi-pencil"></i> Edit
-                                                                            </button>
+                                                                            <?php if ($role === 'Admin'): ?>
+                                                                                <button class="btn btn-sm btn-primary edit-concession"
+                                                                                    data-id="<?= $concession['id'] ?>">
+                                                                                    <i class="bi bi-pencil"></i> Edit
+                                                                                </button>
+                                                                            <?php endif; ?>
                                                                             <button class="btn btn-sm btn-info history-concession"
                                                                                 data-id="<?= $concession['id'] ?>">
                                                                                 <i class="bi bi-clock-history"></i> History
@@ -782,40 +796,59 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
 
             // Initialize DataTable with server-side processing
             $(document).ready(function() {
-                // Initialize billable table immediately
+                // Initialize DataTables
                 <?php if (!empty($concessions)) : ?>
-                    var billableTable = $('#billableTable').DataTable({
+                    $('#billableTable').DataTable({
                         "order": [],
                         "stateSave": true,
                         "stateDuration": -1
                     });
                 <?php endif; ?>
 
-                // Initialize non-billable table only when its tab is shown
-                $('#non-billable-tab').on('shown.bs.tab', function() {
-                    <?php if (!empty($concessions)) : ?>
-                        if (!$.fn.DataTable.isDataTable('#nonBillableTable')) {
-                            var nonBillableTable = $('#nonBillableTable').DataTable({
-                                "order": [],
-                                "stateSave": true,
-                                "stateDuration": -1,
-                                "destroy": true // Allows reinitialization
-                            });
-                        }
-                    <?php endif; ?>
-                });
+                // Show non-billable tab if URL has ?tab=non-billable
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('tab') === 'non-billable') {
+                    $('#non-billable-tab').tab('show');
 
-                // If non-billable tab is active on load, initialize its table
-                if ($('#non-billable-tab').hasClass('active')) {
+                    // Initialize non-billable table
                     <?php if (!empty($concessions)) : ?>
-                        var nonBillableTable = $('#nonBillableTable').DataTable({
+                        $('#nonBillableTable').DataTable({
                             "order": [],
                             "stateSave": true,
                             "stateDuration": -1
                         });
                     <?php endif; ?>
                 }
+
+                // Handle tab changes
+                $('#concessionTabs a').on('shown.bs.tab', function(e) {
+                    const tab = $(e.target).attr('href').split('=')[1];
+
+                    // Update URL without reloading
+                    const newUrl = updateQueryStringParameter('tab', tab);
+                    window.history.pushState({
+                        path: newUrl
+                    }, '', newUrl);
+
+                    // Initialize non-billable table if needed
+                    if (tab === 'non-billable' && !$.fn.DataTable.isDataTable('#nonBillableTable')) {
+                        <?php if (!empty($concessions)) : ?>
+                            $('#nonBillableTable').DataTable({
+                                "order": [],
+                                "stateSave": true,
+                                "stateDuration": -1
+                            });
+                        <?php endif; ?>
+                    }
+                });
             });
+
+            // Helper function to update URL parameters
+            function updateQueryStringParameter(key, value) {
+                const url = new URL(window.location);
+                url.searchParams.set(key, value);
+                return url.toString();
+            }
 
             // Handle filter form submission
             $('#filterForm').on('submit', function(e) {
@@ -1136,7 +1169,7 @@ $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] :
                     data: function(params) {
                         return {
                             q: params.term, // search term
-                            isActive: true // or false depending on your needs
+                            // isActive: true // or false depending on your needs
                         };
                     },
                     processResults: function(data) {
