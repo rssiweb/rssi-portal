@@ -1149,6 +1149,11 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <li><strong>Special Cases / Discretionary:</strong> Unique cases like parent death, medical emergencies, orphan students, etc. Requires approval.</li>
                     </ol>
                 </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" data-bs-target="#concessionModal" data-bs-toggle="modal">
+                        Back to Concession Form
+                    </button>
+                </div>
             </div>
         </div>
     </div>
