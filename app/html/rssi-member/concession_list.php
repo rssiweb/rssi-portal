@@ -330,7 +330,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
                     <li class="breadcrumb-item active">Student Concessions</li>
                 </ol>
             </nav>
@@ -449,19 +449,6 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                     <div class="card-body">
                                         <form id="filterForm" method="get">
                                             <div class="row">
-                                                <!-- <div class="col-md-3 mb-3">
-                                                    <label class="form-label">Student</label>
-                                                    <select class="form-select select2-multiple" name="student_id[]" multiple="multiple">
-                                                        <?php foreach ($students as $student):
-                                                            $selected = in_array($student['student_id'], $filterParams['student_id']) ? 'selected' : '';
-                                                        ?>
-                                                            <option value="<?= htmlspecialchars($student['student_id']) ?>" <?= $selected ?>>
-                                                                <?= htmlspecialchars($student['studentname']) ?> (<?= htmlspecialchars($student['class']) ?>)
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div> -->
-
                                                 <div class="col-md-3">
                                                     <label class="form-label">Student</label>
                                                     <select name="student_id[]" id="student-select" class="form-control select2" multiple="multiple">
@@ -513,6 +500,12 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                             </div>
                                         </form>
                                     </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button class="btn btn-success export-btn">
+                                        <i class="bi bi-download"></i> Export CSV
+                                    </button>
                                 </div>
 
                                 <!-- Concessions Table -->
@@ -1185,6 +1178,69 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                 width: '100%'
             });
         });
+    </script>
+    <script>
+        // Track current active tab
+        let currentTab = '<?= $activeTab ?>'; // Initialize with PHP value
+
+        // Update currentTab when switching tabs
+        $('#concessionTabs a').on('shown.bs.tab', function(e) {
+            const tabHref = $(e.target).attr('href');
+            currentTab = tabHref.includes('non-billable') ? 'non-billable' : 'billable';
+        });
+
+        // Export functionality
+        $(document).on('click', '.export-btn', function(e) {
+            e.preventDefault();
+
+            // Show loading indicator
+            const originalText = $(this).html();
+            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...');
+
+            // Submit form to export endpoint
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'export_concessions.php';
+
+            // Add tab parameter based on currentTab
+            const tabInput = document.createElement('input');
+            tabInput.type = 'hidden';
+            tabInput.name = 'tab';
+            tabInput.value = currentTab;
+            form.appendChild(tabInput);
+
+            // Add filter parameters
+            const filters = getCurrentFilters();
+            Object.entries(filters).forEach(([key, values]) => {
+                if (Array.isArray(values)) {
+                    values.forEach(value => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `filters[${key}][]`;
+                        input.value = value;
+                        form.appendChild(input);
+                    });
+                }
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+            // Restore button text after a delay
+            setTimeout(() => {
+                $('.export-btn').html(originalText);
+            }, 3000);
+        });
+
+        // Helper function to get current filter values
+        function getCurrentFilters() {
+            return {
+                student_id: $('#student-select').val() || [],
+                concession_category: $('select[name="concession_category[]"]').val() || [],
+                academic_year: $('#academicYearFilter').val() || []
+            };
+        }
     </script>
 </body>
 
