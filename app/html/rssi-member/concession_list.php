@@ -10,16 +10,6 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// Set current academic year as default if no filter specified
-if (empty($_GET['academic_year'])) {
-    $currentYear = date('Y');
-    $currentMonth = date('m');
-    $academicYear = ($currentMonth >= 4) ?
-        $currentYear . '-' . ($currentYear + 1) : ($currentYear - 1) . '-' . $currentYear;
-
-    $_GET['academic_year'] = [$academicYear];
-}
-
 // Function to determine academic year based on date
 function getAcademicYear($date)
 {
@@ -80,8 +70,20 @@ if (!empty($filterParams['concession_category'])) {
     $params[] = toPgArray($filterParams['concession_category'], $con);
 }
 
-if (!empty($filterParams['academic_year'])) {
-    $yearConditions = [];
+// Modify your query to use current academic year when no filter is set
+$yearConditions = [];
+if (empty($filterParams['academic_year'])) {
+    // Default to current academic year when no filter is set
+    $currentYear = date('Y');
+    $currentMonth = date('m');
+    $academicYear = ($currentMonth >= 4) ?
+        $currentYear . '-' . ($currentYear + 1) : ($currentYear - 1) . '-' . $currentYear;
+
+    $startYear = substr($academicYear, 0, 4);
+    $endYear = substr($academicYear, 5, 4);
+    $yearConditions[] = "(sc.effective_from >= '$startYear-04-01' AND sc.effective_from < '$endYear-04-01')";
+} else {
+    // Use the filter parameters if they exist
     foreach ($filterParams['academic_year'] as $year) {
         if ($year === 'Indefinite') {
             $yearConditions[] = "sc.effective_until IS NULL";
@@ -91,6 +93,9 @@ if (!empty($filterParams['academic_year'])) {
             $yearConditions[] = "(sc.effective_from >= '$startYear-04-01' AND sc.effective_from < '$endYear-04-01')";
         }
     }
+}
+
+if (!empty($yearConditions)) {
     $whereClauses[] = "(" . implode(" OR ", $yearConditions) . ")";
 }
 
@@ -455,7 +460,7 @@ pg_free_result($categoriesResult);
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-3 mb-3">
+                                                <!-- <div class="col-md-3 mb-3">
                                                     <label class="form-label">Academic Year</label>
                                                     <select class="form-select select2-multiple" name="academic_year[]" multiple="multiple">
                                                         <?php
@@ -470,7 +475,26 @@ pg_free_result($categoriesResult);
                                                         <?php endforeach; ?>
                                                         <option value="Indefinite" <?= in_array('Indefinite', $filterParams['academic_year']) ? 'selected' : '' ?>>Indefinite</option>
                                                     </select>
-                                                </div>
+                                                </div> -->
+                                                <div class="col-md-3 mb-3">
+    <label class="form-label">Academic Year</label>
+    <select class="form-select select2-multiple" name="academic_year[]" multiple="multiple">
+        <?php
+        // Sort academic years in descending order
+        krsort($stats['academic_years']);
+        foreach ($stats['academic_years'] as $year => $data):
+            // Only set selected if it was explicitly chosen in the filter
+            $selected = (isset($_GET['academic_year']) && in_array($year, $filterParams['academic_year'])) ? 'selected' : '';
+        ?>
+            <option value="<?= htmlspecialchars($year) ?>" <?= $selected ?>>
+                <?= htmlspecialchars($year) ?> (<?= $data['count'] ?>)
+            </option>
+        <?php endforeach; ?>
+        <option value="Indefinite" <?= (isset($_GET['academic_year']) && in_array('Indefinite', $filterParams['academic_year'])) ? 'selected' : '' ?>>
+            Indefinite
+        </option>
+    </select>
+</div>
                                                 <div class="col-md-3 d-flex align-items-end mb-3">
                                                     <button type="submit" class="btn btn-primary me-2">Filter</button>
                                                     <a href="concession_list.php" class="btn btn-outline-secondary">Reset</a>
@@ -483,64 +507,143 @@ pg_free_result($categoriesResult);
                                 <!-- Concessions Table -->
                                 <div class="card">
                                     <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-hover" id="concessionsTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Student ID</th>
-                                                        <th>Student</th>
-                                                        <th>Class</th>
-                                                        <th>Category</th>
-                                                        <th>Amount</th>
-                                                        <th>Academic Year</th>
-                                                        <th>Effective From</th>
-                                                        <th>Effective Until</th>
-                                                        <th>Reason</th>
-                                                        <th>Created By</th>
-                                                        <th>Created At</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php if (!empty($concessions)): ?>
-                                                        <?php foreach ($concessions as $concession):
-                                                            $academicYear = getAcademicYear($concession['effective_from']);
-                                                        ?>
+                                        <ul class="nav nav-tabs" id="concessionTabs" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="billable-tab" data-bs-toggle="tab" data-bs-target="#billable" type="button" role="tab" aria-controls="billable" aria-selected="true">
+                                                    Billable Concessions
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="non-billable-tab" data-bs-toggle="tab" data-bs-target="#non-billable" type="button" role="tab" aria-controls="non-billable" aria-selected="false">
+                                                    Non-Billable (Audit)
+                                                </button>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content" id="concessionTabsContent">
+                                            <div class="tab-pane fade show active" id="billable" role="tabpanel" aria-labelledby="billable-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped table-hover" id="billableTable">
+                                                        <thead>
                                                             <tr>
-                                                                <td><?= htmlspecialchars($concession['student_id']) ?></td>
-                                                                <td><?= htmlspecialchars($concession['studentname']) ?></td>
-                                                                <td><?= htmlspecialchars($concession['class']) ?></td>
-                                                                <td>
-                                                                    <?= !empty($concession['concession_category']) ?
-                                                                        ucwords(str_replace('_', ' ', $concession['concession_category'])) :
-                                                                        'Uncategorized' ?>
-                                                                </td>
-                                                                <td>₹<?= number_format($concession['concession_amount'], 2) ?></td>
-                                                                <td><?= $academicYear ?></td>
-                                                                <td><?= $concession['formatted_from_date'] ?></td>
-                                                                <td><?= $concession['formatted_until_date'] ?></td>
-                                                                <td><?= nl2br(htmlspecialchars($concession['reason'])) ?></td>
-                                                                <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
-                                                                <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
-                                                                <td>
-                                                                    <button class="btn btn-sm btn-primary edit-concession"
-                                                                        data-id="<?= $concession['id'] ?>">
-                                                                        <i class="bi bi-pencil"></i> Edit
-                                                                    </button>
-                                                                    <button class="btn btn-sm btn-info history-concession"
-                                                                        data-id="<?= $concession['id'] ?>">
-                                                                        <i class="bi bi-clock-history"></i> History
-                                                                    </button>
-                                                                </td>
+                                                                <th>Student ID</th>
+                                                                <th>Student</th>
+                                                                <th>Class</th>
+                                                                <th>Category</th>
+                                                                <th>Amount</th>
+                                                                <th>Academic Year</th>
+                                                                <th>Effective From</th>
+                                                                <th>Effective Until</th>
+                                                                <th>Reason</th>
+                                                                <th>Created By</th>
+                                                                <th>Created At</th>
+                                                                <th>Actions</th>
                                                             </tr>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <tr>
-                                                            <td colspan="11" class="text-center">No concessions found</td>
-                                                        </tr>
-                                                    <?php endif; ?>
-                                                </tbody>
-                                            </table>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php if (!empty($concessions)): ?>
+                                                                <?php foreach ($concessions as $concession):
+                                                                    if ($concession['concession_category'] === 'non_billable') continue;
+                                                                    $academicYear = getAcademicYear($concession['effective_from']);
+                                                                ?>
+                                                                    <tr>
+                                                                        <td><?= htmlspecialchars($concession['student_id']) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['studentname']) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['class']) ?></td>
+                                                                        <td>
+                                                                            <?= !empty($concession['concession_category']) ?
+                                                                                ucwords(str_replace('_', ' ', $concession['concession_category'])) :
+                                                                                'Uncategorized' ?>
+                                                                        </td>
+                                                                        <td>₹<?= number_format($concession['concession_amount'], 2) ?></td>
+                                                                        <td><?= $academicYear ?></td>
+                                                                        <td><?= $concession['formatted_from_date'] ?></td>
+                                                                        <td><?= $concession['formatted_until_date'] ?></td>
+                                                                        <td><?= nl2br(htmlspecialchars($concession['reason'])) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
+                                                                        <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
+                                                                        <td>
+                                                                            <button class="btn btn-sm btn-primary edit-concession"
+                                                                                data-id="<?= $concession['id'] ?>">
+                                                                                <i class="bi bi-pencil"></i> Edit
+                                                                            </button>
+                                                                            <button class="btn btn-sm btn-info history-concession"
+                                                                                data-id="<?= $concession['id'] ?>">
+                                                                                <i class="bi bi-clock-history"></i> History
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php endforeach; ?>
+                                                            <?php else: ?>
+                                                                <tr>
+                                                                    <td colspan="12" class="text-center">No billable concessions found</td>
+                                                                </tr>
+                                                            <?php endif; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="non-billable" role="tabpanel" aria-labelledby="non-billable-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped table-hover" id="nonBillableTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Student ID</th>
+                                                                <th>Student</th>
+                                                                <th>Class</th>
+                                                                <th>Category</th>
+                                                                <th>Amount</th>
+                                                                <th>Academic Year</th>
+                                                                <th>Effective From</th>
+                                                                <th>Effective Until</th>
+                                                                <th>Reason</th>
+                                                                <th>Created By</th>
+                                                                <th>Created At</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php if (!empty($concessions)): ?>
+                                                                <?php foreach ($concessions as $concession):
+                                                                    if ($concession['concession_category'] !== 'non_billable') continue;
+                                                                    $academicYear = getAcademicYear($concession['effective_from']);
+                                                                ?>
+                                                                    <tr>
+                                                                        <td><?= htmlspecialchars($concession['student_id']) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['studentname']) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['class']) ?></td>
+                                                                        <td>
+                                                                            <?= !empty($concession['concession_category']) ?
+                                                                                ucwords(str_replace('_', ' ', $concession['concession_category'])) :
+                                                                                'Uncategorized' ?>
+                                                                        </td>
+                                                                        <td>₹<?= number_format($concession['concession_amount'], 2) ?></td>
+                                                                        <td><?= $academicYear ?></td>
+                                                                        <td><?= $concession['formatted_from_date'] ?></td>
+                                                                        <td><?= $concession['formatted_until_date'] ?></td>
+                                                                        <td><?= nl2br(htmlspecialchars($concession['reason'])) ?></td>
+                                                                        <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
+                                                                        <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
+                                                                        <td>
+                                                                            <button class="btn btn-sm btn-primary edit-concession"
+                                                                                data-id="<?= $concession['id'] ?>">
+                                                                                <i class="bi bi-pencil"></i> Edit
+                                                                            </button>
+                                                                            <button class="btn btn-sm btn-info history-concession"
+                                                                                data-id="<?= $concession['id'] ?>">
+                                                                                <i class="bi bi-clock-history"></i> History
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php endforeach; ?>
+                                                            <?php else: ?>
+                                                                <tr>
+                                                                    <td colspan="12" class="text-center">No non-billable concessions found</td>
+                                                                </tr>
+                                                            <?php endif; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -673,18 +776,40 @@ pg_free_result($categoriesResult);
             });
 
             // Initialize DataTable with server-side processing
-
             $(document).ready(function() {
-                // Check if resultArr is empty
+                // Initialize billable table immediately
                 <?php if (!empty($concessions)) : ?>
-                    // Initialize DataTables only if resultArr is not empty
-                    $('#concessionsTable').DataTable({
-                        // paging: false,
-                        "order": [], // Disable initial sorting
+                    var billableTable = $('#billableTable').DataTable({
+                        "order": [],
                         "stateSave": true,
-                        "stateDuration": -1 // Session storage
+                        "stateDuration": -1
                     });
                 <?php endif; ?>
+
+                // Initialize non-billable table only when its tab is shown
+                $('#non-billable-tab').on('shown.bs.tab', function() {
+                    <?php if (!empty($concessions)) : ?>
+                        if (!$.fn.DataTable.isDataTable('#nonBillableTable')) {
+                            var nonBillableTable = $('#nonBillableTable').DataTable({
+                                "order": [],
+                                "stateSave": true,
+                                "stateDuration": -1,
+                                "destroy": true // Allows reinitialization
+                            });
+                        }
+                    <?php endif; ?>
+                });
+
+                // If non-billable tab is active on load, initialize its table
+                if ($('#non-billable-tab').hasClass('active')) {
+                    <?php if (!empty($concessions)) : ?>
+                        var nonBillableTable = $('#nonBillableTable').DataTable({
+                            "order": [],
+                            "stateSave": true,
+                            "stateDuration": -1
+                        });
+                    <?php endif; ?>
+                }
             });
 
             // Handle filter form submission
@@ -1005,6 +1130,34 @@ pg_free_result($categoriesResult);
                 width: '100%'
             });
         });
+    </script>
+    <script>
+        $(document).ready(function() {
+    // Initialize academic year select2
+    $('select[name="academic_year[]"]').select2({
+        width: '100%',
+        placeholder: 'Select academic years',
+        allowClear: true
+    });
+
+    // When form is submitted without academic year selected, 
+    // it will automatically use current academic year (handled in PHP)
+    $('#filterForm').on('submit', function(e) {
+        // If academic year is empty, don't show any selected in the UI
+        if ($('select[name="academic_year[]"]').val() === null) {
+            $('select[name="academic_year[]"]').val(null).trigger('change');
+        }
+    });
+
+    // Reset button handler
+    $('button[type="reset"]').on('click', function() {
+        setTimeout(function() {
+            $('select[name="academic_year[]"]').val(null).trigger('change');
+            // The form will submit with default (current academic year) filtering
+            $('#filterForm').submit();
+        }, 10);
+    });
+});
     </script>
 </body>
 
