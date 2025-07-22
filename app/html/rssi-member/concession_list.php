@@ -172,6 +172,35 @@ $categories = pg_fetch_all($categoriesResult);
 pg_free_result($result);
 pg_free_result($categoriesResult);
 ?>
+<?php
+// In your PHP code (before the HTML)
+function generateAcademicYears($numYears = 5)
+{
+    $currentYear = date('Y');
+    $currentMonth = date('m');
+
+    // Determine current academic year
+    $currentAcademicYear = ($currentMonth >= 4) ?
+        $currentYear . '-' . ($currentYear + 1) : ($currentYear - 1) . '-' . $currentYear;
+
+    $years = [];
+    $startYear = ($currentMonth >= 4) ? $currentYear : $currentYear - 1;
+
+    // Generate previous academic years
+    for ($i = 0; $i < $numYears; $i++) {
+        $year = ($startYear - $i) . '-' . ($startYear - $i + 1);
+        $years[] = $year;
+    }
+
+    // Add "Indefinite" option
+    $years[] = 'Indefinite';
+
+    return $years;
+}
+
+$academicYearOptions = generateAcademicYears(5); // Current + 4 previous
+$selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] : [];
+?>
 <!doctype html>
 <html lang="en">
 
@@ -460,41 +489,17 @@ pg_free_result($categoriesResult);
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
-                                                <!-- <div class="col-md-3 mb-3">
+                                                <div class="col-md-3 mb-3">
                                                     <label class="form-label">Academic Year</label>
-                                                    <select class="form-select select2-multiple" name="academic_year[]" multiple="multiple">
-                                                        <?php
-                                                        // Sort academic years in descending order
-                                                        krsort($stats['academic_years']);
-                                                        foreach ($stats['academic_years'] as $year => $data):
-                                                            $selected = in_array($year, $filterParams['academic_year']) ? 'selected' : '';
-                                                        ?>
-                                                            <option value="<?= htmlspecialchars($year) ?>" <?= $selected ?>>
-                                                                <?= htmlspecialchars($year) ?> (<?= $data['count'] ?>)
+                                                    <select class="form-select select2-multiple" name="academic_year[]" multiple="multiple" id="academicYearFilter">
+                                                        <?php foreach ($academicYearOptions as $year): ?>
+                                                            <option value="<?= htmlspecialchars($year) ?>"
+                                                                <?= in_array($year, $selectedYears) ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($year) ?>
                                                             </option>
                                                         <?php endforeach; ?>
-                                                        <option value="Indefinite" <?= in_array('Indefinite', $filterParams['academic_year']) ? 'selected' : '' ?>>Indefinite</option>
                                                     </select>
-                                                </div> -->
-                                                <div class="col-md-3 mb-3">
-    <label class="form-label">Academic Year</label>
-    <select class="form-select select2-multiple" name="academic_year[]" multiple="multiple">
-        <?php
-        // Sort academic years in descending order
-        krsort($stats['academic_years']);
-        foreach ($stats['academic_years'] as $year => $data):
-            // Only set selected if it was explicitly chosen in the filter
-            $selected = (isset($_GET['academic_year']) && in_array($year, $filterParams['academic_year'])) ? 'selected' : '';
-        ?>
-            <option value="<?= htmlspecialchars($year) ?>" <?= $selected ?>>
-                <?= htmlspecialchars($year) ?> (<?= $data['count'] ?>)
-            </option>
-        <?php endforeach; ?>
-        <option value="Indefinite" <?= (isset($_GET['academic_year']) && in_array('Indefinite', $filterParams['academic_year'])) ? 'selected' : '' ?>>
-            Indefinite
-        </option>
-    </select>
-</div>
+                                                </div>
                                                 <div class="col-md-3 d-flex align-items-end mb-3">
                                                     <button type="submit" class="btn btn-primary me-2">Filter</button>
                                                     <a href="concession_list.php" class="btn btn-outline-secondary">Reset</a>
@@ -1103,6 +1108,23 @@ pg_free_result($categoriesResult);
                 }
             }
         });
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#academicYearFilter').select2({
+                width: '100%',
+                placeholder: 'Select academic years',
+                allowClear: true
+            });
+
+            // Handle form reset to maintain the fixed options
+            $('#filterForm').on('reset', function() {
+                setTimeout(function() {
+                    $('#academicYearFilter').val(null).trigger('change');
+                    // The form will submit with default (current academic year) filtering
+                    $('#filterForm').submit();
+                }, 10);
+            });
+        });
     </script>
     <script>
         $(document).ready(function() {
@@ -1130,34 +1152,6 @@ pg_free_result($categoriesResult);
                 width: '100%'
             });
         });
-    </script>
-    <script>
-        $(document).ready(function() {
-    // Initialize academic year select2
-    $('select[name="academic_year[]"]').select2({
-        width: '100%',
-        placeholder: 'Select academic years',
-        allowClear: true
-    });
-
-    // When form is submitted without academic year selected, 
-    // it will automatically use current academic year (handled in PHP)
-    $('#filterForm').on('submit', function(e) {
-        // If academic year is empty, don't show any selected in the UI
-        if ($('select[name="academic_year[]"]').val() === null) {
-            $('select[name="academic_year[]"]').val(null).trigger('change');
-        }
-    });
-
-    // Reset button handler
-    $('button[type="reset"]').on('click', function() {
-        setTimeout(function() {
-            $('select[name="academic_year[]"]').val(null).trigger('change');
-            // The form will submit with default (current academic year) filtering
-            $('#filterForm').submit();
-        }, 10);
-    });
-});
     </script>
 </body>
 
