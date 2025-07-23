@@ -174,22 +174,22 @@ pg_free_result($categoriesResult);
 ?>
 <?php
 // In your PHP code (before the HTML)
-function generateAcademicYears($numYears = 5)
+// Replace the existing generateAcademicYears() function with this:
+function getAvailableAcademicYears($con)
 {
-    $currentYear = date('Y');
-    $currentMonth = date('m');
-
-    // Determine current academic year
-    $currentAcademicYear = ($currentMonth >= 4) ?
-        $currentYear . '-' . ($currentYear + 1) : ($currentYear - 1) . '-' . $currentYear;
+    // Query to get all distinct effective_from dates
+    $query = "SELECT DISTINCT effective_from FROM student_concessions WHERE effective_from IS NOT NULL ORDER BY effective_from DESC";
+    $result = pg_query($con, $query);
+    $dates = pg_fetch_all($result);
 
     $years = [];
-    $startYear = ($currentMonth >= 4) ? $currentYear : $currentYear - 1;
 
-    // Generate previous academic years
-    for ($i = 0; $i < $numYears; $i++) {
-        $year = ($startYear - $i) . '-' . ($startYear - $i + 1);
-        $years[] = $year;
+    // Add all academic years from the database
+    foreach ($dates as $date) {
+        $year = getAcademicYear($date['effective_from']);
+        if (!in_array($year, $years)) {
+            $years[] = $year;
+        }
     }
 
     // Add "Indefinite" option
@@ -198,7 +198,8 @@ function generateAcademicYears($numYears = 5)
     return $years;
 }
 
-$academicYearOptions = generateAcademicYears(5); // Current + 4 previous
+// Then replace the line where $academicYearOptions is set:
+$academicYearOptions = getAvailableAcademicYears($con);
 $selectedYears = isset($_GET['academic_year']) ? (array)$_GET['academic_year'] : [];
 
 // Determine active tab from URL
@@ -1134,22 +1135,53 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                 }
             }
         });
+        // Replace the Select2 initialization for academic year filter with this:
+        $('#academicYearFilter').select2({
+            width: '100%',
+            placeholder: 'Select academic years',
+            allowClear: true,
+            minimumResultsForSearch: 5 // Only show search box when there are more than 5 options
+        });
+
+        // Add this to limit the visible options while keeping all available
         $(document).ready(function() {
-            // Initialize Select2
-            $('#academicYearFilter').select2({
-                width: '100%',
-                placeholder: 'Select academic years',
-                allowClear: true
+            const academicYearSelect = $('#academicYearFilter');
+            const options = academicYearSelect.find('option');
+
+            // Hide all options except the first 5 (which should be the latest years)
+            options.each(function(index) {
+                if (index >= 5 && $(this).val() !== '') {
+                    $(this).addClass('d-none');
+                }
             });
 
-            // Handle form reset to maintain the fixed options
-            $('#filterForm').on('reset', function() {
-                setTimeout(function() {
-                    $('#academicYearFilter').val(null).trigger('change');
-                    // The form will submit with default (current academic year) filtering
-                    $('#filterForm').submit();
-                }, 10);
+            // Show all options when searching
+            academicYearSelect.on('select2:opening', function() {
+                options.removeClass('d-none');
             });
+
+            // Hide non-matching options after search
+            academicYearSelect.on('select2:searching', function(e) {
+                if (!e.target.value) {
+                    options.each(function(index) {
+                        if (index >= 5 && $(this).val() !== '') {
+                            $(this).addClass('d-none');
+                        }
+                    });
+                }
+            });
+        });
+        $('#filterForm').on('reset', function() {
+            setTimeout(function() {
+                $('#academicYearFilter').val(null).trigger('change');
+                // Hide all options except first 5 again
+                $('#academicYearFilter').find('option').each(function(index) {
+                    if (index >= 5 && $(this).val() !== '') {
+                        $(this).addClass('d-none');
+                    }
+                });
+                $('#filterForm').submit();
+            }, 10);
         });
     </script>
     <script>
