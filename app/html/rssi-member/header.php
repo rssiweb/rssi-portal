@@ -572,6 +572,11 @@
             </a>
           </li>
           <li>
+            <a id="icom" href="id.php">
+              <span>ID Card Order Management (ICOM)</span>
+            </a>
+          </li>
+          <li>
             <a id="facility-hygiene-monitoring" href="facility-hygiene-monitoring.php">
               <span>Facility Hygiene Monitoring</span>
             </a>
@@ -829,7 +834,17 @@
         id: 'work',
         linkId: 'studentLink',
         url: 'student.php'
-      },{
+      },
+      {
+        id: 'work',
+        linkId: 'icom',
+        url: 'id.php'
+      },
+      {
+        id: 'work',
+        linkId: 'icom',
+        url: 'id_history.php'
+      }, {
         id: 'work',
         linkId: 'facility-hygiene-monitoring',
         url: 'facility-hygiene-monitoring.php'
@@ -1056,11 +1071,11 @@
         id: 'rostermanagement',
         linkId: 'student_class_days',
         url: 'student_class_days.php'
-      },{
+      }, {
         id: 'rostermanagement',
         linkId: 'exception_view',
         url: 'exception_view.php'
-      },{
+      }, {
         id: 'rostermanagement',
         linkId: 'exception_view',
         url: 'class_days_exception.php'
@@ -1073,7 +1088,7 @@
         id: 'survey',
         linkId: 'appointments',
         url: 'appointments.php'
-      },{
+      }, {
         id: 'survey',
         linkId: 'enquiry_portal',
         url: 'enquiry_portal.php'
@@ -1107,7 +1122,7 @@
         linkId: 'rtet',
         url: 'rtet.php'
       },
-{
+      {
         id: 'feePortal',
         linkId: 'fee_collection',
         url: 'fee_collection.php'
