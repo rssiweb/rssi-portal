@@ -192,10 +192,9 @@ if (!$current_batch) {
                                                                 <th>Remarks</th>
                                                                 <th>Last Issued</th>
                                                                 <th>Times Issued</th>
-                                                                <?php if ($role === 'Admin'): ?>
-                                                                    <th>Requested By</th>
-                                                                    <th>Batch ID</th>
-                                                                <?php endif; ?>
+                                                                <th>Requested By</th>
+                                                                <th>order Date</th>
+                                                                <th>Batch ID</th>
                                                                 <th>Actions</th>
                                                             </tr>
                                                         </thead>
@@ -465,6 +464,10 @@ if (!$current_batch) {
 
                         response.data.forEach(function(item) {
                             const canEdit = item.status === 'Pending';
+                            const isAdmin = '<?= $role === 'Admin' ?>' === '1';
+                            const isOrderPlacer = '<?= $associatenumber ?>' === item.order_placed_by;
+                            // Show buttons if: Admin OR (non-Admin who placed the order AND status is Pending)
+                            const showButtons = isAdmin || (!isAdmin && isOrderPlacer && canEdit);
                             const row = `
                 <tr data-id="${item.id}" data-batch="${item.batch_id}">
                     <td><img src="${item.photourl || 'default_photo.jpg'}" class="student-photo"/></td>
@@ -488,12 +491,11 @@ if (!$current_batch) {
                     </td>
                     <td>${item.last_issued ? new Date(item.last_issued).toLocaleDateString() : 'Never'}</td>
                     <td>${item.times_issued || '0'}</td>
-                    <?php if ($role === 'Admin'): ?>
                     <td>${item.order_placed_by_name}</td>
+                    <td>${new Date(item.order_date).toLocaleDateString('en-GB')}</td>
                     <td><code>${item.batch_id}</code></td>
-                    <?php endif; ?>
                     <td>
-                        ${canEdit ? `
+                        ${showButtons ? `
                         <div class="btn-group btn-group-sm">
                             <button class="btn btn-outline-danger remove-item" data-id="${item.id}">
                                 <i class="bi bi-trash"></i>

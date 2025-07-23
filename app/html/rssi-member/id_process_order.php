@@ -146,9 +146,7 @@ function handleGetBatch()
     global $con, $role;
 
     $batchId = $_GET['batch_id'] ?? null;
-
-    if ($role === 'Admin' && !$batchId) {
-        $query = "
+    $query = "
             SELECT o.*, 
                    COALESCE(s.studentname, m.fullname) AS studentname,
                    s.class,
@@ -163,28 +161,9 @@ function handleGetBatch()
             LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
             JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
             WHERE o.status = 'Pending'
-            ORDER BY o.order_date DESC
+            ORDER BY o.id DESC
         ";
-        $result = pg_query($con, $query);
-    } else {
-        $query = "
-            SELECT o.*, 
-                   COALESCE(s.studentname, m.fullname) AS studentname,
-                   s.class,
-                   COALESCE(s.photourl, m.photo) AS photourl,
-                   (SELECT COUNT(*) FROM id_card_orders 
-                    WHERE student_id = o.student_id AND status = 'Delivered') AS times_issued,
-                   (SELECT MAX(order_date) FROM id_card_orders 
-                    WHERE student_id = o.student_id AND status = 'Delivered') AS last_issued
-            FROM id_card_orders o
-            LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
-            LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
-            WHERE o.batch_id = $1
-            ORDER BY o.order_date DESC
-        ";
-        $result = pg_query_params($con, $query, [$batchId]);
-    }
-
+    $result = pg_query($con, $query);
     $data = pg_fetch_all($result) ?: [];
     echo json_encode([
         'success' => true,
