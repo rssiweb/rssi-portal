@@ -136,23 +136,9 @@ if (!$current_batch) {
                                             <div class="card-body">
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
-                                                        <label class="form-label">Search Students</label>
+                                                        <label class="form-label">Search Student/Associate</label>
                                                         <select name="student_ids[]" id="student-select" class="form-control select2" multiple="multiple">
-                                                            <?php
-                                                            $studentIds = is_array($_GET['student_ids'] ?? []) ? $_GET['student_ids'] : [];
-                                                            foreach ($studentIds as $id) {
-                                                                $student = pg_fetch_assoc(pg_query_params(
-                                                                    $con,
-                                                                    "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id = $1",
-                                                                    array($id)
-                                                                ));
-                                                                if ($student) {
-                                                                    echo '<option value="' . $student['student_id'] . '" selected>' .
-                                                                        htmlspecialchars($student['studentname']) . ' - ' .
-                                                                        htmlspecialchars($student['student_id']) . '</option>';
-                                                                }
-                                                            }
-                                                            ?>
+
                                                         </select>
                                                     </div>
                                                     <div class="col-md-3">
@@ -198,7 +184,7 @@ if (!$current_batch) {
                                                         <thead class="table-light">
                                                             <tr>
                                                                 <th>Photo</th>
-                                                                <th>Student ID</th>
+                                                                <th>ID</th>
                                                                 <th>Name</th>
                                                                 <th>Class</th>
                                                                 <th>Type</th>
@@ -306,13 +292,13 @@ if (!$current_batch) {
             // Initialize Select2 for student search
             $('#student-select').select2({
                 ajax: {
-                    url: 'fetch_students.php',
+                    url: 'search_beneficiaries.php',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
                         return {
                             q: params.term,
-                            isActive: true
+                            // isActive: true
                         };
                     },
                     processResults: function(data) {
@@ -323,7 +309,7 @@ if (!$current_batch) {
                     cache: true
                 },
                 minimumInputLength: 2,
-                placeholder: 'Search by Student ID or Name',
+                placeholder: 'Search by ID or Name',
                 width: '100%'
             });
 
@@ -350,7 +336,7 @@ if (!$current_batch) {
                 // Check for duplicates in current session
                 const duplicates = selectedValues.filter(id => addedStudentIds.includes(id));
                 if (duplicates.length > 0) {
-                    alert(`These students are already in the batch: ${duplicates.join(', ')}`);
+                    alert(`These profiles are already in the batch: ${duplicates.join(', ')}`);
                     return;
                 }
 
@@ -378,7 +364,7 @@ if (!$current_batch) {
                             // Add to tracked student IDs
                             addedStudentIds.push(...selectedValues);
 
-                            alert('Students added to batch successfully');
+                            alert('Selected profiles added to batch successfully.');
                             loadBatchItems();
                             $('#student-select').val(null).trigger('change');
                             $('#payment-status').val('');

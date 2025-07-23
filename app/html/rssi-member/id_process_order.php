@@ -64,14 +64,29 @@ function handleAddOrder()
         }
     }
 
+    // Try to fetch from student table
     $student = pg_query_params(
         $con,
         "SELECT student_id, studentname, class, photourl FROM rssimyprofile_student 
-         WHERE student_id = $1 AND filterstatus = 'Active'",
+     WHERE student_id = $1 AND filterstatus = 'Active'",
         [$_POST['student_id']]
     );
+
     if (pg_num_rows($student) === 0) {
-        throw new Exception('Student not found or inactive');
+        // If not found in student table, try members table
+        $member = pg_query_params(
+            $con,
+            "SELECT associatenumber AS student_id, fullname AS studentname, NULL AS class, photo AS photourl 
+         FROM rssimyaccount_members 
+         WHERE associatenumber = $1",
+            [$_POST['student_id']]
+        );
+
+        if (pg_num_rows($member) === 0) {
+            throw new Exception('Student/Associate not found or inactive');
+        } else {
+            $student = $member; // Override $student with $member for downstream use
+        }
     }
 
     $exists = pg_query_params(
@@ -133,30 +148,40 @@ function handleGetBatch()
     $batchId = $_GET['batch_id'] ?? null;
 
     if ($role === 'Admin' && !$batchId) {
-        $query = "SELECT o.*, 
-                         s.studentname, s.class, s.photourl,
-                         u.fullname as order_placed_by_name,
-                         (SELECT COUNT(*) FROM id_card_orders 
-                          WHERE student_id = o.student_id AND status = 'Delivered') as times_issued,
-                         (SELECT MAX(order_date) FROM id_card_orders 
-                          WHERE student_id = o.student_id AND status = 'Delivered') as last_issued
-                  FROM id_card_orders o
-                  JOIN rssimyprofile_student s ON o.student_id = s.student_id
-                  JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
-                  WHERE o.status = 'Pending'
-                  ORDER BY o.order_date DESC";
+        $query = "
+            SELECT o.*, 
+                   COALESCE(s.studentname, m.fullname) AS studentname,
+                   s.class,
+                   COALESCE(s.photourl, m.photo) AS photourl,
+                   u.fullname AS order_placed_by_name,
+                   (SELECT COUNT(*) FROM id_card_orders 
+                    WHERE student_id = o.student_id AND status = 'Delivered') AS times_issued,
+                   (SELECT MAX(order_date) FROM id_card_orders 
+                    WHERE student_id = o.student_id AND status = 'Delivered') AS last_issued
+            FROM id_card_orders o
+            LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
+            LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
+            JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
+            WHERE o.status = 'Pending'
+            ORDER BY o.order_date DESC
+        ";
         $result = pg_query($con, $query);
     } else {
-        $query = "SELECT o.*, 
-                         s.studentname, s.class, s.photourl,
-                         (SELECT COUNT(*) FROM id_card_orders 
-                          WHERE student_id = o.student_id AND status = 'Delivered') as times_issued,
-                         (SELECT MAX(order_date) FROM id_card_orders 
-                          WHERE student_id = o.student_id AND status = 'Delivered') as last_issued
-                  FROM id_card_orders o
-                  JOIN rssimyprofile_student s ON o.student_id = s.student_id
-                  WHERE o.batch_id = $1
-                  ORDER BY o.order_date DESC";
+        $query = "
+            SELECT o.*, 
+                   COALESCE(s.studentname, m.fullname) AS studentname,
+                   s.class,
+                   COALESCE(s.photourl, m.photo) AS photourl,
+                   (SELECT COUNT(*) FROM id_card_orders 
+                    WHERE student_id = o.student_id AND status = 'Delivered') AS times_issued,
+                   (SELECT MAX(order_date) FROM id_card_orders 
+                    WHERE student_id = o.student_id AND status = 'Delivered') AS last_issued
+            FROM id_card_orders o
+            LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
+            LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
+            WHERE o.batch_id = $1
+            ORDER BY o.order_date DESC
+        ";
         $result = pg_query_params($con, $query, [$batchId]);
     }
 
@@ -318,28 +343,32 @@ function handleApproveItem()
 
     echo json_encode(['success' => true]);
 }
-function handleMarkDelivered() {
+function handleMarkDelivered()
+{
     global $con, $role, $associatenumber;
-    
+
     if ($role !== 'Admin') {
         throw new Exception('Unauthorized');
     }
-    
+
     if (empty($_POST['batch_id'])) {
         throw new Exception('Missing batch ID');
     }
-    
+
     // Verify batch exists and is in Ordered status
-    $batch = pg_query_params($con,
+    $batch = pg_query_params(
+        $con,
         "SELECT 1 FROM id_card_orders 
          WHERE batch_id = $1 AND status = 'Ordered' LIMIT 1",
-        [$_POST['batch_id']]);
+        [$_POST['batch_id']]
+    );
     if (pg_num_rows($batch) === 0) {
         throw new Exception('Batch not found or not in Ordered status');
     }
-    
+
     // Update all orders in the batch to Delivered status
-    $result = pg_query_params($con,
+    $result = pg_query_params(
+        $con,
         "UPDATE id_card_orders SET 
             status = 'Delivered',
             delivered_date = CURRENT_DATE,
@@ -348,11 +377,12 @@ function handleMarkDelivered() {
         [
             $associatenumber,
             $_POST['batch_id']
-        ]);
-    
+        ]
+    );
+
     if (!$result) {
         throw new Exception('Database error: ' . pg_last_error($con));
     }
-    
+
     echo json_encode(['success' => true]);
 }
