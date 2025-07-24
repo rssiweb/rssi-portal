@@ -221,7 +221,7 @@ if (pg_num_rows($result) > 0) {
 
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header bg-secondary text-white">
-                                                <h3 class="h5 mb-0"><?= $role === 'Admin' ? 'Pending Orders' : 'Current Batch Items' ?></h3>
+                                                <h3 class="h5 mb-0"><?= $role === 'Admin' ? 'Pending Orders' : 'Current Batch Items' ?>&nbsp;(<span id="orders-count-badge">0</span>)</h3>
                                             </div>
                                             <div class="card-body">
                                                 <div class="table-responsive">
@@ -647,6 +647,10 @@ if (pg_num_rows($result) > 0) {
                 }, function(response) {
                     tableBody.empty();
                     addedStudentIds = [];
+
+                    // Update the count badge
+                    const itemCount = response.data ? response.data.length : 0;
+                    $('#orders-count-badge').text(itemCount);
 
                     if (response.data && response.data.length) {
                         // Enable place order button if there are items

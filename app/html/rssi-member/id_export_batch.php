@@ -26,11 +26,12 @@ $query = "
         i.payment_status,
         i.remarks,
         i.order_date,
-        i.vendor_name,
-        i.admin_remarks,
+        b.vendor_name,
+        b.admin_remarks,
         i.status,
         a.fullname AS requested_by
     FROM id_card_orders i
+    LEFT JOIN id_card_batches b ON i.batch_id = b.batch_id
     LEFT JOIN rssimyprofile_student s ON i.student_id = s.student_id
     LEFT JOIN rssimyaccount_members m ON i.student_id = m.associatenumber
     LEFT JOIN rssimyaccount_members a ON i.order_placed_by = a.associatenumber

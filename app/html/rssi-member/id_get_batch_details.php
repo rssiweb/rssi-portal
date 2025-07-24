@@ -154,7 +154,7 @@ $orders = pg_fetch_all($orders_result) ?: [];
                                     <th>Remarks</th>
                                     <th>Requested By</th>
                                     <th>Order Date</th>
-                                    <th>History</th>
+                                    <!-- <th>History</th> -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,10 +176,10 @@ $orders = pg_fetch_all($orders_result) ?: [];
                                         <td><?= htmlspecialchars($order['remarks'] ?? '-') ?></td>
                                         <td>
                                             <?= htmlspecialchars($order['order_placed_by_name']) ?><br>
-                                            <small><?= $order['order_placed_by'] ?></small>
+                                            <!-- <small><?= $order['order_placed_by'] ?></small> -->
                                         </td>
                                         <td><?= date('d M Y', strtotime($order['order_date'])) ?></td>
-                                        <td>
+                                        <!-- <td>
                                             <?php if ($order['times_issued'] > 0): ?>
                                                 Issued <?= $order['times_issued'] ?> time(s)
                                                 <br>
@@ -187,7 +187,7 @@ $orders = pg_fetch_all($orders_result) ?: [];
                                             <?php else: ?>
                                                 First issue
                                             <?php endif; ?>
-                                        </td>
+                                        </td> -->
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -197,22 +197,23 @@ $orders = pg_fetch_all($orders_result) ?: [];
             </div>
         </div>
     </div>
-
-    <div class="row mt-3">
-        <div class="col-md-12 text-end">
-            <button class="btn btn-primary" onclick="window.print()">
-                <i class="bi bi-printer"></i> Print
-            </button>
-            <a href="id_export_batch.php?batch_id=<?= urlencode($batch['batch_id']) ?>" class="btn btn-secondary">
-                <i class="bi bi-download"></i> Export Batch
-            </a>
-            <!-- <?php if ($role === 'Admin' && $batch['status'] === 'Ordered'): ?>
+    <?php if ($role === 'Admin'): ?>
+        <div class="row mt-3">
+            <div class="col-md-12 text-end">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <a href="id_export_batch.php?batch_id=<?= urlencode($batch['batch_id']) ?>" class="btn btn-secondary">
+                    <i class="bi bi-download"></i> Export Batch
+                </a>
+                <!-- <?php if ($role === 'Admin' && $batch['status'] === 'Ordered'): ?>
                 <button class="btn btn-success mark-delivered" data-batch="<?= $batch['batch_id'] ?>">
                     <i class="bi bi-check-circle"></i> Mark Delivered
                 </button>
             <?php endif; ?> -->
+            </div>
         </div>
-    </div>
+    <?php endif; ?>
 </div>
 
 <script>
