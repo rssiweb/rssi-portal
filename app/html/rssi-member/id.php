@@ -8,22 +8,38 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-// Get current batch if exists
+// Replace the batch ID generation logic with:
 $current_batch = null;
-$result = pg_query_params(
+$result = pg_query(
     $con,
-    "SELECT batch_id FROM id_card_orders 
-     WHERE order_placed_by = $1 AND status = 'Pending'
-     LIMIT 1",
-    array($associatenumber)
+    "SELECT batch_id FROM id_card_batches 
+     WHERE status = 'Pending'
+     ORDER BY created_date DESC
+     LIMIT 1"
 );
+
 if (pg_num_rows($result) > 0) {
     $current_batch = pg_fetch_assoc($result)['batch_id'];
-}
-
-// Create new batch if none exists
-if (!$current_batch) {
+} else {
+    // Create new shared batch only if no pending batches exist
     $batch_id = 'ID-' . date('Ymd-His');
+
+    // Insert into batches table first
+    pg_query_params(
+        $con,
+        "INSERT INTO id_card_batches (
+            batch_id, created_by, created_date, status
+         ) VALUES (
+            $1, $2, $3, $4
+         )",
+        [
+            $batch_id,
+            $associatenumber,
+            date('Y-m-d H:i:s'),
+            'Pending'
+        ]
+    );
+
     $current_batch = $batch_id;
 }
 ?>
@@ -204,7 +220,17 @@ if (!$current_batch) {
                                                     </table>
                                                 </div>
 
-                                                <?php if ($role !== 'Admin' && $current_batch): ?>
+                                                <?php
+                                                $showOrderButton = false;
+                                                $allowedPositions = ['Senior Centre Incharge', 'Centre Incharge'];
+
+                                                // Show button if: has allowed position AND current batch exists
+                                                if ((in_array($position, $allowedPositions)) && $current_batch) {
+                                                    $showOrderButton = true;
+                                                }
+                                                ?>
+
+                                                <?php if ($showOrderButton): ?>
                                                     <div class="mt-3 text-end">
                                                         <button id="place-order" class="btn btn-success" disabled>
                                                             <i class="bi bi-send-check"></i> Request Order Placement
@@ -216,7 +242,14 @@ if (!$current_batch) {
 
                                                         <div id="place-order-message" class="alert d-none mt-2"></div>
                                                     </div>
-                                                <?php elseif ($role === 'Admin'): ?>
+                                                <?php elseif ($role != 'Admin' && !in_array($position, $allowedPositions) && $current_batch): ?>
+                                                    <div class="mt-3 text-end">
+                                                        <div class="alert alert-info">
+                                                            <i class="bi bi-info-circle"></i> To place the final order, please contact Centre Incharge.
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if ($role === 'Admin'): ?>
                                                     <div class="row g-3 mt-3">
                                                         <div class="col-md-4">
                                                             <label class="form-label">Vendor Name</label>

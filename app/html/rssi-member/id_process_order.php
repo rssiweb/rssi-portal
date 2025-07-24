@@ -53,8 +53,7 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function handleAddOrder()
-{
+function handleAddOrder() {
     global $con, $associatenumber;
 
     $required = ['batch_id', 'student_id', 'order_type'];
@@ -62,6 +61,51 @@ function handleAddOrder()
         if (empty($_POST[$field])) {
             throw new Exception("Missing required field: $field");
         }
+    }
+
+    // Check if batch exists and is pending
+    $batchCheck = pg_query_params(
+        $con,
+        "SELECT 1 FROM id_card_batches WHERE batch_id = $1 AND status = 'Pending'",
+        [$_POST['batch_id']]
+    );
+    
+    if (pg_num_rows($batchCheck) === 0) {
+        throw new Exception('Invalid batch ID or batch is not pending');
+    }
+
+    // Check 1: Already in current batch
+    $inCurrentBatch = pg_query_params(
+        $con,
+        "SELECT 1 FROM id_card_orders 
+         WHERE batch_id = $1 AND student_id = $2 AND status = 'Pending'",
+        [$_POST['batch_id'], $_POST['student_id']]
+    );
+    
+    if (pg_num_rows($inCurrentBatch) > 0) {
+        throw new Exception('ALREADY_IN_BATCH');
+    }
+
+    // Enhanced Check 2: Has pending order (ordered but not delivered)
+    $pendingOrder = pg_query_params(
+        $con,
+        "SELECT batch_id, status, order_date 
+         FROM id_card_orders 
+         WHERE student_id = $1 AND status IN ('Pending', 'Ordered') 
+         AND batch_id != $2
+         ORDER BY order_date DESC
+         LIMIT 1",
+        [$_POST['student_id'], $_POST['batch_id']]
+    );
+    
+    if (pg_num_rows($pendingOrder) > 0) {
+        $orderInfo = pg_fetch_assoc($pendingOrder);
+        $message = "PENDING_ORDER_EXISTS:" . json_encode([
+            'batch_id' => $orderInfo['batch_id'],
+            'status' => $orderInfo['status'],
+            'order_date' => $orderInfo['order_date']
+        ]);
+        throw new Exception($message);
     }
 
     // Try to fetch from student table
@@ -188,7 +232,7 @@ function handleRequestOrder()
 
 function handleMarkOrdered()
 {
-    global $con, $role, $associatenumber; // Added $associatenumber here
+    global $con, $role, $associatenumber;
 
     if ($role !== 'Admin') {
         throw new Exception('Unauthorized');
@@ -201,30 +245,53 @@ function handleMarkOrdered()
         }
     }
 
-    $result = pg_query_params(
-        $con,
-        "UPDATE id_card_orders SET 
-            status = 'Ordered',
-            vendor_name = $1,
-            order_placed_date = CURRENT_DATE,
-            processed_by = $2,
-            admin_remarks = $3
-         WHERE batch_id = $4 AND status = 'Pending'",
-        [
-            $_POST['vendor_name'],
-            $associatenumber,
-            $_POST['remarks'] ?? null,
-            $_POST['batch_id']
-        ]
-    );
+    // Start transaction
+    pg_query($con, "BEGIN");
 
-    if (!$result) {
-        throw new Exception('Database error: ' . pg_last_error($con));
+    try {
+        // 1. Update the batch record
+        $updateBatch = pg_query_params(
+            $con,
+            "UPDATE id_card_batches SET 
+                status = 'Ordered',
+                vendor_name = $1,
+                ordered_date = CURRENT_TIMESTAMP,
+                admin_remarks = $2
+             WHERE batch_id = $3 AND status = 'Pending'",
+            [
+                $_POST['vendor_name'],
+                $_POST['remarks'] ?? null,
+                $_POST['batch_id']
+            ]
+        );
+
+        if (pg_affected_rows($updateBatch) === 0) {
+            throw new Exception('Batch not found or already processed');
+        }
+
+        // 2. Update all orders in the batch
+        $updateOrders = pg_query_params(
+            $con,
+            "UPDATE id_card_orders SET 
+                status = 'Ordered',
+                processed_by = $1,
+                order_placed_date = CURRENT_DATE
+             WHERE batch_id = $2 AND status = 'Pending'",
+            [
+                $associatenumber,
+                $_POST['batch_id']
+            ]
+        );
+
+        // Commit transaction
+        pg_query($con, "COMMIT");
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        pg_query($con, "ROLLBACK");
+        throw $e;
     }
-
-    echo json_encode(['success' => true]);
 }
-
 function handleRemoveItem()
 {
     global $con;
