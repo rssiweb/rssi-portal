@@ -56,28 +56,30 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function handleCreateBatch() {
+function handleCreateBatch()
+{
     global $con, $associatenumber;
-    
+
     if (empty($_POST['batch_id']) || empty($_POST['created_by'])) {
         echo json_encode(['success' => false, 'message' => 'Missing required fields']);
         return;
     }
-    
+
     $batch_id = $_POST['batch_id'];
     $created_by = $_POST['created_by'];
-    
+
     // Check if batch already exists
-    $check = pg_query_params($con, 
-        "SELECT 1 FROM id_card_batches WHERE batch_id = $1", 
+    $check = pg_query_params(
+        $con,
+        "SELECT 1 FROM id_card_batches WHERE batch_id = $1",
         [$batch_id]
     );
-    
+
     if (pg_num_rows($check) > 0) {
         echo json_encode(['success' => false, 'message' => 'Batch ID already exists']);
         return;
     }
-    
+
     // Insert new batch
     $result = pg_query_params(
         $con,
@@ -92,15 +94,15 @@ function handleCreateBatch() {
             date('Y-m-d H:i:s')
         ]
     );
-    
+
     if (!$result) {
         echo json_encode([
-            'success' => false, 
+            'success' => false,
             'message' => 'Database error: ' . pg_last_error($con)
         ]);
         return;
     }
-    
+
     echo json_encode([
         'success' => true,
         'batch_id' => $batch_id
@@ -478,10 +480,12 @@ function handleMarkDelivered()
         $con,
         "UPDATE id_card_orders SET 
             status = 'Delivered',
+            delivered_remarks = $1,
             delivered_date = CURRENT_DATE,
-            delivered_by = $1
-         WHERE batch_id = $2 AND status = 'Ordered'",
+            delivered_by = $2
+         WHERE batch_id = $3 AND status = 'Ordered'",
         [
+            $_POST['remarks'],
             $associatenumber,
             $_POST['batch_id']
         ]

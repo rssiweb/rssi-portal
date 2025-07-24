@@ -8,22 +8,34 @@ if (!isLoggedIn("aid")) {
 }
 
 // Get all batches with counts
-$query = "SELECT 
-             batch_id, 
-             MIN(order_date) as start_date,
-             MAX(order_date) as end_date,
-             COUNT(*) as item_count,
-             status,
-             MIN(academic_year) as academic_year,
-             MAX(vendor_name) as vendor_name,
-             MAX(admin_remarks) as admin_remarks,
-             MAX(delivered_date) as delivered_date,
-             MAX(delivered_remarks) as delivered_remarks
-          FROM id_card_orders
-          GROUP BY batch_id, status
-          ORDER BY start_date DESC";
+$query = "
+    SELECT 
+        b.batch_id,
+        b.created_by,
+        m.fullname AS created_by_name,
+        b.created_date,
+        o.status,
+        b.vendor_name,
+        b.admin_remarks,
+        b.ordered_date,
+        MAX(o.delivered_date) AS delivered_date,
+        MAX(o.delivered_remarks) AS delivered_remarks,
+        COUNT(o.id) AS item_count,
+        MIN(o.academic_year) AS academic_year,
+        MIN(o.order_date) AS start_date,
+        MAX(o.order_date) AS end_date
+    FROM id_card_batches b
+    INNER JOIN id_card_orders o ON b.batch_id = o.batch_id
+    LEFT JOIN rssimyaccount_members m ON b.created_by = m.associatenumber
+    GROUP BY 
+        b.batch_id, b.created_by, m.fullname, b.created_date, o.status, 
+        b.vendor_name, b.admin_remarks, b.ordered_date
+    ORDER BY start_date DESC
+";
+
 $batches = pg_query($con, $query);
 $batches = pg_fetch_all($batches) ?: [];
+
 ?>
 
 <!DOCTYPE html>
@@ -55,12 +67,6 @@ $batches = pg_fetch_all($batches) ?: [];
 
         .badge-pending {
             background-color: #0d6efd;
-        }
-
-        .spinner-border {
-            width: 1rem;
-            height: 1rem;
-            border-width: 0.15em;
         }
 
         .batch-id-link {
@@ -101,7 +107,7 @@ $batches = pg_fetch_all($batches) ?: [];
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <div class="container py-4">
+                            <div class="py-4">
                                 <div class="card shadow">
                                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                                         <h2 class="h4 mb-0"><i class="bi bi-clock-history"></i> ID Card Order History</h2>
@@ -114,14 +120,16 @@ $batches = pg_fetch_all($batches) ?: [];
                                             <table id="historyTable" class="table table-striped table-hover">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th><input type="checkbox" id="selectAll"></th>
+                                                        <th><input class="form-check-input" type="checkbox" id="selectAll"></th>
                                                         <th>Batch ID</th>
-                                                        <th>Academic Year</th>
+                                                        <!-- <th>Academic Year</th> -->
                                                         <th>Date Range</th>
+                                                        <th>Order Date</th>
                                                         <th>Items</th>
                                                         <th>Status</th>
                                                         <th>Vendor</th>
                                                         <th>Admin Remarks</th>
+                                                        <th>Delivered Date</th>
                                                         <th>Delivered Remarks</th>
                                                         <th>Actions</th>
                                                     </tr>
@@ -129,30 +137,35 @@ $batches = pg_fetch_all($batches) ?: [];
                                                 <tbody>
                                                     <?php foreach ($batches as $batch): ?>
                                                         <tr data-batch-id="<?= htmlspecialchars($batch['batch_id']) ?>">
-                                                            <td><input type="checkbox" class="batch-checkbox"></td>
+                                                            <td><input class="form-check-input" type="checkbox" class="batch-checkbox"></td>
                                                             <td>
                                                                 <span class="batch-id-link" data-batch="<?= htmlspecialchars($batch['batch_id']) ?>">
                                                                     <code><?= htmlspecialchars($batch['batch_id']) ?></code>
                                                                 </span>
                                                             </td>
-                                                            <td><?= htmlspecialchars($batch['academic_year']) ?></td>
+                                                            <!-- <td><?= htmlspecialchars($batch['academic_year']) ?></td> -->
                                                             <td>
                                                                 <?= date('d M Y', strtotime($batch['start_date'])) ?> -
                                                                 <?= date('d M Y', strtotime($batch['end_date'])) ?>
                                                             </td>
+                                                            <td>
+                                                                <?= isset($batch['ordered_date']) && $batch['ordered_date']
+                                                                    ? htmlspecialchars(date('d M Y', strtotime($batch['ordered_date'])))
+                                                                    : '-' ?>
+                                                            </td>
                                                             <td><?= $batch['item_count'] ?></td>
                                                             <td>
-                                                                <span class="badge <?=
-                                                                                    $batch['status'] === 'Delivered' ? 'bg-success' : ($batch['status'] === 'Ordered' ? 'bg-warning text-dark' : 'bg-primary')
-                                                                                    ?>">
+                                                                <span class="badge <?= $batch['status'] === 'Delivered' ? 'bg-success' : ($batch['status'] === 'Ordered' ? 'bg-warning text-dark' : 'bg-primary') ?>">
                                                                     <?= $batch['status'] ?>
-                                                                    <?php if ($batch['status'] === 'Delivered' && $batch['delivered_date']): ?>
-                                                                        <br><small><?= date('d M Y', strtotime($batch['delivered_date'])) ?></small>
-                                                                    <?php endif; ?>
                                                                 </span>
                                                             </td>
                                                             <td><?= htmlspecialchars($batch['vendor_name'] ?? '-') ?></td>
                                                             <td><?= htmlspecialchars($batch['admin_remarks'] ?? '-') ?></td>
+                                                            <td>
+                                                                <?= isset($batch['delivered_date']) && $batch['delivered_date']
+                                                                    ? htmlspecialchars(date('d M Y', strtotime($batch['delivered_date'])))
+                                                                    : '-' ?>
+                                                            </td>
                                                             <td><?= htmlspecialchars($batch['delivered_remarks'] ?? '-') ?></td>
                                                             <td>
                                                                 <?php if ($role === 'Admin' && $batch['status'] === 'Ordered'): ?>
