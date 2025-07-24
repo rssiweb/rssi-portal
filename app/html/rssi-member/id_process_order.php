@@ -77,7 +77,12 @@ function handleAddOrder()
             [$batch_id]
         );
         if (pg_num_rows($batchCheck) === 0) {
-            throw new Exception("Batch is invalid or not pending");
+            echo json_encode([
+                'success' => false,
+                'isBatchError' => true,
+                'message' => 'This batch is invalid or already processed'
+            ]);
+            return;
         }
 
         // Already in current batch

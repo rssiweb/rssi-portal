@@ -390,6 +390,13 @@ if (pg_num_rows($result) > 0) {
 
                 Promise.all(promises)
                     .then(results => {
+                        // Check if any result is a batch error
+                        const batchError = results.find(r => r.isBatchError);
+                        if (batchError) {
+                            alert(`${batchError.message}. Please reload the page and try again.`);
+                            return;
+                        }
+
                         const added = [];
                         const failed = [];
 
@@ -398,7 +405,6 @@ if (pg_num_rows($result) > 0) {
                                 added.push(r.student_id);
                                 addedStudentIds.push(r.student_id);
                             } else {
-                                // Group by message
                                 failed.push({
                                     id: r.student_id,
                                     message: r.message
@@ -410,7 +416,6 @@ if (pg_num_rows($result) > 0) {
                             alert(`Successfully added: ${added.join(', ')}`);
                             loadBatchItems();
 
-                            // Remove added IDs from dropdown
                             const remaining = selectedValues.filter(id => !added.includes(id));
                             $('#student-select').val(remaining).trigger('change');
 
@@ -422,7 +427,6 @@ if (pg_num_rows($result) > 0) {
                         }
 
                         if (failed.length > 0) {
-                            // Group failed messages
                             const grouped = {};
                             failed.forEach(item => {
                                 if (!grouped[item.message]) {
@@ -431,7 +435,6 @@ if (pg_num_rows($result) > 0) {
                                 grouped[item.message].push(item.id);
                             });
 
-                            // Create summary
                             let summary = 'Failed to add:\n';
                             for (const [reason, ids] of Object.entries(grouped)) {
                                 summary += `${ids.join(', ')} ➜ ${reason}\n`;
