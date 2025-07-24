@@ -415,7 +415,7 @@ if (pg_num_rows($result) > 0) {
                             $('#student-select').val(remaining).trigger('change');
 
                             if (remaining.length === 0) {
-                                $('#order-type').val('').trigger('change');
+                                $('#order-type').val('New').trigger('change');
                                 $('#payment-status').val('');
                                 $('#order-remarks').val('');
                             }
