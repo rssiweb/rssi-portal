@@ -46,11 +46,65 @@ try {
         case 'mark_delivered':
             handleMarkDelivered();
             break;
+        case 'create_batch':
+            handleCreateBatch();
+            break;
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+
+function handleCreateBatch() {
+    global $con, $associatenumber;
+    
+    if (empty($_POST['batch_id']) || empty($_POST['created_by'])) {
+        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+        return;
+    }
+    
+    $batch_id = $_POST['batch_id'];
+    $created_by = $_POST['created_by'];
+    
+    // Check if batch already exists
+    $check = pg_query_params($con, 
+        "SELECT 1 FROM id_card_batches WHERE batch_id = $1", 
+        [$batch_id]
+    );
+    
+    if (pg_num_rows($check) > 0) {
+        echo json_encode(['success' => false, 'message' => 'Batch ID already exists']);
+        return;
+    }
+    
+    // Insert new batch
+    $result = pg_query_params(
+        $con,
+        "INSERT INTO id_card_batches (
+            batch_id, created_by, created_date, status
+        ) VALUES (
+            $1, $2, $3, 'Pending'
+        )",
+        [
+            $batch_id,
+            $created_by,
+            date('Y-m-d H:i:s')
+        ]
+    );
+    
+    if (!$result) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Database error: ' . pg_last_error($con)
+        ]);
+        return;
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'batch_id' => $batch_id
+    ]);
 }
 
 function handleAddOrder()

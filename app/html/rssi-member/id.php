@@ -109,6 +109,32 @@ if (pg_num_rows($result) > 0) {
             height: 1rem;
             border-width: 0.15em;
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: middle;
+            border: 0.25em solid #f3f3f3;
+            border-top: 0.25em solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 2rem;
+        }
     </style>
 </head>
 
@@ -147,7 +173,7 @@ if (pg_num_rows($result) > 0) {
                                     <div class="card-body">
                                         <div class="card mb-4 border-primary">
                                             <div class="card-header bg-primary bg-opacity-10">
-                                                <h3 class="h5 mb-0">Current Batch: <span class="fw-bold"><?= $current_batch ?></span></h3>
+                                                <h3 class="h5 mb-0">Current Batch: <span id="current-batch-display" class="fw-bold"><?= $current_batch ?></span></h3>
                                             </div>
                                             <div class="card-body">
                                                 <div class="row g-3">
@@ -182,6 +208,9 @@ if (pg_num_rows($result) > 0) {
                                                         <button id="add-to-batch" class="btn btn-primary">
                                                             <i class="bi bi-plus-circle"></i> Add to Batch
                                                         </button>
+                                                        <!-- <button id="create-new-batch" class="btn btn-outline-primary ms-2">
+                                                            <i class="bi bi-file-earmark-plus"></i> Create New Batch
+                                                        </button> -->
                                                         <div id="add-progress" class="spinner-border text-primary d-none" role="status">
                                                             <span class="visually-hidden">Loading...</span>
                                                         </div>
@@ -215,7 +244,12 @@ if (pg_num_rows($result) > 0) {
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <!-- Filled via AJAX -->
+                                                            <tr>
+                                                                <td colspan="13" class="text-center py-4">
+                                                                    <div class="loading-spinner"></div>
+                                                                    <div class="mt-2">Loading orders...</div>
+                                                                </td>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -306,6 +340,10 @@ if (pg_num_rows($result) > 0) {
 
     <script>
         $(document).ready(function() {
+            // Track already added student IDs in current session
+            let addedStudentIds = [];
+            let currentBatchId = '<?= $current_batch ?>';
+
             // Toggle payment status field based on order type
             function togglePaymentStatus() {
                 if ($('#order-type').val() === 'Reissue') {
@@ -345,13 +383,60 @@ if (pg_num_rows($result) > 0) {
                 width: '100%'
             });
 
-            // Track already added student IDs in current session
-            let addedStudentIds = [];
+            // Function to create new batch
+            function createNewBatch() {
+                return new Promise((resolve, reject) => {
+                    const now = new Date();
+                    const pad = num => String(num).padStart(2, '0');
 
-            // Load current batch items
-            loadBatchItems();
+                    const newBatchId = 'ID-' +
+                        now.getFullYear().toString() +
+                        pad(now.getMonth() + 1) +
+                        pad(now.getDate()) + '-' +
+                        pad(now.getHours()) +
+                        pad(now.getMinutes()) +
+                        pad(now.getSeconds());
 
-            $('#add-to-batch').click(function() {
+                    $('#create-new-batch').prop('disabled', true);
+                    $('#create-new-batch').html('<span class="spinner-border spinner-border-sm" role="status"></span> Creating...');
+
+                    $.post('id_process_order.php', {
+                            action: 'create_batch',
+                            batch_id: newBatchId,
+                            created_by: '<?= $associatenumber ?>'
+                        }, function(response) {
+                            if (response.success) {
+                                currentBatchId = newBatchId;
+                                $('#current-batch-display').text(newBatchId);
+                                resolve(newBatchId);
+                            } else {
+                                reject(response.message);
+                            }
+                        }, 'json')
+                        .fail(() => reject('Failed to create new batch'))
+                        .always(() => {
+                            $('#create-new-batch').prop('disabled', false);
+                            $('#create-new-batch').html('<i class="bi bi-file-earmark-plus"></i> Create New Batch');
+                        });
+                });
+            }
+
+            // Manual batch creation
+            $('#create-new-batch').click(function() {
+                if (confirm('Create a new batch? Any pending items will remain in the current batch.')) {
+                    createNewBatch()
+                        .then(newBatchId => {
+                            alert(`New batch created: ${newBatchId}`);
+                            loadBatchItems();
+                        })
+                        .catch(error => {
+                            alert(error);
+                        });
+                }
+            });
+
+            // Add to batch with automatic batch creation on failure
+            $('#add-to-batch').click(async function() {
                 const selectedValues = $('#student-select').val();
                 if (!selectedValues || selectedValues.length === 0) {
                     alert('Please select at least one student');
@@ -377,82 +462,108 @@ if (pg_num_rows($result) > 0) {
                 $('#add-progress').removeClass('d-none');
                 $('#add-to-batch').prop('disabled', true);
 
-                const promises = selectedValues.map(studentId =>
+                try {
+                    let results = await addToBatchAttempt(currentBatchId, selectedValues);
+
+                    // Check for batch errors
+                    const batchError = results.find(r => r && r.isBatchError);
+                    if (batchError) {
+                        if (confirm('The current batch is no longer available. Create a new batch and try again?')) {
+                            currentBatchId = await createNewBatch();
+                            results = await addToBatchAttempt(currentBatchId, selectedValues);
+                        } else {
+                            throw new Error('Operation cancelled by user');
+                        }
+                    }
+
+                    processResults(results, selectedValues);
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.message || 'Unexpected error during batch addition');
+                } finally {
+                    $('#add-progress').addClass('d-none');
+                    $('#add-to-batch').prop('disabled', false);
+                }
+            });
+
+            // Helper function to attempt adding to batch
+            async function addToBatchAttempt(batchId, studentIds) {
+                const promises = studentIds.map(studentId =>
                     $.post('id_process_order.php', {
                         action: 'add',
-                        batch_id: '<?= $current_batch ?>',
+                        batch_id: batchId,
                         student_id: studentId,
                         order_type: $('#order-type').val(),
                         payment_status: $('#payment-status').val(),
                         remarks: $('#order-remarks').val()
                     }).then(r => typeof r === 'string' ? JSON.parse(r) : r)
+                    .catch(error => ({
+                        success: false,
+                        message: error.responseJSON?.message || error.statusText || 'Unknown error',
+                        student_id: studentId
+                    }))
                 );
 
-                Promise.all(promises)
-                    .then(results => {
-                        // Check if any result is a batch error
-                        const batchError = results.find(r => r.isBatchError);
-                        if (batchError) {
-                            alert(`${batchError.message}. Please reload the page and try again.`);
-                            return;
-                        }
+                return Promise.all(promises);
+            }
 
-                        const added = [];
-                        const failed = [];
+            // Process addition results
+            function processResults(results, selectedValues) {
+                const added = [];
+                const failed = [];
 
-                        results.forEach(r => {
-                            if (r.success) {
-                                added.push(r.student_id);
-                                addedStudentIds.push(r.student_id);
-                            } else {
-                                failed.push({
-                                    id: r.student_id,
-                                    message: r.message
-                                });
-                            }
+                results.forEach(r => {
+                    if (r && r.success) {
+                        added.push(r.student_id);
+                        addedStudentIds.push(r.student_id);
+                    } else if (r) {
+                        failed.push({
+                            id: r.student_id,
+                            message: r.message || 'Unknown error'
                         });
+                    }
+                });
 
-                        if (added.length > 0) {
-                            alert(`Successfully added: ${added.join(', ')}`);
-                            loadBatchItems();
+                // Show success message for added items
+                if (added.length > 0) {
+                    alert(`Successfully added: ${added.join(', ')}`);
+                    loadBatchItems();
 
-                            const remaining = selectedValues.filter(id => !added.includes(id));
-                            $('#student-select').val(remaining).trigger('change');
+                    // Update selection to remove successfully added items
+                    const remaining = selectedValues.filter(id => !added.includes(id));
+                    $('#student-select').val(remaining).trigger('change');
 
-                            if (remaining.length === 0) {
-                                $('#order-type').val('New').trigger('change');
-                                $('#payment-status').val('');
-                                $('#order-remarks').val('');
-                            }
+                    // Clear form if all items were added
+                    if (remaining.length === 0) {
+                        $('#order-type').val('New').trigger('change');
+                        $('#payment-status').val('');
+                        $('#order-remarks').val('');
+                    }
+                }
+
+                // Show detailed error message for failed items
+                if (failed.length > 0) {
+                    const grouped = {};
+                    failed.forEach(item => {
+                        if (!grouped[item.message]) {
+                            grouped[item.message] = [];
                         }
-
-                        if (failed.length > 0) {
-                            const grouped = {};
-                            failed.forEach(item => {
-                                if (!grouped[item.message]) {
-                                    grouped[item.message] = [];
-                                }
-                                grouped[item.message].push(item.id);
-                            });
-
-                            let summary = 'Failed to add:\n';
-                            for (const [reason, ids] of Object.entries(grouped)) {
-                                summary += `${ids.join(', ')} ➜ ${reason}\n`;
-                            }
-
-                            alert(summary.trim());
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Unexpected error during batch addition');
-                    })
-                    .finally(() => {
-                        $('#add-progress').addClass('d-none');
-                        $('#add-to-batch').prop('disabled', false);
+                        grouped[item.message].push(item.id);
                     });
-            });
 
+                    let summary = 'Failed to add:\n';
+                    for (const [reason, ids] of Object.entries(grouped)) {
+                        summary += `${ids.join(', ')} ➜ ${reason}\n`;
+                    }
+
+                    alert(summary.trim());
+                }
+
+                // Enable place order button if we have items
+                if (added.length > 0) {
+                    $('#place-order').prop('disabled', false);
+                }
+            }
 
             // Place order request
             $('#place-order').click(function() {
@@ -462,7 +573,7 @@ if (pg_num_rows($result) > 0) {
 
                     $.post('id_process_order.php', {
                             action: 'request_order',
-                            batch_id: '<?= $current_batch ?>'
+                            batch_id: currentBatchId
                         }, function(response) {
                             if (response.success) {
                                 alert('Order request submitted to admin');
@@ -519,14 +630,22 @@ if (pg_num_rows($result) > 0) {
 
             // Load batch items with edit/save functionality
             function loadBatchItems() {
+                const tableBody = $('#orders-table tbody');
+                tableBody.html(`
+                    <tr>
+                        <td colspan="13" class="text-center py-4">
+                            <div class="loading-spinner"></div>
+                            <div class="mt-2">Loading orders...</div>
+                        </td>
+                    </tr>
+                `);
+
                 const batchId = '<?= $role === 'Admin' ? '' : $current_batch ?>';
                 $.get('id_process_order.php', {
                     action: 'get_batch',
                     batch_id: batchId
                 }, function(response) {
-                    $('#orders-table tbody').empty();
-
-                    // Reset tracked student IDs
+                    tableBody.empty();
                     addedStudentIds = [];
 
                     if (response.data && response.data.length) {
@@ -582,9 +701,7 @@ if (pg_num_rows($result) > 0) {
                         ` : '<span class="text-muted">Locked</span>'}
                     </td>
                 </tr>`;
-                            $('#orders-table tbody').append(row);
-
-                            // Add to tracked student IDs
+                            tableBody.append(row);
                             addedStudentIds.push(item.student_id);
                         });
 
@@ -593,10 +710,8 @@ if (pg_num_rows($result) > 0) {
                             $('#export-batch').data('batch', response.batch_id);
                         <?php endif; ?>
                     } else {
-                        // Disable place order button if no items
                         $('#place-order').prop('disabled', true);
-
-                        $('#orders-table tbody').append(`
+                        tableBody.append(`
                 <tr>
                     <td colspan="${$role === 'Admin' ? 12 : 10}" class="text-center text-muted py-4">
                         No items found in current batch
@@ -681,9 +796,19 @@ if (pg_num_rows($result) > 0) {
                         }
                     });
                 }, 'json').fail(function(xhr) {
+                    tableBody.html(`
+                        <tr>
+                            <td colspan="13" class="text-center text-danger py-4">
+                                <i class="bi bi-exclamation-triangle"></i> Failed to load data
+                            </td>
+                        </tr>
+                    `);
                     console.error('Error loading batch:', xhr.responseText);
                 });
             }
+
+            // Initial load
+            loadBatchItems();
         });
     </script>
 </body>
