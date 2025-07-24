@@ -297,7 +297,7 @@ if (!$current_batch) {
                     data: function(params) {
                         return {
                             q: params.term,
-                            // isActive: true
+                            isStockout: true
                         };
                     },
                     processResults: function(data) {
