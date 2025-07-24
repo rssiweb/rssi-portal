@@ -53,136 +53,138 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function handleAddOrder() {
+function handleAddOrder()
+{
     global $con, $associatenumber;
 
-    $required = ['batch_id', 'student_id', 'order_type'];
-    foreach ($required as $field) {
-        if (empty($_POST[$field])) {
-            throw new Exception("Missing required field: $field");
+    header('Content-Type: application/json');
+
+    try {
+        $required = ['batch_id', 'student_id', 'order_type'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("Missing required field: $field");
+            }
         }
-    }
 
-    // Check if batch exists and is pending
-    $batchCheck = pg_query_params(
-        $con,
-        "SELECT 1 FROM id_card_batches WHERE batch_id = $1 AND status = 'Pending'",
-        [$_POST['batch_id']]
-    );
-    
-    if (pg_num_rows($batchCheck) === 0) {
-        throw new Exception('Invalid batch ID or batch is not pending');
-    }
+        $student_id = $_POST['student_id'];
+        $batch_id = $_POST['batch_id'];
 
-    // Check 1: Already in current batch
-    $inCurrentBatch = pg_query_params(
-        $con,
-        "SELECT 1 FROM id_card_orders 
-         WHERE batch_id = $1 AND student_id = $2 AND status = 'Pending'",
-        [$_POST['batch_id'], $_POST['student_id']]
-    );
-    
-    if (pg_num_rows($inCurrentBatch) > 0) {
-        throw new Exception('ALREADY_IN_BATCH');
-    }
-
-    // Enhanced Check 2: Has pending order (ordered but not delivered)
-    $pendingOrder = pg_query_params(
-        $con,
-        "SELECT batch_id, status, order_date 
-         FROM id_card_orders 
-         WHERE student_id = $1 AND status IN ('Pending', 'Ordered') 
-         AND batch_id != $2
-         ORDER BY order_date DESC
-         LIMIT 1",
-        [$_POST['student_id'], $_POST['batch_id']]
-    );
-    
-    if (pg_num_rows($pendingOrder) > 0) {
-        $orderInfo = pg_fetch_assoc($pendingOrder);
-        $message = "PENDING_ORDER_EXISTS:" . json_encode([
-            'batch_id' => $orderInfo['batch_id'],
-            'status' => $orderInfo['status'],
-            'order_date' => $orderInfo['order_date']
-        ]);
-        throw new Exception($message);
-    }
-
-    // Try to fetch from student table
-    $student = pg_query_params(
-        $con,
-        "SELECT student_id, studentname, class, photourl FROM rssimyprofile_student 
-     WHERE student_id = $1 AND filterstatus = 'Active'",
-        [$_POST['student_id']]
-    );
-
-    if (pg_num_rows($student) === 0) {
-        // If not found in student table, try members table
-        $member = pg_query_params(
+        // Check if batch is pending
+        $batchCheck = pg_query_params(
             $con,
-            "SELECT associatenumber AS student_id, fullname AS studentname, NULL AS class, photo AS photourl 
-         FROM rssimyaccount_members 
-         WHERE associatenumber = $1",
-            [$_POST['student_id']]
+            "SELECT 1 FROM id_card_batches WHERE batch_id = $1 AND status = 'Pending'",
+            [$batch_id]
+        );
+        if (pg_num_rows($batchCheck) === 0) {
+            throw new Exception("Batch is invalid or not pending");
+        }
+
+        // Already in current batch
+        $inCurrentBatch = pg_query_params(
+            $con,
+            "SELECT 1 FROM id_card_orders 
+             WHERE batch_id = $1 AND student_id = $2 AND status = 'Pending'",
+            [$batch_id, $student_id]
+        );
+        if (pg_num_rows($inCurrentBatch) > 0) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Already in current batch',
+                'student_id' => $student_id
+            ]);
+            return;
+        }
+
+        // Pending order elsewhere
+        $pendingOrder = pg_query_params(
+            $con,
+            "SELECT batch_id, status, order_date 
+             FROM id_card_orders 
+             WHERE student_id = $1 AND status IN ('Pending', 'Ordered') AND batch_id != $2
+             ORDER BY order_date DESC LIMIT 1",
+            [$student_id, $batch_id]
+        );
+        if (pg_num_rows($pendingOrder) > 0) {
+            $info = pg_fetch_assoc($pendingOrder);
+            echo json_encode([
+                'success' => false,
+                'message' => "Pending order exists in batch {$info['batch_id']} ({$info['status']}, {$info['order_date']})",
+                'student_id' => $student_id
+            ]);
+            return;
+        }
+
+        // Fetch from student/member
+        $student = pg_query_params(
+            $con,
+            "SELECT student_id FROM rssimyprofile_student WHERE student_id = $1 AND filterstatus = 'Active'",
+            [$student_id]
+        );
+        if (pg_num_rows($student) === 0) {
+            $member = pg_query_params(
+                $con,
+                "SELECT associatenumber FROM rssimyaccount_members WHERE associatenumber = $1",
+                [$student_id]
+            );
+            if (pg_num_rows($member) === 0) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student or associate not found or inactive',
+                    'student_id' => $student_id
+                ]);
+                return;
+            }
+        }
+
+        // Insert
+        $historyRes = pg_query_params(
+            $con,
+            "SELECT COUNT(*) as count, MAX(order_date) as last_date 
+             FROM id_card_orders WHERE student_id = $1 AND status = 'Delivered'",
+            [$student_id]
+        );
+        $history = pg_fetch_assoc($historyRes);
+
+        $insert = pg_query_params(
+            $con,
+            "INSERT INTO id_card_orders (
+                batch_id, student_id, order_type, order_date, 
+                order_placed_by, remarks, payment_status, academic_year
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8
+            ) RETURNING id",
+            [
+                $batch_id,
+                $student_id,
+                $_POST['order_type'],
+                date('Y-m-d'),
+                $associatenumber,
+                $_POST['remarks'] ?? null,
+                $_POST['payment_status'] ?? null,
+                getAcademicYear()
+            ]
         );
 
-        if (pg_num_rows($member) === 0) {
-            throw new Exception('Student/Associate not found or inactive');
-        } else {
-            $student = $member; // Override $student with $member for downstream use
+        if (!$insert) {
+            throw new Exception('Database insert error');
         }
+
+        echo json_encode([
+            'success' => true,
+            'student_id' => $student_id,
+            'history' => [
+                'times_issued' => $history['count'],
+                'last_issued' => $history['last_date']
+            ]
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'student_id' => $_POST['student_id'] ?? 'unknown'
+        ]);
     }
-
-    $exists = pg_query_params(
-        $con,
-        "SELECT 1 FROM id_card_orders 
-         WHERE batch_id = $1 AND student_id = $2 AND status = 'Pending'",
-        [$_POST['batch_id'], $_POST['student_id']]
-    );
-    if (pg_num_rows($exists) > 0) {
-        throw new Exception('Student already exists in current batch');
-    }
-
-    $history = pg_query_params(
-        $con,
-        "SELECT COUNT(*) as count, MAX(order_date) as last_date 
-         FROM id_card_orders 
-         WHERE student_id = $1 AND status = 'Delivered'",
-        [$_POST['student_id']]
-    );
-    $history = pg_fetch_assoc($history);
-
-    $result = pg_query_params(
-        $con,
-        "INSERT INTO id_card_orders (
-            batch_id, student_id, order_type, order_date, 
-            order_placed_by, remarks, payment_status, academic_year
-         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8
-         ) RETURNING id",
-        [
-            $_POST['batch_id'],
-            $_POST['student_id'],
-            $_POST['order_type'],
-            date('Y-m-d'),
-            $associatenumber,
-            $_POST['remarks'] ?? null,
-            $_POST['payment_status'] ?? null,
-            getAcademicYear()
-        ]
-    );
-
-    if (!$result) {
-        throw new Exception('Database error: ' . pg_last_error($con));
-    }
-
-    echo json_encode([
-        'success' => true,
-        'history' => [
-            'last_issued' => $history['last_date'],
-            'times_issued' => $history['count']
-        ]
-    ]);
 }
 
 function handleGetBatch()

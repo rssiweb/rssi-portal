@@ -351,7 +351,6 @@ if (pg_num_rows($result) > 0) {
             // Load current batch items
             loadBatchItems();
 
-            // Add to batch - handle multiple students
             $('#add-to-batch').click(function() {
                 const selectedValues = $('#student-select').val();
                 if (!selectedValues || selectedValues.length === 0) {
@@ -359,62 +358,98 @@ if (pg_num_rows($result) > 0) {
                     return;
                 }
 
-                // Validate payment status for reissue
                 if ($('#order-type').val() === 'Reissue' && !$('#payment-status').val()) {
                     alert('Payment status is required for Reissue orders');
                     return;
                 }
 
-                // Check for duplicates in current session
                 const duplicates = selectedValues.filter(id => addedStudentIds.includes(id));
                 if (duplicates.length > 0) {
                     alert(`These profiles are already in the batch: ${duplicates.join(', ')}`);
+
+                    // Remove duplicates from selection
+                    const filteredValues = selectedValues.filter(id => !duplicates.includes(id));
+                    $('#student-select').val(filteredValues).trigger('change');
+
                     return;
                 }
 
-                // Show progress
                 $('#add-progress').removeClass('d-none');
                 $('#add-to-batch').prop('disabled', true);
 
-                const promises = selectedValues.map(studentId => {
-                    return $.post('id_process_order.php', {
+                const promises = selectedValues.map(studentId =>
+                    $.post('id_process_order.php', {
                         action: 'add',
                         batch_id: '<?= $current_batch ?>',
                         student_id: studentId,
                         order_type: $('#order-type').val(),
                         payment_status: $('#payment-status').val(),
                         remarks: $('#order-remarks').val()
-                    });
-                });
+                    }).then(r => typeof r === 'string' ? JSON.parse(r) : r)
+                );
 
                 Promise.all(promises)
-                    .then(responses => {
-                        const allSuccess = responses.every(r => r.success);
-                        const failedItems = responses.filter(r => !r.success);
+                    .then(results => {
+                        const added = [];
+                        const failed = [];
 
-                        if (allSuccess) {
-                            // Add to tracked student IDs
-                            addedStudentIds.push(...selectedValues);
+                        results.forEach(r => {
+                            if (r.success) {
+                                added.push(r.student_id);
+                                addedStudentIds.push(r.student_id);
+                            } else {
+                                // Group by message
+                                failed.push({
+                                    id: r.student_id,
+                                    message: r.message
+                                });
+                            }
+                        });
 
-                            alert('Selected profiles added to batch successfully.');
+                        if (added.length > 0) {
+                            alert(`Successfully added: ${added.join(', ')}`);
                             loadBatchItems();
-                            $('#student-select').val(null).trigger('change');
-                            $('#payment-status').val('');
-                            $('#order-remarks').val('');
-                        } else {
-                            const errorMessages = failedItems.map(r => r.message).join('\n');
-                            alert('Some orders failed:\n' + errorMessages);
+
+                            // Remove added IDs from dropdown
+                            const remaining = selectedValues.filter(id => !added.includes(id));
+                            $('#student-select').val(remaining).trigger('change');
+
+                            if (remaining.length === 0) {
+                                $('#order-type').val('').trigger('change');
+                                $('#payment-status').val('');
+                                $('#order-remarks').val('');
+                            }
+                        }
+
+                        if (failed.length > 0) {
+                            // Group failed messages
+                            const grouped = {};
+                            failed.forEach(item => {
+                                if (!grouped[item.message]) {
+                                    grouped[item.message] = [];
+                                }
+                                grouped[item.message].push(item.id);
+                            });
+
+                            // Create summary
+                            let summary = 'Failed to add:\n';
+                            for (const [reason, ids] of Object.entries(grouped)) {
+                                summary += `${ids.join(', ')} ➜ ${reason}\n`;
+                            }
+
+                            alert(summary.trim());
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Error processing orders');
+                        alert('Unexpected error during batch addition');
                     })
                     .finally(() => {
                         $('#add-progress').addClass('d-none');
                         $('#add-to-batch').prop('disabled', false);
                     });
             });
+
 
             // Place order request
             $('#place-order').click(function() {
