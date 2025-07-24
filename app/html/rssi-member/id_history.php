@@ -137,7 +137,7 @@ $batches = pg_fetch_all($batches) ?: [];
                                                 <tbody>
                                                     <?php foreach ($batches as $batch): ?>
                                                         <tr data-batch-id="<?= htmlspecialchars($batch['batch_id']) ?>">
-                                                            <td><input class="form-check-input" type="checkbox" class="batch-checkbox"></td>
+                                                            <td><input type="checkbox" class="batch-checkbox form-check-input"></td>
                                                             <td>
                                                                 <span class="batch-id-link" data-batch="<?= htmlspecialchars($batch['batch_id']) ?>">
                                                                     <code><?= htmlspecialchars($batch['batch_id']) ?></code>
@@ -240,42 +240,54 @@ $batches = pg_fetch_all($batches) ?: [];
     <script>
         $(document).ready(function() {
             // Initialize DataTable
-            <?php if (!empty($batches)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#historyTable').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
+            const table = $('#historyTable').DataTable({
+                "order": [], // Disable initial sorting
+                "columnDefs": [{
+                        "orderable": false,
+                        "targets": [0, 10]
+                    } // Disable sorting for checkbox and actions columns
+                ]
+            });
 
             // Row selection functionality
             $('#selectAll').change(function() {
-                $('.batch-checkbox').prop('checked', this.checked);
+                table.$('.batch-checkbox').prop('checked', this.checked);
                 updateExportButton();
             });
 
-            $('tbody').on('change', '.batch-checkbox', function() {
-                if (!this.checked) {
-                    $('#selectAll').prop('checked', false);
-                }
+            $('#historyTable tbody').on('change', '.batch-checkbox', function() {
+                const allChecked = table.$('.batch-checkbox:checked').length === table.$('.batch-checkbox').length;
+                $('#selectAll').prop('checked', allChecked);
                 updateExportButton();
             });
 
             function updateExportButton() {
-                const selectedCount = $('.batch-checkbox:checked').length;
+                const selectedCount = table.$('.batch-checkbox:checked').length;
                 $('#exportSelected').prop('disabled', selectedCount === 0);
             }
 
             // Export selected batches
             $('#exportSelected').click(function() {
                 const selectedBatches = [];
-                $('.batch-checkbox:checked').each(function() {
+                table.$('.batch-checkbox:checked').each(function() {
                     selectedBatches.push($(this).closest('tr').data('batch-id'));
                 });
 
                 if (selectedBatches.length > 0) {
-                    window.location.href = 'id_export_batch.php?batch_ids=' + selectedBatches.join(',');
+                    // Create a form and submit it to handle the export
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'id_export_selected_batches.php';
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'batch_ids';
+                    input.value = selectedBatches.join(',');
+                    form.appendChild(input);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
                 }
             });
 
