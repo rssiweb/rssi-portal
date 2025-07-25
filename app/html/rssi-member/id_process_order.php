@@ -256,7 +256,7 @@ function handleGetBatch()
     $query = "
             SELECT o.*, 
                    COALESCE(s.studentname, m.fullname) AS studentname,
-                   s.class,
+                   s.class, s.filterstatus,
                    COALESCE(s.photourl, m.photo) AS photourl,
                    u.fullname AS order_placed_by_name,
                    (SELECT COUNT(*) FROM id_card_orders 

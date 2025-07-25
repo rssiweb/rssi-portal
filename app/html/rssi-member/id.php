@@ -232,6 +232,7 @@ if (pg_num_rows($result) > 0) {
                                                                 <th>ID</th>
                                                                 <th>Name</th>
                                                                 <th>Class</th>
+                                                                <th>Status</th>
                                                                 <th>Type</th>
                                                                 <th>Payment</th>
                                                                 <th>Remarks</th>
@@ -668,6 +669,7 @@ if (pg_num_rows($result) > 0) {
                     <td>${item.student_id}</td>
                     <td>${item.studentname}</td>
                     <td>${item.class}</td>
+                    <td>${item.filterstatus}</td>
                     <td><span class="badge ${item.order_type === 'New' ? 'bg-primary' : 'bg-secondary'}">${item.order_type}</span></td>
                     <td>
                         <span class="view-mode">${item.payment_status || '-'}</span>
