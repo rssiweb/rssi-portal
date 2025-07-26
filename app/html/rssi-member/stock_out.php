@@ -233,24 +233,63 @@ while ($row = pg_fetch_assoc($unit_result)) {
     <script src="../assets_new/js/main.js"></script>
 
     <script>
+        // GLOBAL bag shared by all components
+        let itemsBag = [];
+
+        // SHARED function to update the bag display
+        function updateBagDisplay() {
+            const bagContainer = $('#itemsBag');
+            bagContainer.empty();
+
+            const itemCount = itemsBag.length;
+            bagContainer.append(`<div class="bag-header mb-2">Items in Bag (${itemCount})</div>`);
+
+            if (itemCount === 0) {
+                bagContainer.append('<div class="empty-bag-message">No items added yet</div>');
+                return;
+            }
+
+            const itemsContainer = $('<div class="items-container"></div>');
+            bagContainer.append(itemsContainer);
+
+            itemsBag.forEach((item, index) => {
+                const itemRow = `
+                <div class="item-row" data-item-id="${item.id}">
+                    <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
+                        <div class="item-info">
+                            ${item.displayText} - ${item.quantity} ${item.unitName}
+                            <input type="hidden" name="item_distributed[]" value="${item.itemId}">
+                            <input type="hidden" name="unit[]" value="${item.unitId}">
+                            <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
+                                data-item-id="${item.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+                itemsContainer.append(itemRow);
+            });
+        }
+
         $(document).ready(function() {
+            // Set today's date by default
+            $('#date').val(new Date().toISOString().split('T')[0]);
+
             // Initialize Select2 for beneficiaries
             $('#distributed_to').select2({
                 ajax: {
                     url: 'search_beneficiaries.php',
                     dataType: 'json',
                     delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term,
-                            isStockout: true
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
+                    data: params => ({
+                        q: params.term,
+                        isStockout: true
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
                     cache: true
                 },
                 minimumInputLength: 1,
@@ -259,7 +298,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                 multiple: true
             });
 
-            // Initialize Select2 for items
+            // Initialize Select2 for item selection
             $('#new_item').select2({
                 ajax: {
                     url: 'search_products.php',
@@ -268,20 +307,19 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     data: function(params) {
                         return {
                             search: params.term,
-                            for_stock_management: true,
+                            for_stock_management: true
                         };
                     },
                     processResults: function(data) {
-                        var items = data.products || data.results || [];
                         return {
-                            results: $.map(items, function(item) {
+                            results: data.results.map(function(item) {
                                 return {
-                                    id: item.id || item.item_id,
-                                    text: (item.name || item.item_name) + ' - ' + (item.unit_name || '') + ' (' + (item.in_stock || 0) + ' in stock)',
+                                    id: item.id,
+                                    text: `${item.name} - ${item.unit_name || ''} (${item.in_stock || 0} in stock)`,
                                     unitId: item.unit_id,
                                     unitName: item.unit_name,
-                                    inStock: item.in_stock,
-                                    disabled: item.soldOut || (item.in_stock <= 0)
+                                    inStock: parseFloat(item.in_stock || 0),
+                                    disabled: item.soldOut === true || parseFloat(item.in_stock) <= 0
                                 };
                             })
                         };
@@ -292,53 +330,37 @@ while ($row = pg_fetch_assoc($unit_result)) {
                 placeholder: 'Select an item',
                 templateResult: function(item) {
                     if (item.loading) return item.text;
-                    var $container = $('<div>' + item.text + '</div>');
+                    const $container = $('<div>' + item.text + '</div>');
                     if (item.disabled) $container.addClass('text-muted');
                     return $container;
                 }
             });
 
-            // Track items in the bag
-            let itemsBag = [];
-
-            // When an item is selected
+            // Populate item details on selection
             $('#new_item').on('change', function() {
                 const selectedItem = $(this).select2('data')[0];
                 if (selectedItem) {
                     $('#new_unit').val(selectedItem.unitName);
                     $('#new_unit_id').val(selectedItem.unitId);
-                    $('#new_quantity').val('');
-                    $('#new_quantity').attr('max', selectedItem.inStock);
+                    $('#new_quantity').val('').attr('max', selectedItem.inStock);
                 }
             });
 
-            // Add item to bag
+            // Add selected item to the bag
             $('#addItemBtn').on('click', function() {
                 const selectedItem = $('#new_item').select2('data')[0];
-                if (!selectedItem) {
-                    alert('Please select an item');
-                    return;
-                }
-
                 const quantity = $('#new_quantity').val();
-                if (!quantity) {
-                    alert('Please enter quantity');
-                    return;
-                }
 
-                if (parseFloat(quantity) > selectedItem.inStock) {
-                    alert('Quantity cannot exceed available stock');
-                    return;
-                }
+                if (!selectedItem) return alert('Please select an item');
+                if (!quantity) return alert('Please enter quantity');
+                if (parseFloat(quantity) > selectedItem.inStock) return alert('Quantity cannot exceed available stock');
 
-                // Generate unique ID for this item in the bag
                 const itemUniqueId = 'item_' + Date.now() + Math.floor(Math.random() * 1000);
 
-                // Add to itemsBag array with complete display text
                 itemsBag.push({
                     id: itemUniqueId,
                     itemId: selectedItem.id,
-                    displayText: selectedItem.text.split(' -')[0], // Name + Unit without stock info
+                    displayText: selectedItem.text.split(' -')[0],
                     quantity: quantity,
                     unitName: selectedItem.unitName,
                     unitId: selectedItem.unitId
@@ -355,255 +377,163 @@ while ($row = pg_fetch_assoc($unit_result)) {
                 itemsBag = itemsBag.filter(item => item.id !== itemId);
                 updateBagDisplay();
             });
-        });
-    </script>
-    <script>
-        // Initialize Select2 for groups
-        $('#select_group').select2({
-            ajax: {
-                url: 'search_groups.php',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
+
+            // Form submission validation
+            $('#distributionForm').on('submit', function(e) {
+                if (itemsBag.length === 0) {
+                    alert('Please add at least one item to distribute');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // GROUP SELECTION HANDLING
+            $('#select_group').select2({
+                ajax: {
+                    url: 'search_groups.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
                         q: params.term
-                    };
-                },
-                processResults: function(data) {
-                    return {
+                    }),
+                    processResults: data => ({
                         results: data.results
-                    };
+                    }),
+                    cache: true
                 },
-                cache: true
-            },
-            minimumInputLength: 1,
-            placeholder: 'Select a group',
-            allowClear: true
-        });
+                minimumInputLength: 1,
+                placeholder: 'Select a group',
+                allowClear: true
+            });
 
-        // Add loading spinner template
-        const loadingSpinner = `
-        <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <span class="ms-3">Loading group items...</span>
-        </div>
-        `;
+            $('#extractItemsBtn').prop('disabled', true);
+            $('#select_group').on('change', function() {
+                $('#extractItemsBtn').prop('disabled', !$(this).val());
+            });
 
-        // Track items in the bag (should already be in your code)
-        let itemsBag = [];
+            $('#extractItemsBtn').on('click', function() {
+                const groupId = $('#select_group').val();
+                if (!groupId) return;
 
-        // Enable/disable extract button based on selection
-        $('#select_group').on('change', function() {
-            $('#extractItemsBtn').prop('disabled', !$(this).val());
-        });
+                const loadingSpinner = `
+                <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-3">Loading group items...</span>
+                </div>`;
 
-        // Handle extract items button click
-        $('#extractItemsBtn').on('click', function() {
-            const groupId = $('#select_group').val();
-            if (!groupId) return;
-
-            // Create modal immediately with loading spinner
-            const modalContent = `
-            <div class="modal fade" id="groupItemsModal" tabindex="-1" aria-labelledby="groupItemsModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="groupItemsModalLabel">Review Group Items</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            ${loadingSpinner}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="confirmAddGroupToBag">Add to Bag</button>
+                const modalHTML = `
+                <div class="modal fade" id="groupItemsModal" tabindex="-1" aria-labelledby="groupItemsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="groupItemsModalLabel">Review Group Items</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">${loadingSpinner}</div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="confirmAddGroupToBag">Add to Bag</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        `;
+                </div>`;
 
-            // Remove existing modal if any
-            if ($('#groupItemsModal').length) {
-                $('#groupItemsModal').remove();
-            }
+                if ($('#groupItemsModal').length) $('#groupItemsModal').remove();
+                $('body').append(modalHTML);
 
-            // Add modal to DOM
-            $('body').append(modalContent);
+                const modal = new bootstrap.Modal(document.getElementById('groupItemsModal'));
+                modal.show();
 
-            // Initialize and show modal immediately
-            const groupItemsModal = new bootstrap.Modal(document.getElementById('groupItemsModal'));
-            groupItemsModal.show();
-
-            // Fetch group items
-            $.get('get_group_items.php', {
-                    group_id: groupId
-                })
-                .done(function(data) {
-                    // Replace spinner with items table (with units disabled)
-                    const itemsTable = `
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Unit</th>
-                                    <th>Quantity</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="groupItemsTableBody">
-                                ${data.map(item => `
-                                    <tr data-item-id="${item.item_id}">
-                                        <td>${item.item_name}</td>
-                                        <td>
-                                            <input type="text" class="form-control" value="${item.unit_name}" readonly>
-                                            <input type="hidden" class="unit-id" value="${item.unit_id}">
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control quantity-input" 
-                                                   value="${item.quantity}" min="0.01">
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-group-item">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
+                $.get('get_group_items.php', {
+                        group_id: groupId
+                    })
+                    .done(data => {
+                        const table = `
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Unit</th>
+                                        <th>Quantity</th>
+                                        <th>Action</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                                </thead>
+                                <tbody id="groupItemsTableBody">
+                                    ${data.map(item => `
+                                        <tr data-item-id="${item.item_id}">
+                                            <td>${item.item_name}</td>
+                                            <td>
+                                                <input type="text" class="form-control" value="${item.unit_name}" readonly>
+                                                <input type="hidden" class="unit-id" value="${item.unit_id}">
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control quantity-input" value="${item.quantity}" min="0.01">
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-group-item">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>`;
+                        $('#groupItemsModal .modal-body').html(table);
+                    })
+                    .fail(() => {
+                        $('#groupItemsModal .modal-body').html(`<div class="alert alert-danger">Failed to load group items. Please try again.</div>`);
+                    });
+            });
 
-                    $('#groupItemsModal .modal-body').html(itemsTable);
-                })
-                .fail(function() {
-                    $('#groupItemsModal .modal-body').html(`
-                    <div class="alert alert-danger">
-                        Failed to load group items. Please try again.
-                    </div>
-                `);
-                });
-
-            // Handle "Add to Bag" button click - EXACTLY matches individual item workflow
-            // Handle "Add to Bag" button click - EXACTLY matches individual item workflow
+            // Confirm add group items to bag
             $(document).off('click', '#confirmAddGroupToBag').on('click', '#confirmAddGroupToBag', function() {
-                let hasError = false;
-                let itemsAdded = 0;
+                let hasError = false,
+                    itemsAdded = 0;
 
                 $('#groupItemsTableBody tr').each(function() {
                     const $row = $(this);
                     const itemId = $row.data('item-id');
                     const itemName = $row.find('td:first').text().trim();
                     const unitId = $row.find('.unit-id').val();
-                    const unitName = $row.find('td:nth-child(2) input[type="text"]').val();
+                    const unitName = $row.find('td:nth-child(2) input').val();
                     const quantity = parseFloat($row.find('.quantity-input').val());
 
                     if (isNaN(quantity) || quantity <= 0) {
                         $row.find('.quantity-input').addClass('is-invalid');
                         hasError = true;
-                        return true; // continue with next iteration
+                        return;
                     }
 
-                    // Generate unique ID for this item in the bag
                     const itemUniqueId = 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-
-                    // Add to itemsBag array - EXACTLY like individual items
                     itemsBag.push({
                         id: itemUniqueId,
-                        itemId: itemId,
+                        itemId,
                         displayText: itemName,
-                        quantity: quantity,
-                        unitName: unitName,
-                        unitId: unitId
+                        quantity,
+                        unitName,
+                        unitId
                     });
-
                     itemsAdded++;
                 });
 
-                if (hasError) {
-                    alert('Please enter valid quantities for all items');
-                    return;
-                }
+                if (hasError) return alert('Please enter valid quantities for all items');
+                if (itemsAdded === 0) return alert('No items to add');
 
-                if (itemsAdded === 0) {
-                    alert('No items to add');
-                    return;
-                }
-
-                // Update the bag display
                 updateBagDisplay();
-
-                // Close modal and reset
                 bootstrap.Modal.getInstance(document.getElementById('groupItemsModal')).hide();
                 $('#select_group').val('').trigger('change');
             });
 
-            // Handle removing items from group before adding to bag
+            // Remove row from group modal before adding
             $(document).off('click', '.remove-group-item').on('click', '.remove-group-item', function() {
                 $(this).closest('tr').remove();
             });
         });
-
-        // Add this to your existing units variable definition
-        const units = <?php echo json_encode($units); ?>;
     </script>
-    <script>
-        // Update the bag display with minimalist format
-        function updateBagDisplay() {
-            const bagContainer = $('#itemsBag');
-            bagContainer.empty();
 
-            // Add item count header
-            const itemCount = itemsBag.length;
-            bagContainer.append(`<div class="bag-header mb-2">Items in Bag (${itemCount})</div>`);
-
-            if (itemCount === 0) {
-                bagContainer.append('<div class="empty-bag-message">No items added yet</div>');
-                return;
-            }
-
-            // Create a container for the items
-            const itemsContainer = $('<div class="items-container"></div>');
-            bagContainer.append(itemsContainer);
-
-            itemsBag.forEach((item, index) => {
-                const itemRow = `
-        <div class="item-row" data-item-id="${item.id}">
-            <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
-                <div class="item-info">
-                    ${item.displayText} - ${item.quantity} ${item.unitName}
-                    <input type="hidden" name="item_distributed[]" value="${item.itemId}">
-                    <input type="hidden" name="unit[]" value="${item.unitId}">
-                    <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
-                </div>
-                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
-                        data-item-id="${item.id}">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-        `;
-                itemsContainer.append(itemRow);
-            });
-        }
-
-        // Form submission validation
-        $('#distributionForm').on('submit', function(e) {
-            if (itemsBag.length === 0) {
-                alert('Please add at least one item to distribute');
-                e.preventDefault();
-                return false;
-            }
-            return true;
-        });
-
-        // Set default date to today
-        $('#date').val(new Date().toISOString().split('T')[0]);
-    </script>
 </body>
 
 </html>
