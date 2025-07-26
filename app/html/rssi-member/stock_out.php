@@ -173,7 +173,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                                 <div class="col-md-5">
                                                     <label for="new_item" class="form-label">Item</label>
                                                     <select id="new_item" class="form-control">
-                                                        <option value="">Select Item</option>
+
                                                     </select>
                                                 </div>
                                                 <div class="col-md-3">
@@ -231,7 +231,6 @@ while ($row = pg_fetch_assoc($unit_result)) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
-
     <script>
         // GLOBAL bag shared by all components
         let itemsBag = [];
@@ -311,15 +310,16 @@ while ($row = pg_fetch_assoc($unit_result)) {
                         };
                     },
                     processResults: function(data) {
+                        var items = data.products || data.results || [];
                         return {
-                            results: data.results.map(function(item) {
+                            results: $.map(items, function(item) {
                                 return {
-                                    id: item.id,
-                                    text: `${item.name} - ${item.unit_name || ''} (${item.in_stock || 0} in stock)`,
+                                    id: item.id || item.item_id,
+                                    text: (item.name || item.item_name) + ' - ' + (item.unit_name || '') + ' (' + (item.in_stock || 0) + ' in stock)',
                                     unitId: item.unit_id,
                                     unitName: item.unit_name,
-                                    inStock: parseFloat(item.in_stock || 0),
-                                    disabled: item.soldOut === true || parseFloat(item.in_stock) <= 0
+                                    inStock: item.in_stock,
+                                    disabled: item.soldOut || (item.in_stock <= 0)
                                 };
                             })
                         };
@@ -336,48 +336,92 @@ while ($row = pg_fetch_assoc($unit_result)) {
                 }
             });
 
-            // Populate item details on selection
+            // When an item is selected
             $('#new_item').on('change', function() {
                 const selectedItem = $(this).select2('data')[0];
                 if (selectedItem) {
                     $('#new_unit').val(selectedItem.unitName);
                     $('#new_unit_id').val(selectedItem.unitId);
-                    $('#new_quantity').val('').attr('max', selectedItem.inStock);
+                    $('#new_quantity').val('');
+                    $('#new_quantity').attr('max', selectedItem.inStock);
                 }
             });
 
             // Add selected item to the bag
             $('#addItemBtn').on('click', function() {
                 const selectedItem = $('#new_item').select2('data')[0];
-                const quantity = $('#new_quantity').val();
+                const quantity = parseFloat($('#new_quantity').val());
 
-                if (!selectedItem) return alert('Please select an item');
-                if (!quantity) return alert('Please enter quantity');
-                if (parseFloat(quantity) > selectedItem.inStock) return alert('Quantity cannot exceed available stock');
+                // Basic validation
+                if (!selectedItem) {
+                    alert('Please select an item');
+                    return;
+                }
+
+                if (!quantity) {
+                    alert('Please enter quantity');
+                    return;
+                }
+
+                if (isNaN(quantity)) {
+                    alert('Please enter a valid quantity');
+                    return;
+                }
+
+                if (quantity <= 0) {
+                    alert('Quantity must be greater than zero');
+                    return;
+                }
+
+                if (quantity > selectedItem.inStock) {
+                    alert(`Cannot add more than ${selectedItem.inStock} (available stock)`);
+                    $('#new_quantity').val(selectedItem.inStock);
+                    return;
+                }
 
                 // Check if item already exists in bag
-                const existingItem = itemsBag.find(item =>
+                const existingItemIndex = itemsBag.findIndex(item =>
                     item.itemId == selectedItem.id && item.unitId == selectedItem.unitId
                 );
 
-                if (existingItem) {
-                    return alert('This item is already in your bag. Please adjust the quantity instead of adding again.');
+                if (existingItemIndex !== -1) {
+                    const newQuantity = itemsBag[existingItemIndex].quantity + quantity;
+
+                    if (newQuantity > selectedItem.inStock) {
+                        alert(`Total quantity (${newQuantity}) cannot exceed available stock (${selectedItem.inStock})`);
+                        return;
+                    }
+
+                    const confirmUpdate = confirm(
+                        `The item "${selectedItem.text.split(' -')[0]}" already exists in your bag.\n\n` +
+                        `Do you want to update the quantity to ${newQuantity}?`
+                    );
+
+                    if (confirmUpdate) {
+                        itemsBag[existingItemIndex].quantity = newQuantity;
+                    } else {
+                        return; // user cancelled update
+                    }
+                } else {
+                    // Add new item
+                    const itemUniqueId = 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    itemsBag.push({
+                        id: itemUniqueId,
+                        itemId: selectedItem.id,
+                        displayText: selectedItem.text.split(' -')[0],
+                        quantity: quantity,
+                        unitName: selectedItem.unitName,
+                        unitId: selectedItem.unitId,
+                        maxStock: selectedItem.inStock
+                    });
                 }
 
-                const itemUniqueId = 'item_' + Date.now() + Math.floor(Math.random() * 1000);
-
-                itemsBag.push({
-                    id: itemUniqueId,
-                    itemId: selectedItem.id,
-                    displayText: selectedItem.text.split(' -')[0],
-                    quantity: quantity,
-                    unitName: selectedItem.unitName,
-                    unitId: selectedItem.unitId
-                });
-
                 updateBagDisplay();
+                // Reset all related inputs
                 $('#new_item').val('').trigger('change');
                 $('#new_quantity').val('');
+                $('#new_unit').val('');
+                $('#new_unit_id').val('');
             });
 
             // Remove item from bag
@@ -468,7 +512,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                             if (isOutOfStock) outOfStockCount++;
 
                             return `
-                        <tr data-item-id="${item.item_id}" data-unit-id="${item.unit_id}" data-out-of-stock="${isOutOfStock}">
+                        <tr data-item-id="${item.item_id}" data-unit-id="${item.unit_id}" data-out-of-stock="${isOutOfStock}" data-max-stock="${item.in_stock}">
                             <td>
                                 ${item.item_name}
                                 ${isOutOfStock ? '<span class="text-danger ms-2">(Out of stock)</span>' : ''}
@@ -480,7 +524,8 @@ while ($row = pg_fetch_assoc($unit_result)) {
                             <td>
                                 <input type="number" step="0.01" class="form-control quantity-input" 
                                        value="${item.quantity}" min="1" max="${item.in_stock}"
-                                       ${isOutOfStock ? 'disabled' : ''}>
+                                       ${isOutOfStock ? 'disabled' : ''} required>
+                                <div class="invalid-feedback">Please enter a valid quantity</div>
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger remove-group-item">
@@ -509,11 +554,9 @@ while ($row = pg_fetch_assoc($unit_result)) {
                             </tbody>
                         </table>
                     </div>
-                    ${someOutOfStock ? `
-                    <div class="alert alert-warning">
+                    <div id="outOfStockAlert" class="alert alert-warning" ${someOutOfStock ? '' : 'style="display:none"'}>
                         ${outOfStockCount} item(s) are out of stock. Please remove them or restock before adding to bag.
                     </div>
-                    ` : ''}
                     ${allOutOfStock ? `
                     <div class="alert alert-danger">
                         All items in this group are out of stock. Cannot add to bag.
@@ -532,36 +575,52 @@ while ($row = pg_fetch_assoc($unit_result)) {
             function validateGroupItems() {
                 let hasErrors = false;
                 let hasValidItems = false;
-                let hasOutOfStockItems = false;
+                let outOfStockCount = 0;
 
                 $('#groupItemsTableBody tr').each(function() {
                     const $row = $(this);
                     const isOutOfStock = $row.data('out-of-stock') === true;
                     const quantityInput = $row.find('.quantity-input');
+                    const feedback = $row.find('.invalid-feedback');
 
                     if (isOutOfStock) {
-                        hasOutOfStockItems = true;
+                        outOfStockCount++;
                         return true; // continue to next item
                     }
 
                     const quantity = parseFloat(quantityInput.val());
                     const maxQuantity = parseFloat(quantityInput.attr('max'));
+                    const itemName = $row.find('td:first').text().replace('(Out of stock)', '').trim();
 
-                    if (isNaN(quantity) || quantity < 1 || quantity > maxQuantity) {
-                        //quantityInput.addClass('is-invalid');
+                    if (isNaN(quantity)) {
+                        feedback.text('Please enter a valid quantity').show();
                         hasErrors = true;
+                    } else if (quantity < 0.01) {
+                        feedback.text('Quantity must be greater than zero').show();
+                        hasErrors = true;
+                    } else if (quantity > maxQuantity) {
+                        alert(`Cannot add more than ${maxQuantity} for "${itemName}" (available stock).`);
+                        quantityInput.val(maxQuantity);
+                        feedback.hide();
                     } else {
-                        //quantityInput.removeClass('is-invalid');
+                        feedback.hide();
                         hasValidItems = true;
                     }
                 });
+
+                // Update out of stock alert
+                const outOfStockAlert = $('#outOfStockAlert');
+                if (outOfStockCount > 0) {
+                    outOfStockAlert.show().html(`${outOfStockCount} item(s) are out of stock. Please remove them or restock before adding to bag.`);
+                } else {
+                    outOfStockAlert.hide();
+                }
 
                 // Enable Add button only if:
                 // 1. There are valid items (not out of stock)
                 // 2. No validation errors exist
                 // 3. No out-of-stock items remain
-                const noOutOfStockItems = !hasOutOfStockItems;
-                $('#confirmAddGroupToBag').prop('disabled', hasErrors || !hasValidItems || hasOutOfStockItems);
+                $('#confirmAddGroupToBag').prop('disabled', hasErrors || !hasValidItems || outOfStockCount > 0);
             }
 
             // Handle input changes for validation
@@ -584,49 +643,75 @@ while ($row = pg_fetch_assoc($unit_result)) {
             $(document).on('click', '#confirmAddGroupToBag', function() {
                 let itemsAdded = 0;
                 let duplicateItems = [];
+                let duplicatesToUpdate = [];
 
+                // First pass: loop through and collect duplicates/new items
                 $('#groupItemsTableBody tr').each(function() {
                     const $row = $(this);
                     const isOutOfStock = $row.data('out-of-stock');
-                    if (isOutOfStock) return true; // skip out-of-stock items
+                    if (isOutOfStock) return true; // Skip out-of-stock items
 
                     const itemId = $row.data('item-id');
                     const unitId = $row.data('unit-id');
                     const itemName = $row.find('td:first').text().replace('(Out of stock)', '').trim();
                     const unitName = $row.find('td:nth-child(2) input').val();
                     const quantity = parseFloat($row.find('.quantity-input').val());
+                    const maxStock = parseFloat($row.data('max-stock'));
 
-                    // Check for duplicate items in bag
-                    const existingItem = itemsBag.find(item =>
+                    const existingItemIndex = itemsBag.findIndex(item =>
                         item.itemId == itemId && item.unitId == unitId
                     );
 
-                    if (existingItem) {
-                        duplicateItems.push(itemName);
-                        return true;
-                    }
+                    if (existingItemIndex !== -1) {
+                        const newQuantity = itemsBag[existingItemIndex].quantity + quantity;
 
-                    // Add to bag
-                    const itemUniqueId = 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                    itemsBag.push({
-                        id: itemUniqueId,
-                        itemId,
-                        displayText: itemName,
-                        quantity,
-                        unitName,
-                        unitId
-                    });
-                    itemsAdded++;
+                        if (newQuantity > maxStock) {
+                            alert(`Total quantity (${newQuantity}) for ${itemName} exceeds available stock (${maxStock}).`);
+                            return false; // abort loop
+                        }
+
+                        // Store for later confirmation
+                        duplicateItems.push(itemName);
+                        duplicatesToUpdate.push({
+                            index: existingItemIndex,
+                            newQuantity: newQuantity
+                        });
+                    } else {
+                        // Add new item directly
+                        const itemUniqueId = 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                        itemsBag.push({
+                            id: itemUniqueId,
+                            itemId,
+                            displayText: itemName,
+                            quantity,
+                            unitName,
+                            unitId,
+                            maxStock
+                        });
+                        itemsAdded++;
+                    }
                 });
 
+                // One-time confirmation for duplicates
+                let proceedWithDuplicates = true;
                 if (duplicateItems.length > 0) {
-                    alert(`These items are already in your bag:\n${duplicateItems.join('\n')}\n\nPlease adjust quantities instead of adding again.`);
+                    proceedWithDuplicates = confirm(
+                        `The following items already exist in your bag:\n\n- ${duplicateItems.join('\n- ')}\n\nDo you want to update their quantities?`
+                    );
                 }
 
-                if (itemsAdded > 0) {
-                    updateBagDisplay();
-                    bootstrap.Modal.getInstance(document.getElementById('groupItemsModal')).hide();
-                    $('#select_group').val('').trigger('change');
+                if (proceedWithDuplicates) {
+                    // Apply updates to duplicates
+                    duplicatesToUpdate.forEach(update => {
+                        itemsBag[update.index].quantity = update.newQuantity;
+                        itemsAdded++;
+                    });
+
+                    if (itemsAdded > 0) {
+                        updateBagDisplay();
+                        bootstrap.Modal.getInstance(document.getElementById('groupItemsModal')).hide();
+                        $('#select_group').val('').trigger('change');
+                    }
                 }
             });
         });
