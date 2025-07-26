@@ -21,21 +21,20 @@ if ($role == 'Admin') {
 
     if ($user_id > 0) {
         $result = pg_query($con, "
-            SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
-            FROM archive a
-            JOIN rssimyaccount_members rm
-            ON a.uploaded_for = rm.associatenumber 
-            OR a.uploaded_for = rm.applicationnumber
-            INNER JOIN (
-                SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
-                FROM archive
-                GROUP BY uploaded_for, file_name
-            ) latest_archive 
-            ON a.uploaded_for = latest_archive.uploaded_for 
-            AND a.file_name = latest_archive.file_name 
-            AND a.uploaded_on = latest_archive.latest_upload
-            WHERE a.uploaded_for = '$user_id' AND rm.filterstatus = '$id'
-        ");
+        SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
+        FROM archive a
+        JOIN rssimyaccount_members rm
+        ON (a.uploaded_for = rm.associatenumber OR a.uploaded_for = rm.applicationnumber)
+        INNER JOIN (
+            SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
+            FROM archive
+            GROUP BY uploaded_for, file_name
+        ) latest_archive 
+        ON a.uploaded_for = latest_archive.uploaded_for 
+        AND a.file_name = latest_archive.file_name 
+        AND a.uploaded_on = latest_archive.latest_upload
+        WHERE (rm.associatenumber = '$user_id' OR rm.applicationnumber = '$user_id') AND rm.filterstatus = '$id'
+    ");
     } else {
         $result = pg_query($con, "
             SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
@@ -54,7 +53,7 @@ if ($role == 'Admin') {
             WHERE rm.filterstatus = '$id'
             ORDER BY a.doc_id DESC
         ");
-    }    
+    }
 }
 
 if (!$result) {
