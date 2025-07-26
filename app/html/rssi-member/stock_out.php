@@ -204,6 +204,9 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                                             Extract Items
                                                         </button>
                                                     </div>
+                                                    <div class="col-2">
+                                                        <a href="group_management.php" target="_blank" title="Create a new group">Learn about Groups (create, use, and manage)</a>
+                                                    </div>
                                                 </div>
                                             </div>
 
