@@ -355,58 +355,6 @@ while ($row = pg_fetch_assoc($unit_result)) {
                 itemsBag = itemsBag.filter(item => item.id !== itemId);
                 updateBagDisplay();
             });
-
-            // Update the bag display with minimalist format
-            function updateBagDisplay() {
-                const bagContainer = $('#itemsBag');
-                bagContainer.empty();
-
-                // Add item count header
-                const itemCount = itemsBag.length;
-                bagContainer.append(`<div class="bag-header mb-2">Items in Bag (${itemCount})</div>`);
-
-                if (itemCount === 0) {
-                    bagContainer.append('<div class="empty-bag-message">No items added yet</div>');
-                    return;
-                }
-
-                // Create a container for the items
-                const itemsContainer = $('<div class="items-container"></div>');
-                bagContainer.append(itemsContainer);
-
-                itemsBag.forEach((item, index) => {
-                    const itemRow = `
-        <div class="item-row" data-item-id="${item.id}">
-            <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
-                <div class="item-info">
-                    ${item.displayText} - ${item.quantity} ${item.unitName}
-                    <input type="hidden" name="item_distributed[]" value="${item.itemId}">
-                    <input type="hidden" name="unit[]" value="${item.unitId}">
-                    <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
-                </div>
-                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
-                        data-item-id="${item.id}">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-        `;
-                    itemsContainer.append(itemRow);
-                });
-            }
-
-            // Form submission validation
-            $('#distributionForm').on('submit', function(e) {
-                if (itemsBag.length === 0) {
-                    alert('Please add at least one item to distribute');
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            });
-
-            // Set default date to today
-            $('#date').val(new Date().toISOString().split('T')[0]);
         });
     </script>
     <script>
@@ -441,7 +389,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
             </div>
             <span class="ms-3">Loading group items...</span>
         </div>
-    `;
+        `;
 
         // Track items in the bag (should already be in your code)
         let itemsBag = [];
@@ -602,6 +550,59 @@ while ($row = pg_fetch_assoc($unit_result)) {
 
         // Add this to your existing units variable definition
         const units = <?php echo json_encode($units); ?>;
+    </script>
+    <script>
+        // Update the bag display with minimalist format
+        function updateBagDisplay() {
+            const bagContainer = $('#itemsBag');
+            bagContainer.empty();
+
+            // Add item count header
+            const itemCount = itemsBag.length;
+            bagContainer.append(`<div class="bag-header mb-2">Items in Bag (${itemCount})</div>`);
+
+            if (itemCount === 0) {
+                bagContainer.append('<div class="empty-bag-message">No items added yet</div>');
+                return;
+            }
+
+            // Create a container for the items
+            const itemsContainer = $('<div class="items-container"></div>');
+            bagContainer.append(itemsContainer);
+
+            itemsBag.forEach((item, index) => {
+                const itemRow = `
+        <div class="item-row" data-item-id="${item.id}">
+            <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
+                <div class="item-info">
+                    ${item.displayText} - ${item.quantity} ${item.unitName}
+                    <input type="hidden" name="item_distributed[]" value="${item.itemId}">
+                    <input type="hidden" name="unit[]" value="${item.unitId}">
+                    <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
+                        data-item-id="${item.id}">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        `;
+                itemsContainer.append(itemRow);
+            });
+        }
+
+        // Form submission validation
+        $('#distributionForm').on('submit', function(e) {
+            if (itemsBag.length === 0) {
+                alert('Please add at least one item to distribute');
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        });
+
+        // Set default date to today
+        $('#date').val(new Date().toISOString().split('T')[0]);
     </script>
 </body>
 
