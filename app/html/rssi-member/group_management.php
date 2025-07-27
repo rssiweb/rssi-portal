@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/login_util.php");
 
-if (!isLoggedIn("aid") || $role != 'Admin') {
+if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;

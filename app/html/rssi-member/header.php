@@ -345,6 +345,11 @@
               <span>Inventory Insights</span>
             </a>
           </li>
+          <li>
+            <a id="group_management" href="group_management.php">
+              <span>Stock Item Group Management</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -1043,6 +1048,14 @@
         id: 'stockmanagement',
         linkId: 'inventory-insights',
         url: 'inventory-insights.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'group_management',
+        url: 'group_management.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'group_management',
+        url: 'edit_group.php'
       },
       {
         id: 'exceptionPortal',
