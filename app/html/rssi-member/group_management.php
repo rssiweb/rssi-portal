@@ -73,20 +73,25 @@ $groups = pg_fetch_all($groups_result) ?: [];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
     <style>
-        .group-card {
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
+        .modal-body .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .group-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .item-badge {
-            margin-right: 5px;
-            margin-bottom: 5px;
+        .badge-count {
+            background-color: #6c757d;
+            color: white;
+            border-radius: 10px;
+            padding: 3px 8px;
+            font-size: 0.8em;
         }
     </style>
 </head>
@@ -141,68 +146,50 @@ $groups = pg_fetch_all($groups_result) ?: [];
                     <div class="card mt-4">
                         <div class="card-body">
                             <h5 class="card-header mb-4">Existing Groups</h5>
-                            <div class="row">
-                                <?php foreach ($groups as $group): ?>
-                                    <div class="col-md-6">
-                                        <div class="card group-card">
-                                            <div class="card-body mt-3">
-                                                <div class="d-flex justify-content-between">
-                                                    <h5><?= htmlspecialchars($group['group_name']) ?></h5>
-                                                    <div>
-                                                        <a href="edit_group.php?group_id=<?= $group['group_id'] ?>" class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-pencil"></i> Edit
-                                                        </a>
+                            <div class="table-responsive">
+                                <table id="groupsTable" class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Group Name</th>
+                                            <th>Description</th>
+                                            <th>Items Count</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($groups as $group):
+                                            // Get item count for this group
+                                            $count_result = pg_query_params(
+                                                $con,
+                                                "SELECT COUNT(*) FROM stock_item_group_items WHERE group_id = $1",
+                                                array($group['group_id'])
+                                            );
+                                            $item_count = pg_fetch_result($count_result, 0, 0);
+                                        ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($group['group_name']) ?></td>
+                                                <td><?= !empty($group['description']) ? htmlspecialchars($group['description']) : '-' ?></td>
+                                                <td><?= $item_count ?></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-info view-group" data-group-id="<?= $group['group_id'] ?>" data-bs-toggle="modal" data-bs-target="#viewGroupModal">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </button>
+                                                    <a href="edit_group.php?group_id=<?= $group['group_id'] ?>" class="btn btn-sm btn-warning">
+                                                        <i class="bi bi-pencil"></i> Edit
+                                                    </a>
+                                                    <?php if ($role === 'Admin'): ?>
                                                         <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this group?');">
                                                             <input type="hidden" name="group_id" value="<?= $group['group_id'] ?>">
-                                                            <button type="submit" name="delete_group" class="btn btn-sm btn-outline-danger">
+                                                            <button type="submit" name="delete_group" class="btn btn-sm btn-danger">
                                                                 <i class="bi bi-trash"></i> Delete
                                                             </button>
                                                         </form>
-                                                    </div>
-                                                </div>
-                                                <?php if (!empty($group['description'])): ?>
-                                                    <p class="text-muted"><?= htmlspecialchars($group['description']) ?></p>
-                                                <?php endif; ?>
-
-                                                <?php
-                                                // Get items in this group
-                                                $items_result = pg_query_params(
-                                                    $con,
-                                                    "SELECT i.item_name, gi.quantity, u.unit_name 
-                                                     FROM stock_item_group_items gi
-                                                     JOIN stock_item i ON gi.item_id = i.item_id
-                                                     JOIN stock_item_unit u ON gi.unit_id = u.unit_id
-                                                     WHERE gi.group_id = $1",
-                                                    array($group['group_id'])
-                                                );
-                                                $items = pg_fetch_all($items_result) ?: [];
-                                                ?>
-
-                                                <div class="mt-2">
-                                                    <h6>Items in Group:</h6>
-                                                    <?php if (!empty($items)): ?>
-                                                        <ul class="list-group list-group-flush">
-                                                            <?php foreach ($items as $item):
-                                                                // Format quantity - remove decimals if not needed
-                                                                $quantity = $item['quantity'];
-                                                                $formattedQuantity = (float)$quantity == (int)$quantity
-                                                                    ? (int)$quantity
-                                                                    : rtrim(rtrim(number_format($quantity, 2), '0'), '.');
-                                                            ?>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
-                                                                    <span><?= htmlspecialchars($item['item_name']) ?></span>
-                                                                    <span><?= $formattedQuantity . ' ' . htmlspecialchars($item['unit_name']) ?></span>
-                                                                </li>
-                                                            <?php endforeach; ?>
-                                                        </ul>
-                                                    <?php else: ?>
-                                                        <p class="text-muted">No items in this group yet.</p>
                                                     <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -211,11 +198,115 @@ $groups = pg_fetch_all($groups_result) ?: [];
         </section>
     </main>
 
+    <!-- View Group Modal -->
+    <div class="modal fade" id="viewGroupModal" tabindex="-1" aria-labelledby="viewGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewGroupModalLabel">Group Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="groupNameDisplay"></h6>
+                    <p id="groupDescriptionDisplay" class="text-muted"></p>
+                    <div id="loadingSpinner" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading items...</p>
+                    </div>
+                    <div id="groupItemsList">
+                        <ul class="list-group">
+                            <!-- Items will be loaded here via AJAX -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#groupsTable').DataTable({
+                responsive: true,
+                columnDefs: [{
+                        orderable: false,
+                        targets: [3]
+                    } // Disable sorting on actions column
+                ]
+            });
+
+            // Handle view group button click
+            $('.view-group').click(function() {
+                var groupId = $(this).data('group-id');
+                var groupName = $(this).closest('tr').find('td:first').text();
+                var groupDescription = $(this).closest('tr').find('td:nth-child(2)').text();
+
+                // Set group name and description in modal
+                $('#groupNameDisplay').text(groupName);
+                $('#groupDescriptionDisplay').text(groupDescription || 'No description available');
+
+                // Show loading spinner and hide items list
+                $('#loadingSpinner').show();
+                $('#groupItemsList').hide();
+
+                // Load items via AJAX
+                $.ajax({
+                    url: 'get_group_items.php',
+                    method: 'GET',
+                    data: {
+                        group_id: groupId
+                    },
+                    dataType: 'json',
+                    beforeSend: function() {
+                        // This runs before the request is sent
+                        $('#loadingSpinner').show();
+                        $('#groupItemsList').hide();
+                    },
+                    success: function(response) {
+                        var itemsList = $('#groupItemsList .list-group');
+                        itemsList.empty();
+
+                        if (response.length > 0) {
+                            $.each(response, function(index, item) {
+                                // Format quantity - remove decimals if not needed
+                                var quantity = item.quantity;
+                                var formattedQuantity = parseFloat(quantity) % 1 === 0 ?
+                                    parseInt(quantity) :
+                                    parseFloat(quantity).toFixed(2).replace(/\.?0+$/, '');
+
+                                itemsList.append(
+                                    '<li class="list-group-item">' +
+                                    '<span>' + item.item_name + '</span>' +
+                                    formattedQuantity + ' ' + item.unit_name +
+                                    '</li>'
+                                );
+                            });
+                        } else {
+                            itemsList.append('<li class="list-group-item">No items in this group yet.</li>');
+                        }
+                    },
+                    error: function() {
+                        $('#groupItemsList .list-group').html('<li class="list-group-item text-danger">Error loading items. Please try again.</li>');
+                    },
+                    complete: function() {
+                        // This runs after success or error
+                        $('#loadingSpinner').hide();
+                        $('#groupItemsList').show();
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
