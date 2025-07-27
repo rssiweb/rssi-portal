@@ -194,19 +194,19 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                             <div class="mb-3">
                                                 <label for="select_group" class="form-label">Or select from predefined groups</label>
                                                 <div class="row g-2 align-items-center">
-                                                    <div class="col-8">
+                                                    <div class="col-6">
                                                         <select id="select_group" class="form-select form-select-sm">
                                                             <option value="">Select Group</option>
                                                         </select>
                                                     </div>
-                                                    <div class="col-2">
+                                                    <div class="col-6">
                                                         <button id="extractItemsBtn" class="btn btn-primary" disabled>
                                                             Extract Items
                                                         </button>
                                                     </div>
-                                                    <div class="col-2">
+                                                    <!-- <div class="col-2">
                                                         <a href="group_management.php" target="_blank" title="Create a new group">Learn about Groups (create, use, and manage)</a>
-                                                    </div>
+                                                    </div> -->
                                                 </div>
                                             </div>
 
@@ -256,20 +256,20 @@ while ($row = pg_fetch_assoc($unit_result)) {
 
             itemsBag.forEach((item, index) => {
                 const itemRow = `
-            <div class="item-row" data-item-id="${item.id}">
-                <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
-                    <div class="item-info">
-                        ${item.displayText} - ${item.quantity} ${item.unitName}
-                        <input type="hidden" name="item_distributed[]" value="${item.itemId}">
-                        <input type="hidden" name="unit[]" value="${item.unitId}">
-                        <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
+                <div class="item-row" data-item-id="${item.id}">
+                    <div class="d-flex justify-content-between align-items-center py-2 ${index !== itemsBag.length - 1 ? 'border-bottom' : ''}">
+                        <div class="item-info">
+                            ${item.displayText} - ${item.quantity} ${item.unitName}
+                            <input type="hidden" name="item_distributed[]" value="${item.itemId}">
+                            <input type="hidden" name="unit[]" value="${item.unitId}">
+                            <input type="hidden" name="quantity_distributed[]" value="${item.quantity}">
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
+                                data-item-id="${item.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
-                            data-item-id="${item.id}">
-                        <i class="bi bi-trash"></i>
-                    </button>
                 </div>
-            </div>
             `;
                 itemsContainer.append(itemRow);
             });
@@ -306,32 +306,28 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     url: 'search_products.php',
                     dataType: 'json',
                     delay: 250,
-                    data: function(params) {
+                    data: params => ({
+                        search: params.term,
+                        for_stock_management: true
+                    }),
+                    processResults: data => {
+                        const items = data.products || data.results || [];
                         return {
-                            search: params.term,
-                            for_stock_management: true
-                        };
-                    },
-                    processResults: function(data) {
-                        var items = data.products || data.results || [];
-                        return {
-                            results: $.map(items, function(item) {
-                                return {
-                                    id: item.id || item.item_id,
-                                    text: (item.name || item.item_name) + ' - ' + (item.unit_name || '') + ' (' + (item.in_stock || 0) + ' in stock)',
-                                    unitId: item.unit_id,
-                                    unitName: item.unit_name,
-                                    inStock: item.in_stock,
-                                    disabled: item.soldOut || (item.in_stock <= 0)
-                                };
-                            })
+                            results: $.map(items, item => ({
+                                id: item.id || item.item_id,
+                                text: (item.name || item.item_name) + ' - ' + (item.unit_name || '') + ' (' + (item.in_stock || 0) + ' in stock)',
+                                unitId: item.unit_id,
+                                unitName: item.unit_name,
+                                inStock: item.in_stock,
+                                disabled: item.soldOut || (item.in_stock <= 0)
+                            }))
                         };
                     },
                     cache: true
                 },
                 minimumInputLength: 1,
                 placeholder: 'Select an item',
-                templateResult: function(item) {
+                templateResult: item => {
                     if (item.loading) return item.text;
                     const $container = $('<div>' + item.text + '</div>');
                     if (item.disabled) $container.addClass('text-muted');
@@ -361,12 +357,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     return;
                 }
 
-                if (!quantity) {
-                    alert('Please enter quantity');
-                    return;
-                }
-
-                if (isNaN(quantity)) {
+                if (!quantity || isNaN(quantity)) {
                     alert('Please enter a valid quantity');
                     return;
                 }
@@ -444,7 +435,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
             });
 
             // GROUP SELECTION HANDLING
-            $('#select_group').select2({
+            const groupSelect = $('#select_group').select2({
                 ajax: {
                     url: 'search_groups.php',
                     dataType: 'json',
@@ -463,38 +454,140 @@ while ($row = pg_fetch_assoc($unit_result)) {
             });
 
             $('#extractItemsBtn').prop('disabled', true);
-            $('#select_group').on('change', function() {
+            groupSelect.on('change', function() {
                 $('#extractItemsBtn').prop('disabled', !$(this).val());
             });
 
+            // Add "See Available Groups" button next to Extract button
+            const extractBtn = $('#extractItemsBtn');
+            extractBtn.after(`
+            <button type="button" class="btn btn-outline-primary ms-2" id="viewGroupsBtn">
+            See Available Groups
+            </button>
+        `);
+
+            // View Groups Modal
+            $('#viewGroupsBtn').on('click', function() {
+                const modalHTML = `
+                <div class="modal fade" id="groupsListModal" tabindex="-1" aria-labelledby="groupsListModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="groupsListModalLabel">Available Groups</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-3">Loading groups...</span>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                if ($('#groupsListModal').length) $('#groupsListModal').remove();
+                $('body').append(modalHTML);
+
+                const modal = new bootstrap.Modal(document.getElementById('groupsListModal'));
+                modal.show();
+
+                // Load all groups without search term
+                $.ajax({
+                    url: 'search_groups.php',
+                    dataType: 'json',
+                    data: {
+                        q: ''
+                    }, // Empty search term to get all groups
+                    success: function(data) {
+                        if (data.results.length === 0) {
+                            $('#groupsListModal .modal-body').html('<div class="alert alert-info">No groups found.</div>');
+                            return;
+                        }
+
+                        const tableHTML = `
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.results.map(group => `
+                                        <tr>
+                                            <td>${group.text || 'N/A'}</td>
+                                            <td>${group.description || 'No description'}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-primary select-group-btn" 
+                                                    data-group-id="${group.id}" 
+                                                    data-group-name="${group.text}">
+                                                    <i class="bi bi-check-lg"></i> Select
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>`;
+
+                        $('#groupsListModal .modal-body').html(tableHTML);
+                    },
+                    error: function() {
+                        $('#groupsListModal .modal-body').html('<div class="alert alert-danger">Failed to load groups. Please try again.</div>');
+                    }
+                });
+            });
+
+            // Handle group selection from modal
+            $(document).on('click', '.select-group-btn', function() {
+                const groupId = $(this).data('group-id');
+                const groupName = $(this).data('group-name');
+
+                // Set the selected group in the select2
+                const newOption = new Option(groupName, groupId, true, true);
+                groupSelect.append(newOption).trigger('change');
+
+                // Close the modal
+                bootstrap.Modal.getInstance(document.getElementById('groupsListModal')).hide();
+            });
+
+            // Extract group items
             $('#extractItemsBtn').on('click', function() {
                 const groupId = $('#select_group').val();
                 if (!groupId) return;
 
                 const loadingSpinner = `
-            <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <span class="ms-3">Loading group items...</span>
-            </div>`;
+                <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-3">Loading group items...</span>
+                </div>`;
 
                 const modalHTML = `
-            <div class="modal fade" id="groupItemsModal" tabindex="-1" aria-labelledby="groupItemsModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="groupItemsModalLabel">Review Group Items</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">${loadingSpinner}</div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="confirmAddGroupToBag" disabled>Add to Bag</button>
+                <div class="modal fade" id="groupItemsModal" tabindex="-1" aria-labelledby="groupItemsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="groupItemsModalLabel">Review Group Items</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">${loadingSpinner}</div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="confirmAddGroupToBag" disabled>Add to Bag</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>`;
+                </div>`;
 
                 if ($('#groupItemsModal').length) $('#groupItemsModal').remove();
                 $('body').append(modalHTML);
@@ -515,56 +608,56 @@ while ($row = pg_fetch_assoc($unit_result)) {
                             if (isOutOfStock) outOfStockCount++;
 
                             return `
-                        <tr data-item-id="${item.item_id}" data-unit-id="${item.unit_id}" data-out-of-stock="${isOutOfStock}" data-max-stock="${item.in_stock}">
-                            <td>
-                                ${item.item_name}
-                                ${isOutOfStock ? '<span class="text-danger ms-2">(Out of stock)</span>' : ''}
-                            </td>
-                            <td>
-                                <input type="text" class="form-control" value="${item.unit_name}" readonly>
-                                <input type="hidden" class="unit-id" value="${item.unit_id}">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" class="form-control quantity-input" 
-                                       value="${item.quantity}" min="1" max="${item.in_stock}"
-                                       ${isOutOfStock ? 'disabled' : ''} required>
-                                <div class="invalid-feedback">Please enter a valid quantity</div>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-outline-danger remove-group-item">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>`;
+                            <tr data-item-id="${item.item_id}" data-unit-id="${item.unit_id}" data-out-of-stock="${isOutOfStock}" data-max-stock="${item.in_stock}">
+                                <td>
+                                    ${item.item_name}
+                                    ${isOutOfStock ? '<span class="text-danger ms-2">(Out of stock)</span>' : ''}
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" value="${item.unit_name}" readonly>
+                                    <input type="hidden" class="unit-id" value="${item.unit_id}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control quantity-input" 
+                                           value="${item.quantity}" min="1" max="${item.in_stock}"
+                                           ${isOutOfStock ? 'disabled' : ''} required>
+                                    <div class="invalid-feedback">Please enter a valid quantity</div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-group-item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
                         }).join('');
 
                         const allOutOfStock = outOfStockCount === totalItems;
                         const someOutOfStock = outOfStockCount > 0;
 
                         const table = `
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Unit</th>
-                                    <th>Quantity</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="groupItemsTableBody">
-                                ${tableRows}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="outOfStockAlert" class="alert alert-warning" ${someOutOfStock ? '' : 'style="display:none"'}>
-                        ${outOfStockCount} item(s) are out of stock. Please remove them or restock before adding to bag.
-                    </div>
-                    ${allOutOfStock ? `
-                    <div class="alert alert-danger">
-                        All items in this group are out of stock. Cannot add to bag.
-                    </div>
-                    ` : ''}`;
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Unit</th>
+                                        <th>Quantity</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="groupItemsTableBody">
+                                    ${tableRows}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="outOfStockAlert" class="alert alert-warning" ${someOutOfStock ? '' : 'style="display:none"'}>
+                            ${outOfStockCount} item(s) are out of stock. Please remove them or restock before adding to bag.
+                        </div>
+                        ${allOutOfStock ? `
+                        <div class="alert alert-danger">
+                            All items in this group are out of stock. Cannot add to bag.
+                        </div>
+                        ` : ''}`;
 
                         $('#groupItemsModal .modal-body').html(table);
                         validateGroupItems(); // Initial validation
