@@ -106,20 +106,69 @@ $units = pg_fetch_all($units_result) ?: [];
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        .item-row {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+        .items-header {
+            /* font-weight: 600; */
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 0.75rem;
         }
 
-        .unit-select {
-            min-width: 150px;
+        .item-row {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f3f5;
+            align-items: center;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .quantity-input {
+            max-width: 100px;
+        }
+
+        .btn-remove {
+            color: #dc3545;
+            background-color: transparent;
+            border: none;
+            padding: 0.375rem;
+        }
+
+        .btn-remove:hover {
+            color: #bb2d3b;
+            background-color: #f8d7da;
+        }
+
+        .modal-content {
+            border-radius: 10px;
+        }
+
+        .item-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+        }
+
+        .preview-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-item:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -132,114 +181,150 @@ $units = pg_fetch_all($units_result) ?: [];
                     <li class="breadcrumb-item active">Edit Group</li>
                 </ol>
             </nav>
-        </div>
+        </div><!-- End Page Title -->
 
-        <section class="section">
+        <section class="section dashboard">
             <div class="row">
-                <div class="col-lg-12">
+
+                <!-- Reports -->
+                <div class="col-12">
                     <div class="card">
+
                         <div class="card-body">
-                            <form method="POST">
-                                <input type="hidden" name="group_id" value="<?= $group_id ?>">
+                            <br>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="group_name" class="form-label">Group Name</label>
-                                        <input type="text" class="form-control" id="group_name" name="group_name"
-                                            value="<?= htmlspecialchars($group['group_name']) ?>" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="description" class="form-label">Description</label>
-                                        <input type="text" class="form-control" id="description" name="description"
-                                            value="<?= htmlspecialchars($group['description']) ?>">
-                                    </div>
-                                </div>
+                            <section class="section">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-10">
+                                        <div class="card">
+                                            <h5 class="card-header">Group Information</h5>
+                                            <div class="card-body">
+                                                <form method="POST" id="groupForm">
+                                                    <input type="hidden" name="group_id" value="<?= $group_id ?>">
 
-                                <h5 class="card-title mt-4">Group Items</h5>
+                                                    <div class="form-section mt-3">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <label for="group_name" class="form-label">Group Name</label>
+                                                                <input type="text" class="form-control" id="group_name" name="group_name"
+                                                                    value="<?= htmlspecialchars($group['group_name']) ?>" required>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label for="description" class="form-label">Description</label>
+                                                                <textarea class="form-control" id="description" name="description" rows="3"
+                                                                    placeholder="Brief description of the group (optional)"><?= htmlspecialchars($group['description']) ?></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                                <div id="groupItems">
-                                    <?php foreach ($items as $item): ?>
-                                        <div class="item-row row">
-                                            <div class="col-md-5">
-                                                <input type="text" class="form-control" name="item_name[]"
-                                                    value="<?= htmlspecialchars($item['item_name']) ?>" readonly>
-                                                <input type="hidden" name="item_id[]" value="<?= $item['item_id'] ?>">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <input type="number" step="0.01" class="form-control" name="quantity[]"
-                                                    value="<?= $item['quantity'] ?>" min="0.01" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <select class="form-select unit-select" name="unit_id[]" required>
-                                                    <?php foreach ($units as $unit): ?>
-                                                        <option value="<?= $unit['unit_id'] ?>"
-                                                            <?= $unit['unit_id'] == $item['unit_id'] ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($unit['unit_name']) ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <button type="button" class="btn btn-danger remove-item">Remove</button>
+                                                    <div class="form-section mt-4">
+                                                        <div class="items-container" id="groupItems">
+                                                            <?php if (empty($items)): ?>
+                                                                <div class="text-center py-4">
+                                                                    <i class="bi bi-inbox" style="font-size: 2rem; color: #adb5bd;"></i>
+                                                                    <p class="text-muted mt-2">No items added yet</p>
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <div class="row items-header">
+                                                                    <div class="col-md-5">Item Name</div>
+                                                                    <div class="col-md-3">Quantity</div>
+                                                                    <div class="col-md-3">Unit</div>
+                                                                    <div class="col-md-1">Action</div>
+                                                                </div>
+                                                                <?php foreach ($items as $item):
+                                                                    $unitName = '';
+                                                                    foreach ($units as $unit) {
+                                                                        if ($unit['unit_id'] == $item['unit_id']) {
+                                                                            $unitName = htmlspecialchars($unit['unit_name']);
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    // Format quantity display
+                                                                    $quantityDisplay = (float)$item['quantity'] == (int)$item['quantity']
+                                                                        ? (int)$item['quantity']
+                                                                        : (float)$item['quantity'];
+                                                                ?>
+                                                                    <div class="row item-row">
+                                                                        <div class="col-md-5">
+                                                                            <span class="item-name"><?= htmlspecialchars($item['item_name']) ?></span>
+                                                                            <input type="hidden" name="item_id[]" value="<?= $item['item_id'] ?>">
+                                                                            <input type="hidden" name="item_name[]" value="<?= htmlspecialchars($item['item_name']) ?>">
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <input type="number" step="0.01" class="form-control quantity-input" name="quantity[]"
+                                                                                value="<?= $item['quantity'] ?>" min="0.01" required>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <?= $unitName ?>
+                                                                            <input type="hidden" name="unit_id[]" value="<?= $item['unit_id'] ?>">
+                                                                        </div>
+                                                                        <div class="col-md-1">
+                                                                            <button type="button" class="btn btn-remove remove-item">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                <?php endforeach; ?>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <div class="mt-4">
+                                                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                                                                <i class="bi bi-plus"></i> Add Items
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between mt-4">
+                                                        <a href="group_management.php" class="btn btn-outline-secondary">Cancel</a>
+                                                        <button type="submit" name="update_group" class="btn btn-primary px-4">
+                                                            <i class="bi bi-check-lg"></i> Save Changes
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
-                                    <?php endforeach; ?>
+                                    </div>
                                 </div>
+                            </section>
 
-                                <div class="mt-3">
-                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                                        <i class="bi bi-plus"></i> Add Item
-                                    </button>
-                                </div>
+                            <!-- Add Item Modal -->
+                            <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="addItemModalLabel">Add Items to Group</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form id="addItemForm">
+                                            <div class="modal-body">
+                                                <div class="mb-4">
+                                                    <label for="new_item_search" class="form-label">Search Items</label>
+                                                    <select id="new_item_search" class="form-control" style="width: 100%" multiple></select>
+                                                </div>
 
-                                <div class="mt-4">
-                                    <button type="submit" name="update_group" class="btn btn-primary">Save Changes</button>
-                                    <a href="group_management.php" class="btn btn-outline-secondary">Cancel</a>
+                                                <h6 class="mt-4 mb-3">Items to be added:</h6>
+                                                <div class="item-preview" id="itemsPreview">
+                                                    <div class="text-muted text-center py-3">No items selected</div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                                <button type="button" class="btn btn-primary" id="confirmAddItems">Add Items</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </main>
 
-    <!-- Add Item Modal -->
-    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addItemModalLabel">Add Item to Group</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" id="addItemForm">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="new_item_search" class="form-label">Item</label>
-                            <select id="new_item_search" class="form-control" style="width: 100%"></select>
-                            <input type="hidden" id="new_item_id" name="new_item_id">
-                        </div>
-                        <div class="mb-3">
-                            <label for="new_quantity" class="form-label">Quantity</label>
-                            <input type="number" step="0.01" class="form-control" id="new_quantity" name="new_quantity" min="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="new_unit_id" class="form-label">Unit</label>
-                            <select class="form-select" id="new_unit_id" name="new_unit_id" required>
-                                <?php foreach ($units as $unit): ?>
-                                    <option value="<?= $unit['unit_id'] ?>"><?= htmlspecialchars($unit['unit_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Add Item</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -248,7 +333,14 @@ $units = pg_fetch_all($units_result) ?: [];
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for item search - with modal fix
+            let selectedItems = [];
+
+            // Format quantity display
+            function formatQuantity(qty) {
+                return parseFloat(qty) % 1 === 0 ? parseInt(qty) : parseFloat(qty);
+            }
+
+            // Initialize Select2 for item search
             function initSelect2() {
                 $('#new_item_search').select2({
                     ajax: {
@@ -276,8 +368,9 @@ $units = pg_fetch_all($units_result) ?: [];
                         cache: true
                     },
                     minimumInputLength: 1,
-                    placeholder: 'Search for an item',
-                    dropdownParent: $('#addItemModal')
+                    placeholder: 'Search for items',
+                    dropdownParent: $('#addItemModal'),
+                    closeOnSelect: true,
                 });
             }
 
@@ -285,74 +378,170 @@ $units = pg_fetch_all($units_result) ?: [];
             $('#addItemModal').on('shown.bs.modal', function() {
                 initSelect2();
                 // Clear previous selections when modal opens
-                $('#new_item_search').val('').trigger('change');
-                $('#new_quantity').val('');
+                $('#new_item_search').val(null).trigger('change');
+                selectedItems = [];
+                updateItemsPreview();
             });
 
-            // When item is selected, set the unit
+            // When items are selected
             $('#new_item_search').on('change', function() {
-                const selectedItem = $(this).select2('data')[0];
-                if (selectedItem) {
-                    $('#new_item_id').val(selectedItem.id);
-                    $('#new_unit_id').val(selectedItem.unitId).trigger('change');
-                }
+                const selectedOptions = $(this).select2('data');
+                selectedItems = selectedOptions.map(item => {
+                    // Handle cases where item name might contain parentheses
+                    const lastParenIndex = item.text.lastIndexOf(' (');
+                    const itemName = lastParenIndex >= 0 ?
+                        item.text.substring(0, lastParenIndex) :
+                        item.text;
+
+                    return {
+                        id: item.id,
+                        text: itemName, // Now properly handles item names with parentheses
+                        unitId: item.unitId,
+                        unitName: item.unitName
+                    };
+                });
+
+                updateItemsPreview();
             });
 
-            // Handle adding item to the list (not to database yet)
-            $('#addItemForm').on('submit', function(e) {
-                e.preventDefault();
+            // Update the items preview list
+            function updateItemsPreview() {
+                const previewContainer = $('#itemsPreview');
 
-                const selectedItem = $('#new_item_search').select2('data')[0];
-                const quantity = $('#new_quantity').val();
-                const unitId = $('#new_unit_id').val();
-                const unitName = $('#new_unit_id option:selected').text();
-
-                if (!selectedItem || !quantity || quantity <= 0 || !unitId) {
-                    alert('Please select an item, enter quantity, and select unit');
+                if (selectedItems.length === 0) {
+                    previewContainer.html('<div class="text-muted text-center py-3">No items selected</div>');
                     return;
                 }
 
-                // Generate unique ID for this item in the list
-                const itemUniqueId = 'item_' + Date.now() + Math.floor(Math.random() * 1000);
+                let previewHTML = '';
+                selectedItems.forEach(item => {
+                    previewHTML += `
+                        <div class="preview-item">
+                            <div class="d-flex justify-content-between">
+                                <span>${item.text}</span>
+                                <span>${item.unitName}</span>
+                            </div>
+                        </div>
+                    `;
+                });
 
-                // Create new item row
-                const itemRow = `
-                <div class="item-row row" id="${itemUniqueId}">
+                previewContainer.html(previewHTML);
+            }
+            // Handle adding items to the list
+            $('#confirmAddItems').on('click', function() {
+                if (selectedItems.length === 0) {
+                    alert('Please select at least one item');
+                    return;
+                }
+
+                let duplicateItems = [];
+                let addedItems = 0;
+
+                // Add each selected item to the main list
+                selectedItems.forEach(item => {
+                    // Check if item already exists in the group
+                    const existingItemIndex = Array.from($('input[name="item_id[]"]')).findIndex(input =>
+                        $(input).val() == item.id
+                    );
+
+                    if (existingItemIndex !== -1) {
+                        // Add to duplicate list
+                        duplicateItems.push(item.text);
+                    } else {
+                        // Add new item
+                        const itemUniqueId = 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                        const initialQty = 1;
+
+                        const itemRow = `
+                <div class="row item-row">
                     <div class="col-md-5">
-                        <input type="text" class="form-control" name="item_name[]" 
-                               value="${selectedItem.text.split(' (')[0]}" readonly>
-                        <input type="hidden" name="item_id[]" value="${selectedItem.id}">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" step="0.01" class="form-control" name="quantity[]" 
-                               value="${quantity}" min="0.01" required>
+                        <span class="item-name">${item.text}</span>
+                        <input type="hidden" name="item_id[]" value="${item.id}">
+                        <input type="hidden" name="item_name[]" value="${item.text}">
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select unit-select" name="unit_id[]" required>
-                            ${$('#new_unit_id').html()} <!-- Copy all unit options -->
-                        </select>
+                        <input type="number" step="0.01" class="form-control quantity-input" name="quantity[]" 
+                               value="${initialQty}" min="0.01" required>
                     </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger remove-item">Remove</button>
+                    <div class="col-md-3">
+                        ${item.unitName}
+                        <input type="hidden" name="unit_id[]" value="${item.unitId}">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-remove remove-item">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 </div>
             `;
 
-                // Add to items list
-                $('#groupItems').append(itemRow);
+                        // Add to items list (remove empty state if present)
+                        if ($('#groupItems').find('.text-center').length) {
+                            $('#groupItems').html('<div class="row items-header"><div class="col-md-5">Item Name</div><div class="col-md-3">Quantity</div><div class="col-md-3">Unit</div><div class="col-md-1">Action</div></div>');
+                        }
+                        $('#groupItems').append(itemRow);
+                        addedItems++;
+                    }
+                });
 
-                // Set the selected unit in the new row
-                $(`#${itemUniqueId} select[name="unit_id[]"]`).val(unitId);
+                // Show appropriate message
+                if (duplicateItems.length > 0) {
+                    alert(`These items are already in the group: ${duplicateItems.join(', ')}`);
+                }
 
-                // Reset form and close modal
-                $('#addItemForm')[0].reset();
-                $('#new_item_search').val('').trigger('change');
-                $('#addItemModal').modal('hide');
+                // Close modal if any items were added
+                if (addedItems > 0) {
+                    $('#addItemModal').modal('hide');
+                }
             });
 
             // Remove item button
             $(document).on('click', '.remove-item', function() {
                 $(this).closest('.item-row').remove();
+
+                // Show empty state if no items left
+                if ($('#groupItems').children('.item-row').length === 0) {
+                    $('#groupItems').html(`
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem; color: #adb5bd;"></i>
+                            <p class="text-muted mt-2">No items added yet</p>
+                        </div>
+                    `);
+                }
+            });
+
+            // Form submission validation
+            $('#groupForm').on('submit', function(e) {
+                // Count how many items are in the form
+                const itemCount = $('input[name="item_id[]"]').length;
+
+                if (itemCount === 0) {
+                    e.preventDefault();
+                    if (confirm('This group has no items. Would you like to delete this group instead?')) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = 'group_management.php';
+
+                        const groupIdInput = document.createElement('input');
+                        groupIdInput.type = 'hidden';
+                        groupIdInput.name = 'group_id';
+                        groupIdInput.value = '<?= $group_id ?>';
+
+                        const deleteInput = document.createElement('input');
+                        deleteInput.type = 'hidden';
+                        deleteInput.name = 'delete_group';
+                        deleteInput.value = '1';
+
+                        form.appendChild(groupIdInput);
+                        form.appendChild(deleteInput);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                    return false;
+                }
+
+                return true;
             });
         });
     </script>

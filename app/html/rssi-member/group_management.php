@@ -119,16 +119,18 @@ $groups = pg_fetch_all($groups_result) ?: [];
 
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Create New Group</h5>
+                            <h5 class="card-header mb-4">Create New Group</h5>
                             <form method="POST">
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label for="group_name" class="form-label">Group Name</label>
-                                        <input type="text" class="form-control" id="group_name" name="group_name" required>
+                                        <input type="text" class="form-control" id="group_name" name="group_name"
+                                            placeholder="e.g., Stationery Kit, Uniform Set" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="description" class="form-label">Description</label>
-                                        <input type="text" class="form-control" id="description" name="description">
+                                        <textarea class="form-control" id="description" name="description" rows="3"
+                                            placeholder="Brief description of the group (optional)"></textarea>
                                     </div>
                                 </div>
                                 <button type="submit" name="create_group" class="btn btn-primary">Create Group</button>
@@ -138,12 +140,12 @@ $groups = pg_fetch_all($groups_result) ?: [];
 
                     <div class="card mt-4">
                         <div class="card-body">
-                            <h5 class="card-title">Existing Groups</h5>
+                            <h5 class="card-header mb-4">Existing Groups</h5>
                             <div class="row">
                                 <?php foreach ($groups as $group): ?>
                                     <div class="col-md-6">
                                         <div class="card group-card">
-                                            <div class="card-body">
+                                            <div class="card-body mt-3">
                                                 <div class="d-flex justify-content-between">
                                                     <h5><?= htmlspecialchars($group['group_name']) ?></h5>
                                                     <div>
@@ -179,12 +181,20 @@ $groups = pg_fetch_all($groups_result) ?: [];
                                                 <div class="mt-2">
                                                     <h6>Items in Group:</h6>
                                                     <?php if (!empty($items)): ?>
-                                                        <?php foreach ($items as $item): ?>
-                                                            <span class="badge bg-primary item-badge">
-                                                                <?= htmlspecialchars($item['item_name']) ?>
-                                                                (<?= $item['quantity'] ?> <?= $item['unit_name'] ?>)
-                                                            </span>
-                                                        <?php endforeach; ?>
+                                                        <ul class="list-group list-group-flush">
+                                                            <?php foreach ($items as $item):
+                                                                // Format quantity - remove decimals if not needed
+                                                                $quantity = $item['quantity'];
+                                                                $formattedQuantity = (float)$quantity == (int)$quantity
+                                                                    ? (int)$quantity
+                                                                    : rtrim(rtrim(number_format($quantity, 2), '0'), '.');
+                                                            ?>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                                                                    <span><?= htmlspecialchars($item['item_name']) ?></span>
+                                                                    <span><?= $formattedQuantity . ' ' . htmlspecialchars($item['unit_name']) ?></span>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
                                                     <?php else: ?>
                                                         <p class="text-muted">No items in this group yet.</p>
                                                     <?php endif; ?>
