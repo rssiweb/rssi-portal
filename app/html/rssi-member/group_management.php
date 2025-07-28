@@ -57,8 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Fetch all groups
-$groups_result = pg_query($con, "SELECT rm.fullname as updated_by_name, * FROM stock_item_groups
-Left join rssimyaccount_members rm on rm.associatenumber=stock_item_groups.updated_by ORDER BY group_name");
+$groups_result = pg_query($con, "
+    SELECT 
+        rm.fullname AS updated_by_name, 
+        rmc.fullname AS created_by_name, 
+        stock_item_groups.*
+    FROM stock_item_groups
+    LEFT JOIN rssimyaccount_members rm ON rm.associatenumber = stock_item_groups.updated_by
+    LEFT JOIN rssimyaccount_members rmc ON rmc.associatenumber = stock_item_groups.created_by
+    ORDER BY group_name
+");
 $groups = pg_fetch_all($groups_result) ?: [];
 ?>
 
@@ -155,7 +163,7 @@ $groups = pg_fetch_all($groups_result) ?: [];
                                             <th>Group Name</th>
                                             <th>Description</th>
                                             <th>Items Count</th>
-
+                                            <th>Created By</th>
                                             <th>Last Updated By</th>
                                             <th>Last Updated</th>
                                             <th>Actions</th>
@@ -175,8 +183,8 @@ $groups = pg_fetch_all($groups_result) ?: [];
                                                 <td><?= htmlspecialchars($group['group_name']) ?></td>
                                                 <td><?= !empty($group['description']) ? htmlspecialchars($group['description']) : '-' ?></td>
                                                 <td><?= $item_count ?></td>
-
-                                                <td><?= @htmlspecialchars($group['updated_by_name']) ?></td>
+                                                <td><?= htmlspecialchars($group['created_by_name']) ?></td>
+                                                <td><?= !empty($group['updated_by_name']) ? htmlspecialchars($group['updated_by_name']) : 'Not edited yet' ?></td>
                                                 <td><?= (new DateTime($group['updated_at']))->format('d/m/Y h:i A') ?></td>
                                                 <td>
                                                     <div class="dropdown">
