@@ -537,12 +537,11 @@ while ($row = pg_fetch_assoc($unit_result)) {
                                 </tbody>
                             </table>
                         </div>
-                        <div class="form-text">
                             Want to create a new group or manage existing ones? 
                             <a href="group_management.php" title="Create or manage groups">
                                 Click here
                             </a>
-                        </div>`;
+                        `;
                         $('#groupsListModal .modal-body').html(tableHTML);
                     },
                     error: function() {
