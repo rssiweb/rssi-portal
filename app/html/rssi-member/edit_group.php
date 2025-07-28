@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         pg_query_params(
             $con,
-            "UPDATE stock_item_groups SET group_name=$1, description=$2, updated_at=NOW() WHERE group_id=$3",
+            "UPDATE stock_item_groups SET group_name=$1, description=$2, updated_at=NOW(), updated_by='$associatenumber' WHERE group_id=$3",
             array($group_name, $description, $group_id)
         );
 

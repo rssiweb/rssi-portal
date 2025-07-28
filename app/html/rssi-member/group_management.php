@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         pg_query_params(
             $con,
-            "UPDATE stock_item_groups SET group_name=$1, description=$2, updated_at=NOW() WHERE group_id=$3",
+            "UPDATE stock_item_groups SET group_name=$1, description=$2, updated_at=NOW(), updated_by='$associatenumber' WHERE group_id=$3",
             array($group_name, $description, $group_id)
         );
 
@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Fetch all groups
-$groups_result = pg_query($con, "SELECT * FROM stock_item_groups ORDER BY group_name");
+$groups_result = pg_query($con, "SELECT rm.fullname as updated_by_name, * FROM stock_item_groups
+Left join rssimyaccount_members rm on rm.associatenumber=stock_item_groups.updated_by ORDER BY group_name");
 $groups = pg_fetch_all($groups_result) ?: [];
 ?>
 
@@ -124,7 +125,7 @@ $groups = pg_fetch_all($groups_result) ?: [];
                     <?php endif; ?>
 
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body container">
                             <h5 class="card-header mb-4">Create New Group</h5>
                             <form method="POST">
                                 <div class="row mb-3">
@@ -148,12 +149,15 @@ $groups = pg_fetch_all($groups_result) ?: [];
                         <div class="card-body">
                             <h5 class="card-header mb-4">Existing Groups</h5>
                             <div class="table-responsive">
-                                <table id="groupsTable" class="table">
+                                <table id="groupsTable" class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>Group Name</th>
                                             <th>Description</th>
                                             <th>Items Count</th>
+
+                                            <th>Last Updated By</th>
+                                            <th>Last Updated</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -171,22 +175,42 @@ $groups = pg_fetch_all($groups_result) ?: [];
                                                 <td><?= htmlspecialchars($group['group_name']) ?></td>
                                                 <td><?= !empty($group['description']) ? htmlspecialchars($group['description']) : '-' ?></td>
                                                 <td><?= $item_count ?></td>
+
+                                                <td><?= @htmlspecialchars($group['updated_by_name']) ?></td>
+                                                <td><?= (new DateTime($group['updated_at']))->format('d/m/Y h:i A') ?></td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-info view-group" data-group-id="<?= $group['group_id'] ?>" data-bs-toggle="modal" data-bs-target="#viewGroupModal">
-                                                        <i class="bi bi-eye"></i> View
-                                                    </button>
-                                                    <a href="edit_group.php?group_id=<?= $group['group_id'] ?>" class="btn btn-sm btn-warning">
-                                                        <i class="bi bi-pencil"></i> Edit
-                                                    </a>
-                                                    <?php if ($role === 'Admin'): ?>
-                                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this group?');">
-                                                            <input type="hidden" name="group_id" value="<?= $group['group_id'] ?>">
-                                                            <button type="submit" name="delete_group" class="btn btn-sm btn-danger">
-                                                                <i class="bi bi-trash"></i> Delete
-                                                            </button>
-                                                        </form>
-                                                    <?php endif; ?>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="bi bi-three-dots-vertical"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li>
+                                                                <button class="dropdown-item view-group"
+                                                                    data-group-id="<?= $group['group_id'] ?>"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#viewGroupModal">
+                                                                    <i class="bi bi-eye"></i> View
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <a href="edit_group.php?group_id=<?= $group['group_id'] ?>" class="dropdown-item">
+                                                                    <i class="bi bi-pencil"></i> Edit
+                                                                </a>
+                                                            </li>
+                                                            <?php if ($role === 'Admin'): ?>
+                                                                <li>
+                                                                    <form method="POST" onsubmit="return confirm('Are you sure you want to delete this group?');">
+                                                                        <input type="hidden" name="group_id" value="<?= $group['group_id'] ?>">
+                                                                        <button type="submit" name="delete_group" class="dropdown-item text-danger">
+                                                                            <i class="bi bi-trash"></i> Delete
+                                                                        </button>
+                                                                    </form>
+                                                                </li>
+                                                            <?php endif; ?>
+                                                        </ul>
+                                                    </div>
                                                 </td>
+
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
