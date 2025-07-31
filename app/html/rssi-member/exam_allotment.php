@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                 <option value="GK" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'GK') ? 'selected' : ''; ?>>GK</option>
                                                 <option value="Hamara Parivesh" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Hamara Parivesh') ? 'selected' : ''; ?>>Hamara Parivesh</option>
                                                 <option value="Computer" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Computer') ? 'selected' : ''; ?>>Computer</option>
-                                                <option value="Arts & Craft" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Arts & Craft') ? 'selected' : ''; ?>>Arts & Craft</option>
+                                                <option value="Art & Craft" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Art & Craft') ? 'selected' : ''; ?>>Art & Craft</option>
                                                 <option value="Sulekh+Imla" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Sulekh+Imla') ? 'selected' : ''; ?>>Sulekh+Imla</option>
                                                 <option value="Project" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Project') ? 'selected' : ''; ?>>Project</option>
                                             </select>
