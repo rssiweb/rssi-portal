@@ -567,6 +567,19 @@
       </li>
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#alliance_portal" data-bs-toggle="collapse" href="#">
+          <span>Alliance Portal</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="alliance_portal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="contact-directory" href="contact-directory.php">
+              <span>Contact Directory</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
           <span>Work</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -709,6 +722,10 @@
         id: 'acadamis',
         linkId: 'examLink',
         url: 'exam.php'
+      },{
+        id: 'alliance_portal',
+        linkId: 'contact-directory',
+        url: 'contact-directory.php'
       }, {
         id: 'acadamis',
         linkId: 'append-students',
