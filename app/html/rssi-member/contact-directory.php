@@ -13,6 +13,7 @@ validation();
 // Get current user info
 $current_user = $associatenumber;
 $is_admin = ($role == 'Admin');
+$is_centreIncharge = ($role == 'Centre Incharge' || $role == 'Senior Centre Incharge');
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -644,7 +645,7 @@ function generateColor($name)
                                                                     <div>
                                                                         <strong><?php echo htmlspecialchars($row['contact_person']); ?></strong>
                                                                         <div>
-                                                                            <?php if ($is_admin || $is_owner): ?>
+                                                                            <?php if ($is_admin || $is_centreIncharge || $is_owner): ?>
                                                                                 <a href="tel:<?php echo htmlspecialchars($row['contact_number']); ?>" class="text-decoration-none">
                                                                                     <i class="fas fa-phone me-1"></i><?php echo htmlspecialchars($row['contact_number']); ?>
                                                                                 </a>
