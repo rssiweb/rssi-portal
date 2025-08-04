@@ -13,7 +13,7 @@ validation();
 // Get current user info
 $current_user = $associatenumber;
 $is_admin = ($role == 'Admin');
-$is_centreIncharge = ($role == 'Centre Incharge' || $role == 'Senior Centre Incharge');
+$is_centreIncharge = ($position == 'Centre Incharge' || $position == 'Senior Centre Incharge');
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
