@@ -37,7 +37,7 @@ $sql = "SELECT
     o.security_deposit_amount,
     o.security_deposit_currency,
     o.security_deposit_transaction_id,
-    ae.security_refund
+    ae.donate_security_deposit
 FROM 
     rssimyaccount_members m
 LEFT JOIN 
@@ -1933,8 +1933,8 @@ echo "<script>
                                                                                         <p id="refund_statusText" class="mb-0">
                                                                                             Refund:
                                                                                             <?php
-                                                                                            echo is_null($array['security_refund']) ?
-                                                                                                'N/A' : ($array['security_refund'] == 'Yes' ? 'Yes' : 'No');
+                                                                                            echo is_null($array['donate_security_deposit']) ?
+                                                                                                'N/A' : ($array['donate_security_deposit'] == 'no' ? 'Yes' : 'No');
                                                                                             ?>
                                                                                         </p>
                                                                                     </td>

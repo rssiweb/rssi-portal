@@ -13,7 +13,7 @@ if (!isLoggedIn("aid")) {
 validation();
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, security_deposit, rssimyaccount_members.remarks reason_remarks, photo, engagement, position, depb, filterstatus,exit_initiated_by, exit_gen_otp_center_incharge, exit_gen_otp_associate, email, exit_flag, exit_photo, exit_date_time, asset_clearance, financial_clearance, security_clearance, hr_clearance, work_clearance, legal_clearance, security_refund, associate_exit.ip_address, exit_submitted_by, exit_submitted_on, exit_initiated_on, exit_initiated_by, associate_exit.remarks exit_remarks, exit_interview, security_deposit_amount, security_deposit_currency
+$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, security_deposit, rssimyaccount_members.remarks reason_remarks, photo, engagement, position, depb, filterstatus,exit_initiated_by, exit_gen_otp_center_incharge, exit_gen_otp_associate, email, exit_flag, exit_photo, exit_date_time, asset_clearance, financial_clearance, security_clearance, hr_clearance, work_clearance, legal_clearance, donate_security_deposit, associate_exit.ip_address, exit_submitted_by, exit_submitted_on, exit_initiated_on, exit_initiated_by, associate_exit.remarks exit_remarks, exit_interview, security_deposit_amount, security_deposit_currency
     FROM rssimyaccount_members
     LEFT JOIN associate_exit ON associate_exit.exit_associate_id = rssimyaccount_members.associatenumber
     LEFT JOIN onboarding ON onboarding.onboarding_associate_id = rssimyaccount_members.associatenumber
@@ -53,8 +53,8 @@ if (@$_POST['form-type'] == "exit") {
         $legal_clearance = isset($_POST['clearance']) && in_array('legal-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
 
         // Retrieve and sanitize the security deposit refund decision
-        $security_refund = isset($_POST['security_refund']) ? $_POST['security_refund'] : 'no';
-        $security_refund = htmlspecialchars($security_refund, ENT_QUOTES, 'UTF-8');
+        $donate_security_deposit = isset($_POST['donate_security_deposit']) ? $_POST['donate_security_deposit'] : 'no';
+        $donate_security_deposit = htmlspecialchars($donate_security_deposit, ENT_QUOTES, 'UTF-8');
 
         $exit_interview = htmlspecialchars($_POST['exit-interview'], ENT_QUOTES, 'UTF-8');
         $exit_date_time = $_POST['exit-date-time'];
@@ -73,7 +73,7 @@ if (@$_POST['form-type'] == "exit") {
         }
 
         $ip_address = getUserIpAddr();
-        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview',security_refund='$security_refund' where exit_associate_id='$otp_initiatedfor_main'";
+        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview',donate_security_deposit='$donate_security_deposit' where exit_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $exit);
         $cmdtuples = pg_affected_rows($result);
     } else {
@@ -260,11 +260,11 @@ if (@$_POST['form-type'] == "exit") {
                                                             <label for="security_deposit">Would you like to make a difference in students' lives by donating your security deposit?</label>
                                                             <p>Deposit amount: <strong><?php echo $array['security_deposit_currency'] . '&nbsp;' . $array['security_deposit_amount'] ?></strong></p>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" id="refund-yes" name="security_refund" value="yes" <?php if ($array['security_refund'] === 'yes') echo 'checked'; ?> required>
+                                                                <input class="form-check-input" type="radio" id="refund-yes" name="donate_security_deposit" value="yes" <?php if ($array['donate_security_deposit'] === 'yes') echo 'checked'; ?> required>
                                                                 <label class="form-check-label" for="refund-yes">Yes</label>
                                                             </div>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" id="refund-no" name="security_refund" value="no" <?php if ($array['security_refund'] === 'no') echo 'checked'; ?> required>
+                                                                <input class="form-check-input" type="radio" id="refund-no" name="donate_security_deposit" value="no" <?php if ($array['donate_security_deposit'] === 'no') echo 'checked'; ?> required>
                                                                 <label class="form-check-label" for="refund-no">No</label>
                                                             </div>
                                                         </div>
