@@ -378,12 +378,18 @@ if ($class_category_data) {
     if ($rank === 'N/A') {
         $individual_class_query = "
         SELECT emd.student_id, 
-               ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
+            ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
         FROM exam_marks_data emd
         JOIN exams e ON emd.exam_id = e.exam_id
         WHERE e.exam_type = $1
-          AND e.academic_year = $2
-          AND emd.class = (SELECT emd.class FROM exam_marks_data emd WHERE emd.student_id = $3 LIMIT 1)
+        AND e.academic_year = $2
+        AND emd.class = (
+            SELECT emd2.class 
+            FROM exam_marks_data emd2 
+            WHERE emd2.student_id = $3 
+            ORDER BY emd2.id DESC 
+            LIMIT 1
+        )
         GROUP BY emd.student_id
         ORDER BY total_marks DESC;
         ";
