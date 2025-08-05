@@ -295,7 +295,7 @@ $resultArr = pg_fetch_all($result);
                                         </div>
 
                                         <div id="filter-checkss">
-                                            <input type="checkbox" name="is_users" id="is_users" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
+                                            <input class="form-check-input" type="checkbox" name="is_users" id="is_users" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
                                             <label for="is_users" style="font-weight: 400;">Adjust Leave With Salary/Other</label>
                                         </div>
 
@@ -409,7 +409,7 @@ $resultArr = pg_fetch_all($result);
                                                     </div>
                                                     <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                         <div id="filter-checks">
-                                                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
                                                             <label for="is_user" style="font-weight: 400;">Search by Leave Adjustment ID</label>
                                                         </div>
                                                     <?php } ?>

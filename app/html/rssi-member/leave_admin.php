@@ -717,7 +717,7 @@ if (!$result) {
                                         profile = document.getElementById("is_userhr" + mydata["leaveid"])
                                         profile.value = mydata["halfday"]
 
-                                        $('input[class="form-check-input" type="checkbox"]').on('change', function() {
+                                        $('input[type="checkbox"]').on('change', function() {
                                             this.value ^= 1;
                                         });
 
