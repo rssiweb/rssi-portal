@@ -8,6 +8,10 @@ $exam_type = $_GET['exam_type'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
 $print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 
+// Initialize flags
+$student_exists = false;
+$no_records_found = false;
+
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset($_GET['exam_type']) && isset($_GET['academic_year'])) {
@@ -40,69 +44,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
     $student_result = pg_query_params($con, $student_query, [$student_id]);
 
     // Check if student exists
-    if ($student_result) {
+    if ($student_result && pg_num_rows($student_result) > 0) {
         $student_details = pg_fetch_assoc($student_result);
+        $student_exists = true;
 
         // Fetch exam details and marks
         $marks_query = "
-    SELECT 
-        exam_marks_data.exam_id, 
-        ROUND(exam_marks_data.viva_marks) AS viva_marks, 
-        ROUND(exam_marks_data.written_marks) AS written_marks, 
-        exams.subject, 
-        exams.full_marks_written, 
-        exams.full_marks_viva, 
-        exams.exam_date_written, 
-        exams.exam_date_viva, 
-        student.doa, 
-        student.dateofbirth, 
-        student.photourl,
-        CASE
-            WHEN attendance_written.attendance_status IS NULL 
-                AND student.doa <= exams.exam_date_written 
-                AND NOT EXISTS (
-                    SELECT 1 
-                    FROM reexamination 
-                    WHERE reexamination.student_id = exam_marks_data.student_id 
-                    AND reexamination.date = exams.exam_date_written
-                ) THEN 'A'
-            ELSE attendance_written.attendance_status
-        END AS written_attendance_status,
-        CASE
-            WHEN attendance_viva.attendance_status IS NULL 
-                AND student.doa <= exams.exam_date_viva 
-                AND NOT EXISTS (
-                    SELECT 1 
-                    FROM reexamination 
-                    WHERE reexamination.student_id = exam_marks_data.student_id 
-                    AND reexamination.date = exams.exam_date_viva
-                ) THEN 'A'
-            ELSE attendance_viva.attendance_status
-        END AS viva_attendance_status
-    FROM exam_marks_data
-    JOIN exams ON exam_marks_data.exam_id = exams.exam_id
-    LEFT JOIN (
-        SELECT user_id, date, 'P' AS attendance_status
-        FROM attendance
-        GROUP BY user_id, date
-    ) AS attendance_written
-    ON exam_marks_data.student_id = attendance_written.user_id 
-    AND exams.exam_date_written = attendance_written.date
-    LEFT JOIN (
-        SELECT user_id, date, 'P' AS attendance_status
-        FROM attendance
-        GROUP BY user_id, date
-    ) AS attendance_viva
-    ON exam_marks_data.student_id = attendance_viva.user_id 
-    AND exams.exam_date_viva = attendance_viva.date
-    JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
-    WHERE exam_marks_data.student_id = $1 
-    AND exams.exam_type = $2 
-    AND exams.academic_year = $3";
+        SELECT 
+            exam_marks_data.exam_id, 
+            ROUND(exam_marks_data.viva_marks) AS viva_marks, 
+            ROUND(exam_marks_data.written_marks) AS written_marks, 
+            exams.subject, 
+            exams.full_marks_written, 
+            exams.full_marks_viva, 
+            exams.exam_date_written, 
+            exams.exam_date_viva, 
+            student.doa, 
+            student.dateofbirth, 
+            student.photourl,
+            CASE
+                WHEN attendance_written.attendance_status IS NULL 
+                    AND student.doa <= exams.exam_date_written 
+                    AND NOT EXISTS (
+                        SELECT 1 
+                        FROM reexamination 
+                        WHERE reexamination.student_id = exam_marks_data.student_id 
+                        AND reexamination.date = exams.exam_date_written
+                    ) THEN 'A'
+                ELSE attendance_written.attendance_status
+            END AS written_attendance_status,
+            CASE
+                WHEN attendance_viva.attendance_status IS NULL 
+                    AND student.doa <= exams.exam_date_viva 
+                    AND NOT EXISTS (
+                        SELECT 1 
+                        FROM reexamination 
+                        WHERE reexamination.student_id = exam_marks_data.student_id 
+                        AND reexamination.date = exams.exam_date_viva
+                    ) THEN 'A'
+                ELSE attendance_viva.attendance_status
+            END AS viva_attendance_status
+        FROM exam_marks_data
+        JOIN exams ON exam_marks_data.exam_id = exams.exam_id
+        LEFT JOIN (
+            SELECT user_id, date, 'P' AS attendance_status
+            FROM attendance
+            GROUP BY user_id, date
+        ) AS attendance_written
+        ON exam_marks_data.student_id = attendance_written.user_id 
+        AND exams.exam_date_written = attendance_written.date
+        LEFT JOIN (
+            SELECT user_id, date, 'P' AS attendance_status
+            FROM attendance
+            GROUP BY user_id, date
+        ) AS attendance_viva
+        ON exam_marks_data.student_id = attendance_viva.user_id 
+        AND exams.exam_date_viva = attendance_viva.date
+        JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
+        WHERE exam_marks_data.student_id = $1 
+        AND exams.exam_type = $2 
+        AND exams.academic_year = $3";
         $marks_result = pg_query_params($con, $marks_query, [$student_id, $exam_type, $academic_year]);
 
         // Process and arrange marks data according to subject sequence
-        if ($marks_result) {
+        if ($marks_result && pg_num_rows($marks_result) > 0) {
             $marks_data = [];
             while ($row = pg_fetch_assoc($marks_result)) {
                 $marks_data[] = $row;
@@ -135,85 +140,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
 
             // Calculate the attendance details for the specified period
             $attendance_query = "
-    WITH date_range AS (
-        SELECT DISTINCT a.date AS attendance_date
-        FROM attendance a
-        WHERE a.date BETWEEN '$start_date' AND '$end_date'
-    ),
-    holidays AS (
-        SELECT holiday_date FROM holidays 
-        WHERE holiday_date BETWEEN '$start_date' AND '$end_date'
-    ),
-    student_exceptions AS (
-        SELECT 
-            m.student_id,
-            e.exception_date AS attendance_date
-        FROM 
-            student_class_days_exceptions e
-        JOIN 
-            student_exception_mapping m ON e.exception_id = m.exception_id
-        WHERE 
-            e.exception_date BETWEEN '$start_date' AND '$end_date'
-            AND m.student_id = $1
-    ),
-    attendance_data AS (
-        SELECT
-            s.student_id,
-            dr.attendance_date,
-            COALESCE(
-                CASE
-                    WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
-                    WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
-                    WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
-                    WHEN a.user_id IS NULL
-                         AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = dr.attendance_date)
-                         AND EXISTS (
-                            SELECT 1 FROM student_class_days cw
-                            WHERE cw.category = s.category
-                              AND cw.effective_from <= dr.attendance_date
-                              AND (cw.effective_to IS NULL OR cw.effective_to >= dr.attendance_date)
-                              AND POSITION(TO_CHAR(dr.attendance_date, 'Dy') IN cw.class_days) > 0
-                         )
-                         AND s.doa <= dr.attendance_date
-                         THEN 'A' -- Absent only if it's a class day and not holiday/exception
-                    ELSE NULL -- NULL for non-class days
-                END
-            ) AS attendance_status
-        FROM date_range dr
-        CROSS JOIN rssimyprofile_student s
-        LEFT JOIN (
-            SELECT DISTINCT user_id, date
-            FROM attendance
-        ) a ON s.student_id = a.user_id AND a.date = dr.attendance_date
-        LEFT JOIN holidays h ON dr.attendance_date = h.holiday_date
-        LEFT JOIN student_exceptions ex ON dr.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
-        WHERE s.student_id = $1
-          AND dr.attendance_date >= s.doa
-    ),
-    first_attendance AS (
-        SELECT MIN(attendance_date) AS first_attendance_date
-        FROM attendance_data
-    )
-    SELECT
-        student_id,
-        attendance_date,
-        attendance_status,
-        (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) AS total_classes,
-        (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) AS attended_classes,
-        CASE
-            WHEN (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) = 0 THEN NULL
-            ELSE CONCAT(
-                ROUND(
-                    ((SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) * 100.0) /
-                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery), 2
+                WITH date_range AS (
+                    SELECT DISTINCT a.date AS attendance_date
+                    FROM attendance a
+                    WHERE a.date BETWEEN '$start_date' AND '$end_date'
                 ),
-                '%'
-            )
-        END AS attendance_percentage,
-        (SELECT first_attendance_date FROM first_attendance) AS first_attendance_date
-    FROM attendance_data
-    ORDER BY attendance_date
-";
+                holidays AS (
+                    SELECT holiday_date FROM holidays 
+                    WHERE holiday_date BETWEEN '$start_date' AND '$end_date'
+                ),
+                student_exceptions AS (
+                    SELECT 
+                        m.student_id,
+                        e.exception_date AS attendance_date
+                    FROM 
+                        student_class_days_exceptions e
+                    JOIN 
+                        student_exception_mapping m ON e.exception_id = m.exception_id
+                    WHERE 
+                        e.exception_date BETWEEN '$start_date' AND '$end_date'
+                        AND m.student_id = $1
+                ),
+                attendance_data AS (
+                    SELECT
+                        s.student_id,
+                        dr.attendance_date,
+                        COALESCE(
+                            CASE
+                                WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
+                                WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
+                                WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
+                                WHEN a.user_id IS NULL
+                                    AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = dr.attendance_date)
+                                    AND EXISTS (
+                                        SELECT 1 FROM student_class_days cw
+                                        WHERE cw.category = s.category
+                                        AND cw.effective_from <= dr.attendance_date
+                                        AND (cw.effective_to IS NULL OR cw.effective_to >= dr.attendance_date)
+                                        AND POSITION(TO_CHAR(dr.attendance_date, 'Dy') IN cw.class_days) > 0
+                                    )
+                                    AND s.doa <= dr.attendance_date
+                                    THEN 'A' -- Absent only if it's a class day and not holiday/exception
+                                ELSE NULL -- NULL for non-class days
+                            END
+                        ) AS attendance_status
+                    FROM date_range dr
+                    CROSS JOIN rssimyprofile_student s
+                    LEFT JOIN (
+                        SELECT DISTINCT user_id, date
+                        FROM attendance
+                    ) a ON s.student_id = a.user_id AND a.date = dr.attendance_date
+                    LEFT JOIN holidays h ON dr.attendance_date = h.holiday_date
+                    LEFT JOIN student_exceptions ex ON dr.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
+                    WHERE s.student_id = $1
+                    AND dr.attendance_date >= s.doa
+                ),
+                first_attendance AS (
+                    SELECT MIN(attendance_date) AS first_attendance_date
+                    FROM attendance_data
+                )
+                SELECT
+                    student_id,
+                    attendance_date,
+                    attendance_status,
+                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) AS total_classes,
+                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) AS attended_classes,
+                    CASE
+                        WHEN (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) = 0 THEN NULL
+                        ELSE CONCAT(
+                            ROUND(
+                                ((SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) * 100.0) /
+                                (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery), 2
+                            ),
+                            '%'
+                        )
+                    END AS attendance_percentage,
+                    (SELECT first_attendance_date FROM first_attendance) AS first_attendance_date
+                FROM attendance_data
+                ORDER BY attendance_date
+            ";
 
             $attendance_result = pg_query_params($con, $attendance_query, [$student_id]);
 
@@ -228,6 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             } else {
                 $average_attendance_percentage = "N/A";
             }
+        } else {
+            $no_records_found = true;
         }
     }
 }
@@ -564,8 +571,28 @@ if ($class_category_data) {
         <?php } ?>
 
         <?php
-        if (@$exam_type > 0) {
-            if ($marks_result) { ?>
+        if ($exam_type > 0) {
+            // Show error messages if any
+            if (isset($_GET['student_id']) && !$student_exists) { ?>
+                <div class="container alert alert-danger" role="alert" style="margin-top:20px;">
+                    <h4 class="alert-heading">Student Not Found</h4>
+                    <p>We couldn't find any student with the ID: <strong><?php echo htmlspecialchars($student_id); ?></strong></p>
+                    <hr>
+                    <p class="mb-0">Please verify the student ID and try again. If you believe this is an error, please contact support.</p>
+                </div>
+            <?php } elseif ($no_records_found) { ?>
+                <div class="container alert alert-warning" role="alert" style="margin-top:20px;">
+                    <h4 class="alert-heading">No Records Found</h4>
+                    <p>We couldn't find any exam records matching your search criteria:</p>
+                    <ul>
+                        <li><strong>Student ID:</strong> <?php echo htmlspecialchars($student_id); ?></li>
+                        <li><strong>Exam Type:</strong> <?php echo htmlspecialchars($exam_type); ?></li>
+                        <li><strong>Academic Year:</strong> <?php echo htmlspecialchars($academic_year); ?></li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0">Please verify your search parameters and try again. If you believe this is an error, please contact your administrator.</p>
+                </div>
+            <?php } elseif ($student_exists && !$no_records_found && isset($marks_result)) { ?>
 
                 <?php
                 function calculateGrade($percentage)
