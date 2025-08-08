@@ -775,7 +775,7 @@ if ($class_category_data) {
                             </tr>
                             <tr>
                                 <td>
-                                    <table class="table visible-xs" border="0" style="width: 100%; margin-top: 20%;">
+                                    <table class="table visible-print-block" border="0" style="width: 100%; margin-top: 20%;">
                                         <tbody>
                                             <tr>
                                                 <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
@@ -810,10 +810,8 @@ if ($class_category_data) {
                         </tr>
                     </table>
 
-
-                <?php } else {
-                echo "Error fetching exam details and marks.";
-            }
+                    <p class="report-footer visible-print-block" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
+                <?php }
         } elseif ($exam_type == "" && $student_id == "") {
                 ?>
                 <div class="noprint">
@@ -843,14 +841,8 @@ if ($class_category_data) {
                     <p>Please enter your Student ID, Exam Name, and Year to view your result.</p>
                 </div>
             <?php
-        } else {
-            ?>
-                No record found for <?php echo $student_id; ?>&nbsp;<?php echo $exam_type; ?>&nbsp;<?php echo $academic_year; ?>
-            <?php
         }
             ?>
-            <p class="report-footer visible-xs" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
-
     </div>
     <script>
         function submit() {
