@@ -270,7 +270,7 @@ while ($row = pg_fetch_assoc($result)) {
                                                     </select>
                                                 </td>
                                                 <td>
-                                                    <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
+                                                    <input type="number" name="quantity_received[]" class="form-control table-input" min="0.01" step="0.01" required>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn-action btn-delete" disabled>
@@ -440,7 +440,7 @@ while ($row = pg_fetch_assoc($result)) {
                     </select>
                 </td>
                 <td>
-                    <input type="number" name="quantity_received[]" class="form-control table-input" min="1" required>
+                    <input type="number" name="quantity_received[]" class="form-control table-input" min="0.01" step="0.01" required>
                 </td>
                 <td>
                     <button type="button" class="btn-action btn-delete">
