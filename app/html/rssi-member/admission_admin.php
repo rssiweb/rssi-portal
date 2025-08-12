@@ -1569,7 +1569,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 $historyQuery = "SELECT category_type, class, effective_from, effective_until, created_at, created_by 
                                            FROM student_category_history 
                                            WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
-                                           AND is_valid = true
+                                           AND (is_valid = true OR is_valid IS NULL)
                                            ORDER BY created_at DESC";
                                 $historyResult = pg_query($con, $historyQuery);
                                 $today = date('Y-m-d');
