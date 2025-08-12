@@ -37,26 +37,27 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // Array to track changed fields
     $changedFields = array();
-    
+
     // Get the form data and compare with original values
     $updates = array();
-    
+
     // Helper function to compare and track changes
-    function checkAndAddUpdate(&$updates, &$changedFields, $fieldName, $newValue, $originalValue, $isFile = false) {
+    function checkAndAddUpdate(&$updates, &$changedFields, $fieldName, $newValue, $originalValue, $isFile = false)
+    {
         if ($isFile) {
             // For files, we'll handle separately as they have different structure
             return;
         }
-        
+
         $newValue = trim($newValue);
         $originalValue = trim($originalValue ?? '');
-        
+
         if ($newValue != $originalValue) {
             $updates[] = "$fieldName=" . ($newValue !== '' ? "'$newValue'" : "NULL");
             $changedFields[] = $fieldName;
         }
     }
-    
+
     // Check each field for changes
     checkAndAddUpdate($updates, $changedFields, 'type_of_admission', $_POST['type_of_admission'], $currentStudentData['type_of_admission']);
     checkAndAddUpdate($updates, $changedFields, 'studentname', $_POST['student-name'], $currentStudentData['studentname']);
@@ -89,15 +90,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     checkAndAddUpdate($updates, $changedFields, 'scode', $_POST['scode'], $currentStudentData['scode']);
     checkAndAddUpdate($updates, $changedFields, 'payment_type', $_POST['payment_type'], $currentStudentData['payment_type']);
     checkAndAddUpdate($updates, $changedFields, 'caste', $_POST['caste'], $currentStudentData['caste']);
-    
-    // Handle effective_from_date separately
-    $original_doa = $currentStudentData['doa'] ?? date('Y-m-d');
-    $effective_from_date = !empty($_POST['effective_from_date']) ? date('Y-m-d', strtotime($_POST['effective_from_date'])) : date('Y-m-d');
-    
-    if (strtotime($effective_from_date) < strtotime($original_doa)) {
-        $effective_from_date = $original_doa;
-    }
-    
+
     if (!empty($_POST['effectivefrom'])) {
         $effective_from = $_POST['effectivefrom'];
         if ($effective_from != $currentStudentData['effectivefrom']) {
@@ -110,13 +103,13 @@ if (@$_POST['form-type'] == "admission_admin") {
             $changedFields[] = 'effectivefrom';
         }
     }
-    
+
     // Handle file uploads
     $timestamp = date('Y-m-d H:i:s');
     $student_photo = $_FILES['student-photo'] ?? null;
     $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
     $caste_document = $_FILES['caste-document'] ?? null;
-    
+
     // Check if new files were uploaded
     if (!empty($student_photo['name'])) {
         $filename = "photo_" . $student_id . "_" . $timestamp;
@@ -125,7 +118,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         $updates[] = "student_photo_raw='$doclink_student_photo'";
         $changedFields[] = 'student_photo';
     }
-    
+
     if (!empty($aadhar_card_upload['name'])) {
         $filename = "aadhar_" . $student_id . "_" . $timestamp;
         $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
@@ -133,7 +126,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         $updates[] = "upload_aadhar_card='$doclink_aadhar_card'";
         $changedFields[] = 'aadhar_card_upload';
     }
-    
+
     if (!empty($caste_document['name'])) {
         $filename = "caste_" . $student_id . "_" . $timestamp;
         $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
@@ -141,34 +134,62 @@ if (@$_POST['form-type'] == "admission_admin") {
         $updates[] = "caste_document='$doclink_caste_document'";
         $changedFields[] = 'caste_document';
     }
-    
+
+    // Handle effective_from_date separately
+    $original_doa = $currentStudentData['doa'] ?? date('Y-m-d');
+
+    // Only set effective_from_date if it was explicitly submitted
+    if (isset($_POST['effective_from_date']) && !empty($_POST['effective_from_date'])) {
+        $effective_from_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
+        if (strtotime($effective_from_date) < strtotime($original_doa)) {
+            $effective_from_date = $original_doa;
+        }
+        $date_changed = true;
+    } else {
+        // If no date was submitted, keep the existing one
+        $currentPlanQuery = "SELECT effective_from 
+                       FROM student_category_history 
+                       WHERE student_id = '$student_id'
+                       AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
+                       ORDER BY effective_from DESC, created_at DESC 
+                       LIMIT 1";
+        $currentResult = pg_query($con, $currentPlanQuery);
+        $currentRow = pg_fetch_assoc($currentResult);
+        $effective_from_date = $currentRow['effective_from'] ?? $original_doa;
+        $date_changed = false;
+    }
+
+    if ($date_changed) {
+        $changedFields[] = 'effective_from_date';
+    }
+
     // Always update these fields
-    $updates[] = "updated_by='".$_POST['updatedby']."'";
+    $updates[] = "updated_by='" . $_POST['updatedby'] . "'";
     $updates[] = "updated_on='$timestamp'";
-    
+
     // Only proceed with update if there are changes
-    if (!empty($updates)) {
+    if (!empty($updates) || $date_changed) {
         $field_string = implode(", ", $updates);
         $student_update = "UPDATE rssimyprofile_student SET $field_string WHERE student_id = '$student_id'";
         $resultt = pg_query($con, $student_update);
         $cmdtuples = pg_affected_rows($resultt);
-        
+
         // Check if type of admission or class changed
         $type_changed = in_array('type_of_admission', $changedFields);
         $class_changed = in_array('class', $changedFields);
-        
+
         // If type of admission or class changed, update the history table
-        if (($type_changed || $class_changed) && $cmdtuples > 0) {
+        if (($type_changed || $class_changed || $date_changed) && $cmdtuples > 0) {
             $type_of_admission = $_POST['type_of_admission'];
             $class = $_POST['class'];
             $updated_by = $_POST['updatedby'];
-            
-            // 4. For new admissions, ensure complete history from admission date
+
+            // 1. For new admissions, ensure complete history from admission date
             $checkInitialRecord = "SELECT 1 FROM student_category_history 
                 WHERE student_id = '$student_id' 
                 AND effective_from = DATE '$original_doa'";
             $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
-            
+
             if (!$initialRecordExists) {
                 $insertInitialHistory = "INSERT INTO student_category_history (
                       student_id, 
@@ -179,38 +200,38 @@ if (@$_POST['form-type'] == "admission_admin") {
                       class
                     ) VALUES (
                       '$student_id', 
-                      '".$currentStudentData['type_of_admission']."', 
+                      '" . $currentStudentData['type_of_admission'] . "', 
                       DATE '$original_doa', 
                       DATE '$effective_from_date' - INTERVAL '1 day',
                       '$updated_by',
-                      '".$currentStudentData['class']."'
+                      '" . $currentStudentData['class'] . "'
                     )";
                 pg_query($con, $insertInitialHistory);
             }
-            
-            // 0. First close ALL existing active records (where effective_until is NULL)
+
+            // 2. First close ALL existing active records (where effective_until is NULL)
             $closeAllActiveRecords = "UPDATE student_category_history 
                                 SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
                                 WHERE student_id = '$student_id'
                                 AND effective_until IS NULL";
             pg_query($con, $closeAllActiveRecords);
-            
-            // 1. Close any records that overlap with the new effective date
+
+            // 3. Close any records that overlap with the new effective date
             $closeHistoryQuery = "UPDATE student_category_history 
                             SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
                             WHERE student_id = '$student_id' 
                             AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
                             AND effective_from < DATE '$effective_from_date'";
             pg_query($con, $closeHistoryQuery);
-            
-            // 2. Adjust any future-dated records
+
+            // 4. Adjust any future-dated records
             $adjustFutureRecords = "UPDATE student_category_history 
-                              SET effective_from = DATE '$effective_from_date'
-                              WHERE student_id = '$student_id' 
-                              AND effective_from >= DATE '$effective_from_date'";
+                        SET is_valid = false
+                        WHERE student_id = '$student_id' 
+                        AND effective_from >= DATE '$effective_from_date'";
             pg_query($con, $adjustFutureRecords);
-            
-            // 3. Insert the new record
+
+            // 5. Insert the new record
             $insertHistoryQuery = "INSERT INTO student_category_history (
                                 student_id, 
                                 category_type, 
@@ -226,10 +247,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                               )";
             pg_query($con, $insertHistoryQuery);
         }
-        
+
         // Prepare JavaScript to show changed fields
-        if (!empty($changedFields)) {
-            $changedFieldsList = implode(", ", array_map(function($field) {
+        if (!empty($changedFields) || $date_changed) {
+            $changedFieldsList = implode(", ", array_map(function ($field) {
                 // Map database field names to more user-friendly names
                 $fieldNames = [
                     'type_of_admission' => 'Type of Admission',
@@ -266,12 +287,13 @@ if (@$_POST['form-type'] == "admission_admin") {
                     'caste' => 'Caste',
                     'student_photo' => 'Student Photo',
                     'aadhar_card_upload' => 'Aadhar Card Upload',
-                    'caste_document' => 'Caste Document'
+                    'caste_document' => 'Caste Document',
+                    'effective_from_date' => 'Effective From Date'
                 ];
-                
+
                 return $fieldNames[$field] ?? $field;
             }, $changedFields));
-            
+
             echo "<script>
                 alert('Student record updated successfully. Changed fields: $changedFieldsList');
                 window.location.href = 'admission_admin.php?student_id=$student_id';
@@ -1547,7 +1569,8 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 $historyQuery = "SELECT category_type, class, effective_from, effective_until, created_at, created_by 
                                            FROM student_category_history 
                                            WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
-                                           ORDER BY effective_from DESC, created_at DESC";
+                                           AND is_valid = true
+                                           ORDER BY created_at DESC";
                                 $historyResult = pg_query($con, $historyQuery);
                                 $today = date('Y-m-d');
 

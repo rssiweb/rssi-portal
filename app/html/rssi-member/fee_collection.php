@@ -16,6 +16,7 @@ function getStudentInfoForDate($con, $studentId, $targetDate)
     $query = "SELECT category_type, class 
               FROM student_category_history 
               WHERE student_id = $1 
+              AND is_valid = true
               AND (
                   (effective_from <= '$targetDate' AND (effective_until >= '$targetDate' OR effective_until IS NULL))
                   OR
