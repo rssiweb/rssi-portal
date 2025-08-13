@@ -869,22 +869,21 @@ if (!isLoggedIn("aid")) {
 
                 $.post('id_process_order.php', {
                         action: 'place_orders',
-                        batch_ids: selectedBatches,
+                        batch_ids: JSON.stringify(selectedBatches),
                         vendor_name: vendorName,
                         remarks: $('#admin-remarks').val()
                     }, function(response) {
                         if (response.success) {
-                            alert('Orders placed successfully');
-                            orderConfirmationModal.hide();
-                            loadOpenBatches();
-                            if (selectedBatches.includes(currentBatchId)) {
-                                loadBatchDetails(currentBatchId);
-                            }
-                            selectedBatches = [];
+                            // Show success message and reload after OK
+                            alert('Order placed successfully for Batch: ' + response.batch_id);
+                            location.reload();
                         } else {
-                            alert(response.message);
+                            alert('Error: ' + response.message);
                         }
                     }, 'json')
+                    .fail(function(xhr, status, error) {
+                        alert('Request failed: ' + error);
+                    })
                     .always(() => {
                         btn.prop('disabled', false);
                         spinner.addClass('d-none');

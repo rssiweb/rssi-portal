@@ -55,7 +55,8 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function handleCreateBatch() {
+function handleCreateBatch()
+{
     global $con, $associatenumber;
 
     // Validate required fields
@@ -97,7 +98,7 @@ function handleCreateBatch() {
     }
 
     $batch = pg_fetch_assoc($result);
-    
+
     echo json_encode([
         'success' => true,
         'batch_id' => $batch['batch_id'],
@@ -301,22 +302,38 @@ function handlePlaceOrders()
 {
     global $con, $associatenumber;
 
-    $required = ['batch_ids', 'vendor_name'];
-    foreach ($required as $field) {
-        if (empty($_POST[$field])) {
-            throw new Exception("Missing required field: $field");
-        }
-    }
-
-    $batch_ids = json_decode($_POST['batch_ids']);
-    if (!is_array($batch_ids) || empty($batch_ids)) {
-        throw new Exception('Invalid batch IDs');
-    }
-
-    // Begin transaction
-    pg_query($con, "BEGIN");
+    header('Content-Type: application/json'); // Ensure JSON response
 
     try {
+        // Validate required fields
+        $required = ['batch_ids', 'vendor_name'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("Missing required field: $field");
+            }
+        }
+
+        // Process batch IDs
+        $batch_ids = $_POST['batch_ids'];
+        if (is_string($batch_ids)) {
+            $batch_ids = json_decode($batch_ids, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('Invalid JSON format for batch IDs');
+            }
+        }
+
+        if (!is_array($batch_ids) || empty($batch_ids)) {
+            throw new Exception('Invalid batch IDs format');
+        }
+
+        // Convert to PostgreSQL text array format
+        $pg_array = '{' . implode(',', array_map(function ($id) use ($con) {
+            return '"' . pg_escape_string($con, $id) . '"';
+        }, $batch_ids)) . '}';
+
+        // Begin transaction
+        pg_query($con, "BEGIN");
+
         // Update batches
         $batchUpdate = pg_query_params(
             $con,
@@ -325,13 +342,13 @@ function handlePlaceOrders()
                  ordered_date = $1,
                  vendor_name = $2,
                  admin_remarks = $3
-             WHERE batch_id = ANY($4) AND status = 'Pending'
+             WHERE batch_id = ANY($4::text[]) AND status = 'Pending'
              RETURNING batch_id",
             [
                 date('Y-m-d H:i:s'),
                 $_POST['vendor_name'],
                 $_POST['admin_remarks'] ?? null,
-                $batch_ids
+                $pg_array
             ]
         );
 
@@ -343,9 +360,15 @@ function handlePlaceOrders()
         $orderUpdate = pg_query_params(
             $con,
             "UPDATE id_card_orders 
-             SET status = 'Ordered'
-             WHERE batch_id = ANY($1) AND status = 'Pending'",
-            [$batch_ids]
+             SET status = 'Ordered',
+                 order_placed_date = $2,
+                 processed_by = $3
+             WHERE batch_id = ANY($1::text[]) AND status = 'Pending'",
+            [
+                $pg_array,
+                date('Y-m-d H:i:s'),
+                $associatenumber
+            ]
         );
 
         if (!$orderUpdate) {
@@ -354,13 +377,22 @@ function handlePlaceOrders()
 
         pg_query($con, "COMMIT");
 
+        // After successful commit
+        $updatedBatch = pg_fetch_assoc($batchUpdate); // Get the single batch record
+
         echo json_encode([
             'success' => true,
-            'updated_batches' => pg_num_rows($batchUpdate)
+            'batch_id' => $updatedBatch['batch_id'], // Single batch ID
+            'message' => 'Order placed successfully for Batch: ' . $updatedBatch['batch_id']
         ]);
+        exit;
     } catch (Exception $e) {
         pg_query($con, "ROLLBACK");
-        throw $e;
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        exit;
     }
 }
 
@@ -491,7 +523,8 @@ function handleExportBatch()
     fclose($output);
     exit;
 }
-function handleGetOrderDetails() {
+function handleGetOrderDetails()
+{
     global $con;
 
     if (empty($_GET['id'])) {
