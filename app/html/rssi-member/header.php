@@ -580,6 +580,24 @@
       </li>
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#icom" data-bs-toggle="collapse" href="#">
+          <span>ID Card Order Management (ICOM)</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="icom" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="icom_manage_order" href="icom.php">
+              <span>Order Management</span>
+            </a>
+          </li>
+          <li>
+            <a id="icom_order_history" href="id_history.php">
+              <span>Order History</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
           <span>Work</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -590,7 +608,7 @@
             </a>
           </li>
           <li>
-            <a id="icom" href="id.php">
+            <a id="icom" href="icom.php">
               <span>ID Card Order Management (ICOM)</span>
             </a>
           </li>
@@ -722,7 +740,7 @@
         id: 'acadamis',
         linkId: 'examLink',
         url: 'exam.php'
-      },{
+      }, {
         id: 'alliance_portal',
         linkId: 'contact-directory',
         url: 'contact-directory.php'
@@ -858,13 +876,13 @@
         url: 'student.php'
       },
       {
-        id: 'work',
-        linkId: 'icom',
-        url: 'id.php'
+        id: 'icom',
+        linkId: 'icom_manage_order',
+        url: 'icom.php'
       },
       {
-        id: 'work',
-        linkId: 'icom',
+        id: 'icom',
+        linkId: 'icom_order_history',
         url: 'id_history.php'
       }, {
         id: 'work',
