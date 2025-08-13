@@ -537,9 +537,12 @@ if (!isLoggedIn("aid")) {
                                             <th>Photo</th>
                                             <th>ID</th>
                                             <th>Name</th>
+                                            <th>Status</th>
                                             <th>Type</th>
                                             <th>Payment</th>
                                             <th>Remarks</th>
+                                            <th>Last Issued</th>
+                                            <th>Times Issued</th>
                                             <th>Requested By</th>
                                             <th>Date</th>
                                             ${canEdit ? '<th>Actions</th>' : ''}
@@ -560,6 +563,7 @@ if (!isLoggedIn("aid")) {
                                         </td>
                                         <td>${item.student_id}</td>
                                         <td>${item.studentname}</td>
+                                        <td>${item.filterstatus}</td>
                                         <td>
                                             <span class="badge ${item.order_type === 'New' ? 'bg-primary' : 'bg-secondary'}">
                                                 ${item.order_type}
@@ -567,8 +571,10 @@ if (!isLoggedIn("aid")) {
                                         </td>
                                         <td>${item.payment_status || '-'}</td>
                                         <td>${item.remarks || '-'}</td>
+                                        <td>${item.last_issued ? new Date(item.last_issued).toLocaleDateString('en-GB') : '-'}</td>
+                                        <td>${item.times_issued || '-'}</td>
                                         <td>${item.order_placed_by_name}</td>
-                                        <td>${new Date(item.order_date).toLocaleDateString()}</td>
+                                        <td>${item.order_date ? new Date(item.order_date).toLocaleDateString('en-GB') : '-'}</td>
                                         ${canEdit ? `
                                         <td>
                                             <div class="btn-group btn-group-sm">

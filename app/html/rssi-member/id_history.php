@@ -10,6 +10,7 @@ if (!isLoggedIn("aid")) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,13 +21,32 @@ if (!isLoggedIn("aid")) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     <style>
-        .table-responsive { max-height: 600px; overflow-y: auto; }
-        .badge-ordered { background-color: #1cc88a; }
-        .badge-delivered { background-color: #4e73df; }
-        .badge-pending { background-color: #f6c23e; }
-        .student-photo { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .badge-ordered {
+            background-color: #1cc88a;
+        }
+
+        .badge-delivered {
+            background-color: #4e73df;
+        }
+
+        .badge-pending {
+            background-color: #f6c23e;
+        }
+
+        .student-photo {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
     </style>
 </head>
+
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
@@ -113,8 +133,12 @@ if (!isLoggedIn("aid")) {
     <script>
         $(document).ready(function() {
             // Initialize date pickers
-            flatpickr("#from-date", { defaultDate: new Date().setMonth(new Date().getMonth() - 1) });
-            flatpickr("#to-date", { defaultDate: new Date() });
+            flatpickr("#from-date", {
+                defaultDate: new Date().setMonth(new Date().getMonth() - 1)
+            });
+            flatpickr("#to-date", {
+                defaultDate: new Date()
+            });
 
             // Load initial data
             loadOrders();
@@ -125,72 +149,98 @@ if (!isLoggedIn("aid")) {
             });
 
             function loadOrders() {
-                const params = {
-                    from_date: $('#from-date').val(),
-                    to_date: $('#to-date').val(),
-                    status: $('#status-filter').val()
-                };
+    const params = {
+        from_date: $('#from-date').val(),
+        to_date: $('#to-date').val(),
+        status: $('#status-filter').val()
+    };
 
+    $('#orders-table tbody').html(`
+        <tr>
+            <td colspan="10" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </td>
+        </tr>
+    `);
+
+    $.ajax({
+        url: 'id_process_order.php',
+        type: 'GET',
+        dataType: 'json',
+        data: {
+            action: 'get_order_history',
+            ...params
+        },
+        success: function(response) {
+            $('#orders-table tbody').empty();
+
+            if (response.success && response.data && response.data.length > 0) {
+                response.data.forEach(order => {
+                    const statusClass = order.status === 'Ordered' ? 'badge-ordered' : 
+                                     order.status === 'Delivered' ? 'badge-delivered' : 'badge-pending';
+
+                    const row = `
+                        <tr>
+                            <td><code>${order.batch_id}</code></td>
+                            <td>
+                                <img src="${order.photourl || 'default_photo.jpg'}" class="student-photo me-2">
+                                ${order.studentname || 'N/A'} (${order.student_id || 'N/A'})
+                            </td>
+                            <td>${order.class || '-'}</td>
+                            <td>
+                                <span class="badge ${order.order_type === 'New' ? 'bg-primary' : 'bg-secondary'}">
+                                    ${order.order_type || '-'}
+                                </span>
+                            </td>
+                            <td><span class="badge ${statusClass}">${order.status || '-'}</span></td>
+                            <td>${order.payment_status || '-'}</td>
+                            <td>${order.order_placed_by_name || '-'}</td>
+                            <td>${order.order_date ? new Date(order.order_date).toLocaleDateString() : '-'}</td>
+                            <td>${order.vendor_name || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary view-order" data-id="${order.id}">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#orders-table tbody').append(row);
+                });
+            } else {
+                const message = response.message || 'No orders found';
                 $('#orders-table tbody').html(`
                     <tr>
-                        <td colspan="10" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
+                        <td colspan="10" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox"></i> ${message}
                         </td>
                     </tr>
                 `);
-
-                $.get('id_process_order.php', {
-                    action: 'get_order_history',
-                    ...params
-                }, function(response) {
-                    $('#orders-table tbody').empty();
-
-                    if (response.success && response.data.length > 0) {
-                        response.data.forEach(order => {
-                            const statusClass = order.status === 'Ordered' ? 'badge-ordered' : 
-                                             order.status === 'Delivered' ? 'badge-delivered' : 'badge-pending';
-
-                            const row = `
-                                <tr>
-                                    <td><code>${order.batch_id}</code></td>
-                                    <td>
-                                        <img src="${order.photourl || 'default_photo.jpg'}" class="student-photo me-2">
-                                        ${order.studentname} (${order.student_id})
-                                    </td>
-                                    <td>${order.class}</td>
-                                    <td>
-                                        <span class="badge ${order.order_type === 'New' ? 'bg-primary' : 'bg-secondary'}">
-                                            ${order.order_type}
-                                        </span>
-                                    </td>
-                                    <td><span class="badge ${statusClass}">${order.status}</span></td>
-                                    <td>${order.payment_status || '-'}</td>
-                                    <td>${order.order_placed_by_name}</td>
-                                    <td>${new Date(order.order_date).toLocaleDateString()}</td>
-                                    <td>${order.vendor_name || '-'}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary view-order" data-id="${order.id}">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                            $('#orders-table tbody').append(row);
-                        });
-                    } else {
-                        $('#orders-table tbody').html(`
-                            <tr>
-                                <td colspan="10" class="text-center py-4 text-muted">
-                                    <i class="bi bi-inbox"></i> No orders found
-                                </td>
-                            </tr>
-                        `);
-                    }
-                }, 'json');
             }
+        },
+        error: function(xhr, status, error) {
+            let errorMsg = 'Request failed';
+            try {
+                const response = JSON.parse(xhr.responseText);
+                errorMsg = response.message || error;
+            } catch (e) {
+                errorMsg = error;
+            }
+            
+            $('#orders-table tbody').html(`
+                <tr>
+                    <td colspan="10" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> ${errorMsg}
+                    </td>
+                </tr>
+            `);
+            console.error('Error:', xhr.responseText);
+        }
+    });
+}
         });
     </script>
 </body>
+
 </html>

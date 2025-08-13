@@ -42,6 +42,9 @@ try {
         case 'update_order':
             handleUpdateOrder();
             break;
+        case 'get_order_history':
+            getOrderHistory();
+            break;
         case 'export_batch':
             handleExportBatch();
             break;
@@ -181,7 +184,7 @@ function handleGetBatchDetails()
         "SELECT 
             o.*,
             COALESCE(s.studentname, m.fullname) AS studentname, s.class, COALESCE(s.photourl, m.photo) AS photourl,
-            u.fullname as order_placed_by_name,
+            u.fullname as order_placed_by_name,COALESCE(s.filterstatus, m.filterstatus) AS filterstatus,
             (SELECT COUNT(*) FROM id_card_orders 
                     WHERE student_id = o.student_id AND status = 'Delivered') AS times_issued,
                    (SELECT MAX(order_date) FROM id_card_orders 
@@ -550,4 +553,89 @@ function handleGetOrderDetails()
         'success' => true,
         'data' => pg_fetch_assoc($result)
     ]);
+}
+function getOrderHistory() {
+    global $con;
+    
+    // Set JSON header first
+    header('Content-Type: application/json');
+    
+    try {
+        $params = [
+            'from_date' => $_GET['from_date'] ?? null,
+            'to_date' => $_GET['to_date'] ?? null,
+            'status' => $_GET['status'] ?? null
+        ];
+        
+        $query = "SELECT 
+                    o.id, o.batch_id, o.student_id, o.order_type, 
+                    o.status, o.payment_status, o.order_date,
+                    o.order_placed_by, o.remarks,
+                    COALESCE(s.studentname, m.fullname) AS studentname, s.class, COALESCE(s.photourl, m.photo) AS photourl,
+                    u.fullname as order_placed_by_name,
+                    b.vendor_name, b.admin_remarks
+                  FROM id_card_orders o
+                  LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
+                  LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
+                  JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
+                  LEFT JOIN id_card_batches b ON o.batch_id = b.batch_id
+                  WHERE 1=1";
+        
+        $conditions = [];
+        $queryParams = [];
+        $paramCount = 1;
+        
+        // Date range filter
+        if ($params['from_date'] && $params['to_date']) {
+            $conditions[] = "o.order_date BETWEEN $" . $paramCount++ . " AND $" . $paramCount++;
+            $queryParams[] = $params['from_date'];
+            $queryParams[] = $params['to_date'];
+        }
+        
+        // Status filter
+        if ($params['status']) {
+            $conditions[] = "o.status = $" . $paramCount++;
+            $queryParams[] = $params['status'];
+        }
+        
+        if (!empty($conditions)) {
+            $query .= " AND " . implode(" AND ", $conditions);
+        }
+        
+        $query .= " ORDER BY o.order_date DESC, s.class, s.studentname";
+        
+        $result = pg_query_params($con, $query, $queryParams);
+        
+        if (!$result) {
+            throw new Exception('Database error: ' . pg_last_error($con));
+        }
+        
+        $data = [];
+        while ($row = pg_fetch_assoc($result)) {
+            $data[] = $row;
+        }
+        
+        // Only clean buffer if there is one
+        if (ob_get_length() > 0) {
+            ob_clean();
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'data' => $data
+        ]);
+        exit;
+        
+    } catch (Exception $e) {
+        // Only clean buffer if there is one
+        if (ob_get_length() > 0) {
+            ob_clean();
+        }
+        
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        exit;
+    }
 }
