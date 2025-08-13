@@ -51,6 +51,16 @@ try {
         case 'get_order_details':
             handleGetOrderDetails();
             break;
+        case 'mark_batch_delivered':
+            markBatchDelivered();
+            break;
+
+        case 'mark_order_delivered':
+            markOrderDelivered();
+            break;
+        case 'get_batch_status':
+            getBatchStatus();
+            break;
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
     }
@@ -554,19 +564,20 @@ function handleGetOrderDetails()
         'data' => pg_fetch_assoc($result)
     ]);
 }
-function getOrderHistory() {
+function getOrderHistory()
+{
     global $con;
-    
+
     // Set JSON header first
     header('Content-Type: application/json');
-    
+
     try {
         $params = [
             'from_date' => $_GET['from_date'] ?? null,
             'to_date' => $_GET['to_date'] ?? null,
             'status' => $_GET['status'] ?? null
         ];
-        
+
         $query = "SELECT 
                     o.id, o.batch_id, o.student_id, o.order_type, 
                     o.status, o.payment_status, o.order_date,
@@ -580,62 +591,248 @@ function getOrderHistory() {
                   JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
                   LEFT JOIN id_card_batches b ON o.batch_id = b.batch_id
                   WHERE 1=1";
-        
+
         $conditions = [];
         $queryParams = [];
         $paramCount = 1;
-        
+
         // Date range filter
         if ($params['from_date'] && $params['to_date']) {
             $conditions[] = "o.order_date BETWEEN $" . $paramCount++ . " AND $" . $paramCount++;
             $queryParams[] = $params['from_date'];
             $queryParams[] = $params['to_date'];
         }
-        
+
         // Status filter
         if ($params['status']) {
             $conditions[] = "o.status = $" . $paramCount++;
             $queryParams[] = $params['status'];
         }
-        
+
         if (!empty($conditions)) {
             $query .= " AND " . implode(" AND ", $conditions);
         }
-        
+
         $query .= " ORDER BY o.order_date DESC, s.class, s.studentname";
-        
+
         $result = pg_query_params($con, $query, $queryParams);
-        
+
         if (!$result) {
             throw new Exception('Database error: ' . pg_last_error($con));
         }
-        
+
         $data = [];
         while ($row = pg_fetch_assoc($result)) {
             $data[] = $row;
         }
-        
+
         // Only clean buffer if there is one
         if (ob_get_length() > 0) {
             ob_clean();
         }
-        
+
         echo json_encode([
             'success' => true,
             'data' => $data
         ]);
         exit;
-        
     } catch (Exception $e) {
         // Only clean buffer if there is one
         if (ob_get_length() > 0) {
             ob_clean();
         }
-        
+
         echo json_encode([
             'success' => false,
             'message' => $e->getMessage()
         ]);
         exit;
+    }
+}
+
+// Add these new functions
+function markBatchDelivered()
+{
+    global $con, $associatenumber;
+
+    header('Content-Type: application/json');
+
+    try {
+        $required = ['batch_id'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("Missing required field: $field");
+            }
+        }
+
+        $batch_id = $_POST['batch_id'];
+        $remarks = $_POST['remarks'] ?? null;
+
+        // Begin transaction
+        pg_query($con, "BEGIN");
+
+        // 1. Update the batch status
+        $batchUpdate = pg_query_params(
+            $con,
+            "UPDATE id_card_batches 
+             SET status = 'Delivered'
+             WHERE batch_id = $1 AND status = 'Ordered'
+             RETURNING batch_id",
+            [$batch_id]
+        );
+
+        if (!$batchUpdate || pg_num_rows($batchUpdate) === 0) {
+            throw new Exception('Batch not found or not in Ordered status');
+        }
+
+        // 2. Update all orders in this batch
+        $ordersUpdate = pg_query_params(
+            $con,
+            "UPDATE id_card_orders
+             SET status = 'Delivered',
+                 delivered_date = $1,
+                 delivered_by = $2,
+                 delivered_remarks = $3
+             WHERE batch_id = $4 AND status = 'Ordered'",
+            [date('Y-m-d H:i:s'), $associatenumber, $remarks, $batch_id]
+        );
+
+        if (!$ordersUpdate) {
+            throw new Exception('Failed to update orders: ' . pg_last_error($con));
+        }
+
+        pg_query($con, "COMMIT");
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Batch marked as delivered successfully'
+        ]);
+    } catch (Exception $e) {
+        pg_query($con, "ROLLBACK");
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+}
+
+function markOrderDelivered()
+{
+    global $con, $associatenumber;
+
+    header('Content-Type: application/json');
+
+    try {
+        $required = ['order_id'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("Missing required field: $field");
+            }
+        }
+
+        $order_id = $_POST['order_id'];
+        $remarks = $_POST['remarks'] ?? null;
+
+        // Begin transaction
+        pg_query($con, "BEGIN");
+
+        // 1. Update the single order
+        $orderUpdate = pg_query_params(
+            $con,
+            "UPDATE id_card_orders
+             SET status = 'Delivered',
+                 delivered_date = $1,
+                 delivered_by = $2,
+                 delivered_remarks = $3
+             WHERE id = $4 AND status = 'Ordered'
+             RETURNING batch_id",
+            [date('Y-m-d H:i:s'), $associatenumber, $remarks, $order_id]
+        );
+
+        if (!$orderUpdate || pg_num_rows($orderUpdate) === 0) {
+            throw new Exception('Order not found or not in Ordered status');
+        }
+
+        $row = pg_fetch_assoc($orderUpdate);
+        $batch_id = $row['batch_id'];
+
+        // 2. Check if all orders in batch are now delivered
+        $check = pg_query_params(
+            $con,
+            "SELECT COUNT(*) as pending_count 
+             FROM id_card_orders 
+             WHERE batch_id = $1 AND status != 'Delivered'",
+            [$batch_id]
+        );
+
+        $pending = pg_fetch_assoc($check)['pending_count'];
+
+        // 3. If no pending orders, update batch status
+        if ($pending == 0) {
+            pg_query_params(
+                $con,
+                "UPDATE id_card_batches
+                 SET status = 'Delivered'
+                 WHERE batch_id = $1 AND status = 'Ordered'",
+                [$batch_id]
+            );
+        }
+
+        pg_query($con, "COMMIT");
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order marked as delivered successfully'
+        ]);
+    } catch (Exception $e) {
+        pg_query($con, "ROLLBACK");
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+}
+// Add this new function
+function getBatchStatus()
+{
+    global $con;
+
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_GET['batch_id'])) {
+            throw new Exception("Missing batch_id parameter");
+        }
+
+        $batch_id = $_GET['batch_id'];
+
+        // Check ordered items
+        $ordered = pg_query_params(
+            $con,
+            "SELECT COUNT(*) as count FROM id_card_orders 
+             WHERE batch_id = $1 AND status = 'Ordered'",
+            [$batch_id]
+        );
+        $hasOrdered = pg_fetch_assoc($ordered)['count'] > 0;
+
+        // Check if all delivered
+        $delivered = pg_query_params(
+            $con,
+            "SELECT COUNT(*) as count FROM id_card_orders 
+             WHERE batch_id = $1 AND status != 'Delivered'",
+            [$batch_id]
+        );
+        $allDelivered = pg_fetch_assoc($delivered)['count'] == 0;
+
+        echo json_encode([
+            'success' => true,
+            'hasOrdered' => $hasOrdered,
+            'allDelivered' => $allDelivered
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
 }
