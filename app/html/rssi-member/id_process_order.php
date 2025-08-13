@@ -501,9 +501,10 @@ function handleGetOrderDetails() {
     $result = pg_query_params(
         $con,
         "SELECT o.id, o.order_type, o.payment_status, o.remarks, 
-                s.studentname, s.student_id
+                COALESCE(s.studentname, m.fullname) AS studentname, COALESCE(s.student_id, m.associatenumber) AS student_id
          FROM id_card_orders o
-         JOIN rssimyprofile_student s ON o.student_id = s.student_id
+         LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
+         LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber
          WHERE o.id = $1",
         [$_GET['id']]
     );
