@@ -651,18 +651,81 @@ if (!isLoggedIn("aid")) {
                                     }, 'json');
                                 }
                             });
+
+                            // Top of your script (with other modal declarations)
+                            const editOrderModal = new bootstrap.Modal('#editOrderModal');
+                            let currentEditOrderId = null; // Track currently edited order
+
+                            // Ensure handler is only bound once
+                            $(document).off('click', '.edit-order-btn').on('click', '.edit-order-btn', function() {
+                                const orderId = $(this).data('id');
+                                const btn = $(this);
+                                const row = btn.closest('tr');
+
+                                btn.html('<span class="spinner-border spinner-border-sm"></span>')
+                                    .prop('disabled', true);
+
+                                $.get('id_process_order.php', {
+                                        action: 'get_order_details',
+                                        id: orderId
+                                    })
+                                    .done(function(response) {
+                                        if (response.success) {
+                                            currentEditOrderId = orderId;
+                                            $('#edit-student-name').text(row.find('td:eq(2)').text());
+                                            $('#edit-student-id').text(row.find('td:eq(1)').text());
+                                            $('#edit-order-id').val(orderId);
+                                            $('#edit-order-type').val(response.data.order_type);
+                                            $('#edit-payment-status').val(response.data.payment_status || '');
+                                            $('#edit-remarks').val(response.data.remarks || '');
+
+                                            editOrderModal.show();
+                                        } else {
+                                            alert(response.message);
+                                        }
+                                    })
+                                    .always(function() {
+                                        btn.html('<i class="bi bi-pencil"></i>').prop('disabled', false);
+                                    });
+                            });
+
+                            // Save handler — only bound once
+                            $(document).off('click', '#save-order-changes').on('click', '#save-order-changes', function() {
+                                const btn = $(this);
+                                btn.prop('disabled', true);
+                                $('#save-spinner').removeClass('d-none');
+
+                                $.post('id_process_order.php', {
+                                        action: 'update_order',
+                                        id: $('#edit-order-id').val(),
+                                        order_type: $('#edit-order-type').val(),
+                                        payment_status: $('#edit-payment-status').val(),
+                                        remarks: $('#edit-remarks').val()
+                                    })
+                                    .done(function(response) {
+                                        if (response.success) {
+                                            editOrderModal.hide();
+                                            loadBatchDetails(currentBatchId);
+                                            loadOpenBatches();
+                                        } else {
+                                            alert(response.message);
+                                        }
+                                    })
+                                    .always(function() {
+                                        btn.prop('disabled', false);
+                                        $('#save-spinner').addClass('d-none');
+                                    });
+                            });
+
+                            // Cleanup form on modal hide
+                            $('#editOrderModal').on('hidden.bs.modal', function() {
+                                $(this).find('form')[0].reset();
+                                currentEditOrderId = null;
+                            });
                         }
 
                         if (isAdmin) {
-                            $('.batch-checkbox').change(function() {
-                                const batchId = $(this).val();
-                                if ($(this).is(':checked')) {
-                                    selectedBatches.push(batchId);
-                                } else {
-                                    selectedBatches = selectedBatches.filter(id => id !== batchId);
-                                }
-                            });
-
+                            // Place order button click
                             $('#place-order-btn').click(function() {
                                 selectedBatches = [$(this).data('batch-id')];
                                 orderConfirmationModal.show();
@@ -836,75 +899,6 @@ if (!isLoggedIn("aid")) {
 
             // Initial load
             loadOpenBatches();
-        });
-    </script>
-    <script>
-        const editOrderModal = new bootstrap.Modal('#editOrderModal');
-        $(document).on('click', '.edit-order-btn', function() {
-            const orderId = $(this).data('id');
-            const btn = $(this);
-            const row = $(this).closest('tr'); // Get the table row
-
-            // Get student info from the row
-            const studentName = row.find('td:eq(2)').text(); // 3rd column (Name)
-            const studentId = row.find('td:eq(1)').text(); // 2nd column (ID)
-
-            // Show loading state
-            btn.html('<span class="spinner-border spinner-border-sm"></span>');
-            btn.prop('disabled', true);
-
-            // Fetch order details
-            $.get('id_process_order.php', {
-                    action: 'get_order_details',
-                    id: orderId
-                }, function(response) {
-                    if (response.success) {
-                        // Populate student info
-                        $('#edit-student-name').text(studentName);
-                        $('#edit-student-id').text(studentId);
-                        // Populate the modal
-                        $('#edit-order-id').val(response.data.id);
-                        $('#edit-order-type').val(response.data.order_type);
-                        $('#edit-payment-status').val(response.data.payment_status || '');
-                        $('#edit-remarks').val(response.data.remarks || '');
-
-                        editOrderModal.show();
-                    } else {
-                        alert(response.message);
-                    }
-                }, 'json')
-                .always(() => {
-                    btn.html('<i class="bi bi-pencil"></i>');
-                    btn.prop('disabled', false);
-                });
-
-            // Save changes handler
-            $('#save-order-changes').click(function() {
-                const btn = $(this);
-                const spinner = $('#save-spinner');
-                btn.prop('disabled', true);
-                spinner.removeClass('d-none');
-
-                $.post('id_process_order.php', {
-                        action: 'update_order',
-                        id: $('#edit-order-id').val(),
-                        order_type: $('#edit-order-type').val(),
-                        payment_status: $('#edit-payment-status').val(),
-                        remarks: $('#edit-remarks').val()
-                    }, function(response) {
-                        if (response.success) {
-                            editOrderModal.hide();
-                            // Refresh the batch details after successful save
-                            loadBatchDetails(currentBatchId);
-                        } else {
-                            alert(response.message);
-                        }
-                    }, 'json')
-                    .always(() => {
-                        btn.prop('disabled', false);
-                        spinner.addClass('d-none');
-                    });
-            });
         });
     </script>
 </body>
