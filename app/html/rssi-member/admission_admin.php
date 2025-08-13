@@ -1431,32 +1431,45 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var form = document.getElementById('admission_admin'); // select form by ID
-            var btn1 = document.getElementById('lockButton');
+            // Get the form reliably (fallback to the button's parent form if ID changes)
+            const lockBtn = document.getElementById('lockButton');
+            const form = document.getElementById('admission_admin') || lockBtn.closest('form');
 
-            btn1.addEventListener('click', lockForm);
+            // Buttons to never disable inside the form
+            const EXCLUDE = 'button[data-bs-target="#planHistoryModal"], #lockButton';
 
-            function lockForm() {
-                if (form.classList.toggle('locked')) {
-                    // Form is now locked
-                    btn1.textContent = 'Unlock Form';
-                    [].slice.call(form.elements).forEach(function(item) {
-                        item.disabled = true;
-                    });
-                } else {
-                    // Form is now unlocked
-                    btn1.textContent = 'Form Unlocked';
-                    [].slice.call(form.elements).forEach(function(item) {
-                        item.disabled = false;
-                        btn1.disabled = true; // Disable the button
-                    });
-                }
+            function setLocked(locked) {
+                // Disable everything except the excluded buttons
+                const toToggle = form.querySelectorAll(
+                    `input, select, textarea, button:not(${EXCLUDE})`
+                );
+                toToggle.forEach(el => {
+                    el.disabled = locked;
+                });
+
+                // Make absolutely sure the excluded buttons stay enabled
+                form.querySelectorAll(EXCLUDE).forEach(el => {
+                    el.disabled = false;
+                    el.classList.remove('disabled');
+                    el.setAttribute('aria-disabled', 'false');
+                });
+
+                // Update state/text
+                form.classList.toggle('locked', locked);
+                lockBtn.textContent = locked ? 'Unlock Form' : 'Lock Form';
             }
 
-            // Lock the form when the page is loaded
-            lockForm();
+            // Toggle on click
+            lockBtn.addEventListener('click', function() {
+                const nowLocked = !form.classList.contains('locked');
+                setLocked(nowLocked);
+            });
+
+            // Start locked on load
+            setLocked(true);
         });
     </script>
+
     <script>
         window.onload = function() {
             var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
