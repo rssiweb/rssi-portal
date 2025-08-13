@@ -149,6 +149,48 @@ if (!isLoggedIn("aid")) {
                 </div>
             </div>
         </div>
+        <!-- View Details Modal -->
+        <div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Order Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="order-details-content">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revert to Pending Modal -->
+        <div class="modal fade" id="revertPendingModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Revert to Pending</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" id="revert-remarks" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" id="confirm-revert">
+                            <span class="spinner-border spinner-border-sm d-none" id="revert-spinner"></span>
+                            Confirm Revert
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -267,22 +309,38 @@ if (!isLoggedIn("aid")) {
                                     <td>${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</td>
                                     <td>${order.vendor_name || '-'}</td>
                                     <td>
-                                    ${order.status === 'Ordered' ? `
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-link text-secondary dropdown-toggle" 
                                                     type="button" data-bs-toggle="dropdown">
-                                                <i class="bi bi-three-dots"></i>
+                                                    <i class="bi bi-three-dots"></i>
                                             </button>
-                                            
                                             <ul class="dropdown-menu dropdown-menu-end">
+                                                <!-- View Details Option -->
+                                                <li>
+                                                    <button class="dropdown-item view-details" data-id="${order.id}">
+                                                        <i class="bi bi-eye me-2"></i> View Details
+                                                    </button>
+                                                </li>
+                                                
+                                                ${order.status === 'Ordered' ? `
+                                                <!-- Mark Delivered Option -->
                                                 <li>
                                                     <button class="dropdown-item mark-single-delivered" data-id="${order.id}">
                                                         <i class="bi bi-check-circle me-2"></i> Mark Delivered
                                                     </button>
                                                 </li>
+                                                ` : ''}
+                                                
+                                                ${order.status === 'Delivered' ? `
+                                                <!-- Revert to Pending Option -->
+                                                <li>
+                                                    <button class="dropdown-item mark-as-pending" data-id="${order.id}">
+                                                        <i class="bi bi-arrow-counterclockwise me-2"></i> Revert to Pending
+                                                    </button>
+                                                </li>
+                                                ` : ''}
                                             </ul>
                                         </div>
-                                        ` : ''}
                                     </td>
                                 </tr>
                             `;
@@ -391,6 +449,111 @@ if (!isLoggedIn("aid")) {
                     }
                 }, 'json');
             }
+        });
+    </script>
+    <script>
+        // Initialize modals
+        const viewDetailsModal = new bootstrap.Modal('#viewDetailsModal');
+        const revertPendingModal = new bootstrap.Modal('#revertPendingModal');
+        let currentOrderId = null;
+
+        // View Details Handler
+        $(document).on('click', '.view-details', function() {
+            const orderId = $(this).data('id');
+
+            $.get('id_process_order.php', {
+                action: 'get_order_details_history',
+                id: orderId
+            }, function(response) {
+                if (response.success) {
+                    const order = response.data;
+                    let statusBadge = '';
+                    if (order.status === 'Ordered') {
+                        statusBadge = 'bg-warning';
+                    } else if (order.status === 'Delivered') {
+                        statusBadge = 'bg-success';
+                    } else if (order.status === 'Pending') {
+                        statusBadge = 'bg-secondary';
+                    }
+
+                    const content = `
+                <div class="mb-3">
+                    <h6>Order Information</h6>
+                    <p><strong>${order.studentname || 'N/A'} (${order.student_id || 'N/A'})</strong></p>
+                    <p><strong>Batch ID:</strong> ${order.batch_id || '-'}</p>
+                    <p><strong>Status:</strong> <span class="badge ${statusBadge}">${order.status || '-'}</span></p>
+                    <p><strong>Order Date:</strong> ${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</p>
+                    <p><strong>Requested By:</strong> ${order.order_placed_by_name || order.order_placed_by || '-'}</p>
+                    <p><strong>Type:</strong> ${order.order_type || '-'}</p>
+                    <p><strong>Payment Status:</strong> ${order.payment_status || '-'}</p>
+                    <p><strong>Remarks:</strong> ${order.remarks || '-'}</p>
+                    <p><strong>Order Placed with Vendor:</strong> ${order.ordered_date ? new Date(order.ordered_date).toLocaleString('en-GB') : '-'}</p>
+                </div>
+                
+                ${order.status === 'Delivered' ? `
+                <div class="mb-3">
+                    <h6>Delivery Information</h6>
+                    <p><strong>Delivered Date:</strong> ${order.delivered_date ? new Date(order.delivered_date).toLocaleDateString('en-GB') : '-'}</p>
+                    <p><strong>Received By:</strong> ${order.delivered_by_name || order.delivered_by || '-'}</p>
+                    <p><strong>Delivery Remarks:</strong> ${order.delivered_remarks || '-'}</p>
+                </div>
+                ` : ''}
+                
+                ${order.status === 'Ordered' && (order.pending_remarks || order.updated_by) ? `
+                <div class="mb-3">
+                    <h6>Pending Status Information</h6>
+                    ${order.pending_remarks ? `<p><strong>Pending Remarks:</strong> ${order.pending_remarks}</p>` : ''}
+                    ${order.updated_by_name ? `<p><strong>Updated By:</strong> ${order.updated_by_name}</p>` : ''}
+                    ${order.updated_at ? `<p><strong>Updated At:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
+                </div>
+                ` : ''}
+                
+                <div class="mb-3">
+                    <h6>System Information</h6>
+                    ${order.created_at ? `<p><strong>Created At:</strong> ${new Date(order.created_at).toLocaleString('en-GB')}</p>` : ''}
+                    ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
+                </div>
+            `;
+
+                    $('#order-details-content').html(content);
+                    viewDetailsModal.show();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to load order details'));
+                }
+            }, 'json');
+        });
+        // Revert to Pending Handler
+        $(document).on('click', '.mark-as-pending', function() {
+            currentOrderId = $(this).data('id');
+            $('#revert-remarks').val('');
+            revertPendingModal.show();
+        });
+
+        // Confirm Revert Handler
+        $('#confirm-revert').click(function() {
+            const btn = $(this);
+            const spinner = $('#revert-spinner');
+            const remarks = $('#revert-remarks').val();
+
+            btn.prop('disabled', true);
+            spinner.removeClass('d-none');
+
+            $.post('id_process_order.php', {
+                action: 'revert_to_pending',
+                order_id: currentOrderId,
+                remarks: remarks
+            }, function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    revertPendingModal.hide();
+                    loadOrders(); // Refresh the table
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            }, 'json').always(() => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+            });
         });
     </script>
 
