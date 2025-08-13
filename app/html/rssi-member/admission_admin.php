@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 include("../../util/email.php");
 include("../../util/drive.php");
@@ -13,8 +12,47 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-?>
-<?php
+
+// Define field names mapping at the beginning
+$fieldNames = [
+    'type_of_admission' => 'Type of Admission',
+    'studentname' => 'Student Name',
+    'dateofbirth' => 'Date of Birth',
+    'gender' => 'Gender',
+    'aadhar_available' => 'Aadhar Available',
+    'studentaadhar' => 'Aadhar Number',
+    'guardiansname' => 'Guardian Name',
+    'relationwithstudent' => 'Relation with Student',
+    'guardianaadhar' => 'Guardian Aadhar',
+    'stateofdomicile' => 'State of Domicile',
+    'postaladdress' => 'Postal Address',
+    'permanentaddress' => 'Permanent Address',
+    'contact' => 'Telephone Number',
+    'emailaddress' => 'Email Address',
+    'preferredbranch' => 'Preferred Branch',
+    'class' => 'Class',
+    'schooladmissionrequired' => 'School Admission Required',
+    'nameoftheschool' => 'School Name',
+    'nameoftheboard' => 'Board Name',
+    'medium' => 'Medium',
+    'familymonthlyincome' => 'Family Monthly Income',
+    'totalnumberoffamilymembers' => 'Total Family Members',
+    'nameofthesubjects' => 'Subjects',
+    'module' => 'Module',
+    'category' => 'Category',
+    'photourl' => 'Photo URL',
+    'filterstatus' => 'Status',
+    'remarks' => 'Remarks',
+    'effectivefrom' => 'Effective From',
+    'scode' => 'Scode',
+    'payment_type' => 'Payment Type',
+    'caste' => 'Caste',
+    'student_photo' => 'Student Photo',
+    'aadhar_card_upload' => 'Aadhar Card Upload',
+    'caste_document' => 'Caste Document',
+    'effective_from_date' => 'Effective From Date'
+];
+
 // Retrieve student ID from form input
 @$student_id = trim($_GET['student_id']);
 
@@ -26,8 +64,7 @@ if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
-?>
-<?php
+
 if (@$_POST['form-type'] == "admission_admin") {
     // First, fetch the current student data including DOA
     $student_id = $_POST['student-id'];
@@ -37,15 +74,12 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     // Array to track changed fields
     $changedFields = array();
-
-    // Get the form data and compare with original values
     $updates = array();
 
     // Helper function to compare and track changes
     function checkAndAddUpdate(&$updates, &$changedFields, $fieldName, $newValue, $originalValue, $isFile = false)
     {
         if ($isFile) {
-            // For files, we'll handle separately as they have different structure
             return;
         }
 
@@ -139,31 +173,25 @@ if (@$_POST['form-type'] == "admission_admin") {
     $original_doa = $currentStudentData['doa'] ?? date('Y-m-d');
 
     // Get current effective date first
-    $currentPlanQuery = "SELECT effective_from 
-                   FROM student_category_history 
-                   WHERE student_id = '$student_id'
-                   AND is_valid = true
-                   AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
-                   ORDER BY effective_from DESC, created_at DESC 
-                   LIMIT 1";
+    $currentPlanQuery = "SELECT effective_from FROM student_category_history 
+                       WHERE student_id = '$student_id'
+                       AND is_valid = true
+                       AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
+                       ORDER BY effective_from DESC, created_at DESC 
+                       LIMIT 1";
     $currentResult = pg_query($con, $currentPlanQuery);
     $currentRow = pg_fetch_assoc($currentResult);
     $current_effective_from_date = $currentRow['effective_from'] ?? $original_doa;
 
-    // Only process if date was explicitly submitted
+    // Process effective_from_date
     if (isset($_POST['effective_from_date']) && !empty($_POST['effective_from_date'])) {
         $submitted_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
-
-        // Ensure date isn't before original DOA
         if (strtotime($submitted_date) < strtotime($original_doa)) {
             $submitted_date = $original_doa;
         }
-
-        // Only set as changed if different from current
         $date_changed = ($submitted_date != $current_effective_from_date);
         $effective_from_date = $submitted_date;
     } else {
-        // No date submitted - keep current date
         $effective_from_date = $current_effective_from_date;
         $date_changed = false;
     }
@@ -192,6 +220,43 @@ if (@$_POST['form-type'] == "admission_admin") {
             $type_of_admission = $_POST['type_of_admission'];
             $class = $_POST['class'];
             $updated_by = $_POST['updatedby'];
+
+            // Check for existing plans
+            $checkExistingPlan = "SELECT 1 FROM student_category_history 
+                                WHERE student_id = '$student_id'
+                                AND category_type = '$type_of_admission'
+                                AND class = '$class'
+                                AND effective_from = DATE '$effective_from_date'";
+            $planExists = pg_num_rows(pg_query($con, $checkExistingPlan)) > 0;
+
+            $checkCoveredPlan = "SELECT 1 FROM student_category_history 
+                               WHERE student_id = '$student_id'
+                               AND category_type = '$type_of_admission'
+                               AND class = '$class'
+                               AND effective_from <= DATE '$effective_from_date'
+                               AND (effective_until >= DATE '$effective_from_date' OR effective_until IS NULL)";
+            $planCovered = pg_num_rows(pg_query($con, $checkCoveredPlan)) > 0;
+
+            if ($planExists || $planCovered) {
+                $nonPlanChanges = array_diff($changedFields, ['type_of_admission', 'class', 'effective_from_date']);
+
+                if (!empty($nonPlanChanges)) {
+                    $changedFieldsList = implode(", ", array_map(function ($field) use ($fieldNames) {
+                        return $fieldNames[$field] ?? $field;
+                    }, $nonPlanChanges));
+
+                    echo "<script>
+                        alert('Student details updated successfully. Changed fields: $changedFieldsList\\n\\nNote: Plan change was not processed as this plan already exists for the selected period.');
+                        window.location.href = 'admission_admin.php?student_id=$student_id';
+                    </script>";
+                } else {
+                    echo "<script>
+                        alert('No changes processed. This plan already exists for the selected period.');
+                        window.location.href = 'admission_admin.php?student_id=$student_id';
+                    </script>";
+                }
+                exit;
+            }
 
             // 1. For new admissions, ensure complete history from admission date
             $checkInitialRecord = "SELECT 1 FROM student_category_history 
@@ -257,62 +322,15 @@ if (@$_POST['form-type'] == "admission_admin") {
             pg_query($con, $insertHistoryQuery);
         }
 
-        // Prepare JavaScript to show changed fields
-        if (!empty($changedFields) || $date_changed) {
-            $changedFieldsList = implode(", ", array_map(function ($field) {
-                // Map database field names to more user-friendly names
-                $fieldNames = [
-                    'type_of_admission' => 'Type of Admission',
-                    'studentname' => 'Student Name',
-                    'dateofbirth' => 'Date of Birth',
-                    'gender' => 'Gender',
-                    'aadhar_available' => 'Aadhar Available',
-                    'studentaadhar' => 'Aadhar Number',
-                    'guardiansname' => 'Guardian Name',
-                    'relationwithstudent' => 'Relation with Student',
-                    'guardianaadhar' => 'Guardian Aadhar',
-                    'stateofdomicile' => 'State of Domicile',
-                    'postaladdress' => 'Postal Address',
-                    'permanentaddress' => 'Permanent Address',
-                    'contact' => 'Telephone Number',
-                    'emailaddress' => 'Email Address',
-                    'preferredbranch' => 'Preferred Branch',
-                    'class' => 'Class',
-                    'schooladmissionrequired' => 'School Admission Required',
-                    'nameoftheschool' => 'School Name',
-                    'nameoftheboard' => 'Board Name',
-                    'medium' => 'Medium',
-                    'familymonthlyincome' => 'Family Monthly Income',
-                    'totalnumberoffamilymembers' => 'Total Family Members',
-                    'nameofthesubjects' => 'Subjects',
-                    'module' => 'Module',
-                    'category' => 'Category',
-                    'photourl' => 'Photo URL',
-                    'filterstatus' => 'Status',
-                    'remarks' => 'Remarks',
-                    'effectivefrom' => 'Effective From',
-                    'scode' => 'Scode',
-                    'payment_type' => 'Payment Type',
-                    'caste' => 'Caste',
-                    'student_photo' => 'Student Photo',
-                    'aadhar_card_upload' => 'Aadhar Card Upload',
-                    'caste_document' => 'Caste Document',
-                    'effective_from_date' => 'Effective From Date'
-                ];
+        // Prepare success message
+        $changedFieldsList = implode(", ", array_map(function ($field) use ($fieldNames) {
+            return $fieldNames[$field] ?? $field;
+        }, $changedFields));
 
-                return $fieldNames[$field] ?? $field;
-            }, $changedFields));
-
-            echo "<script>
-                alert('Student record updated successfully. Changed fields: $changedFieldsList');
-                window.location.href = 'admission_admin.php?student_id=$student_id';
-            </script>";
-        } else {
-            echo "<script>
-                alert('No changes detected in the student record.');
-                window.location.href = 'admission_admin.php?student_id=$student_id';
-            </script>";
-        }
+        echo "<script>
+            alert('Student record updated successfully. Changed fields: $changedFieldsList');
+            window.location.href = 'admission_admin.php?student_id=$student_id';
+        </script>";
     } else {
         echo "<script>
             alert('No changes detected in the student record.');
