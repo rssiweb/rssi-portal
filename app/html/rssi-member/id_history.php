@@ -264,7 +264,7 @@ if (!isLoggedIn("aid")) {
                                     <td><span class="badge ${statusClass}">${order.status || '-'}</span></td>
                                     <td>${order.payment_status || '-'}</td>
                                     <td>${order.order_placed_by_name || '-'}</td>
-                                    <td>${order.order_date ? new Date(order.order_date).toLocaleDateString() : '-'}</td>
+                                    <td>${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</td>
                                     <td>${order.vendor_name || '-'}</td>
                                     <td>
                                     ${order.status === 'Ordered' ? `
