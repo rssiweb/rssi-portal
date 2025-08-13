@@ -138,24 +138,33 @@ if (@$_POST['form-type'] == "admission_admin") {
     // Handle effective_from_date separately
     $original_doa = $currentStudentData['doa'] ?? date('Y-m-d');
 
-    // Only set effective_from_date if it was explicitly submitted
+    // Get current effective date first
+    $currentPlanQuery = "SELECT effective_from 
+                   FROM student_category_history 
+                   WHERE student_id = '$student_id'
+                   AND is_valid = true
+                   AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
+                   ORDER BY effective_from DESC, created_at DESC 
+                   LIMIT 1";
+    $currentResult = pg_query($con, $currentPlanQuery);
+    $currentRow = pg_fetch_assoc($currentResult);
+    $current_effective_from_date = $currentRow['effective_from'] ?? $original_doa;
+
+    // Only process if date was explicitly submitted
     if (isset($_POST['effective_from_date']) && !empty($_POST['effective_from_date'])) {
-        $effective_from_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
-        if (strtotime($effective_from_date) < strtotime($original_doa)) {
-            $effective_from_date = $original_doa;
+        $submitted_date = date('Y-m-d', strtotime($_POST['effective_from_date']));
+
+        // Ensure date isn't before original DOA
+        if (strtotime($submitted_date) < strtotime($original_doa)) {
+            $submitted_date = $original_doa;
         }
-        $date_changed = true;
+
+        // Only set as changed if different from current
+        $date_changed = ($submitted_date != $current_effective_from_date);
+        $effective_from_date = $submitted_date;
     } else {
-        // If no date was submitted, keep the existing one
-        $currentPlanQuery = "SELECT effective_from 
-                       FROM student_category_history 
-                       WHERE student_id = '$student_id'
-                       AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
-                       ORDER BY effective_from DESC, created_at DESC 
-                       LIMIT 1";
-        $currentResult = pg_query($con, $currentPlanQuery);
-        $currentRow = pg_fetch_assoc($currentResult);
-        $effective_from_date = $currentRow['effective_from'] ?? $original_doa;
+        // No date submitted - keep current date
+        $effective_from_date = $current_effective_from_date;
         $date_changed = false;
     }
 
@@ -615,6 +624,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                             $currentPlanQuery = "SELECT category_type, class, effective_from 
                                                                             FROM student_category_history 
                                                                             WHERE student_id = '" . $array['student_id'] . "'
+                                                                            AND is_valid = true
                                                                             AND effective_from <= '$currentDate'
                                                                             AND (effective_until >= '$currentDate' OR effective_until IS NULL)
                                                                             ORDER BY effective_from DESC, created_at DESC LIMIT 1";
@@ -622,6 +632,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                             // Query to check for future plans
                                                                             $futurePlanQuery = "SELECT 1 FROM student_category_history
                                                                             WHERE student_id = '" . $array['student_id'] . "'
+                                                                            AND is_valid = true
                                                                             AND effective_from > '$currentDate'
                                                                             LIMIT 1";
 
