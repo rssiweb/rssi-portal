@@ -200,7 +200,7 @@ function handleGetBatchDetails()
             u.fullname as order_placed_by_name,COALESCE(s.filterstatus, m.filterstatus) AS filterstatus,
             (SELECT COUNT(*) FROM id_card_orders 
                     WHERE student_id = o.student_id AND status = 'Delivered') AS times_issued,
-                   (SELECT MAX(order_date) FROM id_card_orders 
+                   (SELECT MAX(delivered_date) FROM id_card_orders 
                     WHERE student_id = o.student_id AND status = 'Delivered') AS last_issued
          FROM id_card_orders o
          LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
@@ -585,6 +585,10 @@ function markBatchDelivered()
 
         $batch_id = $_POST['batch_id'];
         $remarks = $_POST['remarks'] ?? null;
+        $delivery_date = $_POST['delivery_date'];
+        if (empty($delivery_date)) {
+            throw new Exception('Delivery date is required');
+        }
 
         // Begin transaction
         pg_query($con, "BEGIN");
@@ -612,7 +616,7 @@ function markBatchDelivered()
                  delivered_by = $2,
                  delivered_remarks = $3
              WHERE batch_id = $4 AND status = 'Ordered'",
-            [date('Y-m-d H:i:s'), $associatenumber, $remarks, $batch_id]
+            [$delivery_date, $associatenumber, $remarks, $batch_id]
         );
 
         if (!$ordersUpdate) {
@@ -652,7 +656,7 @@ function markOrderDelivered()
         $remarks = $_POST['remarks'] ?? null;
         $delivery_date = $_POST['delivery_date'];
         if (empty($delivery_date)) {
-            $delivery_date = date('Y-m-d H:i:s');
+            throw new Exception('Delivery date is required');
         }
 
         // Begin transaction
