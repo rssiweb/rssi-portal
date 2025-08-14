@@ -523,11 +523,9 @@ if (!isLoggedIn("aid")) {
                                     <span class="text-muted">Created by ${batch.created_by_name} on ${new Date(batch.created_date).toLocaleString()}</span>
                                 </div>
                                 <div>
-                                    ${canEdit ? `
                                     <button class="btn btn-sm btn-primary" id="add-students-btn">
                                         <i class="bi bi-plus-lg"></i> Add Students
                                     </button>
-                                    ` : ''}
                                 </div>
                             </div>
                             <div class="table-responsive mt-3">
@@ -593,7 +591,7 @@ if (!isLoggedIn("aid")) {
                         } else {
                             batchDetails += `
                                 <tr>
-                                    <td colspan="${isAdmin ? 10 : 9}" class="text-center py-4 text-muted">
+                                    <td colspan="${canEdit ? 12 : 11}" class="text-center py-4 text-muted">
                                         <i class="bi bi-inbox"></i> No items in this batch
                                     </td>
                                 </tr>
@@ -630,105 +628,103 @@ if (!isLoggedIn("aid")) {
                         $('#batch-details-container').html(batchDetails);
 
                         // Set up event handlers
-                        if (canEdit) {
-                            $('#add-students-btn').click(function() {
-                                addStudentsModal.show();
-                            });
+                        $('#add-students-btn').click(function() {
+                            addStudentsModal.show();
+                        });
 
-                            $('.remove-item').click(function() {
-                                const itemId = $(this).data('id');
-                                if (confirm('Are you sure you want to remove this item from the batch?')) {
-                                    const btn = $(this);
-                                    btn.html('<span class="spinner-border spinner-border-sm"></span>');
-                                    btn.prop('disabled', true);
-
-                                    $.post('id_process_order.php', {
-                                        action: 'remove_item',
-                                        id: itemId
-                                    }, function(response) {
-                                        if (response.success) {
-                                            loadBatchDetails(currentBatchId);
-                                            loadOpenBatches();
-                                        } else {
-                                            alert(response.message);
-                                            btn.html('<i class="bi bi-trash"></i>');
-                                            btn.prop('disabled', false);
-                                        }
-                                    }, 'json');
-                                }
-                            });
-
-                            // Top of your script (with other modal declarations)
-                            const editOrderModal = new bootstrap.Modal('#editOrderModal');
-                            let currentEditOrderId = null; // Track currently edited order
-
-                            // Ensure handler is only bound once
-                            $(document).off('click', '.edit-order-btn').on('click', '.edit-order-btn', function() {
-                                const orderId = $(this).data('id');
+                        $('.remove-item').click(function() {
+                            const itemId = $(this).data('id');
+                            if (confirm('Are you sure you want to remove this item from the batch?')) {
                                 const btn = $(this);
-                                const row = btn.closest('tr');
-
-                                btn.html('<span class="spinner-border spinner-border-sm"></span>')
-                                    .prop('disabled', true);
-
-                                $.get('id_process_order.php', {
-                                        action: 'get_order_details',
-                                        id: orderId
-                                    })
-                                    .done(function(response) {
-                                        if (response.success) {
-                                            currentEditOrderId = orderId;
-                                            $('#edit-student-name').text(row.find('td:eq(2)').text());
-                                            $('#edit-student-id').text(row.find('td:eq(1)').text());
-                                            $('#edit-order-id').val(orderId);
-                                            $('#edit-order-type').val(response.data.order_type);
-                                            $('#edit-payment-status').val(response.data.payment_status || '');
-                                            $('#edit-remarks').val(response.data.remarks || '');
-
-                                            editOrderModal.show();
-                                        } else {
-                                            alert(response.message);
-                                        }
-                                    })
-                                    .always(function() {
-                                        btn.html('<i class="bi bi-pencil"></i>').prop('disabled', false);
-                                    });
-                            });
-
-                            // Save handler — only bound once
-                            $(document).off('click', '#save-order-changes').on('click', '#save-order-changes', function() {
-                                const btn = $(this);
+                                btn.html('<span class="spinner-border spinner-border-sm"></span>');
                                 btn.prop('disabled', true);
-                                $('#save-spinner').removeClass('d-none');
 
                                 $.post('id_process_order.php', {
-                                        action: 'update_order',
-                                        id: $('#edit-order-id').val(),
-                                        order_type: $('#edit-order-type').val(),
-                                        payment_status: $('#edit-payment-status').val(),
-                                        remarks: $('#edit-remarks').val()
-                                    })
-                                    .done(function(response) {
-                                        if (response.success) {
-                                            editOrderModal.hide();
-                                            loadBatchDetails(currentBatchId);
-                                            loadOpenBatches();
-                                        } else {
-                                            alert(response.message);
-                                        }
-                                    })
-                                    .always(function() {
+                                    action: 'remove_item',
+                                    id: itemId
+                                }, function(response) {
+                                    if (response.success) {
+                                        loadBatchDetails(currentBatchId);
+                                        loadOpenBatches();
+                                    } else {
+                                        alert(response.message);
+                                        btn.html('<i class="bi bi-trash"></i>');
                                         btn.prop('disabled', false);
-                                        $('#save-spinner').addClass('d-none');
-                                    });
-                            });
+                                    }
+                                }, 'json');
+                            }
+                        });
 
-                            // Cleanup form on modal hide
-                            $('#editOrderModal').on('hidden.bs.modal', function() {
-                                $(this).find('form')[0].reset();
-                                currentEditOrderId = null;
-                            });
-                        }
+                        // Top of your script (with other modal declarations)
+                        const editOrderModal = new bootstrap.Modal('#editOrderModal');
+                        let currentEditOrderId = null; // Track currently edited order
+
+                        // Ensure handler is only bound once
+                        $(document).off('click', '.edit-order-btn').on('click', '.edit-order-btn', function() {
+                            const orderId = $(this).data('id');
+                            const btn = $(this);
+                            const row = btn.closest('tr');
+
+                            btn.html('<span class="spinner-border spinner-border-sm"></span>')
+                                .prop('disabled', true);
+
+                            $.get('id_process_order.php', {
+                                    action: 'get_order_details',
+                                    id: orderId
+                                })
+                                .done(function(response) {
+                                    if (response.success) {
+                                        currentEditOrderId = orderId;
+                                        $('#edit-student-name').text(row.find('td:eq(2)').text());
+                                        $('#edit-student-id').text(row.find('td:eq(1)').text());
+                                        $('#edit-order-id').val(orderId);
+                                        $('#edit-order-type').val(response.data.order_type);
+                                        $('#edit-payment-status').val(response.data.payment_status || '');
+                                        $('#edit-remarks').val(response.data.remarks || '');
+
+                                        editOrderModal.show();
+                                    } else {
+                                        alert(response.message);
+                                    }
+                                })
+                                .always(function() {
+                                    btn.html('<i class="bi bi-pencil"></i>').prop('disabled', false);
+                                });
+                        });
+
+                        // Save handler — only bound once
+                        $(document).off('click', '#save-order-changes').on('click', '#save-order-changes', function() {
+                            const btn = $(this);
+                            btn.prop('disabled', true);
+                            $('#save-spinner').removeClass('d-none');
+
+                            $.post('id_process_order.php', {
+                                    action: 'update_order',
+                                    id: $('#edit-order-id').val(),
+                                    order_type: $('#edit-order-type').val(),
+                                    payment_status: $('#edit-payment-status').val(),
+                                    remarks: $('#edit-remarks').val()
+                                })
+                                .done(function(response) {
+                                    if (response.success) {
+                                        editOrderModal.hide();
+                                        loadBatchDetails(currentBatchId);
+                                        loadOpenBatches();
+                                    } else {
+                                        alert(response.message);
+                                    }
+                                })
+                                .always(function() {
+                                    btn.prop('disabled', false);
+                                    $('#save-spinner').addClass('d-none');
+                                });
+                        });
+
+                        // Cleanup form on modal hide
+                        $('#editOrderModal').on('hidden.bs.modal', function() {
+                            $(this).find('form')[0].reset();
+                            currentEditOrderId = null;
+                        });
 
                         if (isAdmin) {
                             // Place order button click
