@@ -45,9 +45,6 @@ try {
         case 'get_order_history':
             getOrderHistory();
             break;
-        case 'export_batch':
-            handleExportBatch();
-            break;
         case 'get_order_details':
             handleGetOrderDetails();
             break;
@@ -325,7 +322,7 @@ function handlePlaceOrders()
 
     try {
         // Validate required fields
-        $required = ['batch_ids', 'vendor_name'];
+        $required = ['batch_ids', 'vendor_name', 'order_date'];
         foreach ($required as $field) {
             if (empty($_POST[$field])) {
                 throw new Exception("Missing required field: $field");
@@ -364,7 +361,7 @@ function handlePlaceOrders()
              WHERE batch_id = ANY($4::text[]) AND status = 'Pending'
              RETURNING batch_id",
             [
-                date('Y-m-d H:i:s'),
+                $_POST['order_date'],
                 $_POST['vendor_name'],
                 $_POST['admin_remarks'] ?? null,
                 $pg_array
@@ -457,91 +454,6 @@ function handleUpdateOrder()
     ]);
 }
 
-function handleExportBatch()
-{
-    global $con;
-
-    if (empty($_GET['batch_id'])) {
-        throw new Exception('Batch ID is required');
-    }
-
-    $batch_id = $_GET['batch_id'];
-
-    // Get batch details
-    $batchResult = pg_query_params(
-        $con,
-        "SELECT * FROM id_card_batches WHERE batch_id = $1",
-        [$batch_id]
-    );
-
-    if (!$batchResult || pg_num_rows($batchResult) === 0) {
-        throw new Exception('Batch not found');
-    }
-
-    $batch = pg_fetch_assoc($batchResult);
-
-    // Get orders
-    $ordersResult = pg_query_params(
-        $con,
-        "SELECT 
-            o.*,
-            s.studentname, s.class, s.fathername, s.mothername, s.photourl,
-            u.fullname as order_placed_by_name
-         FROM id_card_orders o
-         JOIN rssimyprofile_student s ON o.student_id = s.student_id
-         JOIN rssimyaccount_members u ON o.order_placed_by = u.associatenumber
-         WHERE o.batch_id = $1
-         ORDER BY s.class, s.studentname",
-        [$batch_id]
-    );
-
-    if (!$ordersResult) {
-        throw new Exception('Failed to fetch orders');
-    }
-
-    // Prepare CSV output
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=id_card_batch_' . $batch_id . '.csv');
-
-    $output = fopen('php://output', 'w');
-
-    // Write CSV headers
-    fputcsv($output, [
-        'Batch ID',
-        'Batch Name',
-        'Batch Type',
-        'Status',
-        'Student ID',
-        'Student Name',
-        'Class',
-        'Order Type',
-        'Payment Status',
-        'Remarks',
-        'Requested By',
-        'Order Date'
-    ]);
-
-    // Write data rows
-    while ($row = pg_fetch_assoc($ordersResult)) {
-        fputcsv($output, [
-            $batch['batch_id'],
-            $batch['batch_name'],
-            $batch['batch_type'],
-            $batch['status'],
-            $row['student_id'],
-            $row['studentname'],
-            $row['class'],
-            $row['order_type'],
-            $row['payment_status'],
-            $row['remarks'],
-            $row['order_placed_by_name'],
-            $row['order_date']
-        ]);
-    }
-
-    fclose($output);
-    exit;
-}
 function handleGetOrderDetails()
 {
     global $con;
@@ -738,6 +650,10 @@ function markOrderDelivered()
 
         $order_id = $_POST['order_id'];
         $remarks = $_POST['remarks'] ?? null;
+        $delivery_date = $_POST['delivery_date'];
+        if (empty($delivery_date)) {
+            $delivery_date = date('Y-m-d H:i:s');
+        }
 
         // Begin transaction
         pg_query($con, "BEGIN");
@@ -752,7 +668,7 @@ function markOrderDelivered()
                  delivered_remarks = $3
              WHERE id = $4 AND status = 'Ordered'
              RETURNING batch_id",
-            [date('Y-m-d H:i:s'), $associatenumber, $remarks, $order_id]
+            [$delivery_date, $associatenumber, $remarks, $order_id]
         );
 
         if (!$orderUpdate || pg_num_rows($orderUpdate) === 0) {

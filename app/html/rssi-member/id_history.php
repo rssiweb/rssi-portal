@@ -146,6 +146,10 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                             <label class="form-label">Delivery Remarks</label>
                             <textarea class="form-control" id="delivery-remarks" rows="3"></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Delivery Date</label>
+                            <input type="date" class="form-control" id="delivery-date" required>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -403,6 +407,7 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                 const btn = $(this);
                 const spinner = $('#delivery-spinner');
                 const remarks = $('#delivery-remarks').val();
+                const deliveryDateTime = $('#delivery-date').val();
 
                 btn.prop('disabled', true);
                 spinner.removeClass('d-none');
@@ -410,7 +415,8 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                 const action = isBatchDelivery ? 'mark_batch_delivered' : 'mark_order_delivered';
                 const data = {
                     action: action,
-                    remarks: remarks
+                    remarks: remarks,
+                    delivery_date: deliveryDateTime
                 };
 
                 if (isBatchDelivery) {
@@ -432,6 +438,33 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                                 updateBatchHeaderStatus(batchId);
                             });
                         }
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                }, 'json').always(() => {
+                    btn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                });
+            });
+
+            // Confirm Revert Handler
+            $('#confirm-revert').click(function() {
+                const btn = $(this);
+                const spinner = $('#revert-spinner');
+                const remarks = $('#revert-remarks').val();
+
+                btn.prop('disabled', true);
+                spinner.removeClass('d-none');
+
+                $.post('id_process_order.php', {
+                    action: 'revert_to_pending',
+                    order_id: currentOrderId,
+                    remarks: remarks
+                }, function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        revertPendingModal.hide();
+                        loadOrders(); // Refresh the table
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -544,33 +577,6 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
             currentOrderId = $(this).data('id');
             $('#revert-remarks').val('');
             revertPendingModal.show();
-        });
-
-        // Confirm Revert Handler
-        $('#confirm-revert').click(function() {
-            const btn = $(this);
-            const spinner = $('#revert-spinner');
-            const remarks = $('#revert-remarks').val();
-
-            btn.prop('disabled', true);
-            spinner.removeClass('d-none');
-
-            $.post('id_process_order.php', {
-                action: 'revert_to_pending',
-                order_id: currentOrderId,
-                remarks: remarks
-            }, function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    revertPendingModal.hide();
-                    loadOrders(); // Refresh the table
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            }, 'json').always(() => {
-                btn.prop('disabled', false);
-                spinner.addClass('d-none');
-            });
         });
     </script>
 

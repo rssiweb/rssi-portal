@@ -281,6 +281,10 @@ if (!isLoggedIn("aid")) {
                             <label class="form-label">Admin Remarks</label>
                             <textarea class="form-control" id="admin-remarks" rows="2"></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Order Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="order-date-time" required>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -873,7 +877,8 @@ if (!isLoggedIn("aid")) {
                         action: 'place_orders',
                         batch_ids: JSON.stringify(selectedBatches),
                         vendor_name: vendorName,
-                        remarks: $('#admin-remarks').val()
+                        remarks: $('#admin-remarks').val(),
+                        order_date: $('#order-date-time').val()
                     }, function(response) {
                         if (response.success) {
                             // Show success message and reload after OK
