@@ -838,8 +838,27 @@ if (!isLoggedIn("aid")) {
                 Promise.all(promises)
                     .then(responses => {
                         const failed = responses.filter(r => !r.success);
+                        const pendingOrders = responses.filter(r => !r.success && r.existing_batch);
+
                         if (failed.length > 0) {
-                            alert(`Failed to add ${failed.length} items. Successfully added ${selectedValues.length - failed.length} items.`);
+                            let errorMessage = `Failed to add ${failed.length} items. Successfully added ${selectedValues.length - failed.length} items.`;
+
+                            // If there are pending orders in other batches
+                            if (pendingOrders.length > 0) {
+                                errorMessage += '\n\nSome students have existing orders in other batches:';
+                                pendingOrders.forEach(order => {
+                                    errorMessage += `\n- ${order.student_id}: ${order.message}`;
+                                });
+
+                                errorMessage += '\n\nWould you like to view these batches?';
+
+                                if (confirm(errorMessage)) {
+                                    // Open the first batch with pending orders
+                                    loadBatchDetails(pendingOrders[0].existing_batch);
+                                }
+                            } else {
+                                alert(errorMessage);
+                            }
                         } else {
                             alert(`Successfully added ${selectedValues.length} items to the batch.`);
                             $('#student-select').val(null).trigger('change');
@@ -852,7 +871,7 @@ if (!isLoggedIn("aid")) {
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('An error occurred while adding items to the batch');
+                        alert('An error occurred while adding items to the batch: ' + error.message);
                     })
                     .finally(() => {
                         btn.prop('disabled', false);

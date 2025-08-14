@@ -243,30 +243,52 @@ function handleAddToBatch()
         throw new Exception('Payment status is required for Reissue orders');
     }
 
-    $params = [
-        $_POST['batch_id'],
-        $_POST['student_id'],
-        $_POST['order_type'],
-        $associatenumber,
-        date('Y-m-d H:i:s'),
-        $_POST['payment_status'] ?? null,
-        $_POST['remarks'] ?? null,
-        getAcademicYear()
-    ];
+    $batch_id = $_POST['batch_id'];
+    $student_id = $_POST['student_id'];
+    $order_type = $_POST['order_type'];
+    $payment_status = $_POST['payment_status'] ?? null;
+    $remarks = $_POST['remarks'] ?? null;
 
-    // Check if student already exists in this batch
+    // 1. Check if student already exists in this batch
     $check = pg_query_params(
         $con,
         "SELECT 1 FROM id_card_orders 
          WHERE batch_id = $1 AND student_id = $2",
-        [$params[0], $params[1]]
+        [$batch_id, $student_id]
     );
 
     if (pg_num_rows($check) > 0) {
         throw new Exception('This student already exists in the batch');
     }
 
-    // Insert order
+    // 2. Check for pending/ordered status in other batches
+    $pendingOrder = pg_query_params(
+        $con,
+        "SELECT b.batch_id, o.status, o.order_date, b.batch_name
+         FROM id_card_orders o
+         JOIN id_card_batches b ON o.batch_id = b.batch_id
+         WHERE o.student_id = $1 
+           AND o.status IN ('Pending', 'Ordered') 
+           AND o.batch_id != $2
+         ORDER BY o.order_date DESC LIMIT 1",
+        [$student_id, $batch_id]
+    );
+
+    if (pg_num_rows($pendingOrder) > 0) {
+        $info = pg_fetch_assoc($pendingOrder);
+        $orderDate = $info['order_date'] ? date('d M Y', strtotime($info['order_date'])) : 'unknown date';
+        $batchName = $info['batch_name'] ? " ({$info['batch_name']})" : '';
+
+        echo json_encode([
+            'success' => false,
+            'message' => "Student has a {$info['status']} order in batch {$info['batch_id']}$batchName from $orderDate",
+            'student_id' => $student_id,
+            'existing_batch' => $info['batch_id']
+        ]);
+        return;
+    }
+
+    // 3. Insert the new order if all checks pass
     $result = pg_query_params(
         $con,
         "INSERT INTO id_card_orders (
@@ -275,7 +297,16 @@ function handleAddToBatch()
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, 'Pending', $8
         ) RETURNING id",
-        $params
+        [
+            $batch_id,
+            $student_id,
+            $order_type,
+            $associatenumber,
+            date('Y-m-d H:i:s'),
+            $payment_status,
+            $remarks,
+            getAcademicYear()
+        ]
     );
 
     if (!$result) {
@@ -284,7 +315,8 @@ function handleAddToBatch()
 
     echo json_encode([
         'success' => true,
-        'student_id' => $params[1]
+        'student_id' => $student_id,
+        'order_id' => pg_fetch_result($result, 0, 'id')
     ]);
 }
 
