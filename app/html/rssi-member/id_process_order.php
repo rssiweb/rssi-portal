@@ -590,7 +590,7 @@ function getOrderHistory()
                     o.order_placed_by, o.remarks,
                     COALESCE(s.studentname, m.fullname) AS studentname, s.class, COALESCE(s.photourl, m.photo) AS photourl,
                     u.fullname as order_placed_by_name,
-                    b.vendor_name, b.admin_remarks
+                    b.vendor_name, b.admin_remarks, b.ordered_date
                   FROM id_card_orders o
                   LEFT JOIN rssimyprofile_student s ON o.student_id = s.student_id
                   LEFT JOIN rssimyaccount_members m ON o.student_id = m.associatenumber

@@ -608,11 +608,6 @@
             </a>
           </li>
           <li>
-            <a id="icom" href="icom.php">
-              <span>ID Card Order Management (ICOM)</span>
-            </a>
-          </li>
-          <li>
             <a id="facility-hygiene-monitoring" href="facility-hygiene-monitoring.php">
               <span>Facility Hygiene Monitoring</span>
             </a>

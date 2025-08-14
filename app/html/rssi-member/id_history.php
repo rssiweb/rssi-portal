@@ -8,6 +8,14 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 ?>
+<?php
+// Example: $role and $position should already be set from session or DB
+$can_access = false;
+
+if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senior Centre Incharge') {
+    $can_access = true;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -260,19 +268,28 @@ if (!isLoggedIn("aid")) {
                             Object.entries(batches).forEach(([batchId, orders]) => {
                                 const isBatchOrdered = orders.every(o => o.status === 'Ordered');
                                 const isBatchDeliverable = isBatchOrdered || orders.some(o => o.status === 'Ordered');
+                                const ordered_date = orders[0]?.ordered_date || '';
+                                const vendor_name = orders[0]?.vendor_name || '';
+                                const canAccess = <?php echo json_encode($can_access); ?>;
 
                                 // Batch header row
                                 if (orders.length > 1) {
                                     const batchRow = `
                                 <tr class="batch-header bg-light">
-                                    <td colspan="9">
+                                    <td colspan="7">
                                         <strong>Batch:</strong> ${batchId}
                                         <span class="badge ${isBatchOrdered ? 'bg-success' : 'bg-secondary'} ms-2">
                                             ${orders.length} cards
                                         </span>
                                     </td>
                                     <td>
-                                        ${isBatchDeliverable ? `
+                                        ${ordered_date ? new Date(orders[0].ordered_date).toLocaleString('en-GB') : '-'}
+                                    </td>
+                                    <td>
+                                        ${vendor_name}
+                                    </td>
+                                    <td>
+                                        ${canAccess && isBatchDeliverable ? `
                                         <button class="btn btn-sm btn-success mark-delivered-btn" 
                                                 data-batch-id="${batchId}" 
                                                 title="Mark entire batch as delivered">
@@ -306,8 +323,8 @@ if (!isLoggedIn("aid")) {
                                     <td><span class="badge ${statusClass}">${order.status || '-'}</span></td>
                                     <td>${order.payment_status || '-'}</td>
                                     <td>${order.order_placed_by_name || '-'}</td>
-                                    <td>${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</td>
-                                    <td>${order.vendor_name || '-'}</td>
+                                    <td></td>
+                                    <td></td>
                                     <td>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-link text-secondary dropdown-toggle" 
@@ -322,7 +339,7 @@ if (!isLoggedIn("aid")) {
                                                     </button>
                                                 </li>
                                                 
-                                                ${order.status === 'Ordered' ? `
+                                                ${canAccess && order.status === 'Ordered' ? `
                                                 <!-- Mark Delivered Option -->
                                                 <li>
                                                     <button class="dropdown-item mark-single-delivered" data-id="${order.id}">
@@ -331,7 +348,7 @@ if (!isLoggedIn("aid")) {
                                                 </li>
                                                 ` : ''}
                                                 
-                                                ${order.status === 'Delivered' ? `
+                                                ${canAccess && order.status === 'Delivered' ? `
                                                 <!-- Revert to Pending Option -->
                                                 <li>
                                                     <button class="dropdown-item mark-as-pending" data-id="${order.id}">
