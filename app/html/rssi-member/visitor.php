@@ -97,17 +97,6 @@ if (!$phoneNumber) {
 <html lang="en">
 
 <head>
-    <style>
-        .col2 {
-            display: inline-block;
-            vertical-align: top;
-            /* Align the col2 elements to the top */
-        }
-
-        #passwordHelpBlock {
-            display: block;
-        }
-    </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
@@ -145,6 +134,17 @@ if (!$phoneNumber) {
         });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <style>
+        .col2 {
+            display: inline-block;
+            vertical-align: top;
+            /* Align the col2 elements to the top */
+        }
+
+        #passwordHelpBlock {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
@@ -167,7 +167,6 @@ if (!$phoneNumber) {
 
         <section class="section dashboard">
             <div class="row">
-
                 <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
@@ -177,9 +176,9 @@ if (!$phoneNumber) {
                             <!-- Show alert if neither contact is found, but continue execution -->
                             <?php if (!$phoneNumber) {
                                 echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i> No active Centre Incharge or Chief HR Officer contact found.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>';
+                                <i class="bi bi-exclamation-triangle-fill"></i> No active Centre Incharge or Chief HR Officer contact found.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>';
                             } ?>
                             <div class="text-end">
                                 Record count: <?php echo sizeof($resultArr) ?>
@@ -237,21 +236,22 @@ if (!$phoneNumber) {
                             </form>
                             <br>
                             <?php echo '
-                       <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Visit ID</th>
-                                <th scope="col">Visitor details</th>
-                                <th scope="col">Visit date from</th>
-                                <th scope="col">Visit date to</th>
-                                <!--<th scope="col">Identity proof</th>-->
-                                <th scope="col">Photo</th>
-                                <th scope="col">Purpose of visit</th>
-                                <th scope="col">Branch name</th>
-                                <th scope="col">HR remarks</th>
-                                <th scope="col"></th>
-                            </tr>
-                        </thead>' ?>
+                                <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Visit ID</th>
+                                            <th scope="col">Visitor details</th>
+                                            <th scope="col">Visit date from</th>
+                                            <th scope="col">Visit date to</th>
+                                            <!--<th scope="col">Identity proof</th>-->
+                                            <th scope="col">Photo</th>
+                                            <th scope="col">Purpose of visit</th>
+                                            <th scope="col">Branch name</th>
+                                            <th scope="col">HR remarks</th>
+                                            <th scope="col"></th>
+                                        </tr>
+                                    </thead>' ?>
                             <?php if (sizeof($resultArr) > 0) { ?>
                                 <?php
                                 echo '<tbody>';
@@ -263,8 +263,6 @@ if (!$phoneNumber) {
                                 <td>' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '</td>
                                 
                                 <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>' ?>
-
-                                    <!--<td><span class="noticea"><a href="' . $array['nationalid'] . '" target="_blank"><i class="bi bi-filetype-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>-->
                                     <td>
                                         <?php
                                         // Assuming $array['photo'] contains the URL
@@ -374,63 +372,58 @@ if (!$phoneNumber) {
                                         <?php echo '<td><p class="badge bg-warning">visited</p></td>' ?>
                                     <?php } ?>
 
-                                    <?php echo '<td>
-                                            <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['visitid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                            <i class="bi bi-box-arrow-up-right" style="font-size:14px;color:#777777" title="Show Details" display:inline;></i></button>' ?>
-                                    <?php if ($role == "Admin") { ?>
-                                        <?php if ($array['tel'] != null && @$array['visitstatus'] != null) { ?>
+                                <?php
+                                    echo '<td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" id="dropdownMenuButton_' . $array['visitid'] . '" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $array['visitid'] . '">
+                                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="showDetails(\'' . $array['visitid'] . '\')"><i class="bi bi-box-arrow-up-right me-2"></i>Details</a></li>';
 
-                                            <?php if ($array['visitstatus'] == "Approved") { ?>
-                                                <?php echo '
-                  
-                  <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request has been approved. Visit Id: *' . $array['visitid'] . '*%0A%0AYou are all set to visit RSSI Learning Centre, Lucknow. This pass is valid for the period from ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '. Upon arrival at the Learning Centre, the centre in-charge will take you through visitor guidelines.%0A%0A*General guidelines:*%0A%0A✔ Please declare your identity at the security check and submit if you have prohibited items.%0A✔ Please note that no weapons, flammable liquids, or gases are allowed inside the center premises.%0A✔ If you wish to donate or contribute anything to the beneficiaries, please inform in advance by email to info@rssi.in. Under no circumstances are any loose food items allowed to be distributed. For any packaged food, please check the batch and expiry date properly.%0A✔ Do not donate cash directly to anyone at the centre. Kindly follow the donation process, for more details please visit the donation portal https://www.rssi.in/donation-portal%0A%0AWe look forward to meeting you.%0A%0A-- RSSI NGO
-" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
-                                                <?php echo '
-                  
-                  <a href="https://api.whatsapp.com/send?phone=91' . $phoneNumber . '&text=Dear Centre In-charge,%0A%0AA visit to RSSI Learning Centre, Lucknow has been scheduled. Please refer to the details below.%0A%0AVisit ID - *' . $array['visitid'] . '*%0ADate - ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '.%0APurpose of visit - ' . $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') . '%0A%0APlease inform the students and concerned class teachers accordingly. During this period all the students and teachers should be present in the centre and the centre should be functional as per schedule including academic activities.%0A%0ATo check visitor details, please click here https://login.rssi.in/rssi-member/visitor.php?visitid=' . $array['visitid'] . '%0A%0A-- RSSI NGO%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-bell" style="color:#444444;" title="Notify Centre Incharge"></i></a>'
-                                                ?>
-                                            <?php } else if ($array['visitstatus'] == "Rejected") { ?>
-                                                <?php echo '
-                  
-                  <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request (' . $array['visitid'] . ') has been REJECTED in the system due to any of the reasons mentioned below.%0A%0A1) The document is invalid.%0A2) The National Identifier Number is invalid.%0A3) Improper scanning of the uploaded document. Please scan the entire document and if the address or any other relevant information is mentioned on the other side, scan both the sides of the National Identifier.%0A%0APlease ensure that the scanned document is clearly legible, and re-upload the same.%0A%0A-- RSSI%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
-                                            <?php } else if ($array['visitstatus'] == "Visited") { ?>
-                                                <?php echo '
-                  
-                  <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['visitid'] . '),%0A%0AThank you for visiting RSSI Offline Centre, Lucknow. Hope you have a great time with the kids.%0A%0AAlso, we would love to hear your feedback, please rate us and share your experience here - https://g.page/r/CQkWqmErGMS7EAg/review%0A%0AHope to see you again.%0A%0A-- Team RSSI
-" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
-                                            <?php } ?>
-                                        <?php } else { ?>
-                                            <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                        <?php } ?>
-                                        <?php if (@$array['email'] != null && @$array['visitstatus'] != null) { ?>
-                                            <?php echo '<form  action="#" name="email-form-' . $array['visitid'] . '" method="POST" style="display: -webkit-inline-box;" >' ?>
+                                    if ($role == "Admin") {
+                                        if ($array['tel'] != null && @$array['visitstatus'] != null) {
+                                            if ($array['visitstatus'] == "Approved") {
+                                                echo '<li><a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request has been approved. Visit Id: *' . $array['visitid'] . '*%0A%0AYou are all set to visit RSSI Learning Centre, Lucknow. This pass is valid for the period from ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '. Upon arrival at the Learning Centre, the centre in-charge will take you through visitor guidelines.%0A%0A*General guidelines:*%0A%0A✔ Please declare your identity at the security check and submit if you have prohibited items.%0A✔ Please note that no weapons, flammable liquids, or gases are allowed inside the center premises.%0A✔ If you wish to donate or contribute anything to the beneficiaries, please inform in advance by email to info@rssi.in. Under no circumstances are any loose food items allowed to be distributed. For any packaged food, please check the batch and expiry date properly.%0A✔ Do not donate cash directly to anyone at the centre. Kindly follow the donation process, for more details please visit the donation portal https://www.rssi.in/donation-portal%0A%0AWe look forward to meeting you.%0A%0A-- RSSI NGO" target="_blank"><i class="bi bi-whatsapp me-2"></i>Send WhatsApp</a></li>';
 
-                                            <?php if (@$array['visitstatus'] == 'Approved') { ?>
-                                                <input type="hidden" name="template" type="text" value="visitapprove">
-                                            <?php } else if (@$array['visitstatus'] == 'Rejected') { ?>
-                                                <input type="hidden" name="template" type="text" value="visitreject">
-                                            <?php } else if (@$array['visitstatus'] == 'Visited') { ?>
-                                                <input type="hidden" name="template" type="text" value="visited">
-                                            <?php } ?>
+                                                echo '<li><a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91' . $phoneNumber . '&text=Dear Centre In-charge,%0A%0AA visit to RSSI Learning Centre, Lucknow has been scheduled. Please refer to the details below.%0A%0AVisit ID - *' . $array['visitid'] . '*%0ADate - ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '.%0APurpose of visit - ' . $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') . '%0A%0APlease inform the students and concerned class teachers accordingly. During this period all the students and teachers should be present in the centre and the centre should be functional as per schedule including academic activities.%0A%0ATo check visitor details, please click here https://login.rssi.in/rssi-member/visitor.php?visitid=' . $array['visitid'] . '%0A%0A-- RSSI NGO%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-bell me-2"></i>Notify Centre</a></li>';
+                                            } else if ($array['visitstatus'] == "Rejected") {
+                                                echo '<li><a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request (' . $array['visitid'] . ') has been REJECTED in the system due to the following reason(s). %0A%0A' . $array['remarks'] . '%0A%0A-- RSSI%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-whatsapp me-2"></i>Send WhatsApp</a></li>';
+                                            } else if ($array['visitstatus'] == "Visited") {
+                                                echo '<li><a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['visitid'] . '),%0A%0AThank you for visiting RSSI Offline Centre, Lucknow. Hope you have a great time with the kids.%0A%0AAlso, we would love to hear your feedback, please rate us and share your experience here - https://g.page/r/CQkWqmErGMS7EAg/review%0A%0AHope to see you again.%0A%0A-- Team RSSI" target="_blank"><i class="bi bi-whatsapp me-2"></i>Send WhatsApp</a></li>';
+                                            }
+                                        }
 
-                                            <?php echo '<input type="hidden" name="data[visitid]" type="text" value="' . $array['visitid'] . '">
-                  <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . '">
-                  <input type="hidden" name="data[visitstartdatetime]" type="text" value="' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '">
-                  <input type="hidden" name="data[visitenddate]" type="text" value="' . date("d/m/Y", strtotime($array['visitenddate'])) . '">
-                  <input type="hidden" name="data[visitstatus]" type="text" value="' . @strtoupper($array['visitstatus']) . '">
-                  <input type="hidden" name="email" type="text" value="' . @$array['email'] . '">
+                                        if (@$array['email'] != null && @$array['visitstatus'] != null) {
+                                            echo '<li>
+                                                    <form action="#" name="email-form-' . $array['visitid'] . '" method="POST">
+                                                        <input type="hidden" name="template" type="text" value="';
+                                            if (@$array['visitstatus'] == 'Approved') {
+                                                echo 'visitapprove';
+                                            } else if (@$array['visitstatus'] == 'Rejected') {
+                                                echo 'visitreject';
+                                            } else if (@$array['visitstatus'] == 'Visited') {
+                                                echo 'visited';
+                                            }
+                                            echo '">
+                                                        <input type="hidden" name="data[visitid]" type="text" value="' . $array['visitid'] . '">
+                                                        <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . '">
+                                                        <input type="hidden" name="data[visitstartdatetime]" type="text" value="' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '">
+                                                        <input type="hidden" name="data[visitenddate]" type="text" value="' . date("d/m/Y", strtotime($array['visitenddate'])) . '">
+                                                        <input type="hidden" name="data[visitstatus]" type="text" value="' . @strtoupper($array['visitstatus']) . '">
+                                                        <input type="hidden" name="email" type="text" value="' . @$array['email'] . '">
+                                                        <input type="hidden" name="remarks" type="text" value="' . @$array['remarks'] . '">
+                                                        <button type="submit" class="dropdown-item"><i class="bi bi-envelope-at me-2"></i>Send Email</button>
+                                                    </form>
+                                                </li>';
+                                        }
+                                    }
 
-                  <button style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . @$array['email'] . '"></i></button>
-                  </form>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                    <?php }
-                                    } ?>
-                                <?php echo '</td></tr>';
+                                    echo '      </ul>
+                                    </div>
+                                    </td>';
                                 } ?>
+                                </tr>
                             <?php } else if ($visitid == null && $contact == null && $visitdatefrom == null) {
                             ?>
                                 <tr>
@@ -446,7 +439,8 @@ if (!$phoneNumber) {
                             <?php }
 
                             echo '</tbody>
-                                    </table>';
+                            </table>
+                            </div>';
                             ?>
                         </div>
                     </div>
@@ -545,8 +539,9 @@ if (!$phoneNumber) {
                             <div class="col-md-6">
                                 <div class="input-help">
                                     <textarea type="text" name="hrremarks" id="hrremarks" class="form-control"
-                                        placeholder="HR remarks"></textarea>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
+                                        placeholder="HR remarks" required></textarea>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks<span
+                                            style="color:red">*</span></small>
                                 </div>
                             </div>
 
