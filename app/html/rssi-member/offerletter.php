@@ -228,7 +228,7 @@ if (!$result) {
                                             'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
                                         ],
                                         'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
-                                        'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
+                                        'Volunteer' => ["thirty (30) days", "3 months", "4-hour", "3"], // Notice period not specified for Volunteer
                                     ];
 
                                     // Check the engagement and job type, and set the values accordingly
@@ -291,7 +291,9 @@ if (!$result) {
                                                     "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
                                                 ],
                                                 "Volunteer" => [
-                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                    // "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                    "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
+                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
                                                 ]
                                             ];
 

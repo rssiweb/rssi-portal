@@ -68,7 +68,7 @@ $hasFilters = !empty($class) || !empty($studentIds);
 if ($hasFilters) {
     // Get student data
     $query = "SELECT s.student_id, s.studentname, s.category, s.class, s.doa, 
-                     s.type_of_admission, s.filterstatus, s.effectivefrom
+                     s.type_of_admission, s.filterstatus, s.effectivefrom, s.contact
               FROM rssimyprofile_student s
               WHERE s.filterstatus = '$status'
               AND (s.doa <= '$lastDayOfMonth' AND 
@@ -321,7 +321,7 @@ if ($hasFilters) {
             'student_id' => $student['student_id'],
             'studentname' => $student['studentname'],
             'class' => $student['class'],
-            'category' => $student['category'],
+            'contact' => $student['contact'],
             'doa' => date('d-M-Y', strtotime($student['doa'])),
             'student_type' => $currentClass . '/' . $studentType,
             'admission_fee' => $feeDetails['Admission Fee'],
@@ -351,11 +351,6 @@ $summary = [
     'total_due' => $hasFilters ? array_sum(array_column($processedStudents, 'due_amount')) : 0,
     'total_carry_forward' => $hasFilters ? array_sum(array_column($processedStudents, 'carry_forward')) : 0
 ];
-
-// Get classes for filter
-$classQuery = "SELECT DISTINCT class FROM rssimyprofile_student ORDER BY class";
-$classResult = pg_query($con, $classQuery);
-$classes = pg_fetch_all($classResult) ?? [];
 
 // Get collectors
 $collectorsQuery = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus='Active' ORDER BY fullname";
@@ -701,7 +696,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                             <th>Student ID</th>
                                                             <th>Name</th>
                                                             <th>Class</th>
-                                                            <th>Category</th>
+                                                            <th>Contact</th>
                                                             <th>DOA</th>
                                                             <th>Type</th>
                                                             <?php foreach ($categories as $category): ?>
@@ -724,7 +719,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                 <td><?= $student['student_id'] ?></td>
                                                                 <td><?= htmlspecialchars($student['studentname']) ?></td>
                                                                 <td><?= $student['class'] ?></td>
-                                                                <td><?= $student['category'] ?></td>
+                                                                <td><?= $student['contact'] ?></td>
                                                                 <td><?= $student['doa'] ?></td>
                                                                 <td><?= $student['student_type'] ?></td>
                                                                 <td class="text-end">
