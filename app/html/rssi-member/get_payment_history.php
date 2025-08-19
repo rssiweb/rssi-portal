@@ -161,6 +161,3 @@ $student = pg_fetch_assoc(pg_query($con, $studentQuery));
         </div>
     </div>
 </div>
-
-<!-- Bootstrap 5.3 JS Bundle (already in your code) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

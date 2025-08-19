@@ -719,7 +719,11 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                 <td><?= $student['student_id'] ?></td>
                                                                 <td><?= htmlspecialchars($student['studentname']) ?></td>
                                                                 <td><?= $student['class'] ?></td>
-                                                                <td><?= $student['contact'] ?></td>
+                                                                <td>
+                                                                    <a href="tel:<?= $student['contact'] ?>">
+                                                                        <?= $student['contact'] ?>
+                                                                    </a>
+                                                                </td>
                                                                 <td><?= $student['doa'] ?></td>
                                                                 <td><?= $student['student_type'] ?></td>
                                                                 <td class="text-end">
@@ -779,20 +783,38 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                 </td>
                                                                 <td class="text-end">₹<?= number_format(($student['paid_amount'] - $student['core_paid_amount']), 2) ?></td>
                                                                 <td>
-                                                                    <button class="btn btn-sm btn-primary collect-fee"
-                                                                        data-student-id="<?= $student['student_id'] ?>"
-                                                                        data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
-                                                                        data-student-class="<?= htmlspecialchars($student['class']) ?>"
-                                                                        data-net-fee="<?= $student['net_fee'] ?>"
-                                                                        data-due-amount="<?= $student['due_amount'] ?>"
-                                                                        <?= $isLocked ? 'disabled title="Fee collection is locked for this month"' : '' ?>>
-                                                                        <i class="fas fa-hand-holding-usd"></i> Collect
-                                                                    </button>
-
-                                                                    <button class="btn btn-sm btn-info view-history"
-                                                                        data-student-id="<?= $student['student_id'] ?>">
-                                                                        <i class="fas fa-history"></i> History
-                                                                    </button>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                            <i class="fas fa-ellipsis-v"></i>
+                                                                        </button>
+                                                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                            <li>
+                                                                                <button class="dropdown-item collect-fee"
+                                                                                    data-student-id="<?= $student['student_id'] ?>"
+                                                                                    data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
+                                                                                    data-student-class="<?= htmlspecialchars($student['class']) ?>"
+                                                                                    data-net-fee="<?= $student['net_fee'] ?>"
+                                                                                    data-due-amount="<?= $student['due_amount'] ?>"
+                                                                                    <?= $isLocked ? 'disabled title="Fee collection is locked for this month"' : '' ?>>
+                                                                                    <i class="fas fa-hand-holding-usd me-1"></i> Collect Fee
+                                                                                </button>
+                                                                            </li>
+                                                                            <li>
+                                                                                <button class="dropdown-item view-history"
+                                                                                    data-student-id="<?= $student['student_id'] ?>">
+                                                                                    <i class="fas fa-history me-1"></i> View History
+                                                                                </button>
+                                                                            </li>
+                                                                            <li>
+                                                                                <button class="dropdown-item send-whatsapp"
+                                                                                    data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
+                                                                                    data-contact="<?= htmlspecialchars($student['contact']) ?>"
+                                                                                    data-due-amount="<?= $student['due_amount'] ?>">
+                                                                                    <i class="fab fa-whatsapp me-1"></i> Send WhatsApp
+                                                                                </button>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         <?php endforeach; ?>
@@ -1573,16 +1595,43 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             });
         });
     </script>
-    <!-- <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.querySelectorAll("input[required], select[required], textarea[required]").forEach(function(field) {
-                const label = document.querySelector("label[for='" + field.id + "']");
-                if (label && !label.innerHTML.includes("*")) {
-                    label.innerHTML += ' <span style="color: red">*</span>';
-                }
-            });
+    <script>
+        $(document).on('click', '.send-whatsapp', function() {
+
+            const studentName = $(this).data('student-name');
+            const contact = $(this).data('contact'); // <— updated
+            const dueAmount = parseFloat($(this).data('due-amount'));
+
+            // PHP values for month / year (fallback to current if not defined)
+            const monthName = '<?= $month ?? "वर्तमान" ?>';
+            const yearName = '<?= $year  ?? "वर्तमान" ?>';
+
+            // Format today's date in Hindi (DD <month> YYYY)
+            const now = new Date();
+            const day = now.getDate();
+            const mIdx = now.getMonth();
+            const yyyy = now.getFullYear();
+            const hMonths = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+                'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
+            ];
+            const hindiDate = `${day} ${hMonths[mIdx]}, ${yyyy}`;
+
+            const formattedAmount = Math.abs(dueAmount).toFixed(2);
+
+            let msg = `प्रिय ${studentName} के अभिभावक,\n\n`;
+
+            if (dueAmount > 0) {
+                msg += `आज (${hindiDate}) तक ${monthName}-${yearName} माह के लिए ₹${formattedAmount} शुल्क देय है।\nकृपया यथाशीघ्र शुल्क जमा करने का कष्ट करें।\n\nधन्यवाद,\nविद्यालय प्रबंधन`;
+            } else if (dueAmount < 0) {
+                msg += `आज (${hindiDate}) तक आपके खाते में ₹${formattedAmount} का क्रेडिट शेष है।\nअधिक जानकारी हेतु कृपया कार्यालय से संपर्क करें।\n\nधन्यवाद,\nविद्यालय प्रबंधन`;
+            } else {
+                msg += `आज (${hindiDate}) तक कोई बकाया शुल्क नहीं है।\nसहयोग के लिए धन्यवाद।\n\nविद्यालय प्रबंधन`;
+            }
+
+            const url = `https://wa.me/+91${contact}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
         });
-    </script> -->
+    </script>
 </body>
 
 </html>
