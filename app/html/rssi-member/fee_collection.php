@@ -809,8 +809,9 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                                 <button class="dropdown-item send-whatsapp"
                                                                                     data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
                                                                                     data-contact="<?= htmlspecialchars($student['contact']) ?>"
-                                                                                    data-due-amount="<?= $student['due_amount'] ?>">
-                                                                                    <i class="fab fa-whatsapp me-1"></i> Send WhatsApp
+                                                                                    data-due-amount="<?= $student['due_amount'] ?>"
+                                                                                    <?= ($student['due_amount'] <= 0) ? 'disabled title="No fee due / credit balance"' : '' ?>>
+                                                                                    <i class="fab fa-whatsapp me-1"></i> Send Reminder
                                                                                 </button>
                                                                             </li>
                                                                         </ul>
@@ -1597,36 +1598,29 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     </script>
     <script>
         $(document).on('click', '.send-whatsapp', function() {
-
             const studentName = $(this).data('student-name');
-            const contact = $(this).data('contact'); // <— updated
+            const contact = $(this).data('contact');
             const dueAmount = parseFloat($(this).data('due-amount'));
 
-            // PHP values for month / year (fallback to current if not defined)
+            // Only proceed if amount > 0
+            if (dueAmount <= 0) {
+                return;
+            }
+
             const monthName = '<?= $month ?? "वर्तमान" ?>';
             const yearName = '<?= $year  ?? "वर्तमान" ?>';
 
-            // Format today's date in Hindi (DD <month> YYYY)
             const now = new Date();
             const day = now.getDate();
             const mIdx = now.getMonth();
             const yyyy = now.getFullYear();
-            const hMonths = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
-                'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
-            ];
+            const hMonths = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
             const hindiDate = `${day} ${hMonths[mIdx]}, ${yyyy}`;
 
             const formattedAmount = Math.abs(dueAmount).toFixed(2);
 
             let msg = `प्रिय ${studentName} के अभिभावक,\n\n`;
-
-            if (dueAmount > 0) {
-                msg += `आज (${hindiDate}) तक ${monthName}-${yearName} माह के लिए ₹${formattedAmount} शुल्क देय है।\nकृपया यथाशीघ्र शुल्क जमा करने का कष्ट करें।\n\nधन्यवाद,\nविद्यालय प्रबंधन`;
-            } else if (dueAmount < 0) {
-                msg += `आज (${hindiDate}) तक आपके खाते में ₹${formattedAmount} का क्रेडिट शेष है।\nअधिक जानकारी हेतु कृपया कार्यालय से संपर्क करें।\n\nधन्यवाद,\nविद्यालय प्रबंधन`;
-            } else {
-                msg += `आज (${hindiDate}) तक कोई बकाया शुल्क नहीं है।\nसहयोग के लिए धन्यवाद।\n\nविद्यालय प्रबंधन`;
-            }
+            msg += `आज (${hindiDate}) तक ${monthName}-${yearName} माह के लिए ₹${formattedAmount} शुल्क देय है।\nकृपया यथाशीघ्र शुल्क जमा करने का कष्ट करें।\n\nधन्यवाद,\nविद्यालय प्रबंधन`;
 
             const url = `https://wa.me/+91${contact}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
