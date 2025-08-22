@@ -31,14 +31,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_mobile'])) {
 
     if (pg_num_rows($result) > 0) {
         $row = pg_fetch_assoc($result);
+        $beneficiary_id = $row['id'];
+
+        // Check if any students are linked to this beneficiary
+        $studentQuery = "SELECT psr.student_id, s.studentname 
+                         FROM parent_student_relationships psr
+                         JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                         WHERE psr.parent_id = '$beneficiary_id'";
+        $studentResult = pg_query($con, $studentQuery);
+
+        $linkedStudents = [];
+        while ($student = pg_fetch_assoc($studentResult)) {
+            $linkedStudents[] = $student;
+        }
+
         echo json_encode([
             'status' => 'error',
             'message' => 'This mobile number is already registered',
             'beneficiary_id' => $row['id'],
-            'name' => $row['name']
+            'name' => $row['name'],
+            'linked_students' => $linkedStudents,
+            'has_linked_students' => !empty($linkedStudents)
         ]);
     } else {
         echo json_encode(['status' => 'success', 'message' => 'Mobile number available']);
+    }
+    exit;
+}
+
+// ---------------------------
+// Link beneficiary to student (AJAX)
+// ---------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['link_student'])) {
+    header('Content-Type: application/json');
+
+    $beneficiary_id = pg_escape_string($con, $_POST['beneficiary_id']);
+    $student_id = pg_escape_string($con, $_POST['student_id']);
+
+    // Check if student exists
+    $studentQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    $studentResult = pg_query($con, $studentQuery);
+
+    if (pg_num_rows($studentResult) === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
+        exit;
+    }
+
+    // Check if relationship already exists
+    $checkQuery = "SELECT * FROM parent_student_relationships 
+                   WHERE parent_id = '$beneficiary_id' AND student_id = '$student_id'";
+    $checkResult = pg_query($con, $checkQuery);
+
+    if (pg_num_rows($checkResult) > 0) {
+        echo json_encode(['status' => 'error', 'message' => 'This relationship already exists']);
+        exit;
+    }
+
+    // Check parent count
+    $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
+    $parentCountResult = pg_query($con, $parentCountQuery);
+    $parentCount = pg_fetch_assoc($parentCountResult)['parent_count'];
+
+    if ($parentCount >= 2) {
+        echo json_encode(['status' => 'error', 'message' => 'This student already has 2 parents registered']);
+        exit;
+    }
+
+    // Create relationship
+    $relationshipSql = "INSERT INTO parent_student_relationships (parent_id, student_id) 
+                        VALUES ('$beneficiary_id', '$student_id')";
+
+    if (pg_query($con, $relationshipSql)) {
+        // Mark as parent
+        $updateSql = "UPDATE public_health_records SET is_parent = TRUE WHERE id = '$beneficiary_id'";
+        pg_query($con, $updateSql);
+
+        echo json_encode(['status' => 'success', 'message' => 'Student linked successfully']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Error linking student: ' . pg_last_error($con)]);
     }
     exit;
 }
@@ -598,15 +668,91 @@ if (isset($_GET['success'])) {
                             step1.classList.remove('active');
                             step2.classList.add('active');
                         } else {
-                            // Show beneficiary details if available
-                            let errorHtml = '<div class="alert alert-danger">' + data.message;
+                            // Inside the mobile check response handler
+                            if (data.status === 'error') {
+                                // Show beneficiary details if available
+                                let errorHtml = '<div class="alert alert-danger">' + data.message;
 
-                            if (data.beneficiary_id && data.name) {
-                                errorHtml += `<br><small>Beneficiary ID: ${data.beneficiary_id}, Name: ${data.name}</small>`;
+                                if (data.beneficiary_id && data.name) {
+                                    errorHtml += `<br><small>Beneficiary ID: ${data.beneficiary_id}, Name: ${data.name}</small>`;
+
+                                    // Show linked students if any
+                                    if (data.has_linked_students) {
+                                        errorHtml += `<br><br><strong>Linked Students:</strong><ul>`;
+                                        data.linked_students.forEach(student => {
+                                            errorHtml += `<li>${student.studentname} (ID: ${student.student_id})</li>`;
+                                        });
+                                        errorHtml += `</ul>`;
+                                    } else {
+                                        errorHtml += `<br><br><div class="mt-3">
+                <p class="mb-2">No students are linked to this beneficiary. Would you like to link a student?</p>
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="link_student_id" placeholder="Enter student ID">
+                    <button type="button" class="btn btn-outline-primary" id="linkStudentBtn">
+                        <span id="linkSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
+                        Link Student
+                    </button>
+                </div>
+                <div id="linkStatus"></div>
+            </div>`;
+                                    }
+                                }
+
+                                errorHtml += '</div>';
+                                mobileStatus.innerHTML = errorHtml;
+
+                                // Add event listener for linking student if needed
+                                if (!data.has_linked_students) {
+                                    setTimeout(() => {
+                                        const linkStudentBtn = document.getElementById('linkStudentBtn');
+                                        const linkStudentId = document.getElementById('link_student_id');
+                                        const linkStatus = document.getElementById('linkStatus');
+                                        const linkSpinner = document.getElementById('linkSpinner');
+
+                                        if (linkStudentBtn) {
+                                            linkStudentBtn.addEventListener('click', function() {
+                                                const studentId = linkStudentId.value.trim();
+
+                                                if (!studentId) {
+                                                    linkStatus.innerHTML = '<div class="alert alert-danger mt-2">Please enter a student ID</div>';
+                                                    return;
+                                                }
+
+                                                linkStudentBtn.disabled = true;
+                                                linkSpinner.style.display = 'inline-block';
+
+                                                fetch('register_beneficiary.php', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                                        },
+                                                        body: `link_student=1&beneficiary_id=${data.beneficiary_id}&student_id=${studentId}`
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(linkData => {
+                                                        if (linkData.status === 'success') {
+                                                            linkStatus.innerHTML = '<div class="alert alert-success mt-2">' + linkData.message + '</div>';
+                                                            // Refresh the page after a short delay
+                                                            setTimeout(() => {
+                                                                location.reload();
+                                                            }, 2000);
+                                                        } else {
+                                                            linkStatus.innerHTML = '<div class="alert alert-danger mt-2">' + linkData.message + '</div>';
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error:', error);
+                                                        linkStatus.innerHTML = '<div class="alert alert-danger mt-2">Error linking student</div>';
+                                                    })
+                                                    .finally(() => {
+                                                        linkStudentBtn.disabled = false;
+                                                        linkSpinner.style.display = 'none';
+                                                    });
+                                            });
+                                        }
+                                    }, 100);
+                                }
                             }
-
-                            errorHtml += '</div>';
-                            mobileStatus.innerHTML = errorHtml;
                         }
                     })
                     .catch(error => {
