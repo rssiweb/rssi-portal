@@ -11,42 +11,98 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// Check mobile number availability (new endpoint)
+// ---------------------------
+// Check mobile number (AJAX)
+// ---------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_mobile'])) {
     header('Content-Type: application/json');
 
     $mobile = pg_escape_string($con, $_POST['mobile']);
 
-    // Validate mobile number format
+    // Validate mobile format
     if (!preg_match('/^[0-9]{10}$/', $mobile)) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid mobile number. Please enter exactly 10 digits.']);
         exit;
     }
 
-    // Check if mobile exists
-    $checkQuery = "SELECT 1 FROM public_health_records WHERE contact_number = '$mobile'";
+    // Check if exists
+    $checkQuery = "SELECT id, name FROM public_health_records WHERE contact_number = '$mobile'";
     $result = pg_query($con, $checkQuery);
 
     if (pg_num_rows($result) > 0) {
-        echo json_encode(['status' => 'error', 'message' => 'This mobile number is already registered']);
+        $row = pg_fetch_assoc($result);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'This mobile number is already registered',
+            'beneficiary_id' => $row['id'],
+            'name' => $row['name']
+        ]);
     } else {
         echo json_encode(['status' => 'success', 'message' => 'Mobile number available']);
     }
     exit;
 }
 
+// ---------------------------
+// Verify student ID (AJAX)
+// ---------------------------
+// Add this after the mobile check endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) {
+    header('Content-Type: application/json');
+
+    $student_id = pg_escape_string($con, $_POST['student_id']);
+
+    // Check if student exists in your student database (replace with your actual student table)
+    $studentQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    $studentResult = pg_query($con, $studentQuery);
+
+    if (pg_num_rows($studentResult) === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
+        exit;
+    }
+
+    $student = pg_fetch_assoc($studentResult);
+
+    // Check how many parents are already linked to this student
+    $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
+    $parentCountResult = pg_query($con, $parentCountQuery);
+    $parentCount = pg_fetch_assoc($parentCountResult)['parent_count'];
+
+    // Get existing parent details if any
+    $existingParentsQuery = "SELECT p.id, p.name 
+                             FROM parent_student_relationships psr
+                             JOIN public_health_records p ON psr.parent_id = p.id
+                             WHERE psr.student_id = '$student_id'";
+    $existingParentsResult = pg_query($con, $existingParentsQuery);
+    $existingParents = [];
+
+    while ($row = pg_fetch_assoc($existingParentsResult)) {
+        $existingParents[] = $row;
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'student_name' => $student['studentname'],
+        'parent_count' => $parentCount,
+        'existing_parents' => $existingParents
+    ]);
+    exit;
+}
+// ---------------------------
 // Handle form submission
+// ---------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     $mobile = pg_escape_string($con, $_POST['contact_number']);
 
-    // Proceed with registration
     $name = pg_escape_string($con, $_POST['name']);
     $email = pg_escape_string($con, $_POST['email'] ?? null);
     $dob = pg_escape_string($con, $_POST['date_of_birth']);
     $gender = pg_escape_string($con, $_POST['gender']);
     $referral = pg_escape_string($con, $_POST['referral_source']);
 
-    // Handle photo upload if exists
+    // ---------------------------
+    // Handle photo upload
+    // ---------------------------
     $photoUrl = null;
     if (!empty($_POST['photo_data'])) {
         $photoData = $_POST['photo_data'];
@@ -54,12 +110,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $photoData = str_replace(' ', '+', $photoData);
         $data = base64_decode($photoData);
 
-        // Create a temporary file
+        // Temporary file
         $tempFileName = 'temp_profile_' . $mobile . '_' . time() . '.jpg';
         $tempFilePath = sys_get_temp_dir() . '/' . $tempFileName;
         file_put_contents($tempFilePath, $data);
 
-        // Prepare file for Google Drive upload
+        // Prepare file for Drive
         $uploadedFile = [
             'name' => 'profile_' . $mobile . '_' . time() . '.jpg',
             'type' => 'image/jpeg',
@@ -68,37 +124,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             'size' => filesize($tempFilePath)
         ];
 
-        // Google Drive folder ID where you want to store photos
-        $parentFolderId = '1LtKZNkfWzxrgMTN2GSHF1O-d6AmFsLRD'; // Replace with your actual folder ID
-
-        // Upload to Google Drive
+        // Google Drive folder
+        $parentFolderId = '1LtKZNkfWzxrgMTN2GSHF1O-d6AmFsLRD'; // change to actual folder ID
         $photoUrl = uploadeToDrive($uploadedFile, $parentFolderId, 'profile_' . $mobile);
 
-        // Delete the temporary file
-        unlink($tempFilePath);
+        unlink($tempFilePath); // cleanup
     }
 
-    // Then use $photoUrl in your SQL insert instead of $photoPath
+    // ---------------------------
+    // Insert record
+    // ---------------------------
     $sql = "INSERT INTO public_health_records 
-       (contact_number, name, email, date_of_birth, gender, referral_source, profile_photo, registration_completed, created_at)
-       VALUES 
-       ('$mobile', '$name', '$email', '$dob', '$gender', '$referral', '$photoUrl', TRUE, CURRENT_TIMESTAMP)";
+        (contact_number, name, email, date_of_birth, gender, referral_source, profile_photo, registration_completed, created_at)
+        VALUES 
+        ('$mobile', '$name', '$email', '$dob', '$gender', '$referral', '$photoUrl', TRUE, CURRENT_TIMESTAMP)";
 
     if (pg_query($con, $sql)) {
-        $_SESSION['registration_success'] = true;
-        header("Location: " . $_SERVER['PHP_SELF']);
+        // Fetch new ID
+        $idQuery = "SELECT id FROM public_health_records WHERE contact_number = '$mobile' ORDER BY created_at DESC LIMIT 1";
+        $idResult = pg_query($con, $idQuery);
+        $newRecord = pg_fetch_assoc($idResult);
+        $new_id = $newRecord['id'];
+
+        // ---------------------------
+        // Parent registration
+        // ---------------------------
+        // If this is a parent registration, create the relationship
+        if (isset($_POST['is_parent']) && $_POST['is_parent'] == 'yes' && !empty($_POST['student_id'])) {
+            $student_id = pg_escape_string($con, $_POST['student_id']);
+
+            // Check parent count again (in case of race conditions)
+            $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
+            $parentCountResult = pg_query($con, $parentCountQuery);
+            $parentCount = pg_fetch_assoc($parentCountResult)['parent_count'];
+
+            if ($parentCount < 2) {
+                // Create relationship
+                $relationshipSql = "INSERT INTO parent_student_relationships (parent_id, student_id) 
+                                VALUES ('$new_id', '$student_id')";
+                pg_query($con, $relationshipSql);
+
+                // Mark as parent
+                $updateSql = "UPDATE public_health_records SET is_parent = TRUE WHERE id = '$new_id'";
+                pg_query($con, $updateSql);
+            } else {
+                // Log error - this shouldn't happen due to frontend validation
+                error_log("Attempted to add third parent to student $student_id");
+            }
+        }
+
+        // Redirect with query params (avoids resubmit)
+        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&beneficiary_id=" . urlencode($new_id));
         exit;
     } else {
         $error = "Error: " . pg_last_error($con);
     }
 }
 
-// Clear success message on page load
-if (isset($_SESSION['registration_success'])) {
+// ---------------------------
+// Show success message
+// ---------------------------
+if (isset($_GET['success'])) {
     $success = "Registration successful! Thank you.";
-    unset($_SESSION['registration_success']);
+    $beneficiary_id = $_GET['beneficiary_id'] ?? null;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -259,6 +350,9 @@ if (isset($_SESSION['registration_success'])) {
                         <?php if (isset($success)): ?>
                             <div class="alert alert-success text-center">
                                 <i class="fas fa-check-circle me-2"></i><?= $success ?>
+                                <?php if (!empty($beneficiary_id)): ?>
+                                    <br><strong>Your Beneficiary ID: <?= htmlspecialchars($beneficiary_id) ?></strong>
+                                <?php endif; ?>
                             </div>
                             <div class="text-center mt-4">
                                 <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-primary px-4">
@@ -355,6 +449,46 @@ if (isset($_SESSION['registration_success'])) {
                                                     <option value="Female">Female</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h5 class="section-title">
+                                            <i class="fas fa-users"></i> Parent-Student Relationship
+                                        </h5>
+
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Are you a parent of a student registered in RSSI NGO or Kalpana Buds School?</label>
+                                            <div class="d-flex gap-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="is_parent" id="is_parent_yes" value="yes">
+                                                    <label class="form-check-label" for="is_parent_yes">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="is_parent" id="is_parent_no" value="no" checked>
+                                                    <label class="form-check-label" for="is_parent_no">No</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="studentIdSection" style="display: none;">
+                                            <div class="mb-3">
+                                                <label for="student_id" class="form-label">Student ID</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Enter student ID">
+                                                    <button type="button" class="btn btn-outline-secondary" id="verifyStudentBtn">
+                                                        <span id="studentSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
+                                                        Verify
+                                                    </button>
+                                                </div>
+                                                <small class="text-muted">Please enter the official student ID</small>
+                                            </div>
+
+                                            <div id="studentStatus" class="mb-3"></div>
+
+                                            <div id="existingParentsInfo" class="alert alert-info" style="display: none;">
+                                                <h6>Existing Parents for this Student:</h6>
+                                                <div id="parentsList"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -464,7 +598,15 @@ if (isset($_SESSION['registration_success'])) {
                             step1.classList.remove('active');
                             step2.classList.add('active');
                         } else {
-                            mobileStatus.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+                            // Show beneficiary details if available
+                            let errorHtml = '<div class="alert alert-danger">' + data.message;
+
+                            if (data.beneficiary_id && data.name) {
+                                errorHtml += `<br><small>Beneficiary ID: ${data.beneficiary_id}, Name: ${data.name}</small>`;
+                            }
+
+                            errorHtml += '</div>';
+                            mobileStatus.innerHTML = errorHtml;
                         }
                     })
                     .catch(error => {
@@ -564,6 +706,152 @@ if (isset($_SESSION['registration_success'])) {
                 takePhotoBtn.style.display = 'block';
                 uploadPhotoBtn.style.display = 'block';
             });
+        });
+    </script>
+    <script>
+        // Add these variables at the top with other element declarations
+        const isParentYes = document.getElementById('is_parent_yes');
+        const isParentNo = document.getElementById('is_parent_no');
+        const studentIdSection = document.getElementById('studentIdSection');
+        const studentIdInput = document.getElementById('student_id');
+        const verifyStudentBtn = document.getElementById('verifyStudentBtn');
+        const studentStatus = document.getElementById('studentStatus');
+        const studentSpinner = document.getElementById('studentSpinner');
+        const existingParentsInfo = document.getElementById('existingParentsInfo');
+        const parentsList = document.getElementById('parentsList');
+        const submitButton = document.querySelector('button[name="register"]');
+
+        // Track student verification status
+        let isStudentVerified = false;
+
+        // Toggle student ID section based on radio button
+        function toggleStudentSection() {
+            const isParent = isParentYes.checked;
+            studentIdSection.style.display = isParent ? 'block' : 'none';
+
+            if (!isParent) {
+                studentIdInput.value = '';
+                studentStatus.innerHTML = '';
+                existingParentsInfo.style.display = 'none';
+                isStudentVerified = false;
+                updateSubmitButton();
+            } else {
+                isStudentVerified = false;
+                updateSubmitButton();
+            }
+        }
+
+        isParentYes.addEventListener('change', toggleStudentSection);
+        isParentNo.addEventListener('change', toggleStudentSection);
+
+        // Verify student ID
+        verifyStudentBtn.addEventListener('click', function() {
+            const studentId = studentIdInput.value.trim();
+
+            if (!studentId) {
+                studentStatus.innerHTML = '<div class="alert alert-danger">Please enter a student ID</div>';
+                return;
+            }
+
+            verifyStudentBtn.disabled = true;
+            studentSpinner.style.display = 'inline-block';
+            studentStatus.innerHTML = '';
+
+            fetch('register_beneficiary.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `check_student_id=1&student_id=${studentId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        let statusHtml = `<div class="alert alert-success">
+                Student verified: ${data.student_name}<br>
+                Currently has ${data.parent_count} parent(s) registered
+            </div>`;
+
+                        studentStatus.innerHTML = statusHtml;
+
+                        // Show existing parents if any
+                        if (data.existing_parents && data.existing_parents.length > 0) {
+                            let parentsHtml = '<ul class="mb-0">';
+                            data.existing_parents.forEach(parent => {
+                                parentsHtml += `<li>${parent.name} (ID: ${parent.id})</li>`;
+                            });
+                            parentsHtml += '</ul>';
+
+                            parentsList.innerHTML = parentsHtml;
+                            existingParentsInfo.style.display = 'block';
+
+                            // Show warning if already 2 parents
+                            if (data.parent_count >= 2) {
+                                studentStatus.innerHTML += '<div class="alert alert-warning mt-2">This student already has 2 parents registered. You cannot add more parents.</div>';
+                                verifyStudentBtn.disabled = true;
+                                isStudentVerified = false;
+                            } else {
+                                isStudentVerified = true;
+                            }
+                        } else {
+                            existingParentsInfo.style.display = 'none';
+                            isStudentVerified = true;
+                        }
+                    } else {
+                        studentStatus.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        isStudentVerified = false;
+                    }
+                    updateSubmitButton();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    studentStatus.innerHTML = '<div class="alert alert-danger">Error verifying student ID</div>';
+                    isStudentVerified = false;
+                    updateSubmitButton();
+                })
+                .finally(() => {
+                    verifyStudentBtn.disabled = false;
+                    studentSpinner.style.display = 'none';
+                });
+        });
+
+        // Update submit button state
+        function updateSubmitButton() {
+            if (isParentYes.checked && !isStudentVerified) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-ban me-2"></i> Please verify student ID first';
+            } else {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-user-check me-2"></i> Complete Registration';
+            }
+        }
+
+        // Update form submission to include parent data
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const isParent = isParentYes.checked;
+            const studentId = studentIdInput.value.trim();
+
+            if (isParent && !isStudentVerified) {
+                e.preventDefault();
+                studentStatus.innerHTML = '<div class="alert alert-danger">Please verify the student ID before submitting</div>';
+                studentIdSection.scrollIntoView({
+                    behavior: 'smooth'
+                });
+                return;
+            }
+
+            // Additional validation for maximum parents
+            if (isParent && studentId) {
+                const parentCountMatch = studentStatus.textContent.match(/Currently has (\d+) parent/);
+                if (parentCountMatch && parseInt(parentCountMatch[1]) >= 2) {
+                    e.preventDefault();
+                    studentStatus.innerHTML += '<div class="alert alert-danger mt-2">Cannot proceed. This student already has 2 parents.</div>';
+                    studentIdSection.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+            }
         });
     </script>
 </body>
