@@ -132,8 +132,16 @@ if ($activeTab == 'dashboard') {
 } elseif ($activeTab == 'health-records') {
     $healthFilterQuery = $baseHealthQuery;
 
+    // Set default date range to last month if not specified
+    $start_date = !empty($_GET['start_date']) ? pg_escape_string($con, $_GET['start_date']) : date('Y-m-d', strtotime('-1 month'));
+    $end_date = !empty($_GET['end_date']) ? pg_escape_string($con, $_GET['end_date']) : date('Y-m-d');
+
+    // Add date range filter
+    $healthFilterQuery .= " AND sh.record_date BETWEEN '$start_date' AND '$end_date'";
+
     if (!empty($_GET['search'])) {
         $search = pg_escape_string($con, $_GET['search']);
+        // Search by both name and beneficiary ID in a single field
         $healthFilterQuery .= " AND (p.name ILIKE '%$search%' OR p.id::text ILIKE '%$search%' OR p.contact_number ILIKE '%$search%')";
     }
 
@@ -833,36 +841,39 @@ function getStudentVerificationBadge($linkedStudents)
                                 <form method="GET" action="">
                                     <input type="hidden" name="tab" value="health-records">
                                     <input type="hidden" name="academic_year" value="<?php echo $selectedAcademicYear; ?>">
+
                                     <!-- Add current filter values as hidden fields if they exist -->
-                                    <!-- <?php if (isset($_GET['class'])) : ?>
+                                    <?php if (isset($_GET['class'])) : ?>
                                         <input type="hidden" name="class" value="<?php echo htmlspecialchars($_GET['class']); ?>">
-                                    <?php endif; ?> -->
-                                    <?php if (isset($_GET['search'])) : ?>
-                                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>">
                                     <?php endif; ?>
 
-
                                     <div class="row mb-3">
-                                        <!-- <div class="col-md-4">
-                                            <select class="form-select" name="class">
-                                                <option value="">All Classes</option>
-                                                <?php
-                                                foreach ($classes as $class) {
-                                                    $selected = (isset($_GET['class']) && $_GET['class'] == $class) ? 'selected' : '';
-                                                    echo '<option value="' . htmlspecialchars($class) . '" ' . $selected . '>' . htmlspecialchars($class) . '</option>';
-                                                }
-                                                ?>
-                                            </select>
-                                        </div> -->
                                         <div class="col-md-4">
-                                            <input type="text" class="form-control" name="search" placeholder="Search beneficiary..."
+                                            <input type="text" class="form-control" name="search" placeholder="Search by name or beneficiary ID..."
                                                 value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="input-group">
+                                                <span class="input-group-text">Date Range</span>
+                                                <input type="date" class="form-control" name="start_date"
+                                                    value="<?php echo isset($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : date('Y-m-d', strtotime('-1 month')); ?>">
+                                                <span class="input-group-text">to</span>
+                                                <input type="date" class="form-control" name="end_date"
+                                                    value="<?php echo isset($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : date('Y-m-d'); ?>">
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <button type="submit" class="btn btn-primary">Filter</button>
                                             <a href="<?php echo getBaseFilterUrl(); ?>" class="btn btn-outline-secondary">Reset</a>
                                         </div>
                                     </div>
+
+                                    <!-- Display record count -->
+                                    <?php if (isset($healthRecords)) : ?>
+                                        <div class="alert alert-info">
+                                            Found <?php echo count($healthRecords); ?> record(s) matching your criteria
+                                        </div>
+                                    <?php endif; ?>
                                 </form>
 
                                 <?php
