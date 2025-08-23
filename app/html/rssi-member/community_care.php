@@ -254,10 +254,10 @@ if ($academicYear) {
     list($startYear, $endYear) = explode('-', $academicYear);
     $academicYearEnd = $endYear . '-03-31'; // Academic year ends March 31
 
-    $academicCondition = "WHERE created_at <= '$academicYearEnd'
+    $academicCondition = "WHERE phr.created_at <= '$academicYearEnd'
                           AND (
-                              effectivefrom IS NULL
-                              OR effectivefrom > '$academicYearEnd'
+                              phr.effectivefrom IS NULL
+                              OR phr.effectivefrom > '$academicYearEnd'
                           )";
 }
 
@@ -266,21 +266,38 @@ $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
 $search_condition = '';
 if ($search) {
     $search_condition = (empty($academicCondition) ? 'WHERE' : 'AND') .
-        " (name ILIKE '%$search%' OR contact_number LIKE '%$search%' OR email ILIKE '%$search%')";
+        " (phr.name ILIKE '%$search%' 
+           OR phr.contact_number LIKE '%$search%' 
+           OR phr.email ILIKE '%$search%'
+           OR phr.id IN (
+               SELECT DISTINCT psr.parent_id 
+               FROM parent_student_relationships psr
+               JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+               WHERE s.student_id ILIKE '%$search%' 
+                  OR s.studentname ILIKE '%$search%'
+           ))";
 }
 
 // Combine conditions
 $where_clause = $academicCondition . $search_condition;
 
-// Get total records for pagination
-$total_query = "SELECT COUNT(*) FROM public_health_records $where_clause";
+// Get total records for pagination (with JOIN to handle student search)
+$total_query = "SELECT COUNT(DISTINCT phr.id) 
+                FROM public_health_records phr
+                LEFT JOIN parent_student_relationships psr ON phr.id = psr.parent_id
+                LEFT JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                $where_clause";
 $total_result = pg_query($con, $total_query);
 $total_records = pg_fetch_result($total_result, 0, 0);
 $total_pages = ceil($total_records / $records_per_page);
 
 // Get records for current page
-$query = "SELECT * FROM public_health_records $where_clause
-          ORDER BY created_at DESC 
+$query = "SELECT DISTINCT phr.* 
+          FROM public_health_records phr
+          LEFT JOIN parent_student_relationships psr ON phr.id = psr.parent_id
+          LEFT JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+          $where_clause
+          ORDER BY phr.created_at DESC 
           LIMIT $records_per_page OFFSET $offset";
 $result = pg_query($con, $query);
 ?>
@@ -574,26 +591,13 @@ function getStudentVerificationBadge($linkedStudents)
                                         </a>
                                     </div>
                                     <div class="card-body">
-                                        <!-- <div class="chart-container">
-                                            <canvas id="growthChart"></canvas>
-                                        </div> -->
-
-                                        <!-- <div class="container py-4"> -->
-                                        <!-- <div class="card"> -->
-                                        <!-- <div class="card-header text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Beneficiary List</h5>
-                <a href="register_beneficiary.php" class="btn btn-light btn-sm" target="_blank">
-                    <i class="fas fa-user-plus me-1"></i> New Registration
-                </a>
-            </div> -->
 
                                         <div class="card-body">
                                             <div class="row mb-4">
                                                 <div class="col-md-8">
                                                     <form method="get" class="search-box">
                                                         <i class="fas fa-search"></i>
-                                                        <input type="text" name="search" class="form-control" placeholder="Search by name, mobile or email..."
-                                                            value="<?= htmlspecialchars($search) ?>">
+                                                        <input type="text" name="search" class="form-control" placeholder="Search by name, mobile, email, or linked student name/ID" value="<?= htmlspecialchars($search ?? '') ?>">
                                                     </form>
                                                 </div>
                                                 <div class="col-md-4 text-end">

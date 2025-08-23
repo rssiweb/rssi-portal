@@ -685,7 +685,7 @@ if (isset($_GET['success'])) {
                                         errorHtml += `</ul>`;
                                     } else {
                                         errorHtml += `<br><br><div class="mt-3">
-                <p class="mb-2">No students are linked to this beneficiary. Would you like to link a student?</p>
+                <p class="mb-2">Does your child study here? If yes, you can link them to avail exclusive offers.</p>
                 <div class="input-group mb-2">
                     <input type="text" class="form-control" id="link_student_id" placeholder="Enter student ID">
                     <button type="button" class="btn btn-outline-primary" id="linkStudentBtn">
