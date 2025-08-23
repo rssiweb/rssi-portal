@@ -477,6 +477,9 @@ if (isset($_GET['success'])) {
                                         <span id="mobileSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
                                         Check Availability
                                     </button>
+                                    <button type="button" id="checkAnotherBtn" class="btn btn-outline-primary mt-2" style="display: none;">
+                                        Check Another Number
+                                    </button>
                                 </div>
                             </div>
 
@@ -646,6 +649,7 @@ if (isset($_GET['success'])) {
             const mobileInput = document.getElementById('mobile');
             const contactNumber = document.getElementById('contact_number');
             const checkMobileBtn = document.getElementById('checkMobileBtn');
+            const checkAnotherBtn = document.getElementById('checkAnotherBtn');
             const mobileStatus = document.getElementById('mobileStatus');
             const mobileSpinner = document.getElementById('mobileSpinner');
 
@@ -660,6 +664,9 @@ if (isset($_GET['success'])) {
             const cameraContainer = document.querySelector('.camera-container');
             const captureBtn = document.getElementById('captureBtn');
             const cancelCaptureBtn = document.getElementById('cancelCaptureBtn');
+
+            // Track mobile verification status
+            let isMobileVerified = false;
 
             // Mobile number validation
             mobileInput.addEventListener('input', function() {
@@ -693,8 +700,16 @@ if (isset($_GET['success'])) {
                             step1.classList.remove('active');
                             step2.classList.add('active');
                         } else {
-                            // Inside the mobile check response handler
+                            // If number already exists
                             if (data.status === 'error') {
+                                // Disable the mobile input
+                                mobileInput.disabled = true;
+                                isMobileVerified = true;
+
+                                // Show "Check Another" button, hide "Check Availability" button
+                                checkMobileBtn.style.display = 'none';
+                                checkAnotherBtn.style.display = 'block';
+
                                 // Show beneficiary details if available
                                 let errorHtml = '<div class="alert alert-danger">' + data.message;
 
@@ -710,16 +725,16 @@ if (isset($_GET['success'])) {
                                         errorHtml += `</ul>`;
                                     } else {
                                         errorHtml += `<br><br><div class="mt-3">
-                <p class="mb-2">Does your child study here? If yes, you can link them to avail exclusive offers.</p>
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control" id="link_student_id" placeholder="Enter student ID">
-                    <button type="button" class="btn btn-outline-primary" id="linkStudentBtn">
-                        <span id="linkSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
-                        Link Student
-                    </button>
-                </div>
-                <div id="linkStatus"></div>
-            </div>`;
+                                    <p class="mb-2">Does your child study here? If yes, you can link them to avail exclusive offers.</p>
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" id="link_student_id" placeholder="Enter student ID">
+                                        <button type="button" class="btn btn-outline-primary" id="linkStudentBtn">
+                                            <span id="linkSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
+                                            Link Student
+                                        </button>
+                                    </div>
+                                    <div id="linkStatus"></div>
+                                    </div>`;
                                     }
                                 }
 
@@ -788,6 +803,17 @@ if (isset($_GET['success'])) {
                         checkMobileBtn.disabled = false;
                         mobileSpinner.style.display = 'none';
                     });
+            });
+
+            // Check another number button handler
+            checkAnotherBtn.addEventListener('click', function() {
+                // Reset to initial state
+                mobileInput.value = '';
+                mobileInput.disabled = false;
+                mobileStatus.innerHTML = '';
+                checkMobileBtn.style.display = 'block';
+                checkAnotherBtn.style.display = 'none';
+                isMobileVerified = false;
             });
 
             // Photo upload handler
