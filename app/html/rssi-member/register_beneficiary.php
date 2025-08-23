@@ -572,6 +572,9 @@ if (isset($_GET['success'])) {
                                                         <span id="studentSpinner" class="spinner-border spinner-border-sm me-1" style="display: none;"></span>
                                                         Verify
                                                     </button>
+                                                    <button type="button" class="btn btn-outline-danger" id="resetStudentBtn" style="display: none;">
+                                                        <i class="fas fa-undo me-1"></i> Reset
+                                                    </button>
                                                 </div>
                                                 <small class="text-muted">Please enter the official student ID</small>
                                             </div>
@@ -883,26 +886,47 @@ if (isset($_GET['success'])) {
         const studentIdSection = document.getElementById('studentIdSection');
         const studentIdInput = document.getElementById('student_id');
         const verifyStudentBtn = document.getElementById('verifyStudentBtn');
+        const resetStudentBtn = document.getElementById('resetStudentBtn');
         const studentStatus = document.getElementById('studentStatus');
         const studentSpinner = document.getElementById('studentSpinner');
         const existingParentsInfo = document.getElementById('existingParentsInfo');
         const parentsList = document.getElementById('parentsList');
         const submitButton = document.querySelector('button[name="register"]');
 
+        // Create a hidden input to store the verified student ID for submission
+        const hiddenStudentIdInput = document.createElement('input');
+        hiddenStudentIdInput.type = 'hidden';
+        hiddenStudentIdInput.name = 'student_id';
+        hiddenStudentIdInput.id = 'hidden_student_id';
+        document.getElementById('registrationForm').appendChild(hiddenStudentIdInput);
+
         // Track student verification status
         let isStudentVerified = false;
+        let verifiedStudentId = '';
+
+        // Function to reset student verification to initial state
+        function resetStudentVerification() {
+            isStudentVerified = false;
+            verifiedStudentId = '';
+            studentIdInput.disabled = false;
+            studentIdInput.value = '';
+            studentIdInput.name = 'student_id'; // Restore the name attribute
+            hiddenStudentIdInput.value = ''; // Clear the hidden field
+            verifyStudentBtn.style.display = 'block';
+            resetStudentBtn.style.display = 'none';
+            studentStatus.innerHTML = '';
+            existingParentsInfo.style.display = 'none';
+            updateSubmitButton();
+        }
 
         // Toggle student ID section based on radio button
         function toggleStudentSection() {
             const isParent = isParentYes.checked;
             studentIdSection.style.display = isParent ? 'block' : 'none';
 
+            // Reset verification when switching from Yes to No
             if (!isParent) {
-                studentIdInput.value = '';
-                studentStatus.innerHTML = '';
-                existingParentsInfo.style.display = 'none';
-                isStudentVerified = false;
-                updateSubmitButton();
+                resetStudentVerification();
             } else {
                 isStudentVerified = false;
                 updateSubmitButton();
@@ -935,9 +959,22 @@ if (isset($_GET['success'])) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        // Lock the input field for UI but keep it submittable
+                        studentIdInput.disabled = true;
+                        studentIdInput.name = ''; // Remove name to exclude from submission
+                        hiddenStudentIdInput.value = studentId; // Store value in hidden field
+
+                        isStudentVerified = true;
+                        verifiedStudentId = studentId;
+
+                        // Show reset button, hide verify button
+                        resetStudentBtn.style.display = 'block';
+                        verifyStudentBtn.style.display = 'none';
+
                         let statusHtml = `<div class="alert alert-success">
-                Student verified: ${data.student_name}<br>
+                <i class="fas fa-check-circle me-2"></i>Student verified: ${data.student_name}<br>
                 Currently has ${data.parent_count} parent(s) registered
+                <div class="verified-badge mt-2"><i class="fas fa-lock me-1"></i>Verified & Locked</div>
             </div>`;
 
                         studentStatus.innerHTML = statusHtml;
@@ -956,24 +993,26 @@ if (isset($_GET['success'])) {
                             // Show warning if already 2 parents
                             if (data.parent_count >= 2) {
                                 studentStatus.innerHTML += '<div class="alert alert-warning mt-2">This student already has 2 parents registered. You cannot add more parents.</div>';
-                                verifyStudentBtn.disabled = true;
                                 isStudentVerified = false;
-                            } else {
-                                isStudentVerified = true;
+                                // Re-enable editing if student has 2 parents already
+                                studentIdInput.disabled = false;
+                                studentIdInput.name = 'student_id';
+                                hiddenStudentIdInput.value = '';
+                                resetStudentBtn.style.display = 'none';
+                                verifyStudentBtn.style.display = 'block';
                             }
                         } else {
                             existingParentsInfo.style.display = 'none';
-                            isStudentVerified = true;
                         }
                     } else {
-                        studentStatus.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        studentStatus.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${data.message}</div>`;
                         isStudentVerified = false;
                     }
                     updateSubmitButton();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    studentStatus.innerHTML = '<div class="alert alert-danger">Error verifying student ID</div>';
+                    studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error verifying student ID</div>';
                     isStudentVerified = false;
                     updateSubmitButton();
                 })
@@ -981,6 +1020,12 @@ if (isset($_GET['success'])) {
                     verifyStudentBtn.disabled = false;
                     studentSpinner.style.display = 'none';
                 });
+        });
+
+        // Reset student verification
+        resetStudentBtn.addEventListener('click', function() {
+            resetStudentVerification();
+            studentIdInput.focus(); // Focus on the input field
         });
 
         // Update submit button state
@@ -994,11 +1039,25 @@ if (isset($_GET['success'])) {
             }
         }
 
-        // Update form submission to include parent data
+        // Add server-side validation
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             const isParent = isParentYes.checked;
-            const studentId = studentIdInput.value.trim();
+            const studentId = isStudentVerified ? hiddenStudentIdInput.value : studentIdInput.value.trim();
 
+            // Additional security: Verify the student ID hasn't been tampered with
+            if (isParent && isStudentVerified && studentId !== verifiedStudentId) {
+                e.preventDefault();
+                studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Security alert: Student ID has been modified after verification. Please verify again.</div>';
+                studentIdSection.scrollIntoView({
+                    behavior: 'smooth'
+                });
+
+                // Reset verification state
+                resetStudentVerification();
+                return;
+            }
+
+            // If user is a parent but hasn't verified student ID
             if (isParent && !isStudentVerified) {
                 e.preventDefault();
                 studentStatus.innerHTML = '<div class="alert alert-danger">Please verify the student ID before submitting</div>';
