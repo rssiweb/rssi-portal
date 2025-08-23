@@ -284,6 +284,42 @@ $query = "SELECT * FROM public_health_records $where_clause
           LIMIT $records_per_page OFFSET $offset";
 $result = pg_query($con, $query);
 ?>
+<?php
+function getStudentVerificationBadge($linkedStudents)
+{
+    if (empty($linkedStudents)) {
+        return '';
+    }
+
+    $hasActiveStudent = false;
+    $studentDetails = '';
+
+    foreach ($linkedStudents as $student) {
+        // Check if student is active (assuming 'Active' string or boolean true)
+        $isActive = ($student['is_active'] === 'Active' || $student['is_active'] === true);
+        if ($isActive) {
+            $hasActiveStudent = true;
+        }
+
+        // Build student details for tooltip
+        $studentDetails .= '• ' . htmlspecialchars($student['studentname']) .
+            ' (ID: ' . $student['student_id'] . ') - ' .
+            ($isActive ? 'Active' : 'Inactive') . '<br>';
+    }
+
+    $iconClass = $hasActiveStudent ? 'bi bi-patch-check text-primary' : 'bi bi-patch-exclamation text-secondary';
+    $tooltipTitle = "<strong>Linked Students:</strong><br>" . $studentDetails;
+
+    return '<span class="position-relative ms-1">
+                <i class="' . $iconClass . '"
+                   style="font-size: 1rem; cursor: pointer;' . (!$hasActiveStudent ? ' opacity: 0.6;' : '') . '"
+                   data-bs-toggle="tooltip"
+                   data-bs-html="true"
+                   title="' . htmlspecialchars($tooltipTitle, ENT_QUOTES) . '">
+                </i>
+            </span>';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -599,13 +635,29 @@ $result = pg_query($con, $query);
                                                             <th>Email</th>
                                                             <th>Age</th>
                                                             <th>Gender</th>
+                                                            <th>Linked Student</th>
                                                             <th>Registered On</th>
-                                                            <!-- <th>Actions</th> -->
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         <?php if (pg_num_rows($result) > 0): ?>
-                                                            <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                            <?php
+                                                            while ($row = pg_fetch_assoc($result)):
+                                                                // Check if this beneficiary is linked to any students and their status
+                                                                $beneficiary_id = $row['id'];
+                                                                $studentQuery = "SELECT psr.student_id, s.studentname, s.filterstatus AS is_active 
+                                                                FROM parent_student_relationships psr
+                                                                JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                                                                WHERE psr.parent_id = '$beneficiary_id'";
+                                                                $studentResult = pg_query($con, $studentQuery);
+                                                                $linkedStudents = [];
+
+                                                                while ($student = pg_fetch_assoc($studentResult)) {
+                                                                    $linkedStudents[] = $student;
+                                                                }
+
+                                                                $hasLinkedStudents = !empty($linkedStudents);
+                                                            ?>
                                                                 <tr>
                                                                     <td><?= $row['id'] ?></td>
                                                                     <td>
@@ -641,7 +693,10 @@ $result = pg_query($con, $query);
                                                                             </div>
                                                                         <?php endif; ?>
                                                                     </td>
-                                                                    <td><?= htmlspecialchars($row['name']) ?></td>
+                                                                    <td>
+                                                                        <?= htmlspecialchars($row['name']) ?>
+                                                                        <?= getStudentVerificationBadge($linkedStudents) ?>
+                                                                    </td>
                                                                     <td><?= htmlspecialchars($row['contact_number']) ?></td>
                                                                     <td><?= isset($row['email']) ? htmlspecialchars($row['email']) : '' ?></td>
                                                                     <td>
@@ -652,17 +707,22 @@ $result = pg_query($con, $query);
                                                                         ?>
                                                                     </td>
                                                                     <td><?= htmlspecialchars($row['gender']) ?></td>
+                                                                    <td>
+                                                                        <?php if ($hasLinkedStudents): ?>
+                                                                            <?php foreach ($linkedStudents as $student): ?>
+                                                                                <div class="student-info">
+                                                                                    <span class="student-name"><?= htmlspecialchars($student['studentname']) ?></span>
+                                                                                    <small class="text-muted d-block">ID: <?= $student['student_id'] ?></small>
+                                                                                    <span class="badge badge-sm <?= $student['is_active'] == 'Active' ? 'bg-success' : 'bg-secondary' ?>">
+                                                                                        <?= $student['is_active'] == 'Active' ? 'Active' : 'Inactive' ?>
+                                                                                    </span>
+                                                                                </div>
+                                                                            <?php endforeach; ?>
+                                                                        <?php else: ?>
+                                                                            <span class="text-muted">None</span>
+                                                                        <?php endif; ?>
+                                                                    </td>
                                                                     <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
-                                                                    <!-- <td>
-                                            <a href="view_beneficiary.php?id=<?= $row['id'] ?>"
-                                                class="btn btn-sm btn-outline-primary" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="edit_beneficiary.php?id=<?= $row['id'] ?>"
-                                                class="btn btn-sm btn-outline-secondary" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        </td> -->
                                                                 </tr>
                                                             <?php endwhile; ?>
                                                         <?php else: ?>
@@ -681,6 +741,15 @@ $result = pg_query($con, $query);
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            <!-- Add this script at the end of your page to initialize tooltips -->
+                                            <script>
+                                                // Initialize Bootstrap tooltips
+                                                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                                                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                                                });
+                                            </script>
 
                                             <?php if ($total_pages > 1): ?>
                                                 <nav aria-label="Page navigation">
@@ -1199,6 +1268,7 @@ $result = pg_query($con, $query);
                                         </thead>
                                         <tbody>
                                             <?php if (!empty($healthRecords)): ?>
+
                                                 <?php foreach ($healthRecords as $row):
                                                     $statuses = calculateHealthStatuses(
                                                         $row['age_at_record'] ?? 0,
@@ -1206,13 +1276,27 @@ $result = pg_query($con, $query);
                                                         $row['blood_pressure'] ?? '',
                                                         ($row['vision_left'] ?? '') . '/' . ($row['vision_right'] ?? '')
                                                     );
+
+                                                    // Fetch linked students for this beneficiary
+                                                    $beneficiary_id = $row['student_id']; // Adjust based on your column name
+                                                    $studentQuery = "SELECT psr.student_id, s.studentname, s.filterstatus AS is_active 
+                                                    FROM parent_student_relationships psr
+                                                    JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                                                    WHERE psr.parent_id = '$beneficiary_id'";
+                                                    $studentResult = pg_query($con, $studentQuery);
+                                                    $linkedStudents = [];
+
+                                                    while ($student = pg_fetch_assoc($studentResult)) {
+                                                        $linkedStudents[] = $student;
+                                                    }
                                                 ?>
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0"><?= htmlspecialchars($row['name']) ?></h6>
+                                                                    <h6 class="mb-0"><?= htmlspecialchars($row['name']) ?><?= getStudentVerificationBadge($linkedStudents) ?></h6>
+
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1332,12 +1416,24 @@ $result = pg_query($con, $query);
                                             <?php
                                             if (isset($periodFilterResult)) {
                                                 while ($row = pg_fetch_assoc($periodFilterResult)) {
+                                                    // Fetch linked students for this beneficiary
+                                                    $beneficiary_id = $row['student_id']; // Use the correct column name
+                                                    $studentQuery = "SELECT psr.student_id, s.studentname, s.filterstatus AS is_active 
+                                    FROM parent_student_relationships psr
+                                    JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                                    WHERE psr.parent_id = '$beneficiary_id'";
+                                                    $studentResult = pg_query($con, $studentQuery);
+                                                    $linkedStudents = [];
+
+                                                    while ($student = pg_fetch_assoc($studentResult)) {
+                                                        $linkedStudents[] = $student;
+                                                    }
                                                     echo '<tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <img src="https://ui-avatars.com/api/?name=' . urlencode($row['name']) . '&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . '</h6>
+                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . getStudentVerificationBadge($linkedStudents) . '</h6>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1456,12 +1552,25 @@ $result = pg_query($con, $query);
                                                 while ($row = pg_fetch_assoc($padFilterResult)) {
                                                     $academicYear = getAcademicYear($row['date']);
 
+                                                    // Fetch linked students for this beneficiary
+                                                    $beneficiary_id = $row['distributed_to']; // Use the correct column name
+                                                    $studentQuery = "SELECT psr.student_id, s.studentname, s.filterstatus AS is_active 
+                                                    FROM parent_student_relationships psr
+                                                    JOIN rssimyprofile_student s ON psr.student_id = s.student_id
+                                                    WHERE psr.parent_id = '$beneficiary_id'";
+                                                    $studentResult = pg_query($con, $studentQuery);
+                                                    $linkedStudents = [];
+
+                                                    while ($student = pg_fetch_assoc($studentResult)) {
+                                                        $linkedStudents[] = $student;
+                                                    }
+
                                                     echo '<tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <img src="https://ui-avatars.com/api/?name=' . urlencode($row['name']) . '&background=random" class="avatar me-2">
                                                                 <div>
-                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . '</h6>
+                                                                    <h6 class="mb-0">' . htmlspecialchars($row['name']) . getStudentVerificationBadge($linkedStudents) . '</h6>
                                                                 </div>
                                                             </div>
                                                         </td>
