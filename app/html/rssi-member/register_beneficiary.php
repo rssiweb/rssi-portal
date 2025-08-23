@@ -68,12 +68,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['link_student'])) {
     $beneficiary_id = pg_escape_string($con, $_POST['beneficiary_id']);
     $student_id = pg_escape_string($con, $_POST['student_id']);
 
-    // Check if student exists
-    $studentQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    // Check if student exists and is active
+    $studentQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id' AND filterstatus = 'Active'";
     $studentResult = pg_query($con, $studentQuery);
 
     if (pg_num_rows($studentResult) === 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
+        // Check if student exists but is inactive
+        $checkInactiveQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id'";
+        $inactiveResult = pg_query($con, $checkInactiveQuery);
+
+        if (pg_num_rows($inactiveResult) > 0) {
+            echo json_encode([
+                'status' => 'inactive',
+                'message' => 'This student’s account is currently inactive. Please activate the student account before linking.'
+            ]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
+        }
         exit;
     }
 
@@ -122,9 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) 
 
     $student_id = pg_escape_string($con, $_POST['student_id']);
 
-    // Check if student exists in your student database (replace with your actual student table)
-    $studentQuery = "SELECT studentname FROM rssimyprofile_student WHERE student_id = '$student_id'";
-    $studentResult = pg_query($con, $studentQuery);
+    // Check if student exists and their status (secure version)
+    $studentQuery = "SELECT studentname, filterstatus FROM rssimyprofile_student WHERE student_id = $1";
+    $studentResult = pg_query_params($con, $studentQuery, array($student_id));
 
     if (pg_num_rows($studentResult) === 0) {
         echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
@@ -132,6 +143,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) 
     }
 
     $student = pg_fetch_assoc($studentResult);
+
+    // Check if student is inactive
+    if ($student['filterstatus'] !== 'Active') {
+        echo json_encode([
+            'status' => 'inactive',
+            'message' => 'This student’s account is currently inactive. Please activate the student account before linking.'
+        ]);
+        exit;
+    }
+
+    // Student exists and is active, continue with your process
 
     // Check how many parents are already linked to this student
     $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
