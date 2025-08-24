@@ -69,6 +69,70 @@ if ($searchByIdOnly) {
   }
 }
 
+// Calculate dashboard statistics
+$totalStudents = count($resultArr);
+$maleCount = 0;
+$femaleCount = 0;
+$binaryCount = 0;
+
+$ageBands = [
+  '0-5' => 0,
+  '6-10' => 0,
+  '11-15' => 0,
+  '16-20' => 0,
+  '21+' => 0
+];
+
+$casteStats = [
+  'SC' => 0,
+  'ST' => 0,
+  'OBC' => 0,
+  'General' => 0,
+  'Not Declared' => 0
+];
+
+$aadharStats = [
+  'Available' => 0,
+  'Not Available' => 0
+];
+
+foreach ($resultArr as $student) {
+  // Gender count
+  $gender = strtolower($student['gender'] ?? '');
+  if ($gender === 'male') $maleCount++;
+  elseif ($gender === 'female') $femaleCount++;
+  else $binaryCount++;
+
+  // Age band calculation
+  if (!empty($student['dateofbirth'])) {
+    $birthDate = new DateTime($student['dateofbirth']);
+    $today = new DateTime();
+    $age = $today->diff($birthDate)->y;
+
+    if ($age <= 5) $ageBands['0-5']++;
+    elseif ($age <= 10) $ageBands['6-10']++;
+    elseif ($age <= 15) $ageBands['11-15']++;
+    elseif ($age <= 20) $ageBands['16-20']++;
+    else $ageBands['21+']++;
+  }
+
+  // Caste statistics
+  $caste = $student['caste'] ?? 'Not Declared';
+  if (array_key_exists($caste, $casteStats)) {
+    $casteStats[$caste]++;
+  } else {
+    $casteStats['Not Declared']++;
+  }
+
+  // Aadhar availability
+  $aadhar = $student['aadhar_available'] ?? '';
+  if (strtolower($aadhar) === 'yes') {
+    $aadharStats['Available']++;
+  } else {
+    $aadharStats['Not Available']++;
+  }
+}
+
 $classlist = [
   "Nursery",
   "LKG",
@@ -186,6 +250,65 @@ function formatContact($role, $contact)
       vertical-align: top;
       display: inline-block;
     }
+
+    /* Dashboard Styles */
+    .dashboard-card {
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      background: white;
+      overflow: hidden;
+    }
+
+    .dashboard-card-header {
+      background-color: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e9ecef;
+      font-weight: 600;
+    }
+
+    .dashboard-card-body {
+      padding: 20px;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3b7ddd;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .gender-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 15px;
+      margin: 5px;
+      font-size: 0.85rem;
+    }
+
+    .age-band-item,
+    .caste-item,
+    .aadhar-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .age-band-item:last-child,
+    .caste-item:last-child,
+    .aadhar-item:last-child {
+      border-bottom: none;
+    }
+
+    .progress {
+      height: 8px;
+      margin-top: 5px;
+    }
   </style>
   <!-- CSS Library Files -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -257,7 +380,6 @@ function formatContact($role, $contact)
                 <div class="col" style="display: inline-block; width:50%;">
                   Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                 </div>
-
                 <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                   <div class="col" style="display: inline-block; width:47%; text-align:right">
                     <form method="POST" action="export_function.php" target="_blank">
@@ -276,6 +398,111 @@ function formatContact($role, $contact)
                     </form>
                   </div>
                 <?php } ?>
+
+                <div class="accordion mt-3 mb-3" id="accordionExample">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                        Student Insights
+                      </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                      <div class="accordion-body">
+                        <!-- Dashboard Cards -->
+                        <div class="col-12">
+                          <div class="row">
+                            <!-- Card 1: Total Students and Gender Distribution -->
+                            <div class="col-md-6 col-lg-3">
+                              <div class="dashboard-card">
+                                <div class="dashboard-card-header">
+                                  Student Overview
+                                </div>
+                                <div class="dashboard-card-body text-center">
+                                  <div class="stat-number"><?php echo $totalStudents; ?></div>
+                                  <div class="stat-label">Total Students</div>
+                                  <div class="mt-3">
+                                    <span class="gender-badge text-bg-primary">M: <?php echo $maleCount; ?></span>
+                                    <span class="gender-badge text-bg-danger">F: <?php echo $femaleCount; ?></span>
+                                    <span class="gender-badge text-bg-secondary">Other: <?php echo $binaryCount; ?></span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Card 2: Age Band Distribution -->
+                            <div class="col-md-6 col-lg-3">
+                              <div class="dashboard-card">
+                                <div class="dashboard-card-header">
+                                  Age Distribution
+                                </div>
+                                <div class="dashboard-card-body">
+                                  <?php foreach ($ageBands as $band => $count):
+                                    $percentage = $totalStudents > 0 ? round(($count / $totalStudents) * 100) : 0;
+                                  ?>
+                                    <div class="age-band-item">
+                                      <span><?php echo $band; ?> yrs</span>
+                                      <span><?php echo $count; ?></span>
+                                    </div>
+                                    <div class="progress">
+                                      <div class="progress-bar" role="progressbar" style="width: <?php echo $percentage; ?>%"
+                                        aria-valuenow="<?php echo $percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                  <?php endforeach; ?>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Card 3: Caste Information -->
+                            <div class="col-md-6 col-lg-3">
+                              <div class="dashboard-card">
+                                <div class="dashboard-card-header">
+                                  Caste Distribution
+                                </div>
+                                <div class="dashboard-card-body">
+                                  <?php foreach ($casteStats as $caste => $count):
+                                    $percentage = $totalStudents > 0 ? round(($count / $totalStudents) * 100) : 0;
+                                  ?>
+                                    <div class="caste-item">
+                                      <span><?php echo $caste; ?></span>
+                                      <span><?php echo $count; ?></span>
+                                    </div>
+                                    <div class="progress">
+                                      <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $percentage; ?>%"
+                                        aria-valuenow="<?php echo $percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                  <?php endforeach; ?>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Card 4: Aadhar Availability -->
+                            <div class="col-md-6 col-lg-3">
+                              <div class="dashboard-card">
+                                <div class="dashboard-card-header">
+                                  Aadhar Status
+                                </div>
+                                <div class="dashboard-card-body">
+                                  <?php foreach ($aadharStats as $status => $count):
+                                    $percentage = $totalStudents > 0 ? round(($count / $totalStudents) * 100) : 0;
+                                  ?>
+                                    <div class="aadhar-item">
+                                      <span><?php echo $status; ?></span>
+                                      <span><?php echo $count; ?></span>
+                                    </div>
+                                    <div class="progress">
+                                      <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $percentage; ?>%"
+                                        aria-valuenow="<?php echo $percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                  <?php endforeach; ?>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span> -->
