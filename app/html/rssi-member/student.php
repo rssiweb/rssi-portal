@@ -90,7 +90,13 @@ $classlist = [
   "x"
 ];
 ?>
+<?php
+function formatContact($role, $contact)
+{
+  return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
+}
 
+?>
 <!doctype html>
 <html lang="en">
 
@@ -265,8 +271,8 @@ $classlist = [
                       <input type="hidden" name="search_by_id_only" value="<?= $searchByIdOnly ? '1' : '0' ?>">
 
                       <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-            padding: 0px;
-            border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
+                      padding: 0px;
+                      border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                     </form>
                   </div>
                 <?php } ?>
@@ -360,55 +366,6 @@ $classlist = [
                 </div>
               </form>
 
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  const searchForm = document.getElementById('searchForm');
-                  const idOnlyCheckbox = document.getElementById('search_by_id_only');
-                  const stidField = document.getElementById('get_stid');
-                  const stidRequired = document.getElementById('stid-required');
-
-                  function toggleFields() {
-                    const idOnly = idOnlyCheckbox.checked;
-
-                    // Toggle disabled state
-                    document.getElementById("get_module").disabled = idOnly;
-                    document.getElementById("get_id").disabled = idOnly;
-                    document.getElementById("get_category").disabled = idOnly;
-                    document.getElementById("get_class").disabled = idOnly;
-                    stidField.disabled = !idOnly;
-                    stidRequired.style.display = idOnly ? 'inline' : 'none';
-
-                    // Toggle required attributes
-                    document.getElementById("get_module").required = !idOnly;
-                    document.getElementById("get_id").required = !idOnly;
-                    stidField.required = idOnly;
-                  }
-
-                  // Initial setup
-                  toggleFields();
-
-                  // Add event listener for checkbox change
-                  idOnlyCheckbox.addEventListener('change', toggleFields);
-
-                  // Form validation
-                  searchForm.addEventListener('submit', function(e) {
-                    if (idOnlyCheckbox.checked && !stidField.value.trim()) {
-                      e.preventDefault();
-                      alert('Please enter a Student ID when searching by ID');
-                      stidField.focus();
-                    }
-                  });
-                });
-              </script>
-
-              <?php
-              function formatContact($role, $contact)
-              {
-                return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
-              }
-
-              ?>
-
               <div class="table-responsive">
                 <table class="table" id="table-id">
                   <thead>
@@ -451,7 +408,12 @@ $classlist = [
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
-                          <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
+                          <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;
+                            <a href="javascript:void(0)"
+                              onclick="showDetails('<?php echo $array['student_id']; ?>')"
+                              data-bs-toggle="modal"
+                              data-bs-target="#exampleModal">misc.</a>
+                          </td>
                         </tr>
                       <?php
                       endforeach;
@@ -476,123 +438,37 @@ $classlist = [
                   </tbody>
                 </table>
               </div>
-              <!--------------- POP-UP BOX ------------
--------------------------------------->
-              <style>
-                .modal {
-                  background-color: rgba(0, 0, 0, 0.4);
-                  /* Black w/ opacity */
-                }
-              </style>
-              <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl">
+              <!-- Modal -->
+              <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h1 class="modal-title fs-5" id="exampleModalLabel">Student Details</h1>
-                      <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
                       <div class="d-flex align-items-center">
                         <img id="profileimage" src="#" class="rounded-circle me-2" width="50" height="50" />
                         <div>
                           <b><span class="studentname"></span>&nbsp;(<span class="student_id"></span>)</b>
                           <span id="status" class="badge"></span>
                         </div>
-                        <!-- <a id="profile" href="#" target="_blank" class="ms-auto text-secondary"><i class="fa-regular fa-pen-to-square" style="font-size: 20px;" title="Edit Profile"></i></a> -->
-                      </div><br>
-                      <!-- <p>
-                        Subject: <span class="nameofthesubjects"></span>
-                      </p> -->
+                      </div>
+                      <br>
+                      <p>Subject: <span class="nameofthesubjects"></span></p>
                       <p>Remarks: <span class="remarks"></span></p>
-
-                      <script>
-                        var data = <?php echo json_encode($resultArr) ?>;
-                        var aid = <?php echo '"' . $associatenumber . '"' ?>;
-
-                        // Get the modal
-                        var modal = document.getElementById("myModal");
-                        // Get the <span> element that closes the modal
-                        var closedetails = [
-                          document.getElementById("closedetails-header"),
-                          document.getElementById("closedetails-footer")
-                        ];
-
-                        function showDetails(id) {
-                          var mydata = undefined
-                          data.forEach(item => {
-                            if (item["student_id"] == id) {
-                              mydata = item;
-                            }
-                          })
-
-                          var keys = Object.keys(mydata)
-                          keys.forEach(key => {
-                            var span = modal.getElementsByClassName(key)
-                            if (span.length > 0)
-                              span[0].innerHTML = mydata[key];
-                          })
-                          modal.style.display = "block";
-
-                          //Print something start
-
-                          var status = document.getElementById("status")
-                          status.innerHTML = mydata["filterstatus"]
-                          if (mydata["filterstatus"] === "Active") {
-                            status.classList.add("bg-success")
-                            status.classList.remove("bg-danger")
-                          } else {
-                            status.classList.remove("bg-success")
-                            status.classList.add("bg-danger")
-                          }
-                          // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
-                          //Print something END
-                          var profileimage = document.getElementById("profileimage")
-                          profileimage.src = mydata["photourl"]
-
-                          var studentid = document.getElementById("studentid")
-                          studentid.value = mydata["student_id"]
-
-                          var collectedby = document.getElementById("collectedby")
-                          collectedby.value = aid
-
-                          var distributedto = document.getElementById("distributedto")
-                          distributedto.value = mydata["student_id"]
-                          var distributedby = document.getElementById("distributedby")
-                          distributedby.value = aid
-                        }
-
-                        closedetails.forEach(function(element) {
-                          element.addEventListener("click", closeModal);
-                        });
-
-                        function closeModal() {
-                          var modal1 = document.getElementById("myModal");
-                          modal1.style.display = "none";
-                        }
-                      </script>
-
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                   </div>
-                </div><!-- End Reports -->
+                </div>
               </div>
-    </section>
-    <!-- Bootstrap Modal -->
-    <div class="modal fade" id="myModal_p" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-body">
-            <div class="text-center">
-              <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
+    </section>
   </main><!-- End #main -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -602,6 +478,68 @@ $classlist = [
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchForm = document.getElementById('searchForm');
+      const idOnlyCheckbox = document.getElementById('search_by_id_only');
+      const stidField = document.getElementById('get_stid');
+      const stidRequired = document.getElementById('stid-required');
+
+      function toggleFields() {
+        const idOnly = idOnlyCheckbox.checked;
+
+        // Toggle disabled state
+        document.getElementById("get_module").disabled = idOnly;
+        document.getElementById("get_id").disabled = idOnly;
+        document.getElementById("get_category").disabled = idOnly;
+        document.getElementById("get_class").disabled = idOnly;
+        stidField.disabled = !idOnly;
+        stidRequired.style.display = idOnly ? 'inline' : 'none';
+
+        // Toggle required attributes
+        document.getElementById("get_module").required = !idOnly;
+        document.getElementById("get_id").required = !idOnly;
+        stidField.required = idOnly;
+      }
+
+      // Initial setup
+      toggleFields();
+
+      // Add event listener for checkbox change
+      idOnlyCheckbox.addEventListener('change', toggleFields);
+
+      // Form validation
+      searchForm.addEventListener('submit', function(e) {
+        if (idOnlyCheckbox.checked && !stidField.value.trim()) {
+          e.preventDefault();
+          alert('Please enter a Student ID when searching by ID');
+          stidField.focus();
+        }
+      });
+    });
+  </script>
+  <script>
+    var data = <?php echo json_encode($resultArr) ?>;
+
+    function showDetails(id) {
+      var mydata = data.find(item => item["student_id"] == id);
+      if (!mydata) return;
+
+      var modal = document.getElementById("exampleModal");
+
+      modal.querySelector(".studentname").textContent = mydata["studentname"];
+      modal.querySelector(".student_id").textContent = mydata["student_id"];
+      modal.querySelector(".nameofthesubjects").textContent = mydata["nameofthesubjects"];
+      modal.querySelector(".remarks").textContent = mydata["remarks"];
+
+      var profileimage = document.getElementById("profileimage");
+      profileimage.src = mydata["photourl"] || "#";
+
+      var status = document.getElementById("status");
+      status.textContent = mydata["filterstatus"];
+      status.className = "badge " + (mydata["filterstatus"] === "Active" ? "bg-success" : "bg-danger");
+    }
+  </script>
   <script>
     $(document).ready(function() {
       // Check if resultArr is empty
