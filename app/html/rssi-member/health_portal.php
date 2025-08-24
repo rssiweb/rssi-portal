@@ -342,6 +342,60 @@ function getBaseFilterUrl()
             border-color: rgba(255, 193, 7, 0.25) !important;
         }
     </style>
+    <style>
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1050;
+            background: #0d6efd;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            padding: 8px 12px;
+            font-size: 24px;
+        }
+
+        @media (max-width: 767.98px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                height: 100vh;
+                width: 250px;
+                transition: left 0.3s ease;
+                z-index: 1040;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .sidebar::after {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: -1;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .sidebar.show::after {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -559,7 +613,7 @@ function getBaseFilterUrl()
 
                                     <!-- Display record count -->
                                     <?php if (isset($healthRecords)) : ?>
-                                        <div class="alert alert-info py-2">
+                                        <div class="alert alert-info">
                                             <strong><?php echo count($healthRecords); ?></strong> record(s) found matching your criteria
                                         </div>
                                     <?php endif; ?>
@@ -2447,6 +2501,45 @@ function getBaseFilterUrl()
             // Set minimum date for appointment (today)
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('appointmentDate').min = today;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create menu toggle button
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'menu-toggle';
+            toggleButton.innerHTML = '<i class="bi bi-list"></i>';
+            document.body.appendChild(toggleButton);
+
+            // Get sidebar element
+            const sidebar = document.querySelector('.sidebar');
+
+            // Toggle menu function
+            function toggleMenu() {
+                sidebar.classList.toggle('show');
+            }
+
+            // Add click event to toggle button
+            toggleButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (sidebar.classList.contains('show') &&
+                    !sidebar.contains(e.target) &&
+                    e.target !== toggleButton) {
+                    toggleMenu();
+                }
+            });
+
+            // Close menu on resize if viewport changes to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768 && sidebar.classList.contains('show')) {
+                    toggleMenu();
+                }
+            });
         });
     </script>
 </body>

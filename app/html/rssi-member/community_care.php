@@ -470,6 +470,60 @@ function getStudentVerificationBadge($linkedStudents)
             border-radius: 20px;
         }
     </style>
+    <style>
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1050;
+            background: #0d6efd;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            padding: 8px 12px;
+            font-size: 24px;
+        }
+
+        @media (max-width: 767.98px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                height: 100vh;
+                width: 250px;
+                transition: left 0.3s ease;
+                z-index: 1040;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .sidebar::after {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: -1;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .sidebar.show::after {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -520,7 +574,6 @@ function getStudentVerificationBadge($linkedStudents)
                     </ul>
                 </div>
             </div>
-
             <!-- Main Content -->
             <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -2850,6 +2903,45 @@ function getStudentVerificationBadge($linkedStudents)
             // Set minimum date for appointment (today)
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('appointmentDate').min = today;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create menu toggle button
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'menu-toggle';
+            toggleButton.innerHTML = '<i class="bi bi-list"></i>';
+            document.body.appendChild(toggleButton);
+
+            // Get sidebar element
+            const sidebar = document.querySelector('.sidebar');
+
+            // Toggle menu function
+            function toggleMenu() {
+                sidebar.classList.toggle('show');
+            }
+
+            // Add click event to toggle button
+            toggleButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (sidebar.classList.contains('show') &&
+                    !sidebar.contains(e.target) &&
+                    e.target !== toggleButton) {
+                    toggleMenu();
+                }
+            });
+
+            // Close menu on resize if viewport changes to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768 && sidebar.classList.contains('show')) {
+                    toggleMenu();
+                }
+            });
         });
     </script>
 </body>

@@ -21,6 +21,7 @@ if ($current_script === 'community_care') {
     $query = "SELECT 
                 p.id AS student_id,
                 p.name AS studentname,
+                p.contact_number AS contact,
                 'N/A' AS class,
                 sh.record_date,
                 sh.height_cm,
@@ -34,6 +35,7 @@ if ($current_script === 'community_care') {
                 s.student_id,
                 s.studentname,
                 s.class,
+                s.contact,
                 sh.record_date,
                 sh.height_cm,
                 sh.weight_kg,
@@ -68,6 +70,7 @@ $output = fopen('php://output', 'w');
 fputcsv($output, [
     'Student ID',
     'Student Name',
+    'Contact Number',
     'Class',
     'Record Date',
     'Height (cm)',
@@ -80,6 +83,7 @@ while ($row = pg_fetch_assoc($result)) {
     fputcsv($output, [
         $row['student_id'],
         $row['studentname'],
+        $row['contact'],
         $row['class'],
         $row['record_date'],
         $row['height_cm'],
