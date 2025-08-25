@@ -107,6 +107,45 @@ if (!$result) {
         body {
             background-color: initial;
         }
+
+        @media print {
+            .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 60px;
+                width: 80%;
+                color: rgba(0, 0, 0, 0.1);
+                /* Light gray with transparency */
+                z-index: 9999;
+                pointer-events: none;
+                font-weight: bold;
+                text-align: center;
+                opacity: 0.3;
+            }
+        }
+
+        /*@media print {
+            .watermark {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9999;
+                pointer-events: none;
+                opacity: 0.1;
+                background: url('path/to/watermark-image.png') center center no-repeat;
+                background-size: 50% auto;
+            }
+        }*/
+
+        @media screen {
+            .watermark {
+                display: none;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
@@ -228,7 +267,7 @@ if (!$result) {
                                             'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
                                         ],
                                         'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
-                                        'Volunteer' => ["thirty (30) days", "3 months", "4-hour", "3"], // Notice period not specified for Volunteer
+                                        'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
                                     ];
 
                                     // Check the engagement and job type, and set the values accordingly
@@ -426,6 +465,7 @@ if (!$result) {
                                 <div class="print-footer d-none d-print-inline-flex">
                                     <?php if (str_contains($array['position'], "Intern")) { ?>
                                         Offer letter disclaimer: This letter does not certify your internship involvement or serve as a reference. It is for legal purposes only.
+                                        <div id="watermark" class="watermark">FOR LEGAL PURPOSES ONLY – NOT INTERNSHIP PROOF</div>
                                     <?php } else { ?>
                                         <p style="text-align: right;">Private and Confidential</p>
                                     <?php } ?>
