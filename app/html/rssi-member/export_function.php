@@ -519,9 +519,33 @@ function student_export()
     'Pay type',
     'Status',
     'DOA',
+    'Caste',
+    'Caste Doc',
+    'Student Aadhaar',
+    'Student Aadhaar Doc',
+    'Parent Aadhaar',
     'DOT',
     'Remarks'
   ]);
+
+  function maskAadhar($aadhar)
+  {
+    // Convert null to empty string
+    $aadhar = (string) $aadhar;
+
+    // If no digit exists in the string, return blank
+    if (!preg_match('/\d/', $aadhar)) {
+      return "";
+    }
+
+    // If it has digits, mask all except last 4
+    if (strlen($aadhar) >= 4) {
+      return str_repeat("X", strlen($aadhar) - 4) . substr($aadhar, -4);
+    }
+
+    // If it's shorter than 4 digits, just return blank
+    return "";
+  }
 
   // Write data rows
   foreach ($resultArr as $array) {
@@ -537,6 +561,11 @@ function student_export()
       $array['payment_type'],
       $array['filterstatus'],
       $array['doa'],
+      $array['caste'],
+      !empty($array['caste_document']) ? "Yes" : "No",
+      maskAadhar($array['studentaadhar']),
+      !empty($array['upload_aadhar_card']) ? "Yes" : "No",
+      maskAadhar($array['guardianaadhar']),
       $array['effectivefrom'],
       $array['remarks']
     ]);
