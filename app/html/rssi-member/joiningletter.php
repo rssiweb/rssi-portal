@@ -150,6 +150,45 @@ if (!$result) {
         .qr-image {
             width: 180px;
         }
+
+        @media print {
+            .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 60px;
+                width: 80%;
+                color: rgba(0, 0, 0, 0.1);
+                /* Light gray with transparency */
+                z-index: 9999;
+                pointer-events: none;
+                font-weight: bold;
+                text-align: center;
+                opacity: 0.3;
+            }
+        }
+
+        /*@media print {
+            .watermark {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9999;
+                pointer-events: none;
+                opacity: 0.1;
+                background: url('path/to/watermark-image.png') center center no-repeat;
+                background-size: 50% auto;
+            }
+        }*/
+
+        @media screen {
+            .watermark {
+                display: none;
+            }
+        }
     </style>
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -400,6 +439,9 @@ if (!$result) {
             <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
+    <?php if (str_contains($array['position'], "Intern")) { ?>
+        <div id="watermark" class="watermark">PROVISIONAL DOCUMENT - NOT FINAL CERTIFICATE</div>
+    <?php } ?>
 </body>
 
 </html>
