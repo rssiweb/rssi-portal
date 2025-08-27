@@ -593,6 +593,14 @@ if (!empty($students)) {
             margin-bottom: 15px;
         }
 
+        .divider {
+            width: 2px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 15px;
+            border-radius: 1px;
+        }
+
         .metric-header h3 {
             font-size: 16px;
             font-weight: 600;
@@ -690,6 +698,24 @@ if (!empty($students)) {
             margin-top: 15px;
             text-align: center;
             opacity: 0.9;
+        }
+
+        .metric-footer i {
+            font-size: 5rem;
+            opacity: 0.3;
+            transform: rotate(-5deg);
+        }
+
+        /* Hover effects for cards */
+        .metric-card.combined-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .metric-card.combined-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         /* Responsive adjustments */
@@ -792,6 +818,9 @@ if (!empty($students)) {
                                                         <?php endif; ?>
                                                     <?php endforeach; ?>
                                                 </select>
+                                                <div class="form-text">
+                                                    Select inactive students only.
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row mt-3">
@@ -1071,7 +1100,7 @@ if (!empty($students)) {
             // Include Student IDs
             $('#student_ids').select2({
                 ajax: {
-                    url: 'fetch_students.php',
+                    url: 'fetch_students.php?isInactive=true',
                     dataType: 'json',
                     delay: 250,
                     data: params => ({

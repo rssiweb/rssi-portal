@@ -13,7 +13,7 @@ validation();
 // Get the search term from the AJAX request
 $searchTerm = $_GET['q'] ?? '';
 $isActive = $_GET['isActive'] ?? false;
-// $isMycertificate = $_GET['isMycertificate'] ?? false;
+$isInactive = $_GET['isInactive'] ?? false;
 
 // Prepare the base query
 $query = "
@@ -29,6 +29,9 @@ $query = "
 // Add filter for Active status only if it's the shift planner request
 if ($isActive) {
     $query .= " AND filterstatus = 'Active'";
+}
+if ($isInactive) {
+    $query .= " AND filterstatus = 'Inactive'";
 }
 
 $query .= " ORDER BY studentname LIMIT 10";
