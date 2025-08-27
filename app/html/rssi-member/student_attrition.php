@@ -12,246 +12,107 @@ if (!isLoggedIn("aid")) {
    FUNCTIONS
 ------------------------------- */
 
-// Function to get total students active at any time in a given period
-function getTotalStudentsInPeriod($start_date, $end_date, $filters = [])
+/**
+ * Build common SQL filter conditions
+ */
+function buildFilters($filters = [])
 {
     global $con;
-
-    // Step 1: Count students who were active at the end date
-    $where_end = ["s.doa <= '$end_date' AND (s.effectivefrom IS NULL OR s.effectivefrom >= '$start_date')"];
-
-    // Apply filters if any
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $class_list = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "'";
-        $where_end[] = "s.class IN ($class_list)";
-    }
-
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $category_list = "'" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "'";
-        $where_end[] = "s.category IN ($category_list)";
-    }
-
-    $where_clause_end = implode(' AND ', $where_end);
-    $query_end = "SELECT COUNT(*) as count FROM rssimyprofile_student s WHERE $where_clause_end";
-    $result_end = pg_query($con, $query_end);
-    $end_count = pg_fetch_assoc($result_end)['count'];
-
-    // Step 2: Count students who left during the period
-    $where_left = [
-        "s.filterstatus = 'Inactive'",
-        "s.effectivefrom IS NOT NULL",
-        "s.effectivefrom BETWEEN '$start_date' AND '$end_date'"
-    ];
-
-    // Apply same filters for consistency
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $where_left[] = "s.class IN ($class_list)";
-    }
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $where_left[] = "s.category IN ($category_list)";
-    }
-
-    $where_clause_left = implode(' AND ', $where_left);
-    $query_left = "SELECT COUNT(*) as count FROM rssimyprofile_student s WHERE $where_clause_left";
-    $result_left = pg_query($con, $query_left);
-    $left_count = pg_fetch_assoc($result_left)['count'];
-
-    // Step 3: Total students in period = end active + left during period
-    return $end_count + $left_count;
-}
-
-// Function to get active students as of the end date
-function getActiveStudentsAsOfEndDate($end_date, $filters = [])
-{
-    global $con;
-
-    // Build common filter conditions
-    $filter_conditions = [];
+    $conditions = [];
 
     if (!empty($filters['class']) && $filters['class'] != 'all') {
         $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $class_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $classes)) . "'";
-        $filter_conditions[] = "s.class IN ($class_list)";
+        $conditions[] = "s.class IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "')";
     }
-
     if (!empty($filters['category']) && $filters['category'] != 'all') {
         $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $category_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $categories)) . "'";
-        $filter_conditions[] = "s.category IN ($category_list)";
+        $conditions[] = "s.category IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "')";
     }
-
     if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $student_ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $student_id_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $student_ids)) . "'";
-        $filter_conditions[] = "s.student_id IN ($student_id_list)";
+        $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
+        $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
     }
 
-    $common_where = '';
-    if (!empty($filter_conditions)) {
-        $common_where = ' AND ' . implode(' AND ', $filter_conditions);
-    }
-
-    // Count Active students
-    $query_active = "
-        SELECT COUNT(*) as count 
-        FROM rssimyprofile_student s
-        WHERE s.filterstatus = 'Active' 
-          AND s.doa <= '$end_date'
-          $common_where
-    ";
-    $result_active = pg_query($con, $query_active);
-    $count_active = pg_fetch_assoc($result_active)['count'];
-
-    // Count Inactive students whose effectivefrom is after end date
-    $query_inactive = "
-        SELECT COUNT(*) as count 
-        FROM rssimyprofile_student s
-        WHERE s.filterstatus = 'Inactive' 
-          AND s.effectivefrom > '$end_date'
-          $common_where
-    ";
-    $result_inactive = pg_query($con, $query_inactive);
-    $count_inactive = pg_fetch_assoc($result_inactive)['count'];
-
-    // Return total
-    return $count_active + $count_inactive;
+    return count($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
 }
 
-// Function to get count of active students at start of period
-function getActiveStudentsAtStart($start_date, $filters = [])
+/**
+ * Get total students enrolled in period and new admissions
+ */
+function getStudentMetrics($start_date, $end_date, $filters = [])
 {
     global $con;
+    $filter_clause = buildFilters($filters);
 
-    $where_conditions = [
-        "s.doa <= '$start_date'",
-        "(s.effectivefrom IS NULL OR s.effectivefrom > '$start_date')"
+    // Total students: enrolled at any time in period (active or later inactive)
+    $query_total = "
+        SELECT COUNT(DISTINCT s.student_id) AS total_students
+        FROM rssimyprofile_student s
+        WHERE s.doa <= '$end_date'
+          AND (s.effectivefrom IS NULL OR s.effectivefrom >= '$start_date')
+          $filter_clause
+    ";
+    $total_students = pg_fetch_assoc(pg_query($con, $query_total))['total_students'];
+
+    // New admissions: students whose DOA falls within period
+    $query_new = "
+        SELECT COUNT(*) AS new_admissions
+        FROM rssimyprofile_student s
+        WHERE s.doa BETWEEN '$start_date' AND '$end_date'
+          $filter_clause
+    ";
+    $new_admissions = pg_fetch_assoc(pg_query($con, $query_new))['new_admissions'];
+
+    return [
+        'total_students' => $total_students,
+        'new_admissions' => $new_admissions
     ];
-
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $class_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $classes)) . "'";
-        $where_conditions[] = "s.class IN ($class_list)";
-    }
-
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $category_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $categories)) . "'";
-        $where_conditions[] = "s.category IN ($category_list)";
-    }
-
-    if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $student_ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $student_id_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $student_ids)) . "'";
-        $where_conditions[] = "s.student_id IN ($student_id_list)";
-    }
-
-    $where_clause = implode(' AND ', $where_conditions);
-
-    $query = "SELECT COUNT(*) as count FROM rssimyprofile_student s WHERE $where_clause";
-    $result = pg_query($con, $query);
-    $row = pg_fetch_assoc($result);
-
-    return $row['count'];
 }
 
-// Function to get students who left during the period
+/**
+ * Count active students as of a specific date
+ */
+function getActiveStudents($date, $filters = [])
+{
+    global $con;
+    $filter_clause = buildFilters($filters);
+
+    // Active students: currently active or inactive after this date
+    $query = "
+        SELECT COUNT(*) AS count
+        FROM rssimyprofile_student s
+        WHERE s.doa <= '$date'
+          AND (s.effectivefrom IS NULL OR s.effectivefrom > '$date')
+          $filter_clause
+    ";
+    return pg_fetch_assoc(pg_query($con, $query))['count'];
+}
+
+/**
+ * Count students who left during a period
+ */
 function getStudentsLeftDuringPeriod($start_date, $end_date, $filters = [])
 {
     global $con;
+    $filter_clause = buildFilters($filters);
 
-    $where_conditions = ["s.filterstatus = 'Inactive'", "s.effectivefrom BETWEEN '$start_date' AND '$end_date'"];
-
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $class_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $classes)) . "'";
-        $where_conditions[] = "s.class IN ($class_list)";
-    }
-
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $category_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $categories)) . "'";
-        $where_conditions[] = "s.category IN ($category_list)";
-    }
-
-    if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $student_ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $student_id_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $student_ids)) . "'";
-        $where_conditions[] = "s.student_id IN ($student_id_list)";
-    }
-
-    $where_clause = implode(' AND ', $where_conditions);
-
-    $query = "SELECT COUNT(*) as count FROM rssimyprofile_student s WHERE $where_clause";
-    $result = pg_query($con, $query);
-    $row = pg_fetch_assoc($result);
-
-    return $row['count'];
+    $query = "
+        SELECT COUNT(*) AS count
+        FROM rssimyprofile_student s
+        WHERE s.filterstatus = 'Inactive'
+          AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
+          $filter_clause
+    ";
+    return pg_fetch_assoc(pg_query($con, $query))['count'];
 }
 
-// Function to get students data with filters
-function getStudentsData($filters = [])
+/**
+ * Get detailed student data within period
+ */
+function getStudentsData($start_date, $end_date, $filters = [])
 {
     global $con;
-
-    // Default date range (current month)
-    $start_date = date('Y-m-01');
-    $end_date = date('Y-m-d');
-
-    // Apply filters
-    if (!empty($filters['start_date'])) {
-        $start_date = $filters['start_date'];
-    }
-    if (!empty($filters['end_date'])) {
-        $end_date = $filters['end_date'];
-    }
-
-    $where_conditions = ["s.effectivefrom BETWEEN '$start_date' AND '$end_date'"];
-
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $class_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $classes)) . "'";
-        $where_conditions[] = "s.class IN ($class_list)";
-    }
-
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $category_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $categories)) . "'";
-        $where_conditions[] = "s.category IN ($category_list)";
-    }
-
-    if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $student_ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $student_id_list = "'" . implode("','", array_map(function ($c) use ($con) {
-            return pg_escape_string($con, $c);
-        }, $student_ids)) . "'";
-        $where_conditions[] = "s.student_id IN ($student_id_list)";
-    }
-
-    $where_clause = implode(' AND ', $where_conditions);
+    $filter_clause = buildFilters($filters);
 
     $query = "
         SELECT 
@@ -260,32 +121,30 @@ function getStudentsData($filters = [])
             s.category,
             s.class,
             s.filterstatus,
-            s.effectivefrom,
             s.doa,
-            s.gender,
             s.effectivefrom,
-            s.schooladmissionrequired,
-            MAX(a.punch_in) as last_attended_date,
-            (MAX(a.punch_in)::date - s.doa::date) as total_duration_days
+            s.gender,
+            MAX(a.punch_in) AS last_attended_date,
+            (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
         FROM rssimyprofile_student s
         LEFT JOIN attendance a ON a.user_id = s.student_id
-        WHERE $where_clause
-        GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, 
-                 s.effectivefrom, s.doa, s.gender, s.effectivefrom, s.schooladmissionrequired
+        WHERE (s.doa <= '$end_date' AND (s.effectivefrom IS NULL OR s.effectivefrom > '$start_date'))
+          $filter_clause
+        GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
         ORDER BY s.effectivefrom DESC
     ";
 
     $result = pg_query($con, $query);
     $students = [];
-
     while ($row = pg_fetch_assoc($result)) {
         $students[] = $row;
     }
-
     return $students;
 }
 
-// Function to calculate attrition + retention metrics
+/**
+ * Calculate attrition and retention metrics
+ */
 function calculateAttritionMetrics($students, $students_at_start, $students_left, $students_today, $total_students)
 {
     $metrics = [
@@ -301,23 +160,15 @@ function calculateAttritionMetrics($students, $students_at_start, $students_left
 
     foreach ($students as $student) {
         if ($student['filterstatus'] === 'Inactive') {
-            if ($student['gender'] === 'Male') {
-                $metrics['male_inactive']++;
-            } elseif ($student['gender'] === 'Female') {
-                $metrics['female_inactive']++;
-            } elseif ($student['gender'] === 'Binary') {
-                $metrics['binary_inactive']++;
-            }
+            if ($student['gender'] === 'Male') $metrics['male_inactive']++;
+            elseif ($student['gender'] === 'Female') $metrics['female_inactive']++;
+            elseif ($student['gender'] === 'Binary') $metrics['binary_inactive']++;
         }
     }
 
-    // Correct formulas
     if ($total_students > 0) {
-        $metrics['attrition_rate'] = round(($metrics['students_left'] / $total_students) * 100, 2);
-    }
-
-    if ($metrics['students_at_start'] > 0) {
-        $metrics['retention_rate'] = round(($metrics['students_today'] / $total_students) * 100, 2);
+        $metrics['attrition_rate'] = round(($students_left / $total_students) * 100, 2);
+        $metrics['retention_rate'] = round(($students_today / $total_students) * 100, 2);
     }
 
     return $metrics;
@@ -335,24 +186,28 @@ $filters = [
     'student_id' => $_GET['student_id'] ?? 'all'
 ];
 
-// Get the data for correct attrition + retention calculation
-$students_today = getActiveStudentsAsOfEndDate($filters['end_date'], $filters);
-$students_at_start = getActiveStudentsAtStart($filters['start_date'], $filters);
+// Fetch metrics
+$students_at_start = getActiveStudents($filters['start_date'], $filters);
+$students_today = getActiveStudents($filters['end_date'], $filters);
 $students_left = getStudentsLeftDuringPeriod($filters['start_date'], $filters['end_date'], $filters);
-$total_students = getTotalStudentsInPeriod($filters['start_date'], $filters['end_date'], $filters);
-$students = getStudentsData($filters);
+$student_metrics = getStudentMetrics($filters['start_date'], $filters['end_date'], $filters);
+$total_students = $student_metrics['total_students'];
+$new_admissions = $student_metrics['new_admissions'];
+$students = getStudentsData($filters['start_date'], $filters['end_date'], $filters);
 
+// Calculate attrition and retention
 $metrics = calculateAttritionMetrics($students, $students_at_start, $students_left, $students_today, $total_students);
 
-// Debug Output (you can later replace with UI cards)
-// echo "<h3>Metrics (" . $filters['start_date'] . " to " . $filters['end_date'] . ")</h3>";
-// echo "Active at Start: " . $metrics['students_at_start'] . "<br>";
-// echo "Active at End: " . $metrics['students_today'] . "<br>";
-// echo "Students Left: " . $metrics['students_left'] . "<br>";
-// echo "Total Students in Period: " . $total_students . "<br><br>";
-
-// echo "Retention Rate: " . $metrics['retention_rate'] . "%<br>";
-// echo "Attrition Rate: " . $metrics['attrition_rate'] . "%<br>";
+// Debug output example
+/*
+echo "Total Students in Period: $total_students<br>";
+echo "New Admissions: $new_admissions<br>";
+echo "Active at Start: $students_at_start<br>";
+echo "Active at End: $students_today<br>";
+echo "Students Left: $students_left<br>";
+echo "Retention Rate: {$metrics['retention_rate']}%<br>";
+echo "Attrition Rate: {$metrics['attrition_rate']}%<br>";
+*/
 ?>
 
 <?php
@@ -500,6 +355,127 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
             min-width: 120px;
         }
     </style>
+    <style>
+        .metric-card.combined-card {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .metric-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .carousel-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .carousel-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .carousel-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .carousel-btn i {
+            font-size: 12px;
+        }
+
+        .chart-indicator {
+            font-size: 12px;
+            opacity: 0.8;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .charts-carousel {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .chart-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-slide.active {
+            opacity: 1;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .mini-chart-container {
+            height: 140px;
+            width: 100%;
+        }
+
+        .metric-footer {
+            margin-top: 15px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .carousel-controls {
+                gap: 5px;
+            }
+
+            .carousel-btn {
+                width: 24px;
+                height: 24px;
+            }
+
+            .charts-carousel {
+                height: 160px;
+            }
+
+            .mini-chart-container {
+                height: 120px;
+            }
+        }
+    </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
@@ -598,61 +574,112 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
                                     </form>
                                 </div>
 
-                                <!-- Metrics Cards -->
-                                <div class="row">
-                                    
-                                    <div class="col-xl-3 col-md-6">
-                                        <div class="metric-card bg-info">
-                                            <div class="metric-value"><?php echo $total_students; ?></div>
-                                            <div class="metric-label">Total Enrolled in Period</div>
-                                            <i class="fas fa-users-viewfinder"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <div class="metric-card bg-success">
-                                            <div class="metric-value"><?php echo $metrics['students_at_start']; ?></div>
-                                            <div class="metric-label">Active at Period Start</div>
-                                            <i class="fas fa-user-check"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <div class="metric-card bg-primary">
-                                            <div class="metric-value"><?php echo $metrics['students_today']; ?></div>
-                                            <div class="metric-label">Active at Period End</div>
-                                            <i class="fas fa-user-check"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <div class="metric-card bg-danger">
-                                            <div class="metric-value"><?php echo $metrics['students_left']; ?></div>
-                                            <div class="metric-label">Students Left</div>
-                                            <i class="fas fa-user-times"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <div class="metric-card bg-warning">
-                                            <div class="metric-value"><?php echo $metrics['attrition_rate']; ?>%</div>
-                                            <div class="metric-label">Attrition Rate</div>
-                                            <i class="fas fa-chart-line"></i>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Charts -->
-                                <div class="row mt-4">
-                                    <div class="col-lg-6">
-                                        <div class="dashboard-card">
-                                            <h4 class="mb-4"><i class="fas fa-venus-mars me-2"></i>Gender Distribution in Attrition</h4>
-                                            <div class="chart-container">
-                                                <canvas id="genderChart"></canvas>
+
+                                <!-- Combined Metrics Cards -->
+                                <div class="row">
+                                    <!-- Combined Enrollment Card -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card combined-card" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
+                                            <div class="metric-header">
+                                                <h3>Enrollment Summary</h3>
+                                            </div>
+                                            <div class="combined-metrics">
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $total_students; ?></div>
+                                                    <div class="metric-label">Total Enrolled</div>
+                                                </div>
+                                                <div class="divider"></div>
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $new_admissions; ?></div>
+                                                    <div class="metric-label">New Admissions</div>
+                                                </div>
+                                            </div>
+                                            <div class="metric-footer">
+                                                <i class="fas fa-user-plus"></i>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <div class="dashboard-card">
-                                            <h4 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Attrition Overview</h4>
-                                            <div class="chart-container">
-                                                <canvas id="attritionChart"></canvas>
+
+                                    <!-- Combined Active Students Card -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card combined-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                            <div class="metric-header">
+                                                <h3>Active Students</h3>
+                                            </div>
+                                            <div class="combined-metrics">
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $metrics['students_at_start']; ?></div>
+                                                    <div class="metric-label">At Period Start</div>
+                                                </div>
+                                                <div class="divider"></div>
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $metrics['students_today']; ?></div>
+                                                    <div class="metric-label">At Period End</div>
+                                                </div>
+                                            </div>
+                                            <div class="metric-footer">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Combined Attrition Card -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card combined-card" style="background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);">
+                                            <div class="metric-header">
+                                                <h3>Attrition Analysis</h3>
+                                            </div>
+                                            <div class="combined-metrics">
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $metrics['students_left']; ?></div>
+                                                    <div class="metric-label">Students Left</div>
+                                                </div>
+                                                <div class="divider"></div>
+                                                <div class="combined-metric">
+                                                    <div class="metric-value"><?php echo $metrics['attrition_rate']; ?>%</div>
+                                                    <div class="metric-label">Attrition Rate</div>
+                                                </div>
+                                            </div>
+                                            <div class="metric-footer">
+                                                <i class="fas fa-user-times"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Combined Charts Card -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card combined-card chart-combo-box" style="background: linear-gradient(135deg, #6f42c1 0%, #20c997 100%);">
+                                            <div class="metric-header">
+                                                <h3>Analytics Overview</h3>
+                                                <div class="carousel-controls">
+                                                    <button class="carousel-btn prev-btn" onclick="prevChart()">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </button>
+                                                    <span class="chart-indicator">1/2</span>
+                                                    <button class="carousel-btn next-btn" onclick="nextChart()">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="charts-carousel">
+                                                <div class="chart-slide active">
+                                                    <div class="chart-title">Gender Distribution</div>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="genderChart"></canvas>
+                                                    </div>
+                                                </div>
+                                                <div class="chart-slide">
+                                                    <div class="chart-title">Attrition Overview</div>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="attritionChart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="metric-footer">
+                                                <i class="fas fa-chart-pie"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -934,6 +961,42 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
             // Submit the form
             document.getElementById('filterForm').submit();
         }
+    </script>
+    <script>
+        let currentChartIndex = 0;
+        const totalCharts = 2;
+
+        function updateChartIndicator() {
+            document.querySelector('.chart-indicator').textContent = `${currentChartIndex + 1}/${totalCharts}`;
+        }
+
+        function showChart(index) {
+            // Hide all charts
+            document.querySelectorAll('.chart-slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            // Show selected chart
+            document.querySelectorAll('.chart-slide')[index].classList.add('active');
+
+            currentChartIndex = index;
+            updateChartIndicator();
+        }
+
+        function nextChart() {
+            let nextIndex = (currentChartIndex + 1) % totalCharts;
+            showChart(nextIndex);
+        }
+
+        function prevChart() {
+            let prevIndex = (currentChartIndex - 1 + totalCharts) % totalCharts;
+            showChart(prevIndex);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateChartIndicator();
+        });
     </script>
 </body>
 
