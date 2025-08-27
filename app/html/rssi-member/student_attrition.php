@@ -965,6 +965,7 @@ if (!empty($students)) {
                                                     <th>Name</th>
                                                     <th>Class</th>
                                                     <th>Category</th>
+                                                    <th>DOA</th>
                                                     <th>Status</th>
                                                     <th>Fees Due Up To</th>
                                                     <th>Due Amount</th>
@@ -982,6 +983,9 @@ if (!empty($students)) {
                                                             <td><?php echo htmlspecialchars($student['studentname']); ?></td>
                                                             <td><?php echo htmlspecialchars($student['class']); ?></td>
                                                             <td><?php echo htmlspecialchars($student['category']); ?></td>
+                                                            <td>
+                                                                <?php echo !empty($student['doa']) ? date("d/m/Y", strtotime($student['doa'])) : 'N/A'; ?>
+                                                            </td>
                                                             <td><?php echo htmlspecialchars($student['filterstatus']); ?></td>
                                                             <td>
                                                                 <?php
@@ -1184,7 +1188,14 @@ if (!empty($students)) {
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: {
-                                    position: 'bottom'
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#fff', // <-- Change legend text color here
+                                        // font: {
+                                        //     size: 14, // optional: change font size
+                                        //     weight: 'bold' // optional: bold labels
+                                        // }
+                                    }
                                 },
                                 tooltip: {
                                     callbacks: {
@@ -1223,7 +1234,14 @@ if (!empty($students)) {
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: {
-                                    position: 'bottom'
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#fff', // <-- Change legend text color here
+                                        // font: {
+                                        //     size: 14, // optional: change font size
+                                        //     weight: 'bold' // optional: bold labels
+                                        // }
+                                    }
                                 },
                                 tooltip: {
                                     callbacks: {
