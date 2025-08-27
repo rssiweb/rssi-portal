@@ -248,6 +248,11 @@ if (!empty($students)) {
             $lastAttendanceDate = $student['doa'] ?: date('Y-m-d');
         }
 
+        // If last attendance date is the 1st of the month, shift it to the previous month’s last day
+        if (date('d', strtotime($lastAttendanceDate)) == '01') {
+            $lastAttendanceDate = date('Y-m-t', strtotime($lastAttendanceDate . ' -1 month'));
+        }
+
         // Extract month and year from last attendance
         $month = date('F', strtotime($lastAttendanceDate));
         $year = date('Y', strtotime($lastAttendanceDate));
@@ -942,9 +947,9 @@ if (!empty($students)) {
                                                     <th>Class</th>
                                                     <th>Category</th>
                                                     <th>Status</th>
-                                                    <th>Last Attended Month</th>
+                                                    <th>Fees Due Up To</th>
                                                     <th>Due Amount</th>
-                                                    <th>Last Attended</th>
+                                                    <th>Last Attendance</th>
                                                     <th>Marked Inactive</th>
                                                     <th>Class Attended</th>
                                                 </tr>
