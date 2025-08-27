@@ -257,6 +257,12 @@ $students_left = getStudentsLeftDuringPeriod($filters['start_date'], $filters['e
 $students = getStudentsData($filters);
 $metrics = calculateAttritionMetrics($students, $students_at_start, $students_left, $students_today);
 ?>
+<?php
+// Get selected values from filters if set, otherwise empty array
+$selectedClasses = !empty($filters['class']) ? (array)$filters['class'] : [];
+$selectedCategories = !empty($filters['category']) ? (array)$filters['category'] : [];
+$selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_id'] : [];
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -265,8 +271,13 @@ $metrics = calculateAttritionMetrics($students, $students_at_start, $students_le
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Attrition Dashboard</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -396,224 +407,336 @@ $metrics = calculateAttritionMetrics($students, $students_at_start, $students_le
             min-width: 120px;
         }
     </style>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <body>
-    <div class="container-fluid py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-graduation-cap me-2"></i>Student Attrition Dashboard</h1>
-            <div class="d-flex">
-                <button class="btn btn-outline-secondary me-2" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i> Print Report
-                </button>
-                <button class="btn btn-outline-primary">
-                    <i class="fas fa-download me-1"></i> Export Data
-                </button>
-            </div>
-        </div>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-        <!-- Filters Section -->
-        <div class="filter-section">
-            <form method="GET" id="filterForm">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label fw-bold">Date Range</label>
-                        <input type="date" class="form-control" name="start_date"
-                            value="<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01'); ?>">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label fw-bold">To</label>
-                        <input type="date" class="form-control" name="end_date"
-                            value="<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'); ?>">
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">Class</label>
-                        <select class="form-select class-select" name="class[]" multiple>
-                            <?php
-                            $class_query = "SELECT DISTINCT class FROM rssimyprofile_student ORDER BY class";
-                            $class_result = pg_query($con, $class_query);
-                            while ($class = pg_fetch_assoc($class_result)) {
-                                $selected = (isset($_GET['class']) && in_array($class['class'], (array)$_GET['class'])) ? 'selected' : '';
-                                echo "<option value='{$class['class']}' $selected>{$class['class']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">Category</label>
-                        <select class="form-select category-select" name="category[]" multiple>
-                            <?php
-                            $category_query = "SELECT DISTINCT category FROM rssimyprofile_student ORDER BY category";
-                            $category_result = pg_query($con, $category_query);
-                            while ($category = pg_fetch_assoc($category_result)) {
-                                $selected = (isset($_GET['category']) && in_array($category['category'], (array)$_GET['category'])) ? 'selected' : '';
-                                echo "<option value='{$category['category']}' $selected>{$category['category']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">Student ID</label>
-                        <select class="form-select student-select" name="student_id[]" multiple>
-                            <?php
-                            $student_query = "SELECT student_id, studentname FROM rssimyprofile_student ORDER BY student_id";
-                            $student_result = pg_query($con, $student_query);
-                            while ($student = pg_fetch_assoc($student_result)) {
-                                $selected = (isset($_GET['student_id']) && in_array($student['student_id'], (array)$_GET['student_id'])) ? 'selected' : '';
-                                echo "<option value='{$student['student_id']}' $selected>{$student['student_id']} - {$student['studentname']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary filter-btn">
-                            <i class="fas fa-filter me-1"></i> Apply Filters
-                        </button>
-                        <button type="button" class="btn btn-secondary filter-btn" onclick="resetFilters()">
-                            <i class="fas fa-sync-alt me-1"></i> Reset
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
+    <main id="main" class="main">
 
-        <!-- Metrics Cards -->
-        <div class="row">
-            <div class="col-xl-3 col-md-6">
-                <div class="metric-card bg-primary">
-                    <div class="metric-value"><?php echo $metrics['students_today']; ?></div>
-                    <div class="metric-label">Total Students (Today)</div>
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="metric-card bg-success">
-                    <div class="metric-value"><?php echo $metrics['students_at_start']; ?></div>
-                    <div class="metric-label">Active at Period Start</div>
-                    <i class="fas fa-user-check"></i>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="metric-card bg-danger">
-                    <div class="metric-value"><?php echo $metrics['students_left']; ?></div>
-                    <div class="metric-label">Students Left</div>
-                    <i class="fas fa-user-times"></i>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="metric-card bg-warning">
-                    <div class="metric-value"><?php echo $metrics['attrition_rate']; ?>%</div>
-                    <div class="metric-label">Attrition Rate</div>
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-        </div>
+        <div class="pagetitle">
+            <h1>Student Attrition</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Analytics</a></li>
+                    <li class="breadcrumb-item active">Student Attrition</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-        <!-- Charts -->
-        <div class="row mt-4">
-            <div class="col-lg-6">
-                <div class="dashboard-card">
-                    <h4 class="mb-4"><i class="fas fa-venus-mars me-2"></i>Gender Distribution in Attrition</h4>
-                    <div class="chart-container">
-                        <canvas id="genderChart"></canvas>
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid py-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                </div>
+
+                                <!-- Filters Section -->
+                                <div class="filter-section">
+                                    <form method="GET" id="filterForm">
+                                        <div class="row">
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold">Date Range</label>
+                                                <input type="date" class="form-control" name="start_date"
+                                                    value="<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01'); ?>">
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold">To</label>
+                                                <input type="date" class="form-control" name="end_date"
+                                                    value="<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'); ?>">
+                                            </div>
+                                            <div class="col-md-2 mb-3">
+                                                <label class="form-label fw-bold">Class</label>
+                                                <select class="form-select" id="classes" name="class[]" multiple>
+                                                    <?php foreach ($selectedClasses as $cls): ?>
+                                                        <?php if ($cls != 'all'): ?>
+                                                            <option value="<?= htmlspecialchars($cls) ?>" selected><?= htmlspecialchars($cls) ?></option>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-2 mb-3">
+                                                <label class="form-label fw-bold">Category</label>
+                                                <select class="form-select" id="categories" name="category[]" multiple>
+                                                    <?php foreach ($selectedCategories as $cat): ?>
+                                                        <?php if ($cat != 'all'): ?>
+                                                            <option value="<?= htmlspecialchars($cat) ?>" selected><?= htmlspecialchars($cat) ?></option>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-2 mb-3">
+                                                <label class="form-label fw-bold">Student ID</label>
+                                                <select class="form-select" id="student_ids" name="student_id[]" multiple>
+                                                    <?php foreach ($selectedStudentIds as $stu): ?>
+                                                        <?php if ($stu != 'all'): ?>
+                                                            <option value="<?= htmlspecialchars($stu) ?>" selected><?= htmlspecialchars($stu) ?></option>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary filter-btn">
+                                                    <i class="fas fa-filter me-1"></i> Apply Filters
+                                                </button>
+                                                <button type="button" class="btn btn-secondary filter-btn" onclick="resetFilters()">
+                                                    <i class="fas fa-sync-alt me-1"></i> Reset
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Metrics Cards -->
+                                <div class="row">
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card bg-primary">
+                                            <div class="metric-value"><?php echo $metrics['students_today']; ?></div>
+                                            <div class="metric-label">Total Students (Today)</div>
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card bg-success">
+                                            <div class="metric-value"><?php echo $metrics['students_at_start']; ?></div>
+                                            <div class="metric-label">Active at Period Start</div>
+                                            <i class="fas fa-user-check"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card bg-danger">
+                                            <div class="metric-value"><?php echo $metrics['students_left']; ?></div>
+                                            <div class="metric-label">Students Left</div>
+                                            <i class="fas fa-user-times"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="metric-card bg-warning">
+                                            <div class="metric-value"><?php echo $metrics['attrition_rate']; ?>%</div>
+                                            <div class="metric-label">Attrition Rate</div>
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Charts -->
+                                <div class="row mt-4">
+                                    <div class="col-lg-6">
+                                        <div class="dashboard-card">
+                                            <h4 class="mb-4"><i class="fas fa-venus-mars me-2"></i>Gender Distribution in Attrition</h4>
+                                            <div class="chart-container">
+                                                <canvas id="genderChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="dashboard-card">
+                                            <h4 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Attrition Overview</h4>
+                                            <div class="chart-container">
+                                                <canvas id="attritionChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Students Table -->
+                                <div class="dashboard-card mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h4 class="mb-0"><i class="fas fa-list me-2"></i>Student Details</h4>
+                                        <span class="badge bg-primary"><?php echo count($students); ?> records found</span>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="table-id">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Student ID</th>
+                                                    <th>Name</th>
+                                                    <th>Class</th>
+                                                    <th>Category</th>
+                                                    <th>Status</th>
+                                                    <th>Gender</th>
+                                                    <th>DOA</th>
+                                                    <th>Last Attended</th>
+                                                    <th>Marked Inactive</th>
+                                                    <th>Class Attended</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (count($students) > 0): ?>
+                                                    <?php foreach ($students as $student): ?>
+                                                        <tr>
+                                                            <td><?php echo htmlspecialchars($student['student_id']); ?></td>
+                                                            <td><?php echo htmlspecialchars($student['studentname']); ?></td>
+                                                            <td><?php echo htmlspecialchars($student['class']); ?></td>
+                                                            <td><?php echo htmlspecialchars($student['category']); ?></td>
+                                                            <td><?php echo htmlspecialchars($student['filterstatus']); ?></td>
+                                                            <td><?php echo htmlspecialchars($student['gender']); ?></td>
+                                                            <td>
+                                                                <?php echo !empty($student['doa']) ? date("d/m/Y", strtotime($student['doa'])) : 'N/A'; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php echo !empty($student['last_attended_date']) ? date("d/m/Y", strtotime($student['last_attended_date'])) : 'N/A'; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php echo !empty($student['effectivefrom']) ? date("d/m/Y", strtotime($student['effectivefrom'])) : 'N/A'; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php
+                                                                if (!empty($student['total_duration_days'])) {
+                                                                    $days = (int)$student['total_duration_days'];
+
+                                                                    if ($days < 30) {
+                                                                        echo $days . ' days';
+                                                                    } elseif ($days < 365) {
+                                                                        $months = floor($days / 30);
+                                                                        $remaining_days = $days % 30;
+                                                                        echo $months . ' month' . ($months > 1 ? 's' : '');
+                                                                        if ($remaining_days > 0) {
+                                                                            echo ' ' . $remaining_days . ' day' . ($remaining_days > 1 ? 's' : '');
+                                                                        }
+                                                                    } else {
+                                                                        $years = floor($days / 365);
+                                                                        $remaining_days = $days % 365;
+                                                                        $months = floor($remaining_days / 30);
+                                                                        $extra_days = $remaining_days % 30;
+
+                                                                        echo $years . ' year' . ($years > 1 ? 's' : '');
+                                                                        if ($months > 0) {
+                                                                            echo ' ' . $months . ' month' . ($months > 1 ? 's' : '');
+                                                                        }
+                                                                        if ($extra_days > 0) {
+                                                                            echo ' ' . $extra_days . ' day' . ($extra_days > 1 ? 's' : '');
+                                                                        }
+                                                                    }
+                                                                } else {
+                                                                    echo 'N/A';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="9" class="text-center py-4">
+                                                            <i class="fas fa-exclamation-circle fa-2x mb-3 text-muted"></i>
+                                                            <p class="text-muted">No students found with the selected filters.</p>
+                                                        </td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
-            <div class="col-lg-6">
-                <div class="dashboard-card">
-                    <h4 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Attrition Overview</h4>
-                    <div class="chart-container">
-                        <canvas id="attritionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Students Table -->
-        <div class="dashboard-card mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0"><i class="fas fa-list me-2"></i>Student Details</h4>
-                <span class="badge bg-primary"><?php echo count($students); ?> records found</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Class</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Gender</th>
-                            <th>DOA</th>
-                            <th>Last Attended</th>
-                            <th>Duration (Days)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (count($students) > 0): ?>
-                            <?php foreach ($students as $student): ?>
-                                <tr>
-                                    <td><span class="fw-bold"><?php echo htmlspecialchars($student['student_id']); ?></span></td>
-                                    <td><?php echo htmlspecialchars($student['studentname']); ?></td>
-                                    <td><span class="badge bg-secondary"><?php echo htmlspecialchars($student['class']); ?></span></td>
-                                    <td><?php echo htmlspecialchars($student['category']); ?></td>
-                                    <td>
-                                        <span class="badge bg-<?php echo $student['filterstatus'] === 'Active' ? 'success' : 'danger'; ?>">
-                                            <?php echo htmlspecialchars($student['filterstatus']); ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-<?php echo $student['gender'] === 'Male' ? 'info' : 'warning'; ?>">
-                                            <?php echo htmlspecialchars($student['gender']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($student['doa']); ?></td>
-                                    <td><?php echo htmlspecialchars($student['last_attended_date'] ?? 'N/A'); ?></td>
-                                    <td>
-                                        <span class="fw-bold"><?php echo htmlspecialchars($student['total_duration_days'] ?? 'N/A'); ?></span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="9" class="text-center py-4">
-                                    <i class="fas fa-exclamation-circle fa-2x mb-3 text-muted"></i>
-                                    <p class="text-muted">No students found with the selected filters.</p>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    </main><!-- End #main -->
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($students)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize all Select2 dropdowns
-            $('.class-select').select2({
-                placeholder: "Select Class",
-                allowClear: true,
-                width: '100%'
+            // Include Student IDs
+            $('#student_ids').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by name or ID',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
             });
 
-            $('.category-select').select2({
-                placeholder: "Select Category",
-                allowClear: true,
-                width: '100%'
+            // Categories
+            $('#categories').select2({
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by category',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
             });
 
-            $('.student-select').select2({
-                placeholder: "Select Student ID",
-                allowClear: true,
-                width: '100%'
+            // Classes
+            $('#classes').select2({
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by class',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
             });
-
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
             // Initialize charts only if we have data
             <?php if ($metrics['students_at_start'] > 0): ?>
                 // Gender Chart
