@@ -128,7 +128,7 @@ function getStudentsData($start_date, $end_date, $filters = [])
             (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
         FROM rssimyprofile_student s
         LEFT JOIN attendance a ON a.user_id = s.student_id
-        WHERE (s.doa <= '$end_date' AND (s.effectivefrom IS NULL OR s.effectivefrom > '$start_date'))
+        WHERE s.filterstatus = 'Inactive' AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
           $filter_clause
         GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
         ORDER BY s.effectivefrom DESC
@@ -197,17 +197,6 @@ $students = getStudentsData($filters['start_date'], $filters['end_date'], $filte
 
 // Calculate attrition and retention
 $metrics = calculateAttritionMetrics($students, $students_at_start, $students_left, $students_today, $total_students);
-
-// Debug output example
-/*
-echo "Total Students in Period: $total_students<br>";
-echo "New Admissions: $new_admissions<br>";
-echo "Active at Start: $students_at_start<br>";
-echo "Active at End: $students_today<br>";
-echo "Students Left: $students_left<br>";
-echo "Retention Rate: {$metrics['retention_rate']}%<br>";
-echo "Attrition Rate: {$metrics['attrition_rate']}%<br>";
-*/
 ?>
 
 <?php
@@ -297,37 +286,10 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
 
-        .bg-primary {
-            background: linear-gradient(45deg, var(--primary), #2e59d9);
-        }
-
-        .bg-success {
-            background: linear-gradient(45deg, var(--success), #17a673);
-        }
-
-        .bg-danger {
-            background: linear-gradient(45deg, var(--danger), #be2617);
-        }
-
-        .bg-warning {
-            background: linear-gradient(45deg, var(--warning), #dda20a);
-        }
-
         .table th {
             border-top: none;
             font-weight: 600;
             color: var(--dark);
-        }
-
-        .badge {
-            font-weight: 500;
-            padding: 0.5em 0.8em;
-        }
-
-        h1 {
-            color: var(--dark);
-            font-weight: 700;
-            margin-bottom: 1.5rem;
         }
 
         .chart-container {
@@ -343,12 +305,6 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
         .btn-primary:hover {
             background-color: #2e59d9;
             border-color: #2e59d9;
-        }
-
-        .select2-container--default .select2-selection--multiple {
-            border: 1px solid #d1d3e2;
-            border-radius: 0.35rem;
-            min-height: calc(1.5em + 0.75rem + 2px);
         }
 
         .filter-btn {
@@ -427,15 +383,36 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
             width: 100%;
             height: 100%;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
+            /* This prevents interaction when hidden */
+            transform: translateX(100%);
         }
 
         .chart-slide.active {
             opacity: 1;
+            pointer-events: auto;
+            /* This enables interaction when visible */
+            transform: translateX(0);
+            z-index: 2;
+        }
+
+        .chart-slide.prev {
+            transform: translateX(-100%);
+        }
+
+        .chart-slide.next {
+            transform: translateX(100%);
+        }
+
+        .mini-chart-container {
+            height: 140px;
+            width: 100%;
+            position: relative;
         }
 
         .chart-title {
@@ -443,11 +420,6 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
             margin-bottom: 10px;
             text-align: center;
             opacity: 0.9;
-        }
-
-        .mini-chart-container {
-            height: 140px;
-            width: 100%;
         }
 
         .metric-footer {
@@ -913,11 +885,11 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
                     new Chart(attritionCtx, {
                         type: 'pie',
                         data: {
-                            labels: ['Active at Start', 'Students Left'],
+                            labels: ['Students Retained', 'Students Left'],
                             datasets: [{
                                 data: [
-                                    <?php echo $metrics['students_at_start']; ?>,
-                                    <?php echo $metrics['students_left']; ?>
+                                    <?php echo ($total_students - $metrics['students_left']); ?>, // Retained
+                                    <?php echo $metrics['students_left']; ?> // Left
                                 ],
                                 backgroundColor: ['#4BC0C0', '#FF9F40'],
                                 borderWidth: 1
@@ -971,7 +943,7 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
         }
 
         function showChart(index) {
-            // Hide all charts
+            // Hide all charts by setting height to 0
             document.querySelectorAll('.chart-slide').forEach(slide => {
                 slide.classList.remove('active');
             });
@@ -981,6 +953,11 @@ $selectedStudentIds = !empty($filters['student_id']) ? (array)$filters['student_
 
             currentChartIndex = index;
             updateChartIndicator();
+
+            // Reinitialize charts to fix hover issues
+            if (typeof initializeCharts === 'function') {
+                initializeCharts();
+            }
         }
 
         function nextChart() {
