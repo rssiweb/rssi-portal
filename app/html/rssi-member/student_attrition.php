@@ -124,6 +124,7 @@ function getStudentsData($start_date, $end_date, $filters = [])
             s.doa,
             s.effectivefrom,
             s.gender,
+            s.remarks,
             MAX(a.punch_in) AS last_attended_date,
             (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
         FROM rssimyprofile_student s
@@ -260,8 +261,6 @@ if (!empty($students)) {
         $firstDayOfMonth = "$year-$monthNumber-01";
         $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
-        echo "<!-- Processing Student ID: $studentId, Last Attendance: $lastAttendanceDate ($month $year) -->";
-
         // Get student type for the last attendance month
         $currentInfo = getStudentInfoForDate($con, $studentId, $firstDayOfMonth);
         $studentType = $currentInfo['category_type'] ?? 'Regular';
@@ -269,17 +268,13 @@ if (!empty($students)) {
 
         // 1. Get student-specific fees with details
         $studentSpecificDetails = [];
-        echo "<!-- Student Type: $studentType, Class: $currentClass -->";
         $studentSpecificQuery = "SELECT fc.category_name, ssf.amount 
                             FROM student_specific_fees ssf
                             JOIN fee_categories fc ON ssf.category_id = fc.id
                             WHERE ssf.student_id = '{$student['student_id']}'
                             AND '$firstDayOfMonth' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
-        echo "<!-- Student-Specific Fee Query: $studentSpecificQuery -->";
         $studentSpecificResult = pg_query($con, $studentSpecificQuery);
         $studentSpecificItems = pg_fetch_all($studentSpecificResult) ?? [];
-
-        echo "<!-- Student-Specific Fee Items Raw: " . json_encode($studentSpecificItems) . " -->";
 
         $studentSpecificTotal = 0;
         foreach ($studentSpecificItems as $fee) {
@@ -289,7 +284,6 @@ if (!empty($students)) {
                 'amount' => $fee['amount']
             ];
         }
-        echo "<!-- Student-Specific Fee Items: " . json_encode($studentSpecificDetails) . " -->";
 
         // 2. Get current month's base fees
         $feeQuery = "SELECT fc.id, fc.category_name, fs.amount, fc.fee_type
@@ -298,12 +292,9 @@ if (!empty($students)) {
                 WHERE fs.class = '$currentClass'
                 AND fs.student_type = '$studentType'
                 AND '$firstDayOfMonth' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')";
-        echo "<!-- Base Fee Query: $feeQuery -->";
 
         $feeResult = pg_query($con, $feeQuery);
         $feeItems = pg_fetch_all($feeResult) ?? [];
-
-        echo "<!-- Base Fee Items: " . json_encode($feeItems) . " -->";
 
         // 3. Calculate current month's fees with Admission Fee logic
         $feeDetails = [
@@ -326,7 +317,6 @@ if (!empty($students)) {
             }
         }
         $currentMonthFees = array_sum($feeDetails);
-        echo "<!-- Current Month Fees (Before Student-Specific): $currentMonthFees -->";
 
         // 4. Calculate total student-specific fees (simple sum, no category logic)
         $studentSpecificTotal = 0;
@@ -480,7 +470,6 @@ if (!empty($students)) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -758,9 +747,6 @@ if (!empty($students)) {
                         <div class="card-body">
                             <br>
                             <div class="container-fluid py-4">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                </div>
-
                                 <!-- Filters Section -->
                                 <div class="filter-section">
                                     <form method="GET" id="filterForm">
@@ -936,7 +922,11 @@ if (!empty($students)) {
                                 <div class="dashboard-card mt-4">
                                     <div class="d-flex justify-content-between align-items-center mb-4">
                                         <h4 class="mb-0"><i class="fas fa-list me-2"></i>Student Details</h4>
-                                        <span class="badge bg-primary"><?php echo count($students); ?> records found</span>
+                                        <!-- <span class="badge bg-primary"><?php echo count($students); ?> records found</span> -->
+                                        <!-- Update your export button -->
+                                        <a href="export_student_attrition.php?<?php echo http_build_query($_GET); ?>" class="btn btn-success btn-sm">
+                                            <i class="fas fa-file-export me-1"></i> Export CSV
+                                        </a>
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-hover" id="table-id">
@@ -952,6 +942,7 @@ if (!empty($students)) {
                                                     <th>Last Attendance</th>
                                                     <th>Marked Inactive</th>
                                                     <th>Class Attended</th>
+                                                    <th>Remarks</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1023,6 +1014,17 @@ if (!empty($students)) {
                                                                 }
                                                                 ?>
                                                             </td>
+                                                            <td>
+                                                                <?php if (!empty($student['remarks'])): ?>
+                                                                    <!-- Link to open modal -->
+                                                                    <a href="#" class="view-remarks-link" data-bs-toggle="modal" data-bs-target="#remarksModal<?= $student['student_id'] ?>">
+                                                                        View
+                                                                    </a>
+                                                                <?php else: ?>
+                                                                    N/A
+                                                                <?php endif; ?>
+                                                            </td>
+
                                                         </tr>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
@@ -1267,6 +1269,32 @@ if (!empty($students)) {
             updateChartIndicator();
         });
     </script>
+    <!-- Place this at the bottom of your page, before </body> -->
+    <div id="modals-container">
+        <?php if (!empty($students)): ?>
+            <?php foreach ($students as $student): ?>
+                <?php if (!empty($student['remarks'])): ?>
+                    <!-- Modal -->
+                    <div class="modal fade" id="remarksModal<?= $student['student_id'] ?>" tabindex="-1" aria-labelledby="remarksModalLabel<?= $student['student_id'] ?>" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="remarksModalLabel<?= $student['student_id'] ?>">Remarks for <?= htmlspecialchars($student['studentname']) ?></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <?= nl2br(htmlspecialchars($student['remarks'])) ?>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </body>
 
 </html>

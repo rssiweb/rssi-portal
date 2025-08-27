@@ -608,6 +608,11 @@
             </a>
           </li>
           <li>
+            <a id="student_attrition" href="student_attrition.php">
+              <span>Student Attrition</span>
+            </a>
+          </li>
+          <li>
             <a id="facility-hygiene-monitoring" href="facility-hygiene-monitoring.php">
               <span>Facility Hygiene Monitoring</span>
             </a>
@@ -874,6 +879,10 @@
         id: 'icom',
         linkId: 'icom_manage_order',
         url: 'icom.php'
+      },{
+        id: 'work',
+        linkId: 'student_attrition',
+        url: 'student_attrition.php'
       },
       {
         id: 'icom',
