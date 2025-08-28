@@ -412,7 +412,7 @@ if (!$phoneNumber) {
                                                         <input type="hidden" name="data[visitenddate]" type="text" value="' . date("d/m/Y", strtotime($array['visitenddate'])) . '">
                                                         <input type="hidden" name="data[visitstatus]" type="text" value="' . @strtoupper($array['visitstatus']) . '">
                                                         <input type="hidden" name="email" type="text" value="' . @$array['email'] . '">
-                                                        <input type="hidden" name="remarks" type="text" value="' . @$array['remarks'] . '">
+                                                        <input type="hidden" name="data[remarks]" type="text" value="' . @$array['remarks'] . '">
                                                         <button type="submit" class="dropdown-item"><i class="bi bi-envelope-at me-2"></i>Send Email</button>
                                                     </form>
                                                 </li>';
