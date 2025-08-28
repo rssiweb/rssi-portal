@@ -613,6 +613,11 @@
             </a>
           </li>
           <li>
+            <a id="distribution_analytics" href="distribution_analytics.php">
+              <span>Distribution Analytics</span>
+            </a>
+          </li>
+          <li>
             <a id="facility-hygiene-monitoring" href="facility-hygiene-monitoring.php">
               <span>Facility Hygiene Monitoring</span>
             </a>
@@ -879,10 +884,14 @@
         id: 'icom',
         linkId: 'icom_manage_order',
         url: 'icom.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'student_attrition',
         url: 'student_attrition.php'
+      }, {
+        id: 'work',
+        linkId: 'distribution_analytics',
+        url: 'distribution_analytics.php'
       },
       {
         id: 'icom',

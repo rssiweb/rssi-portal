@@ -831,7 +831,7 @@ if (!empty($students)) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Analytics</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
                     <li class="breadcrumb-item active">Student Attrition</li>
                 </ol>
             </nav>
