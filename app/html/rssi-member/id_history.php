@@ -15,6 +15,9 @@ $can_access = false;
 if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senior Centre Incharge') {
     $can_access = true;
 }
+
+// Set default status to Ordered if not already set
+$default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,6 +31,7 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .table-responsive {
             max-height: 600px;
@@ -51,6 +55,26 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
             height: 40px;
             object-fit: cover;
             border-radius: 50%;
+        }
+
+        .search-options {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .search-option-checkbox {
+            margin-right: 5px;
+        }
+
+        .search-option-label {
+            font-weight: normal;
+            margin-right: 15px;
+        }
+
+        .filter-section {
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -76,27 +100,63 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
+                            <div class="search-options mb-4">
+                                <h6>Search By:</h6>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input search-option-checkbox" type="checkbox" id="search-by-batch" checked>
+                                    <label class="form-check-label search-option-label" for="search-by-batch">Batch ID</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input search-option-checkbox" type="checkbox" id="search-by-student" checked>
+                                    <label class="form-check-label search-option-label" for="search-by-student">Student ID</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input search-option-checkbox" type="checkbox" id="search-by-status" checked>
+                                    <label class="form-check-label search-option-label" for="search-by-status">Status</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input search-option-checkbox" type="checkbox" id="search-by-date" checked>
+                                    <label class="form-check-label search-option-label" for="search-by-date">Date Range</label>
+                                </div>
+                            </div>
+
                             <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">From Date</label>
-                                    <input type="date" class="form-control" id="from-date">
+                                <div class="col-md-3 filter-section" id="batch-filter-section">
+                                    <label class="form-label">Batch ID (comma separated)</label>
+                                    <input type="text" class="form-control" id="batch-id" placeholder="BATCH001, BATCH002">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">To Date</label>
-                                    <input type="date" class="form-control" id="to-date">
+                                <div class="col-md-3 filter-section" id="student-filter-section">
+                                    <label class="form-label">Student ID</label>
+                                    <select class="form-select student-select" id="student-id" multiple="multiple">
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2 filter-section" id="status-filter-section">
                                     <label class="form-label">Status</label>
                                     <select class="form-select" id="status-filter">
                                         <option value="">All Status</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Ordered">Ordered</option>
-                                        <option value="Delivered">Delivered</option>
+                                        <option value="Pending" <?php echo $default_status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="Ordered" <?php echo $default_status === 'Ordered' ? 'selected' : ''; ?>>Ordered</option>
+                                        <option value="Delivered" <?php echo $default_status === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3 d-flex align-items-end">
+                                <div class="col-md-2 filter-section" id="date-from-section">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="from-date">
+                                </div>
+                                <div class="col-md-2 filter-section" id="date-to-section">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="to-date">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
                                     <button class="btn btn-primary" id="apply-filters">
                                         <i class="bi bi-funnel"></i> Apply Filters
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="reset-filters">
+                                        <i class="bi bi-arrow-repeat"></i> Reset Filters
                                     </button>
                                 </div>
                             </div>
@@ -208,11 +268,13 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             const deliveryModal = new bootstrap.Modal('#deliveryModal');
             let currentDeliveryId = null;
             let isBatchDelivery = false;
+
             // Initialize date pickers
             flatpickr("#from-date", {
                 defaultDate: new Date().setMonth(new Date().getMonth() - 1)
@@ -220,6 +282,54 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
             flatpickr("#to-date", {
                 defaultDate: new Date()
             });
+
+            // Initialize Select2 for student selection
+            $('.student-select').select2({
+                placeholder: "Select student(s)",
+                allowClear: true,
+                ajax: {
+                    url: 'id_process_order.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            action: 'search_students',
+                            search: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2
+            });
+
+            // Set default status to Ordered on page load
+            $('#status-filter').val('Ordered');
+
+            // Toggle filter sections based on checkboxes
+            $('.search-option-checkbox').change(function() {
+                toggleFilterSections();
+            });
+
+            function toggleFilterSections() {
+                $('#batch-filter-section').toggle($('#search-by-batch').is(':checked'));
+                $('#student-filter-section').toggle($('#search-by-student').is(':checked'));
+                $('#status-filter-section').toggle($('#search-by-status').is(':checked'));
+
+                const dateEnabled = $('#search-by-date').is(':checked');
+                $('#date-from-section').toggle(dateEnabled);
+                $('#date-to-section').toggle(dateEnabled);
+
+                // Disable date inputs when date search is not selected
+                $('#from-date, #to-date').prop('disabled', !dateEnabled);
+            }
+
+            // Initialize filter sections
+            toggleFilterSections();
 
             // Load initial data
             loadOrders();
@@ -229,12 +339,28 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
                 loadOrders();
             });
 
+            // Reset filters button
+            $('#reset-filters').click(function() {
+                $('#batch-id').val('');
+                $('.student-select').val(null).trigger('change');
+                $('#status-filter').val('Ordered');
+                $('#from-date, #to-date').val('');
+
+                // Reset checkboxes to default
+                $('#search-by-batch, #search-by-student, #search-by-status, #search-by-date').prop('checked', true);
+                toggleFilterSections();
+
+                loadOrders();
+            });
+
             // Modify your row generation to include delivery action
             function loadOrders() {
                 const params = {
-                    from_date: $('#from-date').val(),
-                    to_date: $('#to-date').val(),
-                    status: $('#status-filter').val()
+                    from_date: $('#search-by-date').is(':checked') ? $('#from-date').val() : '',
+                    to_date: $('#search-by-date').is(':checked') ? $('#to-date').val() : '',
+                    status: $('#search-by-status').is(':checked') ? $('#status-filter').val() : '',
+                    batch_ids: $('#search-by-batch').is(':checked') ? $('#batch-id').val() : '',
+                    student_ids: $('#search-by-student').is(':checked') ? $('#student-id').val() : ''
                 };
 
                 $('#orders-table tbody').html(`
@@ -579,7 +705,29 @@ if ($role === 'Admin' || $position === 'Centre Incharge' || $position === 'Senio
             revertPendingModal.show();
         });
     </script>
-
+    <script>
+        $(document).ready(function() {
+            // Include Student IDs
+            $('#student-id').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
+                    cache: true
+                },
+                placeholder: 'Search by name or ID',
+                width: '100%',
+                minimumInputLength: 1,
+                multiple: true
+            });
+        });
+    </script>
 </body>
 
 </html>

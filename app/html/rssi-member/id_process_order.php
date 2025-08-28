@@ -525,7 +525,9 @@ function getOrderHistory()
         $params = [
             'from_date' => $_GET['from_date'] ?? null,
             'to_date' => $_GET['to_date'] ?? null,
-            'status' => $_GET['status'] ?? null
+            'status' => $_GET['status'] ?? null,
+            'batch_ids' => $_GET['batch_ids'] ?? null,
+            'student_ids' => $_GET['student_ids'] ?? null
         ];
 
         $query = "SELECT 
@@ -557,6 +559,31 @@ function getOrderHistory()
         if ($params['status']) {
             $conditions[] = "o.status = $" . $paramCount++;
             $queryParams[] = $params['status'];
+        }
+
+        // Batch IDs filter
+        if ($params['batch_ids']) {
+            $batchIds = array_map('trim', explode(',', $params['batch_ids']));
+            $placeholders = [];
+            foreach ($batchIds as $batchId) {
+                $placeholders[] = "$" . $paramCount++;
+                $queryParams[] = $batchId;
+            }
+            $conditions[] = "o.batch_id IN (" . implode(',', $placeholders) . ")";
+        }
+
+        // Student IDs filter
+        if ($params['student_ids']) {
+            $studentIds = is_array($params['student_ids']) ? 
+                $params['student_ids'] : 
+                explode(',', $params['student_ids']);
+                
+            $placeholders = [];
+            foreach ($studentIds as $studentId) {
+                $placeholders[] = "$" . $paramCount++;
+                $queryParams[] = trim($studentId);
+            }
+            $conditions[] = "o.student_id IN (" . implode(',', $placeholders) . ")";
         }
 
         if (!empty($conditions)) {
