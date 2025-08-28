@@ -76,6 +76,30 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
         .filter-section {
             margin-bottom: 15px;
         }
+
+        .batch-header {
+            cursor: pointer;
+        }
+
+        .batch-header:hover {
+            background-color: #f0f0f0 !important;
+        }
+
+        .batch-details {
+            display: none;
+        }
+
+        .batch-expanded .batch-details {
+            display: table-row;
+        }
+
+        .batch-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .batch-expanded .batch-toggle-icon {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 
@@ -230,7 +254,12 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" id="order-details-content">
-                        <!-- Content will be loaded dynamically -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading order details...</p>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -272,7 +301,10 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
     <script>
         $(document).ready(function() {
             const deliveryModal = new bootstrap.Modal('#deliveryModal');
+            const viewDetailsModal = new bootstrap.Modal('#viewDetailsModal');
+            const revertPendingModal = new bootstrap.Modal('#revertPendingModal');
             let currentDeliveryId = null;
+            let currentOrderId = null;
             let isBatchDelivery = false;
 
             // Initialize date pickers
@@ -353,6 +385,16 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                 loadOrders();
             });
 
+            // Toggle batch details
+            $(document).on('click', '.batch-header', function() {
+                $(this).toggleClass('batch-expanded');
+                $(this).nextUntil('.batch-header').toggleClass('batch-details');
+
+                // Update the toggle icon
+                const icon = $(this).find('.batch-toggle-icon');
+                icon.toggleClass('bi-chevron-right bi-chevron-down');
+            });
+
             // Modify your row generation to include delivery action
             function loadOrders() {
                 const params = {
@@ -407,6 +449,7 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                                     const batchRow = `
                                 <tr class="batch-header bg-light">
                                     <td colspan="7">
+                                        <i class="bi bi-chevron-right batch-toggle-icon me-2"></i>
                                         <strong>Batch:</strong> ${batchId}
                                         <span class="badge ${isBatchOrdered ? 'bg-success' : 'bg-secondary'} ms-2">
                                             ${orders.length} cards
@@ -438,7 +481,7 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                                         order.status === 'Delivered' ? 'badge-delivered' : 'badge-pending';
 
                                     const row = `
-                                <tr>
+                                <tr class="${orders.length > 1 ? 'batch-details' : ''}">
                                     <td><code>${order.batch_id}</code></td>
                                     <td>
                                         <img src="${order.photourl || 'default_photo.jpg'}" class="student-photo me-2">
@@ -453,7 +496,7 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                                     <td><span class="badge ${statusClass}">${order.status || '-'}</span></td>
                                     <td>${order.payment_status || '-'}</td>
                                     <td>${order.order_placed_by_name || '-'}</td>
-                                    <td></td>
+                                    <td>${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</td>
                                     <td></td>
                                     <td>
                                         <div class="dropdown">
@@ -506,13 +549,20 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                         }
                     },
                     error: function(xhr, status, error) {
-                        // ... [keep your existing error handling] ...
+                        $('#orders-table tbody').html(`
+                    <tr>
+                        <td colspan="10" class="text-center py-4 text-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Error loading data: ${error}
+                        </td>
+                    </tr>
+                `);
                     }
                 });
             }
 
             // Handle batch delivery button click
-            $(document).on('click', '.mark-delivered-btn', function() {
+            $(document).on('click', '.mark-delivered-btn', function(e) {
+                e.stopPropagation(); // Prevent triggering the row click event
                 currentDeliveryId = $(this).data('batch-id');
                 isBatchDelivery = true;
                 $('#delivery-remarks').val('');
@@ -528,7 +578,6 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
             });
 
             // Confirm delivery
-            // In your confirm delivery handler
             $('#confirm-delivery').click(function() {
                 const btn = $(this);
                 const spinner = $('#delivery-spinner');
@@ -600,6 +649,95 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                 });
             });
 
+            // View Details Handler
+            $(document).on('click', '.view-details', function() {
+                const orderId = $(this).data('id');
+                currentOrderId = orderId;
+
+                // Show the modal immediately with a loading spinner
+                $('#order-details-content').html(`
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading order details...</p>
+                    </div>
+                `);
+                viewDetailsModal.show();
+
+                // Fetch the data
+                $.get('id_process_order.php', {
+                    action: 'get_order_details_history',
+                    id: orderId
+                }, function(response) {
+                    if (response.success) {
+                        const order = response.data;
+                        let statusBadge = '';
+                        if (order.status === 'Ordered') {
+                            statusBadge = 'bg-warning';
+                        } else if (order.status === 'Delivered') {
+                            statusBadge = 'bg-success';
+                        } else if (order.status === 'Pending') {
+                            statusBadge = 'bg-secondary';
+                        }
+
+                        const content = `
+                    <div class="mb-3">
+                        <h6>Order Information</h6>
+                        <p><strong>${order.studentname || 'N/A'} (${order.student_id || 'N/A'})</strong></p>
+                        <p><strong>Batch ID:</strong> ${order.batch_id || '-'}</p>
+                        <p><strong>Status:</strong> <span class="badge ${statusBadge}">${order.status || '-'}</span></p>
+                        <p><strong>Order Date:</strong> ${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</p>
+                        <p><strong>Requested By:</strong> ${order.order_placed_by_name || order.order_placed_by || '-'}</p>
+                        <p><strong>Type:</strong> ${order.order_type || '-'}</p>
+                        <p><strong>Payment Status:</strong> ${order.payment_status || '-'}</p>
+                        <p><strong>Remarks:</strong> ${order.remarks || '-'}</p>
+                        <p><strong>Order Placed with Vendor:</strong> ${order.ordered_date ? new Date(order.ordered_date).toLocaleString('en-GB') : '-'}</p>
+                    </div>
+                    
+                    ${order.status === 'Delivered' ? `
+                    <div class="mb-3">
+                        <h6>Delivery Information</h6>
+                        <p><strong>Delivered Date:</strong> ${order.delivered_date ? new Date(order.delivered_date).toLocaleDateString('en-GB') : '-'}</p>
+                        <p><strong>Received By:</strong> ${order.delivered_by_name || order.delivered_by || '-'}</p>
+                        <p><strong>Delivery Remarks:</strong> ${order.delivered_remarks || '-'}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${order.status === 'Ordered' && (order.pending_remarks || order.updated_by) ? `
+                    <div class="mb-3">
+                        <h6>Pending Status Information</h6>
+                        ${order.pending_remarks ? `<p><strong>Pending Remarks:</strong> ${order.pending_remarks}</p>` : ''}
+                        ${order.updated_by_name ? `<p><strong>Updated By:</strong> ${order.updated_by_name}</p>` : ''}
+                        ${order.updated_at ? `<p><strong>Updated At:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="mb-3">
+                        <h6>System Information</h6>
+                        ${order.created_at ? `<p><strong>Created At:</strong> ${new Date(order.created_at).toLocaleString('en-GB')}</p>` : ''}
+                        ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
+                    </div>
+                `;
+
+                        $('#order-details-content').html(content);
+                    } else {
+                        $('#order-details-content').html(`
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Error: ${response.message || 'Failed to load order details'}
+                    </div>
+                `);
+                    }
+                }, 'json');
+            });
+
+            // Revert to Pending Handler
+            $(document).on('click', '.mark-as-pending', function() {
+                currentOrderId = $(this).data('id');
+                $('#revert-remarks').val('');
+                revertPendingModal.show();
+            });
+
             // Add this helper function
             function updateBatchHeaderStatus(batchId) {
                 $.get('id_process_order.php', {
@@ -625,84 +763,6 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                     }
                 }, 'json');
             }
-        });
-    </script>
-    <script>
-        // Initialize modals
-        const viewDetailsModal = new bootstrap.Modal('#viewDetailsModal');
-        const revertPendingModal = new bootstrap.Modal('#revertPendingModal');
-        let currentOrderId = null;
-
-        // View Details Handler
-        $(document).on('click', '.view-details', function() {
-            const orderId = $(this).data('id');
-
-            $.get('id_process_order.php', {
-                action: 'get_order_details_history',
-                id: orderId
-            }, function(response) {
-                if (response.success) {
-                    const order = response.data;
-                    let statusBadge = '';
-                    if (order.status === 'Ordered') {
-                        statusBadge = 'bg-warning';
-                    } else if (order.status === 'Delivered') {
-                        statusBadge = 'bg-success';
-                    } else if (order.status === 'Pending') {
-                        statusBadge = 'bg-secondary';
-                    }
-
-                    const content = `
-                <div class="mb-3">
-                    <h6>Order Information</h6>
-                    <p><strong>${order.studentname || 'N/A'} (${order.student_id || 'N/A'})</strong></p>
-                    <p><strong>Batch ID:</strong> ${order.batch_id || '-'}</p>
-                    <p><strong>Status:</strong> <span class="badge ${statusBadge}">${order.status || '-'}</span></p>
-                    <p><strong>Order Date:</strong> ${order.order_date ? new Date(order.order_date).toLocaleDateString('en-GB') : '-'}</p>
-                    <p><strong>Requested By:</strong> ${order.order_placed_by_name || order.order_placed_by || '-'}</p>
-                    <p><strong>Type:</strong> ${order.order_type || '-'}</p>
-                    <p><strong>Payment Status:</strong> ${order.payment_status || '-'}</p>
-                    <p><strong>Remarks:</strong> ${order.remarks || '-'}</p>
-                    <p><strong>Order Placed with Vendor:</strong> ${order.ordered_date ? new Date(order.ordered_date).toLocaleString('en-GB') : '-'}</p>
-                </div>
-                
-                ${order.status === 'Delivered' ? `
-                <div class="mb-3">
-                    <h6>Delivery Information</h6>
-                    <p><strong>Delivered Date:</strong> ${order.delivered_date ? new Date(order.delivered_date).toLocaleDateString('en-GB') : '-'}</p>
-                    <p><strong>Received By:</strong> ${order.delivered_by_name || order.delivered_by || '-'}</p>
-                    <p><strong>Delivery Remarks:</strong> ${order.delivered_remarks || '-'}</p>
-                </div>
-                ` : ''}
-                
-                ${order.status === 'Ordered' && (order.pending_remarks || order.updated_by) ? `
-                <div class="mb-3">
-                    <h6>Pending Status Information</h6>
-                    ${order.pending_remarks ? `<p><strong>Pending Remarks:</strong> ${order.pending_remarks}</p>` : ''}
-                    ${order.updated_by_name ? `<p><strong>Updated By:</strong> ${order.updated_by_name}</p>` : ''}
-                    ${order.updated_at ? `<p><strong>Updated At:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
-                </div>
-                ` : ''}
-                
-                <div class="mb-3">
-                    <h6>System Information</h6>
-                    ${order.created_at ? `<p><strong>Created At:</strong> ${new Date(order.created_at).toLocaleString('en-GB')}</p>` : ''}
-                    ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString('en-GB')}</p>` : ''}
-                </div>
-            `;
-
-                    $('#order-details-content').html(content);
-                    viewDetailsModal.show();
-                } else {
-                    alert('Error: ' + (response.message || 'Failed to load order details'));
-                }
-            }, 'json');
-        });
-        // Revert to Pending Handler
-        $(document).on('click', '.mark-as-pending', function() {
-            currentOrderId = $(this).data('id');
-            $('#revert-remarks').val('');
-            revertPendingModal.show();
         });
     </script>
     <script>

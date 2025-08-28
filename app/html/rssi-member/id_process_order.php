@@ -550,7 +550,7 @@ function getOrderHistory()
 
         // Date range filter
         if ($params['from_date'] && $params['to_date']) {
-            $conditions[] = "o.order_date BETWEEN $" . $paramCount++ . " AND $" . $paramCount++;
+            $conditions[] = "b.ordered_date::date BETWEEN $" . $paramCount++ . " AND $" . $paramCount++;
             $queryParams[] = $params['from_date'];
             $queryParams[] = $params['to_date'];
         }
@@ -574,10 +574,10 @@ function getOrderHistory()
 
         // Student IDs filter
         if ($params['student_ids']) {
-            $studentIds = is_array($params['student_ids']) ? 
-                $params['student_ids'] : 
+            $studentIds = is_array($params['student_ids']) ?
+                $params['student_ids'] :
                 explode(',', $params['student_ids']);
-                
+
             $placeholders = [];
             foreach ($studentIds as $studentId) {
                 $placeholders[] = "$" . $paramCount++;
@@ -590,7 +590,7 @@ function getOrderHistory()
             $query .= " AND " . implode(" AND ", $conditions);
         }
 
-        $query .= " ORDER BY o.order_date DESC, s.class, s.studentname";
+        $query .= " ORDER BY b.ordered_date DESC, s.class, s.studentname";
 
         $result = pg_query_params($con, $query, $queryParams);
 
