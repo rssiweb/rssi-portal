@@ -51,7 +51,7 @@ $stats_query = "
 $stats_result = pg_query($con, $stats_query);
 $stats = pg_fetch_assoc($stats_result);
 
-// Get distribution dates
+// Get distribution dates with beneficiary count
 $dates_query = "
     SELECT 
         so.date,
@@ -68,6 +68,33 @@ $dates_query = "
 ";
 
 $dates_result = pg_query($con, $dates_query);
+
+// Get beneficiaries for each date
+$beneficiaries_by_date = [];
+if (pg_num_rows($dates_result) > 0) {
+    pg_result_seek($dates_result, 0);
+    while ($date_row = pg_fetch_assoc($dates_result)) {
+        $date = $date_row['date'];
+        $beneficiaries_query = "
+            SELECT 
+            so.distributed_to,
+            COALESCE(a.fullname, s.studentname) AS fullname,
+            COALESCE(a.associatenumber, s.student_id) AS associatenumber,
+            STRING_AGG(si.item_name || ' (' || so.quantity_distributed || ' ' || u.unit_name || ')', ', ') AS items_received
+        FROM stock_out so
+        LEFT JOIN rssimyaccount_members a ON so.distributed_to = a.associatenumber
+        LEFT JOIN rssimyprofile_student s ON so.distributed_to = s.student_id
+        LEFT JOIN stock_item si ON so.item_distributed = si.item_id AND si.is_ration = true
+        LEFT JOIN stock_item_unit u ON so.unit = u.unit_id
+        WHERE so.date = '$date'
+        AND si.is_ration = true
+        GROUP BY so.distributed_to, COALESCE(a.fullname, s.studentname), COALESCE(a.associatenumber, s.student_id)
+        ORDER BY COALESCE(a.fullname, s.studentname);
+        ";
+        $beneficiaries_result = pg_query($con, $beneficiaries_query);
+        $beneficiaries_by_date[$date] = pg_fetch_all($beneficiaries_result);
+    }
+}
 
 // Get item-wise summary
 $items_query = "
@@ -262,6 +289,14 @@ for ($i = -5; $i <= 1; $i++) {
             margin-bottom: 1rem;
         }
 
+        .beneficiary-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
         .chart-container {
             background: white;
             border-radius: 12px;
@@ -286,6 +321,11 @@ for ($i = -5; $i <= 1; $i++) {
         .btn-primary:hover {
             background: var(--secondary);
             transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
         }
 
         .filter-choice {
@@ -327,6 +367,17 @@ for ($i = -5; $i <= 1; $i++) {
             font-weight: 600;
             color: #495057;
             background-color: var(--primary-light);
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            background: var(--primary-light);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .loading {
@@ -473,12 +524,18 @@ for ($i = -5; $i <= 1; $i++) {
             </div>
             <div class="card-body">
                 <?php if (pg_num_rows($dates_result) > 0): ?>
-                    <?php $index = 0;
-                    while ($row = pg_fetch_assoc($dates_result)): $index++; ?>
+                    <?php
+                    pg_result_seek($dates_result, 0);
+                    $index = 0;
+                    while ($date_row = pg_fetch_assoc($dates_result)):
+                        $index++;
+                        $date = $date_row['date'];
+                        $beneficiaries = $beneficiaries_by_date[$date] ?? [];
+                    ?>
                         <div class="distribution-date" data-bs-toggle="collapse" data-bs-target="#distribution<?= $index ?>">
                             <div>
-                                <strong><?= date('d M, Y', strtotime($row['date'])) ?></strong>
-                                <div class="text-muted small"><?= $row['beneficiaries_count'] ?> beneficiaries, <?= $row['total_quantity'] ?> units distributed</div>
+                                <strong><?= date('d M, Y', strtotime($date)) ?></strong>
+                                <div class="text-muted small"><?= $date_row['beneficiaries_count'] ?> beneficiaries, <?= $date_row['total_quantity'] ?> units distributed</div>
                             </div>
                             <div class="text-end">
                                 <span class="text-muted small">Click to view details</span>
@@ -487,8 +544,31 @@ for ($i = -5; $i <= 1; $i++) {
                         </div>
                         <div class="collapse mb-3" id="distribution<?= $index ?>">
                             <div class="distribution-details">
-                                <h6 class="mb-2">Items Distributed:</h6>
-                                <p class="mb-0"><?= $row['items'] ?></p>
+                                <h6 class="mb-3">Beneficiaries on <?= date('d M, Y', strtotime($date)) ?>:</h6>
+
+                                <?php if (!empty($beneficiaries)): ?>
+                                    <?php foreach ($beneficiaries as $beneficiary): ?>
+                                        <div class="beneficiary-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1"><?= $beneficiary['fullname'] ?> (<?= $beneficiary['associatenumber'] ?>)</h6>
+                                                    <p class="text-muted small mb-0">Received on <?= date('d M, Y', strtotime($date)) ?></p>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#itemsModal"
+                                                    data-beneficiary="<?= $beneficiary['fullname'] ?>"
+                                                    data-association-id="<?= $beneficiary['associatenumber'] ?>"
+                                                    data-date="<?= date('d M, Y', strtotime($date)) ?>"
+                                                    data-items="<?= htmlspecialchars($beneficiary['items_received']) ?>">
+                                                    <i class="fas fa-box-open me-1"></i> View Items
+                                                </button>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-0">No beneficiary details available for this date.</p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -530,6 +610,40 @@ for ($i = -5; $i <= 1; $i++) {
         </div>
     </div>
 
+    <!-- Items Modal -->
+    <div class="modal fade" id="itemsModal" tabindex="-1" aria-labelledby="itemsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="itemsModalLabel">Items Received</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="beneficiaryName" class="mb-3"></h6>
+                    <p class="text-muted" id="distributionDate"></p>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Quantity</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <!-- Items will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function setFilterType(type) {
@@ -550,6 +664,64 @@ for ($i = -5; $i <= 1; $i++) {
                     btn.classList.remove('active');
                 }
             });
+        }
+
+        // Setup modal event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsModal = document.getElementById('itemsModal');
+            itemsModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const beneficiary = button.getAttribute('data-beneficiary');
+                const associationId = button.getAttribute('data-association-id');
+                const date = button.getAttribute('data-date');
+                const itemsString = button.getAttribute('data-items');
+
+                // Parse the items string into an array of objects
+                const items = parseItemsString(itemsString);
+
+                // Update modal title and info
+                document.getElementById('beneficiaryName').textContent = `Items Received by ${beneficiary} (${associationId})`;
+                document.getElementById('distributionDate').textContent = `Distribution Date: ${date}`;
+
+                // Populate the table
+                const tableBody = document.getElementById('itemsTableBody');
+                tableBody.innerHTML = '';
+
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.unit}</td>
+                    `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No items found</td></tr>';
+                }
+            });
+        });
+
+        // Helper function to parse the items string
+        function parseItemsString(itemsString) {
+            const items = [];
+            // Split by comma to get each item entry
+            const entries = itemsString.split(', ');
+
+            entries.forEach(entry => {
+                // Match pattern: ItemName (Quantity Unit)
+                const match = entry.match(/(.+)\s\(([\d.]+)\s(.+)\)/);
+                if (match) {
+                    items.push({
+                        name: match[1].trim(),
+                        quantity: match[2].trim(),
+                        unit: match[3].trim()
+                    });
+                }
+            });
+
+            return items;
         }
 
         // Charts
