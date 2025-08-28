@@ -326,7 +326,6 @@ if (!empty($students)) {
 
         // 5. Combine both fee types (student-specific fees are ADDED to standard fees)
         $totalCurrentMonthFees = $currentMonthFees + $studentSpecificTotal;
-        echo "<!-- Total Current Month Fees: $totalCurrentMonthFees (Standard: $currentMonthFees + Student-Specific: $studentSpecificTotal) -->";
 
         // 6. Get payments for the last attendance month
         $paymentsQuery = "SELECT 
@@ -593,11 +592,12 @@ if (!empty($students)) {
             margin-bottom: 15px;
         }
 
+        /* Horizontal divider */
         .divider {
-            width: 2px;
-            height: 50px;
+            width: 50px;
+            height: 2px;
             background: rgba(255, 255, 255, 0.3);
-            margin: 0 15px;
+            margin: 20px auto;
             border-radius: 1px;
         }
 
