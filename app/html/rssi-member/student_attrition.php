@@ -20,17 +20,26 @@ function buildFilters($filters = [])
     global $con;
     $conditions = [];
 
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $conditions[] = "s.class IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "')";
-    }
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $conditions[] = "s.category IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "')";
-    }
-    if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+    // If student_id_only is checked, only apply student_id filter
+    if (!empty($filters['student_id_only'])) {
+        if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
+            $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
+            $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+        }
+    } else {
+        // Original filter logic
+        if (!empty($filters['class']) && $filters['class'] != 'all') {
+            $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
+            $conditions[] = "s.class IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "')";
+        }
+        if (!empty($filters['category']) && $filters['category'] != 'all') {
+            $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
+            $conditions[] = "s.category IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "')";
+        }
+        if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
+            $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
+            $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+        }
     }
 
     return count($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
@@ -44,24 +53,39 @@ function getStudentMetrics($start_date, $end_date, $filters = [])
     global $con;
     $filter_clause = buildFilters($filters);
 
-    // Total students: enrolled at any time in period (active or later inactive)
-    $query_total = "
-        SELECT COUNT(DISTINCT s.student_id) AS total_students
-        FROM rssimyprofile_student s
-        WHERE s.doa <= '$end_date'
-          AND (s.effectivefrom IS NULL OR s.effectivefrom >= '$start_date')
-          $filter_clause
-    ";
-    $total_students = pg_fetch_assoc(pg_query($con, $query_total))['total_students'];
+    // If student_id_only is checked, ignore date filters
+    if (!empty($filters['student_id_only'])) {
+        // Total students: all students matching the student_id filter
+        $query_total = "
+            SELECT COUNT(DISTINCT s.student_id) AS total_students
+            FROM rssimyprofile_student s
+            WHERE 1=1
+              $filter_clause
+        ";
 
-    // New admissions: students whose DOA falls within period
-    $query_new = "
-        SELECT COUNT(*) AS new_admissions
-        FROM rssimyprofile_student s
-        WHERE s.doa BETWEEN '$start_date' AND '$end_date'
-          $filter_clause
-    ";
-    $new_admissions = pg_fetch_assoc(pg_query($con, $query_new))['new_admissions'];
+        // New admissions: not applicable in student_id_only mode
+        $new_admissions = 0;
+    } else {
+        // Total students: enrolled at any time in period (active or later inactive)
+        $query_total = "
+            SELECT COUNT(DISTINCT s.student_id) AS total_students
+            FROM rssimyprofile_student s
+            WHERE s.doa <= '$end_date'
+              AND (s.effectivefrom IS NULL OR s.effectivefrom >= '$start_date')
+              $filter_clause
+        ";
+
+        // New admissions: students whose DOA falls within period
+        $query_new = "
+            SELECT COUNT(*) AS new_admissions
+            FROM rssimyprofile_student s
+            WHERE s.doa BETWEEN '$start_date' AND '$end_date'
+              $filter_clause
+        ";
+        $new_admissions = pg_fetch_assoc(pg_query($con, $query_new))['new_admissions'];
+    }
+
+    $total_students = pg_fetch_assoc(pg_query($con, $query_total))['total_students'];
 
     return [
         'total_students' => $total_students,
@@ -77,14 +101,25 @@ function getActiveStudents($date, $filters = [])
     global $con;
     $filter_clause = buildFilters($filters);
 
-    // Active students: currently active or inactive after this date
-    $query = "
-        SELECT COUNT(*) AS count
-        FROM rssimyprofile_student s
-        WHERE s.doa <= '$date'
-          AND (s.effectivefrom IS NULL OR s.effectivefrom > '$date')
-          $filter_clause
-    ";
+    // If student_id_only is checked, ignore date filter
+    if (!empty($filters['student_id_only'])) {
+        $query = "
+            SELECT COUNT(*) AS count
+            FROM rssimyprofile_student s
+            WHERE 1=1
+              $filter_clause
+        ";
+    } else {
+        // Active students: currently active or inactive after this date
+        $query = "
+            SELECT COUNT(*) AS count
+            FROM rssimyprofile_student s
+            WHERE s.doa <= '$date'
+              AND (s.effectivefrom IS NULL OR s.effectivefrom > '$date')
+              $filter_clause
+        ";
+    }
+
     return pg_fetch_assoc(pg_query($con, $query))['count'];
 }
 
@@ -96,13 +131,24 @@ function getStudentsLeftDuringPeriod($start_date, $end_date, $filters = [])
     global $con;
     $filter_clause = buildFilters($filters);
 
-    $query = "
-        SELECT COUNT(*) AS count
-        FROM rssimyprofile_student s
-        WHERE s.filterstatus = 'Inactive'
-          AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
-          $filter_clause
-    ";
+    // If student_id_only is checked, ignore date filters
+    if (!empty($filters['student_id_only'])) {
+        $query = "
+            SELECT COUNT(*) AS count
+            FROM rssimyprofile_student s
+            WHERE s.filterstatus = 'Inactive'
+              $filter_clause
+        ";
+    } else {
+        $query = "
+            SELECT COUNT(*) AS count
+            FROM rssimyprofile_student s
+            WHERE s.filterstatus = 'Inactive'
+              AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
+              $filter_clause
+        ";
+    }
+
     return pg_fetch_assoc(pg_query($con, $query))['count'];
 }
 
@@ -114,26 +160,50 @@ function getStudentsData($start_date, $end_date, $filters = [])
     global $con;
     $filter_clause = buildFilters($filters);
 
-    $query = "
-        SELECT 
-            s.student_id,
-            s.studentname,
-            s.category,
-            s.class,
-            s.filterstatus,
-            s.doa,
-            s.effectivefrom,
-            s.gender,
-            s.remarks,
-            MAX(a.punch_in) AS last_attended_date,
-            (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
-        FROM rssimyprofile_student s
-        LEFT JOIN attendance a ON a.user_id = s.student_id
-        WHERE s.filterstatus = 'Inactive' AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
-          $filter_clause
-        GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
-        ORDER BY s.effectivefrom DESC
-    ";
+    // If student_id_only is checked, ignore date filters
+    if (!empty($filters['student_id_only'])) {
+        $query = "
+            SELECT 
+                s.student_id,
+                s.studentname,
+                s.category,
+                s.class,
+                s.filterstatus,
+                s.doa,
+                s.effectivefrom,
+                s.gender,
+                s.remarks,
+                MAX(a.punch_in) AS last_attended_date,
+                (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
+            FROM rssimyprofile_student s
+            LEFT JOIN attendance a ON a.user_id = s.student_id
+            WHERE s.filterstatus = 'Inactive'
+              $filter_clause
+            GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
+            ORDER BY s.effectivefrom DESC
+        ";
+    } else {
+        $query = "
+            SELECT 
+                s.student_id,
+                s.studentname,
+                s.category,
+                s.class,
+                s.filterstatus,
+                s.doa,
+                s.effectivefrom,
+                s.gender,
+                s.remarks,
+                MAX(a.punch_in) AS last_attended_date,
+                (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
+            FROM rssimyprofile_student s
+            LEFT JOIN attendance a ON a.user_id = s.student_id
+            WHERE s.filterstatus = 'Inactive' AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
+              $filter_clause
+            GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
+            ORDER BY s.effectivefrom DESC
+        ";
+    }
 
     $result = pg_query($con, $query);
     $students = [];
@@ -184,8 +254,12 @@ $filters = [
     'end_date' => $_GET['end_date'] ?? date('Y-m-d'),
     'class' => $_GET['class'] ?? 'all',
     'category' => $_GET['category'] ?? 'all',
-    'student_id' => $_GET['student_id'] ?? 'all'
+    'student_id' => $_GET['student_id'] ?? 'all',
+    'student_id_only' => $_GET['student_id_only'] ?? false
 ];
+
+// Don't set start_date and end_date to null - instead modify the query functions
+// to handle the student_id_only case appropriately
 
 // Get selected values from filters if set, otherwise empty array
 $selectedClasses = !empty($filters['class']) ? (array)$filters['class'] : [];
@@ -779,12 +853,12 @@ if (!empty($students)) {
                                         <div class="row">
                                             <div class="col-md-3 mb-3">
                                                 <label class="form-label fw-bold">Date Range</label>
-                                                <input type="date" class="form-control" name="start_date"
+                                                <input type="date" class="form-control" name="start_date" id="start_date"
                                                     value="<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01'); ?>">
                                             </div>
                                             <div class="col-md-3 mb-3">
                                                 <label class="form-label fw-bold">To</label>
-                                                <input type="date" class="form-control" name="end_date"
+                                                <input type="date" class="form-control" name="end_date" id="end_date"
                                                     value="<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'); ?>">
                                             </div>
                                             <div class="col-md-2 mb-3">
@@ -823,6 +897,20 @@ if (!empty($students)) {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- New checkbox for student ID only search -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="student_id_only" name="student_id_only"
+                                                        <?php echo !empty($_GET['student_id_only']) ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="student_id_only">
+                                                        Search by Student ID only (ignore all other filters)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div class="row mt-3">
                                             <div class="col-12">
                                                 <button type="submit" class="btn btn-primary filter-btn">
@@ -835,8 +923,6 @@ if (!empty($students)) {
                                         </div>
                                     </form>
                                 </div>
-
-
 
                                 <!-- Combined Metrics Cards -->
                                 <div class="row">
@@ -1315,6 +1401,77 @@ if (!empty($students)) {
         document.addEventListener('DOMContentLoaded', function() {
             updateChartIndicator();
         });
+    </script>
+    <script>
+        // Function to handle the student_id_only checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentIdOnlyCheckbox = document.getElementById('student_id_only');
+            const studentIdSelect = document.getElementById('student_ids');
+            const filterForm = document.getElementById('filterForm');
+
+            // Function to toggle form elements based on checkbox state
+            function toggleFormElements() {
+                const isChecked = studentIdOnlyCheckbox.checked;
+                const elementsToDisable = [
+                    'start_date', 'end_date', 'classes', 'categories'
+                ];
+
+                elementsToDisable.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.disabled = isChecked;
+                    }
+                });
+
+                // Make student ID required when checkbox is checked
+                if (isChecked) {
+                    studentIdSelect.setAttribute('required', 'required');
+                } else {
+                    studentIdSelect.removeAttribute('required');
+                }
+            }
+
+            // Initial state
+            toggleFormElements();
+
+            // Add event listener for checkbox change
+            studentIdOnlyCheckbox.addEventListener('change', toggleFormElements);
+
+            // Modify form submission to handle student_id_only
+            filterForm.addEventListener('submit', function(e) {
+                if (studentIdOnlyCheckbox.checked) {
+                    // Clear other filter values if student_id_only is checked
+                    document.getElementById('start_date').value = '';
+                    document.getElementById('end_date').value = '';
+
+                    // Clear class and category selections
+                    const classSelect = document.getElementById('classes');
+                    const categorySelect = document.getElementById('categories');
+
+                    Array.from(classSelect.options).forEach(option => {
+                        option.selected = false;
+                    });
+
+                    Array.from(categorySelect.options).forEach(option => {
+                        option.selected = false;
+                    });
+
+                    // Validate that at least one student ID is selected
+                    const selectedStudentIds = Array.from(studentIdSelect.selectedOptions);
+                    if (selectedStudentIds.length === 0) {
+                        e.preventDefault(); // Prevent form submission
+                        alert('Please select at least one Student ID when using "Search by Student ID only"');
+                        studentIdSelect.focus();
+                    }
+                }
+            });
+        });
+
+        // Reset filters function (update if needed)
+        function resetFilters() {
+            // Your existing reset logic
+            window.location.href = window.location.pathname;
+        }
     </script>
     <!-- Place this at the bottom of your page, before </body> -->
     <div id="modals-container">

@@ -12,7 +12,8 @@ $filters = [
     'end_date' => $_GET['end_date'] ?? date('Y-m-d'),
     'class' => $_GET['class'] ?? 'all',
     'category' => $_GET['category'] ?? 'all',
-    'student_id' => $_GET['student_id'] ?? 'all'
+    'student_id' => $_GET['student_id'] ?? 'all',
+    'student_id_only' => $_GET['student_id_only'] ?? false
 ];
 
 /* ------------------------------
@@ -27,17 +28,26 @@ function buildFilters($filters = [])
     global $con;
     $conditions = [];
 
-    if (!empty($filters['class']) && $filters['class'] != 'all') {
-        $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
-        $conditions[] = "s.class IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "')";
-    }
-    if (!empty($filters['category']) && $filters['category'] != 'all') {
-        $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
-        $conditions[] = "s.category IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "')";
-    }
-    if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
-        $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
-        $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+    // If student_id_only is checked, only apply student_id filter
+    if (!empty($filters['student_id_only'])) {
+        if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
+            $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
+            $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+        }
+    } else {
+        // Original filter logic
+        if (!empty($filters['class']) && $filters['class'] != 'all') {
+            $classes = is_array($filters['class']) ? $filters['class'] : [$filters['class']];
+            $conditions[] = "s.class IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $classes)) . "')";
+        }
+        if (!empty($filters['category']) && $filters['category'] != 'all') {
+            $categories = is_array($filters['category']) ? $filters['category'] : [$filters['category']];
+            $conditions[] = "s.category IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $categories)) . "')";
+        }
+        if (!empty($filters['student_id']) && $filters['student_id'] != 'all') {
+            $ids = is_array($filters['student_id']) ? $filters['student_id'] : [$filters['student_id']];
+            $conditions[] = "s.student_id IN ('" . implode("','", array_map(fn($c) => pg_escape_string($con, $c), $ids)) . "')";
+        }
     }
 
     return count($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
@@ -51,26 +61,50 @@ function getStudentsData($start_date, $end_date, $filters = [])
     global $con;
     $filter_clause = buildFilters($filters);
 
-    $query = "
-        SELECT 
-            s.student_id,
-            s.studentname,
-            s.category,
-            s.class,
-            s.filterstatus,
-            s.doa,
-            s.effectivefrom,
-            s.gender,
-            s.remarks,
-            MAX(a.punch_in) AS last_attended_date,
-            (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
-        FROM rssimyprofile_student s
-        LEFT JOIN attendance a ON a.user_id = s.student_id
-        WHERE s.filterstatus = 'Inactive' AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
-          $filter_clause
-        GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender, s.remarks
-        ORDER BY s.effectivefrom DESC
-    ";
+    // If student_id_only is checked, ignore date filters
+    if (!empty($filters['student_id_only'])) {
+        $query = "
+            SELECT 
+                s.student_id,
+                s.studentname,
+                s.category,
+                s.class,
+                s.filterstatus,
+                s.doa,
+                s.effectivefrom,
+                s.gender,
+                s.remarks,
+                MAX(a.punch_in) AS last_attended_date,
+                (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
+            FROM rssimyprofile_student s
+            LEFT JOIN attendance a ON a.user_id = s.student_id
+            WHERE s.filterstatus = 'Inactive'
+              $filter_clause
+            GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
+            ORDER BY s.effectivefrom DESC
+        ";
+    } else {
+        $query = "
+            SELECT 
+                s.student_id,
+                s.studentname,
+                s.category,
+                s.class,
+                s.filterstatus,
+                s.doa,
+                s.effectivefrom,
+                s.gender,
+                s.remarks,
+                MAX(a.punch_in) AS last_attended_date,
+                (MAX(a.punch_in)::date - s.doa::date) AS total_duration_days
+            FROM rssimyprofile_student s
+            LEFT JOIN attendance a ON a.user_id = s.student_id
+            WHERE s.filterstatus = 'Inactive' AND s.effectivefrom BETWEEN '$start_date' AND '$end_date'
+              $filter_clause
+            GROUP BY s.student_id, s.studentname, s.category, s.class, s.filterstatus, s.doa, s.effectivefrom, s.gender
+            ORDER BY s.effectivefrom DESC
+        ";
+    }
 
     $result = pg_query($con, $query);
     $students = [];
