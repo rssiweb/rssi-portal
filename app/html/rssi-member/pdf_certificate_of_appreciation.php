@@ -151,7 +151,7 @@ if (!$result) {
         $pdf->SetY($newY + 5); // Adjust Y to avoid overlapping with next elements
 
         // Generate the QR code URL dynamically
-        $a = 'https://login.rssi.in/certificate.php?scode=';
+        $a = 'https://login.rssi.in/rssi-member/getdetails.php?scode=';
         $b = $array['scode'];  // Assuming $array['scode'] is fetched from the database
         $url = $a . $b;
         $url = urlencode($url);
