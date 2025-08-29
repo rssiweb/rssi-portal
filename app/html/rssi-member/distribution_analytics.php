@@ -97,6 +97,7 @@ if (pg_num_rows($dates_result) > 0) {
         $beneficiaries_query = "
             SELECT 
                 so.distributed_to,
+                (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = so.distributed_by) AS distributed_by_name,
                 COALESCE(a.fullname, s.studentname) AS fullname,
                 COALESCE(a.associatenumber, s.student_id) AS associatenumber,
                 STRING_AGG(si.item_name || ' (' || so.quantity_distributed || ' ' || u.unit_name || ')', ', ') AS items_received
@@ -108,7 +109,7 @@ if (pg_num_rows($dates_result) > 0) {
             WHERE so.date = '$date'
             AND si.is_ration = true
             $student_where_condition
-            GROUP BY so.distributed_to, COALESCE(a.fullname, s.studentname), COALESCE(a.associatenumber, s.student_id)
+            GROUP BY so.distributed_to, COALESCE(a.fullname, s.studentname), COALESCE(a.associatenumber, s.student_id), so.distributed_by
             ORDER BY COALESCE(a.fullname, s.studentname);
         ";
         $beneficiaries_result = pg_query($con, $beneficiaries_query);
@@ -610,7 +611,7 @@ for ($i = -5; $i <= 1; $i++) {
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                                         <div>
                                                                             <h6 class="mb-1"><?= $beneficiary['fullname'] ?> (<?= $beneficiary['associatenumber'] ?>)</h6>
-                                                                            <p class="text-muted small mb-0">Received on <?= date('d M, Y', strtotime($date)) ?></p>
+                                                                            <p class="text-muted small mb-0">Recorded by: <?= $beneficiary['distributed_by_name'] ?></p>
                                                                         </div>
                                                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#itemsModal"
                                                                             data-beneficiary="<?= $beneficiary['fullname'] ?>"
