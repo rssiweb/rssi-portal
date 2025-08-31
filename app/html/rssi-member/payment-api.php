@@ -1075,14 +1075,14 @@ if (@$_POST['form-type'] == "admission") {
       $doclink_aadhar_card = null;
     } else {
       $filename_aadhar_card = "doc_" . $student_name . "_" . time();
-      $parent_aadhar_card = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+      $parent_aadhar_card = '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E';
       $doclink_aadhar_card = uploadeToDrive($uploadedFile_aadhar_card, $parent_aadhar_card, $filename_aadhar_card);
     }
     if (empty($_FILES['student-photo']['name'])) {
       $doclink_student_photo = null;
     } else {
       $filename_student_photo = "doc_" . $student_name . "_" . time();
-      $parent_student_photo = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+      $parent_student_photo = '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9';
       $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
     }
 
@@ -1090,7 +1090,7 @@ if (@$_POST['form-type'] == "admission") {
       $doclink_caste_document = null;
     } else {
       $filename_caste_document = "caste_" . $student_name . "_" . time();
-      $parent_caste_document = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+      $parent_caste_document = '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E';
       $doclink_caste_document = uploadeToDrive($caste_document, $parent_caste_document, $filename_caste_document);
     }
 
@@ -1450,7 +1450,7 @@ if (@$_POST['form-type'] == "signup") {
     $doclink_payment_photo = null;
   } else {
     $filename_payment_photo = "payment_" . "$application_number" . "_" . time();
-    $parent_payment_photo = '1dEIPRCM8PQZkCg1rezT6Eggqm_H-a_S4kWNKvfcPCuYMYJp6r8EoD0p_NHcijrqPks7C0KNq';
+    $parent_payment_photo = '1_XqHbekgxQSSwjScG8V8-lL-3l_Spx52';
     $doclink_payment_photo = uploadeToDrive($uploadedFile_payment, $parent_payment_photo, $filename_payment_photo);
   }
 
@@ -1458,7 +1458,7 @@ if (@$_POST['form-type'] == "signup") {
     $doclink_applicant_photo = null;
   } else {
     $filename_applicant_photo = "photo_" . "$application_number" . "_" . time();
-    $parent_applicant_photo = '1CgXW0M1ClTLRFrJjOCh490GVAq0IVAlM5OmAcfTtXVWxmnR9cx_I_Io7uD_iYE7-5rWDND82';
+    $parent_applicant_photo = '1gv6JnDX5QTzlcZV-CekoherLdKeriH-A';
     $doclink_applicant_photo = uploadeToDrive($uploadedFile_photo, $parent_applicant_photo, $filename_applicant_photo);
   }
 
@@ -1466,7 +1466,7 @@ if (@$_POST['form-type'] == "signup") {
     $doclink_resume_photo = null;
   } else {
     $filename_resume_photo = "resume_" . "$application_number" . "_" . time();
-    $parent_resume_photo = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
+    $parent_resume_photo = '1wxt6Q2lIvgWyP0fzMx8cjY5iVImmoxVA';
     $doclink_resume_photo = uploadeToDrive($uploadedFile_resume, $parent_resume_photo, $filename_resume_photo);
   }
 

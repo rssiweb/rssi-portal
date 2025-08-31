@@ -89,14 +89,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
 
         // Upload the photo
         $filename_applicant_photo = "photo_" . "$application_number" . "_" . time();
-        $parent_applicant_photo = '1CgXW0M1ClTLRFrJjOCh490GVAq0IVAlM5OmAcfTtXVWxmnR9cx_I_Io7uD_iYE7-5rWDND82';
+        $parent_applicant_photo = '1gv6JnDX5QTzlcZV-CekoherLdKeriH-A';
         $doclink_applicant_photo = uploadeToDrive($photo_file, $parent_applicant_photo, $filename_applicant_photo);
     }
 
     // Handle resume upload
     if (!empty($uploadedFile_resume['name'])) {
         $filename_resume = "resume_" . "$application_number" . "_" . time();
-        $parent_resume = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
+        $parent_resume = '1wxt6Q2lIvgWyP0fzMx8cjY5iVImmoxVA';
         $doclink_resume = uploadeToDrive($uploadedFile_resume, $parent_resume, $filename_resume);
     }
 

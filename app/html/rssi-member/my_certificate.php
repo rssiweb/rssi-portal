@@ -44,10 +44,10 @@ include("../../util/email.php");
                 $doclink = null;
             } else {
                 if ($badge_name == 'Offer Letter') {
-                    $parent = '1ax2QbjgC3yjJK3ezbrS9ZtOllRlUHOR8';
+                    $parent = '1XOOv7rMHoeTVtOAhch1cUPQ8tt-7wC1C';
                     $filename = $awarded_to_id . "_" . $badge_name . "_" . time();
                 } else if ($badge_name == 'Joining Letter') {
-                    $parent = '1ax2QbjgC3yjJK3ezbrS9ZtOllRlUHOR8';
+                    $parent = '1XOOv7rMHoeTVtOAhch1cUPQ8tt-7wC1C';
                     $filename = $awarded_to_id . "_" . $badge_name . "_" . time();
                 } else {
                     $parent = '1Qsogy6nZHd5MgnPHcKyiYmnhefkNjGln';

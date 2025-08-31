@@ -147,7 +147,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     // Check if new files were uploaded
     if (!empty($student_photo['name'])) {
         $filename = "photo_" . $student_id . "_" . $timestamp;
-        $parent = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+        $parent = '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9';
         $doclink_student_photo = uploadeToDrive($student_photo, $parent, $filename);
         $updates[] = "student_photo_raw='$doclink_student_photo'";
         $changedFields[] = 'student_photo';
@@ -155,7 +155,7 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     if (!empty($aadhar_card_upload['name'])) {
         $filename = "aadhar_" . $student_id . "_" . $timestamp;
-        $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+        $parent = '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E';
         $doclink_aadhar_card = uploadeToDrive($aadhar_card_upload, $parent, $filename);
         $updates[] = "upload_aadhar_card='$doclink_aadhar_card'";
         $changedFields[] = 'aadhar_card_upload';
@@ -163,7 +163,7 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     if (!empty($caste_document['name'])) {
         $filename = "caste_" . $student_id . "_" . $timestamp;
-        $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+        $parent = '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E';
         $doclink_caste_document = uploadeToDrive($caste_document, $parent, $filename);
         $updates[] = "caste_document='$doclink_caste_document'";
         $changedFields[] = 'caste_document';
