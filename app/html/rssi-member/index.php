@@ -53,6 +53,82 @@ if (isLoggedIn("aid")) {
     afterlogin($con, $date);
 }
 
+function generateOTP($length = 6)
+{
+    return str_pad(rand(0, pow(10, $length) - 1), $length, '0', STR_PAD_LEFT);
+}
+
+function sendOTPEmail($con, $username)
+{
+    // Generate OTP
+    $otp = generateOTP();
+    $otp_created_at = date('Y-m-d H:i:s');
+
+    // Hash OTP before storing (just like passwords)
+    $hashedOtp = password_hash($otp, PASSWORD_DEFAULT);
+
+    // Store hashed OTP in database
+    $update_query = "UPDATE rssimyaccount_members SET otp_code = '$hashedOtp', otp_created_at = '$otp_created_at', otp_attempts = 0 WHERE email = '$username'";
+    pg_query($con, $update_query);
+
+    // Get user details
+    $user_query = pg_query($con, "SELECT fullname FROM rssimyaccount_members WHERE email='$username'");
+    $user = pg_fetch_assoc($user_query);
+    $name = $user['fullname'];
+
+    // Prepare email data
+    $email_data = [
+        "name" => $name,
+        "otp_code" => $otp, // Send plain text OTP in email
+        "valid_time" => "10 minutes" // OTP validity period
+    ];
+
+    // Send email
+    sendEmail("otp_verification", $email_data, $username, false);
+
+    return true;
+}
+
+function verifyOTP($con, $username, $entered_otp)
+{
+    // Get stored OTP details
+    $query = "SELECT otp_code, otp_created_at, otp_attempts FROM rssimyaccount_members WHERE email='$username'";
+    $result = pg_query($con, $query);
+    $user = pg_fetch_assoc($result);
+
+    if (!$user || empty($user['otp_code'])) {
+        return false;
+    }
+
+    // Verify OTP using password_verify (just like password verification)
+    $stored_otp_hash = $user['otp_code'];
+    $otp_created_at = $user['otp_created_at'];
+    $otp_attempts = $user['otp_attempts'];
+
+    // Check if OTP attempts exceeded
+    if ($otp_attempts >= 5) {
+        return "max_attempts";
+    }
+
+    // Check if OTP is expired (10 minutes)
+    $current_time = time();
+    $otp_time = strtotime($otp_created_at);
+    if (($current_time - $otp_time) > 600) { // 10 minutes in seconds
+        return "expired";
+    }
+
+    // Verify OTP using password_verify
+    if (password_verify($entered_otp, $stored_otp_hash)) {
+        // Clear OTP data after successful verification
+        pg_query($con, "UPDATE rssimyaccount_members SET otp_code = NULL, otp_created_at = NULL, otp_attempts = 0 WHERE email = '$username'");
+        return true;
+    } else {
+        // Increment failed attempts
+        pg_query($con, "UPDATE rssimyaccount_members SET otp_attempts = otp_attempts + 1 WHERE email = '$username'");
+        return false;
+    }
+}
+
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
@@ -70,8 +146,17 @@ function checkLogin($con, $date)
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    $_SESSION['aid'] = $username;
-                    afterlogin($con, $date);
+                    // Instead of logging in directly, set session for OTP verification
+                    $_SESSION['otp_verification_user'] = $username;
+
+                    // Send OTP email
+                    if (sendOTPEmail($con, $username)) {
+                        // Show OTP verification form
+                        header("Location: index.php?otp_verification=1");
+                        exit;
+                    } else {
+                        $login_failed_dialog = "Failed to send OTP. Please try again.";
+                    }
                 }
             } else {
                 $login_failed_dialog = "Incorrect username or password.";
@@ -84,9 +169,91 @@ function checkLogin($con, $date)
     }
 }
 
+// Handle AJAX OTP verification
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    if (isset($_POST['verify_otp_ajax']) && isset($_SESSION['otp_verification_user'])) {
+        $username = $_SESSION['otp_verification_user'];
+        $entered_otp = $_POST['otp_code'];
+
+        $verification_result = verifyOTP($con, $username, $entered_otp);
+
+        if ($verification_result === true) {
+            // OTP verified successfully
+            $_SESSION['aid'] = $username;
+            unset($_SESSION['otp_verification_user']);
+
+            echo json_encode(['success' => true, 'redirect' => 'home.php']);
+            exit;
+        } else {
+            $error_msg = "Invalid OTP. Please try again.";
+            if ($verification_result === "expired") {
+                $error_msg = "OTP has expired. Please request a new one.";
+            } elseif ($verification_result === "max_attempts") {
+                $error_msg = "Too many failed attempts. Please request a new OTP.";
+            }
+
+            echo json_encode(['success' => false, 'error' => $error_msg]);
+            exit;
+        }
+    }
+
+    if (isset($_POST['resend_otp_ajax']) && isset($_SESSION['otp_verification_user'])) {
+        $username = $_SESSION['otp_verification_user'];
+        if (sendOTPEmail($con, $username)) {
+            echo json_encode(['success' => true, 'message' => 'New OTP has been sent to your email.']);
+            exit;
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to resend OTP. Please try again.']);
+            exit;
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['login'])) {
         checkLogin($con, $date);
+    } elseif (isset($_POST['verify_otp'])) {
+        // Traditional form submission fallback
+        $username = $_SESSION['otp_verification_user'];
+        $entered_otp = $_POST['otp_code'];
+
+        $verification_result = verifyOTP($con, $username, $entered_otp);
+
+        if ($verification_result === true) {
+            // OTP verified successfully, complete login
+            $_SESSION['aid'] = $username;
+            unset($_SESSION['otp_verification_user']);
+            afterlogin($con, $date);
+        } else {
+            if ($verification_result === "expired") {
+                $login_failed_dialog = "OTP has expired. Please request a new one.";
+            } elseif ($verification_result === "max_attempts") {
+                $login_failed_dialog = "Too many failed attempts. Please request a new OTP.";
+            } else {
+                $login_failed_dialog = "Invalid OTP. Please try again.";
+            }
+
+            // Stay on OTP verification page
+            header("Location: index.php?otp_verification=1&error=1");
+            exit;
+        }
+    } elseif (isset($_POST['resend_otp'])) {
+        // Resend OTP - traditional form submission fallback
+        if (isset($_SESSION['otp_verification_user'])) {
+            $username = $_SESSION['otp_verification_user'];
+            if (sendOTPEmail($con, $username)) {
+                header("Location: index.php?otp_verification=1&resent=1");
+                exit;
+            } else {
+                $login_failed_dialog = "Failed to resend OTP. Please try again.";
+                header("Location: index.php?otp_verification=1&error=1");
+                exit;
+            }
+        } else {
+            $login_failed_dialog = "Session expired. Please login again.";
+            header("Location: index.php");
+            exit;
+        }
     }
 }
 ?>
@@ -180,6 +347,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
             color: white !important;
             margin-left: 10%;
         }
+
+        .otp-input {
+            letter-spacing: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #0d6efd;
+            text-decoration: underline;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .resend-btn:hover {
+            color: #0a58ca;
+        }
+
+        .resend-btn:disabled {
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .verify-btn {
+            position: relative;
+        }
+
+        .btn-loading .btn-text {
+            visibility: hidden;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            border: 3px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: button-loading-spinner 1s ease infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+
+            to {
+                transform: rotate(1turn);
+            }
+        }
     </style>
 </head>
 
@@ -196,53 +422,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
                                     <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
                                 </div>
                             </div>
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <div class="pt-4 pb-2">
-                                        <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
-                                        <p class="text-center small">Enter your username & password to login</p>
+
+                            <?php if (isset($_GET['otp_verification'])): ?>
+                                <!-- OTP Verification Form -->
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="pt-4 pb-2">
+                                            <h5 class="card-title text-center pb-0 fs-4">Two-Factor Authentication</h5>
+                                            <p class="text-center small">Enter the OTP sent to your email</p>
+                                            <?php if (isset($_GET['resent'])): ?>
+                                                <div class="alert alert-success" role="alert">
+                                                    New OTP has been sent to your email.
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <form class="row g-3 needs-validation" role="form" method="post" name="otp_verification" action="index.php" id="otpForm">
+                                            <div class="col-12">
+                                                <label for="otp_code" class="form-label">OTP Code</label>
+                                                <input type="text" name="otp_code" class="form-control otp-input" id="otp_code" maxlength="6" required placeholder="000000">
+                                                <div class="form-text">Check your email for the 6-digit code</div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button class="btn btn-primary w-100 verify-btn" type="submit" name="verify_otp" id="verifyBtn">
+                                                    <span class="btn-text">Verify OTP</span>
+                                                </button>
+                                            </div>
+                                            <div class="col-12 text-center">
+                                                <p class="small mb-0">Didn't receive the code?
+                                                    <button type="button" name="resend_otp" class="resend-btn" id="resendBtn">Resend OTP</button>
+                                                    <span id="countdown" class="text-muted small"></span>
+                                                </p>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php">
-                                        <div class="col-12">
-                                            <label for="yourUsername" class="form-label">Username</label>
-                                            <div class="input-group has-validation">
-                                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                                <input type="email" name="aid" class="form-control" placeholder="Username" required>
-                                                <div class="invalid-feedback">Please enter your username.</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <label for="pass" class="form-label">Password</label>
-                                            <input type="password" name="pass" class="form-control" id="pass" required>
-                                            <div class="invalid-feedback">Please enter your password!</div>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" id="show-password">
-                                                <label for="show-password" class="form-label">Show password</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
-                                        </div>
-                                        <div class="col-12">
-                                            <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
-                                        </div>
-                                    </form>
                                 </div>
-                                <script>
-                                    if (window.history.replaceState) {
-                                        window.history.replaceState(null, null, window.location.href);
-                                    }
-                                    document.addEventListener("DOMContentLoaded", function() {
-                                        var password = document.querySelector("#pass");
-                                        var toggle = document.querySelector("#show-password");
-                                        toggle.addEventListener("click", function() {
-                                            password.type = this.checked ? "text" : "password";
+                            <?php else: ?>
+                                <!-- Regular Login Form -->
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="pt-4 pb-2">
+                                            <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
+                                            <p class="text-center small">Enter your username & password to login</p>
+                                        </div>
+                                        <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php">
+                                            <div class="col-12">
+                                                <label for="yourUsername" class="form-label">Username</label>
+                                                <div class="input-group has-validation">
+                                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                                    <input type="email" name="aid" class="form-control" placeholder="Username" required>
+                                                    <div class="invalid-feedback">Please enter your username.</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="pass" class="form-label">Password</label>
+                                                <input type="password" name="pass" class="form-control" id="pass" required>
+                                                <div class="invalid-feedback">Please enter your password!</div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="show-password">
+                                                    <label for="show-password" class="form-label">Show password</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
+                                            </div>
+                                            <div class="col-12">
+                                                <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            var password = document.querySelector("#pass");
+                                            var toggle = document.querySelector("#show-password");
+                                            toggle.addEventListener("click", function() {
+                                                password.type = this.checked ? "text" : "password";
+                                            });
                                         });
-                                    });
-                                </script>
-                            </div>
+                                    </script>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="credits">
                                 Designed by <a href="https://www.rssi.in/">rssi.in</a>
                             </div>
@@ -253,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
         </div>
     </main>
 
-    <?php if (!empty($login_failed_dialog)) { ?>
+    <?php if (!empty($login_failed_dialog) && !isset($_GET['otp_verification'])) { ?>
         <div class="modal" tabindex="-1" role="dialog" id="errorModal">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -331,6 +595,160 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
             const buttonText = document.getElementById('button-text');
             buttonText.textContent = 'Sending...';
         }
+
+        // OTP Verification Handling
+        document.addEventListener("DOMContentLoaded", function() {
+            const otpInput = document.getElementById('otp_code');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const resendBtn = document.getElementById('resendBtn');
+            const countdownEl = document.getElementById('countdown');
+            const otpForm = document.getElementById('otpForm');
+
+            <?php if (isset($_GET['error'])): ?>
+                // Show error alert if OTP verification failed
+                alert('<?php echo $login_failed_dialog; ?>');
+            <?php endif; ?>
+
+            if (otpInput) {
+                otpInput.focus();
+
+                // Auto-submit when 6 digits are entered
+                otpInput.addEventListener('input', function() {
+                    if (this.value.length === 6) {
+                        startVerification();
+                    }
+                });
+            }
+
+            if (verifyBtn) {
+                verifyBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    startVerification();
+                });
+            }
+
+            function startVerification() {
+                const otpValue = otpInput.value.trim();
+
+                if (otpValue.length !== 6) {
+                    alert('Please enter a valid 6-digit OTP code.');
+                    otpInput.focus();
+                    return;
+                }
+
+                // Disable inputs and show loading state
+                otpInput.disabled = true;
+                verifyBtn.disabled = true;
+                verifyBtn.classList.add('btn-loading');
+
+                // Submit the form via AJAX
+                const formData = new FormData();
+                formData.append('verify_otp_ajax', '1');
+                formData.append('otp_code', otpValue);
+
+                fetch('index.php', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect on success
+                            window.location.href = data.redirect;
+                        } else {
+                            // Show error message
+                            alert(data.error);
+
+                            // Re-enable inputs
+                            otpInput.disabled = false;
+                            verifyBtn.disabled = false;
+                            verifyBtn.classList.remove('btn-loading');
+                            otpInput.focus();
+                            otpInput.select();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred during verification. Please try again.');
+
+                        // Re-enable inputs
+                        otpInput.disabled = false;
+                        verifyBtn.disabled = false;
+                        verifyBtn.classList.remove('btn-loading');
+                    });
+            }
+
+            // Resend OTP countdown timer
+            if (resendBtn && countdownEl) {
+                let countdown = 30;
+                resendBtn.disabled = true;
+
+                const countdownInterval = setInterval(() => {
+                    countdownEl.textContent = ` (${countdown}s)`;
+                    countdown--;
+
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval);
+                        resendBtn.disabled = false;
+                        countdownEl.textContent = '';
+                    }
+                }, 1000);
+
+                resendBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Disable resend button during request
+                    resendBtn.disabled = true;
+                    countdownEl.textContent = ' (Sending...)';
+
+                    // Create a form for resend request
+                    const formData = new FormData();
+                    formData.append('resend_otp_ajax', '1');
+
+                    fetch('index.php', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+
+                                // Reset countdown
+                                countdown = 30;
+                                resendBtn.disabled = true;
+
+                                const newCountdownInterval = setInterval(() => {
+                                    countdownEl.textContent = ` (${countdown}s)`;
+                                    countdown--;
+
+                                    if (countdown < 0) {
+                                        clearInterval(newCountdownInterval);
+                                        resendBtn.disabled = false;
+                                        countdownEl.textContent = '';
+                                    }
+                                }, 1000);
+                            } else {
+                                alert(data.error);
+                                resendBtn.disabled = false;
+                                countdownEl.textContent = '';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred. Please try again.');
+                            resendBtn.disabled = false;
+                            countdownEl.textContent = '';
+                        });
+                });
+            }
+        });
     </script>
 </body>
 
