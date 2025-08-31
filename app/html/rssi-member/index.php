@@ -6,17 +6,9 @@ include("../../util/email.php");
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
 
-function afterlogin($con, $date)
+// Function to log user login
+function logUserLogin($con, $username, $date)
 {
-    $user_check = $_SESSION['aid'];
-    $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email='$user_check'");
-    $row = pg_fetch_row($user_query);
-    $password_updated_by = $row[0];
-    $password_updated_on = $row[1];
-    $default_pass_updated_on = $row[2];
-
-    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
-
     function getUserIpAddr()
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
@@ -31,7 +23,23 @@ function afterlogin($con, $date)
     }
 
     $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$user_check', '$user_ip', '$date')");
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$username', '$user_ip', '$date')");
+}
+
+function afterlogin($con, $date)
+{
+    $user_check = $_SESSION['aid'];
+
+    // Log the user login
+    logUserLogin($con, $user_check, $date);
+
+    $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email='$user_check'");
+    $row = pg_fetch_row($user_query);
+    $password_updated_by = $row[0];
+    $password_updated_on = $row[1];
+    $default_pass_updated_on = $row[2];
+
+    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
@@ -181,6 +189,9 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             // OTP verified successfully
             $_SESSION['aid'] = $username;
             unset($_SESSION['otp_verification_user']);
+
+            // Log the user login
+            logUserLogin($con, $username, $date);
 
             echo json_encode(['success' => true, 'redirect' => 'home.php']);
             exit;
