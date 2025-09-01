@@ -6,13 +6,14 @@ header('Content-Type: application/json');
 // Get division from request
 $division = $_GET['division'] ?? '';
 
-if (!in_array($division, ['kalpana', 'rssi'])) {
+if (!in_array($division, ['kalpana', 'rssi', 'coaching'])) {
     die(json_encode([]));
 }
 
 // Using pg_query_params for prepared statements with your existing connection
-$result = pg_query_params($con, 
-    "SELECT name FROM plans WHERE division = $1 AND is_active = TRUE ORDER BY name", 
+$result = pg_query_params(
+    $con,
+    "SELECT name FROM plans WHERE division = $1 AND is_active = TRUE ORDER BY name",
     [$division]
 );
 
@@ -26,4 +27,3 @@ while ($row = pg_fetch_assoc($result)) {
 }
 
 echo json_encode($plans);
-?>

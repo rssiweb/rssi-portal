@@ -1536,6 +1536,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                             <option value="">--Select Division--</option>
                             <option value="kalpana" <?php echo (!empty($array['division']) && $array['division'] == 'kalpana') ? 'selected' : '' ?>>Kalpana Buds School</option>
                             <option value="rssi" <?php echo (!empty($array['division']) && $array['division'] == 'rssi') ? 'selected' : '' ?>>RSSI NGO</option>
+                            <option value="coaching" <?php echo (!empty($array['division']) && $array['division'] == 'coaching') ? 'selected' : '' ?>>Coaching</option>
                         </select>
                         <small class="form-text text-muted">Please select the division you're applying for.</small>
                     </div>

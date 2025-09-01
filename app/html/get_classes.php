@@ -12,8 +12,11 @@ try {
         throw new Exception('Division parameter is required');
     }
 
-    // Prepare and execute query
-    $query = "SELECT value, class_name FROM school_classes WHERE division = $1 ORDER BY id";
+    // Prepare and execute query to handle comma-separated values
+    $query = "SELECT value, class_name FROM school_classes 
+              WHERE $1 = ANY(string_to_array(division, ',')) 
+              ORDER BY id";
+    
     $result = pg_query_params($con, $query, [$division]);
 
     // Check for query errors
