@@ -143,27 +143,35 @@ function checkLogin($con, $date)
     $username = strtolower($_POST['aid']);
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM rssimyaccount_members WHERE email='$username'";
+    $query = "SELECT password, absconding, twofa_enabled, twofa_secret FROM rssimyaccount_members WHERE email='$username'";
     $result = pg_query($con, $query);
     if ($result) {
         $user = pg_fetch_assoc($result);
         if ($user) {
             $existingHashFromDb = $user['password'];
             $absconding = $user['absconding'];
+            $twofa_enabled = $user['twofa_enabled'];
+            $twofa_secret = $user['twofa_secret'];
+
             if (password_verify($password, $existingHashFromDb)) {
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    // Instead of logging in directly, set session for OTP verification
+                    // Set session for OTP / 2FA verification
                     $_SESSION['otp_verification_user'] = $username;
 
-                    // Send OTP email
-                    if (sendOTPEmail($con, $username)) {
-                        // Show OTP verification form
-                        header("Location: index.php?otp_verification=1");
+                    if ($twofa_enabled && !empty($twofa_secret)) {
+                        // Redirect to Authenticator TOTP verification page
+                        header("Location: setup_2fa_verify.php"); // new page for TOTP verification
                         exit;
                     } else {
-                        $login_failed_dialog = "Failed to send OTP. Please try again.";
+                        // Continue email OTP flow
+                        if (sendOTPEmail($con, $username)) {
+                            header("Location: index.php?otp_verification=1");
+                            exit;
+                        } else {
+                            $login_failed_dialog = "Failed to send OTP. Please try again.";
+                        }
                     }
                 }
             } else {
