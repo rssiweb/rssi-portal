@@ -359,71 +359,77 @@ $qrUrl = $totp->getProvisioningUri();
 
                                         <div class="auth-body">
                                             <div class="row">
-                                                <div class="col-md-6">
-                                                    <h3 class="section-title">Setup Instructions</h3>
+                                                <?php if ($row['twofa_enabled'] === 'f') { ?>
+                                                    <div class="col-md-6">
+                                                        <h3 class="section-title">Setup Instructions</h3>
 
-                                                    <div class="step-container">
-                                                        <div class="step-number">1</div>
-                                                        <div class="step-content">
-                                                            <h5>Download Authenticator App</h5>
-                                                            <p class="mb-0">Install Google Authenticator or Microsoft Authenticator on your phone.</p>
+                                                        <div class="step-container">
+                                                            <div class="step-number">1</div>
+                                                            <div class="step-content">
+                                                                <h5>Download Authenticator App</h5>
+                                                                <p class="mb-0">Install Google Authenticator or Microsoft Authenticator on your phone.</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div class="step-container">
-                                                        <div class="step-number">2</div>
-                                                        <div class="step-content">
+                                                        <div class="step-container">
+                                                            <div class="step-number">2</div>
+                                                            <div class="step-content">
+                                                                <h5>Scan QR Code</h5>
+                                                                <p class="mb-0">Open the app and scan the QR code with your camera.</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="step-container">
+                                                            <div class="step-number">3</div>
+                                                            <div class="step-content">
+                                                                <h5>Verify Setup</h5>
+                                                                <p class="mb-0">Enter the 6-digit code from the app to complete setup.</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="qr-container">
                                                             <h5>Scan QR Code</h5>
-                                                            <p class="mb-0">Open the app and scan the QR code with your camera.</p>
+                                                            <canvas id="qrcode" class="mb-3"></canvas>
+                                                            <p class="small text-muted text-center">Open your authenticator app and scan this code</p>
                                                         </div>
                                                     </div>
 
-                                                    <div class="step-container">
-                                                        <div class="step-number">3</div>
-                                                        <div class="step-content">
-                                                            <h5>Verify Setup</h5>
-                                                            <p class="mb-0">Enter the 6-digit code from the app to complete setup.</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="qr-container">
-                                                        <h5>Scan QR Code</h5>
-                                                        <canvas id="qrcode" class="mb-3"></canvas>
-                                                        <p class="small text-muted text-center">Open your authenticator app and scan this code</p>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <div class="mb-4">
-                                                        <h5>Manual Setup Option</h5>
-                                                        <p class="text-muted">If you can't scan the QR code, enter this secret key manually:</p>
-                                                        <div class="secret-code">
-                                                            <?php echo chunk_split($secret, 4, ' '); ?>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="divider">
-                                                        <h3 class="section-title">Verify Setup</h3>
-                                                    </div>
-
-                                                    <form id="verifyForm">
-                                                        <div class="mb-3">
-                                                            <label for="otp" class="form-label">Enter Verification Code</label>
-                                                            <input type="text" class="form-control" id="otp" maxlength="6" required placeholder="000000" autocomplete="off">
-                                                            <div class="form-text">Enter the 6-digit code from your authenticator app</div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-4">
+                                                            <h5>Manual Setup Option</h5>
+                                                            <p class="text-muted">If you can't scan the QR code, enter this secret key manually:</p>
+                                                            <div class="secret-code">
+                                                                <?php echo chunk_split($secret, 4, ' '); ?>
+                                                            </div>
                                                         </div>
 
-                                                        <button type="button" class="btn btn-primary verify-btn" onclick="verifyOtp()">
-                                                            <span class="btn-text">Verify & Enable 2FA</span>
-                                                        </button>
-                                                    </form>
+                                                        <div class="divider">
+                                                            <h3 class="section-title">Verify Setup</h3>
+                                                        </div>
 
-                                                    <div class="text-center mt-4">
-                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal" class="help-link">
-                                                            <i class="fas fa-question-circle me-2"></i>Need help setting up?
-                                                        </a>
+                                                        <form id="verifyForm">
+                                                            <div class="mb-3">
+                                                                <label for="otp" class="form-label">Enter Verification Code</label>
+                                                                <input type="text" class="form-control" id="otp" maxlength="6" required placeholder="000000" autocomplete="off">
+                                                                <div class="form-text">Enter the 6-digit code from your authenticator app</div>
+                                                            </div>
+
+                                                            <button type="button" class="btn btn-primary verify-btn" onclick="verifyOtp()">
+                                                                <span class="btn-text">Verify & Enable 2FA</span>
+                                                            </button>
+                                                        </form>
+
+                                                        <div class="text-center mt-4">
+                                                            <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal" class="help-link">
+                                                                <i class="fas fa-question-circle me-2"></i>Need help setting up?
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                <?php } else { ?>
+                                                    <div class="alert alert-success mt-4">
+                                                        Two-Factor Authentication is already enabled on your account.
+                                                    </div>
+                                                <?php } ?>
                                             </div>
                                         </div>
                                     </div>
