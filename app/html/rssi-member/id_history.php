@@ -7,6 +7,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+validation();
 ?>
 <?php
 // Example: $role and $position should already be set from session or DB

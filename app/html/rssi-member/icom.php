@@ -7,6 +7,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+validation();
 ?>
 <!DOCTYPE html>
 <html lang="en">

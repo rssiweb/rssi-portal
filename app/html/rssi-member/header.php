@@ -60,7 +60,13 @@
             <li>
               <hr class="dropdown-divider">
             </li>
-
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="setup_2fa.php">
+                <i class="bi bi-person-lock"></i>
+                <span>Enable 2FA</span>
+              </a>
+            </li>
+            <hr class="dropdown-divider">
             <li>
               <a class="dropdown-item d-flex align-items-center" href="#">
                 <i class="bi bi-question-circle"></i>
