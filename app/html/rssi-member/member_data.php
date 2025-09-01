@@ -39,4 +39,6 @@ while ($row = pg_fetch_assoc($run)) {
     $default_pass_updated_on = $row['default_pass_updated_on'];
     $doj = $row['doj']; //used in point-mart
     $job_type = $row['job_type']; //used in leave
+    $twofa_enabled = $row['twofa_enabled'];
+    $twofa_secret = $row['twofa_secret'];
 }

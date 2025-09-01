@@ -11,7 +11,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-validation(); // Your custom validation
+//validation(); // Your custom validation
 
 $user = $_SESSION['aid']; // logged in user email or ID
 
@@ -45,11 +45,13 @@ $qrUrl = $totp->getProvisioningUri();
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Setup 2FA</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
+
 <body>
     <h2>Scan this QR code with your Authenticator app</h2>
     <canvas id="qrcode"></canvas>
@@ -76,21 +78,26 @@ $qrUrl = $totp->getProvisioningUri();
             }
 
             fetch('verify_2fa.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ otp })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('OTP verified successfully! 2FA is now enabled.');
-                    window.location.href = 'home.php';
-                } else {
-                    alert(data.message || 'Invalid OTP. Try again.');
-                }
-            })
-            .catch(err => console.error(err));
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        otp
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('OTP verified successfully! 2FA is now enabled.');
+                        window.location.href = 'home.php';
+                    } else {
+                        alert(data.message || 'Invalid OTP. Try again.');
+                    }
+                })
+                .catch(err => console.error(err));
         }
     </script>
 </body>
+
 </html>

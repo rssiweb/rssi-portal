@@ -45,6 +45,35 @@ function passwordCheck($password_updated_by, $password_updated_on, $default_pass
     }
 }
 
+function checkTwoFA($twofa_enabled, $twofa_secret)
+{
+    // Initialize the message variable
+    $message = '';
+
+    // Check if the password has never been updated or is older than the default password update date
+    if ($twofa_enabled != true || empty($twofa_secret)) {
+        $message = "For security reasons, you must set up Two-Factor Authentication (2FA) before accessing your account.";
+    }
+
+    // If a message is set, show the alert and redirect
+    if ($message) {
+        // Start output buffering
+        ob_start();
+
+        // Display the alert and redirect using JavaScript
+        echo '<script type="text/javascript">';
+        echo 'alert("' . addslashes($message) . '");';
+        echo 'window.location.href = "setup_2fa.php";';
+        echo '</script>';
+
+        // End output buffering and send the output
+        ob_end_flush();
+
+        // Stop further script execution
+        exit();
+    }
+}
+
 function checkPageAccess()
 {
     global $filterstatus;
@@ -259,8 +288,11 @@ function validation()
     global $password_updated_on;
     global $default_pass_updated_on;
     global $associatenumber; // added to check HRMS validation
+    global $twofa_enabled; // added to check 2FA setup
+    global $twofa_secret; // added to check 2FA setup
     // Check default password
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
+    checkTwoFA($twofa_enabled, $twofa_secret);
 
     $checkPageAccessResult = checkPageAccess();
     if ($checkPageAccessResult != "allow") {
