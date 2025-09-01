@@ -97,122 +97,6 @@ $stats_query = "
 $stats_result = pg_query($con, $stats_query);
 $stats = pg_fetch_assoc($stats_result);
 
-// Detailed breakdown query to see the calculation step by step
-// $breakdown_query = "
-//     SELECT 
-//         so.date,
-//         si.item_name,
-//         u.unit_name,
-//         so.quantity_distributed,
-//         sip.original_price,
-//         sip.discount_percentage,
-//         (sip.original_price * so.quantity_distributed) AS original_amount,
-//         (sip.original_price * (1 - COALESCE(sip.discount_percentage, 0)/100) * so.quantity_distributed) AS discounted_amount
-//     FROM stock_out so
-//     JOIN stock_item si ON so.item_distributed = si.item_id
-//     JOIN stock_item_unit u ON so.unit = u.unit_id
-//     LEFT JOIN stock_item_price sip ON (
-//         sip.item_id = so.item_distributed 
-//         AND sip.unit_id = so.unit 
-//         AND sip.effective_start_date <= so.date 
-//         AND (sip.effective_end_date IS NULL OR sip.effective_end_date >= so.date)
-//     )
-//     WHERE so.date BETWEEN '$start_date' AND '$end_date'
-//       AND so.distributed_to IS NOT NULL
-//       AND si.is_ration = true
-//     ORDER BY so.date, si.item_name
-// ";
-
-// $breakdown_result = pg_query($con, $breakdown_query);
-
-// echo "<h3>Price Calculation Breakdown:</h3>";
-// echo "<table border='1' cellpadding='5' cellspacing='0'>";
-// echo "<tr>
-//         <th>Date</th>
-//         <th>Item</th>
-//         <th>Unit</th>
-//         <th>Quantity</th>
-//         <th>Original Price</th>
-//         <th>Discount %</th>
-//         <th>Original Amount</th>
-//         <th>Discounted Amount</th>
-//       </tr>";
-
-// $total_original = 0;
-// $total_discounted = 0;
-
-// while ($row = pg_fetch_assoc($breakdown_result)) {
-//     echo "<tr>";
-//     echo "<td>" . $row['date'] . "</td>";
-//     echo "<td>" . $row['item_name'] . "</td>";
-//     echo "<td>" . $row['unit_name'] . "</td>";
-//     echo "<td>" . $row['quantity_distributed'] . "</td>";
-//     echo "<td>" . ($row['original_price'] ?? 'NULL') . "</td>";
-//     echo "<td>" . ($row['discount_percentage'] ?? '0') . "</td>";
-//     echo "<td>" . ($row['original_amount'] ?? '0') . "</td>";
-//     echo "<td>" . ($row['discounted_amount'] ?? '0') . "</td>";
-//     echo "</tr>";
-
-//     $total_original += floatval($row['original_amount'] ?? 0);
-//     $total_discounted += floatval($row['discounted_amount'] ?? 0);
-// }
-
-// echo "<tr style='font-weight: bold;'>";
-// echo "<td colspan='6' align='right'>TOTALS:</td>";
-// echo "<td>" . number_format($total_original, 2) . "</td>";
-// echo "<td>" . number_format($total_discounted, 2) . "</td>";
-// echo "</tr>";
-
-// echo "</table>";
-
-// // Also show a summary of missing price records
-// $missing_prices_query = "
-//     SELECT 
-//         so.date,
-//         si.item_name,
-//         u.unit_name,
-//         so.quantity_distributed,
-//         COUNT(sip.price_id) as price_records_found
-//     FROM stock_out so
-//     JOIN stock_item si ON so.item_distributed = si.item_id
-//     JOIN stock_item_unit u ON so.unit = u.unit_id
-//     LEFT JOIN stock_item_price sip ON (
-//         sip.item_id = so.item_distributed 
-//         AND sip.unit_id = so.unit 
-//         AND sip.effective_start_date <= so.date 
-//         AND (sip.effective_end_date IS NULL OR sip.effective_end_date >= so.date)
-//     )
-//     WHERE so.date BETWEEN '$start_date' AND '$end_date'
-//       AND so.distributed_to IS NOT NULL
-//       AND si.is_ration = true
-//     GROUP BY so.date, si.item_name, u.unit_name, so.quantity_distributed
-//     HAVING COUNT(sip.price_id) = 0
-// ";
-
-// $missing_prices_result = pg_query($con, $missing_prices_query);
-
-// if (pg_num_rows($missing_prices_result) > 0) {
-//     echo "<h3 style='color: red;'>Items with Missing Price Records:</h3>";
-//     echo "<table border='1' cellpadding='5' cellspacing='0'>";
-//     echo "<tr>
-//             <th>Date</th>
-//             <th>Item</th>
-//             <th>Unit</th>
-//             <th>Quantity</th>
-//           </tr>";
-
-//     while ($row = pg_fetch_assoc($missing_prices_result)) {
-//         echo "<tr>";
-//         echo "<td>" . $row['date'] . "</td>";
-//         echo "<td>" . $row['item_name'] . "</td>";
-//         echo "<td>" . $row['unit_name'] . "</td>";
-//         echo "<td>" . $row['quantity_distributed'] . "</td>";
-//         echo "</tr>";
-//     }
-
-//     echo "</table>";
-// }
-
 // Get distribution dates with beneficiary count
 $dates_query = "
     SELECT 
@@ -325,21 +209,6 @@ while ($item_row = pg_fetch_assoc($item_chart_result)) {
     $item_labels[] = $item_row['item_name'];
     $item_data[] = $item_row['total_quantity'];
 }
-
-// Get all student IDs for the select2 dropdown
-// $all_students_query = "
-//     SELECT DISTINCT so.distributed_to, 
-//            COALESCE(a.fullname, s.studentname) AS name
-//     FROM stock_out so
-//     LEFT JOIN rssimyaccount_members a ON so.distributed_to = a.associatenumber
-//     LEFT JOIN rssimyprofile_student s ON so.distributed_to = s.student_id
-//     JOIN stock_item si ON so.item_distributed = si.item_id
-//     WHERE si.is_ration = true
-//     ORDER BY name
-// ";
-
-// $all_students_result = pg_query($con, $all_students_query);
-// $all_students = pg_fetch_all($all_students_result);
 
 // Academic year options
 $current_year = date('Y');
@@ -713,7 +582,7 @@ for ($i = -5; $i <= 1; $i++) {
                                             <div class="stat-icon">
                                                 <i class="fas fa-weight-hanging"></i>
                                             </div>
-                                            <div class="stat-number"><?= $stats['total_quantity'] ?></div>
+                                            <div class="stat-number"><?= $stats['total_quantity'] ?? 0 ?></div>
                                             <div class="stat-title">Total Quantity Distributed</div>
                                         </div>
                                     </div>
@@ -734,10 +603,10 @@ for ($i = -5; $i <= 1; $i++) {
                                             <div class="stat-number">
                                                 <div class="d-flex justify-content-between">
                                                     <span class="text-decoration-line-through text-muted small">
-                                                        ₹<?= number_format($stats['total_original_amount'], 2) ?>
+                                                        <?= $stats['total_original_amount'] !== null ? '₹' . number_format($stats['total_original_amount'], 2) : '' ?>
                                                     </span>
                                                     <span class="fw-bold">
-                                                        ₹<?= number_format($stats['total_discounted_amount'], 2) ?>
+                                                        <?= $stats['total_discounted_amount'] !== null ? '₹' . number_format($stats['total_discounted_amount'], 2) : '₹0.00' ?>
                                                     </span>
                                                 </div>
                                             </div>
