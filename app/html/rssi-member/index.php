@@ -160,7 +160,7 @@ function checkLogin($con, $date)
                     // Set session for OTP / 2FA verification
                     $_SESSION['otp_verification_user'] = $username;
 
-                    if ($twofa_enabled == true && !empty($twofa_secret)) {
+                    if (($twofa_enabled == 'true' || $twofa_enabled == 't' || $twofa_enabled == true) && !empty($twofa_secret)) {
                         // Redirect to Authenticator TOTP verification page
                         header("Location: setup_2fa_verify.php"); // new page for TOTP verification
                         exit;
