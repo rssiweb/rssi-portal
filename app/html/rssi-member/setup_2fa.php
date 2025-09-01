@@ -403,9 +403,9 @@ $qrUrl = $totp->getProvisioningUri();
                                                             </div>
                                                         </div>
 
-                                                        <div class="divider">
-                                                            <h3 class="section-title">Verify Setup</h3>
-                                                        </div>
+                                                        <!-- <div class="divider"> -->
+                                                        <h3 class="section-title">Verify Setup</h3>
+                                                        <!-- </div> -->
 
                                                         <form id="verifyForm">
                                                             <div class="mb-3">
@@ -518,80 +518,69 @@ $qrUrl = $totp->getProvisioningUri();
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 const qrCodeCanvas = document.getElementById('qrcode');
-
-                // Generate QR code on canvas
                 QRCode.toCanvas(qrCodeCanvas, "<?php echo $qrUrl; ?>", {
                     width: 180,
                     height: 180,
                     margin: 1
-                }, function(error) {
-                    if (error) console.error(error);
                 });
 
-                // Format the OTP input
                 const otpInput = document.getElementById('otp');
                 const verifyBtn = document.querySelector('.verify-btn');
 
                 otpInput.addEventListener('input', function() {
-                    // Remove any non-digit characters
-                    this.value = this.value.replace(/\D/g, '');
-
-                    // Only allow up to 6 digits
-                    if (this.value.length > 6) {
-                        this.value = this.value.slice(0, 6);
-                    }
-
-                    // Auto-verify when 6 digits are entered
+                    this.value = this.value.replace(/\D/g, '').slice(0, 6);
                     if (this.value.length === 6 && !verifyBtn.disabled) {
                         verifyOtp();
                     }
                 });
+            });
 
-                function verifyOtp() {
-                    const otp = otpInput.value.trim();
-                    if (otp.length !== 6) {
-                        alert('Please enter a valid 6-digit code.');
-                        return;
-                    }
+            // ✅ Define globally so HTML onclick can see it
+            function verifyOtp() {
+                const otpInput = document.getElementById('otp');
+                const verifyBtn = document.querySelector('.verify-btn');
+                const otp = otpInput.value.trim();
 
-                    // Disable button and show loading state
-                    verifyBtn.disabled = true;
-                    verifyBtn.classList.add('btn-loading');
+                if (otp.length !== 6) {
+                    alert('Please enter a valid 6-digit code.');
+                    return;
+                }
 
-                    fetch('verify_2fa.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                otp
-                            })
+                verifyBtn.disabled = true;
+                verifyBtn.classList.add('btn-loading');
+
+                fetch('verify_2fa.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            otp
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            // Re-enable button
-                            verifyBtn.disabled = false;
-                            verifyBtn.classList.remove('btn-loading');
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        verifyBtn.disabled = false;
+                        verifyBtn.classList.remove('btn-loading');
 
-                            if (data.success) {
-                                alert('OTP verified successfully! 2FA is now enabled.');
-                                window.location.href = 'home.php';
-                            } else {
-                                alert(data.message || 'Invalid OTP. Please try again.');
-                                otpInput.value = '';
-                                otpInput.focus();
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            verifyBtn.disabled = false;
-                            verifyBtn.classList.remove('btn-loading');
-                            alert('An error occurred. Please try again.');
+                        if (data.success) {
+                            alert('OTP verified successfully! 2FA is now enabled.');
+                            window.location.href = 'home.php';
+                        } else {
+                            alert(data.message || 'Invalid OTP. Please try again.');
                             otpInput.value = '';
                             otpInput.focus();
-                        });
-                }
-            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        verifyBtn.disabled = false;
+                        verifyBtn.classList.remove('btn-loading');
+                        alert('An error occurred. Please try again.');
+                        otpInput.value = '';
+                        otpInput.focus();
+                    });
+            }
         </script>
     </body>
 

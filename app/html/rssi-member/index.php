@@ -682,11 +682,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
                             alert(data.error);
 
                             // Re-enable inputs
+                            otpInput.value = '';
                             otpInput.disabled = false;
                             verifyBtn.disabled = false;
                             verifyBtn.classList.remove('btn-loading');
                             otpInput.focus();
-                            otpInput.select();
                         }
                     })
                     .catch(error => {
