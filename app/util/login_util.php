@@ -50,8 +50,8 @@ function checkTwoFA($twofa_enabled, $twofa_secret)
     // Initialize the message variable
     $message = '';
 
-    // Check if the password has never been updated or is older than the default password update date
-    if (($twofa_enabled != 'true' && $twofa_enabled != 't' && $twofa_enabled != true) || empty($twofa_secret)) {
+    // Check if the user has not enabled 2FA or if the secret is empty
+    if ($twofa_enabled != 't' || empty($twofa_secret)) {
         $message = "For security reasons, you must set up Two-Factor Authentication (2FA) before accessing your account.";
     }
 
