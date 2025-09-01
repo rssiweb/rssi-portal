@@ -524,6 +524,8 @@ $qrUrl = $totp->getProvisioningUri();
 
                 // Format the OTP input
                 const otpInput = document.getElementById('otp');
+                const verifyBtn = document.querySelector('.verify-btn');
+
                 otpInput.addEventListener('input', function() {
                     // Remove any non-digit characters
                     this.value = this.value.replace(/\D/g, '');
@@ -532,48 +534,58 @@ $qrUrl = $totp->getProvisioningUri();
                     if (this.value.length > 6) {
                         this.value = this.value.slice(0, 6);
                     }
+
+                    // Auto-verify when 6 digits are entered
+                    if (this.value.length === 6 && !verifyBtn.disabled) {
+                        verifyOtp();
+                    }
                 });
-            });
 
-            // OTP verification
-            function verifyOtp() {
-                const otp = document.getElementById('otp').value.trim();
-                if (otp.length !== 6) {
-                    alert('Please enter a valid 6-digit code.');
-                    return;
-                }
+                function verifyOtp() {
+                    const otp = otpInput.value.trim();
+                    if (otp.length !== 6) {
+                        alert('Please enter a valid 6-digit code.');
+                        return;
+                    }
 
-                // Show loading state
-                const verifyBtn = document.querySelector('.verify-btn');
-                verifyBtn.classList.add('btn-loading');
+                    // Disable button and show loading state
+                    verifyBtn.disabled = true;
+                    verifyBtn.classList.add('btn-loading');
 
-                fetch('verify_2fa.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            otp
+                    fetch('verify_2fa.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                otp
+                            })
                         })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        // Remove loading state
-                        verifyBtn.classList.remove('btn-loading');
+                        .then(res => res.json())
+                        .then(data => {
+                            // Re-enable button
+                            verifyBtn.disabled = false;
+                            verifyBtn.classList.remove('btn-loading');
 
-                        if (data.success) {
-                            alert('OTP verified successfully! 2FA is now enabled.');
-                            window.location.href = 'home.php';
-                        } else {
-                            alert(data.message || 'Invalid OTP. Please try again.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        verifyBtn.classList.remove('btn-loading');
-                        alert('An error occurred. Please try again.');
-                    });
-            }
+                            if (data.success) {
+                                alert('OTP verified successfully! 2FA is now enabled.');
+                                window.location.href = 'home.php';
+                            } else {
+                                alert(data.message || 'Invalid OTP. Please try again.');
+                                otpInput.value = '';
+                                otpInput.focus();
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            verifyBtn.disabled = false;
+                            verifyBtn.classList.remove('btn-loading');
+                            alert('An error occurred. Please try again.');
+                            otpInput.value = '';
+                            otpInput.focus();
+                        });
+                }
+            });
         </script>
     </body>
 
