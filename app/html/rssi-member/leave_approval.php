@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['form-type']) && $_PO
                                 "comment" => $comment,
                                 "reviewer" => $fullname,
                                 "now" => $now,
-                            ], $email, false);
+                            ], $email);
                         }
                     }
                 }
