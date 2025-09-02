@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 require __DIR__ . '/../vendor/autoload.php';
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 use OTPHP\TOTP;
 
@@ -11,12 +12,10 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-//validation(); // Your custom validation
-
 $user = $_SESSION['aid']; // logged in user email or ID
 
 // Fetch user secret from DB
-$query = "SELECT twofa_secret, twofa_enabled FROM rssimyaccount_members WHERE email=$1";
+$query = "SELECT twofa_secret, twofa_enabled, email FROM rssimyaccount_members WHERE email=$1";
 $stmt = pg_prepare($con, "get_user_2fa", $query);
 $res = pg_execute($con, "get_user_2fa", [$user]);
 $row = pg_fetch_assoc($res);
@@ -41,6 +40,42 @@ $totp->setIssuer('RSSI My Account');
 
 // Generate provisioning URI (used for QR code)
 $qrUrl = $totp->getProvisioningUri();
+
+// If 2FA is already enabled, don't generate email code
+if ($row['twofa_enabled'] === 't') {
+    $needsNewEmailCode = false;
+} else {
+    // Check if we need to generate a new email code (only if 2FA is not enabled)
+    $needsNewEmailCode = true;
+    if (
+        isset($_SESSION['email_verification_started']) &&
+        time() - $_SESSION['email_verification_started'] < 120
+    ) {
+        $needsNewEmailCode = false;
+    }
+}
+
+// Generate email verification code if needed (and only if 2FA is not enabled)
+if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
+    unset($_SESSION['email_verified']);
+    unset($_SESSION['email_verification_started']);
+    unset($_SESSION['auth_verification_started']);
+
+    $email_code = rand(100000, 999999);
+    $_SESSION['email_verification_code'] = $email_code;
+    $_SESSION['email_code_created_at'] = time();
+
+    // Store in database
+    $update = "UPDATE rssimyaccount_members SET twofa_email_code=$1, twofa_email_code_created_at=NOW() WHERE email=$2";
+    $stmt = pg_prepare($con, "update_email_code", $update);
+    pg_execute($con, "update_email_code", [$email_code, $user]);
+
+    // Send email with the code
+    sendEmail("2fa_verification", [
+        "verification_code" => $email_code,
+        "user_email" => $row['email']
+    ], [$row['email']], false);
+}
 ?>
 
 <!DOCTYPE html>
@@ -72,16 +107,6 @@ $qrUrl = $totp->getProvisioningUri();
             --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             --transition: all 0.3s ease;
         }
-
-        /* body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 20px 0;
-            color: var(--dark);
-        } */
 
         .auth-container {
             background: white;
@@ -232,29 +257,6 @@ $qrUrl = $totp->getProvisioningUri();
             flex: 1;
         }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 30px 0;
-            color: var(--gray);
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .divider::before {
-            margin-right: 10px;
-        }
-
-        .divider::after {
-            margin-left: 10px;
-        }
-
         .modal-content {
             border-radius: var(--border-radius);
             border: none;
@@ -317,271 +319,591 @@ $qrUrl = $totp->getProvisioningUri();
                 transform: rotate(1turn);
             }
         }
+
+        .alert-highlight {
+            border-left: 4px solid var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .verification-step {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .verification-step h5 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .code-input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .code-input {
+            flex: 1;
+        }
+
+        .email-note {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #4cc9f0;
+        }
+
+        .verification-modal .modal-dialog {
+            max-width: 600px;
+        }
+
+        .verification-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .verification-steps:before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+
+        .step-item {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dee2e6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .step-item.active .step-indicator {
+            background: var(--primary);
+        }
+
+        .step-item.completed .step-indicator {
+            background: var(--success);
+        }
+
+        .step-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .verification-content {
+            min-height: 300px;
+        }
+
+        .timer {
+            font-size: 0.9rem;
+            color: #dc3545;
+            font-weight: 600;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-    <body>
-        <?php include 'inactive_session_expire_check.php'; ?>
-        <?php include 'header.php'; ?>
+    <main id="main" class="main">
 
-        <main id="main" class="main">
+        <div class="pagetitle">
+            <h1>Authentication Setup</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item active">Enable 2FA</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-            <div class="pagetitle">
-                <h1>Authentication Setup</h1>
-                <nav>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item active">Enable 2FA</li>
-                    </ol>
-                </nav>
-            </div><!-- End Page Title -->
+        <section class="section dashboard">
+            <div class="row">
 
-            <section class="section dashboard">
-                <div class="row">
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                    <!-- Reports -->
-                    <div class="col-12">
-                        <div class="card">
-
-                            <div class="card-body">
-                                <br>
-                                <div class="container">
-                                    <div class="auth-container">
-                                        <div class="auth-header">
-                                            <div class="auth-icon">
-                                                <i class="fas fa-shield-alt"></i>
-                                            </div>
-                                            <h2>Two-Factor Authentication</h2>
-                                            <p class="mb-0">Add an extra layer of security to your account</p>
+                        <div class="card-body">
+                            <br>
+                            <div class="container">
+                                <div class="auth-container">
+                                    <div class="auth-header">
+                                        <div class="auth-icon">
+                                            <i class="fas fa-shield-alt"></i>
                                         </div>
+                                        <h2>Two-Factor Authentication</h2>
+                                        <p class="mb-0">Add an extra layer of security to your account</p>
+                                    </div>
 
-                                        <div class="auth-body">
-                                            <div class="row">
-                                                <?php if ($row['twofa_enabled'] === 'f') { ?>
-                                                    <div class="col-md-6">
-                                                        <h3 class="section-title">Setup Instructions</h3>
+                                    <div class="auth-body">
+                                        <div class="row">
+                                            <?php if ($row['twofa_enabled'] === 'f') { ?>
+                                                <div class="col-md-6">
+                                                    <h3 class="section-title">Setup Instructions</h3>
 
-                                                        <div class="step-container">
-                                                            <div class="step-number">1</div>
-                                                            <div class="step-content">
-                                                                <h5>Download Authenticator App</h5>
-                                                                <p class="mb-0">Install Google Authenticator or Microsoft Authenticator on your phone.</p>
-                                                            </div>
+                                                    <div class="step-container">
+                                                        <div class="step-number">1</div>
+                                                        <div class="step-content">
+                                                            <h5>Download Authenticator App</h5>
+                                                            <p class="mb-0">Install Google Authenticator or Microsoft Authenticator on your phone.</p>
                                                         </div>
+                                                    </div>
 
-                                                        <div class="step-container">
-                                                            <div class="step-number">2</div>
-                                                            <div class="step-content">
-                                                                <h5>Scan QR Code</h5>
-                                                                <p class="mb-0">Open the app and scan the QR code with your camera.</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="step-container">
-                                                            <div class="step-number">3</div>
-                                                            <div class="step-content">
-                                                                <h5>Verify Setup</h5>
-                                                                <p class="mb-0">Enter the 6-digit code from the app to complete setup.</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="qr-container">
+                                                    <div class="step-container">
+                                                        <div class="step-number">2</div>
+                                                        <div class="step-content">
                                                             <h5>Scan QR Code</h5>
-                                                            <canvas id="qrcode" class="mb-3"></canvas>
-                                                            <p class="small text-muted text-center">Open your authenticator app and scan this code</p>
+                                                            <p class="mb-0">Open the app and scan the QR code with your camera.</p>
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-md-6">
-                                                        <div class="mb-4">
-                                                            <h5>Manual Setup Option</h5>
-                                                            <p class="text-muted">If you can't scan the QR code, enter this secret key manually:</p>
-                                                            <div class="secret-code">
-                                                                <?php echo chunk_split($secret, 4, ' '); ?>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- <div class="divider"> -->
-                                                        <h3 class="section-title">Verify Setup</h3>
-                                                        <!-- </div> -->
-
-                                                        <form id="verifyForm">
-                                                            <div class="mb-3">
-                                                                <label for="otp" class="form-label">Enter Verification Code</label>
-                                                                <input type="text" class="form-control" id="otp" maxlength="6" required placeholder="000000" autocomplete="off">
-                                                                <div class="form-text">Enter the 6-digit code from your authenticator app</div>
-                                                            </div>
-
-                                                            <button type="button" class="btn btn-primary verify-btn" onclick="verifyOtp()">
-                                                                <span class="btn-text">Verify & Enable 2FA</span>
-                                                            </button>
-                                                        </form>
-
-                                                        <div class="text-center mt-4">
-                                                            <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal" class="help-link">
-                                                                <i class="fas fa-question-circle me-2"></i>Need help setting up?
-                                                            </a>
+                                                    <div class="step-container">
+                                                        <div class="step-number">3</div>
+                                                        <div class="step-content">
+                                                            <h5>Complete Verification</h5>
+                                                            <p class="mb-0">Click the "Start Verification" button to complete the setup process.</p>
                                                         </div>
                                                     </div>
-                                                <?php } else { ?>
-                                                    <div class="alert alert-success mt-4">
-                                                        Two-Factor Authentication is already enabled on your account.
+
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        <strong>Important:</strong> Scanning the QR code is only the first step. You must complete the verification process to enable 2FA.
                                                     </div>
-                                                <?php } ?>
-                                            </div>
+
+                                                    <div class="qr-container">
+                                                        <h5>Scan QR Code</h5>
+                                                        <canvas id="qrcode" class="mb-3"></canvas>
+                                                        <p class="small text-muted text-center">Open your authenticator app and scan this code</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="mb-4">
+                                                        <h5>Manual Setup Option</h5>
+                                                        <p class="text-muted">If you can't scan the QR code, enter this secret key manually:</p>
+                                                        <div class="secret-code">
+                                                            <?php echo chunk_split($secret, 4, ' '); ?>
+                                                        </div>
+                                                    </div>
+
+                                                    <h3 class="section-title">Complete Setup</h3>
+                                                    <p class="text-muted mb-4">After scanning the QR code or entering the secret key manually, click the button below to start the verification process.</p>
+
+                                                    <button type="button" class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#verificationModal">
+                                                        <i class="fas fa-shield-alt me-2"></i>Start Verification
+                                                    </button>
+
+                                                    <div class="text-center mt-4">
+                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal" class="help-link">
+                                                            <i class="fas fa-question-circle me-2"></i>Need help setting up?
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            <?php } else { ?>
+                                                <div class="alert alert-success mt-4">
+                                                    Two-Factor Authentication is already enabled on your account.
+                                                </div>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div><!-- End Reports -->
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Verification Modal -->
+    <div class="modal fade verification-modal" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="verificationModalLabel">Complete Two-Factor Authentication Setup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </section>
-
-        </main><!-- End #main -->
-
-        <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-        <!-- Help Modal -->
-        <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="helpModalLabel"><i class="fas fa-mobile-alt me-2"></i>Authenticator App Setup Guide</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="step-container">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h5>Download the App</h5>
-                                <p class="mb-0">Install Google Authenticator from the App Store (iOS) or Google Play Store (Android).</p>
-                            </div>
+                <div class="modal-body">
+                    <div class="verification-steps">
+                        <div class="step-item active" id="step1">
+                            <div class="step-indicator">1</div>
+                            <div class="step-title">Email Verification</div>
                         </div>
-
-                        <div class="step-container">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h5>Open the App</h5>
-                                <p class="mb-0">Launch Google Authenticator on your device.</p>
-                            </div>
+                        <div class="step-item" id="step2">
+                            <div class="step-indicator">2</div>
+                            <div class="step-title">Authenticator App</div>
                         </div>
-
-                        <div class="step-container">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h5>Add a New Account</h5>
-                                <p class="mb-0">Tap the "+" button and select "Scan a QR code" or "Enter a setup key".</p>
-                            </div>
-                        </div>
-
-                        <div class="step-container">
-                            <div class="step-number">4</div>
-                            <div class="step-content">
-                                <h5>Scan the QR Code</h5>
-                                <p class="mb-0">If you selected "Scan a QR code", point your camera at the QR code shown on this page.</p>
-                            </div>
-                        </div>
-
-                        <div class="step-container">
-                            <div class="step-number">5</div>
-                            <div class="step-content">
-                                <h5>Enter Setup Key (Alternative)</h5>
-                                <p class="mb-0">If you selected "Enter a setup key", type in the provided secret key and select "Time-based".</p>
-                            </div>
-                        </div>
-
-                        <div class="step-container bg-light bg-opacity-50 rounded p-3 mt-3">
-                            <div class="step-number">6</div>
-                            <div class="step-content">
-                                <h5>Verification</h5>
-                                <p class="mb-0"><strong>After scanning the QR code or entering the setup key</strong>, your account will be added to the authenticator app and it will start generating 6-digit verification codes.</p>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info mt-4">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Important:</strong> Enter the 6-digit code currently displayed in the authenticator app to verify your setup.
+                        <div class="step-item" id="step3">
+                            <div class="step-indicator">3</div>
+                            <div class="step-title">Complete</div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+
+                    <div class="verification-content">
+                        <!-- Step 1: Email Verification -->
+                        <div id="emailVerificationStep">
+                            <h5>Verify Your Email Address</h5>
+                            <p>We've sent a 6-digit verification code to your registered email address with RSSI.</p>
+
+                            <div class="code-input-group">
+                                <input type="text" class="form-control code-input" id="email_otp" maxlength="6" placeholder="000000" autocomplete="off">
+                            </div>
+
+                            <div class="email-note">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <small>Can't find the email? Check your spam folder or <a href="#" onclick="resendEmailCode(); return false;">click here to resend</a>.</small>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mt-3 w-100" onclick="verifyEmailCode()">
+                                Verify Email Code
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Authenticator App Verification -->
+                        <div id="authVerificationStep" style="display: none;">
+                            <h5>Verify Authenticator App</h5>
+                            <p>Enter the 6-digit code from your authenticator app.</p>
+                            <p class="timer" id="authTimer">Time remaining: <span id="timeRemaining">02:00</span></p>
+
+                            <div class="code-input-group">
+                                <input type="text" class="form-control code-input" id="otp" maxlength="6" placeholder="000000" autocomplete="off">
+                            </div>
+
+                            <button type="button" class="btn btn-primary mt-3 w-100" onclick="verifyAuthCode()">
+                                Verify Authenticator Code
+                            </button>
+                        </div>
+
+                        <!-- Step 3: Completion -->
+                        <div id="completionStep" style="display: none;">
+                            <div class="text-center py-4">
+                                <div class="mb-4">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                                </div>
+                                <h4 class="text-success">Two-Factor Authentication Enabled!</h4>
+                                <p>Your account is now protected with two-factor authentication.</p>
+                                <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">
+                                    Continue to Dashboard
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Template Main JS File -->
-        <script src="../assets_new/js/main.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const qrCodeCanvas = document.getElementById('qrcode');
-                QRCode.toCanvas(qrCodeCanvas, "<?php echo $qrUrl; ?>", {
-                    width: 180,
-                    height: 180,
-                    margin: 1
-                });
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel"><i class="fas fa-mobile-alt me-2"></i>Authenticator App Setup Guide</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="step-container">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h5>Download the App</h5>
+                            <p class="mb-0">Install Google Authenticator from the App Store (iOS) or Google Play Store (Android).</p>
+                        </div>
+                    </div>
 
-                const otpInput = document.getElementById('otp');
-                const verifyBtn = document.querySelector('.verify-btn');
+                    <div class="step-container">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h5>Open the App</h5>
+                            <p class="mb-0">Launch Google Authenticator on your device.</p>
+                        </div>
+                    </div>
 
-                otpInput.addEventListener('input', function() {
+                    <div class="step-container">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h5>Add a New Account</h5>
+                            <p class="mb-0">Tap the "+" button and select "Scan a QR code" or "Enter a setup key".</p>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h5>Scan the QR Code</h5>
+                            <p class="mb-0">If you selected "Scan a QR code", point your camera at the QR code shown on this page.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h5>Enter Setup Key (Alternative)</h5>
+                            <p class="mb-0">If you selected "Enter a setup key", type in the provided secret key and select "Time-based".</p>
+                        </div>
+                    </div>
+
+                    <div class="step-container bg-light bg-opacity-50 rounded p-3 mt-3">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h5>Complete Verification</h5>
+                            <p class="mb-0"><strong>After scanning the QR code or entering the setup key</strong>, click "Start Verification" to complete the setup process. You will need to verify both your email and the authenticator app.</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> You need to complete the verification process to enable two-factor authentication.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const qrCodeCanvas = document.getElementById('qrcode');
+            QRCode.toCanvas(qrCodeCanvas, "<?php echo $qrUrl; ?>", {
+                width: 180,
+                height: 180,
+                margin: 1
+            });
+
+            // Format OTP inputs to only allow numbers
+            const otpInputs = document.querySelectorAll('.code-input');
+            otpInputs.forEach(input => {
+                input.addEventListener('input', function() {
                     this.value = this.value.replace(/\D/g, '').slice(0, 6);
-                    if (this.value.length === 6 && !verifyBtn.disabled) {
-                        verifyOtp();
-                    }
                 });
             });
 
-            // ✅ Define globally so HTML onclick can see it
-            function verifyOtp() {
-                const otpInput = document.getElementById('otp');
-                const verifyBtn = document.querySelector('.verify-btn');
-                const otp = otpInput.value.trim();
+            // Show verification modal if email was already verified but auth not completed
+            <?php if (isset($_SESSION['email_verified']) && $_SESSION['email_verified'] === true) : ?>
+                var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+                verificationModal.show();
+                showAuthVerificationStep();
+                startAuthTimer();
+            <?php endif; ?>
+        });
 
-                if (otp.length !== 6) {
-                    alert('Please enter a valid 6-digit code.');
-                    return;
+        let authTimerInterval;
+        let timeLeft = 120; // 2 minutes in seconds
+
+        function startAuthTimer() {
+            clearInterval(authTimerInterval);
+            timeLeft = 120;
+            updateTimerDisplay();
+
+            authTimerInterval = setInterval(function() {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(authTimerInterval);
+                    // Time's up, reset the process
+                    alert('Time has expired. Please restart the verification process.');
+                    window.location.reload();
                 }
+            }, 1000);
+        }
 
-                verifyBtn.disabled = true;
-                verifyBtn.classList.add('btn-loading');
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timeRemaining').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
 
-                fetch('verify_2fa.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            otp
-                        })
+        function showAuthVerificationStep() {
+            document.getElementById('emailVerificationStep').style.display = 'none';
+            document.getElementById('authVerificationStep').style.display = 'block';
+            document.getElementById('completionStep').style.display = 'none';
+
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('step3').classList.remove('active');
+        }
+
+        function showCompletionStep() {
+            document.getElementById('emailVerificationStep').style.display = 'none';
+            document.getElementById('authVerificationStep').style.display = 'none';
+            document.getElementById('completionStep').style.display = 'block';
+
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.add('active');
+            document.getElementById('step3').classList.add('completed');
+
+            clearInterval(authTimerInterval);
+        }
+
+        function resendEmailCode() {
+            const resendLink = document.querySelector('a[onclick*="resendEmailCode"]');
+            const originalText = resendLink.innerHTML;
+            // Show sending state
+            resendLink.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+            resendLink.onclick = null; // Prevent multiple clicks
+            fetch('resend_2fa_email.php')
+                .then(response => response.json())
+                .then(data => {
+                    // Restore original state
+                    resendLink.innerHTML = originalText;
+                    resendLink.onclick = function() {
+                        resendEmailCode();
+                        return false;
+                    };
+                    if (data.success) {
+                        alert('A new verification code has been sent to your email.');
+                    } else {
+                        alert('Failed to resend verification code. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    // Restore original state on error
+                    resendLink.innerHTML = originalText;
+                    resendLink.onclick = function() {
+                        resendEmailCode();
+                        return false;
+                    };
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+        }
+
+        function verifyEmailCode() {
+            const emailOtpInput = document.getElementById('email_otp');
+            const emailOtp = emailOtpInput.value.trim();
+            const verifyBtn = document.querySelector('#emailVerificationStep button');
+
+            if (emailOtp.length !== 6) {
+                alert('Please enter a valid 6-digit code from your email.');
+                emailOtpInput.focus();
+                return;
+            }
+
+            // Disable button and show spinner
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...';
+
+            fetch('verify_2fa_email.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email_otp: emailOtp
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        verifyBtn.disabled = false;
-                        verifyBtn.classList.remove('btn-loading');
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Re-enable button regardless of outcome
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = 'Verify Email Code';
+                    if (data.success) {
+                        // Email verification successful, proceed to auth verification
+                        showAuthVerificationStep();
+                        startAuthTimer();
+                    } else {
+                        alert(data.message || 'Invalid verification code. Please try again.');
+                        emailOtpInput.value = '';
+                        emailOtpInput.focus();
+                    }
+                })
+                .catch(err => {
+                    // Re-enable button on error
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = 'Verify Email Code';
+                    console.error(err);
+                    alert('An error occurred. Please try again.');
+                    emailOtpInput.value = '';
+                    emailOtpInput.focus();
+                });
+        }
 
-                        if (data.success) {
-                            alert('OTP verified successfully! 2FA is now enabled.');
-                            window.location.href = 'home.php';
-                        } else {
-                            alert(data.message || 'Invalid OTP. Please try again.');
-                            otpInput.value = '';
-                            otpInput.focus();
-                        }
+        function verifyAuthCode() {
+            const otpInput = document.getElementById('otp');
+            const otp = otpInput.value.trim();
+            // Get the verify button
+            const verifyBtn = document.querySelector('#authVerificationStep button');
+
+            if (otp.length !== 6) {
+                alert('Please enter a valid 6-digit code from your authenticator app.');
+                otpInput.focus();
+                return;
+            }
+            // Disable button and show spinner
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...';
+            fetch('verify_2fa.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        otp: otp
                     })
-                    .catch(err => {
-                        console.error(err);
-                        verifyBtn.disabled = false;
-                        verifyBtn.classList.remove('btn-loading');
-                        alert('An error occurred. Please try again.');
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Re-enable button regardless of outcome
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = 'Verify Authenticator Code';
+                    if (data.success) {
+                        // Both verifications successful
+                        showCompletionStep();
+                        // Show success alert
+                        alert('Two-Factor Authentication has been successfully enabled!');
+                        // Reload the page - PHP will check twofa_enabled status
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Invalid verification code. Please try again.');
                         otpInput.value = '';
                         otpInput.focus();
-                    });
-            }
-        </script>
-    </body>
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    // Re-enable button on error
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = 'Verify Authenticator Code';
+                    alert('An error occurred. Please try again.');
+                    otpInput.value = '';
+                    otpInput.focus();
+                });
+        }
+    </script>
+</body>
 
 </html>

@@ -12,6 +12,13 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
+// Check if email was verified within the time limit
+if (!isset($_SESSION['email_verification_started']) || 
+    (time() - $_SESSION['email_verification_started'] > 120)) {
+    echo json_encode(['success' => false, 'message' => 'Email verification has expired. Please restart the process.']);
+    exit;
+}
+
 // Get JSON data from fetch
 $data = json_decode(file_get_contents('php://input'), true);
 if (!isset($data['otp'])) {
@@ -42,8 +49,15 @@ if ($totp->verify($otpEntered)) {
     $update = "UPDATE rssimyaccount_members SET twofa_enabled = TRUE WHERE email=$1";
     $stmt2 = pg_prepare($con, "enable_2fa", $update);
     pg_execute($con, "enable_2fa", [$user]);
+    
+    // Clear verification session data
+    unset($_SESSION['email_verification_code']);
+    unset($_SESSION['email_code_created_at']);
+    unset($_SESSION['email_verified']);
+    unset($_SESSION['email_verification_started']);
 
     echo json_encode(['success' => true, 'message' => 'OTP verified successfully! 2FA enabled.']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid OTP. Please try again.']);
 }
+?>
