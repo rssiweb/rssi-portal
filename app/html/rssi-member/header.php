@@ -604,6 +604,24 @@
       </li>
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#lms" data-bs-toggle="collapse" href="#">
+          <span>Leave Management System</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="lms" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="leave_approval" href="leave_approval.php">
+              <span>Leave Approval</span>
+            </a>
+          </li>
+          <li>
+            <a id="leave_admin" href="leave_admin.php">
+              <span>Leave Admin</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
           <span>Work</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -651,11 +669,6 @@
           <li>
             <a id="facultyLink" href="faculty.php">
               <span>RSSI Faculty</span>
-            </a>
-          </li>
-          <li>
-            <a id="leave_adminLink" href="leave_admin.php">
-              <span>Leave Management</span>
             </a>
           </li>
           <li>
@@ -969,18 +982,22 @@
         url: 'facultyexp.php'
       },
       {
-        id: 'work',
-        linkId: 'leave_adminLink',
+        id: 'lms',
+        linkId: 'leave_admin',
         url: 'leave_admin.php'
+      }, {
+        id: 'lms',
+        linkId: 'leave_approval',
+        url: 'leave_approval.php'
       },
       {
-        id: 'work',
-        linkId: 'leave_adminLink',
+        id: 'myservices',
+        linkId: 'leaveLink',
         url: 'leaveallo.php'
       },
       {
-        id: 'work',
-        linkId: 'leave_adminLink',
+        id: 'myservices',
+        linkId: 'leaveLink',
         url: 'leaveadjustment.php'
       },
       {

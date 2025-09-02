@@ -21,6 +21,7 @@ if (in_array(date('m'), [1, 2, 3])) { // Upto March
 
 $now = date('Y-m-d H:i:s');
 $year = $academic_year;
+$cmdtuples = '';
 
 // Handle leave apply form
 if (!empty($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
@@ -46,6 +47,7 @@ if (!empty($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
         ";
 
         $result = pg_query($con, $leaveQuery);
+        $cmdtuples = pg_affected_rows($result);
         if (!$result) {
             error_log("Leave insertion failed: " . pg_last_error($con));
         }
@@ -80,23 +82,12 @@ if (!empty($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
 }
 
 // Filters and queries
-$id      = $_POST['get_id'] ?? null;
 $appid   = isset($_POST['get_appid']) ? strtoupper($_POST['get_appid']) : null;
 $lyear   = $_POST['lyear'] ?? $year;
-$is_user = $_POST['is_user'] ?? null;
 
 date_default_timezone_set('Asia/Kolkata');
 
-if ($id) {
-    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
-        FROM leavedb_leavedb 
-        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-            ON leavedb_leavedb.applicantid = faculty.associatenumber  
-        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
-            ON leavedb_leavedb.applicantid = student.student_id 
-        WHERE leaveid = '$id' 
-        ORDER BY timestamp DESC");
-} elseif (!$appid && $lyear) {
+if (!$appid && $lyear) {
     $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
         FROM leavedb_leavedb 
         LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
@@ -131,16 +122,8 @@ if ($id) {
     $resultArrrsl      = pg_fetch_result($allosl, 0, 0);
     $resultArr_cladj   = pg_fetch_result($cladj, 0, 0);
     $resultArr_sladj   = pg_fetch_result($sladj, 0, 0);
-    $resultArr_lwptaken= pg_fetch_result($lwptaken, 0, 0);
+    $resultArr_lwptaken = pg_fetch_result($lwptaken, 0, 0);
     $resultArr_lwpadj  = pg_fetch_result($lwpadj, 0, 0);
-} else {
-    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
-        FROM leavedb_leavedb 
-        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-            ON leavedb_leavedb.applicantid = faculty.associatenumber  
-        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
-            ON leavedb_leavedb.applicantid = student.student_id 
-        ORDER BY timestamp DESC");
 }
 
 if (!$result) {
@@ -158,7 +141,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Leave Management System (LMS)</title>
+    <title>Leave Admin</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -200,6 +183,63 @@ $resultArr = pg_fetch_all($result);
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#get_appid').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                // multiple: true
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#applicantid').select2({
+                ajax: {
+                    url: 'fetch_associates.php?isActive=true',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                // multiple: true
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -209,12 +249,12 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Leave Management System (LMS)</h1>
+            <h1>Leave Admin</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">LMS</li>
+                    <li class="breadcrumb-item"><a href="#">Leave Management System</a></li>
+                    <li class="breadcrumb-item active">Leave Admin</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -229,13 +269,13 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="row">
-                                <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
+                                <?php if ($cmdtuples == 0) { ?>
                                     <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         <i class="bi bi-exclamation-triangle"></i>
                                         <span>ERROR: Oops, something wasn't right.</span>
                                     </div>
-                                <?php } else if (@$cmdtuples == 1) { ?>
+                                <?php } else if ($cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         <i class="bi bi-check2-circle"></i>
@@ -265,7 +305,9 @@ $resultArr = pg_fetch_all($result);
                                         <input type="hidden" name="form-type" type="text" value="leaveapply">
 
                                         <span class="input-help">
-                                            <input type="text" name="applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['applicantid']; ?>" required>
+                                            <select class="form-select" id="applicantid" name="applicantid" required style="width:200px;">
+                                                <!-- Options will be populated by Select2 AJAX -->
+                                            </select>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                         </span>
                                         <span class="input-help">
@@ -367,536 +409,86 @@ $resultArr = pg_fetch_all($result);
                                     }
                                     document.getElementById("typeofleave").addEventListener("click", getType)
                                 </script>
-
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Search Criteria</th>
-                                            <th scope="col">Current Leave Balance</th>
-                                            <th scope="col">Total Leave Taken</th>
-                                            <th scope="col">Total Allocated Leave</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <form action="" method="POST">
-                                                    <div class="form-group" style="display: inline-block;">
-                                                        <div class="col2" style="display: inline-block;">
-                                                            <input name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave ID" value="<?php echo $id ?>">
-
-                                                            <input name="get_appid" id="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
-
-                                                            <select name="lyear" id="lyear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year" required>
-                                                                <?php if ($lyear == null) { ?>
-                                                                    <option disabled selected hidden>Academic Year</option>
-                                                                <?php
-                                                                } else { ?>
-                                                                    <option hidden selected><?php echo $lyear ?></option>
-                                                                <?php }
-                                                                ?>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col2 left" style="display: inline-block;">
-                                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                                                    </div>
-                                                    <div id="filter-checks">
-                                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                                        <label for="is_user" style="font-weight: 400;">Search by Leave ID</label>
-                                                    </div>
-                                                </form>
-                                                <script>
-                                                    if ($('#is_user').not(':checked').length > 0) {
-
-                                                        document.getElementById("get_id").disabled = true;
-                                                        document.getElementById("get_appid").disabled = false;
-                                                        document.getElementById("lyear").disabled = false;
-
-                                                    } else {
-
-                                                        document.getElementById("get_id").disabled = false;
-                                                        document.getElementById("get_appid").disabled = true;
-                                                        document.getElementById("lyear").disabled = true;
-
-                                                    }
-
-                                                    const checkbox = document.getElementById('is_user');
-
-                                                    checkbox.addEventListener('change', (event) => {
-                                                        if (event.target.checked) {
-                                                            document.getElementById("get_id").disabled = false;
-                                                            document.getElementById("get_appid").disabled = true;
-                                                            document.getElementById("lyear").disabled = true;
-                                                        } else {
-                                                            document.getElementById("get_id").disabled = true;
-                                                            document.getElementById("get_appid").disabled = false;
-                                                            document.getElementById("lyear").disabled = false;
-                                                        }
-                                                    })
-                                                </script>
-                                                <script>
-                                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                                        var currentYear = new Date().getFullYear() - 1;
-                                                    <?php } else { ?>
-                                                        var currentYear = new Date().getFullYear();
-                                                    <?php } ?>
-                                                    for (var i = 0; i < 5; i++) {
-                                                        var next = currentYear + 1;
-                                                        var year = currentYear + '-' + next;
-                                                        //next.toString().slice(-2)
-                                                        $('#lyear').append(new Option(year, year));
-                                                        currentYear--;
-                                                    }
-                                                </script>
-                                            </td>
-                                            <td>
-                                                <?php if ($appid != null) { ?>
-
-                                                    Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
-                                                    <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
-                                                    <br>Leave Without Pay/Adj - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj ?>)
-                                                <?php } ?>
-                                            </td>
-
-                                            <td>
-                                                <?php if ($appid != null) { ?>
-
-                                                    Sick Leave - <?php echo $resultArrsl ?>
-                                                    <br>Casual Leave - <?php echo $resultArrcl ?>
-                                                    <br>Leave Without Pay/Adj - <?php echo $resultArr_lwptaken ?>
-                                                <?php } ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($appid != null) { ?>
-
-                                                    Sick Leave - <?php echo $resultArrrsl ?>
-                                                    <br>Casual Leave - <?php echo $resultArrrcl ?>
-                                                <?php } ?>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-
                                 <div class="table-responsive">
-                                    <table class="table" id="table-id">
-                                        <thead>
+                                    <table class="table align-middle mt-5" id="myTable">
+                                        <thead class="table-light">
                                             <tr>
-                                                <th scope="col">Leave ID</th>
-                                                <th scope="col">Applicant ID</th>
-                                                <th scope="col">Applied on</th>
-                                                <th scope="col">From-To</th>
-                                                <th scope="col">Day(s) count</th>
-                                                <th scope="col">Leave Details</th>
-                                                <th scope="col">Applied by</th>
-                                                <th scope="col">Status</th>
-                                                <th scope="col">Reviewer</th>
-                                                <th scope="col" width="15%">Remarks</th>
-                                                <th scope="col"></th>
+                                                <th scope="col">Search Criteria</th>
+                                                <th scope="col">Current Leave Balance</th>
+                                                <th scope="col">Total Leave Taken</th>
+                                                <th scope="col">Total Allocated Leave</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php if (sizeof($resultArr) > 0) { ?>
-                                                <?php foreach ($resultArr as $array) { ?>
-                                                    <tr>
-                                                        <td>
-                                                            <?php if ($array['doc'] != null) { ?>
-                                                                <a href="javascript:void(0)" onclick="showpdf('<?php echo $array['leaveid']; ?>')">
-                                                                    <?php echo $array['leaveid']; ?>
-                                                                </a>
-                                                            <?php } else { ?>
-                                                                <?php echo $array['leaveid']; ?>
-                                                            <?php } ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['applicantid'] . '<br>' . $array['fullname'] . $array['studentname']; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo @date("d/m/Y g:i a", strtotime($array['timestamp'])); ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])); ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['days']; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php
-                                                            $typeofLeave = htmlspecialchars($array['typeofleave'] ?? '');
-                                                            $shift = htmlspecialchars($array['shift'] ?? '');
-                                                            echo $typeofLeave . ($shift ? '-' . $shift : '') . '<br>' . $array['creason'] . '<br>';
+                                            <tr>
+                                                <td>
+                                                    <form action="" method="POST" class="row g-2 align-items-center">
+                                                        <div class="col-auto">
+                                                            <select class="form-select" id="get_appid" name="get_appid" required style="width:200px;">
+                                                                <?php if (!empty($appid)): ?>
+                                                                    <option value="<?= $appid ?>" selected><?= $appid ?></option>
+                                                                <?php endif; ?>
+                                                            </select>
+                                                        </div>
 
-                                                            $applicantComment = isset($array['applicantcomment']) ? $array['applicantcomment'] : '';
-                                                            $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
-                                                            echo '<span class="short-comment">' . htmlspecialchars($shortComment) . '</span>';
-                                                            echo '<span class="full-comment" style="display: none;">' . htmlspecialchars($applicantComment) . '</span>';
+                                                        <div class="col-auto">
+                                                            <select name="lyear" id="lyear" class="form-select" required>
+                                                                <?php if ($lyear == null) { ?>
+                                                                    <option disabled selected hidden>Academic Year</option>
+                                                                <?php } else { ?>
+                                                                    <option hidden selected><?php echo $lyear ?></option>
+                                                                <?php } ?>
+                                                            </select>
+                                                        </div>
 
-                                                            if (strlen($applicantComment) > 30) {
-                                                                echo ' <a href="#" class="more-link">more</a>';
-                                                            }
-                                                            ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo ($array['appliedby'] === $array['applicantid']) ? 'Self' : 'System';  ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['status']; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['reviewer_id'] . '<br>' . $array['reviewer_name']; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['comment']; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo '<button type="button" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: inline-block; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0; border: none;" title="Details">
-                                                            <i class="bi bi-box-arrow-up-right" style="font-size: 14px; color:#777777;" title="Show Details"></i>
-                                                            </button>'; ?>
+                                                        <div class="col-auto">
+                                                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm">
+                                                                <i class="bi bi-search"></i> Search
+                                                            </button>
+                                                        </div>
+                                                    </form>
 
-                                                            <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
-                                                                <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank">
-                                                                <i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i>
-                                                                </a>'; ?>
-                                                            <?php } else { ?>
-                                                                <i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>
-                                                            <?php } ?>
+                                                    <script>
+                                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                            var currentYear = new Date().getFullYear() - 1;
+                                                        <?php } else { ?>
+                                                            var currentYear = new Date().getFullYear();
+                                                        <?php } ?>
+                                                        for (var i = 0; i < 5; i++) {
+                                                            var next = currentYear + 1;
+                                                            var year = currentYear + '-' + next;
+                                                            $('#lyear').append(new Option(year, year));
+                                                            currentYear--;
+                                                        }
+                                                    </script>
+                                                </td>
 
-                                                            <?php if ($array['email'] != null || $array['emailaddress'] != null) { ?>
-                                                                <form action="#" name="email-form-<?php echo $array['leaveid']; ?>" method="POST" style="display: inline-block;">
-                                                                    <input type="hidden" name="template" value="leaveconf">
-                                                                    <input type="hidden" name="data[leaveid]" value="<?php echo $array['leaveid']; ?>">
-                                                                    <input type="hidden" name="data[applicantid]" value="<?php echo $array['applicantid']; ?>">
-                                                                    <input type="hidden" name="data[typeofleave]" value="<?php echo $array['typeofleave']; ?>">
-                                                                    <input type="hidden" name="data[applicantname]" value="<?php echo $array['fullname'] . $array['studentname']; ?>">
-                                                                    <input type="hidden" name="data[category]" value="<?php echo $array['creason']; ?>">
-                                                                    <input type="hidden" name="data[comment]" value="<?php echo $array['comment']; ?>">
-                                                                    <input type="hidden" name="data[day]" value="<?php echo $array['days']; ?>">
-                                                                    <input type="hidden" name="data[fromdate]" value="<?php echo @date("d/m/Y", strtotime($array['fromdate'])); ?>">
-                                                                    <input type="hidden" name="data[todate]" value="<?php echo @date("d/m/Y", strtotime($array['todate'])); ?>">
-                                                                    <input type="hidden" name="data[status]" value="<?php echo @strtoupper($array['status']); ?>">
-                                                                    <input type="hidden" name="email" value="<?php echo $array['email'] . $array['emailaddress']; ?>">
+                                                <td>
+                                                    <?php if ($appid != null) { ?>
+                                                        Sick Leave - (<?= ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)<br>
+                                                        Casual Leave - (<?= ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)<br>
+                                                        Leave Without Pay/Adj - (<?= $resultArr_lwptaken - $resultArr_lwpadj ?>)
+                                                    <?php } ?>
+                                                </td>
 
-                                                                    <button type="submit" style="display: inline-block; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0; border: none;">
-                                                                        <i class="bi bi-envelope-at" style="color:#444444;" title="Send Email <?php echo $array['email'] . $array['emailaddress']; ?>"></i>
-                                                                    </button>
-                                                                </form>
-                                                            <?php } else { ?>
-                                                                <i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>
-                                                            <?php } ?>
+                                                <td>
+                                                    <?php if ($appid != null) { ?>
+                                                        Sick Leave - <?= $resultArrsl ?><br>
+                                                        Casual Leave - <?= $resultArrcl ?><br>
+                                                        Leave Without Pay/Adj - <?= $resultArr_lwptaken ?>
+                                                    <?php } ?>
+                                                </td>
 
-                                                            <form name="leavedelete_<?php echo $array['leaveid']; ?>" action="#" method="POST" style="display: inline-block;">
-                                                                <input type="hidden" name="form-type" value="leavedelete">
-                                                                <input type="hidden" name="leavedeleteid" value="<?php echo $array['leaveid']; ?>">
-                                                                <button type="submit" onclick="validateForm()" style="display: inline-block; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0; border: none;" title="Delete <?php echo $array['leaveid']; ?>">
-                                                                    <i class="bi bi-x-lg"></i>
-                                                                </button>
-                                                            </form>
-                                                        </td>
-                                                    </tr>
-                                                <?php } ?>
-                                            <?php } else if ($id == null) { ?>
-                                                <tr>
-                                                    <td colspan="10">Please select Filter value.</td>
-                                                </tr>
-                                            <?php } else { ?>
-                                                <tr>
-                                                    <td colspan="10">No record was found for the selected filter value.</td>
-                                                </tr>
-                                            <?php } ?>
+                                                <td>
+                                                    <?php if ($appid != null) { ?>
+                                                        Sick Leave - <?= $resultArrrsl ?><br>
+                                                        Casual Leave - <?= $resultArrrcl ?>
+                                                    <?php } ?>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                                <!--------------- POP-UP BOX ------------
-                                        -------------------------------------->
-                                <style>
-                                    .modal {
-                                        background-color: rgba(0, 0, 0, 0.4);
-                                        /* Black w/ opacity */
-                                    }
-                                </style>
-                                <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Leave Details</h1>
-                                                <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-
-                                                <div style="width:100%; text-align:right">
-                                                    <p id="status" class="badge " style="display: inline !important;"><span class="leaveid"></span></p>
-                                                </div>
-
-                                                <form id="leavereviewform" name="leavereviewform" action="#" method="POST">
-                                                    <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
-                                                    <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                                                    <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                                                    <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" readonly>
-                                                    <span class="input-help">
-                                                        <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">From</small>
-                                                    </span>
-                                                    <span class="input-help">
-                                                        <input type="date" class="form-control" name="todate" id="todated" type="text" value="">
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">To</small>
-                                                    </span>
-
-                                                    <select name="leave_status" id="leave_status" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                        <option disabled selected hidden>Status</option>
-                                                        <option value="Approved">Approved</option>
-                                                        <option value="Under review">Under review</option>
-                                                        <option value="Rejected">Rejected</option>
-                                                    </select>
-
-                                                    <span class="input-help">
-                                                        <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
-                                                    </span>
-                                                    <div id="filter-checkshr">
-                                                        <input class="form-check-input" type="checkbox" name="is_userhr" id="" />
-                                                        <label for="is_userhr" style="font-weight: 400;">Half day</label>
-                                                    </div>
-                                                    <br>
-                                                    <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
-                                                </form>
-                                                <div class="modal-footer">
-                                                    <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <script>
-                                    var data = <?php echo json_encode($resultArr) ?>
-
-                                    // Get the modal
-                                    var modal = document.getElementById("myModal");
-                                    // Get the <span> element that closes the modal
-                                    var closedetails = [
-                                        document.getElementById("closedetails-header"),
-                                        document.getElementById("closedetails-footer")
-                                    ];
-
-                                    function showDetails(id) {
-                                        // console.log(modal)
-                                        // console.log(modal.getElementsByClassName("data"))
-                                        var mydata = undefined
-                                        data.forEach(item => {
-                                            if (item["leaveid"] == id) {
-                                                mydata = item;
-                                            }
-                                        })
-
-                                        var keys = Object.keys(mydata)
-                                        keys.forEach(key => {
-                                            var span = modal.getElementsByClassName(key)
-                                            if (span.length > 0)
-                                                span[0].innerHTML = mydata[key];
-                                        })
-                                        modal.style.display = "block";
-
-                                        //class add 
-                                        var status = document.getElementById("status")
-                                        if (mydata["status"] === "Approved") {
-                                            status.classList.add("bg-success")
-                                            status.classList.remove("bg-danger")
-                                        } else {
-                                            status.classList.remove("bg-success")
-                                            status.classList.add("bg-danger")
-                                        }
-                                        //class add end
-
-                                        var profile = document.getElementById("leaveidd")
-                                        profile.value = mydata["leaveid"]
-                                        if (mydata["status"] !== null) {
-                                            profile = document.getElementById("leave_status")
-                                            profile.value = mydata["status"]
-                                        }
-                                        if (mydata["comment"] !== null) {
-                                            profile = document.getElementById("reviewer_remarks")
-                                            profile.value = mydata["comment"]
-                                        }
-
-                                        if (mydata["fromdate"] !== null) {
-                                            profile = document.getElementById("fromdated")
-                                            profile.value = mydata["fromdate"]
-                                        }
-                                        if (mydata["todate"] !== null) {
-                                            profile = document.getElementById("todated")
-                                            profile.value = mydata["todate"]
-                                        }
-
-                                        // document.getElementsByName("leavereviewform")[0].id = "leavereviewform" + mydata["leaveid"];
-                                        document.getElementsByName("is_userhr")[0].id = "is_userhr" + mydata["leaveid"];
-
-                                        profile = document.getElementById("is_userhr" + mydata["leaveid"])
-                                        profile.value = mydata["halfday"]
-
-                                        $('input[type="checkbox"]').on('change', function() {
-                                            this.value ^= 1;
-                                        });
-
-
-                                        if (mydata["halfday"] == 1) {
-                                            document.getElementById("is_userhr" + mydata["leaveid"]).checked = true;
-                                        } else {
-                                            document.getElementById("is_userhr" + mydata["leaveid"]).checked = false;
-                                        }
-
-                                        if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
-                                            document.getElementById("leaveupdate").disabled = true;
-                                        } else {
-                                            document.getElementById("leaveupdate").disabled = false;
-                                        }
-                                    }
-                                    // When the user clicks on <span> (x), close the modal
-                                    closedetails.forEach(function(element) {
-                                        element.addEventListener("click", closeModal);
-                                    });
-
-                                    function closeModal() {
-                                        var modal1 = document.getElementById("myModal");
-                                        modal1.style.display = "none";
-                                    }
-                                </script>
-                                <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Supporting documents</h1>
-                                                <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div style="width:100%;">
-                                                    <span style="float: left;">Leave Id: <span class="leaveid"></span></span>
-                                                    <span style="float: right;">
-                                                        <p id="status2" class="badge" style="display: inline !important;"><span class="status"></span></p>
-                                                    </span>
-                                                </div>
-                                                <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
-                                                <div class="modal-footer">
-                                                    <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <script>
-                                    var data1 = <?php echo json_encode($resultArr) ?>
-
-                                    // Get the modal
-                                    var modal1 = document.getElementById("myModalpdf");
-                                    var closepdf = [
-                                        document.getElementById("closepdf-header"),
-                                        document.getElementById("closepdf-footer")
-                                    ];
-
-                                    function showpdf(id1) {
-                                        var mydata1 = undefined
-                                        data1.forEach(item1 => {
-                                            if (item1["leaveid"] == id1) {
-                                                mydata1 = item1;
-                                            }
-                                        })
-                                        var keys1 = Object.keys(mydata1)
-                                        keys1.forEach(key => {
-                                            var span1 = modal1.getElementsByClassName(key)
-                                            if (span1.length > 0)
-                                                span1[0].innerHTML = mydata1[key];
-                                        })
-                                        modal1.style.display = "block";
-
-                                        //class add 
-                                        var statuss = document.getElementById("status2")
-                                        if (mydata1["status"] === "Approved") {
-                                            statuss.classList.add("bg-success")
-                                            statuss.classList.remove("bg-danger")
-                                        } else if (mydata1["status"] === "Rejected") {
-                                            statuss.classList.remove("bg-success")
-                                            statuss.classList.add("bg-danger")
-                                        } else {
-                                            statuss.classList.remove("bg-success")
-                                            statuss.classList.remove("bg-danger")
-                                        }
-                                        //class add end
-                                        document.getElementsByName("docid")[0].id = "docid" + mydata1["leaveid"];
-
-                                        randomvar = document.getElementById("docid" + mydata1["leaveid"])
-                                        randomvar.data = mydata1["docp"]
-
-                                        closepdf.forEach(function(element) {
-                                            element.addEventListener("click", closeModel);
-                                        });
-
-                                        function closeModel() {
-                                            var modal1 = document.getElementById("myModalpdf");
-                                            modal1.style.display = "none";
-                                        }
-                                    }
-                                </script>
-
-                                <script>
-                                    var data = <?php echo json_encode($resultArr) ?>;
-                                    const scriptURL = 'payment-api.php'
-
-                                    function validateForm() {
-                                        if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-
-                                            data.forEach(item => {
-                                                const form = document.forms['leavedelete_' + item.leaveid]
-                                                form.addEventListener('submit', e => {
-                                                    e.preventDefault()
-                                                    fetch(scriptURL, {
-                                                            method: 'POST',
-                                                            body: new FormData(document.forms['leavedelete_' + item.leaveid])
-                                                        })
-                                                        .then(response =>
-                                                            alert("Record has been deleted.") +
-                                                            location.reload()
-                                                        )
-                                                        .catch(error => console.error('Error!', error.message))
-                                                })
-
-                                                console.log(item)
-                                            })
-                                        } else {
-                                            alert("Record has NOT been deleted.");
-                                            return false;
-                                        }
-                                    }
-
-                                    const form = document.getElementById('leavereviewform')
-                                    form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch(scriptURL, {
-                                                method: 'POST',
-                                                body: new FormData(document.getElementById('leavereviewform'))
-                                            })
-                                            .then(response =>
-                                                alert("Record has been updated.") +
-                                                location.reload()
-                                            )
-                                            .catch(error => console.error('Error!', error.message))
-                                    })
-
-                                    data.forEach(item => {
-                                        const formId = 'email-form-' + item.leaveid
-                                        const form = document.forms[formId]
-                                        form.addEventListener('submit', e => {
-                                            e.preventDefault()
-                                            fetch('mailer.php', {
-                                                    method: 'POST',
-                                                    body: new FormData(document.forms[formId])
-                                                })
-                                                .then(response =>
-                                                    alert("Email has been sent.")
-                                                )
-                                                .catch(error => console.error('Error!', error.message))
-                                        })
-                                    })
-                                </script>
-
                             </div>
                         </div>
                     </div><!-- End Reports -->
@@ -933,19 +525,6 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
-        });
-    </script>
 
 </body>
 

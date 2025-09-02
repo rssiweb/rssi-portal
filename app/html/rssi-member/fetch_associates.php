@@ -14,6 +14,7 @@ validation();
 $searchTerm = $_GET['q'] ?? '';
 $isShiftPlanner = $_GET['isShiftPlanner'] ?? false;
 $isMycertificate = $_GET['isMycertificate'] ?? false;
+$isActive = $_GET['isActive'] ?? false;
 
 // Prepare the base query
 $query = "
@@ -27,7 +28,7 @@ $query = "
         associatenumber::text ILIKE $1)";
 
 // Add filter for Active status only if it's the shift planner request
-if ($isShiftPlanner || $isMycertificate) {
+if ($isShiftPlanner || $isMycertificate || $isActive) {
     $query .= " AND filterstatus = 'Active'";
 }
 
