@@ -317,9 +317,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                             <div class="col2 d-inline-block">
                                                 <input name="leave_id" id="leave_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Leave ID" value="<?php echo $leave_id ?>">
 
-                                                <?php if ($is_admin) { ?>
-                                                    <input name="applicant_id" id="applicant_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Applicant ID" value="<?php echo $applicant_id ?>">
-                                                <?php } ?>
+                                                <input name="applicant_id" id="applicant_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Applicant ID" value="<?php echo $applicant_id ?>">
 
                                                 <select name="lyear" id="lyear" class="form-select d-inline-block" style="width:max-content;" required>
                                                     <?php if ($lyear == null) { ?>
@@ -479,7 +477,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 <?php } ?>
                                             <?php } else { ?>
                                                 <tr>
-                                                    <td colspan="10">No records found for the selected filter value.</td>
+                                                    <td colspan="11">No records found for the selected filter value.</td>
                                                 </tr>
                                             <?php } ?>
                                         </tbody>
@@ -612,18 +610,16 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     </script>
     <script>
         $(document).ready(function() {
-            // Toggle full comment visibility on "more" link click
-            $('.more-link').click(function(e) {
+            // Use event delegation for dynamically created rows
+            $('#table-id').on('click', '.more-link', function(e) {
                 e.preventDefault();
                 var shortComment = $(this).siblings('.short-comment');
                 var fullComment = $(this).siblings('.full-comment');
                 if (fullComment.is(':visible')) {
-                    // If full comment is visible, toggle to show short comment
                     shortComment.show();
                     fullComment.hide();
                     $(this).text('more');
                 } else {
-                    // If short comment is visible, toggle to show full comment
                     shortComment.hide();
                     fullComment.show();
                     $(this).text('less');
