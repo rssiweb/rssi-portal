@@ -87,6 +87,7 @@ function sendOTPEmail($con, $username)
     // Prepare email data
     $email_data = [
         "name" => $name,
+        "email" => $username,
         "otp_code" => $otp, // Send plain text OTP in email
         "valid_time" => "10 minutes" // OTP validity period
     ];
