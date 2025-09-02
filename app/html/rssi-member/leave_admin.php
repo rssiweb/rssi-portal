@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
-
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -13,126 +11,144 @@ if (!isLoggedIn("aid")) {
 validation();
 
 include("../../util/email.php");
-if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
+
+// Academic year calculation
+if (in_array(date('m'), [1, 2, 3])) { // Upto March
     $academic_year = (date('Y') - 1) . '-' . date('Y');
-} else { //After MARCH
+} else { // After March
     $academic_year = date('Y') . '-' . (date('Y') + 1);
 }
 
-@$now = date('Y-m-d H:i:s');
-@$year = $academic_year;
+$now = date('Y-m-d H:i:s');
+$year = $academic_year;
 
-if (@$_POST['form-type'] == "leaveapply") {
-    @$leaveid = 'RSL' . time();
-    @$applicantid = strtoupper($_POST['applicantid']);
-    @$fromdate = $_POST['fromdate'];
-    @$todate = $_POST['todate'];
-    @$typeofleave = $_POST['typeofleave'];
-    @$creason = $_POST['creason'];
-    @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
-    @$appliedby = $_POST['appliedby'];
-    @$halfday = $_POST['is_userh'] ?? 0;
+// Handle leave apply form
+if (!empty($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
+    $leaveid      = 'RSL' . time();
+    $applicantid  = strtoupper(trim($_POST['applicantid'] ?? ''));
+    $fromdate     = $_POST['fromdate'] ?? null;
+    $todate       = $_POST['todate'] ?? null;
+    $typeofleave  = $_POST['typeofleave'] ?? '';
+    $creason      = $_POST['creason'] ?? '';
+    $comment      = htmlspecialchars($_POST['comment'] ?? '', ENT_QUOTES, 'UTF-8');
+    $appliedby    = $_POST['appliedby'] ?? '';
+    $halfday      = isset($_POST['is_userh']) ? (int)$_POST['is_userh'] : 0;
 
-    if ($leaveid != "") {
+    if (!empty($leaveid) && $fromdate && $todate) {
+        $diffDays = (strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1;
+        $day = $halfday === 1 ? round($diffDays) / 2 : round($diffDays);
 
-        if ($halfday == 1) {
+        $leaveQuery = "
+            INSERT INTO leavedb_leavedb 
+            (timestamp, leaveid, applicantid, fromdate, todate, typeofleave, creason, comment, appliedby, lyear, days, halfday)
+            VALUES 
+            ('$now', '$leaveid', '$applicantid', '$fromdate', '$todate', '$typeofleave', '$creason', '$comment', '$appliedby', '$year', '$day', $halfday)
+        ";
 
-            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1) / 2;
-        } else {
-            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
+        $result = pg_query($con, $leaveQuery);
+        if (!$result) {
+            error_log("Leave insertion failed: " . pg_last_error($con));
         }
 
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$day',$halfday)";
+        // Fetch applicant details (faculty and student)
+        $resultt  = pg_query($con, "SELECT fullname, email FROM rssimyaccount_members WHERE associatenumber='$applicantid'");
+        $nameassociate  = $resultt ? pg_fetch_result($resultt, 0, 0) : '';
+        $emailassociate = $resultt ? pg_fetch_result($resultt, 0, 1) : '';
 
-        $result = pg_query($con, $leave);
-        $cmdtuples = pg_affected_rows($result);
-
-
-        $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$applicantid'");
-        @$nameassociate = pg_fetch_result($resultt, 0, 0);
-        @$emailassociate = pg_fetch_result($resultt, 0, 1);
-
-        $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$applicantid'");
-        @$namestudent = pg_fetch_result($resulttt, 0, 0);
-        @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+        $resulttt  = pg_query($con, "SELECT studentname, emailaddress FROM rssimyprofile_student WHERE student_id='$applicantid'");
+        $namestudent  = $resulttt ? pg_fetch_result($resulttt, 0, 0) : '';
+        $emailstudent = $resulttt ? pg_fetch_result($resulttt, 0, 1) : '';
 
         $applicantname = $nameassociate . $namestudent;
         $email = $emailassociate . $emailstudent;
 
-        if ($halfday != 1) {
-            sendEmail("leaveapply_admin", array(
-                "leaveid" => $leaveid,
-                "applicantid" => $applicantid,
-                "applicantname" => @$applicantname,
-                "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "todate" => @date("d/m/Y", strtotime($todate)),
-                "typeofleave" => $typeofleave,
-                "category" => $creason,
-                "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-                "now" => $now,
-            ), $email, False);
-        }
-        if ($halfday == 1) {
-            sendEmail("leaveapply_admin", array(
-                "leaveid" => $leaveid,
-                "applicantid" => $applicantid,
-                "applicantname" => @$applicantname,
-                "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "todate" => @date("d/m/Y", strtotime($todate)),
-                "typeofleave" => $typeofleave,
-                "category" => $creason,
-                "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
-                "now" => $now,
-            ), $email, False);
-        }
+        // Send email notification
+        $dayCount = $halfday === 1 ? $day : round($diffDays);
+
+        sendEmail("leaveapply_admin", [
+            "leaveid"       => $leaveid,
+            "applicantid"   => $applicantid,
+            "applicantname" => $applicantname,
+            "fromdate"      => date("d/m/Y", strtotime($fromdate)),
+            "todate"        => date("d/m/Y", strtotime($todate)),
+            "typeofleave"   => $typeofleave,
+            "category"      => $creason,
+            "day"           => $dayCount,
+            "now"           => $now,
+        ], $email, false);
     }
 }
 
-@$id = $_POST['get_id'];
-@$appid = strtoupper($_POST['get_appid']);
-@$lyear = $_POST['lyear'] ? $_POST['lyear'] : $year;
-@$is_user = $_POST['is_user'];
+// Filters and queries
+$id      = $_POST['get_id'] ?? null;
+$appid   = isset($_POST['get_appid']) ? strtoupper($_POST['get_appid']) : null;
+$lyear   = $_POST['lyear'] ?? $year;
+$is_user = $_POST['is_user'] ?? null;
 
 date_default_timezone_set('Asia/Kolkata');
-// $date = date('Y-d-m h:i:s');
 
-if ($id != null) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
-} else if ($appid == null && $lyear != null) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$lyear' order by timestamp desc");
-} else if ($appid != null && $lyear != null) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' AND lyear='$lyear' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved')");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved')");
+if ($id) {
+    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
+        FROM leavedb_leavedb 
+        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+            ON leavedb_leavedb.applicantid = faculty.associatenumber  
+        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+            ON leavedb_leavedb.applicantid = student.student_id 
+        WHERE leaveid = '$id' 
+        ORDER BY timestamp DESC");
+} elseif (!$appid && $lyear) {
+    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
+        FROM leavedb_leavedb 
+        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+            ON leavedb_leavedb.applicantid = faculty.associatenumber  
+        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+            ON leavedb_leavedb.applicantid = student.student_id 
+        WHERE lyear = '$lyear' 
+        ORDER BY timestamp DESC");
+} elseif ($appid && $lyear) {
+    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
+        FROM leavedb_leavedb 
+        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+            ON leavedb_leavedb.applicantid = faculty.associatenumber  
+        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+            ON leavedb_leavedb.applicantid = student.student_id 
+        WHERE applicantid = '$appid' AND lyear = '$lyear' 
+        ORDER BY timestamp DESC");
 
-    $allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
-    $allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
+    // Calculations for leaves
+    $totalsl    = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$lyear' AND status='Approved'");
+    $totalcl    = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$lyear' AND status='Approved'");
+    $allocl     = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
+    $allosl     = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
+    $cladj      = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
+    $sladj      = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
+    $lwptaken   = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND (typeofleave='Leave Without Pay' OR typeofleave='Adjustment Leave') AND lyear='$lyear' AND status='Approved'");
+    $lwpadj     = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND (adj_leavetype='Leave Without Pay' OR adj_leavetype='Adjustment Leave') AND adj_academicyear='$lyear'");
 
-    $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
-    $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
-
-    $lwptaken = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid'AND (typeofleave='Leave Without Pay' OR typeofleave='Adjustment Leave') AND lyear='$lyear' AND (status='Approved')");
-    $lwpadj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND (adj_leavetype='Leave Without Pay' OR adj_leavetype='Adjustment Leave') AND adj_academicyear='$lyear'");
-
-
-    $resultArrsl = pg_fetch_result($totalsl, 0, 0); //sltaken        (resultArrrsl+resultArr_sladj)-$resultArrsl
-    $resultArrcl = pg_fetch_result($totalcl, 0, 0); //cltaken
-    @$resultArrrcl = pg_fetch_result($allocl, 0, 0); //clallocate
-    @$resultArrrsl = pg_fetch_result($allosl, 0, 0); //slallocate
-    @$resultArr_cladj = pg_fetch_result($cladj, 0, 0); //cladjusted
-    @$resultArr_sladj = pg_fetch_result($sladj, 0, 0); //sladjusted
-    @$resultArr_lwptaken = pg_fetch_result($lwptaken, 0, 0); //sladjusted
-    @$resultArr_lwpadj = pg_fetch_result($lwpadj, 0, 0); //sladjusted
+    $resultArrsl       = pg_fetch_result($totalsl, 0, 0);
+    $resultArrcl       = pg_fetch_result($totalcl, 0, 0);
+    $resultArrrcl      = pg_fetch_result($allocl, 0, 0);
+    $resultArrrsl      = pg_fetch_result($allosl, 0, 0);
+    $resultArr_cladj   = pg_fetch_result($cladj, 0, 0);
+    $resultArr_sladj   = pg_fetch_result($sladj, 0, 0);
+    $resultArr_lwptaken= pg_fetch_result($lwptaken, 0, 0);
+    $resultArr_lwpadj  = pg_fetch_result($lwpadj, 0, 0);
 } else {
-    $result = pg_query($con, "select * , REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
+    $result = pg_query($con, "SELECT *, REPLACE(doc, 'view', 'preview') docp 
+        FROM leavedb_leavedb 
+        LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+            ON leavedb_leavedb.applicantid = faculty.associatenumber  
+        LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+            ON leavedb_leavedb.applicantid = student.student_id 
+        ORDER BY timestamp DESC");
 }
-
-$resultArr = pg_fetch_all($result);
 
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
+$resultArr = pg_fetch_all($result);
 ?>
 
 <!doctype html>
