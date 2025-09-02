@@ -52,7 +52,7 @@ function template_file($file, $hash)
     return $string;
 }
 
-function sendEmail($template, $data, $emails, $bcc = true)
+function sendEmail($template, $data, $emails, $bcc = true, $cc = '')
 {
     $mail = new PHPMailer(true);
 
@@ -95,6 +95,17 @@ function sendEmail($template, $data, $emails, $bcc = true)
         // Optional BCC
         if ($bcc) {
             $mail->addBCC('info@rssi.in');
+        }
+        // Add CC if provided
+        if (!empty($cc)) {
+            if (is_string($cc)) {
+                $cc = array_map('trim', explode(',', $cc)); // handle comma-separated emails
+            }
+            foreach ($cc as $ccEmail) {
+                if (!empty($ccEmail)) {
+                    $mail->addCC($ccEmail);
+                }
+            }
         }
 
         // Email content setup

@@ -477,7 +477,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 <?php } ?>
                                             <?php } else { ?>
                                                 <tr>
-                                                    <td colspan="11">No records found for the selected filter value.</td>
+                                                    <td colspan="11">No records found or you are not authorized to view this data.</td>
                                                 </tr>
                                             <?php } ?>
                                         </tbody>

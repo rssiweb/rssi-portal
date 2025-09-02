@@ -133,6 +133,14 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
 
         // Check if the query was successful
         if ($queryResult) {
+            $supervisorEmail = '';
+            $supervisorQuery = pg_query($con, "SELECT email FROM rssimyaccount_members 
+                                   WHERE associatenumber = (
+                                       SELECT supervisor FROM rssimyaccount_members WHERE associatenumber = '$applicantid'
+                                   )");
+            if ($supervisorQuery && pg_num_rows($supervisorQuery) > 0) {
+                $supervisorEmail = pg_fetch_result($supervisorQuery, 0, 0);
+            }
             // Send email notification if the query is successful
             if (!empty($email)) {
                 sendEmail("leaveapply", [
@@ -145,7 +153,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                     "category" => $creason,
                     "day" => $day,
                     "now" => date("d/m/Y g:i a", strtotime($now)),
-                ], $email);
+                ], $email, false, $supervisorEmail);
             }
 
             // Update balance
