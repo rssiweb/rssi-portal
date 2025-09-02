@@ -134,10 +134,15 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
         // Check if the query was successful
         if ($queryResult) {
             $supervisorEmail = '';
-            $supervisorQuery = pg_query($con, "SELECT email FROM rssimyaccount_members 
-                                   WHERE associatenumber = (
-                                       SELECT supervisor FROM rssimyaccount_members WHERE associatenumber = '$applicantid'
-                                   )");
+            $supervisorQuery = pg_query($con, "
+                SELECT COALESCE(NULLIF(alt_email, ''), email) AS email
+                FROM rssimyaccount_members 
+                WHERE associatenumber = (
+                    SELECT supervisor 
+                    FROM rssimyaccount_members 
+                    WHERE associatenumber = '$applicantid'
+                )
+            ");
             if ($supervisorQuery && pg_num_rows($supervisorQuery) > 0) {
                 $supervisorEmail = pg_fetch_result($supervisorQuery, 0, 0);
             }
