@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -92,10 +93,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['form-type']) && $_PO
                         }
 
                         $applicantname = trim($nameassociate . ' ' . $namestudent);
-                        $email = trim($emailassociate . ',' . $emailstudent);
+                        $emailList = array_filter([$emailassociate, $emailstudent]); // clean empty ones
+                        $emails = implode(',', $emailList);
 
-                        if (!empty($email)) {
-                            include("../../util/email.php");
+                        $fromdate = $leave_data['fromdate'];
+                        $todate   = $leave_data['todate'];
+                        $halfday  = $leave_data['halfday']; // assuming you have this column in leavedb_leavedb
+
+                        $days = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
+
+                        if ($halfday == 1) {
+                            $days = $days / 2;
+                        }
+
+                        if (!empty($emails)) {
                             sendEmail("leaveconf", [
                                 "leaveid" => $leave_id,
                                 "applicantid" => $applicantid,
@@ -107,7 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['form-type']) && $_PO
                                 "comment" => $comment,
                                 "reviewer" => $fullname,
                                 "now" => $now,
-                            ], $email);
+                                "day" => $days
+                            ], $emails);
                         }
                     }
                 }
