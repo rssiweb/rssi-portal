@@ -153,7 +153,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                     "category" => $creason,
                     "day" => $day,
                     "now" => date("d/m/Y g:i a", strtotime($now)),
-                ], $email, false, $supervisorEmail);
+                ], $email, $supervisorEmail);
             }
 
             // Update balance
