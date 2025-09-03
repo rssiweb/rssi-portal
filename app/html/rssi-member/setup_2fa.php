@@ -41,41 +41,12 @@ $totp->setIssuer('RSSI My Account');
 // Generate provisioning URI (used for QR code)
 $qrUrl = $totp->getProvisioningUri();
 
-// If 2FA is already enabled, don't generate email code
-if ($row['twofa_enabled'] === 't') {
-    $needsNewEmailCode = false;
-} else {
-    // Check if we need to generate a new email code (only if 2FA is not enabled)
-    $needsNewEmailCode = true;
-    if (
-        isset($_SESSION['email_verification_started']) &&
-        time() - $_SESSION['email_verification_started'] < 120
-    ) {
-        $needsNewEmailCode = false;
-    }
-}
+// Don't generate email code on page load - only when user initiates verification
+$needsNewEmailCode = false;
 
-// Generate email verification code if needed (and only if 2FA is not enabled)
-if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
-    unset($_SESSION['email_verified']);
-    unset($_SESSION['email_verification_started']);
-    unset($_SESSION['auth_verification_started']);
-
-    $email_code = rand(100000, 999999);
-    $_SESSION['email_verification_code'] = $email_code;
-    $_SESSION['email_code_created_at'] = time();
-
-    // Store in database
-    $update = "UPDATE rssimyaccount_members SET twofa_email_code=$1, twofa_email_code_created_at=NOW() WHERE email=$2";
-    $stmt = pg_prepare($con, "update_email_code", $update);
-    pg_execute($con, "update_email_code", [$email_code, $user]);
-
-    // Send email with the code
-    sendEmail("2fa_verification", [
-        "verification_code" => $email_code,
-        "user_email" => $row['email']
-    ], [$row['email']], false);
-}
+// Check if we have a pending verification session
+$verificationStarted = isset($_SESSION['email_verification_started']) &&
+    time() - $_SESSION['email_verification_started'] < 120;
 ?>
 
 <!DOCTYPE html>
@@ -171,6 +142,52 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             align-items: center;
             margin-bottom: 25px;
             border: 1px dashed var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qr-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: var(--transition);
+        }
+
+        .qr-mask.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .reveal-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .reveal-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .secret-container {
+            position: relative;
+            width: 100%;
         }
 
         .secret-code {
@@ -185,6 +202,28 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             border: 1px solid #e9ecef;
             color: var(--dark);
             font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .secret-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: var(--transition);
+        }
+
+        .secret-mask.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .form-control {
@@ -290,7 +329,7 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             overflow: hidden;
         }
 
-        .btn-loading .btn-text {
+        /* .btn-loading .btn-text {
             visibility: hidden;
         }
 
@@ -308,7 +347,7 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             border-top-color: #ffffff;
             border-radius: 50%;
             animation: button-loading-spinner 1s ease infinite;
-        }
+        } */
 
         @keyframes button-loading-spinner {
             from {
@@ -421,6 +460,35 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             font-weight: 600;
             margin-top: 10px;
         }
+
+        .custom-confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1060;
+        }
+
+        .custom-confirm-dialog {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--box-shadow);
+        }
+
+        .custom-confirm-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
     </style>
 </head>
 
@@ -497,6 +565,11 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
                                                     <div class="qr-container">
                                                         <h5>Scan QR Code</h5>
                                                         <canvas id="qrcode" class="mb-3"></canvas>
+                                                        <div class="qr-mask" id="qrMask">
+                                                            <button type="button" class="reveal-btn" id="revealQrBtn">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </div>
                                                         <p class="small text-muted text-center">Open your authenticator app and scan this code</p>
                                                     </div>
                                                 </div>
@@ -505,15 +578,22 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
                                                     <div class="mb-4">
                                                         <h5>Manual Setup Option</h5>
                                                         <p class="text-muted">If you can't scan the QR code, enter this secret key manually:</p>
-                                                        <div class="secret-code">
-                                                            <?php echo chunk_split($secret, 4, ' '); ?>
+                                                        <div class="secret-container">
+                                                            <div class="secret-code" id="secretCode">
+                                                                <?php echo chunk_split($secret, 4, ' '); ?>
+                                                            </div>
+                                                            <div class="secret-mask" id="secretMask">
+                                                                <button type="button" class="reveal-btn" id="revealSecretBtn">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
 
                                                     <h3 class="section-title">Complete Setup</h3>
                                                     <p class="text-muted mb-4">After scanning the QR code or entering the secret key manually, click the button below to start the verification process.</p>
 
-                                                    <button type="button" class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#verificationModal">
+                                                    <button type="button" class="btn btn-primary btn-lg w-100" id="startVerificationBtn">
                                                         <i class="fas fa-shield-alt me-2"></i>Start Verification
                                                     </button>
 
@@ -543,12 +623,12 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Verification Modal -->
-    <div class="modal fade verification-modal" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
+    <div class="modal fade verification-modal" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="verificationModalLabel">Complete Two-Factor Authentication Setup</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" id="modalCloseBtn" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="verification-steps">
@@ -616,6 +696,18 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="custom-confirm-modal" id="customConfirmModal" style="display: none;">
+        <div class="custom-confirm-dialog">
+            <h5>Exit 2FA Setup?</h5>
+            <p>Do you want to exit 2FA setup? Exiting now will require you to restart the verification process.</p>
+            <div class="custom-confirm-buttons">
+                <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmOkBtn">OK</button>
             </div>
         </div>
     </div>
@@ -710,12 +802,145 @@ if ($needsNewEmailCode && $row['twofa_enabled'] === 'f') {
             });
 
             // Show verification modal if email was already verified but auth not completed
-            <?php if (isset($_SESSION['email_verified']) && $_SESSION['email_verified'] === true) : ?>
+            <?php if ($verificationStarted) : ?>
                 var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
                 verificationModal.show();
                 showAuthVerificationStep();
                 startAuthTimer();
             <?php endif; ?>
+
+            // Setup QR code and secret reveal functionality
+            const qrMask = document.getElementById('qrMask');
+            const secretMask = document.getElementById('secretMask');
+            const revealQrBtn = document.getElementById('revealQrBtn');
+            const revealSecretBtn = document.getElementById('revealSecretBtn');
+            let qrHideTimeout, secretHideTimeout;
+
+            revealQrBtn.addEventListener('click', function() {
+                qrMask.classList.add('hidden');
+
+                // Set timeout to re-mask after 30 seconds
+                clearTimeout(qrHideTimeout);
+                qrHideTimeout = setTimeout(() => {
+                    qrMask.classList.remove('hidden');
+                }, 30000);
+            });
+
+            revealSecretBtn.addEventListener('click', function() {
+                secretMask.classList.add('hidden');
+
+                // Set timeout to re-mask after 30 seconds
+                clearTimeout(secretHideTimeout);
+                secretHideTimeout = setTimeout(() => {
+                    secretMask.classList.remove('hidden');
+                }, 30000);
+            });
+
+            // Manual hide when clicking again
+            document.getElementById('qrcode').addEventListener('click', function() {
+                if (qrMask.classList.contains('hidden')) {
+                    qrMask.classList.remove('hidden');
+                    clearTimeout(qrHideTimeout);
+                }
+            });
+
+            document.getElementById('secretCode').addEventListener('click', function() {
+                if (secretMask.classList.contains('hidden')) {
+                    secretMask.classList.remove('hidden');
+                    clearTimeout(secretHideTimeout);
+                }
+            });
+
+            // Start verification button handler
+            document.getElementById('startVerificationBtn').addEventListener('click', function() {
+                const btn = this;
+
+                // Show loading state
+                //btn.classList.add('btn-loading');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Initiating Verification...';
+                btn.disabled = true;
+
+                // Call backend to generate and send verification code
+                fetch('start_2fa_verification.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show verification modal
+                            var verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+                            verificationModal.show();
+                        } else {
+                            alert('Failed to start verification: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while starting verification.');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        //btn.classList.remove('btn-loading');
+                        btn.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Start Verification';
+                        btn.disabled = false;
+                    });
+            });
+
+            // Custom modal close confirmation
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const customConfirmModal = document.getElementById('customConfirmModal');
+            const confirmOkBtn = document.getElementById('confirmOkBtn');
+            const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+
+            modalCloseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Show custom confirmation modal
+                customConfirmModal.style.display = 'flex';
+            });
+
+            confirmOkBtn.addEventListener('click', function() {
+                // Store original button text
+                const originalText = this.innerHTML;
+
+                // Show loading state
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exiting setup...';
+                this.disabled = true;
+
+                // Also disable the cancel button to prevent multiple clicks
+                confirmCancelBtn.disabled = true;
+
+                // User confirmed exit - reset session and reload page
+                fetch('reset_2fa_session.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to reset session. Please try again.');
+                            // Restore button state
+                            this.innerHTML = originalText;
+                            this.disabled = false;
+                            confirmCancelBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Please try again.');
+                        // Restore button state
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        confirmCancelBtn.disabled = false;
+                    });
+            });
+
+            confirmCancelBtn.addEventListener('click', function() {
+                // User canceled exit - hide confirmation, keep verification modal open
+                customConfirmModal.style.display = 'none';
+            });
         });
 
         let authTimerInterval;
