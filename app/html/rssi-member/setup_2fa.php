@@ -819,21 +819,21 @@ $verificationStarted = isset($_SESSION['email_verification_started']) &&
             revealQrBtn.addEventListener('click', function() {
                 qrMask.classList.add('hidden');
 
-                // Set timeout to re-mask after 30 seconds
+                // Set timeout to re-mask after 10 seconds
                 clearTimeout(qrHideTimeout);
                 qrHideTimeout = setTimeout(() => {
                     qrMask.classList.remove('hidden');
-                }, 30000);
+                }, 10000);
             });
 
             revealSecretBtn.addEventListener('click', function() {
                 secretMask.classList.add('hidden');
 
-                // Set timeout to re-mask after 30 seconds
+                // Set timeout to re-mask after 10 seconds
                 clearTimeout(secretHideTimeout);
                 secretHideTimeout = setTimeout(() => {
                     secretMask.classList.remove('hidden');
-                }, 30000);
+                }, 10000);
             });
 
             // Manual hide when clicking again
