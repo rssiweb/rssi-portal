@@ -53,10 +53,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_totp'])) {
         unset($_SESSION['otp_verification_user']);
         logUserLogin($con, $user, date('Y-m-d H:i:s'));
 
-        echo "SUCCESS_2FA";
+        // --- Build redirect URL ---
+        $redirect = "home.php"; // default
+        if (isset($_SESSION["login_redirect"])) {
+            $params = "";
+            if (isset($_SESSION["login_redirect_params"])) {
+                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                    $params .= "$key=" . urlencode($value) . "&";
+                }
+                unset($_SESSION["login_redirect_params"]);
+            }
+            $redirect = $_SESSION["login_redirect"] . ($params ? "?" . rtrim($params, "&") : "");
+            unset($_SESSION["login_redirect"]);
+        }
+
+        echo json_encode(["status" => "SUCCESS_2FA", "redirect" => $redirect]);
         exit;
     } else {
-        echo "FAIL_2FA";
+        echo json_encode(["status" => "FAIL_2FA"]);
         exit;
     }
 }
@@ -261,12 +275,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_totp'])) {
                 })
                 .then(res => res.text())
                 .then(response => {
-                    if (response.includes("SUCCESS_2FA")) {
-                        window.location.href = "home.php";
-                    } else {
-                        alert("Invalid code. Please try again.");
-                        otpInput.value = ""; // reset field
-                        otpInput.focus(); // refocus
+                    try {
+                        const data = JSON.parse(response); // expect JSON
+                        if (data.status === "SUCCESS_2FA") {
+                            window.location.href = data.redirect; // dynamic redirect
+                        } else {
+                            alert("Invalid code. Please try again.");
+                            otpInput.value = ""; // reset field
+                            otpInput.focus(); // refocus
+                            btn.classList.remove("btn-loading");
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        console.error("Unexpected response:", response);
+                        alert("Something went wrong. Try again.");
                         btn.classList.remove("btn-loading");
                         btn.disabled = false;
                     }
