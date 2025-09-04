@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 
-// Include the necessary functions
+// Assume current logged-in user ID is available
+$current_user_id = '250985611230'; // adjust according to your session variable
+
 function getLikeCount($event_id, $con)
 {
     $query = "SELECT COUNT(*) FROM likes WHERE event_id = $1";
@@ -30,11 +32,17 @@ function getLikedUsers($event_id, $con)
     }
 
     shuffle($likedUsers);
-
     return $likedUsers;
 }
 
-// Function to process event_image_url
+function hasUserLiked($event_id, $user_id, $con)
+{
+    if (!$user_id) return false; // if not logged in
+    $query = "SELECT 1 FROM likes WHERE event_id = $1 AND user_id = $2";
+    $result = pg_query_params($con, $query, array($event_id, $user_id));
+    return pg_num_rows($result) > 0;
+}
+
 function processImageUrl($imageUrl)
 {
     $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
@@ -42,7 +50,7 @@ function processImageUrl($imageUrl)
         $photoID = $matches[1];
         return "https://drive.google.com/file/d/{$photoID}/preview";
     }
-    return $imageUrl; // Return the original URL if the pattern doesn't match
+    return $imageUrl;
 }
 
 // Get offset and limit from query parameters
@@ -61,35 +69,34 @@ $query_events = "
 $result_events = pg_query($con, $query_events);
 
 $events = [];
+$likes = [];
+
+// In get_blog_data.php, modify the while loop:
 while ($row = pg_fetch_assoc($result_events)) {
-    // Process the event_image_url
     if (!empty($row['event_image_url'])) {
         $row['event_image_url'] = processImageUrl($row['event_image_url']);
     }
+
+    $event_id = $row['event_id'];
+    $likeCount = getLikeCount($event_id, $con);
+    $likedUsers = getLikedUsers($event_id, $con);
+    $userLiked = hasUserLiked($event_id, $current_user_id, $con);
+
+    $likes[$event_id] = [
+        'like_count' => $likeCount,
+        'liked_users' => $likedUsers,
+        'liked' => $userLiked  // This indicates if current user liked this event
+    ];
+
     $events[] = $row;
 }
 
-// Fetch likes for events
-$likes = [];
-foreach ($events as $event) {
-    $event_id = $event['event_id'];
-    $likeCount = getLikeCount($event_id, $con);
-    $likedUsers = getLikedUsers($event_id, $con);
-    $likes[$event_id] = [
-        'like_count' => $likeCount,
-        'liked_users' => $likedUsers
-    ];
-}
-
-// Combine all data into a single response
 $response = [
     'success' => true,
     'events' => $events,
     'likes' => $likes,
-    'has_more' => count($events) === $limit // Indicates if there are more events to load
+    'has_more' => count($events) === $limit
 ];
 
-// Output as JSON
 header('Content-Type: application/json');
 echo json_encode($response);
-?>
