@@ -388,7 +388,7 @@ if (!function_exists('makeClickableLinks')) {
             data.append('event_id', eventId);
             data.append('user_id', userId);
 
-            fetch('home1.php', {
+            fetch('home.php', {
                     method: 'POST',
                     body: data
                 })
