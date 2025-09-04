@@ -346,8 +346,10 @@ if (!function_exists('makeClickableLinks')) {
                                         <!-- Wall of Fame Section -->
                                         <div class="card shadow-sm mb-4">
                                             <div class="card-body">
-                                                <h5 class="card-title">Recognitions</h5>
-                                                <!-- Example content for Wall of Fame -->
+                                                <h5 class="card-title">Rina Shiksha Sahayak Foundation (RSSI)</h5>
+                                                <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:7364185120980811776"
+                                                    height="400" width="100%" frameborder="0" allowfullscreen=""
+                                                    title="LinkedIn Post"></iframe>
                                             </div>
                                         </div>
                                         <!-- Add other blocks here if needed (e.g., latest news, updates, etc.) -->
