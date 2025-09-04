@@ -492,7 +492,7 @@ LEFT JOIN
     ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
     -- mode = 'Offline'
-    m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern')
+    (m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern'))
     AND grade!='D'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
