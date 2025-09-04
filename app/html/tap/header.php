@@ -126,9 +126,14 @@
 <aside id="sidebar" class="sidebar">
 
   <ul class="sidebar-nav" id="sidebar-nav">
+     <li class="nav-item">
+      <a class="nav-link collapsed" id="homeLink" href="home.php">
+        <span>Home</span>
+      </a>
+    </li>
 
     <li class="nav-item">
-      <a class="nav-link collapsed" id="homeLink" href="home.php">
+      <a class="nav-link collapsed" id="dashBoardLink" href="dashboard.php">
         <span>Dashboard</span>
       </a>
     </li>
@@ -223,6 +228,7 @@
 
   // Call the function for 'home.php' and 'profile.php'
   toggleCollapsedClass('home.php', 'homeLink');
+  toggleCollapsedClass('dashboard.php', 'dashBoardLink');
   toggleCollapsedClass('application_form.php', 'applicationForm');
   toggleCollapsedClass('identity_verification.php', 'indentityVerification');
   toggleCollapsedClass('document_verification.php', 'documentVerification');

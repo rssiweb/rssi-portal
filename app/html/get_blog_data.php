@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../bootstrap.php';
 
 // Assume current logged-in user ID is available
-$current_user_id = '250985611230'; // adjust according to your session variable
+$current_user_id = isset($_GET['user_id']) ? $_GET['user_id'] : null;
 
 function getLikeCount($event_id, $con)
 {
