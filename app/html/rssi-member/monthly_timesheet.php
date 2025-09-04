@@ -221,6 +221,7 @@ attendance_data AS (
         m.filterstatus,
         m.fullname,
         m.engagement,
+        m.position,
         COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
         m.effectivedate,
         m.doj,
@@ -442,6 +443,7 @@ SELECT
     m.associatenumber,
     m.fullname,
     m.engagement,
+    m.position,
     m.phone,
     (
         SELECT s.workdays 
@@ -490,11 +492,11 @@ LEFT JOIN
     ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
     -- mode = 'Offline'
-    m.engagement IN ('Employee', 'Intern')
+    m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern')
     AND grade!='D'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
-    m.associatenumber, m.fullname, m.engagement, h.holiday_dates
+    m.associatenumber, m.fullname, m.engagement, m.position, h.holiday_dates
 ORDER BY 
     m.associatenumber;
 ";
