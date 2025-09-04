@@ -786,7 +786,7 @@ pg_close($con);
                                             <tr>
                                                 <th>Associate Number</th>
                                                 <th>Full Name</th>
-                                                 <th>Work Schedule</th> <!-- New column -->
+                                                <th>Work Schedule</th> <!-- New column -->
                                                 <th>Scheduled Workdays</th>
                                                 <th>Days Worked</th>
                                                 <!-- <th>Leave Taken</th>
