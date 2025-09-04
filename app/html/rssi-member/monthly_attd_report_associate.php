@@ -28,7 +28,7 @@ if ($role == 'Admin') {
             FROM rssimyaccount_members 
             WHERE associatenumber IN ($placeholders) 
               AND filterstatus = 'Active' 
-              AND engagement IN ('Employee', 'Intern')
+              AND engagement IN ('Employee', 'Intern') OR position IN ('Intern')
         ";
 
         $result = pg_query_params($con, $query, $selectedTeachers);
@@ -117,6 +117,7 @@ attendance_data AS (
         m.filterstatus,
         m.fullname,
         m.engagement,
+        m.position,
         COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
         m.effectivedate,
         m.doj,
@@ -339,6 +340,7 @@ SELECT
     filterstatus,
     fullname,
     engagement,
+    position,
     mode,
     attendance_date,
     attendance_status,
@@ -351,12 +353,13 @@ SELECT
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
 -- WHERE mode = 'Offline'
-WHERE engagement IN ('Employee', 'Intern')
+WHERE engagement IN ('Employee', 'Intern') OR position IN ('Intern')
 GROUP BY
     associatenumber,
     filterstatus,
     fullname,
     engagement,
+    position,
     mode,
     attendance_date,
     attendance_status,
