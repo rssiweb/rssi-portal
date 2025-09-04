@@ -42,6 +42,9 @@ if ($needsNewEmailCode) {
     // Generate 6-digit code
     $email_code = rand(100000, 999999);
 
+    // Hash the code before storing
+    $hashed_code = password_hash($email_code, PASSWORD_DEFAULT);
+
     // Store in session
     $_SESSION['email_verification_code'] = $email_code;
     $_SESSION['email_code_created_at'] = time();
@@ -52,7 +55,7 @@ if ($needsNewEmailCode) {
                SET twofa_email_code = $1, twofa_email_code_created_at = NOW() 
                WHERE email = $2";
     $stmt = pg_prepare($con, "update_email_code", $update);
-    $result = pg_execute($con, "update_email_code", [$email_code, $user]);
+    $result = pg_execute($con, "update_email_code", [$hashed_code, $user]);
 
     if ($result) {
         // Prepare data for email template

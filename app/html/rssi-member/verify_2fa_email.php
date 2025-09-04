@@ -38,13 +38,12 @@ if (time() - $codeCreated > 600) {
 }
 
 // Verify email OTP
-if ($emailOtpEntered === $row['twofa_email_code']) {
+if (password_verify($emailOtpEntered, $row['twofa_email_code'])) {
     // Mark email as verified in session
     $_SESSION['email_verified'] = true;
     $_SESSION['email_verification_started'] = time();
-    
+
     echo json_encode(['success' => true, 'message' => 'Email verification successful!']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid email verification code.']);
 }
-?>

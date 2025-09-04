@@ -46,7 +46,7 @@ $totp = TOTP::create($secret);
 // Verify OTP
 if ($totp->verify($otpEntered)) {
     // Enable 2FA for this user
-    $update = "UPDATE rssimyaccount_members SET twofa_enabled = TRUE WHERE email=$1";
+    $update = "UPDATE rssimyaccount_members SET twofa_enabled = TRUE, twofa_email_code=null, twofa_email_code_created_at=null WHERE email=$1";
     $stmt2 = pg_prepare($con, "enable_2fa", $update);
     pg_execute($con, "enable_2fa", [$user]);
     
