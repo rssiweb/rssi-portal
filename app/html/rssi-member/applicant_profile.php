@@ -26,6 +26,8 @@ if ($resultArr && count($resultArr) > 0) {
     $applicant_name = $resultArr[0]['applicant_name'];
     $application_number = $resultArr[0]['application_number'];
     $applicant_telephone = $resultArr[0]['telephone'];
+    $association = $resultArr[0]['association'];
+    $post_select = $resultArr[0]['post_select'];
 }
 if (!$result) {
     echo "An error occurred.\n";
@@ -232,12 +234,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule'])) {
         if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show == false)) {
             if ($applicant_email != "") {
-                // Adjust the parameters for your sendEmail function accordingly
-                sendEmail("tap_technical_interview_schedule", array(
-                    "application_number" => $application_number,
-                    "applicant_name" => $applicant_name,
-                    "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule))
-                ), $applicant_email, False);
+
+                // Determine template based on association and post
+                if ($association == "Volunteer" || $association == "Intern") {
+                    $template = "tap_pi_schedule";
+                } elseif ($association == "Employee" && $post_select != "Faculty") {
+                    $template = "tap_pi_schedule";
+                } else {
+                    // For Employee with Faculty post OR direct Faculty association
+                    $template = "tap_technical_interview_schedule";
+                }
+
+                // Send email with dynamic values
+                sendEmail($template, array(
+                    "application_number"      => $application_number,
+                    "applicant_name"          => $applicant_name,
+                    "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule)),
+                    "post_select"             => $post_select
+                ), $applicant_email, false);
             }
         }
     }
