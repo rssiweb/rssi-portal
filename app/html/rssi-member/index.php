@@ -163,7 +163,7 @@ function checkLogin($con, $date)
 
                     if ($twofa_enabled == 't' && !empty($twofa_secret)) {
                         // Redirect to Authenticator TOTP verification page
-                        header("Location: setup_2fa_verify.php"); // new page for TOTP verification
+                        header("Location: 2fa_verification.php"); // new page for TOTP verification
                         exit;
                     } else {
                         // Continue email OTP flow
