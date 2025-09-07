@@ -53,9 +53,10 @@ function getLikeCount($event_id, $con)
 function getLikedUsers($event_id, $con)
 {
   $query = "
-    SELECT m.fullname
+    SELECT COALESCE(m.fullname, s.applicant_name) AS fullname
     FROM likes l
-    JOIN rssimyaccount_members m ON l.user_id = m.associatenumber
+    LEFT JOIN rssimyaccount_members m ON l.user_id = m.associatenumber
+    LEFT JOIN signup s ON l.user_id = s.application_number
     WHERE l.event_id = $1
   ";
   $result = pg_query_params($con, $query, array($event_id));

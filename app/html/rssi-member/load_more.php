@@ -27,9 +27,10 @@ $query = "
         (SELECT COUNT(*) FROM likes WHERE event_id = e.event_id) AS like_count,
         (SELECT COUNT(*) > 0 FROM likes WHERE event_id = e.event_id AND user_id = $1) AS liked,
         ARRAY(
-            SELECT m2.fullname 
+            SELECT COALESCE(m2.fullname, s2.applicant_name) AS fullname 
             FROM likes l 
-            JOIN rssimyaccount_members m2 ON l.user_id = m2.associatenumber 
+            LEFT JOIN rssimyaccount_members m2 ON l.user_id = m2.associatenumber
+            LEFT JOIN signup s2 ON l.user_id = s2.application_number 
             WHERE l.event_id = e.event_id 
             LIMIT 10
         ) AS liked_users
@@ -44,11 +45,11 @@ $result = pg_query_params($con, $query, array($current_user_id, $offset, $limit)
 
 $events = [];
 while ($row = pg_fetch_assoc($result)) {
-    $row['liked_users'] = $row['liked_users'] 
-    ? array_map(function($user) { 
-        return trim($user, '"'); // Remove double quotes from each username 
-      }, explode(',', trim($row['liked_users'], '{}'))) 
-    : [];
+    $row['liked_users'] = $row['liked_users']
+        ? array_map(function ($user) {
+            return trim($user, '"'); // Remove double quotes from each username 
+        }, explode(',', trim($row['liked_users'], '{}')))
+        : [];
     $events[] = $row;
 }
 
