@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Generator with Logo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="../img/favicon_1.ico" rel="icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #4361ee;
@@ -98,15 +100,6 @@
             width: 100%;
         }
 
-        .file-input-container input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-            height: 100%;
-        }
-
         .file-input-button {
             display: flex;
             justify-content: space-between;
@@ -175,6 +168,7 @@
             background: white;
             border-radius: 8px;
             display: inline-block;
+            position: relative;
         }
 
         #qrcode canvas {
@@ -191,6 +185,19 @@
             border-radius: 8px;
             padding: 5px;
             background: white;
+        }
+
+        .logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20%;
+            height: 20%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
         }
 
         .download-btn {
@@ -255,7 +262,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>QR Code Generator</h1>
+            <h1>QR Code Generator by Sourav Saha</h1>
             <p class="subtitle">Create custom QR codes with your logo</p>
         </header>
 
@@ -273,7 +280,7 @@
                             <span>Choose logo image</span>
                             <i class="fas fa-upload"></i>
                         </div>
-                        <input type="file" id="logo" name="logo" accept="image/*">
+                        <input type="file" id="logo" name="logo" accept="image/*" style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
                     </div>
                     <div class="file-name" id="file-name">No file chosen</div>
                     <img id="logo-preview" class="logo-preview" style="display: none;" alt="Logo preview">
@@ -299,7 +306,7 @@
         </div>
 
         <footer>
-            <p>© 2023 QR Code Generator | Create custom QR codes with your logo</p>
+            <p>© 2025 QR Code Generator | Create custom QR codes with your logo | Designed and maintained by Sourav Saha</p>
         </footer>
     </div>
 
@@ -318,6 +325,7 @@
 
             let qrcode = null;
             let logoFile = null;
+            let logoDataUrl = null;
 
             // Show selected file name and preview
             fileInput.addEventListener('change', function() {
@@ -328,13 +336,15 @@
                     // Show preview
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        logoPreview.src = e.target.result;
+                        logoDataUrl = e.target.result;
+                        logoPreview.src = logoDataUrl;
                         logoPreview.style.display = 'block';
                     };
                     reader.readAsDataURL(logoFile);
                 } else {
                     fileName.textContent = 'No file chosen';
                     logoPreview.style.display = 'none';
+                    logoDataUrl = null;
                 }
             });
 
@@ -375,8 +385,8 @@
                 // Generate QR code
                 qrcode = new QRCode(qrcodeElement, {
                     text: url,
-                    width: 200,
-                    height: 200,
+                    width: 250,
+                    height: 250,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
@@ -387,7 +397,7 @@
             }
 
             function addLogoToQRCode() {
-                if (!logoFile) {
+                if (!logoDataUrl) {
                     finishGeneration();
                     return;
                 }
@@ -421,7 +431,7 @@
                     finishGeneration();
                 };
 
-                logoImg.src = URL.createObjectURL(logoFile);
+                logoImg.src = logoDataUrl;
             }
 
             function finishGeneration() {
