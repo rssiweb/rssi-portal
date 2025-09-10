@@ -28,10 +28,10 @@ if (!empty($visitid) || !empty($contact)) {
 } else {
     // If date_from or date_to is empty, assign default values
     if (empty($date_from)) {
-        $date_from = date('Y-m-d', strtotime('-1 month'));
+        $date_from = date('Y-m-d');
     }
     if (empty($date_to)) {
-        $date_to = date('Y-m-d');
+        $date_to = date('Y-m-d', strtotime('+1 month'));
     }
 }
 
