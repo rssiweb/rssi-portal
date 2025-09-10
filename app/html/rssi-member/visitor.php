@@ -14,16 +14,17 @@ date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
 
 // Retrieve form parameters
-@$visitid = $_GET['visitid'];
-@$contact = $_GET['contact'];
-@$visitdatefrom = $_GET['visitdatefrom'];
-@$ayear = $_GET['ayear'];
+$visitid = isset($_GET['visitid']) ? $_GET['visitid'] : '';
+$contact = isset($_GET['contact']) ? $_GET['contact'] : '';
+$visitdatefrom = isset($_GET['visitdatefrom']) ? $_GET['visitdatefrom'] : '';
+$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d', strtotime('-1 month'));
+$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : $today;
 
 // Initialize the WHERE clause of the query
 $whereClause = " WHERE 1=1"; // Always true condition to start with
 
-// Specify the column to order by, e.g., 'visitdatefrom' or any other column
-$orderBy = " ORDER BY vd.timestamp DESC"; // Change to your desired column and direction
+// Specify the column to order by
+$orderBy = " ORDER BY vd.timestamp DESC";
 
 // Add conditions based on the filled input fields
 if (!empty($visitid)) {
@@ -38,14 +39,17 @@ if (!empty($visitdatefrom)) {
     $whereClause .= " AND DATE(vd.visitstartdatetime) = '$visitdatefrom'";
 }
 
-// If academic year filter is provided, add condition to WHERE clause
-if (!empty($ayear)) {
-    $whereClause .= " AND CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
-                EXTRACT(YEAR FROM vd.visitstartdatetime) + CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) >= 4 THEN 1 ELSE 0 END) = '$ayear'";
+// Add date range condition
+if (!empty($date_from) && !empty($date_to)) {
+    $whereClause .= " AND DATE(vd.visitstartdatetime) BETWEEN '$date_from' AND '$date_to'";
+} elseif (!empty($date_from)) {
+    $whereClause .= " AND DATE(vd.visitstartdatetime) >= '$date_from'";
+} elseif (!empty($date_to)) {
+    $whereClause .= " AND DATE(vd.visitstartdatetime) <= '$date_to'";
 }
 
 // Check if any filter parameters are not empty
-if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ayear)) {
+if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($date_from) || !empty($date_to)) {
     // Finalize the query with the WHERE clause
     $query = "SELECT *, 
                 CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
@@ -66,7 +70,6 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
     // If all filter parameters are empty, set an empty result array
     $resultArr = [];
 }
-
 ?>
 <?php
 // Function to fetch phone number by position
@@ -184,42 +187,41 @@ if (!$phoneNumber) {
                                 Record count: <?php echo sizeof($resultArr) ?>
                             </div>
                             <form id="myform" action="" method="GET">
-                                Customize your search by selecting any combination of filters to retrieve the
-                                data.<br><br>
+                                Customize your search by selecting any combination of filters to retrieve the data.<br><br>
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2">
                                         <input name="visitid" class="form-control"
                                             style="width: max-content; display: inline-block;" placeholder="Visit ID"
-                                            value="<?php echo $visitid ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit Id<span
+                                            value="<?php echo htmlspecialchars($visitid); ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit ID<span
                                                 style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
                                         <input name="contact" class="form-control"
                                             style="width: max-content; display: inline-block;" placeholder="Contact"
-                                            value="<?php echo $contact ?>">
+                                            value="<?php echo htmlspecialchars($contact); ?>">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Contact<span
                                                 style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
                                         <input type="date" name="visitdatefrom" class="form-control"
                                             style="width: max-content; display: inline-block;"
-                                            placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
+                                            placeholder="Select visit date" value="<?php echo htmlspecialchars($visitdatefrom); ?>">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span
                                                 style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
-                                        <select name="ayear" id="ayear" class="form-select"
-                                            style="width:max-content; display:inline-block" placeholder="Academic Year">
-                                            <?php if ($ayear == null) { ?>
-                                                <option disabled selected hidden>Academic Year</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $ayear ?></option>
-                                            <?php }
-                                            ?>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Academic Year<span
+                                        <input type="date" name="date_from" class="form-control"
+                                            style="width: max-content; display: inline-block;"
+                                            value="<?php echo htmlspecialchars($date_from); ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Date From<span
+                                                style="color:red"></span></small>
+                                    </div>
+                                    <div class="col2">
+                                        <input type="date" name="date_to" class="form-control"
+                                            style="width: max-content; display: inline-block;"
+                                            value="<?php echo htmlspecialchars($date_to); ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Date To<span
                                                 style="color:red"></span></small>
                                     </div>
                                 </div>

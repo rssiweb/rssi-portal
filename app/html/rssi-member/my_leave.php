@@ -29,8 +29,9 @@ $queryConditions = [
 
 $whereClause = implode(" AND ", $queryConditions);
 
-$historyQuery = "SELECT *, REPLACE(doc, 'view', 'preview') docp 
-                 FROM leavedb_leavedb 
+$historyQuery = "SELECT *, REPLACE(doc, 'view', 'preview') docp, r.fullname as reviewer_name 
+                 FROM leavedb_leavedb l
+                 LEFT JOIN rssimyaccount_members r ON l.reviewer_id = r.associatenumber
                  WHERE $whereClause 
                  ORDER BY timestamp DESC";
 

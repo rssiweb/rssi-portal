@@ -60,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['form-type']) && $_PO
                                 status = '$status', 
                                 comment = '$comment',
                                 reviewer_id = '$associatenumber',
-                                reviewer_name = '$fullname',
                                 reviewed_on = '$now'
                                 WHERE leaveid = '$leave_id'";
                 $result = pg_query($con, $update_query);
@@ -201,10 +200,12 @@ $where_clause = implode(" AND ", $where_conditions);
 // Get leave requests
 $result = pg_query($con, "SELECT l.*, REPLACE(l.doc, 'view', 'preview') docp,
                          COALESCE(f.fullname, s.studentname) as applicant_name,
-                         COALESCE(f.email, s.emailaddress) as applicant_email
+                         COALESCE(f.email, s.emailaddress) as applicant_email,
+                         r.fullname as reviewer_name
                          FROM leavedb_leavedb l
                          LEFT JOIN rssimyaccount_members f ON l.applicantid = f.associatenumber  
                          LEFT JOIN rssimyprofile_student s ON l.applicantid = s.student_id 
+                         LEFT JOIN rssimyaccount_members r ON l.reviewer_id = r.associatenumber
                          WHERE $where_clause
                          ORDER BY l.timestamp DESC");
 
