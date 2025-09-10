@@ -14,10 +14,26 @@ date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
 
 // Retrieve form parameters
-$visitid = isset($_GET['visitid']) ? $_GET['visitid'] : '';
-$contact = isset($_GET['contact']) ? $_GET['contact'] : '';
-$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d', strtotime('-1 month'));
-$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : $today;
+$visitid = isset($_GET['visitid']) ? trim($_GET['visitid']) : '';
+$contact = isset($_GET['contact']) ? trim($_GET['contact']) : '';
+
+// Initialize date_from and date_to
+$date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
+$date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
+
+// If visitid or contact is provided, ignore date filters
+if (!empty($visitid) || !empty($contact)) {
+    $date_from = '';
+    $date_to = '';
+} else {
+    // If date_from or date_to is empty, assign default values
+    if (empty($date_from)) {
+        $date_from = date('Y-m-d', strtotime('-1 month'));
+    }
+    if (empty($date_to)) {
+        $date_to = date('Y-m-d');
+    }
+}
 
 // Initialize the WHERE clause of the query
 $whereClause = " WHERE 1=1"; // Always true condition to start with
