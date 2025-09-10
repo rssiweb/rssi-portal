@@ -16,7 +16,6 @@ $today = date("Y-m-d");
 // Retrieve form parameters
 $visitid = isset($_GET['visitid']) ? $_GET['visitid'] : '';
 $contact = isset($_GET['contact']) ? $_GET['contact'] : '';
-$visitdatefrom = isset($_GET['visitdatefrom']) ? $_GET['visitdatefrom'] : '';
 $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-d', strtotime('-1 month'));
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : $today;
 
@@ -35,10 +34,6 @@ if (!empty($contact)) {
     $whereClause .= " AND ud.tel = '$contact'";
 }
 
-if (!empty($visitdatefrom)) {
-    $whereClause .= " AND DATE(vd.visitstartdatetime) = '$visitdatefrom'";
-}
-
 // Add date range condition
 if (!empty($date_from) && !empty($date_to)) {
     $whereClause .= " AND DATE(vd.visitstartdatetime) BETWEEN '$date_from' AND '$date_to'";
@@ -49,7 +44,7 @@ if (!empty($date_from) && !empty($date_to)) {
 }
 
 // Check if any filter parameters are not empty
-if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($date_from) || !empty($date_to)) {
+if (!empty($visitid) || !empty($contact) || !empty($date_from) || !empty($date_to)) {
     // Finalize the query with the WHERE clause
     $query = "SELECT *, 
                 CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
@@ -201,13 +196,6 @@ if (!$phoneNumber) {
                                             style="width: max-content; display: inline-block;" placeholder="Contact"
                                             value="<?php echo htmlspecialchars($contact); ?>">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Contact<span
-                                                style="color:red"></span></small>
-                                    </div>
-                                    <div class="col2">
-                                        <input type="date" name="visitdatefrom" class="form-control"
-                                            style="width: max-content; display: inline-block;"
-                                            placeholder="Select visit date" value="<?php echo htmlspecialchars($visitdatefrom); ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span
                                                 style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
