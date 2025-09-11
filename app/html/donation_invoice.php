@@ -173,7 +173,7 @@ if ($searchField !== '') {
                     <div class="col-md-6">
                         <div class="flex-align">
                             <div>
-                                <img src="../img/brand_logo.png" alt="Logo" class="logo">
+                                <img src="../img/logo_bg.png" alt="Logo" class="logo">
                             </div>
                             <div class="invoice-text">
                                 <h2>Invoice</h2>
@@ -200,7 +200,7 @@ if ($searchField !== '') {
                         <h4>Bill to</h4>
                         <p><?php echo $array['fullname'] ?><br>
                             <?php echo $array['postaladdress'] ?><br>
-                            <?php echo $array['documenttype'] ?> - <?php echo $array['nationalid'] ?><br>
+                            <?php echo $array['documenttype'] . ' - ' . str_repeat('X', max(0, strlen($array['nationalid']) - 4)) . substr($array['nationalid'], -4); ?><br>
                             <?php echo $array['tel'] ?><br>
                             <?php echo $array['email'] ?></p>
                         <hr>

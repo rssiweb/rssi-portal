@@ -347,7 +347,13 @@ foreach ($accountNatures as $accountNature) {
                     <thead>
                         <tr>
                             <td>
-                                <div class="print-header">
+                                <div class="print-header d-flex justify-content-between align-items-center">
+                                    <!-- Left: Logo -->
+                                    <div class="left-content d-none d-print-inline-flex">
+                                        <img src="../img/logo_bg.png" alt="Logo" style="height: 50px;" />
+                                    </div>
+
+                                    <!-- Right: QR Code -->
                                     <div class="right-content d-none d-print-inline-flex">
                                         <!-- Scan QR code to check authenticity -->
                                         <?php
@@ -382,7 +388,7 @@ foreach ($accountNatures as $accountNature) {
                                         </tr>
                                         <tr>
                                             <td>Employee ID: <?php echo $array['associatenumber'] ?><br>
-                                                Designation: <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?><br>
+                                                Designation: <?php echo $array['position'] ?><br>
                                                 Grade: <?php echo @$array['grade'] ?><br>
                                                 Employment Type: <?php echo $array['job_type'] ?>
 
