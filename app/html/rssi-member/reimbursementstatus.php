@@ -437,25 +437,21 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                     </tbody>
                   </table>
                 </div>
-                <!--------------- POP-UP BOX ------------
--------------------------------------->
-                <style>
-                  .modal {
-                    background-color: rgba(0, 0, 0, 0.4);
-                    /* Black w/ opacity */
-                  }
-                </style>
-                <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-xl">
+                <!--------------- POP-UP BOX ------------>
+                <!-- No custom style needed; Bootstrap modal background is handled by default -->
+
+                <!-- Reimbursement Details Modal -->
+                <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Details</h1>
-                        <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
 
                         <div style="width:100%; text-align:right">
-                          <p id="status_details" class="badge" style="display: inline;"></p>
+                          <p id="status_details" class="badge"></p>
                         </div>
 
                         <?php if ($role != "Admin") { ?>
@@ -464,264 +460,190 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                             HR Remarks: <span class="mediremarks"></span><br>
                           </p>
                         <?php } ?>
+
                         <?php if ($role == "Admin") { ?>
                           <form id="claimreviewform" name="claimreviewform" action="#" method="POST">
-                            <input type="hidden" class="form-control" name="form-type" type="text" value="claimreviewform" readonly>
-                            <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                            <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                            <input type="hidden" class="form-control" name="reimbid" id="reimbid" type="text" readonly>
+                            <input type="hidden" name="form-type" value="claimreviewform" readonly>
+                            <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
+                            <input type="hidden" name="reviewer_name" id="reviewer_name" value="<?php echo $fullname ?>" readonly>
+                            <input type="hidden" name="reimbid" id="reimbid" readonly>
 
-                            <span class="input-help">
-                              <select name="claimstatus" id="claimstatus" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                            <div class="mb-3">
+                              <select name="claimstatus" id="claimstatus" class="form-select" required>
                                 <option disabled selected hidden>Status</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Claim settled">Claim settled</option>
                                 <option value="Under review">Under review</option>
                                 <option value="Rejected">Rejected</option>
                               </select>
-                              <small id="passwordHelpBlock" class="form-text text-muted">Claim status<span style="color:red">*</span></small>
-                            </span>
+                              <small class="form-text text-muted">Claim status <span style="color:red">*</span></small>
+                            </div>
 
-                            <span class="input-help">
-                              <input type="number" class="form-control" name="approvedamount" id="approvedamount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                              <small id="passwordHelpBlock" class="form-text text-muted">Approved amount<span style="color:red">*</span></small>
-                            </span>
-                            <span class="input-help">
+                            <div class="mb-3">
+                              <input type="number" name="approvedamount" id="approvedamount" class="form-control" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                              <small class="form-text text-muted">Approved amount <span style="color:red">*</span></small>
+                            </div>
+
+                            <div class="mb-3">
                               <input type="text" name="transactionid" id="transactionid" class="form-control" placeholder="Transaction id" required>
-                              <small id="passwordHelpBlock" class="form-text text-muted">Transaction id<span style="color:red">*</span></small>
-                            </span>
-                            <span class="input-help">
-                              <input type="date" class="form-control" name="transfereddate" id="transfereddate" required>
-                              <small id="passwordHelpBlock" class="form-text text-muted">Transfer Date<span style="color:red">*</span></small>
-                            </span>
+                              <small class="form-text text-muted">Transaction id <span style="color:red">*</span></small>
+                            </div>
 
-                            <span class="input-help">
-                              <textarea type="text" name="mediremarks" id="mediremarks" class="form-control" placeholder="HR remarks" value=""></textarea>
-                              <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
-                            </span>
-                            <span class="input-help">
-                              <input type="date" class="form-control" name="closedon" id="closedon" value="">
-                              <small id="passwordHelpBlock" class="form-text text-muted">Closed on</small>
-                            </span>
+                            <div class="mb-3">
+                              <input type="date" name="transfereddate" id="transfereddate" class="form-control" required>
+                              <small class="form-text text-muted">Transfer Date <span style="color:red">*</span></small>
+                            </div>
 
-                            <button type="submit" id="claimupdate" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
+                            <div class="mb-3">
+                              <textarea name="mediremarks" id="mediremarks" class="form-control" placeholder="HR remarks"></textarea>
+                              <small class="form-text text-muted">HR remarks</small>
+                            </div>
+
+                            <div class="mb-3">
+                              <input type="date" name="closedon" id="closedon" class="form-control">
+                              <small class="form-text text-muted">Closed on</small>
+                            </div>
+
+                            <button type="submit" id="claimupdate" class="btn btn-danger btn-sm">Update</button>
                           </form>
                         <?php } ?>
-                        <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="reviewer_name"></span> (<span class="reviewer_id"></span>) on <span class="updatedon"></span>
-                        <div class="modal-footer">
-                          <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
+
+                        <p style="font-size:small; text-align:right; font-style:italic; color:#A2A2A2;">
+                          Updated by: <span class="reviewer_name"></span> (<span class="reviewer_id"></span>) on <span class="updatedon"></span>
+                        </p>
+
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                       </div>
                     </div>
                   </div>
                 </div>
-                <script>
-                  var data = <?php echo json_encode($resultArr) ?>
 
-                  // Get the modal
-                  var modal = document.getElementById("myModal");
-                  var closedetails = [
-                    document.getElementById("closedetails-header"),
-                    document.getElementById("closedetails-footer")
-                  ];
-
-                  function showDetails(id) {
-                    var mydata = undefined
-                    data.forEach(item => {
-                      if (item["reimbid"] == id) {
-                        mydata = item;
-                      }
-                    })
-
-                    var keys = Object.keys(mydata)
-                    keys.forEach(key => {
-                      var span = modal.getElementsByClassName(key)
-                      if (span.length > 0)
-                        span[0].innerHTML = mydata[key];
-                    })
-                    modal.style.display = "block";
-
-                    // Update status_details content with the reimbid value
-                    var statusDetailsElement = document.getElementById("status_details");
-                    if (statusDetailsElement) {
-                      statusDetailsElement.textContent = mydata["reimbid"];
-                    }
-
-                    //class add 
-                    var status_details = document.getElementById("status_details")
-                    if (mydata["claimstatus"] === "Claim settled") {
-                      status_details.classList.add("bg-success")
-                      status_details.classList.remove("bg-danger")
-                    } else if (mydata["claimstatus"] === "Rejected") {
-                      status_details.classList.remove("bg-success")
-                      status_details.classList.add("bg-danger")
-                    } else {
-                      status_details.classList.remove("bg-success")
-                      status_details.classList.remove("bg-danger")
-                      status_details.classList.add("bg-secondary")
-                    }
-                    //class add end
-
-                    var profile = document.getElementById("reimbid")
-                    profile.value = mydata["reimbid"]
-                    if (mydata["claimstatus"] !== null) {
-                      profile = document.getElementById("claimstatus")
-                      profile.value = mydata["claimstatus"]
-                    } else {
-                      profile = document.getElementById("claimstatus")
-                      profile.value = ""
-                    }
-                    if (mydata["mediremarks"] !== null) {
-                      profile = document.getElementById("mediremarks")
-                      profile.value = mydata["mediremarks"]
-                    } else {
-                      profile = document.getElementById("mediremarks")
-                      profile.value = ""
-                    }
-                    if (mydata["approvedamount"] !== null) {
-                      profile = document.getElementById("approvedamount")
-                      profile.value = mydata["approvedamount"]
-                    } else {
-                      profile = document.getElementById("approvedamount")
-                      profile.value = ""
-                    }
-                    if (mydata["transactionid"] !== null) {
-                      profile = document.getElementById("transactionid")
-                      profile.value = mydata["transactionid"]
-                    } else {
-                      profile = document.getElementById("transactionid")
-                      profile.value = ""
-                    }
-
-                    if (mydata["transfereddate"] !== null) {
-                      profile = document.getElementById("transfereddate")
-                      profile.value = mydata["transfereddate"]
-                    } else {
-                      profile = document.getElementById("transfereddate")
-                      profile.value = ""
-                    }
-                    if (mydata["closedon"] !== null) {
-                      profile = document.getElementById("closedon")
-                      profile.value = mydata["closedon"]
-                    } else {
-                      profile = document.getElementById("closedon")
-                      profile.value = ""
-                    }
-
-
-                    // Initial check when the page loads
-                    function updateFieldStatus() {
-                      const claimStatus = document.getElementById('claimstatus').value;
-
-                      if (claimStatus === "" || claimStatus === "Rejected" || claimStatus === "Under review") {
-                        document.getElementById("approvedamount").disabled = true;
-                        document.getElementById("transactionid").disabled = true;
-                        document.getElementById("transfereddate").disabled = true;
-                      } else if (claimStatus === "Approved") {
-                        document.getElementById("approvedamount").disabled = false;
-                        document.getElementById("transactionid").disabled = true;
-                        document.getElementById("transfereddate").disabled = true;
-                      } else if (claimStatus === "Claim settled") {
-                        document.getElementById("approvedamount").disabled = false;
-                        document.getElementById("transactionid").disabled = false;
-                        document.getElementById("transfereddate").disabled = false;
-                      }
-                    }
-
-                    // Attach event listener to handle changes in claim status
-                    document.getElementById('claimstatus').addEventListener('change', updateFieldStatus);
-
-                    // Call the function initially to set the correct state when the page loads
-                    updateFieldStatus();
-
-
-                    if (mydata["claimstatus"] == 'Claim settled' || mydata["claimstatus"] == 'Rejected') {
-                      document.getElementById("claimupdate").disabled = true;
-                    } else {
-                      document.getElementById("claimupdate").disabled = false;
-                    }
-                  }
-                  closedetails.forEach(function(element) {
-                    element.addEventListener("click", closeModal);
-                  });
-
-                  function closeModal() {
-                    var modal1 = document.getElementById("myModal");
-                    modal1.style.display = "none";
-                  }
-                </script>
-
-                <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-xl">
+                <!-- PDF Modal -->
+                <div class="modal fade" id="myModalpdf" tabindex="-1" aria-labelledby="pdfModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Document</h1>
-                        <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h1 class="modal-title fs-5" id="pdfModalLabel">Document</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
+
                         <div style="width:100%; text-align:right">
-                          <p id="status2" class="badge" style="display: inline !important;"><span class="claimstatus"></span></p>
+                          <p id="status2" class="badge"><span class="claimstatus"></span></p>
                         </div>
 
                         Claim Number: <span class="reimbid"></span><br>
                         <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
+
                       </div>
                       <div class="modal-footer">
-                        <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <script>
-                  var data1 = <?php echo json_encode($resultArr) ?>
+                  var data = <?php echo json_encode($resultArr) ?>;
+                  var data1 = <?php echo json_encode($resultArr) ?>;
 
-                  // Get the modal
-                  var modal1 = document.getElementById("myModalpdf");
-                  var closepdf = [
-                    document.getElementById("closepdf-header"),
-                    document.getElementById("closepdf-footer")
-                  ];
+                  function showDetails(id) {
+                    var mydata = data.find(item => item.reimbid == id);
+                    if (!mydata) return;
+
+                    // Populate spans and inputs
+                    Object.keys(mydata).forEach(key => {
+                      var elems = document.getElementsByClassName(key);
+                      if (elems.length > 0) {
+                        elems[0].innerHTML = mydata[key];
+                      }
+                    });
+
+                    document.getElementById("status_details").textContent = mydata["reimbid"];
+                    var statusDetails = document.getElementById("status_details");
+                    statusDetails.classList.remove("bg-success", "bg-danger", "bg-secondary");
+
+                    if (mydata["claimstatus"] === "Claim settled") {
+                      statusDetails.classList.add("bg-success");
+                    } else if (mydata["claimstatus"] === "Rejected") {
+                      statusDetails.classList.add("bg-danger");
+                    } else {
+                      statusDetails.classList.add("bg-secondary");
+                    }
+
+                    document.getElementById("reimbid").value = mydata["reimbid"] || "";
+                    document.getElementById("claimstatus").value = mydata["claimstatus"] || "";
+                    document.getElementById("mediremarks").value = mydata["mediremarks"] || "";
+                    document.getElementById("approvedamount").value = mydata["approvedamount"] || "";
+                    document.getElementById("transactionid").value = mydata["transactionid"] || "";
+                    document.getElementById("transfereddate").value = mydata["transfereddate"] || "";
+                    document.getElementById("closedon").value = mydata["closedon"] || "";
+
+                    function updateFieldStatus() {
+                      const claimStatus = document.getElementById('claimstatus').value;
+                      const approved = document.getElementById("approvedamount");
+                      const transaction = document.getElementById("transactionid");
+                      const transfered = document.getElementById("transfereddate");
+
+                      if (claimStatus === "" || claimStatus === "Rejected" || claimStatus === "Under review") {
+                        approved.disabled = true;
+                        transaction.disabled = true;
+                        transfered.disabled = true;
+                      } else if (claimStatus === "Approved") {
+                        approved.disabled = false;
+                        transaction.disabled = true;
+                        transfered.disabled = true;
+                      } else if (claimStatus === "Claim settled") {
+                        approved.disabled = false;
+                        transaction.disabled = false;
+                        transfered.disabled = false;
+                      }
+                    }
+
+                    document.getElementById('claimstatus').addEventListener('change', updateFieldStatus);
+                    updateFieldStatus();
+
+                    const updateButton = document.getElementById("claimupdate");
+                    if (mydata["claimstatus"] == 'Claim settled' || mydata["claimstatus"] == 'Rejected') {
+                      updateButton.disabled = true;
+                    } else {
+                      updateButton.disabled = false;
+                    }
+
+                    // Show modal using Bootstrap API
+                    var modalEl = document.getElementById('myModal');
+                    var modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                  }
 
                   function showpdf(id1) {
-                    var mydata1 = undefined
-                    data1.forEach(item1 => {
-                      if (item1["reimbid"] == id1) {
-                        mydata1 = item1;
+                    var mydata1 = data1.find(item => item.reimbid == id1);
+                    if (!mydata1) return;
+
+                    Object.keys(mydata1).forEach(key => {
+                      var elems = document.getElementsByClassName(key);
+                      if (elems.length > 0) {
+                        elems[0].innerHTML = mydata1[key];
                       }
-                    })
-                    var keys1 = Object.keys(mydata1)
-                    keys1.forEach(key => {
-                      var span1 = modal1.getElementsByClassName(key)
-                      if (span1.length > 0)
-                        span1[0].innerHTML = mydata1[key];
-                    })
-                    modal1.style.display = "block";
+                    });
 
-                    //class add 
-                    var statuss = document.getElementById("status2")
+                    var statusElem = document.getElementById("status2");
+                    statusElem.classList.remove("bg-success", "bg-danger");
+
                     if (mydata1["claimstatus"] === "Claim settled") {
-                      statuss.classList.add("bg-success")
-                      statuss.classList.remove("bg-danger")
+                      statusElem.classList.add("bg-success");
                     } else if (mydata1["claimstatus"] === "Rejected") {
-                      statuss.classList.remove("bg-success")
-                      statuss.classList.add("bg-danger")
-                    } else {
-                      statuss.classList.remove("bg-success")
-                      statuss.classList.remove("bg-danger")
+                      statusElem.classList.add("bg-danger");
                     }
-                    //class add end
-                    var docid = document.getElementById("docid")
-                    docid.data = mydata1["docp"]
-                  }
-                  //close model using either cross or close button
-                  closepdf.forEach(function(element) {
-                    element.addEventListener("click", closeModal);
-                  });
 
-                  function closeModal() {
-                    var modal1 = document.getElementById("myModalpdf");
-                    modal1.style.display = "none";
+                    document.getElementById("docid").data = mydata1["docp"] || "#";
+
+                    // Show modal using Bootstrap API
+                    var modalEl = document.getElementById('myModalpdf');
+                    var modal = new bootstrap.Modal(modalEl);
+                    modal.show();
                   }
                 </script>
                 <script>
