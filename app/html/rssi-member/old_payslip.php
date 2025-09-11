@@ -110,7 +110,7 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
                         <div class="card-body">
                             <br>
                             <div class="alert alert-warning" role="alert">
-                                <strong>Note:</strong> This portal contains payslips up to May 2023 only. For the latest payslips from June 2023 onward, please visit the <a href="pay_details.php">Pay Details Portal</a>.
+                                <strong>Note:</strong> This portal contains payslips up to May 2023 only. For the latest payslips from June 2023 onward, please visit the <a href="pay_details.php" class="alert-link">Pay Details</a> portal.
                             </div>
                             <div class="row">
                                 <div class="col">

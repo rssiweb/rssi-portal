@@ -823,6 +823,10 @@
         id: 'myservices',
         linkId: 'documentLink',
         url: 'pay_details.php'
+      }, {
+        id: 'myservices',
+        linkId: 'documentLink',
+        url: 'old_payslip.php'
       },
       {
         id: 'myservices',
