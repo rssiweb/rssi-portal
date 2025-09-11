@@ -45,19 +45,22 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Old_Payslip (till May 23)</title>
+    <title>Old Pay Details (Payslips till May 2023)</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -86,13 +89,13 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Pay Slip</h1>
+            <h1>Old Pay Details</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">My Services</a></li>
                     <li class="breadcrumb-item"><a href="document.php">My Document</a></li>
-                    <li class="breadcrumb-item active">Pay Slip</li>
+                    <li class="breadcrumb-item active">Old Pay Details</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -106,14 +109,13 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
 
                         <div class="card-body">
                             <br>
+                            <div class="alert alert-warning" role="alert">
+                                <strong>Note:</strong> This portal contains payslips up to May 2023 only. For the latest payslips from June 2023 onward, please visit the <a href="pay_details.php">Pay Details Portal</a>.
+                            </div>
                             <div class="row">
                                 <div class="col">
                                     Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                                     <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($resultArrr) ?></p>
-                                </div>
-                                <div class="col text-end">
-                                    <a href="pay_details.php">
-                                        << New Payslip</a>
                                 </div>
                             </div>
 

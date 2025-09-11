@@ -138,11 +138,11 @@ if ($searchField !== '' || $fyear !== '') {
     });
   </script>
   <!-- CSS Library Files -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
-    <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+  <!-- JavaScript Library Files -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+  <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
 </head>
 
@@ -219,121 +219,118 @@ if ($searchField !== '' || $fyear !== '') {
                     <i class="bi bi-search"></i>&nbsp;Search</button>
                 </div>
               </form>
-              <?php echo '
-          <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                            <th scope="col">Date</th>
-                            <th scope="col">Name</th>    
-                            <th scope="col">FY</th>
-                                <th scope="col">Transaction id</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">National Identifier/Number</th>
-                        <th scope="col">Mode of payment</th>
-                        <th scope="col">Invoice</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Action</th>
-                            </tr>
-                        </thead>' ?>
-              <?php if ($resultArr != null) {
-                echo '<tbody>';
-                foreach ($resultArr as $array) {
-                  echo '
-                                <tr>' ?>
-                  <?php
-                  echo '
+              <div class="table-responsive">
+                <table class="table" id="table-id">
+                  <thead>
+                    <tr>
+                      <th scope="col">Date</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">FY</th>
+                      <th scope="col">Transaction id</th>
+                      <th scope="col">Amount</th>
+                      <th scope="col">National Identifier/Number</th>
+                      <th scope="col">Mode of payment</th>
+                      <th scope="col">Invoice</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if ($resultArr != null): ?>
+                      <?php foreach ($resultArr as $array): ?>
+                        <tr>
+                          <td><?= date("d/m/Y", strtotime($array['timestamp'])) ?></td>
+                          <td>
+                            <?= $array['fullname'] ?><br>
+                            <?= $array['tel'] ?><br>
+                            <?= $array['email'] ?>
+                          </td>
+                          <td><?= $array['financial_year'] ?></td>
+                          <td><?= $array['transactionid'] ?></td>
+                          <td><?= $array['currency'] ?>&nbsp;<?= $array['amount'] ?></td>
+                          <td><?= $array['documenttype'] ?>/<?= $array['nationalid'] ?></td>
+                          <td>Online</td>
+                          <td>
+                            <?php if ($array['donationid'] != null): ?>
+                              <a href="/donation_invoice.php?searchField=<?= $array['donationid'] ?>" target="_blank"><?= $array['donationid'] ?></a>
+                            <?php else: ?>
+                              <?= $array['donationid'] ?>
+                            <?php endif; ?>
+                          </td>
+                          <td><?= $array['status'] ?></td>
+                          <td>
+                            <?php if ($role == 'Admin'): ?>
+                              <div class="dropdown">
+                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="dropdownMenuLink_<?= $array['donationid'] ?>" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 4px 8px;">
+                                  <i class="bi bi-three-dots-vertical" style="font-size:14px;"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink_<?= $array['donationid'] ?>">
+                                  <li>
+                                    <button class="dropdown-item" type="button" onclick="showDetails('<?= $array['donationid'] ?>')">
+                                      <i class="bi bi-box-arrow-up-right me-2"></i> Show Details
+                                    </button>
+                                  </li>
+                                  <?php if (!empty($array['tel']) && $array['status'] == 'Approved'): ?>
+                                    <?php
+                                    $phone = $array['tel'];
+                                    $fullname = $array['fullname'];
+                                    $donationid = $array['donationid'];
+                                    $message = urlencode("Dear $fullname ($phone),\n\nThank you for your generous donation! Your invoice for Donation ID $donationid has been issued and emailed to your registered email address.\n\nWe greatly appreciate your support for our cause. Please feel free to reach out if you have any questions or need assistance.\n\n--RSSI\n\n**This is an automatically generated SMS");
+                                    $whatsappLink = "https://api.whatsapp.com/send?phone=91$phone&text=$message";
+                                    ?>
+                                    <li>
+                                      <a class="dropdown-item" href="<?= $whatsappLink ?>" target="_blank">
+                                        <i class="bi bi-whatsapp me-2"></i> Send WhatsApp
+                                      </a>
+                                    </li>
+                                  <?php endif; ?>
+                                  <?php if (!empty($array['email']) && $array['status'] == 'Approved'): ?>
+                                    <li>
+                                      <form action="#" name="email-form-<?= $array['donationid'] ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="template" value="donation_invoice">
+                                        <input type="hidden" name="data[donationid]" value="<?= $array['donationid'] ?>">
+                                        <input type="hidden" name="data[fullname]" value="<?= $array['fullname'] ?>">
+                                        <input type="hidden" name="email" value="<?= $array['email'] ?>">
+                                        <button type="submit" class="dropdown-item">
+                                          <i class="bi bi-envelope-at me-2"></i> Send Email
+                                        </button>
+                                      </form>
+                                    </li>
+                                  <?php endif; ?>
+                                </ul>
+                              </div>
+                            <?php endif; ?>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    <?php elseif ($fyear == null): ?>
+                      <tr>
+                        <td colspan="10">Please select Filter value.</td>
+                      </tr>
+                    <?php else: ?>
+                      <tr>
+                        <td colspan="10">No record found for <?= $searchField ?> <?= $fyear ?></td>
+                      </tr>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
 
-                                <td>' . date("d/m/Y", strtotime($array['timestamp'])) . '</td>
-                                <td>' . $array['fullname'] . '<br>' . $array['tel'] . '<br>' . $array['email'] . '</td>
-                                <td>' . $array['financial_year'] . '</td>
-                                    <td>' . $array['transactionid'] . '</td>
-                                    <td>' . $array['currency'] . '&nbsp;' . $array['amount'] . '</td>
-                                    <td>' . $array['documenttype'] . '/' . $array['nationalid'] . '</td>
-                                    <td>Online</td>' ?>
+              <script>
+                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                  var currentYear = new Date().getFullYear() - 1;
+                <?php } else { ?>
+                  var currentYear = new Date().getFullYear();
+                <?php } ?>
 
-
-                  <?php if ($array['donationid'] != null) { ?>
-                    <?php
-                    echo '<td><a href="/donation_invoice.php?searchField=' . $array['donationid'] . '" target="_blank">' . $array['donationid'] . '</a></span></td>'
-                    ?>
-                    <?php    } else { ?><?php
-                                        echo '<td>' . $array['donationid'] . '</td>' ?>
-                  <?php } ?>
-                  <?php echo '<td>' . $array['status'] . '</td>' ?>
-
-                  <?php if ($role == 'Admin') { ?>
-
-                    <?php echo '
-
-<td>
-<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['donationid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-<i class="bi bi-box-arrow-up-right" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
-                    <?php if (($array['tel'] != null) && $array['status'] == 'Approved') { ?>
-
-                      <?php
-                      $phone = $array['tel'];
-                      $fullname = $array['fullname'];
-                      $donationid = $array['donationid'];
-
-                      $message = urlencode("Dear $fullname ($phone),\n\nThank you for your generous donation! Your invoice for Donation ID $donationid has been issued and emailed to your registered email address.\n\nWe greatly appreciate your support for our cause. Please feel free to reach out if you have any questions or need assistance.\n\n--RSSI\n\n**This is an automatically generated SMS");
-
-                      $whatsappLink = "https://api.whatsapp.com/send?phone=91$phone&text=$message";
-                      ?>
-                      <a href="<?php echo $whatsappLink; ?>" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>
-
-                    <?php } else { ?>
-                      <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                      <?php } ?>&nbsp;&nbsp;
-
-                      <?php if (($array['email'] != null) && $array['status'] == 'Approved') { ?>
-                        <?php echo '<form  action="#" name="email-form-' . $array['donationid'] . '" method="POST" style="display: -webkit-inline-box;" >
-                          <input type="hidden" name="template" type="text" value="donation_invoice">
-                          <input type="hidden" name="data[donationid]" type="text" value="' . $array['donationid'] . '">
-                          <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . '">
-                          <input type="hidden" name="email" type="text" value="' . $array['email'] . '">
-                          <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
-                          type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . $array['email'] . '"></i></button>
-                          </form>' ?>
-                      <?php } else { ?>
-                        <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                      <?php } ?>
-
-                      <?php echo '</td>' ?>
-                    <?php } ?>
-
-                    <?php echo '</tr>';
-                  }
-                } else if ($fyear == null) {
-                  echo '<tr>
-                            <td colspan="5">Please select Filter value.</td>
-                        </tr>';
-                } else {
-                  echo '<tr>
-                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $searchField ?><?php echo $fyear ?>
-                  <?php echo '</td>
-                    </tr>';
+                for (var i = 0; i < 5; i++) {
+                  var next = currentYear + 1;
+                  var status = currentYear + '-' + next;
+                  //next.toString().slice(-2) 
+                  $('#get_fyear').append(new Option(status, status));
+                  currentYear--;
                 }
-                echo '</tbody>
-                     </table>
-                     </div>';
-                  ?>
-
-                  <script>
-                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                      var currentYear = new Date().getFullYear() - 1;
-                    <?php } else { ?>
-                      var currentYear = new Date().getFullYear();
-                    <?php } ?>
-
-                    for (var i = 0; i < 5; i++) {
-                      var next = currentYear + 1;
-                      var status = currentYear + '-' + next;
-                      //next.toString().slice(-2) 
-                      $('#get_fyear').append(new Option(status, status));
-                      currentYear--;
-                    }
-                  </script>
+              </script>
 
 
             </div>
@@ -346,23 +343,17 @@ if ($searchField !== '' || $fyear !== '') {
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <!--------------- POP-UP BOX --------------->
-  <style>
-    .modal {
-      background-color: rgba(0, 0, 0, 0.4);
-      /* Black w/ opacity */
-    }
-  </style>
-  <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+  <!-- POP-UP BOX -->
+  <div class="modal fade" id="myModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="exampleModalLabel">Donation Review</h1>
-          <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div style="width: 100%; text-align: right;">
-            <p id="status" class="badge" style="display: inline;"><span class="donationid"></span></p>
+            <p id="status" class="badge bg-secondary"><span class="donationid"></span></p>
           </div>
 
           <form id="donation_review" action="#" method="POST">
@@ -388,89 +379,52 @@ if ($searchField !== '' || $fyear !== '') {
 
             <button type="submit" id="donationupdate" class="btn btn-danger btn-sm">Update</button>
           </form>
-
-          <div class="modal-footer">
-            <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-          <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
+          <div class="text-end p-2" style="font-size: small; font-style: italic; color: #A2A2A2;">
+          Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
+        </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
-  <script>
-    var data = <?php echo json_encode($resultArr) ?>
 
-    // Get the modal
-    var modal = document.getElementById("myModal");
-    // Get the <span> element that closes the modal
-    var closedetails = [
-      document.getElementById("closedetails-header"),
-      document.getElementById("closedetails-footer")
-    ];
+  <script>
+    var data = <?php echo json_encode($resultArr) ?>;
 
     function showDetails(id) {
-      // console.log(modal)
-      // console.log(modal.getElementsByClassName("data"))
-      var mydata = undefined
-      data.forEach(item => {
-        if (item["donationid"] == id) {
-          mydata = item;
-        }
-      })
+      var modal = new bootstrap.Modal(document.getElementById('myModal'));
+      var mydata = data.find(item => item["donationid"] === id);
 
-      var keys = Object.keys(mydata)
-      keys.forEach(key => {
-        var span = modal.getElementsByClassName(key)
-        if (span.length > 0)
-          span[0].innerHTML = mydata[key];
-      })
-      modal.style.display = "block";
+      if (!mydata) return;
 
-      //class add 
-      var status = document.getElementById("status")
+      // Fill fields
+      document.querySelector(".donationid").innerHTML = mydata["donationid"];
+      document.getElementById("donationid").value = mydata["donationid"];
+      document.getElementById("reviewer_status").value = mydata["status"] || '';
+      document.getElementById("reviewer_remarks").value = mydata["reviewer_remarks"] || '';
+      document.querySelector(".reviewedby").innerHTML = mydata["reviewedby"] || '';
+      document.querySelector(".reviewedon").innerHTML = mydata["reviewedon"] || '';
+
+      // Set status badge
+      var status = document.getElementById("status");
+      status.classList.remove("bg-success", "bg-danger", "bg-secondary");
       if (mydata["status"] === "Approved") {
-        status.classList.add("bg-success")
-        status.classList.remove("bg-danger")
+        status.classList.add("bg-success");
+      } else if (mydata["status"] === "Rejected") {
+        status.classList.add("bg-danger");
       } else {
-        status.classList.remove("bg-success")
-        status.classList.add("bg-danger")
-      }
-      //class add end
-
-      var profile = document.getElementById("donationid")
-      profile.value = mydata["donationid"]
-      if (mydata["status"] !== null) {
-        profile = document.getElementById("reviewer_status")
-        profile.value = mydata["status"]
-      }
-      if (mydata["status"] !== null) {
-        profile = document.getElementById("reviewer_remarks")
-        profile.value = mydata["reviewer_remarks"]
+        status.classList.add("bg-secondary");
       }
 
-      if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
-        document.getElementById("donationupdate").disabled = true;
-      } else {
-        document.getElementById("donationupdate").disabled = false;
-      }
+      // Disable or enable update button
+      document.getElementById("donationupdate").disabled = (mydata["status"] === 'Approved' || mydata["status"] === 'Rejected');
+
+      modal.show();
     }
-    // When the user clicks the button, open the modal 
-    // When the user clicks on <span> (x), close the modal
-    closedetails.forEach(function(element) {
-      element.addEventListener("click", closeModal);
-    });
-
-    function closeModal() {
-      var modal1 = document.getElementById("myModal");
-      modal1.style.display = "none";
-    }
-    // When the user clicks anywhere outside of the modal, close it
-    // window.onclick = function(event) {
-    //     if (event.target == modal) {
-    //         modal.style.display = "none";
-    //     }
-    // }
   </script>
+  <!-- Script to handle form submission and email sending -->
   <script>
     var data = <?php echo json_encode($resultArr) ?>;
     //For form submission - to update Remarks
