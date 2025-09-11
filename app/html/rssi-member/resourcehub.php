@@ -115,6 +115,25 @@ $resultArr = pg_fetch_all($result);
             vertical-align: top;
             display: inline-block;
         }
+
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #0d6efd;
+        }
+
+        .tab-pane {
+            padding: 20px 0;
+        }
+
+        .inactive-document {
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            font-size: 0.7em;
+            margin-left: 5px;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -221,6 +240,7 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                 </form>
                             <?php } ?>
+
                             <!-- Filter and Search Controls -->
                             <div class="filter-container">
                                 <form method="get" action="resourcehub.php" class="search-box mb-3">
@@ -253,101 +273,207 @@ $resultArr = pg_fetch_all($result);
                                     </a>
                                 </div>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table" id="table-id">
-                                    <thead>
-                                        <tr>
-                                            <th>Policy Id</th>
-                                            <th>Category</th>
-                                            <th>Date</th>
-                                            <th>Policy name</th>
-                                            <th>Details</th>
-                                            <th>Policy document</th>
-                                            <?php if ($role == 'Admin') { ?>
-                                                <th>Action</th>
-                                            <?php } ?>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (!empty($resultArr)): ?>
-                                            <?php foreach ($resultArr as $array):
-                                                $isInactive = $array['is_inactive'] === 't' || $array['is_inactive'] === true;
-                                            ?>
-                                                <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?>">
-                                                    <td><?php echo $array['policyid']; ?></td>
-                                                    <td><?php echo $array['policytype']; ?></td>
-                                                    <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
-                                                    <td>
-                                                        <?php echo $array['policyname']; ?>
-                                                        <?php if ($isInactive): ?>
-                                                            <span class="badge bg-secondary status-badge">Inactive</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <form name="policybody_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                            <input type="hidden" name="form-type" value="policybodyedit">
-                                                            <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
-                                                            <textarea id="inp_<?php echo $array['policyid']; ?>" name="remarks" disabled><?php echo $array['remarks']; ?></textarea>
 
-                                                            <?php if ($role == 'Admin') { ?>
-                                                                &nbsp;
-                                                                <button type="button" id="edit_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
-                                                                    <i class="bi bi-pencil-square"></i>
-                                                                </button>&nbsp;
-                                                                <button type="submit" id="save_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
-                                                                    <i class="bi bi-save"></i>
-                                                                </button>
-                                                            <?php } ?>
-                                                        </form>
-                                                    </td>
+                            <!-- Tabs for HR Policy and Other Policies -->
+                            <ul class="nav nav-tabs" id="policyTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="hr-policy-tab" data-bs-toggle="tab" data-bs-target="#hr-policy" type="button" role="tab" aria-controls="hr-policy" aria-selected="true">
+                                        HR Policies
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="other-policy-tab" data-bs-toggle="tab" data-bs-target="#other-policy" type="button" role="tab" aria-controls="other-policy" aria-selected="false">
+                                        Other Documents
+                                    </button>
+                                </li>
+                            </ul>
 
-                                                    <?php if ($array['policydoc'] == null) { ?>
-                                                        <td></td>
-                                                    <?php } else { ?>
-                                                        <td><a href="<?php echo $array['policydoc']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="<?php echo $array['policyid']; ?>"></i></a></td>
-                                                    <?php } ?>
-
+                            <div class="tab-content" id="policyTabsContent">
+                                <!-- HR Policy Tab -->
+                                <div class="tab-pane fade show active" id="hr-policy" role="tabpanel" aria-labelledby="hr-policy-tab">
+                                    <div class="table-responsive">
+                                        <table class="table hr-policy-table" id="hr-policy-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Policy Id</th>
+                                                    <th>Category</th>
+                                                    <th>Date</th>
+                                                    <th>Policy name</th>
+                                                    <th>Details</th>
+                                                    <th>Policy document</th>
                                                     <?php if ($role == 'Admin') { ?>
-                                                        <td>
-                                                            <!-- <form name="policydelete_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                                <input type="hidden" name="form-type" value="policydelete">
-                                                                <input type="hidden" name="policydeleteid" value="<?php echo $array['policyid']; ?>">
-                                                                <button type="submit" onclick="validateForm()" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete <?php echo $array['policyid']; ?>">
-                                                                    <i class="bi bi-x-lg"></i>
-                                                                </button>
-                                                            </form> -->
-                                                            <!-- Toggle status button -->
-                                                            <form name="toggleInactive_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: inline-block;">
-                                                                <input type="hidden" name="form-type" value="toggleInactive">
-                                                                <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
-                                                                <input type="hidden" name="currentStatus" value="<?php echo $isInactive ? 'true' : 'false'; ?>">
-                                                                <button type="submit" class="btn btn-sm <?php echo $isInactive ? 'btn-success' : 'btn-warning'; ?>"
-                                                                    title="<?php echo $isInactive ? 'Activate document' : 'Deactivate document'; ?>">
-                                                                    <i class="bi <?php echo $isInactive ? 'bi-check-circle' : 'bi-slash-circle'; ?>"></i>
-                                                                </button>
-                                                            </form>
-                                                        </td>
+                                                        <th>Action</th>
                                                     <?php } ?>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <tr>
-                                                <td colspan="8" class="text-center">No documents found</td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $hrPolicies = array_filter($resultArr, function ($array) {
+                                                    return $array['policytype'] === 'HR Policy';
+                                                });
+                                                ?>
+                                                <?php if (!empty($hrPolicies)): ?>
+                                                    <?php foreach ($hrPolicies as $array):
+                                                        $isInactive = $array['is_inactive'] === 't' || $array['is_inactive'] === true;
+                                                    ?>
+                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?>">
+                                                            <td><?php echo $array['policyid']; ?></td>
+                                                            <td><?php echo $array['policytype']; ?></td>
+                                                            <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
+                                                            <td>
+                                                                <?php echo $array['policyname']; ?>
+                                                                <?php if ($isInactive): ?>
+                                                                    <span class="badge bg-secondary status-badge">Inactive</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <form name="policybody_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                    <input type="hidden" name="form-type" value="policybodyedit">
+                                                                    <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
+                                                                    <textarea id="inp_<?php echo $array['policyid']; ?>" name="remarks" disabled><?php echo $array['remarks']; ?></textarea>
+
+                                                                    <?php if ($role == 'Admin') { ?>
+                                                                        &nbsp;
+                                                                        <button type="button" id="edit_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
+                                                                            <i class="bi bi-pencil-square"></i>
+                                                                        </button>&nbsp;
+                                                                        <button type="submit" id="save_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
+                                                                            <i class="bi bi-save"></i>
+                                                                        </button>
+                                                                    <?php } ?>
+                                                                </form>
+                                                            </td>
+
+                                                            <?php if ($array['policydoc'] == null) { ?>
+                                                                <td></td>
+                                                            <?php } else { ?>
+                                                                <td><a href="<?php echo $array['policydoc']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="<?php echo $array['policyid']; ?>"></i></a></td>
+                                                            <?php } ?>
+
+                                                            <?php if ($role == 'Admin') { ?>
+                                                                <td>
+                                                                    <!-- Toggle status button -->
+                                                                    <form name="toggleInactive_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: inline-block;">
+                                                                        <input type="hidden" name="form-type" value="toggleInactive">
+                                                                        <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
+                                                                        <input type="hidden" name="currentStatus" value="<?php echo $isInactive ? 'true' : 'false'; ?>">
+                                                                        <button type="submit" class="btn btn-sm <?php echo $isInactive ? 'btn-success' : 'btn-warning'; ?>"
+                                                                            title="<?php echo $isInactive ? 'Activate document' : 'Deactivate document'; ?>">
+                                                                            <i class="bi <?php echo $isInactive ? 'bi-check-circle' : 'bi-slash-circle'; ?>"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </td>
+                                                            <?php } ?>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="7" class="text-center">No HR Policies found</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Other Policy Tab -->
+                                <div class="tab-pane fade" id="other-policy" role="tabpanel" aria-labelledby="other-policy-tab">
+                                    <div class="table-responsive">
+                                        <table class="table other-policy-table" id="other-policy-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Policy Id</th>
+                                                    <th>Category</th>
+                                                    <th>Date</th>
+                                                    <th>Policy name</th>
+                                                    <th>Details</th>
+                                                    <th>Policy document</th>
+                                                    <?php if ($role == 'Admin') { ?>
+                                                        <th>Action</th>
+                                                    <?php } ?>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $otherPolicies = array_filter($resultArr, function ($array) {
+                                                    return $array['policytype'] !== 'HR Policy';
+                                                });
+                                                ?>
+                                                <?php if (!empty($otherPolicies)): ?>
+                                                    <?php foreach ($otherPolicies as $array):
+                                                        $isInactive = $array['is_inactive'] === 't' || $array['is_inactive'] === true;
+                                                    ?>
+                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?>">
+                                                            <td><?php echo $array['policyid']; ?></td>
+                                                            <td><?php echo $array['policytype']; ?></td>
+                                                            <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
+                                                            <td>
+                                                                <?php echo $array['policyname']; ?>
+                                                                <?php if ($isInactive): ?>
+                                                                    <span class="badge bg-secondary status-badge">Inactive</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <form name="policybody_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                    <input type="hidden" name="form-type" value="policybodyedit">
+                                                                    <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
+                                                                    <textarea id="inp_<?php echo $array['policyid']; ?>" name="remarks" disabled><?php echo $array['remarks']; ?></textarea>
+
+                                                                    <?php if ($role == 'Admin') { ?>
+                                                                        &nbsp;
+                                                                        <button type="button" id="edit_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
+                                                                            <i class="bi bi-pencil-square"></i>
+                                                                        </button>&nbsp;
+                                                                        <button type="submit" id="save_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
+                                                                            <i class="bi bi-save"></i>
+                                                                        </button>
+                                                                    <?php } ?>
+                                                                </form>
+                                                            </td>
+
+                                                            <?php if ($array['policydoc'] == null) { ?>
+                                                                <td></td>
+                                                            <?php } else { ?>
+                                                                <td><a href="<?php echo $array['policydoc']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="<?php echo $array['policyid']; ?>"></i></a></td>
+                                                            <?php } ?>
+
+                                                            <?php if ($role == 'Admin') { ?>
+                                                                <td>
+                                                                    <!-- Toggle status button -->
+                                                                    <form name="toggleInactive_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: inline-block;">
+                                                                        <input type="hidden" name="form-type" value="toggleInactive">
+                                                                        <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
+                                                                        <input type="hidden" name="currentStatus" value="<?php echo $isInactive ? 'true' : 'false'; ?>">
+                                                                        <button type="submit" class="btn btn-sm <?php echo $isInactive ? 'btn-success' : 'btn-warning'; ?>"
+                                                                            title="<?php echo $isInactive ? 'Activate document' : 'Deactivate document'; ?>">
+                                                                            <i class="bi <?php echo $isInactive ? 'bi-check-circle' : 'bi-slash-circle'; ?>"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </td>
+                                                            <?php } ?>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="7" class="text-center">No other documents found</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
+
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
 
                                 data.forEach(item => {
-
                                     const form = document.getElementById('edit_' + item.policyid);
-
-                                    form.addEventListener('click', function() {
-                                        document.getElementById('inp_' + item.policyid).disabled = false;
-                                    });
+                                    if (form) {
+                                        form.addEventListener('click', function() {
+                                            document.getElementById('inp_' + item.policyid).disabled = false;
+                                        });
+                                    }
                                 })
 
                                 //For form submission - to update Remarks
@@ -355,45 +481,19 @@ $resultArr = pg_fetch_all($result);
 
                                 data.forEach(item => {
                                     const form = document.forms['policybody_' + item.policyid]
-                                    form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch(scriptURL, {
-                                                method: 'POST',
-                                                body: new FormData(document.forms['policybody_' + item.policyid])
-                                            })
-                                            .then(response => alert("Record has been updated.") +
-                                                location.reload())
-                                            .catch(error => console.error('Error!', error.message))
-                                    })
-
-                                    console.log(item)
-                                })
-
-                                function validateForm() {
-                                    if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-
-                                        data.forEach(item => {
-                                            const form = document.forms['policydelete_' + item.policyid]
-                                            form.addEventListener('submit', e => {
-                                                e.preventDefault()
-                                                fetch(scriptURL, {
-                                                        method: 'POST',
-                                                        body: new FormData(document.forms['policydelete_' + item.policyid])
-                                                    })
-                                                    .then(response =>
-                                                        alert("Record has been deleted.") +
-                                                        location.reload()
-                                                    )
-                                                    .catch(error => console.error('Error!', error.message))
-                                            })
-
-                                            console.log(item)
+                                    if (form) {
+                                        form.addEventListener('submit', e => {
+                                            e.preventDefault()
+                                            fetch(scriptURL, {
+                                                    method: 'POST',
+                                                    body: new FormData(document.forms['policybody_' + item.policyid])
+                                                })
+                                                .then(response => alert("Record has been updated.") +
+                                                    location.reload())
+                                                .catch(error => console.error('Error!', error.message))
                                         })
-                                    } else {
-                                        alert("Record has NOT been deleted.");
-                                        return false;
                                     }
-                                }
+                                })
 
                                 // Handle toggle inactive/active form submission
                                 document.querySelectorAll('form[name^="toggleInactive_"]').forEach(form => {
@@ -427,6 +527,21 @@ $resultArr = pg_fetch_all($result);
                                         }
                                     });
                                 });
+
+                                // Initialize DataTables for both tables
+                                $(document).ready(function() {
+                                    <?php if (!empty($hrPolicies)) : ?>
+                                        $('#hr-policy-table').DataTable({
+                                            "order": [] // Disable initial sorting
+                                        });
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($otherPolicies)) : ?>
+                                        $('#other-policy-table').DataTable({
+                                            "order": [] // Disable initial sorting
+                                        });
+                                    <?php endif; ?>
+                                });
                             </script>
 
                         </div>
@@ -444,19 +559,6 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
-        });
-    </script>
 
 </body>
 
