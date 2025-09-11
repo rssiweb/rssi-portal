@@ -97,9 +97,7 @@ $resultArr = pg_fetch_all($result);
 $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
 $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 ?>
-
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -189,6 +187,27 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
     #cw {
       width: 20%;
     }
+
+    /* New styles for row selection */
+    .table-hover tbody tr {
+      cursor: pointer;
+    }
+
+    .table-hover tbody tr.selected {
+      background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+
+    .select-all-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .selected-count {
+      margin-left: 10px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
   </style>
   <!-- CSS Library Files -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -197,10 +216,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
-
-<!-- =========================
-     NAVIGATION LINKS     
-============================== -->
 
 <body>
   <?php include 'inactive_session_expire_check.php'; ?>
@@ -260,10 +275,10 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                 </div>
 
 
-                <form action="" method="POST">
+                <form action="" method="POST" id="filterForm">
                   <div class="form-group" style="display: inline-block;">
                     <div class="col2" style="display: inline-block;">
-                      <input name="reimbid" class="form-control" style="width:max-content; display:inline-block" placeholder="Enter Claim Numbers separated by commas" value="<?php echo $reimbid ?>">
+                      <input name="reimbid" id="reimbidFilter" class="form-control" style="width:max-content; display:inline-block" placeholder="Enter Claim Numbers separated by commas" value="<?php echo $reimbid ?>">
                       <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
                         <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
                       <?php } ?>
@@ -299,10 +314,25 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                     currentYear--;
                   }
                 </script>
+
+                <!-- Select All Controls -->
+                <div class="select-all-container">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                    <label class="form-check-label" for="selectAllCheckbox">
+                      Select all
+                    </label>
+                  </div>
+                  <span class="selected-count" id="selectedCount">0 claims selected</span>
+                </div>
+
                 <div class="table-responsive">
-                  <table class="table" id="table-id">
+                  <table class="table table-hover" id="table-id">
                     <thead>
                       <tr>
+                        <th scope="col" style="width: 30px;">
+                          <!-- Checkbox column header -->
+                        </th>
                         <th scope="col">Claim Number</th>
                         <th scope="col">Registered On</th>
                         <th scope="col">ID/F Name</th>
@@ -317,7 +347,10 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                     <tbody>
                       <?php if ($resultArr != null): ?>
                         <?php foreach ($resultArr as $array): ?>
-                          <tr>
+                          <tr data-reimbid="<?php echo $array['reimbid']; ?>">
+                            <td>
+                              <input type="checkbox" class="row-checkbox form-check-input" name="selected_claims[]" value="<?php echo $array['reimbid']; ?>">
+                            </td>
                             <td>
                               <?php if ($array['uploadeddocuments'] != null): ?>
                                 <a href="javascript:void(0)" onclick="showpdf('<?php echo $array['reimbid']; ?>')">
@@ -427,22 +460,111 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         <?php endforeach; ?>
                       <?php elseif ($status == null): ?>
                         <tr>
-                          <td colspan="9">Please select policy year.</td>
+                          <td colspan="10">Please select policy year.</td>
                         </tr>
                       <?php else: ?>
                         <tr>
-                          <td colspan="9">No record found for <?php echo $status; ?></td>
+                          <td colspan="10">No record found for <?php echo $status; ?></td>
                         </tr>
                       <?php endif; ?>
                     </tbody>
                   </table>
                 </div>
+
+                <script>
+                  // Function to update the filter field with selected claim numbers
+                  function updateReimbidFilter() {
+                    const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+                    const reimbidValues = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+                    document.getElementById('reimbidFilter').value = reimbidValues.join(',');
+
+                    // Update selected count
+                    document.getElementById('selectedCount').textContent = `${reimbidValues.length} claims selected`;
+                  }
+
+                  // Function to handle row click
+                  function setupRowSelection() {
+                    const table = document.getElementById('table-id');
+                    const rows = table.querySelectorAll('tbody tr');
+                    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+                    // Add click event to each row
+                    rows.forEach(row => {
+                      // Skip rows that don't have a reimbid (empty rows)
+                      if (!row.dataset.reimbid) return;
+
+                      row.addEventListener('click', (e) => {
+                        // Don't trigger if clicking on a link, button, or the checkbox itself
+                        if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.tagName === 'I' || e.target.classList.contains('dropdown-toggle')) {
+                          return;
+                        }
+
+                        // Find the checkbox in this row
+                        const checkbox = row.querySelector('.row-checkbox');
+                        if (checkbox) {
+                          checkbox.checked = !checkbox.checked;
+                          row.classList.toggle('selected', checkbox.checked);
+                          updateReimbidFilter();
+                          updateSelectAllCheckbox();
+                        }
+                      });
+                    });
+
+                    // Add change event to each checkbox
+                    const checkboxes = document.querySelectorAll('.row-checkbox');
+                    checkboxes.forEach(checkbox => {
+                      checkbox.addEventListener('change', function() {
+                        const row = this.closest('tr');
+                        row.classList.toggle('selected', this.checked);
+                        updateReimbidFilter();
+                        updateSelectAllCheckbox();
+                      });
+                    });
+
+                    // Select all checkbox functionality
+                    selectAllCheckbox.addEventListener('change', function() {
+                      const isChecked = this.checked;
+                      checkboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                        const row = checkbox.closest('tr');
+                        if (row) {
+                          row.classList.toggle('selected', isChecked);
+                        }
+                      });
+                      updateReimbidFilter();
+                    });
+
+                    // Function to update the select all checkbox state
+                    function updateSelectAllCheckbox() {
+                      const checkboxes = document.querySelectorAll('.row-checkbox');
+                      const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+
+                      if (checkedCount === 0) {
+                        selectAllCheckbox.checked = false;
+                        selectAllCheckbox.indeterminate = false;
+                      } else if (checkedCount === checkboxes.length) {
+                        selectAllCheckbox.checked = true;
+                        selectAllCheckbox.indeterminate = false;
+                      } else {
+                        selectAllCheckbox.checked = false;
+                        selectAllCheckbox.indeterminate = true;
+                      }
+                    }
+                  }
+
+                  // Initialize row selection when document is loaded
+                  document.addEventListener('DOMContentLoaded', function() {
+                    setupRowSelection();
+                  });
+                </script>
+
+                <!-- Rest of your modal code remains the same -->
                 <!--------------- POP-UP BOX ------------>
                 <!-- No custom style needed; Bootstrap modal background is handled by default -->
 
                 <!-- Reimbursement Details Modal -->
-                <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal fade" id="myModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Details</h1>
@@ -470,7 +592,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
                             <div class="mb-3">
                               <select name="claimstatus" id="claimstatus" class="form-select" required>
-                                <option disabled selected hidden>Status</option>
+                                <option value="" disabled selected>Select Status</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Claim settled">Claim settled</option>
                                 <option value="Under review">Under review</option>
@@ -535,7 +657,11 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         </div>
 
                         Claim Number: <span class="reimbid"></span><br>
-                        <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
+                        <div id="pdfContainer">
+                          <object id="docid" data="" type="application/pdf" width="100%" height="500px">
+                            PDF not supported.
+                          </object>
+                        </div>
 
                       </div>
                       <div class="modal-footer">
@@ -547,7 +673,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
                 <script>
                   var data = <?php echo json_encode($resultArr) ?>;
-                  var data1 = <?php echo json_encode($resultArr) ?>;
 
                   function showDetails(id) {
                     var mydata = data.find(item => item.reimbid == id);
@@ -612,40 +737,53 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       updateButton.disabled = false;
                     }
 
-                    // Show modal using Bootstrap API
                     var modalEl = document.getElementById('myModal');
                     var modal = new bootstrap.Modal(modalEl);
                     modal.show();
                   }
 
                   function showpdf(id1) {
-                    var mydata1 = data1.find(item => item.reimbid == id1);
-                    if (!mydata1) return;
+                    var mydata = data.find(item => item.reimbid == id1);
+                    if (!mydata) return;
 
-                    Object.keys(mydata1).forEach(key => {
+                    Object.keys(mydata).forEach(key => {
                       var elems = document.getElementsByClassName(key);
                       if (elems.length > 0) {
-                        elems[0].innerHTML = mydata1[key];
+                        elems[0].innerHTML = mydata[key];
                       }
                     });
 
                     var statusElem = document.getElementById("status2");
                     statusElem.classList.remove("bg-success", "bg-danger");
 
-                    if (mydata1["claimstatus"] === "Claim settled") {
+                    if (mydata["claimstatus"] === "Claim settled") {
                       statusElem.classList.add("bg-success");
-                    } else if (mydata1["claimstatus"] === "Rejected") {
+                    } else if (mydata["claimstatus"] === "Rejected") {
                       statusElem.classList.add("bg-danger");
                     }
 
-                    document.getElementById("docid").data = mydata1["docp"] || "#";
+                    var pdfUrl = mydata["docp"] || "#";
+                    pdfUrl += (pdfUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
 
-                    // Show modal using Bootstrap API
+                    var container = document.getElementById("pdfContainer");
+                    container.innerHTML = '';
+
+                    var newObj = document.createElement("object");
+                    newObj.id = "docid";
+                    newObj.data = pdfUrl;
+                    newObj.type = "application/pdf";
+                    newObj.width = "100%";
+                    newObj.height = "500px";
+                    newObj.innerHTML = "PDF not supported.";
+
+                    container.appendChild(newObj);
+
                     var modalEl = document.getElementById('myModalpdf');
                     var modal = new bootstrap.Modal(modalEl);
                     modal.show();
                   }
                 </script>
+
                 <script>
                   var data = <?php echo json_encode($resultArr) ?>;
                   const scriptURL = 'payment-api.php'
@@ -700,7 +838,12 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
         // Initialize DataTables only if resultArr is not empty
         $('#table-id').DataTable({
           paging: false,
-          "order": [] // Disable initial sorting
+          "order": [], // Disable initial sorting
+          "columnDefs": [{
+              "orderable": false,
+              "targets": 0
+            } // Disable sorting on checkbox column
+          ]
           // other options...
         });
       <?php endif; ?>
