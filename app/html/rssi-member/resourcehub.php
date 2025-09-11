@@ -134,6 +134,11 @@ $resultArr = pg_fetch_all($result);
             font-size: 0.7em;
             margin-left: 5px;
         }
+
+        .highlight {
+            background-color: #fff3cd !important;
+            border: 1px solid #ffeaa7;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -243,7 +248,8 @@ $resultArr = pg_fetch_all($result);
 
                             <!-- Filter and Search Controls -->
                             <div class="filter-container">
-                                <form method="get" action="resourcehub.php" class="search-box mb-3">
+                                <form method="get" action="resourcehub.php" class="search-box mb-3" id="searchForm">
+                                    <input type="hidden" name="tab" id="activeTabInput" value="<?php echo isset($_GET['tab']) ? $_GET['tab'] : 'hr-policy'; ?>">
                                     <div class="input-group">
                                         <input type="text" class="form-control" name="search" placeholder="Search documents..."
                                             value="<?php echo htmlspecialchars($search); ?>">
@@ -277,12 +283,12 @@ $resultArr = pg_fetch_all($result);
                             <!-- Tabs for HR Policy and Other Policies -->
                             <ul class="nav nav-tabs" id="policyTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="hr-policy-tab" data-bs-toggle="tab" data-bs-target="#hr-policy" type="button" role="tab" aria-controls="hr-policy" aria-selected="true">
+                                    <button class="nav-link <?php echo (!isset($_GET['tab']) || (isset($_GET['tab']) && $_GET['tab'] == 'hr-policy')) ? 'active' : ''; ?>" id="hr-policy-tab" data-bs-toggle="tab" data-bs-target="#hr-policy" type="button" role="tab" aria-controls="hr-policy" aria-selected="true">
                                         HR Policies
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="other-policy-tab" data-bs-toggle="tab" data-bs-target="#other-policy" type="button" role="tab" aria-controls="other-policy" aria-selected="false">
+                                    <button class="nav-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'other-policy') ? 'active' : ''; ?>" id="other-policy-tab" data-bs-toggle="tab" data-bs-target="#other-policy" type="button" role="tab" aria-controls="other-policy" aria-selected="false">
                                         Other Documents
                                     </button>
                                 </li>
@@ -290,7 +296,7 @@ $resultArr = pg_fetch_all($result);
 
                             <div class="tab-content" id="policyTabsContent">
                                 <!-- HR Policy Tab -->
-                                <div class="tab-pane fade show active" id="hr-policy" role="tabpanel" aria-labelledby="hr-policy-tab">
+                                <div class="tab-pane fade <?php echo (!isset($_GET['tab']) || (isset($_GET['tab']) && $_GET['tab'] == 'hr-policy')) ? 'show active' : ''; ?>" id="hr-policy" role="tabpanel" aria-labelledby="hr-policy-tab">
                                     <div class="table-responsive">
                                         <table class="table hr-policy-table" id="hr-policy-table">
                                             <thead>
@@ -311,12 +317,31 @@ $resultArr = pg_fetch_all($result);
                                                 $hrPolicies = array_filter($resultArr, function ($array) {
                                                     return $array['policytype'] === 'HR Policy';
                                                 });
+
+                                                // Check if search results are in HR Policies
+                                                $searchInHrPolicies = false;
+                                                if (!empty($search) && !empty($hrPolicies)) {
+                                                    foreach ($hrPolicies as $policy) {
+                                                        if (
+                                                            stripos($policy['policyname'], $search) !== false ||
+                                                            stripos($policy['remarks'], $search) !== false ||
+                                                            stripos($policy['policytype'], $search) !== false
+                                                        ) {
+                                                            $searchInHrPolicies = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
                                                 ?>
                                                 <?php if (!empty($hrPolicies)): ?>
                                                     <?php foreach ($hrPolicies as $array):
                                                         $isInactive = $array['is_inactive'] === 't' || $array['is_inactive'] === true;
+                                                        $isSearchMatch = !empty($search) &&
+                                                            (stripos($array['policyname'], $search) !== false ||
+                                                                stripos($array['remarks'], $search) !== false ||
+                                                                stripos($array['policytype'], $search) !== false);
                                                     ?>
-                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?>">
+                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?> <?php echo $isSearchMatch ? 'highlight' : ''; ?>">
                                                             <td><?php echo $array['policyid']; ?></td>
                                                             <td><?php echo $array['policytype']; ?></td>
                                                             <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
@@ -377,7 +402,7 @@ $resultArr = pg_fetch_all($result);
                                 </div>
 
                                 <!-- Other Policy Tab -->
-                                <div class="tab-pane fade" id="other-policy" role="tabpanel" aria-labelledby="other-policy-tab">
+                                <div class="tab-pane fade <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'other-policy') ? 'show active' : ''; ?>" id="other-policy" role="tabpanel" aria-labelledby="other-policy-tab">
                                     <div class="table-responsive">
                                         <table class="table other-policy-table" id="other-policy-table">
                                             <thead>
@@ -398,12 +423,31 @@ $resultArr = pg_fetch_all($result);
                                                 $otherPolicies = array_filter($resultArr, function ($array) {
                                                     return $array['policytype'] !== 'HR Policy';
                                                 });
+
+                                                // Check if search results are in Other Policies
+                                                $searchInOtherPolicies = false;
+                                                if (!empty($search) && !empty($otherPolicies)) {
+                                                    foreach ($otherPolicies as $policy) {
+                                                        if (
+                                                            stripos($policy['policyname'], $search) !== false ||
+                                                            stripos($policy['remarks'], $search) !== false ||
+                                                            stripos($policy['policytype'], $search) !== false
+                                                        ) {
+                                                            $searchInOtherPolicies = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
                                                 ?>
                                                 <?php if (!empty($otherPolicies)): ?>
                                                     <?php foreach ($otherPolicies as $array):
                                                         $isInactive = $array['is_inactive'] === 't' || $array['is_inactive'] === true;
+                                                        $isSearchMatch = !empty($search) &&
+                                                            (stripos($array['policyname'], $search) !== false ||
+                                                                stripos($array['remarks'], $search) !== false ||
+                                                                stripos($array['policytype'], $search) !== false);
                                                     ?>
-                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?>">
+                                                        <tr class="<?php echo $isInactive ? 'inactive-document' : ''; ?> <?php echo $isSearchMatch ? 'highlight' : ''; ?>">
                                                             <td><?php echo $array['policyid']; ?></td>
                                                             <td><?php echo $array['policytype']; ?></td>
                                                             <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
@@ -466,6 +510,61 @@ $resultArr = pg_fetch_all($result);
 
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
+                                var searchTerm = "<?php echo $search ?>";
+                                var searchInHrPolicies = <?php echo $searchInHrPolicies ? 'true' : 'false' ?>;
+                                var searchInOtherPolicies = <?php echo $searchInOtherPolicies ? 'true' : 'false' ?>;
+
+                                // Switch to the tab with search results if applicable
+                                $(document).ready(function() {
+                                    // If we have a search term, switch to the appropriate tab
+                                    if (searchTerm) {
+                                        if (searchInHrPolicies && !searchInOtherPolicies) {
+                                            // Only HR policies have matches
+                                            $('#hr-policy-tab').tab('show');
+                                            $('#activeTabInput').val('hr-policy');
+                                        } else if (searchInOtherPolicies && !searchInHrPolicies) {
+                                            // Only other policies have matches
+                                            $('#other-policy-tab').tab('show');
+                                            $('#activeTabInput').val('other-policy');
+                                        }
+                                        // If both have matches, stay on the current tab or use the tab parameter from URL
+                                    }
+
+                                    // Update the active tab input when tabs are changed
+                                    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                                        var target = $(e.target).attr("data-bs-target");
+                                        if (target === "#hr-policy") {
+                                            $('#activeTabInput').val('hr-policy');
+                                        } else if (target === "#other-policy") {
+                                            $('#activeTabInput').val('other-policy');
+                                        }
+                                    });
+
+                                    // Initialize DataTables for both tables
+                                    <?php if (!empty($hrPolicies)) : ?>
+                                        $('#hr-policy-table').DataTable({
+                                            "order": [], // Disable initial sorting
+                                            "searching": false // Disable DataTables search as we have our own
+                                        });
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($otherPolicies)) : ?>
+                                        $('#other-policy-table').DataTable({
+                                            "order": [], // Disable initial sorting
+                                            "searching": false // Disable DataTables search as we have our own
+                                        });
+                                    <?php endif; ?>
+
+                                    // Highlight search terms in the tables
+                                    if (searchTerm) {
+                                        $('table td').each(function() {
+                                            var text = $(this).text();
+                                            if (text.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1) {
+                                                $(this).addClass('highlight');
+                                            }
+                                        });
+                                    }
+                                });
 
                                 data.forEach(item => {
                                     const form = document.getElementById('edit_' + item.policyid);
@@ -526,21 +625,6 @@ $resultArr = pg_fetch_all($result);
                                                 });
                                         }
                                     });
-                                });
-
-                                // Initialize DataTables for both tables
-                                $(document).ready(function() {
-                                    <?php if (!empty($hrPolicies)) : ?>
-                                        $('#hr-policy-table').DataTable({
-                                            "order": [] // Disable initial sorting
-                                        });
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($otherPolicies)) : ?>
-                                        $('#other-policy-table').DataTable({
-                                            "order": [] // Disable initial sorting
-                                        });
-                                    <?php endif; ?>
                                 });
                             </script>
 
