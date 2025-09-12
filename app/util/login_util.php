@@ -74,6 +74,35 @@ function checkTwoFA($twofa_enabled, $twofa_secret)
     }
 }
 
+function checkAbsconding($absconding)
+{
+    // Initialize the message variable
+    $message = '';
+
+    // Check if the user has not enabled 2FA or if the secret is empty
+    if ($absconding === 'Yes') {
+        $message = "Your account has been flagged as inactive. Please contact support.";
+    }
+
+    // If a message is set, show the alert and redirect
+    if ($message) {
+        // Start output buffering
+        ob_start();
+
+        // Display the alert and redirect using JavaScript
+        echo '<script type="text/javascript">';
+        echo 'alert("' . addslashes($message) . '");';
+        echo 'window.location.href = "logout.php";';
+        echo '</script>';
+
+        // End output buffering and send the output
+        ob_end_flush();
+
+        // Stop further script execution
+        exit();
+    }
+}
+
 function checkPageAccess()
 {
     global $filterstatus;
@@ -290,9 +319,11 @@ function validation()
     global $associatenumber; // added to check HRMS validation
     global $twofa_enabled; // added to check 2FA setup
     global $twofa_secret; // added to check 2FA setup
+    global $absconding; // added to check absconding status
     // Check default password
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
     checkTwoFA($twofa_enabled, $twofa_secret);
+    checkAbsconding($absconding);
 
     $checkPageAccessResult = checkPageAccess();
     if ($checkPageAccessResult != "allow") {
