@@ -416,6 +416,11 @@ if (!$result) {
                     name: "Zee home",
                     latitude: 19.3173098,
                     longitude: -81.1816173
+                },
+                {
+                    name: "Kolkata office",
+                    latitude: 22.755938,
+                    longitude: 88.369624
                 }
             ];
 
