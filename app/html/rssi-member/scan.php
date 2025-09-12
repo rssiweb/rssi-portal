@@ -407,7 +407,6 @@ while ($row = pg_fetch_assoc($locations_result)) {
         }
 
         function checkIfAtOffice() {
-            var officeLocations = <?php echo json_encode($officeLocations); ?>;
 
             // Get latitude and longitude values
             console.log(latitude, longitude);
@@ -416,6 +415,7 @@ while ($row = pg_fetch_assoc($locations_result)) {
                 return;
             }
 
+            var officeLocations = <?php echo json_encode($officeLocations); ?>; // Array of office locations from PHP
             var tolerance = 0.05; // 50 meters in KM
             var atOffice = false;
             var nearestLocation = null;
