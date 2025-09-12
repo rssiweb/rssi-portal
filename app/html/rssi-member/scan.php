@@ -30,22 +30,6 @@ if (!$result) {
     exit;
 }
 ?>
-<?php
-// Fetch active office locations
-$locations_result = pg_query($con, "SELECT name, latitude, longitude FROM office_locations WHERE is_active = TRUE");
-
-$officeLocations = [];
-while ($row = pg_fetch_assoc($locations_result)) {
-    $officeLocations[] = [
-        "name" => $row['name'],
-        "latitude" => (float)$row['latitude'],
-        "longitude" => (float)$row['longitude']
-    ];
-}
-
-// Pass to JS
-echo "<script>var officeLocations = " . json_encode($officeLocations) . ";</script>";
-?>
 
 <!doctype html>
 <html lang="en">
@@ -409,19 +393,43 @@ echo "<script>var officeLocations = " . json_encode($officeLocations) . ";</scri
             }
         }
 
-        function checkIfAtOffice(latitude, longitude) {
+        function checkIfAtOffice() {
+            // Get latitude and longitude values
             console.log(latitude, longitude);
             if (!latitude || !longitude) {
                 alert("Error getting location. Please try again later or contact support.");
                 return;
             }
 
+            // List of office locations
+            var officeLocations = [{
+                    name: "RSSI LKO office",
+                    latitude: 26.864342,
+                    longitude: 81.025571
+                },
+                {
+                    name: "Gurgaon location",
+                    latitude: 28.4229632,
+                    longitude: 77.053952
+                },
+                {
+                    name: "Zee home",
+                    latitude: 19.3173098,
+                    longitude: -81.1816173
+                },
+                {
+                    name: "Kolkata office",
+                    latitude: 22.7559325,
+                    longitude: 88.3696212
+                }
+            ];
+
             var tolerance = 0.05; // 50 meters in KM
             var atOffice = false;
             var nearestLocation = null;
             var nearestDistance = Infinity;
 
-            // Check each active office location
+            // Check each office location
             for (var i = 0; i < officeLocations.length; i++) {
                 var loc = officeLocations[i];
                 var distance = getDistance(latitude, longitude, loc.latitude, loc.longitude);
@@ -435,7 +443,7 @@ echo "<script>var officeLocations = " . json_encode($officeLocations) . ";</scri
                 if (distance <= tolerance) {
                     atOffice = true;
                     nearestLocation = loc;
-                    break; // User is within tolerance
+                    break; // User is within tolerance, no need to check further
                 }
             }
 
