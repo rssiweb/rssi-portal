@@ -419,8 +419,8 @@ if (!$result) {
                 },
                 {
                     name: "Kolkata office",
-                    latitude: 22.755938,
-                    longitude: 88.369624
+                    latitude: 22.7559325,
+                    longitude: 88.3696212
                 }
             ];
 
