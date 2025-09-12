@@ -397,31 +397,55 @@ if (!$result) {
             // Get latitude and longitude values
             console.log(latitude, longitude);
             if (!latitude || !longitude) {
-
                 alert("Error getting location. Please try again later or contact support.");
                 return;
             }
-            // restrict the location to the office location (50m radius) of a set point 
-            var officeLocation = {
-                //  RSSI LKO office
-                latitude: 26.864342,
-                longitude: 81.025571
 
-                //  Gurgaon location
-                // latitude: 28.4229632,
-                // longitude: 77.053952
+            // List of office locations
+            var officeLocations = [{
+                    name: "RSSI LKO office",
+                    latitude: 26.864342,
+                    longitude: 81.025571
+                },
+                {
+                    name: "Gurgaon location",
+                    latitude: 28.4229632,
+                    longitude: 77.053952
+                },
+                {
+                    name: "Zee home",
+                    latitude: 19.3173098,
+                    longitude: -81.1816173
+                }
+            ];
 
-                // zee home
-                // latitude: 19.3173098 ,
-                // longitude: -81.1816173
-            };
-            var distance = getDistance(latitude, longitude, officeLocation.latitude, officeLocation.longitude);
-            console.log("distance is:", distance);
-            tolerance = 0.05; // 50m
-            if (distance > tolerance) {
+            var tolerance = 0.05; // 50 meters in KM
+            var atOffice = false;
+            var nearestLocation = null;
+            var nearestDistance = Infinity;
+
+            // Check each office location
+            for (var i = 0; i < officeLocations.length; i++) {
+                var loc = officeLocations[i];
+                var distance = getDistance(latitude, longitude, loc.latitude, loc.longitude);
+                console.log("Distance to", loc.name, "is:", distance, "KM");
+
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestLocation = loc;
+                }
+
+                if (distance <= tolerance) {
+                    atOffice = true;
+                    nearestLocation = loc;
+                    break; // User is within tolerance, no need to check further
+                }
+            }
+
+            if (!atOffice) {
                 hideLoading();
-                distance = Math.round(distance * 100) / 100;
-                alert(`Seems like you are not in office (${distance} KM away from office). Please try again when you are in office.`);
+                nearestDistance = Math.round(nearestDistance * 100) / 100;
+                alert(`Seems like you are not in office (${nearestDistance} KM away from ${nearestLocation.name}). Please try again when you are in office.`);
                 return;
             } else {
                 allowAttendance = true;
@@ -471,7 +495,7 @@ if (!$result) {
                 const result = await response.json();
 
                 if (result.error) {
-                    alert("Error recording attendance. Please try again later or contact support.");
+                    alert(result.error); // Handles both general errors and absconding
                 } else {
                     addRowInAttendanceTable(result);
                     playNotificationSound(); // Play notification sound on successful form submission

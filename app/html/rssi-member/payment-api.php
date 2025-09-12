@@ -912,9 +912,10 @@ if ($formtype === "attendance") {
     $category = $status_row['category'];
     $class = $status_row['class'];
     $engagement = ""; // Assuming engagement is not present in rssimyprofile_student
+    $absconding = ""; // Assuming absconding is not present in rssimyprofile_student
   } else {
     // If no result is found in rssimyprofile_student table, fetch from rssimyaccount_members table
-    $select_status_query = 'SELECT filterstatus, fullname, engagement FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
+    $select_status_query = 'SELECT filterstatus, fullname, engagement, absconding FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
     pg_prepare($con, "select_status_members", $select_status_query);
     $status_result_members = pg_execute($con, "select_status_members", array($user_id));
     $status_row_members = pg_fetch_assoc($status_result_members);
@@ -924,6 +925,7 @@ if ($formtype === "attendance") {
       $status = $status_row_members['filterstatus'];
       $name = $status_row_members['fullname'];
       $engagement = $status_row_members['engagement'];
+      $absconding = $status_row_members['absconding'];
       $category = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
       $class = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
     } else {
@@ -933,10 +935,20 @@ if ($formtype === "attendance") {
       $engagement = 'default_engagement';
       $category = 'default_category';
       $class = 'default_class';
+      $absconding = 'default_absconding';
     }
   }
 
   // Now $status, $name, $engagement, $category, and $class contain the desired values.
+
+  // Check if absconding is 'Yes' and stop further processing
+  if ($absconding === 'Yes') {
+    echo json_encode(array(
+      "error" => "Your profile has been marked inactive. Hence, your attendance has not been recorded. Please contact support.",
+      "absconding" => $absconding
+    ));
+    exit(); // Stop further execution so attendance is not inserted
+  }
 
   // Prepared statement for INSERT query
   $insert_query = 'INSERT INTO public.attendance(user_id, punch_in, ip_address, gps_location, recorded_by, date, status) VALUES ($1, $2, $3, $4, $5, $6, $7)';
@@ -946,7 +958,7 @@ if ($formtype === "attendance") {
   if (pg_affected_rows($result) !== 1) {
     echo json_encode(
       array(
-        "error" => "Unable to record attendance"
+        "error" => "Error recording attendance. Please try again later or contact support."
       )
     );
   } else {
