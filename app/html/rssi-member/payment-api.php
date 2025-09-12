@@ -944,7 +944,7 @@ if ($formtype === "attendance") {
   // Check if absconding is 'Yes' and stop further processing
   if ($absconding === 'Yes') {
     echo json_encode(array(
-      "error" => "Attention: Your account has been flagged as inactive, so we couldn’t record your attendance. Please contact support to resolve this.",
+      "error" => "Error recording attendance. The scanned account is flagged as inactive. Please contact support.",
       "absconding" => $absconding
     ));
     exit(); // Stop further execution so attendance is not inserted
