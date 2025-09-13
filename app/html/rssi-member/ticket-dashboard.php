@@ -447,6 +447,7 @@ if (!function_exists('makeClickableLinks')) {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Support 360</a></li>
+                    <li class="breadcrumb-item"><a href="ticket_log.php">Ticket Log</a></li>
                     <li class="breadcrumb-item active">Ticket dashboard</li>
                 </ol>
             </nav>

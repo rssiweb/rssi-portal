@@ -446,12 +446,7 @@ if (count($selected_associates) > 0) {
                             </div>
                             <form method="POST" class="filter-form row g-3">
                                 <div class="col-md-2">
-                                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>">
-                                    <div class="form-text">Exact match only</div>
-                                </div>
-
-                                <div class="col-md-2">
-                                    <select id="academic_year" name="academic_year" class="form-control select2">
+                                    <select id="academic_year" name="academic_year" class="form-control select2" required>
                                         <?php
                                         // Get current academic year (April to March)
                                         $current_year = date('Y');
@@ -474,6 +469,11 @@ if (count($selected_associates) > 0) {
                                         ?>
                                     </select>
                                     <div class="form-text">Academic Year</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>">
+                                    <div class="form-text">Exact match only</div>
                                 </div>
 
                                 <div class="col-md-2">
