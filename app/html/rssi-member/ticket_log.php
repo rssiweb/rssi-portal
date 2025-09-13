@@ -17,6 +17,28 @@ $filter_concerned_individual = isset($_POST['concerned_individual']) ? $_POST['c
 $filter_raised_by = isset($_POST['raised_by']) ? $_POST['raised_by'] : '';
 $filter_assigned_to = isset($_POST['assigned_to']) ? $_POST['assigned_to'] : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+$filter_academic_year = isset($_POST['academic_year']) ? $_POST['academic_year'] : '';
+
+// Parse academic year to get start and end dates
+if ($filter_academic_year) {
+    list($start_year, $end_year) = explode('-', $filter_academic_year);
+    $academic_year_start = $start_year . '-04-01';
+    $academic_year_end = $end_year . '-03-31';
+} else {
+    // Default to current academic year if not set
+    $current_year = date('Y');
+    $current_month = date('n');
+
+    if ($current_month < 4) {
+        $academic_year_start = ($current_year - 1) . '-04-01';
+        $academic_year_end = $current_year . '-03-31';
+        $filter_academic_year = ($current_year - 1) . '-' . $current_year;
+    } else {
+        $academic_year_start = $current_year . '-04-01';
+        $academic_year_end = ($current_year + 1) . '-03-31';
+        $filter_academic_year = $current_year . '-' . ($current_year + 1);
+    }
+}
 
 // Use default statuses only if all filters are empty
 $filter_status_for_query = (
@@ -26,7 +48,8 @@ $filter_status_for_query = (
     empty($filter_concerned_individual) &&
     empty($filter_raised_by) &&
     empty($filter_assigned_to) &&
-    empty($filter_status)
+    empty($filter_status) &&
+    empty($filter_academic_year)
 ) ? ['Open', 'In Progress'] : $filter_status;
 
 // Get unique values for filter dropdowns
@@ -78,6 +101,10 @@ $query = "
     LEFT JOIN rssimyaccount_members m2 ON a.assigned_to = m2.associatenumber
     WHERE 1=1
 ";
+
+// Apply academic year filter
+$query .= " AND t.timestamp >= '" . pg_escape_string($con, $academic_year_start) . "' 
+            AND t.timestamp <= '" . pg_escape_string($con, $academic_year_end) . " 23:59:59'";
 
 // Apply role-based filtering
 if ($role !== 'Admin') {
@@ -168,6 +195,10 @@ $metrics_query = "
     ) s ON t.ticket_id = s.ticket_id
     WHERE 1=1
 ";
+
+// Apply academic year filter to metrics too
+$metrics_query .= " AND t.timestamp >= '" . pg_escape_string($con, $academic_year_start) . "' 
+                    AND t.timestamp <= '" . pg_escape_string($con, $academic_year_end) . " 23:59:59'";
 
 // Apply role-based filtering to metrics too
 if ($role !== 'Admin') {
@@ -428,6 +459,32 @@ if (count($selected_associates) > 0) {
                                 </div>
 
                                 <div class="col-md-2">
+                                    <select id="academic_year" name="academic_year" class="form-control select2">
+                                        <?php
+                                        // Get current academic year (April to March)
+                                        $current_year = date('Y');
+                                        $current_month = date('n');
+
+                                        // Generate academic year options (current + 4 previous years)
+                                        for ($i = 0; $i < 5; $i++) {
+                                            $year_offset = $i;
+                                            if ($current_month < 4) {
+                                                $start_year = $current_year - 1 - $year_offset;
+                                                $end_year = $current_year - $year_offset;
+                                            } else {
+                                                $start_year = $current_year - $year_offset;
+                                                $end_year = $current_year + 1 - $year_offset;
+                                            }
+                                            $academic_year_value = $start_year . '-' . $end_year;
+                                            $is_selected = ($filter_academic_year == $academic_year_value) ? 'selected' : '';
+                                            echo "<option value='$academic_year_value' $is_selected>$academic_year_value</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <div class="form-text">Academic Year</div>
+                                </div>
+
+                                <div class="col-md-2">
                                     <select id="type" name="type" class="form-control select2">
                                         <option value="">All Types</option>
                                         <?php foreach ($types as $type): ?>
@@ -506,7 +563,7 @@ if (count($selected_associates) > 0) {
                                     <div class="form-text">Select Assigned To</div>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <select id="status" name="status[]" class="form-control select2" multiple>
                                         <option value="In Progress" <?php echo in_array('In Progress', $filter_status) ? 'selected' : ''; ?>>In Progress</option>
                                         <option value="Open" <?php echo in_array('Open', $filter_status) ? 'selected' : ''; ?>>Open</option>
@@ -582,6 +639,7 @@ if (count($selected_associates) > 0) {
         $(document).ready(function() {
             // Map of select IDs to their placeholders
             const selects = {
+                'academic_year': 'Academic Year',
                 'type': 'Select Type',
                 'category': 'Select Category',
                 'status': 'Select Status (Multi-select)'
@@ -592,6 +650,7 @@ if (count($selected_associates) > 0) {
                 $('#' + id).select2({
                     theme: 'bootstrap-5',
                     placeholder: placeholder,
+                    allowClear: true,
                     width: '100%'
                 });
             });
@@ -628,6 +687,7 @@ if (count($selected_associates) > 0) {
                         },
                         cache: true
                     },
+                    theme: 'bootstrap-5',
                     minimumInputLength: 1,
                     placeholder: placeholderText,
                     allowClear: true
