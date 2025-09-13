@@ -39,15 +39,13 @@ if ($filter_academic_year) {
         $filter_academic_year = $current_year . '-' . ($current_year + 1);
     }
 }
-// Determine if default statuses should be applied based on other filters except academic year
-$use_default_status = empty($filter_type) 
-                   && empty($filter_category) 
-                   && empty($filter_concerned_individual) 
-                   && empty($filter_raised_by) 
-                   && empty($filter_assigned_to) 
-                   && empty($filter_status);
+// Check if the form is submitted by checking academic year, which is always present in the form
+$form_submitted = isset($_POST['academic_year']);
 
-// Apply default statuses only if other filters (except academic year) are not set
+// Apply default only when it's not a form submission
+$use_default_status = !$form_submitted;
+
+// Set the filter for the query
 $filter_status_for_query = $use_default_status ? ['Open', 'In Progress'] : $filter_status;
 
 // Get unique values for filter dropdowns
