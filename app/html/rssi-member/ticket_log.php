@@ -39,18 +39,10 @@ if ($filter_academic_year) {
         $filter_academic_year = $current_year . '-' . ($current_year + 1);
     }
 }
+// Determine if it's the initial page load (no filters applied)
+$is_initial_load = $_SERVER['REQUEST_METHOD'] === 'GET' && count($_GET) === 0;
 
-// Use default statuses only if all filters are empty
-$filter_status_for_query = (
-    empty($filter_ticket_id) &&
-    empty($filter_type) &&
-    empty($filter_category) &&
-    empty($filter_concerned_individual) &&
-    empty($filter_raised_by) &&
-    empty($filter_assigned_to) &&
-    empty($filter_status) &&
-    empty($filter_academic_year)
-) ? ['Open', 'In Progress'] : $filter_status;
+$filter_status_for_query = $is_initial_load ? ['Open', 'In Progress'] : $filter_status;
 
 // Get unique values for filter dropdowns
 $type_query = "SELECT DISTINCT action FROM support_ticket WHERE action IS NOT NULL ORDER BY action";
