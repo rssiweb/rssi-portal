@@ -18,10 +18,16 @@ $filter_raised_by = isset($_POST['raised_by']) ? $_POST['raised_by'] : '';
 $filter_assigned_to = isset($_POST['assigned_to']) ? $_POST['assigned_to'] : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
-// Set default statuses if no filter value is selected
-if (empty($filter_status) && empty($_POST)) {
-    $filter_status = ['Open', 'In Progress']; // Default statuses on page load
-}
+// Use default statuses only if all filters are empty
+$filter_status_for_query = (
+    empty($filter_ticket_id) &&
+    empty($filter_type) &&
+    empty($filter_category) &&
+    empty($filter_concerned_individual) &&
+    empty($filter_raised_by) &&
+    empty($filter_assigned_to) &&
+    empty($filter_status)
+) ? ['Open', 'In Progress'] : $filter_status;
 
 // Get unique values for filter dropdowns
 $type_query = "SELECT DISTINCT action FROM support_ticket WHERE action IS NOT NULL ORDER BY action";
@@ -119,11 +125,10 @@ if ($filter_assigned_to) {
 }
 
 // Apply multi-select status filter
-if (!empty($filter_status)) {
-    // Escape each status for SQL safety
+if (!empty($filter_status_for_query)) {
     $escapedStatuses = array_map(function ($status) use ($con) {
         return "'" . pg_escape_string($con, $status) . "'";
-    }, $filter_status);
+    }, $filter_status_for_query);
 
     $query .= " AND s.status IN (" . implode(", ", $escapedStatuses) . ")";
 }
@@ -514,11 +519,20 @@ if (count($selected_associates) > 0) {
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2
-            $('.select2').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Select Status',
-                width: '100%'
+            // Map of select IDs to their placeholders
+            const selects = {
+                'type': 'Select Type',
+                'category': 'Select Category',
+                'status': 'Select Status (Multi-select)'
+            };
+
+            // Loop through each select and initialize Select2
+            $.each(selects, function(id, placeholder) {
+                $('#' + id).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: placeholder,
+                    width: '100%'
+                });
             });
 
             // Check if resultArr is empty
