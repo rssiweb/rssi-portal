@@ -173,7 +173,7 @@ $resultArr = pg_fetch_all($result);
 $metrics_query = "
     SELECT 
         COUNT(*) as total_tickets,
-        SUM(CASE WHEN s.status IN ('Open', 'In Progress') THEN 1 ELSE 0 END) as open_tickets,
+        SUM(CASE WHEN s.status IN ('Open') THEN 1 ELSE 0 END) as open_tickets,
         SUM(CASE WHEN s.status = 'In Progress' THEN 1 ELSE 0 END) as inprogress_tickets,
         SUM(CASE WHEN s.status IN ('Closed', 'Resolved') THEN 1 ELSE 0 END) as closed_tickets,
         AVG(CASE WHEN s.status IN ('Closed', 'Resolved') THEN 
