@@ -22,71 +22,84 @@ function calculateFinancialYear($timestamp)
   return $financialYear;
 }
 
-$searchField = isset($_POST['searchField']) ? $_POST['searchField'] : '';
+$searchField = isset($_POST['searchField']) ? trim($_POST['searchField']) : '';
 $fyear = isset($_POST['get_fyear']) ? $_POST['get_fyear'] : '';
 
 function fetchDataAndTotalAmount($con, $searchField, $fyear)
 {
   $query = "SELECT
-  pd.*,
-  ud.*,
-  CASE 
-      WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
-      ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
-  END || '-' ||
-  CASE 
-      WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
-      ELSE EXTRACT(YEAR FROM pd.timestamp)
-  END AS financial_year
-  FROM donation_paymentdata AS pd
-  LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
-  WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
-        (((CASE 
-            WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
-            ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
-        END || '-' ||
-        CASE 
-            WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
-            ELSE EXTRACT(YEAR FROM pd.timestamp)
-        END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) ORDER BY pd.timestamp DESC";
+    pd.*,
+    ud.*,
+    CASE 
+        WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+        ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+    END || '-' ||
+    CASE 
+        WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+        ELSE EXTRACT(YEAR FROM pd.timestamp)
+    END AS financial_year
+    FROM donation_paymentdata AS pd
+    LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+    WHERE (
+        (
+            pd.donationid LIKE '%' || $1 || '%' OR
+            pd.tel LIKE '%' || $1 || '%'
+        ) OR $1 IS NULL
+    ) AND (
+        (
+            CASE 
+                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+                ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+            END || '-' ||
+            CASE 
+                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+                ELSE EXTRACT(YEAR FROM pd.timestamp)
+            END
+        ) = $2 OR $2 IS NULL
+    )
+    ORDER BY pd.timestamp DESC";
 
   $params = array();
   if ($searchField !== '') {
     $params[] = $searchField;
   } else {
-    $params[] = null; // Placeholder value for $1
+    $params[] = null;
   }
 
   if ($fyear !== '') {
     $params[] = $fyear;
   } else {
-    $params[] = null; // Placeholder value for $2
+    $params[] = null;
   }
 
   $result = pg_query_params($con, $query, $params);
-
   $resultArr = pg_fetch_all($result);
 
-  $totalAmountQuery = "SELECT SUM(pd.amount) 
-                      FROM donation_paymentdata AS pd
-                      WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
-                            (((CASE 
-                                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
-                                ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
-                            END || '-' ||
-                            CASE 
-                                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
-                                ELSE EXTRACT(YEAR FROM pd.timestamp)
-                            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) AND status='Approved'";
+  $totalAmountQuery = "SELECT SUM(pd.amount)
+                        FROM donation_paymentdata AS pd
+                        WHERE (
+                            (
+                                pd.donationid LIKE '%' || $1 || '%' OR
+                                pd.tel LIKE '%' || $1 || '%'
+                            ) OR $1 IS NULL
+                        ) AND (
+                            (
+                                CASE 
+                                    WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+                                    ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+                                END || '-' ||
+                                CASE 
+                                    WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+                                    ELSE EXTRACT(YEAR FROM pd.timestamp)
+                                END
+                            ) = $2 OR $2 IS NULL
+                        ) AND status='Approved'";
 
   $totalAmountResult = pg_query_params($con, $totalAmountQuery, $params);
   $totalDonatedAmount = pg_fetch_result($totalAmountResult, 0, 0);
 
   return array($resultArr, $totalDonatedAmount);
 }
-
-$searchField = isset($_POST['searchField']) ? $_POST['searchField'] : '';
-$fyear = isset($_POST['get_fyear']) ? $_POST['get_fyear'] : '';
 
 if ($searchField !== '' || $fyear !== '') {
   list($resultArr, $totalDonatedAmount) = fetchDataAndTotalAmount($con, $searchField, $fyear);
@@ -202,7 +215,7 @@ if ($searchField !== '' || $fyear !== '') {
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
-                    <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Contact number" value="<?php echo $searchField ?>">
+                    <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Donation ref or contact number" value="<?php echo htmlspecialchars($searchField); ?>">
                     <select name="get_fyear" id="get_fyear" class="form-select" style="width:max-content;display:inline-block" required>
                       <?php if ($fyear == null) { ?>
                         <option disabled selected hidden>Select Year</option>
@@ -303,7 +316,7 @@ if ($searchField !== '' || $fyear !== '') {
                           </td>
                         </tr>
                       <?php endforeach; ?>
-                    <?php elseif ($fyear == null): ?>
+                    <?php elseif ($searchField == null && $fyear == null): ?>
                       <tr>
                         <td colspan="10">Please select Filter value.</td>
                       </tr>
