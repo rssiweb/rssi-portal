@@ -18,6 +18,15 @@ if ($searchField !== '') {
     // If $searchField is empty, set an empty result array
     $resultArr = array();
 }
+
+// Check if donation exists and if its status is Approved
+$isValidDonation = false;
+if (is_array($resultArr) && count($resultArr) > 0) {
+    if (strtolower($resultArr[0]['status']) === 'approved') {
+        $isValidDonation = true;
+    }
+}
+// Close the database connection if needed
 ?>
 
 <!DOCTYPE html>
@@ -167,106 +176,134 @@ if ($searchField !== '') {
                 </div>
             </div>
         </form>
+
         <?php if (sizeof($resultArr) > 0) { ?>
+
             <?php foreach ($resultArr as $array) { ?>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="flex-align">
-                            <div>
-                                <img src="../img/logo_bg.png" alt="Logo" class="logo">
+                <?php if ($isValidDonation): ?>
+                    <!-- Display the invoice only if the donation is valid -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="flex-align">
+                                <div>
+                                    <img src="../img/logo_bg.png" alt="Logo" class="logo">
+                                </div>
+                                <div class="invoice-text">
+                                    <h2>Invoice</h2>
+                                    <p class="text-end">Invoice number: <?php echo $array['donationid'] ?></br>
+                                        Date (dd/MM/yyyy): <?php echo date("d/m/Y g:i a", strtotime($array['timestamp'])) ?></p>
+                                </div>
                             </div>
-                            <div class="invoice-text">
-                                <h2>Invoice</h2>
-                                <p class="text-end">Invoice number: <?php echo $array['donationid'] ?></br>
-                                    Date (dd/MM/yyyy): <?php echo date("d/m/Y g:i a", strtotime($array['timestamp'])) ?></p>
-                            </div>
+                            <hr>
+                            <h2>Rina Shiksha Sahayak Foundation</h2>
+                            <p>1074/801/A Jhapetapur, Backside of Municipality, West Medinipur, West Bengal, 721301, India<br>
+                                CIN: U80101WB2020NPL237900<br>
+                                Section-12A Reg No: AAKCR2540KE20214 dated 31-05-2021<br>
+                                Section-80G Reg No: AAKCR2540KF20214 dated 31-05-2021<br>
+                                Permanent Account Number (PAN): AAKCR2540K<br>
+                                Tax Deduction and Collection Account Number (TAN): CALR17955A<br>
+                                www.rssi.in
+                            </p>
                         </div>
-                        <hr>
-                        <h2>Rina Shiksha Sahayak Foundation</h2>
-                        <p>1074/801/A Jhapetapur, Backside of Municipality, West Medinipur, West Bengal, 721301, India<br>
-                            CIN: U80101WB2020NPL237900<br>
-                            Section-12A Reg No: AAKCR2540KE20214 dated 31-05-2021<br>
-                            Section-80G Reg No: AAKCR2540KF20214 dated 31-05-2021<br>
-                            Permanent Account Number (PAN): AAKCR2540K<br>
-                            Tax Deduction and Collection Account Number (TAN): CALR17955A<br>
-                            www.rssi.in
-                        </p>
+                        <div class="col-md-6">
+                            <div class="qr-code-section">
+                                <!-- QR code to check authenticity -->
+                                <div id="qrcode"></div>
+                            </div>
+                            <h4>Bill to</h4>
+                            <p><?php echo $array['fullname'] ?><br>
+                                <?php echo $array['postaladdress'] ?><br>
+                                <?php echo $array['documenttype'] . ' - ' . str_repeat('X', max(0, strlen($array['nationalid']) - 4)) . substr($array['nationalid'], -4); ?><br>
+                                <?php echo $array['tel'] ?><br>
+                                <?php echo $array['email'] ?></p>
+                            <hr>
+                            <p class="text-end">Total in <?php echo $array['currency'] ?></p>
+                            <h4 class="text-end">&#8377;<?php echo $array['amount'] ?></h4>
+                            <hr>
+                            <h4>Summary</h4>
+                            <hr>
+                            <table class="table">
+                                <tr>
+                                    <td>Transaction ID</td>
+                                    <td><?php echo $array['transactionid'] ?></td>
+                                </tr>
+                                <tr>
+                                    <td>Mode of Payment</td>
+                                    <td>Online</td>
+                                </tr>
+                            </table>
+                            <hr>
+                            <p class="small">Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="qr-code-section">
-                            <!-- QR code to check authenticity -->
-                            <div id="qrcode"></div>
+
+                    <!-- Footer to display document generated date and message -->
+                    <div class="report-footer p-2 bg-light text-end">
+                        <p class="small mb-0">Document generated on: <?php echo date("d/m/Y g:i a") ?>. This is a computer-generated document. No signature is required. </p>
+                    </div>
+                <?php else: ?>
+                    <!-- Show the rejected donation modal only -->
+                    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Access Denied</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    This donation has been rejected and cannot be used to generate an invoice. Please contact support for further assistance.
+                                </div>
+                            </div>
                         </div>
-                        <h4>Bill to</h4>
-                        <p><?php echo $array['fullname'] ?><br>
-                            <?php echo $array['postaladdress'] ?><br>
-                            <?php echo $array['documenttype'] . ' - ' . str_repeat('X', max(0, strlen($array['nationalid']) - 4)) . substr($array['nationalid'], -4); ?><br>
-                            <?php echo $array['tel'] ?><br>
-                            <?php echo $array['email'] ?></p>
-                        <hr>
-                        <p class="text-end">Total in <?php echo $array['currency'] ?></p>
-                        <h4 class="text-end">&#8377;<?php echo $array['amount'] ?></h4>
-                        <hr>
-                        <h4>Summary</h4>
-                        <hr>
-                        <table class="table">
-                            <tr>
-                                <td>Transaction ID</td>
-                                <td><?php echo $array['transactionid'] ?></td>
-                            </tr>
-                            <tr>
-                                <td>Mode of Payment</td>
-                                <td>Online</td>
-                            </tr>
-                        </table>
-                        <hr>
-                        <p class="small">Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+                                backdrop: 'static',
+                                keyboard: false
+                            });
+                            myModal.show();
+                        };
+                    </script>
+                <?php endif; ?>
+            <?php }
+        } else { ?>
+            <!-- Onboarding not initiated -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <?php
+                            if (empty($searchField)) {
+                                $error_message = "No donation ID entered.";
+                            } else {
+                                if (pg_num_rows($result) == 0) {
+                                    $error_message = "No record found for the entered donation ID";
+                                }
+                            }
+                            if (isset($error_message)) {
+                                echo $error_message;
+                            } ?>
+                        </div>
                     </div>
                 </div>
-    </div>
-
-
-    <!-- Footer to display document generated date and message -->
-    <div class="report-footer p-2 bg-light text-end">
-        <p class="small mb-0">Document generated on: <?php echo date("d/m/Y g:i a") ?>. This is a computer-generated document. No signature is required. </p>
-    </div>
-<?php }
-        } else { ?>
-<!-- Onboarding not initiated -->
-<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <?php
-                if (empty($searchField)) {
-                    $error_message = "No donation ID entered.";
-                } else {
-                    if (pg_num_rows($result) == 0) {
-                        $error_message = "No record found for the entered donation ID";
-                    }
-                }
-                if (isset($error_message)) {
-                    echo $error_message;
-                } ?>
-            </div>
-        </div>
-    </div>
-</div>
-<?php } ?>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-<script>
-    window.onload = function() {
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        myModal.show();
-    };
-</script>
+        <?php } ?>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+        <script>
+            window.onload = function() {
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                myModal.show();
+            };
+        </script>
 
 </body>
 

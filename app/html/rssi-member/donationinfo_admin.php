@@ -251,7 +251,7 @@ if ($searchField !== '' || $fyear !== '') {
                           <td><?= $array['documenttype'] ?>/<?= $array['nationalid'] ?></td>
                           <td>Online</td>
                           <td>
-                            <?php if ($array['donationid'] != null): ?>
+                            <?php if ($array['status'] === 'Approved'): ?>
                               <a href="/donation_invoice.php?searchField=<?= $array['donationid'] ?>" target="_blank"><?= $array['donationid'] ?></a>
                             <?php else: ?>
                               <?= $array['donationid'] ?>
@@ -355,6 +355,8 @@ if ($searchField !== '' || $fyear !== '') {
           <div style="width: 100%; text-align: right;">
             <p id="status" class="badge bg-secondary"><span class="donationid"></span></p>
           </div>
+          <p>Message from Donor</p>
+          <p><span class="message"></span></p>
 
           <form id="donation_review" action="#" method="POST">
             <input type="hidden" name="form-type" value="donation_review" readonly>
@@ -364,7 +366,7 @@ if ($searchField !== '' || $fyear !== '') {
             <div class="mb-3">
               <label for="reviewer_status" class="form-label">Status</label>
               <select name="reviewer_status" id="reviewer_status" class="form-select" required>
-                <option disabled selected hidden>Status</option>
+                <option value="" disabled selected hidden>Select status</option>
                 <option value="Approved">Approved</option>
                 <option value="Under review">Under review</option>
                 <option value="Rejected">Rejected</option>
@@ -380,8 +382,8 @@ if ($searchField !== '' || $fyear !== '') {
             <button type="submit" id="donationupdate" class="btn btn-danger btn-sm">Update</button>
           </form>
           <div class="text-end p-2" style="font-size: small; font-style: italic; color: #A2A2A2;">
-          Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
-        </div>
+            Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -401,6 +403,7 @@ if ($searchField !== '' || $fyear !== '') {
 
       // Fill fields
       document.querySelector(".donationid").innerHTML = mydata["donationid"];
+      document.querySelector(".message").innerHTML = mydata["message"] ? mydata["message"] : "No message provided.";
       document.getElementById("donationid").value = mydata["donationid"];
       document.getElementById("reviewer_status").value = mydata["status"] || '';
       document.getElementById("reviewer_remarks").value = mydata["reviewer_remarks"] || '';
