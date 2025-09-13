@@ -39,10 +39,16 @@ if ($filter_academic_year) {
         $filter_academic_year = $current_year . '-' . ($current_year + 1);
     }
 }
-// Determine if it's the initial page load (no filters applied)
-$is_initial_load = $_SERVER['REQUEST_METHOD'] === 'GET' && count($_GET) === 0;
+// Determine if default statuses should be applied based on other filters except academic year
+$use_default_status = empty($filter_type) 
+                   && empty($filter_category) 
+                   && empty($filter_concerned_individual) 
+                   && empty($filter_raised_by) 
+                   && empty($filter_assigned_to) 
+                   && empty($filter_status);
 
-$filter_status_for_query = $is_initial_load ? ['Open', 'In Progress'] : $filter_status;
+// Apply default statuses only if other filters (except academic year) are not set
+$filter_status_for_query = $use_default_status ? ['Open', 'In Progress'] : $filter_status;
 
 // Get unique values for filter dropdowns
 $type_query = "SELECT DISTINCT action FROM support_ticket WHERE action IS NOT NULL ORDER BY action";
@@ -557,10 +563,13 @@ if (count($selected_associates) > 0) {
 
                                 <div class="col-md-2">
                                     <select id="status" name="status[]" class="form-control select2" multiple>
-                                        <option value="In Progress" <?php echo in_array('In Progress', $filter_status) ? 'selected' : ''; ?>>In Progress</option>
-                                        <option value="Open" <?php echo in_array('Open', $filter_status) ? 'selected' : ''; ?>>Open</option>
-                                        <option value="Closed" <?php echo in_array('Closed', $filter_status) ? 'selected' : ''; ?>>Closed</option>
-                                        <option value="Resolved" <?php echo in_array('Resolved', $filter_status) ? 'selected' : ''; ?>>Resolved</option>
+                                        <?php
+                                        $selected_statuses = $use_default_status ? ['Open', 'In Progress'] : $filter_status;
+                                        ?>
+                                        <option value="In Progress" <?php echo in_array('In Progress', $selected_statuses) ? 'selected' : ''; ?>>In Progress</option>
+                                        <option value="Open" <?php echo in_array('Open', $selected_statuses) ? 'selected' : ''; ?>>Open</option>
+                                        <option value="Closed" <?php echo in_array('Closed', $selected_statuses) ? 'selected' : ''; ?>>Closed</option>
+                                        <option value="Resolved" <?php echo in_array('Resolved', $selected_statuses) ? 'selected' : ''; ?>>Resolved</option>
                                     </select>
                                     <div class="form-text">Select Status (Multi-select)</div>
                                 </div>
