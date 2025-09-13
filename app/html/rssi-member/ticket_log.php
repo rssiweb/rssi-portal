@@ -248,18 +248,34 @@ if (count($selected_associates) > 0) {
         }
 
         .dashboard-card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
         }
 
         .dashboard-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
         }
 
         .stats-number {
             font-size: 1.8rem;
             font-weight: bold;
+        }
+
+        .card-border-left {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 5px;
+        }
+
+        .card-icon {
+            opacity: 0.7;
         }
 
         .select2-container--bootstrap-5 {
@@ -294,215 +310,260 @@ if (count($selected_associates) > 0) {
         </div><!-- End Page Title -->
 
         <section class="section dashboard">
-            <!-- Dashboard metrics -->
-            <!-- <div class="row">
-                <div class="col-lg-3 col-md-6">
-                    <div class="card dashboard-card bg-primary text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Tickets</h5>
-                            <div class="stats-number"><?php echo $metrics['total_tickets'] ?? 0; ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card dashboard-card bg-warning text-dark">
-                        <div class="card-body">
-                            <h5 class="card-title">Open Tickets</h5>
-                            <div class="stats-number"><?php echo $metrics['open_tickets'] ?? 0; ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card dashboard-card bg-info text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">In Progress</h5>
-                            <div class="stats-number"><?php echo $metrics['inprogress_tickets'] ?? 0; ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card dashboard-card bg-success text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Closed Tickets</h5>
-                            <div class="stats-number"><?php echo $metrics['closed_tickets'] ?? 0; ?></div>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
-
-            <!-- <?php if (isset($metrics['avg_hours_to_resolve']) && $metrics['avg_hours_to_resolve'] > 0): ?>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Average Resolution Time</h5>
-                            <div class="stats-number">
-                                <?php
-                                $avg_hours = floatval($metrics['avg_hours_to_resolve']);
-                                if ($avg_hours < 24) {
-                                    echo number_format($avg_hours, 1) . " hours";
-                                } else {
-                                    echo number_format($avg_hours / 24, 1) . " days";
-                                }
-                                ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?> -->
-
             <!-- Reports -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <div class="container">
-                                <form method="POST" class="filter-form row g-3">
-                                    <div class="col-md-2">
-                                        <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>">
-                                        <div class="form-text">Exact match only</div>
+                            <!-- Dashboard metrics - Updated design -->
+                            <div class="row">
+                                <!-- Total Tickets -->
+                                <div class="col-lg-2 col-md-6 mb-3">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="card-content">
+                                                    <h5 class="card-title text-muted">Total Tickets</h5>
+                                                    <div class="stats-number"><?php echo $metrics['total_tickets'] ?? 0; ?></div>
+                                                </div>
+                                                <div class="card-icon">
+                                                    <i class="bi bi-ticket-detailed fs-1 text-primary"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-border-left bg-primary"></div>
                                     </div>
-
-                                    <div class="col-md-2">
-                                        <select id="type" name="type" class="form-control select2">
-                                            <option value="">All Types</option>
-                                            <?php foreach ($types as $type): ?>
-                                                <option value="<?php echo htmlspecialchars($type['action']); ?>" <?php echo $filter_type == $type['action'] ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($type['action']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="form-text">Select Type</div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <select id="category" name="category" class="form-control select2">
-                                            <option value="">All Categories</option>
-                                            <?php foreach ($categories as $category):
-                                                // Decode JSON if needed
-                                                $catData = json_decode($category['category'], true);
-                                                $catName = is_array($catData) && count($catData) > 0 ? $catData[0] : $category['category'];
-                                            ?>
-                                                <option value="<?php echo htmlspecialchars($catName); ?>" <?php echo $filter_category == $catName ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($catName); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="form-text">Select Category</div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <select id="concerned_individual" name="concerned_individual" class="form-control select2">
-                                            <option value="<?php echo htmlspecialchars($filter_concerned_individual); ?>" <?php echo $filter_concerned_individual ? 'selected' : ''; ?>>
-                                                <?php
-                                                if ($filter_concerned_individual && isset($members_data[$filter_concerned_individual])) {
-                                                    echo htmlspecialchars($members_data[$filter_concerned_individual]);
-                                                } elseif ($filter_concerned_individual) {
-                                                    echo htmlspecialchars($filter_concerned_individual);
-                                                } else {
-                                                    echo 'Select Concerned Individual';
-                                                }
-                                                ?>
-                                            </option>
-                                        </select>
-                                        <div class="form-text">Select Concerned Individual</div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <select id="raised_by" name="raised_by" class="form-control select2">
-                                            <option value="<?php echo htmlspecialchars($filter_raised_by); ?>" <?php echo $filter_raised_by ? 'selected' : ''; ?>>
-                                                <?php
-                                                if ($filter_raised_by && isset($members_data[$filter_raised_by])) {
-                                                    echo htmlspecialchars($members_data[$filter_raised_by]);
-                                                } elseif ($filter_raised_by) {
-                                                    echo htmlspecialchars($filter_raised_by);
-                                                } else {
-                                                    echo 'Select Raised By';
-                                                }
-                                                ?>
-                                            </option>
-                                        </select>
-                                        <div class="form-text">Select Raised By</div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <select id="assigned_to" name="assigned_to" class="form-control select2">
-                                            <option value="<?php echo htmlspecialchars($filter_assigned_to); ?>" <?php echo $filter_assigned_to ? 'selected' : ''; ?>>
-                                                <?php
-                                                if ($filter_assigned_to && isset($members_data[$filter_assigned_to])) {
-                                                    echo htmlspecialchars($members_data[$filter_assigned_to]);
-                                                } elseif ($filter_assigned_to) {
-                                                    echo htmlspecialchars($filter_assigned_to);
-                                                } else {
-                                                    echo 'Select Assigned To';
-                                                }
-                                                ?>
-                                            </option>
-                                        </select>
-                                        <div class="form-text">Select Assigned To</div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <select id="status" name="status[]" class="form-control select2" multiple>
-                                            <option value="In Progress" <?php echo in_array('In Progress', $filter_status) ? 'selected' : ''; ?>>In Progress</option>
-                                            <option value="Open" <?php echo in_array('Open', $filter_status) ? 'selected' : ''; ?>>Open</option>
-                                            <option value="Closed" <?php echo in_array('Closed', $filter_status) ? 'selected' : ''; ?>>Closed</option>
-                                            <option value="Resolved" <?php echo in_array('Resolved', $filter_status) ? 'selected' : ''; ?>>Resolved</option>
-                                        </select>
-                                        <div class="form-text">Select Status (Multi-select)</div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-primary" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Filter
-                                        </button>
-                                        <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-secondary">
-                                            <i class="bi bi-arrow-clockwise"></i>&nbsp;Reset
-                                        </a>
-                                    </div>
-                                </form>
-                                <div class="table-responsive">
-                                    <table class="table" id="table-id">
-                                        <thead>
-                                            <tr>
-                                                <th>Ticket Id</th>
-                                                <th>Description</th>
-                                                <th>Type</th>
-                                                <th>Category</th>
-                                                <th>Severity</th>
-                                                <th>Raised by</th>
-                                                <th>Tagged to</th>
-                                                <th>Ticket Timestamp</th>
-                                                <th>Latest Assignment Timestamp</th>
-                                                <th>Latest Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php if (empty($resultArr)) { ?>
-                                                <tr>
-                                                    <td colspan="10">No records found</td>
-                                                </tr>
-                                            <?php } else { ?>
-                                                <?php foreach ($resultArr as $array) { ?>
-                                                    <tr>
-                                                        <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
-                                                        <td><?php echo htmlspecialchars($array['short_description']); ?></td>
-                                                        <td><?php echo htmlspecialchars($array['action']); ?></td>
-                                                        <td><?php echo htmlspecialchars(json_decode($array['category'], true)[0] ?? ''); ?></td>
-                                                        <td><?php echo htmlspecialchars($array['severity']); ?></td>
-                                                        <td><?php echo htmlspecialchars($array['raised_by_name'] ?: $array['raised_by']); ?></td>
-                                                        <td><?php echo htmlspecialchars($array['assigned_to_name'] ?: $array['assigned_to']); ?></td>
-                                                        <td><?php echo htmlspecialchars(date("d/m/Y g:i a", strtotime($array['ticket_timestamp']))); ?></td>
-                                                        <td><?php echo !empty($array['latest_assignment_timestamp']) ? htmlspecialchars(date("d/m/Y g:i a", strtotime($array['latest_assignment_timestamp']))) : 'N/A'; ?></td>
-                                                        <td><?php echo htmlspecialchars($array['latest_status_description']); ?></td>
-                                                    </tr>
-                                                <?php } ?>
-                                            <?php } ?>
-                                        </tbody>
-                                    </table>
                                 </div>
+
+                                <!-- Open Tickets -->
+                                <div class="col-lg-2 col-md-6 mb-3">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="card-content">
+                                                    <h5 class="card-title text-muted">Open Tickets</h5>
+                                                    <div class="stats-number"><?php echo $metrics['open_tickets'] ?? 0; ?></div>
+                                                </div>
+                                                <div class="card-icon">
+                                                    <i class="bi bi-folder2-open fs-1 text-warning"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-border-left bg-warning"></div>
+                                    </div>
+                                </div>
+
+                                <!-- In Progress -->
+                                <div class="col-lg-2 col-md-6 mb-3">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="card-content">
+                                                    <h5 class="card-title text-muted">In Progress</h5>
+                                                    <div class="stats-number"><?php echo $metrics['inprogress_tickets'] ?? 0; ?></div>
+                                                </div>
+                                                <div class="card-icon">
+                                                    <i class="bi bi-arrow-clockwise fs-1 text-info"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-border-left bg-info"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Closed Tickets -->
+                                <div class="col-lg-2 col-md-6 mb-3">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="card-content">
+                                                    <h5 class="card-title text-muted">Closed Tickets</h5>
+                                                    <div class="stats-number"><?php echo $metrics['closed_tickets'] ?? 0; ?></div>
+                                                </div>
+                                                <div class="card-icon">
+                                                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-border-left bg-success"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Average Resolution Time - Now in the same row -->
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="card-content">
+                                                    <h5 class="card-title text-muted">Avg. Resolution Time</h5>
+                                                    <div class="stats-number">
+                                                        <?php
+                                                        if (isset($metrics['avg_hours_to_resolve']) && $metrics['avg_hours_to_resolve'] > 0) {
+                                                            $avg_hours = floatval($metrics['avg_hours_to_resolve']);
+                                                            if ($avg_hours < 24) {
+                                                                echo number_format($avg_hours, 1) . " hrs";
+                                                            } else {
+                                                                echo number_format($avg_hours / 24, 1) . " days";
+                                                            }
+                                                        } else {
+                                                            echo "N/A";
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                                <div class="card-icon">
+                                                    <i class="bi bi-clock-history fs-1 text-secondary"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-border-left bg-secondary"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <form method="POST" class="filter-form row g-3">
+                                <div class="col-md-2">
+                                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>">
+                                    <div class="form-text">Exact match only</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select id="type" name="type" class="form-control select2">
+                                        <option value="">All Types</option>
+                                        <?php foreach ($types as $type): ?>
+                                            <option value="<?php echo htmlspecialchars($type['action']); ?>" <?php echo $filter_type == $type['action'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($type['action']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div class="form-text">Select Type</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select id="category" name="category" class="form-control select2">
+                                        <option value="">All Categories</option>
+                                        <?php foreach ($categories as $category):
+                                            // Decode JSON if needed
+                                            $catData = json_decode($category['category'], true);
+                                            $catName = is_array($catData) && count($catData) > 0 ? $catData[0] : $category['category'];
+                                        ?>
+                                            <option value="<?php echo htmlspecialchars($catName); ?>" <?php echo $filter_category == $catName ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($catName); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div class="form-text">Select Category</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select id="concerned_individual" name="concerned_individual" class="form-control select2">
+                                        <option value="<?php echo htmlspecialchars($filter_concerned_individual); ?>" <?php echo $filter_concerned_individual ? 'selected' : ''; ?>>
+                                            <?php
+                                            if ($filter_concerned_individual && isset($members_data[$filter_concerned_individual])) {
+                                                echo htmlspecialchars($members_data[$filter_concerned_individual]);
+                                            } elseif ($filter_concerned_individual) {
+                                                echo htmlspecialchars($filter_concerned_individual);
+                                            } else {
+                                                echo 'Select Concerned Individual';
+                                            }
+                                            ?>
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Select Concerned Individual</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select id="raised_by" name="raised_by" class="form-control select2">
+                                        <option value="<?php echo htmlspecialchars($filter_raised_by); ?>" <?php echo $filter_raised_by ? 'selected' : ''; ?>>
+                                            <?php
+                                            if ($filter_raised_by && isset($members_data[$filter_raised_by])) {
+                                                echo htmlspecialchars($members_data[$filter_raised_by]);
+                                            } elseif ($filter_raised_by) {
+                                                echo htmlspecialchars($filter_raised_by);
+                                            } else {
+                                                echo 'Select Raised By';
+                                            }
+                                            ?>
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Select Raised By</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select id="assigned_to" name="assigned_to" class="form-control select2">
+                                        <option value="<?php echo htmlspecialchars($filter_assigned_to); ?>" <?php echo $filter_assigned_to ? 'selected' : ''; ?>>
+                                            <?php
+                                            if ($filter_assigned_to && isset($members_data[$filter_assigned_to])) {
+                                                echo htmlspecialchars($members_data[$filter_assigned_to]);
+                                            } elseif ($filter_assigned_to) {
+                                                echo htmlspecialchars($filter_assigned_to);
+                                            } else {
+                                                echo 'Select Assigned To';
+                                            }
+                                            ?>
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Select Assigned To</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <select id="status" name="status[]" class="form-control select2" multiple>
+                                        <option value="In Progress" <?php echo in_array('In Progress', $filter_status) ? 'selected' : ''; ?>>In Progress</option>
+                                        <option value="Open" <?php echo in_array('Open', $filter_status) ? 'selected' : ''; ?>>Open</option>
+                                        <option value="Closed" <?php echo in_array('Closed', $filter_status) ? 'selected' : ''; ?>>Closed</option>
+                                        <option value="Resolved" <?php echo in_array('Resolved', $filter_status) ? 'selected' : ''; ?>>Resolved</option>
+                                    </select>
+                                    <div class="form-text">Select Status (Multi-select)</div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Filter
+                                    </button>
+                                    <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-clockwise"></i>&nbsp;Reset
+                                    </a>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th>Ticket Id</th>
+                                            <th>Description</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Severity</th>
+                                            <th>Raised by</th>
+                                            <th>Tagged to</th>
+                                            <th>Ticket Timestamp</th>
+                                            <th>Latest Assignment Timestamp</th>
+                                            <th>Latest Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($resultArr)) { ?>
+                                            <tr>
+                                                <td colspan="10">No records found</td>
+                                            </tr>
+                                        <?php } else { ?>
+                                            <?php foreach ($resultArr as $array) { ?>
+                                                <tr>
+                                                    <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
+                                                    <td><?php echo htmlspecialchars($array['short_description']); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['action']); ?></td>
+                                                    <td><?php echo htmlspecialchars(json_decode($array['category'], true)[0] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['severity']); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['raised_by_name'] ?: $array['raised_by']); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['assigned_to_name'] ?: $array['assigned_to']); ?></td>
+                                                    <td><?php echo htmlspecialchars(date("d/m/Y g:i a", strtotime($array['ticket_timestamp']))); ?></td>
+                                                    <td><?php echo !empty($array['latest_assignment_timestamp']) ? htmlspecialchars(date("d/m/Y g:i a", strtotime($array['latest_assignment_timestamp']))) : 'N/A'; ?></td>
+                                                    <td><?php echo htmlspecialchars($array['latest_status_description']); ?></td>
+                                                </tr>
+                                            <?php } ?>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
