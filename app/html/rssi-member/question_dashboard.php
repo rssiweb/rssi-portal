@@ -179,7 +179,73 @@ $questionIdFilter = $_GET['question_ids'] ?? '';
 // Capture status filter
 $statusFilter = $_GET['status'] ?? '';
 
-// Build WHERE clause
+// Build WHERE clause for count query
+$whereClausesCount = [];
+
+// Category filter applies to all
+if ($categoryFilter) {
+    $whereClausesCount[] = "q.category_id = '$categoryFilter'";
+}
+
+// Question ID filter
+if ($questionIdFilter) {
+    $ids = explode(',', $questionIdFilter);
+    $sanitizedIds = array_map('intval', $ids);
+    $idsString = implode(',', $sanitizedIds);
+    $whereClausesCount[] = "q.id IN ($idsString)";
+}
+
+// Status filter (only if valid value is selected)
+if ($statusFilter === 't' || $statusFilter === 'f') {
+    $whereClausesCount[] = "q.is_active = '$statusFilter'";
+}
+
+// For non-admins, restrict by creator
+if ($role !== 'Admin') {
+    $whereClausesCount[] = "q.created_by = '$associatenumber'";
+}
+
+$whereSqlCount = count($whereClausesCount) > 0 ? 'WHERE ' . implode(' AND ', $whereClausesCount) : '';
+
+// Count query to check data volume
+$countQuery = "
+    SELECT COUNT(*) as total_count
+    FROM test_questions q
+    $whereSqlCount
+";
+
+$countResult = pg_query($con, $countQuery);
+$countRow = pg_fetch_assoc($countResult);
+$totalCount = $countRow['total_count'];
+
+// Check if admin needs to be warned about large data volume
+$showWarning = false;
+$forceDateFilter = false;
+$forceCurrentDate = false;
+
+if ($role === 'Admin') {
+    // If no date filter is applied and count is high
+    if ($ignoreDate && $totalCount > 100) {
+        $showWarning = true;
+        $forceDateFilter = true;
+        $ignoreDate = false; // Force date filter
+        $dateFromFilter = $currentDate;
+        $dateToFilter = $currentDate;
+    }
+    // If date filter is applied but count is still high
+    else if (!$ignoreDate && $totalCount > 100) {
+        $showWarning = true;
+        $forceCurrentDate = true;
+        $dateFromFilter = $currentDate;
+        $dateToFilter = $currentDate;
+
+        // Also update the GET parameters to reflect the change
+        $_GET['date_from'] = $currentDate;
+        $_GET['date_to'] = $currentDate;
+    }
+}
+
+// Build WHERE clause for main query
 $whereClauses = [];
 
 // Category filter applies to all
@@ -222,6 +288,15 @@ $query = "
 ";
 
 $result = pg_query($con, $query);
+
+// Show warning if needed
+if ($showWarning) {
+    if ($forceDateFilter) {
+        echo "<script>alert('With your filter criteria, you are going to fetch a huge amount of data. Hence, the date range filter is enabled. Please select the desired date range.');</script>";
+    } else if ($forceCurrentDate) {
+        echo "<script>alert('With your current date range, you are fetching a large amount of data. Please narrow down your date range for better performance.');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -855,31 +930,6 @@ $result = pg_query($con, $query);
                     // other options...
                 });
             <?php endif; ?>
-        });
-    </script>
-    <script>
-        // Wait for the DOM to load
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('filterForm');
-            const category = document.querySelector('[name="category"]');
-            const status = document.querySelector('[name="status"]');
-            const questionIds = document.querySelector('[name="question_ids"]');
-            const ignoreDate = document.querySelector('[name="ignore_date"]');
-
-            form.addEventListener('submit', function(e) {
-                // Check if all filters are empty and ignore_date is checked
-                if (
-                    ignoreDate.checked &&
-                    category.value.trim() === '' &&
-                    status.value.trim() === '' &&
-                    questionIds.value.trim() === ''
-                ) {
-                    e.preventDefault(); // Stop the form submission
-                    alert('With your filter criteria, you are going to fetch a huge amount of data. Hence, the date range filter is enabled. Please select the desired date range.');
-                    ignoreDate.checked = false; // Uncheck the ignore date option
-                    form.submit(); // Resubmit the form
-                }
-            });
         });
     </script>
 </body>
