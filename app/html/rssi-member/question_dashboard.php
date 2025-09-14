@@ -81,33 +81,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 ?>
 <?php
 // Get current date
-$currentDate = date('Y-m-d'); // Today's date (e.g., 2025-01-25)
+$currentDate = date('Y-m-d');
 
-// Default to the last 7 days if no date is selected
-if (empty($_GET['date_from']) && empty($_GET['date_to'])) {
-    $dateFromFilter = date('Y-m-d', strtotime('-7 days', strtotime($currentDate))); // 7 days ago (e.g., 2025-01-18)
-    $dateToFilter = $currentDate; // Today (e.g., 2025-01-25)
+// Get user role and ID (assumed to be already set earlier)
+$role = $role;
+$associatenumber = $associatenumber;
+
+// Determine if ignore_date checkbox is set (for admins only)
+$ignoreDate = isset($_GET['ignore_date']) && $_GET['ignore_date'] == '1';
+
+// Default filters
+$dateFromFilter = $currentDate;
+$dateToFilter = $currentDate;
+
+// For admins, use provided filters unless ignore_date is checked
+if ($role === 'Admin') {
+    if (!$ignoreDate) {
+        $dateFromFilter = $_GET['date_from'] ?? $currentDate;
+        $dateToFilter = $_GET['date_to'] ?? $currentDate;
+    }
 } else {
-    $dateFromFilter = $_GET['date_from'] ?? $currentDate;
-    $dateToFilter = $_GET['date_to'] ?? $currentDate;
+    // For non-admins, force today's date and restrict by creator
+    $dateFromFilter = $currentDate;
+    $dateToFilter = $currentDate;
 }
 
 // Capture category filter
 $categoryFilter = $_GET['category'] ?? '';
 
-// Build the WHERE clause based on filters
+// Build WHERE clause
 $whereClauses = [];
+
+// Category filter applies to all
 if ($categoryFilter) {
     $whereClauses[] = "q.category_id = '$categoryFilter'";
 }
 
-// Include both the start and end date with exact time
-if ($dateFromFilter && $dateToFilter) {
-    // Ensure the entire start day is included (from the beginning of the day)
+if ($role !== 'Admin' || ($role === 'Admin' && !$ignoreDate)) {
+    // Apply date filter only if not ignoring it
     $whereClauses[] = "q.created_at >= '$dateFromFilter 00:00:00' AND q.created_at <= '$dateToFilter 23:59:59.999999'";
 }
 
-// Combine the WHERE clauses (if any) and adjust the query
+// For non-admins, restrict by creator
+if ($role !== 'Admin') {
+    $whereClauses[] = "q.created_by = '$associatenumber'";
+}
+
 $whereSql = count($whereClauses) > 0 ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
 // Query to fetch data based on the filters
@@ -116,7 +135,6 @@ $query = "
     FROM test_questions q
     LEFT JOIN test_categories c ON q.category_id = c.id
     $whereSql
-    AND q.id>2522
     ORDER BY q.created_at DESC
 ";
 
@@ -209,14 +227,25 @@ $result = pg_query($con, $query);
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label for="dateFromFilter" class="form-label">Creation Date From</label>
-                                            <input type="date" id="dateFromFilter" name="date_from" class="form-control" value="<?= isset($_GET['date_from']) ? $_GET['date_from'] : $dateFromFilter ?>">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="dateToFilter" class="form-label">Creation Date To</label>
-                                            <input type="date" id="dateToFilter" name="date_to" class="form-control" value="<?= isset($_GET['date_to']) ? $_GET['date_to'] : $dateToFilter ?>">
-                                        </div>
+
+                                        <?php if ($role === 'Admin'): ?>
+                                            <div class="col-md-4">
+                                                <label for="dateFromFilter" class="form-label">Creation Date From</label>
+                                                <input type="date" id="dateFromFilter" name="date_from" class="form-control" value="<?= isset($_GET['date_from']) ? $_GET['date_from'] : $currentDate ?>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="dateToFilter" class="form-label">Creation Date To</label>
+                                                <input type="date" id="dateToFilter" name="date_to" class="form-control" value="<?= isset($_GET['date_to']) ? $_GET['date_to'] : $currentDate ?>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" id="ignoreDate" name="ignore_date" value="1" <?= $ignoreDate ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="ignoreDate">
+                                                        Ignore Date Range
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="mt-3">
                                         <button type="submit" class="btn btn-primary">Apply Filters</button>
@@ -388,6 +417,24 @@ $result = pg_query($con, $query);
             <?php endif; ?>
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ignoreDate = document.getElementById('ignoreDate');
+            const dateFrom = document.getElementById('dateFromFilter');
+            const dateTo = document.getElementById('dateToFilter');
+
+            if (ignoreDate) {
+                function toggleDateFields() {
+                    const disabled = ignoreDate.checked;
+                    dateFrom.disabled = disabled;
+                    dateTo.disabled = disabled;
+                }
+                ignoreDate.addEventListener('change', toggleDateFields);
+                toggleDateFields(); // Initial call to set state
+            }
+        });
+    </script>
+
 </body>
 
 </html>
