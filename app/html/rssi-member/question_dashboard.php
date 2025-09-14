@@ -10,13 +10,53 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+
+// Handle bulk actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
+    $action = $_POST['bulk_action'];
+    $selectedIds = $_POST['selected_ids'] ?? [];
+
+    if (!empty($selectedIds)) {
+        // Convert comma-separated string to array if needed
+        $idsArray = is_array($selectedIds) ? $selectedIds : explode(',', $selectedIds);
+        $ids = implode(",", array_map('intval', $idsArray));
+
+        if ($action === 'inactive') {
+            $updateQuery = "UPDATE test_questions SET is_active = FALSE WHERE id IN ($ids)";
+        } elseif ($action === 'active') {
+            $updateQuery = "UPDATE test_questions SET is_active = TRUE WHERE id IN ($ids)";
+        }
+
+        $updateResult = pg_query($con, $updateQuery);
+
+        if ($updateResult) {
+            $actionText = $action === 'inactive' ? 'inactive' : 'active';
+            echo "<script>
+                    alert('Questions marked as $actionText successfully!');
+                    if (window.history.replaceState) {
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload();
+                  </script>";
+        } else {
+            echo "<script>
+                    alert('Error updating questions.');
+                  </script>";
+        }
+    } else {
+        echo "<script>
+                alert('Please select at least one question.');
+              </script>";
+    }
+}
+
 // Fetch categories for the filter dropdown
 $categoryQuery = "SELECT id, name FROM test_categories WHERE is_active=true ORDER BY name";
 $categoryResult = pg_query($con, $categoryQuery);
 $categories = pg_fetch_all($categoryResult);
 
 // Handle the form submission when editing a question
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && !isset($_POST['bulk_action'])) {
     $questionId = $_POST['id'];
     $questionText = $_POST['question_text'];
     $categoryId = $_POST['category'];
@@ -58,15 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     }
 }
 
-// Handle the delete request for a question
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
-    $deleteId = $_POST['delete_id'];
-    $deleteQuery = "DELETE FROM test_questions WHERE id = $1";
-    $deleteResult = pg_query_params($con, $deleteQuery, array($deleteId));
+// Handle the mark inactive request for a question
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inactive_id']) && !isset($_POST['bulk_action'])) {
+    $inactiveId = $_POST['inactive_id'];
+    $updateQuery = "UPDATE test_questions SET is_active = FALSE WHERE id = $1";
+    $updateResult = pg_query_params($con, $updateQuery, array($inactiveId));
 
-    if ($deleteResult) {
+    if ($updateResult) {
         echo "<script>
-                alert('Question deleted successfully!');
+                alert('Question marked as inactive successfully!');
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
@@ -74,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
               </script>";
     } else {
         echo "<script>
-                alert('Error deleting question.');
+                alert('Error marking question as inactive.');
               </script>";
     }
 }
@@ -109,6 +149,12 @@ if ($role === 'Admin') {
 // Capture category filter
 $categoryFilter = $_GET['category'] ?? '';
 
+// Capture question ID filter
+$questionIdFilter = $_GET['question_ids'] ?? '';
+
+// Capture status filter
+$statusFilter = $_GET['status'] ?? '';
+
 // Build WHERE clause
 $whereClauses = [];
 
@@ -117,8 +163,21 @@ if ($categoryFilter) {
     $whereClauses[] = "q.category_id = '$categoryFilter'";
 }
 
+// Question ID filter
+if ($questionIdFilter) {
+    $ids = explode(',', $questionIdFilter);
+    $sanitizedIds = array_map('intval', $ids);
+    $idsString = implode(',', $sanitizedIds);
+    $whereClauses[] = "q.id IN ($idsString)";
+}
+
+// Status filter (only if valid value is selected)
+if ($statusFilter === 't' || $statusFilter === 'f') {
+    $whereClauses[] = "q.is_active = '$statusFilter'";
+}
+
+// Date filter logic
 if ($role !== 'Admin' || ($role === 'Admin' && !$ignoreDate)) {
-    // Apply date filter only if not ignoring it
     $whereClauses[] = "q.created_at >= '$dateFromFilter 00:00:00' AND q.created_at <= '$dateToFilter 23:59:59.999999'";
 }
 
@@ -129,9 +188,9 @@ if ($role !== 'Admin') {
 
 $whereSql = count($whereClauses) > 0 ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
-// Query to fetch data based on the filters
+// Final query
 $query = "
-    SELECT q.id, q.question_text, q.correct_option, q.created_at, q.created_by, c.id AS category_id, c.name AS category_name
+    SELECT q.id, q.question_text, q.correct_option, q.created_at, q.created_by, q.is_active, c.id AS category_id, c.name AS category_name
     FROM test_questions q
     LEFT JOIN test_categories c ON q.category_id = c.id
     $whereSql
@@ -182,6 +241,28 @@ $result = pg_query($con, $query);
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <style>
+        .bulk-actions {
+            margin-bottom: 15px;
+        }
+
+        .selected-count {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        tr.selected {
+            background-color: #f0f8ff !important;
+        }
+
+        tr[data-id] {
+            cursor: pointer;
+        }
+
+        tr[data-id]:hover {
+            background-color: #f5f5f5 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -211,7 +292,17 @@ $result = pg_query($con, $query);
                         <div class="card-body">
                             <br>
                             <div class="container mt-5">
-                                <!-- <h1 class="mb-4">Question Management</h1> -->
+                                <!-- Bulk Actions -->
+                                <?php if ($role === 'Admin'): ?>
+                                    <form method="POST" id="bulkActionForm" class="bulk-actions">
+                                        <div class="d-flex align-items-center">
+                                            <button type="submit" name="bulk_action" value="inactive" class="btn btn-warning me-2">Bulk Mark Inactive</button>
+                                            <button type="submit" name="bulk_action" value="active" class="btn btn-success me-2">Bulk Mark Active</button>
+                                            <span id="selectedCount" class="selected-count">0 selected</span>
+                                        </div>
+                                        <input type="hidden" name="selected_ids" id="selectedIds">
+                                    </form>
+                                <?php endif; ?>
 
                                 <!-- Filter Section -->
                                 <form method="GET" id="filterForm" class="mb-4">
@@ -226,6 +317,22 @@ $result = pg_query($con, $query);
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
+                                        </div>
+                                        <!-- Status Filter -->
+                                        <div class="col-md-4">
+                                            <label for="statusFilter" class="form-label">Status</label>
+                                            <select id="statusFilter" name="status" class="form-select">
+                                                <option value="">All Statuses</option>
+                                                <option value="t" <?= isset($_GET['status']) && $_GET['status'] === 't' ? 'selected' : '' ?>>Active</option>
+                                                <option value="f" <?= isset($_GET['status']) && $_GET['status'] === 'f' ? 'selected' : '' ?>>Inactive</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="questionIdFilter" class="form-label">Question IDs (comma separated)</label>
+                                            <input type="text" id="questionIdFilter" name="question_ids" class="form-control"
+                                                value="<?= isset($_GET['question_ids']) ? htmlspecialchars($_GET['question_ids']) : '' ?>"
+                                                placeholder="e.g., 1,5,7">
                                         </div>
 
                                         <?php if ($role === 'Admin'): ?>
@@ -257,12 +364,20 @@ $result = pg_query($con, $query);
                                     <table class="table" id="table-id">
                                         <thead>
                                             <tr>
+                                                <th>
+                                                    <?php if ($role === 'Admin'): ?>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </th>
                                                 <th>#</th>
                                                 <th>Question Text</th>
                                                 <th>Category</th>
                                                 <th>Correct Option</th>
                                                 <th>Options</th>
                                                 <th>Last Updated</th>
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -283,31 +398,50 @@ $result = pg_query($con, $query);
                                                         $optionsDisplay .= "{$option['option_key']}: {$option['option_text']}<br>";
                                                     }
                                                 ?>
-                                                    <tr>
+                                                    <tr data-id="<?= $row['id'] ?>">
+                                                        <td>
+                                                            <?php if ($role === 'Admin'): ?>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input row-checkbox" type="checkbox" value="<?= $row['id'] ?>">
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </td>
                                                         <td><?= $row['id'] ?></td>
                                                         <td><?= htmlspecialchars($row['question_text']) ?></td>
                                                         <td><?= htmlspecialchars($row['category_name']) ?></td>
                                                         <td><?= $row['correct_option'] ?></td>
                                                         <td><?= $optionsDisplay ?></td>
                                                         <td><?= (new DateTime($row['created_at']))->format('d/m/Y h:i A') ?> by <?= $row['created_by'] ?></td>
+                                                        <td><?= $row['is_active'] === 't' ? 'Active' : 'Inactive' ?></td>
                                                         <td>
-                                                            <?php if ($role === 'Admin' || $row['created_by'] === $associatenumber): ?>
-                                                                <!-- Edit button -->
-                                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
-                                                                    data-id="<?= $row['id'] ?>" data-question="<?= htmlspecialchars($row['question_text']) ?>"
-                                                                    data-category="<?= $row['category_id'] ?>" data-correct="<?= $row['correct_option'] ?>"
-                                                                    data-options='<?= json_encode($options) ?>'>
-                                                                    Edit
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="bi bi-three-dots-vertical"></i>
                                                                 </button>
-                                                            <?php endif; ?>
+                                                                <ul class="dropdown-menu">
+                                                                    <?php if ($role === 'Admin' || $row['created_by'] === $associatenumber): ?>
+                                                                        <li>
+                                                                            <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editModal"
+                                                                                data-id="<?= $row['id'] ?>" data-question="<?= htmlspecialchars($row['question_text']) ?>"
+                                                                                data-category="<?= $row['category_id'] ?>" data-correct="<?= $row['correct_option'] ?>"
+                                                                                data-options='<?= json_encode($options) ?>'>
+                                                                                <i class="bi bi-pencil-square me-2"></i> Edit
+                                                                            </button>
+                                                                        </li>
+                                                                    <?php endif; ?>
 
-                                                            <?php if ($role === 'Admin'): ?>
-                                                                <!-- Delete button for Admin only -->
-                                                                <form action="" method="POST" onsubmit="return confirm('Are you sure you want to delete this question?');" style="display:inline;">
-                                                                    <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                                                                    <button type="submit" class="btn btn-danger btn-sm mt-2">Delete</button>
-                                                                </form>
-                                                            <?php endif; ?>
+                                                                    <?php if ($role === 'Admin'): ?>
+                                                                        <li>
+                                                                            <form action="" method="POST" onsubmit="return confirm('Are you sure you want to mark this question as inactive?');">
+                                                                                <input type="hidden" name="inactive_id" value="<?= $row['id'] ?>">
+                                                                                <button type="submit" class="dropdown-item" <?= $row['is_active'] === 't' ? '' : 'disabled' ?>>
+                                                                                    <i class="bi bi-x-circle me-2"></i> <?= $row['is_active'] === 't' ? 'Mark Inactive' : 'Disabled' ?>
+                                                                                </button>
+                                                                            </form>
+                                                                        </li>
+                                                                    <?php endif; ?>
+                                                                </ul>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php endwhile; ?>
@@ -398,27 +532,97 @@ $result = pg_query($con, $query);
                 optionsContainer.appendChild(optionDiv);
             });
         });
-    </script>
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($result)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
-        });
-    </script>
-    <script>
+
+        // Bulk selection functionality
         document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectedIds = document.getElementById('selectedIds');
+            const bulkActionForm = document.getElementById('bulkActionForm');
+            const questionIdFilter = document.getElementById('questionIdFilter');
+
+            // Select all functionality
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = selectAll.checked;
+                        updateRowSelection(checkbox);
+                    });
+                    updateSelectionCount();
+                });
+            }
+
+            // Individual checkbox functionality
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateRowSelection(this);
+                    updateSelectionCount();
+
+                    // Update Select All checkbox state
+                    if (selectAll) {
+                        selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+                    }
+                });
+            });
+
+            // Row click selection
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on a checkbox or dropdown
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' &&
+                        !e.target.closest('.dropdown-menu') && !e.target.closest('.form-check')) {
+                        const checkbox = this.querySelector('.row-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            updateRowSelection(checkbox);
+                            updateSelectionCount();
+                        }
+                    }
+                });
+            });
+
+            // Update selection count and hidden field
+            function updateSelectionCount() {
+                const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                selectedCount.textContent = `${selected.length} selected`;
+
+                // Update hidden field with selected IDs
+                selectedIds.value = selected.map(cb => cb.value).join(',');
+
+                // Update question ID filter with selected IDs
+                questionIdFilter.value = selected.map(cb => cb.value).join(',');
+            }
+
+            // Update row visual selection state
+            function updateRowSelection(checkbox) {
+                const row = checkbox.closest('tr');
+                if (checkbox.checked) {
+                    row.classList.add('selected');
+                } else {
+                    row.classList.remove('selected');
+                }
+            }
+
+            // Confirm bulk actions
+            if (bulkActionForm) {
+                bulkActionForm.addEventListener('submit', function(e) {
+                    const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                    if (selected.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one question.');
+                        return;
+                    }
+
+                    const action = document.querySelector('button[name="bulk_action"]:focus')?.value;
+                    const actionText = action === 'inactive' ? 'inactive' : 'active';
+
+                    if (!confirm(`Are you sure you want to mark ${selected.length} question(s) as ${actionText}?`)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
             const ignoreDate = document.getElementById('ignoreDate');
             const dateFrom = document.getElementById('dateFromFilter');
             const dateTo = document.getElementById('dateToFilter');
@@ -432,6 +636,29 @@ $result = pg_query($con, $query);
                 ignoreDate.addEventListener('change', toggleDateFields);
                 toggleDateFields(); // Initial call to set state
             }
+        });
+    </script>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($result)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [], // Disable initial sorting
+                    "columnDefs": [{
+                            "orderable": false,
+                            "targets": [0, 8]
+                        } // Disable sorting on checkbox and actions columns
+                    ]
+                    // other options...
+                });
+            <?php endif; ?>
         });
     </script>
 

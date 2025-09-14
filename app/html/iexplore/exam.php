@@ -206,6 +206,7 @@ if (!$show_form) {
             SELECT id AS question_id, question_text
             FROM test_questions
             WHERE category_id = $1
+            AND is_active = TRUE
             $language_filter
             ORDER BY RANDOM()
             LIMIT $2
