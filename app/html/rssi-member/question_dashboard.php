@@ -11,9 +11,10 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Handle bulk actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
-    $action = $_POST['bulk_action'];
+// Handle status change with remarks
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && isset($_POST['selected_ids'])) {
+    $status = $_POST['status'];
+    $remarks = $_POST['remarks'] ?? '';
     $selectedIds = $_POST['selected_ids'] ?? [];
 
     if (!empty($selectedIds)) {
@@ -21,18 +22,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
         $idsArray = is_array($selectedIds) ? $selectedIds : explode(',', $selectedIds);
         $ids = implode(",", array_map('intval', $idsArray));
 
-        if ($action === 'inactive') {
-            $updateQuery = "UPDATE test_questions SET is_active = FALSE WHERE id IN ($ids)";
-        } elseif ($action === 'active') {
-            $updateQuery = "UPDATE test_questions SET is_active = TRUE WHERE id IN ($ids)";
-        }
+        // Get current timestamp
+        $changeTimestamp = date('Y-m-d H:i:s');
+        $isActive = $status === 'active' ? 'TRUE' : 'FALSE';
+        $oldStatus = $status === 'active' ? 'inactive' : 'active';
+        $newStatus = $status;
+
+        $updateQuery = "UPDATE test_questions 
+                       SET is_active = $isActive, 
+                           change_history = change_history || 
+                           jsonb_build_array(
+                             jsonb_build_object(
+                               'changed_by', '$associatenumber',
+                               'change_type', 'status_change',
+                               'old_value', '$oldStatus',
+                               'new_value', '$newStatus',
+                               'change_timestamp', '$changeTimestamp',
+                               'notes', " . ($remarks ? "'$remarks'" : "'Update by $associatenumber'") . "
+                             )
+                           )
+                       WHERE id IN ($ids)";
 
         $updateResult = pg_query($con, $updateQuery);
 
         if ($updateResult) {
-            $actionText = $action === 'inactive' ? 'inactive' : 'active';
             echo "<script>
-                    alert('Questions marked as $actionText successfully!');
+                    alert('Questions status updated successfully!');
                     if (window.history.replaceState) {
                         window.history.replaceState(null, null, window.location.href);
                     }
@@ -40,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
                   </script>";
         } else {
             echo "<script>
-                    alert('Error updating questions.');
+                    alert('Error updating questions status.');
                   </script>";
         }
     } else {
@@ -48,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
                 alert('Please select at least one question.');
               </script>";
     }
+    exit;
 }
 
 // Fetch categories for the filter dropdown
@@ -63,11 +79,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && !isset($_POS
     $correctOption = $_POST['correct_option'];
     $options = $_POST['options']; // Options array
     $modifiedAt = date('Y-m-d H:i:s');
+    $changeTimestamp = date('Y-m-d H:i:s');
 
-    // Update the question text
+    // First, get the current values to compare
+    $currentQuery = "SELECT question_text, category_id, correct_option FROM test_questions WHERE id = $1";
+    $currentResult = pg_query_params($con, $currentQuery, array($questionId));
+    $currentData = pg_fetch_assoc($currentResult);
+
+    $changes = [];
+    if ($currentData['question_text'] !== $questionText) {
+        $changes[] = "Question text updated";
+    }
+    if ($currentData['category_id'] != $categoryId) {
+        $changes[] = "Category changed from {$currentData['category_id']} to $categoryId";
+    }
+    if ($currentData['correct_option'] !== $correctOption) {
+        $changes[] = "Correct option changed from {$currentData['correct_option']} to $correctOption";
+    }
+
+    $changeNotes = !empty($changes) ? implode(', ', $changes) : 'No content changes detected';
+
+    // Update the question text and history
     $updateQuery = "
         UPDATE test_questions
-        SET question_text = $1, category_id = $2, correct_option = $3, created_at=$5, created_by=$6
+        SET question_text = $1, category_id = $2, correct_option = $3, created_at = $5, created_by = $6,
+            change_history = change_history || 
+            jsonb_build_array(
+              jsonb_build_object(
+                'changed_by', '$associatenumber',
+                'change_type', 'content_edit',
+                'old_value', 'Previous version',
+                'new_value', 'Updated content',
+                'change_timestamp', '$changeTimestamp',
+                'notes', '$changeNotes'
+              )
+            )
         WHERE id = $4
     ";
     $result = pg_query_params($con, $updateQuery, array($questionText, $categoryId, $correctOption, $questionId, $modifiedAt, $associatenumber));
@@ -86,35 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && !isset($_POS
         echo "<script>
                 alert('Question and options updated successfully!');
                 if (window.history.replaceState) {
-                        // Update the URL without causing a page reload or resubmission
-                        window.history.replaceState(null, null, window.location.href);
-                    }
-                    window.location.reload(); // Trigger a page reload to reflect changes
-              </script>";
-    } else {
-        echo "<script>
-                alert('Error updating question.');
-              </script>";
-    }
-}
-
-// Handle the mark inactive request for a question
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inactive_id']) && !isset($_POST['bulk_action'])) {
-    $inactiveId = $_POST['inactive_id'];
-    $updateQuery = "UPDATE test_questions SET is_active = FALSE WHERE id = $1";
-    $updateResult = pg_query_params($con, $updateQuery, array($inactiveId));
-
-    if ($updateResult) {
-        echo "<script>
-                alert('Question marked as inactive successfully!');
-                if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
                 window.location.reload();
               </script>";
     } else {
         echo "<script>
-                alert('Error marking question as inactive.');
+                alert('Error updating question.');
               </script>";
     }
 }
@@ -262,6 +286,35 @@ $result = pg_query($con, $query);
         tr[data-id]:hover {
             background-color: #f5f5f5 !important;
         }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -30px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+        }
+
+        .timeline-content {
+            padding: 10px;
+            border-left: 2px solid #dee2e6;
+        }
+
+        .timeline-item:last-child .timeline-content {
+            border-left: 2px solid transparent;
+        }
     </style>
 </head>
 
@@ -292,18 +345,6 @@ $result = pg_query($con, $query);
                         <div class="card-body">
                             <br>
                             <div class="container mt-5">
-                                <!-- Bulk Actions -->
-                                <?php if ($role === 'Admin'): ?>
-                                    <form method="POST" id="bulkActionForm" class="bulk-actions">
-                                        <div class="d-flex align-items-center">
-                                            <button type="submit" name="bulk_action" value="inactive" class="btn btn-warning me-2">Bulk Mark Inactive</button>
-                                            <button type="submit" name="bulk_action" value="active" class="btn btn-success me-2">Bulk Mark Active</button>
-                                            <span id="selectedCount" class="selected-count">0 selected</span>
-                                        </div>
-                                        <input type="hidden" name="selected_ids" id="selectedIds">
-                                    </form>
-                                <?php endif; ?>
-
                                 <!-- Filter Section -->
                                 <form method="GET" id="filterForm" class="mb-4">
                                     <div class="row g-3">
@@ -358,6 +399,15 @@ $result = pg_query($con, $query);
                                         <button type="submit" class="btn btn-primary">Apply Filters</button>
                                     </div>
                                 </form>
+                                <!-- Bulk Actions -->
+                                <?php if ($role === 'Admin'): ?>
+                                    <div class="d-flex justify-content-end align-items-center bulk-actions">
+                                        <button type="button" class="btn btn-primary" id="bulkActionButton">
+                                            <i class="bi bi-pencil-square me-1"></i> Change Status (<span id="selectedCount">0</span>)
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="selected_ids" id="selectedIds">
+                                <?php endif; ?>
 
                                 <!-- Question Table -->
                                 <div class="table-responsive">
@@ -429,15 +479,11 @@ $result = pg_query($con, $query);
                                                                             </button>
                                                                         </li>
                                                                     <?php endif; ?>
-
                                                                     <?php if ($role === 'Admin'): ?>
                                                                         <li>
-                                                                            <form action="" method="POST" onsubmit="return confirm('Are you sure you want to mark this question as inactive?');">
-                                                                                <input type="hidden" name="inactive_id" value="<?= $row['id'] ?>">
-                                                                                <button type="submit" class="dropdown-item" <?= $row['is_active'] === 't' ? '' : 'disabled' ?>>
-                                                                                    <i class="bi bi-x-circle me-2"></i> <?= $row['is_active'] === 't' ? 'Mark Inactive' : 'Disabled' ?>
-                                                                                </button>
-                                                                            </form>
+                                                                            <button class="dropdown-item view-history" data-question-id="<?= $row['id'] ?>">
+                                                                                <i class="bi bi-clock-history me-2"></i> History
+                                                                            </button>
                                                                         </li>
                                                                     <?php endif; ?>
                                                                 </ul>
@@ -499,6 +545,64 @@ $result = pg_query($con, $query);
             </div>
         </div>
     </div>
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyModalLabel">Question History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="historyContent">
+                        <p class="text-center">Loading history...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Change Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="#" id="statusForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="statusModalLabel">Change Question Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="selected_ids" id="modalSelectedIds">
+                        <div class="mb-3">
+                            <label for="statusChange" class="form-label">Status</label>
+                            <select id="statusChange" name="status" class="form-select" required>
+                                <option value="">Select Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="statusRemarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="statusRemarks" name="remarks" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         // Modal handling for editing questions
@@ -526,20 +630,21 @@ $result = pg_query($con, $query);
                 const optionDiv = document.createElement('div');
                 optionDiv.classList.add('mb-3');
                 optionDiv.innerHTML = `
-            <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
-            <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
-        `;
+                <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
+                <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
+            `;
                 optionsContainer.appendChild(optionDiv);
             });
         });
+    </script>
 
+    <script>
         // Bulk selection functionality
         document.addEventListener('DOMContentLoaded', function() {
             const selectAll = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('.row-checkbox');
             const selectedCount = document.getElementById('selectedCount');
             const selectedIds = document.getElementById('selectedIds');
-            const bulkActionForm = document.getElementById('bulkActionForm');
             const questionIdFilter = document.getElementById('questionIdFilter');
 
             // Select all functionality
@@ -585,7 +690,7 @@ $result = pg_query($con, $query);
             // Update selection count and hidden field
             function updateSelectionCount() {
                 const selected = Array.from(checkboxes).filter(cb => cb.checked);
-                selectedCount.textContent = `${selected.length} selected`;
+                selectedCount.textContent = `${selected.length}`;
 
                 // Update hidden field with selected IDs
                 selectedIds.value = selected.map(cb => cb.value).join(',');
@@ -604,25 +709,6 @@ $result = pg_query($con, $query);
                 }
             }
 
-            // Confirm bulk actions
-            if (bulkActionForm) {
-                bulkActionForm.addEventListener('submit', function(e) {
-                    const selected = Array.from(checkboxes).filter(cb => cb.checked);
-                    if (selected.length === 0) {
-                        e.preventDefault();
-                        alert('Please select at least one question.');
-                        return;
-                    }
-
-                    const action = document.querySelector('button[name="bulk_action"]:focus')?.value;
-                    const actionText = action === 'inactive' ? 'inactive' : 'active';
-
-                    if (!confirm(`Are you sure you want to mark ${selected.length} question(s) as ${actionText}?`)) {
-                        e.preventDefault();
-                    }
-                });
-            }
-
             const ignoreDate = document.getElementById('ignoreDate');
             const dateFrom = document.getElementById('dateFromFilter');
             const dateTo = document.getElementById('dateToFilter');
@@ -638,14 +724,124 @@ $result = pg_query($con, $query);
             }
         });
     </script>
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+
     <script>
+        // Status modal functionality - FIXED VERSION
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+            const statusForm = document.getElementById('statusForm');
+            const modalSelectedIds = document.getElementById('modalSelectedIds');
+            const statusChangeBtn = document.getElementById('bulkActionButton');
+
+            if (statusChangeBtn) {
+                statusChangeBtn.addEventListener('click', function(e) {
+                    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+
+                    if (selected.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one question to change status.');
+                        return false;
+                    }
+
+                    const selectedIds = selected.map(cb => cb.value).join(',');
+                    modalSelectedIds.value = selectedIds;
+
+                    document.getElementById('statusChange').value = '';
+                    document.getElementById('statusRemarks').value = '';
+
+                    // Open the modal only if there are selected items
+                    statusModal.show();
+                });
+            }
+
+            if (statusForm) {
+                statusForm.addEventListener('submit', function(e) {
+                    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+                    if (selected.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one question.');
+                        return;
+                    }
+
+                    const status = document.getElementById('statusChange').value;
+                    if (!status) {
+                        e.preventDefault();
+                        alert('Please select a status.');
+                        return;
+                    }
+
+                    const remarks = document.getElementById('statusRemarks').value;
+                    if (!remarks.trim()) {
+                        e.preventDefault();
+                        alert('Please provide remarks for this status change.');
+                        return;
+                    }
+
+                    if (!confirm(`Are you sure you want to change status for ${selected.length} question(s)?`)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+
+    <script>
+        // History modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+
+            // Handle history button clicks
+            document.querySelectorAll('.view-history').forEach(button => {
+                button.addEventListener('click', function() {
+                    const questionId = this.getAttribute('data-question-id');
+                    loadQuestionHistory(questionId);
+                    historyModal.show();
+                });
+            });
+
+            // Function to load question history
+            function loadQuestionHistory(questionId) {
+                const historyContent = document.getElementById('historyContent');
+                historyContent.innerHTML = '<p class="text-center">Loading history...</p>';
+
+                // AJAX request to fetch history
+                fetch(`get_question_history.php?question_id=${questionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            historyContent.innerHTML = '<p class="text-center">No history available for this question.</p>';
+                            return;
+                        }
+
+                        let html = '<div class="timeline">';
+                        data.forEach(entry => {
+                            html += `
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">${entry.change_type.replace('_', ' ').toUpperCase()}</h6>
+                                    <p class="mb-1 text-muted small">By ${entry.changed_by} on ${new Date(entry.change_timestamp).toLocaleString()}</p>
+                                    <p class="mb-1">${entry.notes}</p>
+                                    ${entry.old_value && entry.new_value ? 
+                                        `<p class="mb-0 small">Changed from <span class="text-danger">${entry.old_value}</span> to <span class="text-success">${entry.new_value}</span></p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        });
+                        html += '</div>';
+                        historyContent.innerHTML = html;
+                    })
+                    .catch(error => {
+                        historyContent.innerHTML = '<p class="text-center text-danger">Error loading history.</p>';
+                        console.error('Error:', error);
+                    });
+            }
+        });
+    </script>
+
+    <script>
+        // DataTables initialization
         $(document).ready(function() {
-            // Check if resultArr is empty
             <?php if (!empty($result)) : ?>
                 // Initialize DataTables only if resultArr is not empty
                 $('#table-id').DataTable({
