@@ -857,7 +857,31 @@ $result = pg_query($con, $query);
             <?php endif; ?>
         });
     </script>
+    <script>
+        // Wait for the DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('filterForm');
+            const category = document.querySelector('[name="category"]');
+            const status = document.querySelector('[name="status"]');
+            const questionIds = document.querySelector('[name="question_ids"]');
+            const ignoreDate = document.querySelector('[name="ignore_date"]');
 
+            form.addEventListener('submit', function(e) {
+                // Check if all filters are empty and ignore_date is checked
+                if (
+                    ignoreDate.checked &&
+                    category.value.trim() === '' &&
+                    status.value.trim() === '' &&
+                    questionIds.value.trim() === ''
+                ) {
+                    e.preventDefault(); // Stop the form submission
+                    alert('With your filter criteria, you are going to fetch a huge amount of data. Hence, the date range filter is enabled. Please select the desired date range.');
+                    ignoreDate.checked = false; // Uncheck the ignore date option
+                    form.submit(); // Resubmit the form
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
