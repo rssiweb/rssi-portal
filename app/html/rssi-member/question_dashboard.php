@@ -916,6 +916,7 @@ $result = pg_query($con, $query);
                     success: function(response) {
                         var data = JSON.parse(response);
                         if (data.success && data.questions.length > 0) {
+                            // Inside your AJAX success loop
                             data.questions.forEach(function(question) {
                                 var optionsDisplay = '';
                                 question.options.forEach(function(option) {
@@ -924,7 +925,31 @@ $result = pg_query($con, $query);
 
                                 var isChecked = selectedRows.has(question.id) ? 'checked' : '';
 
-                                var newRow = [
+                                // Determine if user can edit
+                                var canEdit = <?php echo ($role === 'Admin') ? 'true' : 'false'; ?> || question.created_by === '<?php echo $associatenumber; ?>';
+                                var editButton = '';
+                                if (canEdit) {
+                                    editButton = '<li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editModal"' +
+                                        ' data-id="' + question.id + '" data-question="' + question.question_text.replace(/"/g, '&quot;') + '"' +
+                                        ' data-category="' + question.category_id + '" data-correct="' + question.correct_option + '"' +
+                                        ' data-options=\'' + JSON.stringify(question.options) + '\'>' +
+                                        '<i class="bi bi-pencil-square me-2"></i> Edit</button></li>';
+                                }
+
+                                // Admin only history button
+                                var historyButton = '';
+                                <?php if ($role === 'Admin'): ?>
+                                    historyButton = '<li><button class="dropdown-item view-history" data-question-id="' + question.id + '">' +
+                                        '<i class="bi bi-clock-history me-2"></i> History</button></li>';
+                                <?php endif; ?>
+
+                                var dropdown = '<div class="dropdown">' +
+                                    '<button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+                                    '<i class="bi bi-three-dots-vertical"></i></button>' +
+                                    '<ul class="dropdown-menu">' + editButton + historyButton + '</ul></div>';
+
+                                // Add row with proper data-id
+                                var newRowNode = table.row.add([
                                     '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + question.id + '" ' + isChecked + '></div>',
                                     question.id,
                                     question.question_text,
@@ -933,33 +958,10 @@ $result = pg_query($con, $query);
                                     optionsDisplay,
                                     question.created_at_formatted + ' by ' + question.created_by,
                                     question.is_active === 't' ? 'Active' : 'Inactive',
-                                    '<div class="dropdown">' +
-                                    '<button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
-                                    '<i class="bi bi-three-dots-vertical"></i>' +
-                                    '</button>' +
-                                    '<ul class="dropdown-menu">' +
-                                    '<?php if ($role === 'Admin' || $row['created_by'] === $associatenumber): ?>' +
-                                    '<li>' +
-                                    '<button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editModal"' +
-                                    'data-id="' + question.id + '" data-question="' + question.question_text.replace(/"/g, '&quot;') + '"' +
-                                    'data-category="' + question.category_id + '" data-correct="' + question.correct_option + '"' +
-                                    'data-options=\'' + JSON.stringify(question.options) + '\'>' +
-                                    '<i class="bi bi-pencil-square me-2"></i> Edit' +
-                                    '</button>' +
-                                    '</li>' +
-                                    '<?php endif; ?>' +
-                                    '<?php if ($role === 'Admin'): ?>' +
-                                    '<li>' +
-                                    '<button class="dropdown-item view-history" data-question-id="' + question.id + '">' +
-                                    '<i class="bi bi-clock-history me-2"></i> History' +
-                                    '</button>' +
-                                    '</li>' +
-                                    '<?php endif; ?>' +
-                                    '</ul>' +
-                                    '</div>'
-                                ];
+                                    dropdown
+                                ]).draw(false).node();
 
-                                table.row.add(newRow).draw(false);
+                                $(newRowNode).attr('data-id', question.id);
                             });
 
                             var newOffset = currentOffset + data.questions.length;
