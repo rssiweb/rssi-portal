@@ -654,32 +654,32 @@ $result = pg_query($con, $query);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
+        // Global Set to store selected row IDs
+        let selectedRows = new Set();
+
         // Helper functions - in global scope
         function updateRowSelection(checkbox) {
             const row = $(checkbox).closest('tr');
+            const id = checkbox.value;
             if ($(checkbox).is(':checked')) {
                 row.addClass('selected');
+                selectedRows.add(id);
             } else {
                 row.removeClass('selected');
+                selectedRows.delete(id);
             }
         }
 
         function updateSelectionCount() {
-            const selected = $('.row-checkbox:checked');
-            $('#selectedCount').text(selected.length);
-            $('#selectedIds').val(selected.map(function() {
-                return this.value;
-            }).get().join(','));
-            $('#questionIdFilter').val(selected.map(function() {
-                return this.value;
-            }).get().join(','));
+            $('#selectedCount').text(selectedRows.size);
+            $('#selectedIds').val(Array.from(selectedRows).join(','));
+            $('#questionIdFilter').val(Array.from(selectedRows).join(','));
         }
 
         function loadQuestionHistory(questionId) {
             const historyContent = document.getElementById('historyContent');
             historyContent.innerHTML = '<p class="text-center">Loading history...</p>';
 
-            // AJAX request to fetch history
             fetch(`get_question_history.php?question_id=${questionId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -687,7 +687,6 @@ $result = pg_query($con, $query);
                         historyContent.innerHTML = '<p class="text-center">No history available for this question.</p>';
                         return;
                     }
-
                     let html = '<div class="timeline">';
                     data.forEach(entry => {
                         html += `
@@ -700,8 +699,7 @@ $result = pg_query($con, $query);
                             ${entry.old_value && entry.new_value ? 
                                 `<p class="mb-0 small">Changed from <span class="text-danger">${entry.old_value}</span> to <span class="text-success">${entry.new_value}</span></p>` : ''}
                         </div>
-                    </div>
-                `;
+                    </div>`;
                     });
                     html += '</div>';
                     historyContent.innerHTML = html;
@@ -712,47 +710,15 @@ $result = pg_query($con, $query);
                 });
         }
 
-        // Modal handling for editing questions - FIXED VERSION
-        $(document).on('show.bs.modal', '#editModal', function(event) {
-            const button = event.relatedTarget;
-            const id = $(button).data('id');
-            const question = $(button).data('question');
-            const category = $(button).data('category');
-            const correct = $(button).data('correct');
-            const options = $(button).data('options');
-
-            // Set values for question and other fields
-            $('#editQuestionId').val(id);
-            $('#editQuestionText').val(question);
-            $('#editCategory').val(category);
-            $('#editCorrectOption').val(correct);
-
-            // Clear the options container
-            const optionsContainer = $('#editOptionsContainer');
-            optionsContainer.empty();
-
-            // Add option fields dynamically
-            options.forEach((option, index) => {
-                const optionDiv = $('<div class="mb-3"></div>');
-                optionDiv.html(`
-                <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
-                <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
-            `);
-                optionsContainer.append(optionDiv);
-            });
-        });
-
-        // Function to initialize event handlers for new rows - FIXED VERSION
         function initializeEventHandlers() {
-            // Remove any existing event handlers first to avoid duplicates
-            $('#table-id tbody').off();
+            $('#table-id tbody').off(); // Clear previous handlers
 
-            // Checkbox handlers - FIXED
+            // Checkbox change handler
             $('#table-id tbody').on('change', '.row-checkbox', function() {
                 updateRowSelection(this);
                 updateSelectionCount();
 
-                // Update Select All checkbox state
+                // Update Select All checkbox
                 const allCheckboxes = $('.row-checkbox');
                 const selectAll = $('#selectAll');
                 if (selectAll.length) {
@@ -760,7 +726,17 @@ $result = pg_query($con, $query);
                 }
             });
 
-            // Row click handlers - FIXED
+            // Select All handler – ADD THIS
+            $('#selectAll').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                $('.row-checkbox').each(function() {
+                    $(this).prop('checked', isChecked);
+                    updateRowSelection(this);
+                });
+                updateSelectionCount();
+            });
+
+            // Row click handler
             $('#table-id tbody').on('click', 'tr[data-id]', function(e) {
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' &&
                     !$(e.target).closest('.dropdown-menu').length && !$(e.target).closest('.form-check').length) {
@@ -773,20 +749,18 @@ $result = pg_query($con, $query);
                 }
             });
 
-            // History button handlers - FIXED
+            // View history handler
             $('#table-id tbody').on('click', '.view-history', function(e) {
-                e.stopPropagation(); // Prevent row click event from firing
+                e.stopPropagation();
                 const questionId = $(this).data('question-id');
                 loadQuestionHistory(questionId);
-
-                // Show the history modal
                 const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                 historyModal.show();
             });
 
-            // Edit modal handlers - FIXED
+            // Edit modal handler
             $('#table-id tbody').on('click', '[data-bs-target="#editModal"]', function(e) {
-                e.stopPropagation(); // Prevent row click event from firing
+                e.stopPropagation();
                 const button = $(this);
                 const id = button.data('id');
                 const question = button.data('question');
@@ -805,21 +779,25 @@ $result = pg_query($con, $query);
                 options.forEach(function(option, index) {
                     const optionDiv = $('<div class="mb-3"></div>');
                     optionDiv.html(`
-                    <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
-                    <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
-                `);
+                <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
+                <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
+            `);
                     optionsContainer.append(optionDiv);
                 });
             });
         }
 
-        // DOMContentLoaded event listener
         document.addEventListener('DOMContentLoaded', function() {
-            // Only keep the ignoreDate functionality here
+            // Restore selected rows from already checked checkboxes
+            $('.row-checkbox:checked').each(function() {
+                selectedRows.add(this.value);
+            });
+            updateSelectionCount();
+
+            // Ignore date functionality
             const ignoreDate = document.getElementById('ignoreDate');
             const dateFrom = document.getElementById('dateFromFilter');
             const dateTo = document.getElementById('dateToFilter');
-
             if (ignoreDate) {
                 function toggleDateFields() {
                     const disabled = ignoreDate.checked;
@@ -827,14 +805,13 @@ $result = pg_query($con, $query);
                     dateTo.disabled = disabled;
                 }
                 ignoreDate.addEventListener('change', toggleDateFields);
-                toggleDateFields(); // Initial call to set state
+                toggleDateFields();
             }
 
-            // Initialize event handlers for initial rows
+            // Initialize event handlers
             initializeEventHandlers();
         });
 
-        // Status modal functionality - FIXED VERSION
         document.addEventListener('DOMContentLoaded', function() {
             const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
             const statusForm = document.getElementById('statusForm');
@@ -844,22 +821,14 @@ $result = pg_query($con, $query);
             if (statusChangeBtn) {
                 statusChangeBtn.addEventListener('click', function(e) {
                     const selected = $('.row-checkbox:checked');
-
                     if (selected.length === 0) {
                         e.preventDefault();
                         alert('Please select at least one question to change status.');
                         return false;
                     }
-
-                    const selectedIds = selected.map(function() {
-                        return this.value;
-                    }).get().join(',');
-                    modalSelectedIds.value = selectedIds;
-
+                    modalSelectedIds.value = Array.from(selectedRows).join(',');
                     document.getElementById('statusChange').value = '';
                     document.getElementById('statusRemarks').value = '';
-
-                    // Open the modal only if there are selected items
                     statusModal.show();
                 });
             }
@@ -872,21 +841,18 @@ $result = pg_query($con, $query);
                         alert('Please select at least one question.');
                         return;
                     }
-
                     const status = document.getElementById('statusChange').value;
                     if (!status) {
                         e.preventDefault();
                         alert('Please select a status.');
                         return;
                     }
-
                     const remarks = document.getElementById('statusRemarks').value;
                     if (!remarks.trim()) {
                         e.preventDefault();
                         alert('Please provide remarks for this status change.');
                         return;
                     }
-
                     if (!confirm(`Are you sure you want to change status for ${selected.length} question(s)?`)) {
                         e.preventDefault();
                     }
@@ -894,54 +860,42 @@ $result = pg_query($con, $query);
             }
         });
 
-        // DataTables initialization and Load More functionality
         $(document).ready(function() {
             <?php if (!empty($result)) : ?>
-                // Initialize DataTables only if resultArr is not empty
                 var table = $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [], // Disable initial sorting
+                    "order": [],
                     "columnDefs": [{
-                            "orderable": false,
-                            "targets": [0, 8]
-                        } // Disable sorting on checkbox and actions columns
-                    ]
-                    // other options...
+                        "orderable": false,
+                        "targets": [0, 8]
+                    }]
                 });
             <?php endif; ?>
 
-            // Store records per load preference
             $('#recordsPerLoad').change(function() {
                 localStorage.setItem('recordsPerLoad', $(this).val());
                 $('#recordsToLoad').text($(this).val());
             });
 
-            // Load records per load from localStorage if available
             var savedRecordsPerLoad = localStorage.getItem('recordsPerLoad');
             if (savedRecordsPerLoad) {
                 $('#recordsPerLoad').val(savedRecordsPerLoad);
                 $('#recordsToLoad').text(savedRecordsPerLoad);
             }
 
-            // Load More functionality
             $('#loadMoreBtn').click(function() {
                 var currentOffset = $(this).data('current-offset');
                 var recordsPerLoad = $('#recordsPerLoad').val();
                 var totalRecords = $(this).data('total-records');
 
-                // Get current filter values
                 var category = $('#categoryFilter').val();
                 var status = $('#statusFilter').val();
-                var questionIds = $('#questionIdFilter').val();
                 var dateFrom = $('#dateFromFilter').val();
                 var dateTo = $('#dateToFilter').val();
                 var ignoreDate = $('#ignoreDate').is(':checked') ? 1 : 0;
 
-                // Show loading state
                 var originalText = $(this).html();
                 $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
 
-                // AJAX request to load more data
                 $.ajax({
                     url: 'load_more_questions.php',
                     type: 'GET',
@@ -950,27 +904,23 @@ $result = pg_query($con, $query);
                         limit: recordsPerLoad,
                         category: category,
                         status: status,
-                        question_ids: questionIds,
                         date_from: dateFrom,
                         date_to: dateTo,
                         ignore_date: ignoreDate
                     },
                     success: function(response) {
-                        // Parse the response
                         var data = JSON.parse(response);
-
                         if (data.success && data.questions.length > 0) {
-                            // Add new rows to the table
                             data.questions.forEach(function(question) {
-                                // Prepare options display
                                 var optionsDisplay = '';
                                 question.options.forEach(function(option) {
                                     optionsDisplay += option.option_key + ': ' + option.option_text + '<br>';
                                 });
 
-                                // Create the new row
+                                var isChecked = selectedRows.has(question.id) ? 'checked' : '';
+
                                 var newRow = [
-                                    '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + question.id + '"></div>',
+                                    '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + question.id + '" ' + isChecked + '></div>',
                                     question.id,
                                     question.question_text,
                                     question.category_name,
@@ -1004,32 +954,23 @@ $result = pg_query($con, $query);
                                     '</div>'
                                 ];
 
-                                // Add the row to DataTable
                                 table.row.add(newRow).draw(false);
                             });
 
-                            // Update the current offset
                             var newOffset = currentOffset + data.questions.length;
                             $('#loadMoreBtn').data('current-offset', newOffset);
-
-                            // Update records info
                             $('.records-info').text('Showing ' + newOffset + ' of ' + totalRecords + ' records');
 
-                            // Hide load more button if all records are loaded
                             if (newOffset >= totalRecords) {
                                 $('#loadMoreBtn').hide();
                             }
 
-                            // Reinitialize event handlers for new rows
-                            initializeEventHandlers();
-
+                            $('#loadMoreBtn').html(originalText);
                         } else {
                             alert('No more questions to load.');
                             $('#loadMoreBtn').hide();
+                            $('#loadMoreBtn').html(originalText);
                         }
-
-                        // Restore button text
-                        $('#loadMoreBtn').html(originalText);
                     },
                     error: function() {
                         alert('Error loading more questions. Please try again.');
@@ -1038,10 +979,10 @@ $result = pg_query($con, $query);
                 });
             });
 
-            // Initialize event handlers for initial rows
             initializeEventHandlers();
         });
     </script>
+
 </body>
 
 </html>
