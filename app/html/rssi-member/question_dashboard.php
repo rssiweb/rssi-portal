@@ -713,18 +713,12 @@ $result = pg_query($con, $query);
         function initializeEventHandlers() {
             $('#table-id tbody').off(); // Clear previous handlers
 
-            // Checkbox change handler
-            $('#table-id tbody').on('change', '.row-checkbox', function() {
-                updateRowSelection(this);
-                updateSelectionCount();
-
-                // Update Select All checkbox
-                const allCheckboxes = $('.row-checkbox');
-                const selectAll = $('#selectAll');
-                if (selectAll.length) {
-                    selectAll.prop('checked', allCheckboxes.length === allCheckboxes.filter(':checked').length);
-                }
-            });
+            // Update Select All checkbox
+            const allCheckboxes = $('.row-checkbox');
+            const selectAll = $('#selectAll');
+            if (selectAll.length) {
+                selectAll.prop('checked', allCheckboxes.length === allCheckboxes.filter(':checked').length);
+            }
 
             // Select All handler – ADD THIS
             $('#selectAll').on('change', function() {
@@ -736,16 +730,23 @@ $result = pg_query($con, $query);
                 updateSelectionCount();
             });
 
-            // Row click handler
-            $('#table-id tbody').on('click', 'tr[data-id]', function(e) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' &&
-                    !$(e.target).closest('.dropdown-menu').length && !$(e.target).closest('.form-check').length) {
-                    const checkbox = $(this).find('.row-checkbox');
-                    if (checkbox.length) {
-                        checkbox.prop('checked', !checkbox.prop('checked'));
-                        updateRowSelection(checkbox[0]);
-                        updateSelectionCount();
-                    }
+            // Checkbox change handler (delegated)
+            $('#table-id tbody').off('change', '.row-checkbox').on('change', '.row-checkbox', function(e) {
+                updateRowSelection(this);
+                updateSelectionCount();
+                e.stopPropagation(); // prevent row click from firing
+            });
+
+            // Row click handler (delegated for DataTables)
+            $('#table-id tbody').off('click', 'tr').on('click', 'tr', function(e) {
+                // Ignore clicks on inputs, buttons, dropdowns
+                if ($(e.target).is('input, button, .dropdown-toggle, .dropdown-item')) return;
+
+                const checkbox = $(this).find('.row-checkbox');
+                if (checkbox.length) {
+                    checkbox.prop('checked', !checkbox.prop('checked')); // toggle checkbox
+                    updateRowSelection(checkbox[0]); // update selectedRows set
+                    updateSelectionCount();
                 }
             });
 
