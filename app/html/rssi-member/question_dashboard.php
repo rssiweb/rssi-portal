@@ -179,6 +179,9 @@ $questionIdFilter = $_GET['question_ids'] ?? '';
 // Capture status filter
 $statusFilter = $_GET['status'] ?? '';
 
+// Capture records per load filter
+$recordsPerLoad = $_GET['records_per_load'] ?? '10';
+
 // Build WHERE clause
 $whereClauses = [];
 
@@ -212,13 +215,20 @@ if ($role !== 'Admin') {
 
 $whereSql = count($whereClauses) > 0 ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
-// Final query
+// Count total records
+$countQuery = "SELECT COUNT(*) as total FROM test_questions q $whereSql";
+$countResult = pg_query($con, $countQuery);
+$totalRecords = pg_fetch_assoc($countResult)['total'];
+
+// Final query with limit
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : $recordsPerLoad;
 $query = "
     SELECT q.id, q.question_text, q.correct_option, q.created_at, q.created_by, q.is_active, c.id AS category_id, c.name AS category_name
     FROM test_questions q
     LEFT JOIN test_categories c ON q.category_id = c.id
     $whereSql
     ORDER BY q.created_at DESC
+    LIMIT $limit
 ";
 
 $result = pg_query($con, $query);
@@ -315,6 +325,20 @@ $result = pg_query($con, $query);
         .timeline-item:last-child .timeline-content {
             border-left: 2px solid transparent;
         }
+
+        .load-more-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .records-info {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -394,9 +418,21 @@ $result = pg_query($con, $query);
                                                 </div>
                                             </div>
                                         <?php endif; ?>
+
+                                        <!-- Records per load filter -->
+                                        <div class="col-md-4">
+                                            <label for="recordsPerLoad" class="form-label">Records per load</label>
+                                            <select id="recordsPerLoad" name="records_per_load" class="form-select">
+                                                <option value="10" <?= $recordsPerLoad == '10' ? 'selected' : '' ?>>10</option>
+                                                <option value="20" <?= $recordsPerLoad == '20' ? 'selected' : '' ?>>20</option>
+                                                <option value="50" <?= $recordsPerLoad == '50' ? 'selected' : '' ?>>50</option>
+                                                <option value="100" <?= $recordsPerLoad == '100' ? 'selected' : '' ?>>100</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="mt-3">
                                         <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                        <span class="ms-3 records-info">Total records: <?= $totalRecords ?></span>
                                     </div>
                                 </form>
                                 <!-- Bulk Actions -->
@@ -496,6 +532,20 @@ $result = pg_query($con, $query);
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
+                                </div>
+
+                                <!-- Load More Section -->
+                                <div class="load-more-container">
+                                    <div class="records-info">
+                                        Showing <?= pg_num_rows($result) ?> of <?= $totalRecords ?> records
+                                    </div>
+                                    <?php if (pg_num_rows($result) < $totalRecords): ?>
+                                        <button type="button" class="btn btn-primary" id="loadMoreBtn"
+                                            data-current-offset="<?= pg_num_rows($result) ?>"
+                                            data-total-records="<?= $totalRecords ?>">
+                                            Load More (<span id="recordsToLoad"><?= $recordsPerLoad ?></span>)
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -603,112 +653,169 @@ $result = pg_query($con, $query);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
     <script>
-        // Modal handling for editing questions
-        const editModal = document.getElementById('editModal');
-        editModal.addEventListener('show.bs.modal', function(event) {
+        // Helper functions - in global scope
+        function updateRowSelection(checkbox) {
+            const row = $(checkbox).closest('tr');
+            if ($(checkbox).is(':checked')) {
+                row.addClass('selected');
+            } else {
+                row.removeClass('selected');
+            }
+        }
+
+        function updateSelectionCount() {
+            const selected = $('.row-checkbox:checked');
+            $('#selectedCount').text(selected.length);
+            $('#selectedIds').val(selected.map(function() {
+                return this.value;
+            }).get().join(','));
+            $('#questionIdFilter').val(selected.map(function() {
+                return this.value;
+            }).get().join(','));
+        }
+
+        function loadQuestionHistory(questionId) {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.innerHTML = '<p class="text-center">Loading history...</p>';
+
+            // AJAX request to fetch history
+            fetch(`get_question_history.php?question_id=${questionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        historyContent.innerHTML = '<p class="text-center">No history available for this question.</p>';
+                        return;
+                    }
+
+                    let html = '<div class="timeline">';
+                    data.forEach(entry => {
+                        html += `
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">${entry.change_type.replace('_', ' ').toUpperCase()}</h6>
+                            <p class="mb-1 text-muted small">By ${entry.changed_by} on ${new Date(entry.change_timestamp).toLocaleString()}</p>
+                            <p class="mb-1">${entry.notes}</p>
+                            ${entry.old_value && entry.new_value ? 
+                                `<p class="mb-0 small">Changed from <span class="text-danger">${entry.old_value}</span> to <span class="text-success">${entry.new_value}</span></p>` : ''}
+                        </div>
+                    </div>
+                `;
+                    });
+                    html += '</div>';
+                    historyContent.innerHTML = html;
+                })
+                .catch(error => {
+                    historyContent.innerHTML = '<p class="text-center text-danger">Error loading history.</p>';
+                    console.error('Error:', error);
+                });
+        }
+
+        // Modal handling for editing questions - FIXED VERSION
+        $(document).on('show.bs.modal', '#editModal', function(event) {
             const button = event.relatedTarget;
-            const id = button.getAttribute('data-id');
-            const question = button.getAttribute('data-question');
-            const category = button.getAttribute('data-category');
-            const correct = button.getAttribute('data-correct');
-            const options = JSON.parse(button.getAttribute('data-options')); // Parse the options JSON
+            const id = $(button).data('id');
+            const question = $(button).data('question');
+            const category = $(button).data('category');
+            const correct = $(button).data('correct');
+            const options = $(button).data('options');
 
             // Set values for question and other fields
-            document.getElementById('editQuestionId').value = id;
-            document.getElementById('editQuestionText').value = question;
-            document.getElementById('editCategory').value = category;
-            document.getElementById('editCorrectOption').value = correct;
+            $('#editQuestionId').val(id);
+            $('#editQuestionText').val(question);
+            $('#editCategory').val(category);
+            $('#editCorrectOption').val(correct);
 
             // Clear the options container
-            const optionsContainer = document.getElementById('editOptionsContainer');
-            optionsContainer.innerHTML = ''; // Clear any previous options
+            const optionsContainer = $('#editOptionsContainer');
+            optionsContainer.empty();
 
             // Add option fields dynamically
             options.forEach((option, index) => {
-                const optionDiv = document.createElement('div');
-                optionDiv.classList.add('mb-3');
-                optionDiv.innerHTML = `
+                const optionDiv = $('<div class="mb-3"></div>');
+                optionDiv.html(`
                 <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
                 <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
-            `;
-                optionsContainer.appendChild(optionDiv);
+            `);
+                optionsContainer.append(optionDiv);
             });
         });
-    </script>
 
-    <script>
-        // Bulk selection functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            const selectedCount = document.getElementById('selectedCount');
-            const selectedIds = document.getElementById('selectedIds');
-            const questionIdFilter = document.getElementById('questionIdFilter');
+        // Function to initialize event handlers for new rows - FIXED VERSION
+        function initializeEventHandlers() {
+            // Remove any existing event handlers first to avoid duplicates
+            $('#table-id tbody').off();
 
-            // Select all functionality
-            if (selectAll) {
-                selectAll.addEventListener('change', function() {
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = selectAll.checked;
-                        updateRowSelection(checkbox);
-                    });
-                    updateSelectionCount();
-                });
-            }
+            // Checkbox handlers - FIXED
+            $('#table-id tbody').on('change', '.row-checkbox', function() {
+                updateRowSelection(this);
+                updateSelectionCount();
 
-            // Individual checkbox functionality
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    updateRowSelection(this);
-                    updateSelectionCount();
-
-                    // Update Select All checkbox state
-                    if (selectAll) {
-                        selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
-                    }
-                });
-            });
-
-            // Row click selection
-            document.querySelectorAll('tbody tr').forEach(row => {
-                row.addEventListener('click', function(e) {
-                    // Don't trigger if clicking on a checkbox or dropdown
-                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' &&
-                        !e.target.closest('.dropdown-menu') && !e.target.closest('.form-check')) {
-                        const checkbox = this.querySelector('.row-checkbox');
-                        if (checkbox) {
-                            checkbox.checked = !checkbox.checked;
-                            updateRowSelection(checkbox);
-                            updateSelectionCount();
-                        }
-                    }
-                });
-            });
-
-            // Update selection count and hidden field
-            function updateSelectionCount() {
-                const selected = Array.from(checkboxes).filter(cb => cb.checked);
-                selectedCount.textContent = `${selected.length}`;
-
-                // Update hidden field with selected IDs
-                selectedIds.value = selected.map(cb => cb.value).join(',');
-
-                // Update question ID filter with selected IDs
-                questionIdFilter.value = selected.map(cb => cb.value).join(',');
-            }
-
-            // Update row visual selection state
-            function updateRowSelection(checkbox) {
-                const row = checkbox.closest('tr');
-                if (checkbox.checked) {
-                    row.classList.add('selected');
-                } else {
-                    row.classList.remove('selected');
+                // Update Select All checkbox state
+                const allCheckboxes = $('.row-checkbox');
+                const selectAll = $('#selectAll');
+                if (selectAll.length) {
+                    selectAll.prop('checked', allCheckboxes.length === allCheckboxes.filter(':checked').length);
                 }
-            }
+            });
 
+            // Row click handlers - FIXED
+            $('#table-id tbody').on('click', 'tr[data-id]', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' &&
+                    !$(e.target).closest('.dropdown-menu').length && !$(e.target).closest('.form-check').length) {
+                    const checkbox = $(this).find('.row-checkbox');
+                    if (checkbox.length) {
+                        checkbox.prop('checked', !checkbox.prop('checked'));
+                        updateRowSelection(checkbox[0]);
+                        updateSelectionCount();
+                    }
+                }
+            });
+
+            // History button handlers - FIXED
+            $('#table-id tbody').on('click', '.view-history', function(e) {
+                e.stopPropagation(); // Prevent row click event from firing
+                const questionId = $(this).data('question-id');
+                loadQuestionHistory(questionId);
+
+                // Show the history modal
+                const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                historyModal.show();
+            });
+
+            // Edit modal handlers - FIXED
+            $('#table-id tbody').on('click', '[data-bs-target="#editModal"]', function(e) {
+                e.stopPropagation(); // Prevent row click event from firing
+                const button = $(this);
+                const id = button.data('id');
+                const question = button.data('question');
+                const category = button.data('category');
+                const correct = button.data('correct');
+                const options = button.data('options');
+
+                $('#editQuestionId').val(id);
+                $('#editQuestionText').val(question);
+                $('#editCategory').val(category);
+                $('#editCorrectOption').val(correct);
+
+                const optionsContainer = $('#editOptionsContainer');
+                optionsContainer.empty();
+
+                options.forEach(function(option, index) {
+                    const optionDiv = $('<div class="mb-3"></div>');
+                    optionDiv.html(`
+                    <label for="editOption${index}" class="form-label">Option ${option.option_key}</label>
+                    <input type="text" class="form-control" id="editOption${index}" name="options[${option.option_key}]" value="${option.option_text}" required>
+                `);
+                    optionsContainer.append(optionDiv);
+                });
+            });
+        }
+
+        // DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only keep the ignoreDate functionality here
             const ignoreDate = document.getElementById('ignoreDate');
             const dateFrom = document.getElementById('dateFromFilter');
             const dateTo = document.getElementById('dateToFilter');
@@ -722,10 +829,11 @@ $result = pg_query($con, $query);
                 ignoreDate.addEventListener('change', toggleDateFields);
                 toggleDateFields(); // Initial call to set state
             }
-        });
-    </script>
 
-    <script>
+            // Initialize event handlers for initial rows
+            initializeEventHandlers();
+        });
+
         // Status modal functionality - FIXED VERSION
         document.addEventListener('DOMContentLoaded', function() {
             const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
@@ -735,7 +843,7 @@ $result = pg_query($con, $query);
 
             if (statusChangeBtn) {
                 statusChangeBtn.addEventListener('click', function(e) {
-                    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+                    const selected = $('.row-checkbox:checked');
 
                     if (selected.length === 0) {
                         e.preventDefault();
@@ -743,7 +851,9 @@ $result = pg_query($con, $query);
                         return false;
                     }
 
-                    const selectedIds = selected.map(cb => cb.value).join(',');
+                    const selectedIds = selected.map(function() {
+                        return this.value;
+                    }).get().join(',');
                     modalSelectedIds.value = selectedIds;
 
                     document.getElementById('statusChange').value = '';
@@ -756,7 +866,7 @@ $result = pg_query($con, $query);
 
             if (statusForm) {
                 statusForm.addEventListener('submit', function(e) {
-                    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+                    const selected = $('.row-checkbox:checked');
                     if (selected.length === 0) {
                         e.preventDefault();
                         alert('Please select at least one question.');
@@ -783,68 +893,12 @@ $result = pg_query($con, $query);
                 });
             }
         });
-    </script>
 
-    <script>
-        // History modal functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
-
-            // Handle history button clicks
-            document.querySelectorAll('.view-history').forEach(button => {
-                button.addEventListener('click', function() {
-                    const questionId = this.getAttribute('data-question-id');
-                    loadQuestionHistory(questionId);
-                    historyModal.show();
-                });
-            });
-
-            // Function to load question history
-            function loadQuestionHistory(questionId) {
-                const historyContent = document.getElementById('historyContent');
-                historyContent.innerHTML = '<p class="text-center">Loading history...</p>';
-
-                // AJAX request to fetch history
-                fetch(`get_question_history.php?question_id=${questionId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length === 0) {
-                            historyContent.innerHTML = '<p class="text-center">No history available for this question.</p>';
-                            return;
-                        }
-
-                        let html = '<div class="timeline">';
-                        data.forEach(entry => {
-                            html += `
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <h6 class="mb-1">${entry.change_type.replace('_', ' ').toUpperCase()}</h6>
-                                    <p class="mb-1 text-muted small">By ${entry.changed_by} on ${new Date(entry.change_timestamp).toLocaleString()}</p>
-                                    <p class="mb-1">${entry.notes}</p>
-                                    ${entry.old_value && entry.new_value ? 
-                                        `<p class="mb-0 small">Changed from <span class="text-danger">${entry.old_value}</span> to <span class="text-success">${entry.new_value}</span></p>` : ''}
-                                </div>
-                            </div>
-                        `;
-                        });
-                        html += '</div>';
-                        historyContent.innerHTML = html;
-                    })
-                    .catch(error => {
-                        historyContent.innerHTML = '<p class="text-center text-danger">Error loading history.</p>';
-                        console.error('Error:', error);
-                    });
-            }
-        });
-    </script>
-
-    <script>
-        // DataTables initialization
+        // DataTables initialization and Load More functionality
         $(document).ready(function() {
             <?php if (!empty($result)) : ?>
                 // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
+                var table = $('#table-id').DataTable({
                     // paging: false,
                     "order": [], // Disable initial sorting
                     "columnDefs": [{
@@ -855,6 +909,137 @@ $result = pg_query($con, $query);
                     // other options...
                 });
             <?php endif; ?>
+
+            // Store records per load preference
+            $('#recordsPerLoad').change(function() {
+                localStorage.setItem('recordsPerLoad', $(this).val());
+                $('#recordsToLoad').text($(this).val());
+            });
+
+            // Load records per load from localStorage if available
+            var savedRecordsPerLoad = localStorage.getItem('recordsPerLoad');
+            if (savedRecordsPerLoad) {
+                $('#recordsPerLoad').val(savedRecordsPerLoad);
+                $('#recordsToLoad').text(savedRecordsPerLoad);
+            }
+
+            // Load More functionality
+            $('#loadMoreBtn').click(function() {
+                var currentOffset = $(this).data('current-offset');
+                var recordsPerLoad = $('#recordsPerLoad').val();
+                var totalRecords = $(this).data('total-records');
+
+                // Get current filter values
+                var category = $('#categoryFilter').val();
+                var status = $('#statusFilter').val();
+                var questionIds = $('#questionIdFilter').val();
+                var dateFrom = $('#dateFromFilter').val();
+                var dateTo = $('#dateToFilter').val();
+                var ignoreDate = $('#ignoreDate').is(':checked') ? 1 : 0;
+
+                // Show loading state
+                var originalText = $(this).html();
+                $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+
+                // AJAX request to load more data
+                $.ajax({
+                    url: 'load_more_questions.php',
+                    type: 'GET',
+                    data: {
+                        offset: currentOffset,
+                        limit: recordsPerLoad,
+                        category: category,
+                        status: status,
+                        question_ids: questionIds,
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        ignore_date: ignoreDate
+                    },
+                    success: function(response) {
+                        // Parse the response
+                        var data = JSON.parse(response);
+
+                        if (data.success && data.questions.length > 0) {
+                            // Add new rows to the table
+                            data.questions.forEach(function(question) {
+                                // Prepare options display
+                                var optionsDisplay = '';
+                                question.options.forEach(function(option) {
+                                    optionsDisplay += option.option_key + ': ' + option.option_text + '<br>';
+                                });
+
+                                // Create the new row
+                                var newRow = [
+                                    '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + question.id + '"></div>',
+                                    question.id,
+                                    question.question_text,
+                                    question.category_name,
+                                    question.correct_option,
+                                    optionsDisplay,
+                                    question.created_at_formatted + ' by ' + question.created_by,
+                                    question.is_active === 't' ? 'Active' : 'Inactive',
+                                    '<div class="dropdown">' +
+                                    '<button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+                                    '<i class="bi bi-three-dots-vertical"></i>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu">' +
+                                    '<?php if ($role === 'Admin' || $row['created_by'] === $associatenumber): ?>' +
+                                    '<li>' +
+                                    '<button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editModal"' +
+                                    'data-id="' + question.id + '" data-question="' + question.question_text.replace(/"/g, '&quot;') + '"' +
+                                    'data-category="' + question.category_id + '" data-correct="' + question.correct_option + '"' +
+                                    'data-options=\'' + JSON.stringify(question.options) + '\'>' +
+                                    '<i class="bi bi-pencil-square me-2"></i> Edit' +
+                                    '</button>' +
+                                    '</li>' +
+                                    '<?php endif; ?>' +
+                                    '<?php if ($role === 'Admin'): ?>' +
+                                    '<li>' +
+                                    '<button class="dropdown-item view-history" data-question-id="' + question.id + '">' +
+                                    '<i class="bi bi-clock-history me-2"></i> History' +
+                                    '</button>' +
+                                    '</li>' +
+                                    '<?php endif; ?>' +
+                                    '</ul>' +
+                                    '</div>'
+                                ];
+
+                                // Add the row to DataTable
+                                table.row.add(newRow).draw(false);
+                            });
+
+                            // Update the current offset
+                            var newOffset = currentOffset + data.questions.length;
+                            $('#loadMoreBtn').data('current-offset', newOffset);
+
+                            // Update records info
+                            $('.records-info').text('Showing ' + newOffset + ' of ' + totalRecords + ' records');
+
+                            // Hide load more button if all records are loaded
+                            if (newOffset >= totalRecords) {
+                                $('#loadMoreBtn').hide();
+                            }
+
+                            // Reinitialize event handlers for new rows
+                            initializeEventHandlers();
+
+                        } else {
+                            alert('No more questions to load.');
+                            $('#loadMoreBtn').hide();
+                        }
+
+                        // Restore button text
+                        $('#loadMoreBtn').html(originalText);
+                    },
+                    error: function() {
+                        alert('Error loading more questions. Please try again.');
+                        $('#loadMoreBtn').html(originalText);
+                    }
+                });
+            });
+
+            // Initialize event handlers for initial rows
+            initializeEventHandlers();
         });
     </script>
 </body>
