@@ -192,10 +192,28 @@ if ($categoryFilter) {
 
 // Question ID filter
 if ($questionIdFilter) {
-    $ids = explode(',', $questionIdFilter);
-    $sanitizedIds = array_map('intval', $ids);
-    $idsString = implode(',', $sanitizedIds);
-    $whereClauses[] = "q.id IN ($idsString)";
+    $parts = explode(',', $questionIdFilter);
+    $idParts = [];
+    $keywordParts = [];
+
+    foreach ($parts as $part) {
+        $part = trim($part);
+        if (is_numeric($part)) {
+            $idParts[] = intval($part);
+        } else {
+            $keywordParts[] = pg_escape_string($con, $part);
+        }
+    }
+
+    $idCondition = count($idParts) ? "q.id IN (" . implode(',', $idParts) . ")" : "";
+    $keywordCondition = count($keywordParts) ?
+        "(" . implode(" OR ", array_map(fn($k) => "q.question_text ILIKE '%$k%'", $keywordParts)) . ")"
+        : "";
+
+    $conditions = array_filter([$idCondition, $keywordCondition]);
+    if (count($conditions)) {
+        $whereClauses[] = "(" . implode(" OR ", $conditions) . ")";
+    }
 }
 
 // Status filter (only if valid value is selected)
@@ -394,10 +412,10 @@ $result = pg_query($con, $query);
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label for="questionIdFilter" class="form-label">Question IDs (comma separated)</label>
+                                            <label for="questionIdFilter" class="form-label">Question IDs or Keywords (comma separated)</label>
                                             <input type="text" id="questionIdFilter" name="question_ids" class="form-control"
                                                 value="<?= isset($_GET['question_ids']) ? htmlspecialchars($_GET['question_ids']) : '' ?>"
-                                                placeholder="e.g., 1,5,7">
+                                                placeholder="e.g., 1,5,7 or math, algebra, geometry">
                                         </div>
 
                                         <?php if ($role === 'Admin'): ?>
