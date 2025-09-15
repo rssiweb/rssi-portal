@@ -868,7 +868,11 @@ $result = pg_query($con, $query);
                     "columnDefs": [{
                         "orderable": false,
                         "targets": [0, 8]
-                    }]
+                    }],
+                    "createdRow": function(row, data, dataIndex) {
+                        // data[1] is the question ID column (second column in your array)
+                        $(row).attr('data-id', data[1]);
+                    }
                 });
             <?php endif; ?>
 
