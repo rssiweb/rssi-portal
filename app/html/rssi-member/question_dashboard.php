@@ -820,8 +820,8 @@ $result = pg_query($con, $query);
 
             if (statusChangeBtn) {
                 statusChangeBtn.addEventListener('click', function(e) {
-                    const selected = $('.row-checkbox:checked');
-                    if (selected.length === 0) {
+                    // const selected = $('.row-checkbox:checked');
+                    if (selectedRows.size === 0) {
                         e.preventDefault();
                         alert('Please select at least one question to change status.');
                         return false;
