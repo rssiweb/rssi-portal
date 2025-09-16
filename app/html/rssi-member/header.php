@@ -830,11 +830,6 @@
       },
       {
         id: 'myservices',
-        linkId: 'documentLink',
-        url: 'gps.php'
-      },
-      {
-        id: 'myservices',
         linkId: 'leaveLink',
         url: 'leave.php'
       }, {
@@ -966,6 +961,10 @@
         id: 'work',
         linkId: 'gpsLink',
         url: 'gps.php'
+      },{
+        id: 'work',
+        linkId: 'gpsLink',
+        url: 'gps_history.php'
       },
       {
         id: 'work',

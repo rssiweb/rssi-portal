@@ -651,11 +651,17 @@ $resultArr = pg_fetch_all($result);
                                                         <small class="text-muted">Remarks (Optional)</small>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <input type="text" name="collectedby" id="collectedby" class="form-control" placeholder="Issued by" required>
+                                                        <select name="collectedby" id="collectedby" class="form-select select2">
+                                                            <option value="">Select associate</option>
+                                                            <!-- Options will be loaded via AJAX -->
+                                                        </select>
                                                         <small class="text-muted">Issued by*</small>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <input type="text" name="taggedto" id="taggedto" class="form-control" placeholder="Tagged to">
+                                                        <select name="taggedto" id="taggedto" class="form-select select2">
+                                                            <option value="">Select associate</option>
+                                                            <!-- Options will be loaded via AJAX -->
+                                                        </select>
                                                         <small class="text-muted">Tagged to</small>
                                                     </div>
                                                 </div>
@@ -752,8 +758,28 @@ $resultArr = pg_fetch_all($result);
             document.getElementById('quantity').value = item.quantity || "";
             document.getElementById('asset_status').value = item.asset_status || "";
             document.getElementById('remarks').value = item.remarks || "";
-            document.getElementById('collectedby').value = item.collectedby || "";
-            document.getElementById('taggedto').value = item.taggedto || "";
+
+            // Handle Select2 field for collectedby
+            var collectedbyValue = item.collectedby || "";
+            if (collectedbyValue) {
+                // Create a new option and append it to the select
+                var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
+                $('#collectedby').append(newOption).trigger('change');
+            } else {
+                // Clear if no value
+                $('#collectedby').val(null).trigger('change');
+            }
+
+            // Handle Select2 field for taggedto
+            var taggedtoValue = item.taggedto || "";
+            if (taggedtoValue) {
+                // Create a new option and append it to the select
+                var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
+                $('#taggedto').append(newOption).trigger('change');
+            } else {
+                // Clear if no value
+                $('#taggedto').val(null).trigger('change');
+            }
 
             modal.show();
         }
@@ -982,31 +1008,51 @@ $resultArr = pg_fetch_all($result);
     </script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for associate numbers
-            $('#tagged-to-select').select2({
-                ajax: {
-                    url: 'fetch_associates.php?isActive=true',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
-                    cache: true
+            // Common AJAX configuration for both selects
+            const ajaxConfig = {
+                url: 'fetch_associates.php?isActive=true',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
                 },
-                minimumInputLength: 1,
-                placeholder: 'Select associate(s)',
-                allowClear: true,
-                width: '100%',
-                theme: 'bootstrap-5',
-                // multiple: true
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            };
+
+            // Function to initialize a Select2 on a given element ID
+            function initSelect2(elementId, modalId = null) {
+                const $element = $(`#${elementId}`);
+                if (!$element.hasClass("select2-hidden-accessible")) {
+                    $element.select2({
+                        ajax: ajaxConfig,
+                        minimumInputLength: 1,
+                        placeholder: 'Select associate(s)',
+                        allowClear: true,
+                        width: '100%',
+                        theme: 'bootstrap-5',
+                        dropdownParent: modalId ? $(`#${modalId}`) : undefined
+                    });
+                }
+            }
+
+            // Initialize when modal is shown
+            $('#myModal').on('shown.bs.modal', function() {
+                initSelect2('taggedto', 'myModal');
             });
+            // Initialize when modal is shown
+            $('#myModal').on('shown.bs.modal', function() {
+                initSelect2('collectedby', 'myModal');
+            });
+
+            // Or initialize immediately if not inside modal:
+            initSelect2('tagged-to-select');
         });
     </script>
     <script>
