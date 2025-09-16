@@ -227,79 +227,80 @@ if ($formtype == "gemsdelete") {
 }
 
 if ($formtype == "gpsedit") {
-    $itemid = isset($_POST['itemid1']) ? pg_escape_string($con, $_POST['itemid1']) : '';
-    $itemname = isset($_POST['itemname']) ? pg_escape_string($con, $_POST['itemname']) : '';
-    $itemtype = isset($_POST['itemtype']) ? pg_escape_string($con, $_POST['itemtype']) : '';
-    $quantity = isset($_POST['quantity']) ? pg_escape_string($con, $_POST['quantity']) : '';
-    $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
-    $updatedby = isset($_POST['updatedby']) ? pg_escape_string($con, $_POST['updatedby']) : '';
-    $asset_status = isset($_POST['asset_status']) ? pg_escape_string($con, $_POST['asset_status']) : '';
-    $collectedby = isset($_POST['collectedby']) ? strtoupper(pg_escape_string($con, $_POST['collectedby'])) : '';
-    $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
-    $now = date('Y-m-d H:i:s');
+  $itemid = isset($_POST['itemid1']) ? pg_escape_string($con, $_POST['itemid1']) : '';
+  $itemname = isset($_POST['itemname']) ? pg_escape_string($con, $_POST['itemname']) : '';
+  $itemtype = isset($_POST['itemtype']) ? pg_escape_string($con, $_POST['itemtype']) : '';
+  $quantity = isset($_POST['quantity']) ? pg_escape_string($con, $_POST['quantity']) : '';
+  $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
+  $updatedby = isset($_POST['updatedby']) ? pg_escape_string($con, $_POST['updatedby']) : '';
+  $asset_status = isset($_POST['asset_status']) ? pg_escape_string($con, $_POST['asset_status']) : '';
+  $collectedby = isset($_POST['collectedby']) ? strtoupper(pg_escape_string($con, $_POST['collectedby'])) : '';
+  $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
+  $now = date('Y-m-d H:i:s');
 
-    // Fetch current data to compare changes
-    $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status FROM gps WHERE itemid = '$itemid'";
-    $current_result = pg_query($con, $current_query);
-    if (!$current_result || pg_num_rows($current_result) == 0) {
-        echo "invalid";
-        exit;
-    }
-    $current_data = pg_fetch_assoc($current_result);
+  // Fetch current data
+  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status FROM gps WHERE itemid = '$itemid'";
+  $current_result = pg_query($con, $current_query);
+  if (!$current_result || pg_num_rows($current_result) == 0) {
+    echo "invalid";
+    exit;
+  }
+  $current_data = pg_fetch_assoc($current_result);
 
-    // Determine changes
-    $changes = [];
-    if ($current_data['itemtype'] !== $itemtype) {
-        $changes['itemtype'] = ['old' => $current_data['itemtype'], 'new' => $itemtype];
-    }
-    if ($current_data['itemname'] !== $itemname) {
-        $changes['itemname'] = ['old' => $current_data['itemname'], 'new' => $itemname];
-    }
-    if ($current_data['quantity'] !== $quantity) {
-        $changes['quantity'] = ['old' => $current_data['quantity'], 'new' => $quantity];
-    }
-    if ($current_data['remarks'] !== $remarks) {
-        $changes['remarks'] = ['old' => $current_data['remarks'], 'new' => $remarks];
-    }
-    if ($current_data['collectedby'] !== $collectedby) {
-        $changes['collectedby'] = ['old' => $current_data['collectedby'], 'new' => $collectedby];
-    }
-    if ($current_data['taggedto'] !== $taggedto) {
-        $changes['taggedto'] = ['old' => $current_data['taggedto'], 'new' => $taggedto];
-    }
-    if ($current_data['asset_status'] !== $asset_status) {
-        $changes['asset_status'] = ['old' => $current_data['asset_status'], 'new' => $asset_status];
-    }
+  // Prepare changes array with only new values
+  $changes = [];
 
-    // Update only if changes exist
-    if (!empty($changes)) {
-        // Build update query dynamically
-        $update_fields = [];
-        foreach ($changes as $field => $change) {
-            $update_fields[] = "$field = '" . pg_escape_string($con, $change['new']) . "'";
-        }
-        $update_fields[] = "lastupdatedon = '$now'";
-        $update_fields[] = "lastupdatedby = '$updatedby'";
-        $update_query = "UPDATE gps SET " . implode(", ", $update_fields) . " WHERE itemid = '$itemid'";
+  if ($current_data['itemtype'] !== $itemtype) {
+    $changes['itemtype'] = $itemtype;
+  }
+  if ($current_data['itemname'] !== $itemname) {
+    $changes['itemname'] = $itemname;
+  }
+  if ($current_data['quantity'] !== $quantity) {
+    $changes['quantity'] = $quantity;
+  }
+  if ($current_data['remarks'] !== $remarks) {
+    $changes['remarks'] = $remarks;
+  }
+  if ($current_data['collectedby'] !== $collectedby) {
+    $changes['collectedby'] = $collectedby;
+  }
+  if ($current_data['taggedto'] !== $taggedto) {
+    $changes['taggedto'] = $taggedto;
+  }
+  if ($current_data['asset_status'] !== $asset_status) {
+    $changes['status'] = $asset_status; // Store only new value with key "status"
+  }
 
-        $update_result = pg_query($con, $update_query);
+  if (!empty($changes)) {
+    // Build update query dynamically
+    $update_fields = [];
+    foreach ($changes as $field => $new_value) {
+      // For "status", map to correct column name if needed
+      $column = ($field === 'status') ? 'asset_status' : $field;
+      $update_fields[] = "$column = '" . pg_escape_string($con, $new_value) . "'";
+    }
+    $update_fields[] = "lastupdatedon = '$now'";
+    $update_fields[] = "lastupdatedby = '$updatedby'";
+    $update_query = "UPDATE gps SET " . implode(", ", $update_fields) . " WHERE itemid = '$itemid'";
 
-        if ($update_result) {
-            // Insert into history
-            $changes_json = json_encode($changes);
-            $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes, remarks) 
-                              VALUES ('$itemid', 'edit', '$updatedby', '$now', '" . pg_escape_string($con, $changes_json) . "', '" . pg_escape_string($con, $remarks) . "')";
-            pg_query($con, $history_query);
+    $update_result = pg_query($con, $update_query);
 
-            echo "success";
-        } else {
-            echo "failed";
-        }
+    if ($update_result) {
+      // Insert into history with simplified changes
+      $changes_json = json_encode($changes);
+      $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
+                              VALUES ('$itemid', 'edit', '$updatedby', '$now', '" . pg_escape_string($con, $changes_json) . "')";
+      pg_query($con, $history_query);
+
+      echo "success";
     } else {
-        echo "nochange";
+      echo "failed";
     }
+  } else {
+    echo "nochange";
+  }
 }
-
 
 if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];

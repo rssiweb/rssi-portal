@@ -38,7 +38,9 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                 'itemtype' => $itemtype,
                 'itemname' => $itemname,
                 'quantity' => $quantity,
-                'asset_status' => $asset_status
+                'asset_status' => $asset_status,
+                'collectedby' => $collectedby,
+                'remarks' => $remarks
             ];
             $changes_json = json_encode($changes);
 
@@ -187,6 +189,10 @@ $resultArr = pg_fetch_all($result);
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <!-- =========================
@@ -296,7 +302,7 @@ $resultArr = pg_fetch_all($result);
 
                                     <div class="col2 left" style="display: inline-block;">
                                         <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                           <i class="bi bi-plus-circle"></i> Add Asset</button>
+                                            <i class="bi bi-plus-circle"></i> Add Asset</button>
                                     </div>
                                 </form>
 
@@ -404,30 +410,25 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <?php if ($role == 'Admin'): ?>
                                 <div class="bulk-update-section mb-3 p-3 border rounded" style="display: none;">
-                                    <h5>Bulk Update Selected Assets</h5>
+                                    <h5>Bulk Update Selected Assets <span id="selected-count-badge" class="badge bg-primary ms-2">0 selected</span></h5>
                                     <form id="bulk-update-form" method="POST" action="gps_bulk_update.php">
                                         <div id="selected-assets-container"></div>
 
                                         <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="form-check">
+                                            <div class="col-md-2">
+                                                <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox" id="update-tagged-to" name="update_tagged_to">
                                                     <label class="form-check-label" for="update-tagged-to">
                                                         Update Tagged To
                                                     </label>
                                                 </div>
-                                                <select class="form-select mt-2" id="tagged-to-select" name="tagged_to" disabled>
+                                                <select class="form-select select2" id="tagged-to-select" name="tagged_to" disabled>
                                                     <option value="">Select Associate</option>
-                                                    <?php
-                                                    $associates = pg_query($con, "SELECT associatenumber, fullname FROM rssimyaccount_members ORDER BY fullname");
-                                                    while ($row = pg_fetch_assoc($associates)) {
-                                                        echo "<option value='{$row['associatenumber']}'>{$row['fullname']} ({$row['associatenumber']})</option>";
-                                                    }
-                                                    ?>
+                                                    <!-- Options will be loaded via AJAX -->
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-2">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" id="update-status" name="update_status">
                                                     <label class="form-check-label" for="update-status">
@@ -905,6 +906,11 @@ $resultArr = pg_fetch_all($result);
             // Toggle bulk update section based on selected items
             function toggleBulkUpdateSection() {
                 const selectedCount = $('.asset-checkbox:checked').length;
+                const selectedCountBadge = $('#selected-count-badge');
+
+                // Update the count badge
+                selectedCountBadge.text(selectedCount + ' selected');
+
                 if (selectedCount > 0 && '<?= $role ?>' === 'Admin') {
                     $('.bulk-update-section').show();
 
@@ -944,6 +950,9 @@ $resultArr = pg_fetch_all($result);
                 $('#tagged-to-select').prop('disabled', true).val('');
                 $('#status-select').prop('disabled', true).val('');
                 $('#update-remarks').val('');
+
+                // Reset the count badge
+                $('#selected-count-badge').text('0 selected');
             });
 
             // Initialize DataTable with proper configuration
@@ -960,12 +969,125 @@ $resultArr = pg_fetch_all($result);
                         $('#select-all-checkbox').prop('checked', false);
                         $('.bulk-update-section').hide();
                         $('#table-id tbody tr').removeClass('selected');
+
+                        // Reset the count badge
+                        $('#selected-count-badge').text('0 selected');
                     }
                 });
             <?php endif; ?>
 
             // Update search placeholder to indicate both ID and name search
             $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#tagged-to-select').select2({
+                ajax: {
+                    url: 'fetch_associates.php?isActive=true',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                // multiple: true
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Function to validate the form
+            function validateBulkUpdateForm() {
+                const updateTaggedTo = $('#update-tagged-to').is(':checked');
+                const updateStatus = $('#update-status').is(':checked');
+                const taggedToValue = $('#tagged-to-select').val();
+                const statusValue = $('#status-select').val();
+                const remarksValue = $('#update-remarks').val().trim();
+
+                let isValid = true;
+                let errorMessage = '';
+
+                // Validation logic
+                if (updateTaggedTo && updateStatus) {
+                    // Both fields enabled - both are required
+                    if (!taggedToValue) {
+                        isValid = false;
+                        errorMessage = 'Please select a Tagged To value';
+                    }
+                    if (!statusValue) {
+                        isValid = false;
+                        errorMessage = errorMessage ? errorMessage + ' and Status' : 'Please select a Status';
+                    }
+                } else if (updateTaggedTo) {
+                    // Only Tagged To enabled - required
+                    if (!taggedToValue) {
+                        isValid = false;
+                        errorMessage = 'Please select a Tagged To value';
+                    }
+                } else if (updateStatus) {
+                    // Only Status enabled - required
+                    if (!statusValue) {
+                        isValid = false;
+                        errorMessage = 'Please select a Status';
+                    }
+                } else {
+                    // Both fields disabled - Remarks becomes required
+                    if (!remarksValue) {
+                        isValid = false;
+                        errorMessage = 'Remarks are required when no other fields are selected';
+                    }
+                }
+
+                return {
+                    isValid,
+                    errorMessage
+                };
+            }
+
+            // Add change event listeners to checkboxes
+            $('#update-tagged-to, #update-status').change(function() {
+                // Re-validate when checkboxes change
+                validateBulkUpdateForm();
+            });
+
+            // Handle form submission
+            $('#bulk-update-form').on('submit', function(e) {
+                e.preventDefault();
+
+                const validation = validateBulkUpdateForm();
+
+                if (!validation.isValid) {
+                    // Show error message
+                    alert('Error: ' + validation.errorMessage);
+                    return false;
+                }
+
+                // If validation passes, submit the form
+                this.submit();
+            });
+
+            // Also add validation when the bulk update section is shown
+            $(document).on('change', '.asset-checkbox', function() {
+                // Re-validate when assets are selected/deselected
+                if ($('.bulk-update-section').is(':visible')) {
+                    validateBulkUpdateForm();
+                }
+            });
         });
     </script>
 </body>
