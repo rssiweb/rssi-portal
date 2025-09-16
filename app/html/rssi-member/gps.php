@@ -50,8 +50,15 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $conditions[] = "taggedto = '$taggedto'";
     }
 
+    // Replace the existing search conditions with this:
     if ($assetid != "") {
-        $conditions[] = "itemid = '$assetid'";
+        if ($is_user == "1") {
+            // Search by Asset ID only
+            $conditions[] = "itemid = '$assetid'";
+        } else {
+            // Search by Asset ID OR Asset Name
+            $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
+        }
     }
 
     if ($assetstatus != "") {
@@ -164,6 +171,29 @@ $resultArr = pg_fetch_all($result);
 
         #cw1 {
             width: 20%;
+        }
+
+        /* Add this to your style section */
+        .table tbody tr {
+            cursor: pointer;
+        }
+
+        .table tbody tr.selected {
+            background-color: #f8f9fa;
+        }
+
+        .table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .select-checkbox {
+            width: 20px;
+            height: 20px;
+        }
+
+        .table td:first-child {
+            text-align: center;
+            vertical-align: middle;
         }
     </style>
     <!-- CSS Library Files -->
@@ -319,8 +349,8 @@ $resultArr = pg_fetch_all($result);
                                             <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
                                             &nbsp;
                                             <span class="input-help">
-                                                <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset id" value="<?php echo $assetid ?>" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset id</small>
+                                                <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset ID OR Name" value="<?php echo $assetid ?>" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset ID OR Name</small>
                                             </span>
                                         </div>
                                     </div>
@@ -387,11 +417,67 @@ $resultArr = pg_fetch_all($result);
                         border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                                 </form>
                             </div>
+                            <?php if ($role == 'Admin'): ?>
+                                <div class="bulk-update-section mb-3 p-3 border rounded" style="display: none;">
+                                    <h5>Bulk Update Selected Assets</h5>
+                                    <form id="bulk-update-form" method="POST" action="gps_bulk_update.php">
+                                        <div id="selected-assets-container"></div>
 
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="update-tagged-to" name="update_tagged_to">
+                                                    <label class="form-check-label" for="update-tagged-to">
+                                                        Update Tagged To
+                                                    </label>
+                                                </div>
+                                                <select class="form-select mt-2" id="tagged-to-select" name="tagged_to" disabled>
+                                                    <option value="">Select Associate</option>
+                                                    <?php
+                                                    $associates = pg_query($con, "SELECT associatenumber, fullname FROM rssimyaccount_members ORDER BY fullname");
+                                                    while ($row = pg_fetch_assoc($associates)) {
+                                                        echo "<option value='{$row['associatenumber']}'>{$row['fullname']} ({$row['associatenumber']})</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="update-status" name="update_status">
+                                                    <label class="form-check-label" for="update-status">
+                                                        Update Status
+                                                    </label>
+                                                </div>
+                                                <select class="form-select mt-2" id="status-select" name="status" disabled>
+                                                    <option value="">Select Status</option>
+                                                    <option value="Active">Active</option>
+                                                    <option value="Inactive">Inactive</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="update-remarks">Remarks (Optional)</label>
+                                                    <textarea class="form-control" id="update-remarks" name="remarks" rows="2"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-primary btn-sm">Apply Updates</button>
+                                            <button type="button" class="btn btn-secondary btn-sm" id="cancel-bulk-update">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
                                         <tr>
+                                            <th scope="col" width="50">
+                                                <input type="checkbox" id="select-all-checkbox" class="form-check-input">
+                                            </th>
                                             <th scope="col">Asset Id</th>
                                             <th scope="col" id="cw">Asset name</th>
                                             <th scope="col">Quantity</th>
@@ -411,6 +497,9 @@ $resultArr = pg_fetch_all($result);
                                             <?php foreach ($resultArr as $array): ?>
                                                 <tr>
                                                     <td>
+                                                        <input type="checkbox" class="form-check-input asset-checkbox" name="selected_assets[]" value="<?= $array['itemid'] ?>">
+                                                    </td>
+                                                    <td>
                                                         <a href="gps_history.php?assetid=<?= $array['itemid'] ?>" target="_blank" title="Asset History">
                                                             <?= $array['itemid'] ?>
                                                         </a>
@@ -429,13 +518,15 @@ $resultArr = pg_fetch_all($result);
                                                     <?php if ($role == 'Admin'): ?>
                                                         <td><?= $array['itemtype'] ?></td>
                                                         <td>
-                                                            <?php if (strlen($array['remarks']) <= 90): ?>
-                                                                <?= $array['remarks'] ?>
-                                                            <?php else: ?>
-                                                                <?= substr($array['remarks'], 0, 90) ?>&nbsp;...&nbsp;
-                                                                <button class="dropdown-item" type="button" onclick="showRemarks('<?= $array['itemid'] ?>')">
+                                                            <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 90): ?>
+                                                                <?= htmlspecialchars($array['remarks']) ?>
+                                                            <?php elseif (isset($array['remarks'])): ?>
+                                                                <?= htmlspecialchars(substr($array['remarks'], 0, 90)) ?>&nbsp;...&nbsp;
+                                                                <button class="dropdown-item" type="button" onclick="showRemarks('<?= htmlspecialchars($array['itemid']) ?>')">
                                                                     <i class="bi bi-box-arrow-up-right"></i>
                                                                 </button>
+                                                            <?php else: ?>
+                                                                <span>No remarks</span>
                                                             <?php endif; ?>
                                                         </td>
                                                     <?php endif; ?>
@@ -646,15 +737,6 @@ $resultArr = pg_fetch_all($result);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#table-id').DataTable({
-                // paging: false,
-                "order": [] // Disable initial sorting
-                // other options...
-            });
-        });
-    </script>
-    <script>
         // Assuming data is provided from PHP
         var data = <?= json_encode($resultArr) ?>;
 
@@ -746,7 +828,116 @@ $resultArr = pg_fetch_all($result);
             })
         })
     </script>
+    <script>
+        $(document).ready(function() {
+            // Select all checkbox functionality
+            $('#select-all-checkbox').change(function() {
+                $('.asset-checkbox').prop('checked', this.checked);
+                toggleBulkUpdateSection();
+                updateRowSelection();
+            });
 
+            // Individual checkbox functionality using event delegation
+            $(document).on('change', '.asset-checkbox', function() {
+                toggleBulkUpdateSection();
+                updateRowSelection();
+
+                // If all checkboxes are unchecked, uncheck select all
+                if ($('.asset-checkbox:checked').length === 0) {
+                    $('#select-all-checkbox').prop('checked', false);
+                }
+                // If all checkboxes are checked, check select all
+                else if ($('.asset-checkbox:checked').length === $('.asset-checkbox').length) {
+                    $('#select-all-checkbox').prop('checked', true);
+                }
+            });
+
+            // Row selection with pointer using event delegation
+            $(document).on('click', '#table-id tbody tr', function(e) {
+                // Don't select row if clicking on checkbox, link, or dropdown
+                if (e.target.type !== 'checkbox' &&
+                    e.target.tagName !== 'A' &&
+                    !$(e.target).hasClass('dropdown-toggle') &&
+                    !$(e.target).closest('.dropdown').length) {
+
+                    const checkbox = $(this).find('.asset-checkbox');
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    checkbox.trigger('change');
+                }
+            });
+
+            // Update row selection styling
+            function updateRowSelection() {
+                $('#table-id tbody tr').removeClass('selected');
+                $('.asset-checkbox:checked').each(function() {
+                    $(this).closest('tr').addClass('selected');
+                });
+            }
+
+            // Toggle bulk update section based on selected items
+            function toggleBulkUpdateSection() {
+                const selectedCount = $('.asset-checkbox:checked').length;
+                if (selectedCount > 0 && '<?= $role ?>' === 'Admin') {
+                    $('.bulk-update-section').show();
+
+                    // Update the bulk form with selected assets
+                    $('#selected-assets-container').empty();
+                    $('.asset-checkbox:checked').each(function() {
+                        $('#selected-assets-container').append('<input type="hidden" name="selected_assets[]" value="' + $(this).val() + '">');
+                    });
+                } else {
+                    $('.bulk-update-section').hide();
+                }
+            }
+
+            // Enable/disable form elements based on checkbox selection
+            $('#update-tagged-to').change(function() {
+                $('#tagged-to-select').prop('disabled', !this.checked);
+                if (!this.checked) {
+                    $('#tagged-to-select').val('');
+                }
+            });
+
+            $('#update-status').change(function() {
+                $('#status-select').prop('disabled', !this.checked);
+                if (!this.checked) {
+                    $('#status-select').val('');
+                }
+            });
+
+            // Cancel bulk update
+            $('#cancel-bulk-update').click(function() {
+                $('.asset-checkbox').prop('checked', false);
+                $('#select-all-checkbox').prop('checked', false);
+                $('.bulk-update-section').hide();
+                $('#table-id tbody tr').removeClass('selected');
+                $('#update-tagged-to').prop('checked', false);
+                $('#update-status').prop('checked', false);
+                $('#tagged-to-select').prop('disabled', true).val('');
+                $('#status-select').prop('disabled', true).val('');
+                $('#update-remarks').val('');
+            });
+
+            // Initialize DataTable with proper configuration
+            $('#table-id').DataTable({
+                "order": [],
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": 0 // Disable sorting for checkbox column
+                }],
+                "drawCallback": function(settings) {
+                    // Re-initialize checkboxes after DataTable redraws
+                    $('.asset-checkbox').prop('checked', false);
+                    $('#select-all-checkbox').prop('checked', false);
+                    $('.bulk-update-section').hide();
+                    $('#table-id tbody tr').removeClass('selected');
+                }
+            });
+
+            // Update search placeholder to indicate both ID and name search
+            $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
+        });
+    </script>
 </body>
 
 </html>
