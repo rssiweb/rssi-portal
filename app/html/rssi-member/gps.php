@@ -420,7 +420,7 @@ $resultArr = pg_fetch_all($result);
                                                             <?= $array['itemname'] ?>
                                                         <?php else: ?>
                                                             <?= substr($array['itemname'], 0, 50) ?>&nbsp;...&nbsp;
-                                                            <button type="button" onclick="showname('<?= $array['itemid'] ?>')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0px; border: none;" title="Details">
+                                                            <button class="dropdown-item" type="button" onclick="showName('<?= $array['itemid'] ?>')">
                                                                 <i class="bi bi-box-arrow-up-right"></i>
                                                             </button>
                                                         <?php endif; ?>
@@ -433,7 +433,7 @@ $resultArr = pg_fetch_all($result);
                                                                 <?= $array['remarks'] ?>
                                                             <?php else: ?>
                                                                 <?= substr($array['remarks'], 0, 90) ?>&nbsp;...&nbsp;
-                                                                <button type="button" onclick="showremarks('<?= $array['itemid'] ?>')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0px; border: none;" title="Details">
+                                                                <button class="dropdown-item" type="button" onclick="showRemarks('<?= $array['itemid'] ?>')">
                                                                     <i class="bi bi-box-arrow-up-right"></i>
                                                                 </button>
                                                             <?php endif; ?>
@@ -521,351 +521,115 @@ $resultArr = pg_fetch_all($result);
                                 </table>
                             </div>
 
-                            <!--------------- POP-UP BOX ------------
--------------------------------------->
-                            <style>
-                                .modal {
-                                    background-color: rgba(0, 0, 0, 0.4);
-                                    /* Black w/ opacity */
-                                }
-                            </style>
-
-                            <!-- Modal content -->
-                            <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+                            <!-- GPS Details Modal -->
+                            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-xl">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">GPS Details</h1>
-                                            <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <h1 class="modal-title fs-5" id="myModalLabel">GPS Details</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-
-                                            <div style="width:100%; text-align:right">
+                                            <div class="text-end mb-3">
                                                 <p class="badge bg-info"><span class="itemid"></span></p>
-
                                             </div>
-
                                             <form id="gpsform" action="#" method="POST">
-                                                <div class="form-group">
-                                                    <div class="col2" style="display: inline-block;">
-                                                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" readonly>
-                                                        <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
-                                                        <input type="hidden" class="form-control" name="updatedby" type="text" value="<?php echo $associatenumber ?>" readonly>
+                                                <input type="hidden" name="itemid1" id="itemid1">
+                                                <input type="hidden" name="form-type" value="gpsedit">
+                                                <input type="hidden" name="updatedby" value="<?= $associatenumber ?>">
 
-                                                        <span class="input-help">
-                                                            <select name="itemtype" id="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
-                                                                <?php if ($itemtype == null) { ?>
-                                                                    <option disabled selected hidden>Item type</option>
-                                                                <?php } else { ?>
-                                                                    <option hidden selected><?php echo $itemtype ?></option>
-                                                                <?php } ?>
-                                                                <option>Purchased</option>
-                                                                <option>Donation</option>
-                                                            </select>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
-                                                        </span>
-
-                                                        <span class="input-help">
-                                                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" required>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
-                                                        </span>
-
-                                                        <span class="input-help">
-                                                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" min="1" required>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
-                                                        </span>
-
-                                                        <span class="input-help">
-                                                            <select name="asset_status" id="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
-                                                                <?php if ($asset_status == null) { ?>
-                                                                    <option disabled selected hidden>Asset status</option>
-                                                                <?php
-                                                                } else { ?>
-                                                                    <option hidden selected><?php echo $asset_status ?></option>
-                                                                <?php }
-                                                                ?>
-                                                                <option>Active</option>
-                                                                <option>Inactive</option>
-                                                            </select>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
-                                                        </span>
-
-                                                        <span class="input-help">
-                                                            <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
-                                                        </span>
-
-                                                        <span class="input-help">
-                                                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" required>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Issued by*</small>
-                                                        </span>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <select name="itemtype" id="itemtype" class="form-select" required>
+                                                            <option disabled selected hidden>Item type</option>
+                                                            <option>Purchased</option>
+                                                            <option>Donation</option>
+                                                        </select>
+                                                        <small class="text-muted">Item type*</small>
                                                     </div>
-
-                                                    <div class="col2" style="display: inline-block;">
-                                                        <span class="input-help">
-                                                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Tagged to</small>
-                                                        </span>
-
-                                                        <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm" style="outline: none;">Update</button>
+                                                    <div class="col-md-6">
+                                                        <input type="text" name="itemname" id="itemname" class="form-control" placeholder="Item name" required>
+                                                        <small class="text-muted">Item name*</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Quantity" min="1" required>
+                                                        <small class="text-muted">Quantity*</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <select name="asset_status" id="asset_status" class="form-select" required>
+                                                            <option disabled selected hidden>Asset status</option>
+                                                            <option>Active</option>
+                                                            <option>Inactive</option>
+                                                        </select>
+                                                        <small class="text-muted">Asset status*</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <textarea name="remarks" id="remarks" class="form-control" placeholder="Remarks"></textarea>
+                                                        <small class="text-muted">Remarks (Optional)</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="text" name="collectedby" id="collectedby" class="form-control" placeholder="Issued by" required>
+                                                        <small class="text-muted">Issued by*</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="text" name="taggedto" id="taggedto" class="form-control" placeholder="Tagged to">
+                                                        <small class="text-muted">Tagged to</small>
                                                     </div>
                                                 </div>
+
+                                                <div class="mt-3 text-end">
+                                                    <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm">Update</button>
+                                                </div>
                                             </form>
-
-                                            <div class="modal-footer">
-                                                <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>
-
-                                // Get the modal
-                                var modal = document.getElementById("myModal");
-                                // Get the <span> element that closes the modal
-                                var closedetails = [
-                                    document.getElementById("closedetails-header"),
-                                    document.getElementById("closedetails-footer")
-                                ];
-
-                                function showDetails(id) {
-                                    // console.log(modal)
-                                    // console.log(modal.getElementsByClassName("data"))
-                                    var mydata = undefined
-                                    data.forEach(item => {
-                                        if (item["itemid"] == id) {
-                                            mydata = item;
-                                        }
-                                    })
-
-                                    var keys = Object.keys(mydata)
-                                    keys.forEach(key => {
-                                        var span = modal.getElementsByClassName(key)
-                                        if (span.length > 0)
-                                            span[0].innerHTML = mydata[key];
-                                    })
-                                    modal.style.display = "block";
-
-                                    var profile = document.getElementById("itemtype")
-                                    profile.value = mydata["itemtype"]
-                                    if (mydata["itemtype"] !== null) {
-                                        profile = document.getElementById("itemtype")
-                                        profile.value = mydata["itemtype"]
-                                    }
-                                    if (mydata["itemname"] !== null) {
-                                        profile = document.getElementById("itemname")
-                                        profile.value = mydata["itemname"]
-                                    }
-                                    if (mydata["quantity"] !== null) {
-                                        profile = document.getElementById("quantity")
-                                        profile.value = mydata["quantity"]
-                                    }
-                                    if (mydata["remarks"] !== null) {
-                                        profile = document.getElementById("remarks")
-                                        profile.value = mydata["remarks"]
-                                    }
-                                    if (mydata["collectedby"] !== null) {
-                                        profile = document.getElementById("collectedby")
-                                        profile.value = mydata["collectedby"]
-                                    }
-                                    if (mydata["taggedto"] !== null) {
-                                        profile = document.getElementById("taggedto")
-                                        profile.value = mydata["taggedto"]
-                                    }
-                                    if (mydata["asset_status"] !== null) {
-                                        profile = document.getElementById("asset_status")
-                                        profile.value = mydata["asset_status"]
-                                    }
-                                    profile = document.getElementById("itemid1")
-                                    profile.value = mydata["itemid"]
-                                }
-                                // When the user clicks the button, open the modal 
-                                // When the user clicks on <span> (x), close the modal
-                                closedetails.forEach(function(element) {
-                                    element.addEventListener("click", closeModal);
-                                });
-
-                                function closeModal() {
-                                    var modal1 = document.getElementById("myModal");
-                                    modal1.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it
-                                window.onclick = function(event) {
-                                    // if (event.target == modal) {
-                                    //     modal.style.display = "none";
-                                    // } else 
-                                    if (event.target == modal1) {
-                                        modal1.style.display = "none";
-                                    } else if (event.target == modal2) {
-                                        modal2.style.display = "none";
-                                    }
-                                }
-                            </script>
-
-
-                            <div class="modal" id="myModal1" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Remarks</h1>
-                                            <button type="button" id="closeremarks-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-
-                                            <div style="width:100%; text-align:right">
-                                                <p class="badge bg-info" style="display: inline !important;"><span class="itemid"></span></p>
-                                            </div>
-
-                                            <span class="remarks"></span>
-                                            <div class="modal-footer">
-                                                <button type="button" id="closeremarks-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <script>
-                                var data1 = <?php echo json_encode($resultArr) ?>
-
-                                // Get the modal
-                                var modal1 = document.getElementById("myModal1");
-                                var closeremarks = [
-                                    document.getElementById("closeremarks-header"),
-                                    document.getElementById("closeremarks-footer")
-                                ];
-
-                                function showremarks(id1) {
-                                    var mydata1 = undefined
-                                    data1.forEach(item1 => {
-                                        if (item1["itemid"] == id1) {
-                                            mydata1 = item1;
-                                        }
-                                    })
-                                    var keys1 = Object.keys(mydata1)
-                                    keys1.forEach(key => {
-                                        var span1 = modal1.getElementsByClassName(key)
-                                        if (span1.length > 0)
-                                            span1[0].innerHTML = mydata1[key];
-                                    })
-                                    modal1.style.display = "block";
-
-                                }
-                                // When the user clicks on <span> (x), close the modal
-                                closeremarks.forEach(function(element) {
-                                    element.addEventListener("click", closeModal);
-                                });
-
-                                function closeModal() {
-                                    var modal1 = document.getElementById("myModal1");
-                                    modal1.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
-                            </script>
-
-                            <div class="modal" id="myModal2" tabindex="-1" aria-hidden="true">
+                            <!-- Remarks Modal -->
+                            <div class="modal fade" id="myModal1" tabindex="-1" aria-labelledby="myModal1Label" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Item name</h1>
-                                            <button type="button" id="closename-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <h1 class="modal-title fs-5" id="myModal1Label">Remarks</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-
-                                            <div style="width:100%; text-align:right">
+                                            <div class="text-end mb-3">
                                                 <p class="badge bg-info"><span class="itemid"></span></p>
-
                                             </div>
-                                            <span class="itemname"></span>
-                                            <div class="modal-footer">
-                                                <button type="button" id="closename-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
+                                            <div class="remarks"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <script>
-                                var data2 = <?php echo json_encode($resultArr) ?>
 
-                                // Get the modal
-                                var modal2 = document.getElementById("myModal2");
-                                var closename = [
-                                    document.getElementById("closename-header"),
-                                    document.getElementById("closename-footer")
-                                ];
-
-                                function showname(id2) {
-                                    var mydata2 = undefined
-                                    data2.forEach(item2 => {
-                                        if (item2["itemid"] == id2) {
-                                            mydata2 = item2;
-                                        }
-                                    })
-                                    var keys2 = Object.keys(mydata2)
-                                    keys2.forEach(key => {
-                                        var span2 = modal2.getElementsByClassName(key)
-                                        if (span2.length > 0)
-                                            span2[0].innerHTML = mydata2[key];
-                                    })
-                                    modal2.style.display = "block";
-
-                                }
-                                // When the user clicks on <span> (x), close the modal
-                                closename.forEach(function(element) {
-                                    element.addEventListener("click", closeModal);
-                                });
-
-                                function closeModal() {
-                                    var modal1 = document.getElementById("myModal2");
-                                    modal1.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
-                            </script>
-
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>;
-                                //For form submission - to update Remarks
-                                const scriptURL = 'payment-api.php'
-                                const form = document.getElementById('gpsform')
-                                form.addEventListener('submit', e => {
-                                    e.preventDefault()
-                                    fetch(scriptURL, {
-                                            method: 'POST',
-                                            body: new FormData(document.getElementById('gpsform'))
-                                        })
-                                        .then(response => response.text())
-                                        .then(result => {
-                                            if (result === 'success') {
-                                                alert("Record has been updated.");
-                                                location.reload();
-                                            } else {
-                                                alert("Error updating record. Please try again later or contact support.");
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error!', error.message);
-                                        });
-                                })
-
-                                data.forEach(item => {
-                                    const formId = 'email-form-' + item.itemid
-                                    const form = document.forms[formId]
-                                    form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch('mailer.php', {
-                                                method: 'POST',
-                                                body: new FormData(document.forms[formId])
-                                            })
-                                            .then(response =>
-                                                alert("Email has been sent.")
-                                            )
-                                            .catch(error => console.error('Error!', error.message))
-                                    })
-                                })
-                            </script>
-
+                            <!-- Item Name Modal -->
+                            <div class="modal fade" id="myModal2" tabindex="-1" aria-labelledby="myModal2Label" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="myModal2Label">Item Name</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="text-end mb-3">
+                                                <p class="badge bg-info"><span class="itemid"></span></p>
+                                            </div>
+                                            <div class="itemname"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div><!-- End Reports -->
@@ -889,6 +653,98 @@ $resultArr = pg_fetch_all($result);
                 // other options...
             });
         });
+    </script>
+    <script>
+        // Assuming data is provided from PHP
+        var data = <?= json_encode($resultArr) ?>;
+
+        // Initialize modals
+        var modal = new bootstrap.Modal(document.getElementById('myModal'));
+        var modal1 = new bootstrap.Modal(document.getElementById('myModal1'));
+        var modal2 = new bootstrap.Modal(document.getElementById('myModal2'));
+
+        function findItem(id) {
+            return data.find(item => item.itemid == id);
+        }
+
+        function showDetails(id) {
+            var item = findItem(id);
+            if (!item) return;
+
+            document.querySelector('#myModal .itemid').textContent = item.itemid;
+            document.getElementById('itemid1').value = item.itemid;
+            document.getElementById('itemtype').value = item.itemtype || "";
+            document.getElementById('itemname').value = item.itemname || "";
+            document.getElementById('quantity').value = item.quantity || "";
+            document.getElementById('asset_status').value = item.asset_status || "";
+            document.getElementById('remarks').value = item.remarks || "";
+            document.getElementById('collectedby').value = item.collectedby || "";
+            document.getElementById('taggedto').value = item.taggedto || "";
+
+            modal.show();
+        }
+
+        function showRemarks(id) {
+            var item = findItem(id);
+            if (!item) return;
+
+            document.querySelector('#myModal1 .itemid').textContent = item.itemid;
+            document.querySelector('#myModal1 .remarks').textContent = item.remarks || "No remarks available.";
+
+            modal1.show();
+        }
+
+        function showName(id) {
+            var item = findItem(id);
+            if (!item) return;
+
+            document.querySelector('#myModal2 .itemid').textContent = item.itemid;
+            document.querySelector('#myModal2 .itemname').textContent = item.itemname || "No item name available.";
+
+            modal2.show();
+        }
+    </script>
+
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        //For form submission - to update Remarks
+        const scriptURL = 'payment-api.php'
+        const form = document.getElementById('gpsform')
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('gpsform'))
+                })
+                .then(response => response.text())
+                .then(result => {
+                    if (result === 'success') {
+                        alert("Record has been updated.");
+                        location.reload();
+                    } else {
+                        alert("Error updating record. Please try again later or contact support.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                });
+        })
+
+        data.forEach(item => {
+            const formId = 'email-form-' + item.itemid
+            const form = document.forms[formId]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch('mailer.php', {
+                        method: 'POST',
+                        body: new FormData(document.forms[formId])
+                    })
+                    .then(response =>
+                        alert("Email has been sent.")
+                    )
+                    .catch(error => console.error('Error!', error.message))
+            })
+        })
     </script>
 
 </body>
