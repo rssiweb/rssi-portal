@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -10,11 +9,28 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+
 // Fetch POST values or set default dates
 $filter_application_number = isset($_POST['filter_application_number']) ? trim($_POST['filter_application_number']) : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
-$filter_from_date = isset($_POST['from_date']) ? $_POST['from_date'] : date('Y-m-d', strtotime('-1 month')); // Default: 1 month past date
-$filter_to_date = isset($_POST['to_date']) ? $_POST['to_date'] : date('Y-m-d'); // Default: Today's date
+$filter_from_date = isset($_POST['from_date']) ? $_POST['from_date'] : date('Y-m-d', strtotime('-1 month'));
+$filter_to_date = isset($_POST['to_date']) ? $_POST['to_date'] : date('Y-m-d');
+$ignore_date = isset($_POST['ignore_date']) ? true : false; // New checkbox for ignoring date
+
+// Server-side validation: if ignore date is checked but no filters are provided
+if ($ignore_date) {
+    if (empty($filter_application_number) && empty($filter_status)) {
+        echo "<script>
+            alert('Error: Please enter Application Number or select at least one Status when ignoring the date range.');
+            window.onload = function() {
+                document.getElementById('ignore_date').checked = false;
+                document.getElementById('from_date').disabled = false;
+                document.getElementById('to_date').disabled = false;
+            };
+        </script>";
+        $ignore_date = false; // Reset ignore_date so form reloads with date range enabled
+    }
+}
 
 // Start building the query
 $query = "SELECT *, 
@@ -26,14 +42,14 @@ $query = "SELECT *,
           END AS academic_year
           FROM signup";
 
-// Add filters based on user input
 $conditions = [];
 
+// Application number or name filter
 if (!empty($filter_application_number)) {
-    // If application number is provided, ignore date and status filters
-    $conditions[] = "application_number = '" . pg_escape_string($con, $filter_application_number) . "'";
+    $search = pg_escape_string($con, $filter_application_number);
+    $conditions[] = "(application_number ILIKE '%$search%' OR applicant_name ILIKE '%$search%')";
 } else {
-    // Add date and status filters only if application number is not provided
+    // Status filter
     if (!empty($filter_status)) {
         $statuses = array_map(function ($status) use ($con) {
             return pg_escape_string($con, $status);
@@ -41,16 +57,13 @@ if (!empty($filter_application_number)) {
         $conditions[] = "application_status IN ('" . implode("', '", $statuses) . "')";
     }
 
-    // Validate date range and add filter if applicable
-    if (!empty($filter_from_date) && !empty($filter_to_date)) {
+    // Date filter (only if ignore_date is not checked)
+    if (!$ignore_date && !empty($filter_from_date) && !empty($filter_to_date)) {
         $from_date = pg_escape_string($con, $filter_from_date);
         $to_date = pg_escape_string($con, $filter_to_date);
-
-        // Ensure $to_date includes the entire day (23:59:59)
         $to_date = $to_date . ' 23:59:59';
 
-        if ($from_date <= $to_date) { // Ensure valid range
-            // Use the timestamp::date to compare only the date part of the timestamp
+        if ($from_date <= $to_date) {
             $conditions[] = "timestamp::date >= '$from_date' AND timestamp::date <= '$to_date'";
         }
     }
@@ -62,15 +75,11 @@ if (!empty($conditions)) {
 
 $query .= " ORDER BY timestamp DESC";
 
-// Execute the query
 $result = pg_query($con, $query);
-
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
-
-// Fetch the results
 $resultArr = pg_fetch_all($result);
 ?>
 
@@ -199,27 +208,26 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="POST" class="filter-form d-flex flex-wrap" style="gap: 10px;">
+                                <form id="filterForm" method="POST" class="filter-form d-flex flex-wrap" style="gap: 10px;">
                                     <div class="form-group">
-                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="max-width: 200px;">
+                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number or Name" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="max-width: 200px;">
+                                        <small class="form-text text-muted">Application Number or Name</small>
                                     </div>
 
                                     <!-- Date Range Filter -->
                                     <div class="form-group">
                                         <input type="date" name="from_date" id="from_date" class="form-control"
-                                            value="<?php echo isset($_GET['from_date']) ? htmlspecialchars($_GET['from_date']) : date('Y-m-d', strtotime('-1 month')); ?>"
-                                            required />
+                                            value="<?php echo htmlspecialchars($filter_from_date); ?>" required />
                                         <small class="form-text text-muted">Select the starting date for the range.</small>
                                     </div>
 
                                     <div class="form-group">
                                         <input type="date" name="to_date" id="to_date" class="form-control"
-                                            value="<?php echo isset($_GET['to_date']) ? htmlspecialchars($_GET['to_date']) : date('Y-m-d'); ?>"
-                                            required />
+                                            value="<?php echo htmlspecialchars($filter_to_date); ?>" required />
                                         <small class="form-text text-muted">Select the ending date for the range.</small>
                                     </div>
-                                    <div class="form-group">
-                                        <select id="status" name="status[]" class="form-select" multiple>
+
+                                    <div class="form-group"> <select id="status" name="status[]" class="form-select" multiple>
                                             <option value="Application Submitted" <?php echo in_array('Application Submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Application Submitted</option>
                                             <option value="Application Re-Submitted" <?php echo in_array('Application Re-Submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Application Re-Submitted</option>
                                             <option value="Identity verification document submitted" <?php echo in_array('Identity verification document submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Identity verification document submitted</option>
@@ -236,12 +244,17 @@ $resultArr = pg_fetch_all($result);
                                             <option value="No-Show" <?php echo in_array('No-Show', $filter_status ?? []) ? 'selected' : ''; ?>>No-Show</option>
                                             <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
                                             <option value="Offer Not Extended" <?php echo in_array('Offer Not Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Not Extended</option>
-                                        </select>
-                                    </div>
+                                        </select> </div>
+
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="bi bi-search"></i>&nbsp;Filter
                                         </button>
+                                    </div>
+                                    <!-- Ignore Date Range Checkbox -->
+                                    <div class="form-group">
+                                        <input class="form-check-input" type="checkbox" name="ignore_date" id="ignore_date" value="1" <?php echo isset($ignore_date) && $ignore_date ? 'checked' : ''; ?>>
+                                        <label for="ignore_date">Ignore Date Range</label>
                                     </div>
                                 </form>
                             </div>
@@ -551,6 +564,37 @@ $resultArr = pg_fetch_all($result);
         // Call the update functions initially in case there is a pre-selected date range
         updateToDateMin();
         updateFromDateMax();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ignoreDateCheckbox = document.getElementById('ignore_date');
+            const fromDate = document.getElementById('from_date');
+            const toDate = document.getElementById('to_date');
+            const applicationNumber = document.getElementById('filter_application_number');
+            const statusSelect = document.getElementById('status');
+            const filterForm = document.getElementById('filterForm');
+
+            function toggleDateInputs() {
+                const isDisabled = ignoreDateCheckbox.checked;
+                fromDate.disabled = isDisabled;
+                toDate.disabled = isDisabled;
+            }
+
+            ignoreDateCheckbox.addEventListener('change', toggleDateInputs);
+            toggleDateInputs();
+            // Form validation before submit
+            filterForm.addEventListener('submit', function(e) {
+                if (ignoreDateCheckbox.checked) {
+                    const appNum = applicationNumber.value.trim();
+                    const statusSelected = Array.from(statusSelect.selectedOptions).length > 0;
+
+                    if (appNum === '' && !statusSelected) {
+                        e.preventDefault();
+                        alert("Please enter Application Number or select at least one Status when ignoring the date range.");
+                    }
+                }
+            });
+        });
     </script>
 </body>
 
