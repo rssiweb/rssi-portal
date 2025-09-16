@@ -234,7 +234,7 @@ function gps_export()
   }
 
   if ($assetid != "") {
-    $conditions[] = "assetid = '$assetid'";
+    $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
   }
 
   if ($asset_status != "") {

@@ -25,16 +25,27 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : '';
         $collectedby = isset($_POST['collectedby']) ? strtoupper($_POST['collectedby']) : '';
         $now = date('Y-m-d H:i:s');
+        $updated_by = $collectedby; // Or whichever user is adding the asset
 
         if ($itemtype != "") {
-            $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
-                    VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
-            $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
-                           VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
+            // Insert into gps table
+            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
+                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
+            pg_query($con, $gps_query);
 
-            $result = pg_query($con, $gps);
-            $result = pg_query($con, $gpshistory);
-            $cmdtuples = pg_affected_rows($result);
+            // Prepare the changes array (only what’s relevant)
+            $changes = [
+                'itemtype' => $itemtype,
+                'itemname' => $itemname,
+                'quantity' => $quantity,
+                'asset_status' => $asset_status
+            ];
+            $changes_json = json_encode($changes);
+
+            // Insert into gps_history table with only required columns
+            $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes, remarks) 
+                          VALUES ('$itemid', 'add_asset', '$updated_by', '$now', '$changes_json', '$remarks')";
+            pg_query($con, $history_query);
         }
     }
 
@@ -155,34 +166,9 @@ $resultArr = pg_fetch_all($result);
             display: inline-block;
         }
 
-        @media (max-width:767px) {
-
-            #cw,
-            #cw1 {
-                width: 100% !important;
-            }
-
-        }
-
-        #cw {
-            width: 15%;
-        }
-
-        #cw1 {
-            width: 20%;
-        }
-
         /* Add this to your style section */
         .table tbody tr {
             cursor: pointer;
-        }
-
-        .table tbody tr.selected {
-            background-color: #f8f9fa;
-        }
-
-        .table tbody tr:hover {
-            background-color: #e9ecef;
         }
 
         .select-checkbox {
@@ -310,7 +296,7 @@ $resultArr = pg_fetch_all($result);
 
                                     <div class="col2 left" style="display: inline-block;">
                                         <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                            Update</button>
+                                           <i class="bi bi-plus-circle"></i> Add Asset</button>
                                     </div>
                                 </form>
 
@@ -624,11 +610,12 @@ $resultArr = pg_fetch_all($result);
                                             <h1 class="modal-title fs-5" id="myModalLabel">GPS Details</h1>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <div class="modal-body">
-                                            <div class="text-end mb-3">
-                                                <p class="badge bg-info"><span class="itemid"></span></p>
-                                            </div>
-                                            <form id="gpsform" action="#" method="POST">
+                                        <form id="gpsform" action="#" method="POST">
+                                            <div class="modal-body">
+                                                <div class="text-end mb-3">
+                                                    <p class="badge bg-info"><span class="itemid"></span></p>
+                                                </div>
+
                                                 <input type="hidden" name="itemid1" id="itemid1">
                                                 <input type="hidden" name="form-type" value="gpsedit">
                                                 <input type="hidden" name="updatedby" value="<?= $associatenumber ?>">
@@ -671,15 +658,15 @@ $resultArr = pg_fetch_all($result);
                                                         <small class="text-muted">Tagged to</small>
                                                     </div>
                                                 </div>
-
-                                                <div class="mt-3 text-end">
-                                                    <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm">Update</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" name="search_by_id3" class="btn btn-primary" id="update-button">
+                                                    <span class="button-text">Save changes</span>
+                                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -792,29 +779,66 @@ $resultArr = pg_fetch_all($result);
     </script>
 
     <script>
-        var data = <?php echo json_encode($resultArr) ?>;
-        //For form submission - to update Remarks
-        const scriptURL = 'payment-api.php'
-        const form = document.getElementById('gpsform')
+        const scriptURL = 'payment-api.php';
+        const form = document.getElementById('gpsform');
+        const updateButton = document.getElementById('update-button');
+        const buttonText = updateButton.querySelector('.button-text');
+        const spinner = updateButton.querySelector('.spinner-border');
+
         form.addEventListener('submit', e => {
-            e.preventDefault()
+            e.preventDefault();
+
+            // Show spinner and disable button
+            buttonText.textContent = 'Updating...';
+            spinner.classList.remove('d-none');
+            updateButton.disabled = true;
+
+            const formData = new FormData(form);
+
             fetch(scriptURL, {
                     method: 'POST',
-                    body: new FormData(document.getElementById('gpsform'))
+                    body: formData
                 })
                 .then(response => response.text())
                 .then(result => {
+                    // Reset button state
+                    resetButton();
+
                     if (result === 'success') {
-                        alert("Record has been updated.");
+                        alert("Record has been successfully updated.");
                         location.reload();
+                    } else if (result === 'nochange') {
+                        alert("No changes detected.");
+                    } else if (result === 'invalid') {
+                        alert("Invalid asset ID.");
+                    } else if (result === 'unauthorized') {
+                        alert("You are not authorized to perform this action.");
                     } else {
-                        alert("Error updating record. Please try again later or contact support.");
+                        alert("Error updating record. Please try again or contact support.");
                     }
                 })
                 .catch(error => {
+                    // Reset button state
+                    resetButton();
+
                     console.error('Error!', error.message);
+                    alert("Network error or server issue occurred.");
                 });
-        })
+        });
+
+        // Function to reset button to original state
+        function resetButton() {
+            if (buttonText && spinner && updateButton) {
+                buttonText.textContent = 'Save changes';
+                spinner.classList.add('d-none');
+                updateButton.disabled = false;
+            }
+        }
+
+        // Reset button state if modal is closed without submitting
+        $('#myModal').on('hidden.bs.modal', function() {
+            resetButton();
+        });
 
         data.forEach(item => {
             const formId = 'email-form-' + item.itemid
