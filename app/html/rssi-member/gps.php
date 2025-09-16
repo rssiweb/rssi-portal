@@ -166,7 +166,7 @@ $resultArr = pg_fetch_all($result);
             width: 20%;
         }
     </style>
-   <!-- CSS Library Files -->
+    <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -329,7 +329,7 @@ $resultArr = pg_fetch_all($result);
                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                     </div>
                                     <div id="filter-checks">
-                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                         <label for="is_user" style="font-weight: 400;">Search by Asset ID</label>
                                     </div>
                                 </form>
@@ -388,148 +388,138 @@ $resultArr = pg_fetch_all($result);
                                 </form>
                             </div>
 
-                            <?php echo '
-                        <div class="table-responsive">
-                        <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                                <th scope="col">Asset Id</th>
-                                <th scope="col" id="cw">Asset name</th>
-                                <th scope="col">Quantity</th>' ?>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php echo '
-                                <th scope="col">Asset type</th>
-                                <th scope="col" id="cw1">Remarks</th>' ?>
-                            <?php }
-                            echo '
-                                <th scope="col">Issued by</th>
-                                <th scope="col">Tagged to</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Last updated on</th>
-                                <th scope="col"></th></tr>
-                        </thead>' ?>
-                            <?php if (sizeof($resultArr) > 0) { ?>
-                                <?php
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '<tr>
-                                <td>
-                                <a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a>
-                                </td><td>' ?>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Asset Id</th>
+                                            <th scope="col" id="cw">Asset name</th>
+                                            <th scope="col">Quantity</th>
+                                            <?php if ($role == 'Admin'): ?>
+                                                <th scope="col">Asset type</th>
+                                                <th scope="col" id="cw1">Remarks</th>
+                                            <?php endif; ?>
+                                            <th scope="col">Issued by</th>
+                                            <th scope="col">Tagged to</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Last updated on</th>
+                                            <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (sizeof($resultArr) > 0): ?>
+                                            <?php foreach ($resultArr as $array): ?>
+                                                <tr>
+                                                    <td>
+                                                        <a href="gps_history.php?assetid=<?= $array['itemid'] ?>" target="_blank" title="Asset History">
+                                                            <?= $array['itemid'] ?>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <?php if (strlen($array['itemname']) <= 50): ?>
+                                                            <?= $array['itemname'] ?>
+                                                        <?php else: ?>
+                                                            <?= substr($array['itemname'], 0, 50) ?>&nbsp;...&nbsp;
+                                                            <button type="button" onclick="showname('<?= $array['itemid'] ?>')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0px; border: none;" title="Details">
+                                                                <i class="bi bi-box-arrow-up-right"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><?= $array['quantity'] ?></td>
+                                                    <?php if ($role == 'Admin'): ?>
+                                                        <td><?= $array['itemtype'] ?></td>
+                                                        <td>
+                                                            <?php if (strlen($array['remarks']) <= 90): ?>
+                                                                <?= $array['remarks'] ?>
+                                                            <?php else: ?>
+                                                                <?= substr($array['remarks'], 0, 90) ?>&nbsp;...&nbsp;
+                                                                <button type="button" onclick="showremarks('<?= $array['itemid'] ?>')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0px; border: none;" title="Details">
+                                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                    <?php endif; ?>
+                                                    <td><?= $array['collectedby'] ?><br><?= $array['ifullname'] ?></td>
+                                                    <td><?= $array['taggedto'] ?><br><?= $array['tfullname'] ?></td>
+                                                    <td><?= $array['asset_status'] ?></td>
+                                                    <td>
+                                                        <?php if ($array['lastupdatedon'] != null): ?>
+                                                            <?= date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>&nbsp;by&nbsp;<?= $array['lastupdatedby'] ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
+                                                                <i class="bi bi-three-dots-vertical"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <?php if ($role == 'Admin'): ?>
+                                                                    <?php if ($array['collectedby'] == $associatenumber): ?>
+                                                                        <li>
+                                                                            <a class="dropdown-item" href="javascript:void(0)" onclick="showDetails('<?= $array['itemid'] ?>')">
+                                                                                <i class="bi bi-box-arrow-up-right"></i> Show Details
+                                                                            </a>
+                                                                        </li>
+                                                                    <?php else: ?>
+                                                                        <li>
+                                                                            <span class="dropdown-item disabled">
+                                                                                <i class="bi bi-box-arrow-up-right text-muted"></i> Show Details
+                                                                            </span>
+                                                                        </li>
+                                                                    <?php endif; ?>
 
-                                    <?php if (@strlen($array['itemname']) <= 50) {
+                                                                    <li>
+                                                                        <?php if ($array['tphone'] != null && $array['collectedby'] == $associatenumber): ?>
+                                                                            <a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91<?= $array['tphone'] ?>&text=Dear <?= urlencode($array['tfullname']) ?>,%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AItem Name – <?= urlencode($array['itemname']) ?>%0AQuantity – <?= urlencode($array['quantity']) ?>%0AAllocated to – <?= urlencode($array['tfullname']) ?> (<?= urlencode($array['taggedto']) ?>)%0AAsset ID – <?= urlencode($array['itemid']) ?>%0AAllocated by – <?= urlencode($array['ifullname']) ?> (<?= urlencode($array['collectedby']) ?>)%0A%0AIn case of any concerns kindly contact Asset officer.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank">
+                                                                                <i class="bi bi-whatsapp"></i> Send WhatsApp
+                                                                            </a>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item disabled">
+                                                                                <i class="bi bi-whatsapp text-muted"></i> Send WhatsApp
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </li>
 
-                                        echo $array['itemname'] ?>
-
-                                    <?php } else { ?>
-
-                                        <?php echo substr($array['itemname'], 0, 50) .
-                                            '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                        <i class="bi bi-box-arrow-up-right"></i></button>' ?>
-
-                                    <?php }
-                                    echo '</td><td>' . $array['quantity'] . '</td>' ?>
-
-
-                                    <?php if ($role == 'Admin') { ?>
-                                        <?php echo '<td>' . $array['itemtype'] . '</td><td>' ?>
-                                        <?php if (@strlen($array['remarks']) <= 90) {
-
-                                            echo $array['remarks'] ?>
-
-                                        <?php } else { ?>
-
-                                            <?php echo substr($array['remarks'], 0, 90) .
-                                                '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="bi bi-box-arrow-up-right"></i></button>' ?>
-                                        <?php }
-                                        echo '</td>' ?>
-                                    <?php } ?>
-
-                                    <?php echo '
-                                <td>' . $array['collectedby'] . '<br>' . $array['ifullname'] . '</td>
-                                <td>' . $array['taggedto'] . '<br>' . $array['tfullname'] . '</td>
-                                <td>' . $array['asset_status'] . '</td>
-                                <td>' ?>
-                                    <?php if ($array['lastupdatedon'] != null) { ?>
-
-                                        <?php echo @date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>&nbsp;by&nbsp;
-                                        <?php echo $array['lastupdatedby'] ?>
-
-                                    <?php } else {
-                                    }
-                                    echo '</td><td>' ?>
-
-
-                                    <?php if ($role == 'Admin') { ?>
-
-                                        <?php if ($array['collectedby'] == $associatenumber) { ?>
-                                            <?php echo '
-                                <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="bi bi-box-arrow-up-right" style="color:#777777" title="Show Details" display:inline;></i></button>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '&nbsp;<i class="bi bi-box-arrow-up-right" style="color:#A2A2A2;" title="Show Details"></i>' ?>
-                                        <?php } ?>
-
-                                        <?php if ($array['tphone'] != null && $array['collectedby'] == $associatenumber) { ?>
-                                            <?php echo '
-
-                                    &nbsp;<a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tphone'] . '"></i></a>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '&nbsp;<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                        <?php } ?>
-
-                                        <?php if ($array['temail'] != null && $array['collectedby'] == $associatenumber) { ?>
-                                            <?php echo '<form  action="#" name="email-form-' . $array['itemid'] . '" method="POST" style="display: -webkit-inline-box;" >
-                            <input type="hidden" name="template" type="text" value="gps">
-                            <input type="hidden" name="data[itemname]" type="text" value="' . $array['itemname'] . '">
-                            <input type="hidden" name="data[itemid]" type="text" value="' . $array['itemid'] . '">
-                            <input type="hidden" name="data[quantity]" type="text" value="' . $array['quantity'] . '">
-                            <input type="hidden" name="data[taggedto]" type="text" value="' . $array['taggedto'] . '">
-                            <input type="hidden" name="data[tfullname]" type="text" value="' . $array['tfullname'] . '">
-                            <input type="hidden" name="data[collectedby]" type="text" value="' . $array['collectedby'] . '">
-                            <input type="hidden" name="data[ifullname]" type="text" value="' . $array['ifullname'] . '">
-                            <input type="hidden" name="email" type="text" value="' . $array['temail'] . '">
-                            &nbsp;<button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
-                             type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . $array['temail'] . '"></i></button>
-                        </form>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '&nbsp;<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                        <?php } ?>
-
-                                        <!-- <?php if ($array['collectedby'] == $associatenumber) { ?>
-                                        <?php echo '
-                                <form id="gpsdelete" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="gpsdelete">
-                                <input type="hidden" name="gpsid" type="text" value="' . $array['itemid'] . '">
-
-                                &nbsp;<button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="bi bi-x-lg"></i></button> </form>' ?>
-                                    <?php } else { ?>
-                                        <?php echo '&nbsp;<i class="bi bi-x-lg" style="color:#A2A2A2;" title="Delete ' . $array['itemid'] . '"></i>' ?>
-                                    <?php } ?> -->
-
-                                <?php echo '</td></tr>';
-                                    }
-                                } ?>
-                            <?php
-                            } else if (@$taggedto == null && @$item_type == null && @$assetid == null && @$assetstatus == null) {
-                            ?>
-                                <tr>
-                                    <td colspan="5">Please select Filter value.</td>
-                                </tr>
-                            <?php
-                            } else {
-                            ?>
-                                <tr>
-                                    <td colspan="5">No record was found for the selected filter value.</td>
-                                </tr>
-                            <?php }
-
-                            echo '</tbody>
-                            </table>
-                            </div>';
-                            ?>
+                                                                    <li>
+                                                                        <?php if ($array['temail'] != null && $array['collectedby'] == $associatenumber): ?>
+                                                                            <form action="#" name="email-form-<?= $array['itemid'] ?>" method="POST" class="dropdown-item p-0 m-0">
+                                                                                <input type="hidden" name="template" value="gps">
+                                                                                <input type="hidden" name="data[itemname]" value="<?= $array['itemname'] ?>">
+                                                                                <input type="hidden" name="data[itemid]" value="<?= $array['itemid'] ?>">
+                                                                                <input type="hidden" name="data[quantity]" value="<?= $array['quantity'] ?>">
+                                                                                <input type="hidden" name="data[taggedto]" value="<?= $array['taggedto'] ?>">
+                                                                                <input type="hidden" name="data[tfullname]" value="<?= $array['tfullname'] ?>">
+                                                                                <input type="hidden" name="data[collectedby]" value="<?= $array['collectedby'] ?>">
+                                                                                <input type="hidden" name="data[ifullname]" value="<?= $array['ifullname'] ?>">
+                                                                                <input type="hidden" name="email" value="<?= $array['temail'] ?>">
+                                                                                <button type="submit" class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
+                                                                                    <i class="bi bi-envelope-at"></i> Send Email
+                                                                                </button>
+                                                                            </form>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item disabled">
+                                                                                <i class="bi bi-envelope-at text-muted"></i> Send Email
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </li>
+                                                                <?php endif; ?>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php elseif (@$taggedto == null && @$item_type == null && @$assetid == null && @$assetstatus == null): ?>
+                                            <tr>
+                                                <td colspan="5">Please select Filter value.</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="5">No record was found for the selected filter value.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <!--------------- POP-UP BOX ------------
 -------------------------------------->
