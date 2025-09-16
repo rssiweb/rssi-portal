@@ -16,29 +16,33 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
 <?php if ($role == 'Admin') {
 
-    if (@$_POST['form-type'] == "addasset") {
-        @$itemid = "A" . time();
-        @$itemtype = $_POST['itemtype'];
-        @$itemname = $_POST['itemname'];
-        @$quantity = $_POST['quantity'];
-        @$remarks = htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8');
-        @$asset_status = $_POST['asset_status'];
-        @$collectedby = strtoupper($_POST['collectedby']);
-        @$now = date('Y-m-d H:i:s');
+    if (isset($_POST['form-type']) && $_POST['form-type'] == "addasset") {
+        $itemid = "A" . time();
+        $itemtype = isset($_POST['itemtype']) ? $_POST['itemtype'] : '';
+        $itemname = isset($_POST['itemname']) ? $_POST['itemname'] : '';
+        $quantity = isset($_POST['quantity']) ? $_POST['quantity'] : '';
+        $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
+        $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : '';
+        $collectedby = isset($_POST['collectedby']) ? strtoupper($_POST['collectedby']) : '';
+        $now = date('Y-m-d H:i:s');
+
         if ($itemtype != "") {
-            $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$asset_status')";
-            $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$asset_status')";
+            $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
+                    VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
+            $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
+                           VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
+
             $result = pg_query($con, $gps);
             $result = pg_query($con, $gpshistory);
             $cmdtuples = pg_affected_rows($result);
         }
     }
 
-    @$taggedto = strtoupper($_GET['taggedto']);
-    @$item_type = $_GET['item_type'];
-    @$assetid = $_GET['assetid'];
-    @$is_user = $_GET['is_user'];
-    @$assetstatus = $_GET['assetstatus'];
+    $taggedto = isset($_GET['taggedto']) ? strtoupper($_GET['taggedto']) : '';
+    $item_type = isset($_GET['item_type']) ? $_GET['item_type'] : '';
+    $assetid = isset($_GET['assetid']) ? $_GET['assetid'] : '';
+    $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
+    $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : '';
 
     $conditions = [];
 
@@ -50,15 +54,8 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $conditions[] = "taggedto = '$taggedto'";
     }
 
-    // Replace the existing search conditions with this:
     if ($assetid != "") {
-        if ($is_user == "1") {
-            // Search by Asset ID only
-            $conditions[] = "itemid = '$assetid'";
-        } else {
-            // Search by Asset ID OR Asset Name
-            $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
-        }
+        $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
     }
 
     if ($assetstatus != "") {
@@ -82,7 +79,9 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $query .= " ORDER BY date DESC";
 
     $gpsdetails = $query;
-} ?>
+}
+?>
+
 
 <?php if ($role != 'Admin') {
     $gpsdetails = "SELECT * from gps 
@@ -349,8 +348,8 @@ $resultArr = pg_fetch_all($result);
                                             <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
                                             &nbsp;
                                             <span class="input-help">
-                                                <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset ID OR Name" value="<?php echo $assetid ?>" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset ID OR Name</small>
+                                                <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset Id or name" value="<?php echo $assetid ?>" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset Id or name</small>
                                             </span>
                                         </div>
                                     </div>
@@ -360,7 +359,7 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                     <div id="filter-checks">
                                         <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                        <label for="is_user" style="font-weight: 400;">Search by Asset ID</label>
+                                        <label for="is_user" style="font-weight: 400;">Search by Asset Id or name</label>
                                     </div>
                                 </form>
                                 <script>
@@ -500,9 +499,7 @@ $resultArr = pg_fetch_all($result);
                                                         <input type="checkbox" class="form-check-input asset-checkbox" name="selected_assets[]" value="<?= $array['itemid'] ?>">
                                                     </td>
                                                     <td>
-                                                        <a href="gps_history.php?assetid=<?= $array['itemid'] ?>" target="_blank" title="Asset History">
-                                                            <?= $array['itemid'] ?>
-                                                        </a>
+                                                        <?= $array['itemid'] ?>
                                                     </td>
                                                     <td>
                                                         <?php if (strlen($array['itemname']) <= 50): ?>
@@ -593,6 +590,13 @@ $resultArr = pg_fetch_all($result);
                                                                             </span>
                                                                         <?php endif; ?>
                                                                     </li>
+                                                                    <li>
+                                                                        <!-- Asset History link styled like a button -->
+                                                                        <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
+                                                                            class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
+                                                                            <i class="bi bi-clock-history"></i> Asset History
+                                                                        </a>
+                                                                    </li>
                                                                 <?php endif; ?>
                                                             </ul>
                                                         </div>
@@ -601,11 +605,11 @@ $resultArr = pg_fetch_all($result);
                                             <?php endforeach; ?>
                                         <?php elseif (@$taggedto == null && @$item_type == null && @$assetid == null && @$assetstatus == null): ?>
                                             <tr>
-                                                <td colspan="5">Please select Filter value.</td>
+                                                <td colspan="11">Please select Filter value.</td>
                                             </tr>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="5">No record was found for the selected filter value.</td>
+                                                <td colspan="11">No record was found for the selected filter value.</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
@@ -919,20 +923,22 @@ $resultArr = pg_fetch_all($result);
             });
 
             // Initialize DataTable with proper configuration
-            $('#table-id').DataTable({
-                "order": [],
-                "columnDefs": [{
-                    "orderable": false,
-                    "targets": 0 // Disable sorting for checkbox column
-                }],
-                "drawCallback": function(settings) {
-                    // Re-initialize checkboxes after DataTable redraws
-                    $('.asset-checkbox').prop('checked', false);
-                    $('#select-all-checkbox').prop('checked', false);
-                    $('.bulk-update-section').hide();
-                    $('#table-id tbody tr').removeClass('selected');
-                }
-            });
+            <?php if (!empty($resultArr)) : ?>
+                $('#table-id').DataTable({
+                    "order": [],
+                    "columnDefs": [{
+                        "orderable": false,
+                        "targets": 0 // Disable sorting for checkbox column
+                    }],
+                    "drawCallback": function(settings) {
+                        // Re-initialize checkboxes after DataTable redraws
+                        $('.asset-checkbox').prop('checked', false);
+                        $('#select-all-checkbox').prop('checked', false);
+                        $('.bulk-update-section').hide();
+                        $('#table-id tbody tr').removeClass('selected');
+                    }
+                });
+            <?php endif; ?>
 
             // Update search placeholder to indicate both ID and name search
             $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
