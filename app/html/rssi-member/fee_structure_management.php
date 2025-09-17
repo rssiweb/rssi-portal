@@ -208,6 +208,8 @@ $filterDivision = isset($_GET['filter_division']) && is_array($_GET['filter_divi
     ? array_map('trim', $_GET['filter_division'])
     : [];
 
+$filterStatus = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
+
 // Build WHERE clause
 $whereClause = "WHERE 1=1";
 
@@ -243,7 +245,18 @@ if (!empty($filterDivision)) {
     )";
 }
 
-// Final query to fetch the fee structure
+// Filter by status
+if ($filterStatus === 'active') {
+    $whereClause .= " AND (fs.effective_until IS NULL OR fs.effective_until >= CURRENT_DATE)";
+} elseif ($filterStatus === 'inactive') {
+    $whereClause .= " AND fs.effective_until < CURRENT_DATE";
+}
+
+if (empty($filterClass) && empty($filterStudentType) && empty($filterCategory) && empty($filterDivision) && empty($filterStatus)) {
+    // Default to show no fees if no filters are applied
+    $whereClause = "WHERE false"; // Ensures the query returns no rows
+}
+
 $feeStructureQuery = "SELECT fs.*, fc.category_name, fc.fee_type
     FROM fee_structure fs
     JOIN fee_categories fc ON fs.category_id = fc.id
@@ -254,6 +267,37 @@ $feeStructureQuery = "SELECT fs.*, fc.category_name, fc.fee_type
 // Execute the query
 $result = pg_query($con, $feeStructureQuery);
 $feeStructure = $result ? pg_fetch_all($result) : [];
+
+?>
+<?php
+// Get the current filter status from GET parameters
+$filterStatus_sp = isset($_GET['filter_status_sp']) ? $_GET['filter_status_sp'] : '';
+
+// Prepare the status condition only if a filter is selected
+$statusCondition = '';
+if (!empty($filterStatus_sp)) {
+    if ($filterStatus_sp === 'active') {
+        $statusCondition = " (ssf.effective_until IS NULL OR ssf.effective_until >= CURRENT_DATE) ";
+    } elseif ($filterStatus_sp === 'inactive') {
+        $statusCondition = " (ssf.effective_until IS NOT NULL AND ssf.effective_until < CURRENT_DATE) ";
+    }
+}
+
+// Query data only if a valid filter is selected
+$studentFees = [];
+if (!empty($statusCondition)) {
+    $studentFeesQuery = "SELECT ssf.*, 
+        s.studentname, s.class,
+        fc.category_name, fc.fee_type
+        FROM student_specific_fees ssf
+        JOIN rssimyprofile_student s ON ssf.student_id = s.student_id
+        JOIN fee_categories fc ON ssf.category_id = fc.id
+        WHERE $statusCondition
+        ORDER BY s.class, s.studentname, fc.category_name, ssf.effective_from DESC";
+
+    $result = pg_query($con, $studentFeesQuery);
+    $studentFees = $result ? pg_fetch_all($result) : [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -496,6 +540,159 @@ $feeStructure = $result ? pg_fetch_all($result) : [];
                                                         </button>
                                                     </div>
                                                 </form>
+                                                <!-- Filter Section -->
+                                                <div class="filter-section mb-4">
+                                                    <h5><i class="fas fa-filter me-2"></i>Filter Standard Fee Structure</h5>
+                                                    <form method="get" action="">
+                                                        <div class="row">
+                                                            <div class="col-md-3">
+                                                                <label for="filter_class" class="form-label">Class</label>
+                                                                <select name="filter_class[]" id="filter_class" class="form-select select2" multiple="multiple">
+                                                                    <?php foreach ($classes as $class): ?>
+                                                                        <option value="<?= htmlspecialchars($class['class']) ?>"
+                                                                            <?= in_array((string)$class['class'], array_map('strval', $filterClass), true) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($class['class']) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3">
+                                                                <label for="filter_student_type" class="form-label">Plans</label>
+                                                                <select name="filter_student_type[]" id="filter_student_type" class="form-select select2" multiple="multiple">
+                                                                    <?php foreach ($names as $name): ?>
+                                                                        <option value="<?= htmlspecialchars($name) ?>"
+                                                                            <?= in_array((string)$name, array_map('strval', $filterStudentType), true) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($name) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3">
+                                                                <label for="filter_division" class="form-label">Division</label>
+                                                                <select name="filter_division[]" id="filter_division" class="form-select select2" multiple="multiple">
+                                                                    <?php foreach ($divisions as $division): ?>
+                                                                        <option value="<?= htmlspecialchars($division) ?>"
+                                                                            <?= in_array((string)$division, array_map('strval', $filterDivision), true) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($division) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3">
+                                                                <label for="filter_category" class="form-label">Fee Type</label>
+                                                                <select name="filter_category[]" id="filter_category" class="form-select select2" multiple="multiple">
+                                                                    <?php foreach ($categories as $category): ?>
+                                                                        <option value="<?= $category['id'] ?>"
+                                                                            <?= in_array((int)$category['id'], array_map('intval', $filterCategory), true) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($category['category_name']) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3">
+                                                                <label for="filter_status" class="form-label">Status</label>
+                                                                <select name="filter_status" id="filter_status" class="form-select select2">
+                                                                    <option value="">-- Select Status --</option>
+                                                                    <option value="active" <?= (isset($filterStatus) && $filterStatus === 'active') ? 'selected' : '' ?>>Active</option>
+                                                                    <option value="inactive" <?= (isset($filterStatus) && $filterStatus === 'inactive') ? 'selected' : '' ?>>Inactive</option>
+                                                                </select>
+                                                            </div>
+                                                            <!-- Add this to both filter forms (standard and student-specific) -->
+                                                            <input type="hidden" name="tab" value="<?= isset($_GET['tab']) ? htmlspecialchars($_GET['tab']) : 'multiple' ?>">
+
+                                                            <div class="col-md-3 align-self-end">
+                                                                <button type="submit" class="btn btn-primary filter-btn">
+                                                                    <i class="fas fa-filter me-1"></i> Apply Filters
+                                                                </button>
+                                                                <a href="fee_structure_management.php" class="btn btn-secondary reset-btn">
+                                                                    <i class="fas fa-times me-1"></i> Reset
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+
+                                                <!-- Standard Fee Structure Table -->
+                                                <div class="mb-4">
+                                                    <h5 class="mb-3"><i class="fas fa-list-alt me-2"></i>Standard Fee Structure</h5>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover" id="feeTable">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Class</th>
+                                                                    <th>Plan</th>
+                                                                    <th>Fee Type</th>
+                                                                    <th>Amount</th>
+                                                                    <th>Effective From</th>
+                                                                    <th>Effective Until</th>
+                                                                    <th>Status</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php if (empty($feeStructure)): ?>
+                                                                    <tr>
+                                                                        <td colspan="9" class="text-center">
+                                                                            <?php if (empty($filterClass) && empty($filterStudentType) && empty($filterCategory) && empty($filterDivision) && empty($filterStatus)): ?>
+                                                                                Please select at least one filter to view the fee structure.
+                                                                            <?php else: ?>
+                                                                                No fee structure found matching your criteria.
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php else: ?>
+                                                                    <?php foreach ($feeStructure as $fee):
+                                                                        $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
+                                                                        $rowClass = $isActive ? 'active-fee' : 'inactive-fee';
+                                                                    ?>
+                                                                        <tr>
+                                                                            <td><?= $fee['class'] ?></td>
+                                                                            <td><?= $fee['student_type'] ?></td>
+                                                                            <td><?= $fee['category_name'] ?></td>
+                                                                            <td>₹<?= number_format($fee['amount'], 2) ?></td>
+                                                                            <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
+                                                                            <td>
+                                                                                <?= !empty($fee['effective_until']) ? date('d-M-Y', strtotime($fee['effective_until'])) : 'N/A' ?>
+                                                                            </td>
+                                                                            <td>
+                                                                                <?php if ($isActive): ?>
+                                                                                    <span class="badge bg-success">Active</span>
+                                                                                <?php else: ?>
+                                                                                    <span class="badge bg-secondary">Inactive</span>
+                                                                                <?php endif; ?>
+                                                                            </td>
+                                                                            <td>
+                                                                                <div class="dropdown">
+                                                                                    <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;" id="dropdownMenuButton<?= $fee['id'] ?>">
+                                                                                        <i class="fas fa-ellipsis-v"></i>
+                                                                                    </button>
+                                                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<?= $fee['id'] ?>">
+                                                                                        <?php if ($isActive): ?>
+                                                                                            <li>
+                                                                                                <button class="dropdown-item btn-deactivate" data-fee-id="<?= $fee['id'] ?>">
+                                                                                                    <i class="fas fa-ban me-1"></i> Deactivate
+                                                                                                </button>
+                                                                                            </li>
+                                                                                        <?php else: ?>
+                                                                                            <li>
+                                                                                                <span class="dropdown-item text-muted">No actions available</span>
+                                                                                            </li>
+                                                                                        <?php endif; ?>
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    <?php endforeach; ?>
+                                                                <?php endif; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <!-- Student Specific Fees Tab -->
@@ -544,229 +741,98 @@ $feeStructure = $result ? pg_fetch_all($result) : [];
                                                         </div>
                                                     </div>
                                                 </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                                <!-- Student Specific Fees Table -->
+                                                <div>
+                                                    <h5 class="mb-3"><i class="fas fa-user-graduate me-2"></i>Student Specific Fees</h5>
 
-                                <!-- Current Fee Structure -->
-                                <div class="card shadow-sm">
-                                    <div class="card-header bg-white">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span><i class="fas fa-list-alt me-2"></i>Fee Structure</span>
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="showInactiveToggle">
-                                                <label class="form-check-label" for="showInactiveToggle">Show Inactive Fees</label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    <!-- Filter Form -->
+                                                    <form method="get" class="mb-3">
+                                                        <!-- Add this to both filter forms (standard and student-specific) -->
+                                                        <input type="hidden" name="tab" value="<?= isset($_GET['tab']) ? htmlspecialchars($_GET['tab']) : 'multiple' ?>">
+                                                        <div class="row g-2 align-items-center">
+                                                            <div class="col-auto">
+                                                                <label for="filter_status_sp" class="form-label">Status</label>
+                                                                <select name="filter_status_sp" id="filter_status_sp" class="form-select">
+                                                                    <option value="">-- Select Status --</option>
+                                                                    <option value="active" <?= ($filterStatus_sp === 'active') ? 'selected' : '' ?>>Active</option>
+                                                                    <option value="inactive" <?= ($filterStatus_sp === 'inactive') ? 'selected' : '' ?>>Inactive</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
 
-                                    <div class="card-body">
-                                        <!-- Filter Section -->
-                                        <div class="filter-section mb-4">
-                                            <h5><i class="fas fa-filter me-2"></i>Filter Standard Fee Structure</h5>
-                                            <form method="get" action="">
-                                                <div class="row">
-                                                    <div class="col-md-3">
-                                                        <label for="filter_class" class="form-label">Class</label>
-                                                        <select name="filter_class[]" id="filter_class" class="form-select select2" multiple="multiple">
-                                                            <?php foreach ($classes as $class): ?>
-                                                                <option value="<?= htmlspecialchars($class['class']) ?>"
-                                                                    <?= in_array((string)$class['class'], array_map('strval', $filterClass), true) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($class['class']) ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-3">
-                                                        <label for="filter_student_type" class="form-label">Plans</label>
-                                                        <select name="filter_student_type[]" id="filter_student_type" class="form-select select2" multiple="multiple">
-                                                            <?php foreach ($names as $name): ?>
-                                                                <option value="<?= htmlspecialchars($name) ?>"
-                                                                    <?= in_array((string)$name, array_map('strval', $filterStudentType), true) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($name) ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-3">
-                                                        <label for="filter_division" class="form-label">Division</label>
-                                                        <select name="filter_division[]" id="filter_division" class="form-select select2" multiple="multiple">
-                                                            <?php foreach ($divisions as $division): ?>
-                                                                <option value="<?= htmlspecialchars($division) ?>"
-                                                                    <?= in_array((string)$division, array_map('strval', $filterDivision), true) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($division) ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-3">
-                                                        <label for="filter_category" class="form-label">Fee Type</label>
-                                                        <select name="filter_category[]" id="filter_category" class="form-select select2" multiple="multiple">
-                                                            <?php foreach ($categories as $category): ?>
-                                                                <option value="<?= $category['id'] ?>"
-                                                                    <?= in_array((int)$category['id'], array_map('intval', $filterCategory), true) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($category['category_name']) ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-3 align-self-end">
-                                                        <button type="submit" class="btn btn-primary filter-btn">
-                                                            <i class="fas fa-filter me-1"></i> Apply Filters
-                                                        </button>
-                                                        <a href="fee_structure_management.php" class="btn btn-secondary reset-btn">
-                                                            <i class="fas fa-times me-1"></i> Reset
-                                                        </a>
-                                                    </div>
+                                                    <?php if (empty($filterStatus_sp)): ?>
+                                                        <div class="text-center text-muted">
+                                                            Please select a status filter to view the student specific fees.
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-hover">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Student</th>
+                                                                        <th>Class</th>
+                                                                        <th>Category</th>
+                                                                        <th>Type</th>
+                                                                        <th>Amount</th>
+                                                                        <th>Effective From</th>
+                                                                        <th>Effective Until</th>
+                                                                        <th>Status</th>
+                                                                        <th>Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <?php if (count($studentFees) > 0): ?>
+                                                                        <?php foreach ($studentFees as $fee):
+                                                                            $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
+                                                                        ?>
+                                                                            <tr>
+                                                                                <td><?= htmlspecialchars($fee['studentname']) ?></td>
+                                                                                <td><?= htmlspecialchars($fee['class']) ?></td>
+                                                                                <td><?= htmlspecialchars($fee['category_name']) ?></td>
+                                                                                <td>
+                                                                                    <span class="badge fee-type-badge <?= strtolower(str_replace(' ', '-', $fee['fee_type'])) ?>">
+                                                                                        <?= htmlspecialchars($fee['fee_type']) ?>
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td>₹<?= number_format($fee['amount'], 2) ?></td>
+                                                                                <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
+                                                                                <td>
+                                                                                    <?= !empty($fee['effective_until']) ? date('d-M-Y', strtotime($fee['effective_until'])) : 'N/A' ?>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?php if ($isActive): ?>
+                                                                                        <span class="badge bg-success">Active</span>
+                                                                                    <?php else: ?>
+                                                                                        <span class="badge bg-secondary">Inactive</span>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?php if ($isActive): ?>
+                                                                                        <button class="btn btn-sm btn-outline-danger btn-deactivate-student"
+                                                                                            data-fee-id="<?= $fee['id'] ?>"
+                                                                                            data-fee-type="student">
+                                                                                            <i class="fas fa-ban me-1"></i> Deactivate
+                                                                                        </button>
+                                                                                    <?php else: ?>
+                                                                                        <span class="text-muted">No actions</span>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                        <?php endforeach; ?>
+                                                                    <?php else: ?>
+                                                                        <tr>
+                                                                            <td colspan="9" class="text-center text-muted">No student specific fees found for the selected filter.</td>
+                                                                        </tr>
+                                                                    <?php endif; ?>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
-                                            </form>
-
-                                        </div>
-
-                                        <!-- Standard Fee Structure Table -->
-                                        <div class="mb-4">
-                                            <h5 class="mb-3"><i class="fas fa-list-alt me-2"></i>Standard Fee Structure</h5>
-                                            <div class="table-responsive">
-                                                <table class="table table-hover" id="feeTable">
-                                                    <thead class="table-light">
-                                                        <tr>
-                                                            <th>Class</th>
-                                                            <th>Plan</th>
-                                                            <th>Fee Type</th>
-                                                            <th>Fee cycle</th>
-                                                            <th>Amount</th>
-                                                            <th>Effective From</th>
-                                                            <th>Effective Until</th>
-                                                            <th>Status</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php if (empty($feeStructure)): ?>
-                                                            <tr>
-                                                                <td colspan="9" class="text-center">
-                                                                    No fee structure found matching your criteria.
-                                                                </td>
-                                                            </tr>
-                                                        <?php else: ?>
-                                                            <?php foreach ($feeStructure as $fee):
-                                                                $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
-                                                                $rowClass = $isActive ? 'active-fee' : 'inactive-fee';
-                                                            ?>
-                                                                <tr class="<?= $rowClass ?> <?= $isActive ? 'active-row' : 'inactive-row' ?>" style="<?= $isActive ? '' : 'display: none;' ?>">
-                                                                    <td><?= $fee['class'] ?></td>
-                                                                    <td><?= $fee['student_type'] ?></td>
-                                                                    <td><?= $fee['category_name'] ?></td>
-                                                                    <td>
-                                                                        <span class="badge fee-type-badge <?= strtolower(str_replace(' ', '-', $fee['fee_type'])) ?>">
-                                                                            <?= $fee['fee_type'] ?>
-                                                                        </span>
-                                                                    </td>
-                                                                    <td>₹<?= number_format($fee['amount'], 2) ?></td>
-                                                                    <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
-                                                                    <td>
-                                                                        <?= !empty($fee['effective_until']) ? date('d-M-Y', strtotime($fee['effective_until'])) : 'N/A' ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if ($isActive): ?>
-                                                                            <span class="badge bg-success">Active</span>
-                                                                        <?php else: ?>
-                                                                            <span class="badge bg-secondary">Inactive</span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if ($isActive): ?>
-                                                                            <button class="btn btn-sm btn-outline-danger btn-deactivate" data-fee-id="<?= $fee['id'] ?>">
-                                                                                <i class="fas fa-ban me-1"></i> Deactivate
-                                                                            </button>
-                                                                        <?php else: ?>
-                                                                            <span class="text-muted">No actions</span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        <?php endif; ?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        <!-- Student Specific Fees Table -->
-                                        <div>
-                                            <h5 class="mb-3"><i class="fas fa-user-graduate me-2"></i>Student Specific Fees</h5>
-                                            <?php
-                                            // Query for student specific fees
-                                            $studentFeesQuery = "SELECT ssf.*, 
-                                            s.studentname, s.class,
-                                            fc.category_name, fc.fee_type
-                                            FROM student_specific_fees ssf
-                                            JOIN rssimyprofile_student s ON ssf.student_id = s.student_id
-                                            JOIN fee_categories fc ON ssf.category_id = fc.id
-                                            ORDER BY s.class, s.studentname, fc.category_name, ssf.effective_from DESC";
-                                            $studentFees = pg_fetch_all(pg_query($con, $studentFeesQuery)) ?? [];
-                                            ?>
-
-                                            <div class="table-responsive">
-                                                <table class="table table-hover">
-                                                    <thead class="table-light">
-                                                        <tr>
-                                                            <th>Student</th>
-                                                            <th>Class</th>
-                                                            <th>Category</th>
-                                                            <th>Type</th>
-                                                            <th>Amount</th>
-                                                            <th>Effective From</th>
-                                                            <th>Effective Until</th>
-                                                            <th>Status</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php foreach ($studentFees as $fee):
-                                                            $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
-                                                            $rowClass = $isActive ? 'active-fee' : 'inactive-fee';
-                                                        ?>
-                                                            <tr class="<?= $rowClass ?> <?= $isActive ? 'active-row' : 'inactive-row' ?>" style="<?= $isActive ? '' : 'display: none;' ?>">
-                                                                <td><?= $fee['studentname'] ?></td>
-                                                                <td><?= $fee['class'] ?></td>
-                                                                <td><?= $fee['category_name'] ?></td>
-                                                                <td>
-                                                                    <span class="badge fee-type-badge <?= strtolower(str_replace(' ', '-', $fee['fee_type'])) ?>">
-                                                                        <?= $fee['fee_type'] ?>
-                                                                    </span>
-                                                                </td>
-                                                                <td>₹<?= number_format($fee['amount'], 2) ?></td>
-                                                                <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
-                                                                <td>
-                                                                    <?= !empty($fee['effective_until']) ? date('d-M-Y', strtotime($fee['effective_until'])) : 'N/A' ?>
-                                                                </td>
-                                                                <td>
-                                                                    <?php if ($isActive): ?>
-                                                                        <span class="badge bg-success">Active</span>
-                                                                    <?php else: ?>
-                                                                        <span class="badge bg-secondary">Inactive</span>
-                                                                    <?php endif; ?>
-                                                                </td>
-                                                                <td>
-                                                                    <?php if ($isActive): ?>
-                                                                        <button class="btn btn-sm btn-outline-danger btn-deactivate-student"
-                                                                            data-fee-id="<?= $fee['id'] ?>"
-                                                                            data-fee-type="student">
-                                                                            <i class="fas fa-ban me-1"></i> Deactivate
-                                                                        </button>
-                                                                    <?php else: ?>
-                                                                        <span class="text-muted">No actions</span>
-                                                                    <?php endif; ?>
-                                                                </td>
-                                                            </tr>
-                                                        <?php endforeach; ?>
-                                                    </tbody>
-                                                </table>
                                             </div>
                                         </div>
                                     </div>
@@ -876,18 +942,6 @@ $feeStructure = $result ? pg_fetch_all($result) : [];
 
                 const deactivateModal = new bootstrap.Modal(document.getElementById('deactivateModal'));
                 deactivateModal.show();
-            });
-
-            // Toggle inactive fees visibility
-            $('#showInactiveToggle').change(function() {
-                if ($(this).is(':checked')) {
-                    // Show all rows (both active and inactive)
-                    $('tr.inactive-row').show();
-                } else {
-                    // Hide only inactive rows, keep active rows visible
-                    $('tr.inactive-row').hide();
-                    $('tr.active-row').show(); // This ensures active rows stay visible
-                }
             });
 
             // Prevent alert from auto-closing
@@ -1005,6 +1059,78 @@ $feeStructure = $result ? pg_fetch_all($result) : [];
                 allowClear: true,
                 theme: 'bootstrap-5'
             });
+        });
+    </script>
+    <script>
+        // Add this script to your page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to get query parameter by name
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            // Function to activate tab based on query parameter
+            function activateTabFromQuery() {
+                const tabName = getQueryParam('tab');
+                if (tabName) {
+                    const tabTrigger = document.querySelector(`[data-bs-target="#${tabName}"]`);
+                    if (tabTrigger) {
+                        const tab = new bootstrap.Tab(tabTrigger);
+                        tab.show();
+                    }
+                }
+            }
+
+            // Update URL with tab parameter when a tab is clicked
+            const feeTab = document.getElementById('feeTab');
+            if (feeTab) {
+                feeTab.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('nav-link')) {
+                        const target = e.target.getAttribute('data-bs-target');
+                        if (target) {
+                            const tabName = target.replace('#', '');
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set('tab', tabName);
+                            const newUrl = window.location.pathname + '?' + urlParams.toString();
+                            history.replaceState(null, null, newUrl);
+                        }
+                    }
+                });
+            }
+
+            // Activate correct tab on page load
+            activateTabFromQuery();
+
+            // Also add tab parameter to filter forms to preserve it when submitting
+            const filterForms = document.querySelectorAll('form[method="get"]');
+            filterForms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    const activeTab = document.querySelector('.nav-link.active');
+                    if (activeTab) {
+                        const target = activeTab.getAttribute('data-bs-target');
+                        if (target) {
+                            const tabName = target.replace('#', '');
+
+                            // Check if there's already a tab input
+                            let tabInput = form.querySelector('input[name="tab"]');
+                            if (!tabInput) {
+                                tabInput = document.createElement('input');
+                                tabInput.type = 'hidden';
+                                tabInput.name = 'tab';
+                                form.appendChild(tabInput);
+                            }
+                            tabInput.value = tabName;
+                        }
+                    }
+                });
+            });
+
+            // On page load, if there's a tab parameter but no active tab, activate it
+            const urlTab = getQueryParam('tab');
+            if (urlTab && !document.querySelector('.nav-link.active')) {
+                activateTabFromQuery();
+            }
         });
     </script>
 </body>
