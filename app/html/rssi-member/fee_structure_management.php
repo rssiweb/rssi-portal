@@ -627,6 +627,7 @@ if (!empty($statusCondition)) {
                                                                     <th>Class</th>
                                                                     <th>Plan</th>
                                                                     <th>Fee Type</th>
+                                                                    <th>Fee Cycle</th>
                                                                     <th>Amount</th>
                                                                     <th>Effective From</th>
                                                                     <th>Effective Until</th>
@@ -654,6 +655,9 @@ if (!empty($statusCondition)) {
                                                                             <td><?= $fee['class'] ?></td>
                                                                             <td><?= $fee['student_type'] ?></td>
                                                                             <td><?= $fee['category_name'] ?></td>
+                                                                            <td>
+                                                                                <?= htmlspecialchars($fee['fee_type']) ?>
+                                                                            </td>
                                                                             <td>₹<?= number_format($fee['amount'], 2) ?></td>
                                                                             <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
                                                                             <td>
@@ -750,41 +754,42 @@ if (!empty($statusCondition)) {
                                                         <!-- Add this to both filter forms (standard and student-specific) -->
                                                         <input type="hidden" name="tab" value="<?= isset($_GET['tab']) ? htmlspecialchars($_GET['tab']) : 'multiple' ?>">
                                                         <div class="row g-2 align-items-center">
-                                                            <div class="col-auto">
+                                                            <div class="col-2">
                                                                 <label for="filter_status_sp" class="form-label">Status</label>
-                                                                <select name="filter_status_sp" id="filter_status_sp" class="form-select">
+                                                                <select name="filter_status_sp" id="filter_status_sp" class="form-select select2" required>
                                                                     <option value="">-- Select Status --</option>
                                                                     <option value="active" <?= ($filterStatus_sp === 'active') ? 'selected' : '' ?>>Active</option>
                                                                     <option value="inactive" <?= ($filterStatus_sp === 'inactive') ? 'selected' : '' ?>>Inactive</option>
                                                                 </select>
                                                             </div>
-                                                            <div class="col-auto">
+                                                            <div class="col-md-3 align-self-end">
                                                                 <button type="submit" class="btn btn-primary">Filter</button>
                                                             </div>
                                                         </div>
                                                     </form>
-
-                                                    <?php if (empty($filterStatus_sp)): ?>
-                                                        <div class="text-center text-muted">
-                                                            Please select a status filter to view the student specific fees.
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-hover">
-                                                                <thead class="table-light">
-                                                                    <tr>
-                                                                        <th>Student</th>
-                                                                        <th>Class</th>
-                                                                        <th>Category</th>
-                                                                        <th>Type</th>
-                                                                        <th>Amount</th>
-                                                                        <th>Effective From</th>
-                                                                        <th>Effective Until</th>
-                                                                        <th>Status</th>
-                                                                        <th>Actions</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover" id="studentFeeTable">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Student</th>
+                                                                    <th>Class</th>
+                                                                    <th>Category</th>
+                                                                    <th>Type</th>
+                                                                    <th>Amount</th>
+                                                                    <th>Effective From</th>
+                                                                    <th>Effective Until</th>
+                                                                    <th>Status</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php if (empty($filterStatus_sp)): ?>
+                                                                    <div class="text-center text-muted">
+                                                                        <td colspan="9" class="text-center">
+                                                                            Please select a status filter to view the student specific fees.
+                                                                        </td>
+                                                                    </div>
+                                                                <?php else: ?>
                                                                     <?php if (count($studentFees) > 0): ?>
                                                                         <?php foreach ($studentFees as $fee):
                                                                             $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
@@ -828,10 +833,10 @@ if (!empty($statusCondition)) {
                                                                             <td colspan="9" class="text-center text-muted">No student specific fees found for the selected filter.</td>
                                                                         </tr>
                                                                     <?php endif; ?>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    <?php endif; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -1039,13 +1044,15 @@ if (!empty($statusCondition)) {
     </script>
     <script>
         $(document).ready(function() {
-            // Check if resultArr is empty
             <?php if (!empty($feeStructure)) : ?>
-                // Initialize DataTables only if resultArr is not empty
                 $('#feeTable').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
+                    "order": []
+                });
+            <?php endif; ?>
+
+            <?php if (!empty($studentFees)) : ?>
+                $('#studentFeeTable').DataTable({
+                    "order": []
                 });
             <?php endif; ?>
         });
