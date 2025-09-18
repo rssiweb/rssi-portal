@@ -76,26 +76,26 @@ if (@$_POST['form-type'] == "exception") {
     // Insert exception record
     $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
                       VALUES ($1, $2, $3) RETURNING exception_id";
-    
+
     $params = array($exception_date, $reason, $created_by);
     $exception_result = pg_query_params($con, $exception_sql, $params);
-    
+
     if (!$exception_result) {
         echo "Error creating exception record.\n";
         exit;
     }
-    
+
     $exception_row = pg_fetch_assoc($exception_result);
     $exception_id = $exception_row['exception_id'];
 
     // Insert student mappings
     foreach ($resultArr as $row) {
         $student_id = $row['student_id'];
-        
+
         $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) 
                          VALUES ($1, $2)";
         $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
-        
+
         if ($mapping_result) {
             $successMessages[] = "Exception applied for student: " . $row['studentname'];
         } else {
@@ -119,6 +119,7 @@ if (@$_POST['form-type'] == "exception") {
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
+
         function gtag() {
             dataLayer.push(arguments);
         }
@@ -150,6 +151,15 @@ if (@$_POST['form-type'] == "exception") {
             color: red;
             margin-left: 5px;
         }
+
+        .back-link {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -175,8 +185,12 @@ if (@$_POST['form-type'] == "exception") {
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <br>
-                            <div class="container mt-5">
+                            <div class="container mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <a href="exception_view.php" class="back-link">
+                                        <i class="bi bi-arrow-left"></i> Back to all exceptions
+                                    </a>
+                                </div>
 
                                 <h4>Select Students</h4>
                                 <div class="mb-3 py-2">
@@ -288,7 +302,7 @@ if (@$_POST['form-type'] == "exception") {
         $(document).ready(function() {
             // Initialize Select2 for multiple selects
             $('select[multiple]').select2();
-            
+
             // Set default date to today
             $('#exception_date').val(new Date().toISOString().substr(0, 10));
         });

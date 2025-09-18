@@ -293,11 +293,13 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="card-footer text-end">
-                                            <button class="btn btn-sm btn-danger" onclick="confirmDelete(<?= $current_exception_id ?>)">
-                                                <i class="bi bi-trash"></i> Delete Exception
-                                            </button>
-                                        </div>
+                                        <?php if ($role === 'Admin'): ?>
+                                            <div class="card-footer text-end">
+                                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(<?= $current_exception_id ?>)">
+                                                    <i class="bi bi-trash"></i> Delete Exception
+                                                </button>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
 
                                     <h5 class="mb-3">Affected Students</h5>
