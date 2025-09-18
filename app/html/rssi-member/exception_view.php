@@ -10,6 +10,9 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+$is_admin = ($role == 'Admin');
+$is_centreIncharge = ($position == 'Centre Incharge' || $position == 'Senior Centre Incharge');
+
 // Handle exception deletion
 if (isset($_GET['delete_exception'])) {
     $exception_id = $_GET['delete_exception'];
@@ -337,7 +340,7 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
                                                 <h4>All Class Days Exceptions</h4>
-                                                <?php if ($role === 'Admin' || $position === 'Centre Incharge'): ?>
+                                                <?php if ($is_admin || $is_centreIncharge): ?>
                                                     <div>
                                                         <a href="class_days_exception.php" class="btn btn-primary">
                                                             <i class="bi bi-plus-circle"></i> Create New

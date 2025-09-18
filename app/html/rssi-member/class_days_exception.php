@@ -9,6 +9,17 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+$is_admin = ($role == 'Admin');
+$is_centreIncharge = ($position == 'Centre Incharge' || $position == 'Senior Centre Incharge');
+
+// Permission check
+if (!$is_admin && !$is_centreIncharge) {
+    echo "<script>
+        alert('Access Denied. You do not have permission to access this page.');
+        window.location.href = 'index.php'; // redirect to homepage
+    </script>";
+    exit; // Stop further execution
+}
 
 if (@$_POST['form-type'] == "exception_filter") {
     $class = $_POST['class'] ?? [];
