@@ -45,9 +45,10 @@ date_default_timezone_set('Asia/Kolkata'); ?>
             $changes_json = json_encode($changes);
 
             // Insert into gps_history table with only required columns
-            $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes, remarks) 
-                          VALUES ('$itemid', 'add_asset', '$updated_by', '$now', '$changes_json', '$remarks')";
+            $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
+                          VALUES ('$itemid', 'add_asset', '$updated_by', '$now', '$changes_json')";
             pg_query($con, $history_query);
+            $cmdtuples = pg_affected_rows(pg_query($con, $gps_query));
         }
     }
 
@@ -55,7 +56,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $item_type = isset($_GET['item_type']) ? $_GET['item_type'] : '';
     $assetid = isset($_GET['assetid']) ? $_GET['assetid'] : '';
     $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
-    $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : '';
+    $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
 
     $conditions = [];
 

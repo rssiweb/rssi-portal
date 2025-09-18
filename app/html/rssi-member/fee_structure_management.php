@@ -595,7 +595,7 @@ if (!empty($statusCondition)) {
 
                                                             <div class="col-md-3">
                                                                 <label for="filter_status" class="form-label">Status</label>
-                                                                <select name="filter_status" id="filter_status" class="form-select select2">
+                                                                <select name="filter_status" id="filter_status" class="form-select select2" required>
                                                                     <option value="">-- Select Status --</option>
                                                                     <option value="active" <?= (isset($filterStatus) && $filterStatus === 'active') ? 'selected' : '' ?>>Active</option>
                                                                     <option value="inactive" <?= (isset($filterStatus) && $filterStatus === 'inactive') ? 'selected' : '' ?>>Inactive</option>

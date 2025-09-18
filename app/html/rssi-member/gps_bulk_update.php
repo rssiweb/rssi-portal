@@ -53,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Add to history table
                 if (!empty($history_data['changes'])) {
                     $changes_json = json_encode($history_data['changes']);
-                    $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes, remarks) 
-                                     VALUES ('$asset_id', 'bulk_update', '$updated_by', '$now', '$changes_json', '$remarks')";
+                    $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
+                                     VALUES ('$asset_id', 'bulk_update', '$updated_by', '$now', '$changes_json')";
                     pg_query($con, $history_query);
                 }
             }
