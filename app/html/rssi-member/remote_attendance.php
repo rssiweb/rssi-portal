@@ -507,6 +507,24 @@ validation();
             }
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const input = document.getElementById("punchInTime");
+            const now = new Date();
+
+            // Format YYYY-MM-DD
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+
+            const today = `${year}-${month}-${day}T00:00`;
+            const tomorrow = `${year}-${month}-${day}T23:59`;
+
+            // Set min and max so only current date is allowed
+            input.setAttribute("min", today);
+            input.setAttribute("max", tomorrow);
+        });
+    </script>
 </body>
 
 </html>
