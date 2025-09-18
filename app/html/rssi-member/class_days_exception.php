@@ -69,7 +69,7 @@ if (@$_POST['form-type'] == "exception_filter") {
     }
 }
 
-if (@$_POST['form-type'] == "exception") {
+if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
     $successMessages = [];
 
     if (isset($_SESSION['filtered_results'])) {
@@ -79,38 +79,74 @@ if (@$_POST['form-type'] == "exception") {
         exit;
     }
 
-    // Process exception
-    $exception_date = $_POST['exception_date'];
     $reason = $_POST['reason'];
     $created_by = $associatenumber;
 
-    // Insert exception record
-    $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
-                      VALUES ($1, $2, $3) RETURNING exception_id";
+    // Check if multiple days selected
+    if (!empty($_POST['multiple_days'])) {
+        $start_date = $_POST['start_date'];
+        $end_date   = $_POST['end_date'];
 
-    $params = array($exception_date, $reason, $created_by);
-    $exception_result = pg_query_params($con, $exception_sql, $params);
+        // Generate date range
+        $period = new DatePeriod(
+            new DateTime($start_date),
+            new DateInterval('P1D'),
+            (new DateTime($end_date))->modify('+1 day') // inclusive
+        );
 
-    if (!$exception_result) {
-        echo "Error creating exception record.\n";
-        exit;
-    }
+        foreach ($period as $date) {
+            $exception_date = $date->format("Y-m-d");
 
-    $exception_row = pg_fetch_assoc($exception_result);
-    $exception_id = $exception_row['exception_id'];
+            // Insert exception record
+            $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
+                              VALUES ($1, $2, $3) RETURNING exception_id";
+            $params = array($exception_date, $reason, $created_by);
+            $exception_result = pg_query_params($con, $exception_sql, $params);
 
-    // Insert student mappings
-    foreach ($resultArr as $row) {
-        $student_id = $row['student_id'];
+            if (!$exception_result) {
+                echo "Error creating exception record.\n";
+                exit;
+            }
 
-        $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) 
-                         VALUES ($1, $2)";
-        $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
+            $exception_row = pg_fetch_assoc($exception_result);
+            $exception_id = $exception_row['exception_id'];
 
-        if ($mapping_result) {
-            $successMessages[] = "Exception applied for student: " . $row['studentname'];
-        } else {
-            echo "Error inserting student mapping for $student_id.\n";
+            // Insert student mappings
+            foreach ($resultArr as $row) {
+                $student_id = $row['student_id'];
+                $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) VALUES ($1, $2)";
+                $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
+
+                if ($mapping_result) {
+                    $successMessages[] = "Exception applied on $exception_date for student: " . $row['studentname'];
+                }
+            }
+        }
+    } else {
+        // Single date
+        $exception_date = $_POST['exception_date'];
+
+        $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
+                          VALUES ($1, $2, $3) RETURNING exception_id";
+        $params = array($exception_date, $reason, $created_by);
+        $exception_result = pg_query_params($con, $exception_sql, $params);
+
+        if (!$exception_result) {
+            echo "Error creating exception record.\n";
+            exit;
+        }
+
+        $exception_row = pg_fetch_assoc($exception_result);
+        $exception_id = $exception_row['exception_id'];
+
+        foreach ($resultArr as $row) {
+            $student_id = $row['student_id'];
+            $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) VALUES ($1, $2)";
+            $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
+
+            if ($mapping_result) {
+                $successMessages[] = "Exception applied on $exception_date for student: " . $row['studentname'];
+            }
         }
     }
 
@@ -278,12 +314,35 @@ if (@$_POST['form-type'] == "exception") {
                                         <input type="hidden" name="form-type" value="exception">
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
-                                                <label for="exception_date" class="form-label">Exception Date<span class="asterisk">*</span></label>
-                                                <input type="date" class="form-control" id="exception_date" name="exception_date" required>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="multiple_days" name="multiple_days" value="1">
+                                                    <label class="form-check-label" for="multiple_days">Apply for multiple days</label>
+                                                </div>
                                             </div>
+                                        </div>
+
+                                        <div class="row single-date">
+                                            <div class="col-md-4 mb-3">
+                                                <label for="exception_date" class="form-label">Exception Date <span class="asterisk">*</span></label>
+                                                <input type="date" class="form-control" id="exception_date" name="exception_date">
+                                            </div>
+                                        </div>
+
+                                        <div class="row date-range" style="display:none;">
+                                            <div class="col-md-4 mb-3">
+                                                <label for="start_date" class="form-label">Start Date <span class="asterisk">*</span></label>
+                                                <input type="date" class="form-control" id="start_date" name="start_date">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="end_date" class="form-label">End Date <span class="asterisk">*</span></label>
+                                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
                                             <div class="col-md-8 mb-3">
-                                                <label for="reason" class="form-label">Reason<span class="asterisk">*</span></label>
-                                                <input type="text" class="form-control" id="reason" name="reason" placeholder="Enter reason for exception" required>
+                                                <label for="reason" class="form-label">Reason <span class="asterisk">*</span></label>
+                                                <textarea class="form-control" id="reason" name="reason" placeholder="Enter reason for exception" required></textarea>
                                             </div>
                                         </div>
 
@@ -291,6 +350,24 @@ if (@$_POST['form-type'] == "exception") {
                                             <button type="submit" class="btn btn-primary">Apply Exception</button>
                                         </div>
                                     </form>
+
+                                    <script>
+                                        document.getElementById('multiple_days').addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.single-date').style.display = 'none';
+                                                document.querySelector('.date-range').style.display = 'flex';
+                                                document.getElementById('exception_date').required = false;
+                                                document.getElementById('start_date').required = true;
+                                                document.getElementById('end_date').required = true;
+                                            } else {
+                                                document.querySelector('.single-date').style.display = 'flex';
+                                                document.querySelector('.date-range').style.display = 'none';
+                                                document.getElementById('exception_date').required = true;
+                                                document.getElementById('start_date').required = false;
+                                                document.getElementById('end_date').required = false;
+                                            }
+                                        });
+                                    </script>
                                 <?php endif; ?>
                             </div>
                         </div>
