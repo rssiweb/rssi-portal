@@ -337,11 +337,13 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
                                                 <h4>All Class Days Exceptions</h4>
-                                                <div>
-                                                    <a href="class_days_exception.php" class="btn btn-primary">
-                                                        <i class="bi bi-plus-circle"></i> Create New
-                                                    </a>
-                                                </div>
+                                                <?php if ($role === 'Admin' || $position === 'Centre Incharge'): ?>
+                                                    <div>
+                                                        <a href="class_days_exception.php" class="btn btn-primary">
+                                                            <i class="bi bi-plus-circle"></i> Create New
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
 
                                             <!-- Search and Filter Section -->
