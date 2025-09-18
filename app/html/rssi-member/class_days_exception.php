@@ -249,7 +249,7 @@ if (@$_POST['form-type'] == "exception") {
                                 <?php endif; ?>
                                 <?php if (isset($resultArr) && !empty($resultArr)) : ?>
                                     <h4 class="mb-4">Exception Parameters</h4>
-                                    <form action="student_class_days_exception.php" name="exception" id="exception" method="post">
+                                    <form action="" name="exception" id="exception" method="post">
                                         <input type="hidden" name="form-type" value="exception">
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
