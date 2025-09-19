@@ -18,25 +18,31 @@ $date = date('Y-m-d H:i:s');
 
 
 if ($role == 'Admin') {
-    @$id = strtoupper($_GET['get_id']);
-    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
-    $resultt = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'");
+    $id = isset($_GET['get_id']) ? strtoupper($_GET['get_id']) : null;
+
+    if ($id) {
+        $result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE associatenumber='$id'");
+    }
+
+    // Optional: if you really need $resultt for logged-in user
+    $resultt = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE associatenumber='$associatenumber'");
+} else {
+    $result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE associatenumber='$associatenumber'");
 }
 
-if ($role != 'Admin') {
+// Fetch data safely
+$resultArr = $result ? pg_fetch_all($result) : [];
+$resultArrr = isset($resultt) && $resultt ? pg_fetch_all($resultt) : [];
 
-    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'"); //select query for viewing users.
-}
-
-
-$resultArr = pg_fetch_all($result);
-$resultArrr = pg_fetch_all($resultt);
-
-
+// Error check
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
+// Example: set $array to the first row
+$array = $resultArr[0] ?? [];
+$isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
 
 ?>
 
@@ -245,122 +251,132 @@ if (!$result) {
                                 <p>Upon acceptance of the offer, you will receive a joining letter outlining your designated start date and initial assignment location. Please note that the validity of the joining letter is contingent upon the successful completion of all onboarding prerequisites.</p>
 
                                 <p>Please find attached the terms and conditions of your employment.</p>
-                                <p><b><u>COMPENSATION and BENEFITS</u></b></p>
-                                <ol>
-                                    <li>Your gross salary including all benefits will be <b>₹<?= $array['salary'] ?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
-                                    <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
-                                        You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
-                                </ol>
+                                <?php if (!($isPaidMembership)): ?>
+                                    <p><b><u>COMPENSATION and BENEFITS</u></b></p>
+                                    <ol>
+                                        <li>Your gross salary including all benefits will be <b>₹<?= $array['salary'] ?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
+                                        <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
+                                            You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
+                                    </ol>
+                                <?php endif; ?>
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
-                                <ol start="3">
-                                    <?php
-                                    // Initialize the notice period, minimum tenure, and working hours
-                                    $notice_period = "";
-                                    $mintenure = "";
-                                    $workinghours = "";
+                                <ol start="<?= $isPaidMembership ? 1 : 3 ?>">
+                                    <?php if (!($isPaidMembership)): ?>
+                                        <?php
+                                        // Initialize the notice period, minimum tenure, and working hours
+                                        $notice_period = "";
+                                        $mintenure = "";
+                                        $workinghours = "";
 
-                                    // Define the settings based on engagement type and job type
-                                    $settings = [
-                                        'Employee' => [
-                                            'Part-time' => ["thirty (30) days", "8 months", "4-hour", "6"],
-                                            'Full-time' => ["ninety (90) days", "12 months", "7.5-hour", "6"],
-                                            'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
-                                        ],
-                                        'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
-                                        'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
-                                    ];
+                                        // Define the settings based on engagement type and job type
+                                        $settings = [
+                                            'Employee' => [
+                                                'Part-time' => ["thirty (30) days", "8 months", "4-hour", "6"],
+                                                'Full-time' => ["ninety (90) days", "12 months", "7.5-hour", "6"],
+                                                'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
+                                            ],
+                                            'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
+                                            'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
+                                        ];
 
-                                    // Check the engagement and job type, and set the values accordingly
-                                    if (isset($settings[$array['engagement']])) {
-                                        if ($array['engagement'] === 'Employee' && isset($settings['Employee'][$array['job_type']])) {
-                                            list($notice_period, $mintenure, $workinghours, $workday) = $settings['Employee'][$array['job_type']];
-                                        } else {
-                                            list($notice_period, $mintenure, $workinghours, $workday) = $settings[$array['engagement']];
-                                        }
-                                    }
-
-                                    // Now incorporate the $notice_period into the statement
-                                    ?>
-
-                                    <?php if ($array['job_type'] === "Contractual") { ?>
-                                        <li>This contract is prepared for a tenure of <?php echo $mintenure; ?> starting from the date of joining as mentioned in the joining letter.</li>
-                                        <li>If you fail to serve the contract period as mentioned above, you shall be liable to pay RSSI ₹5000/- as a penalty.</li>
-                                    <?php } ?>
-                                    <?php if ($array['job_type'] != "Contractual") { ?>
-                                        <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
-                                        <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
-                                    <?php } ?>
-
-                                    <li>Leaves will be governed by the Organization's Leave Policy. The Organization retains the right to amend, modify, or replace the Leave Policy as deemed necessary. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
-
-                                    <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
-
-                                    <?php if ($array['job_type'] != "Contractual") { ?>
-                                        <li>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
-                                        </li>
-                                    <?php } ?>
-
-                                    <li>You are expected to be active and responsive throughout your service period.</li>
-                                    <li>
-                                        <p>Working Hours:</p>
-                                        The work schedule comprises <?php echo $workday; ?> days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
-                                        <?php if ($array['college_name'] == "upes") { ?>
-                                            For the two-month internship program,
-                                            you will be assigned to one month in the morning shift and one month in the afternoon shift,
-                                            based on business requirements.
-                                        <?php } ?>
-                                        <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
-                                    </li>
-                                    <li>
-                                        <p>Primary responsibility:</p>
-                                        Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
-                                        <ol type="A">
-                                            <?php
-                                            $links = [
-                                                "Intern" => [
-                                                    "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
-                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
-                                                ],
-                                                "Centre Incharge" => [
-                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view",
-                                                    "Key Responsibilities of Centre In-Charge" => "https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view"
-                                                ],
-                                                "Employee" => [
-                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
-                                                ],
-                                                "Volunteer" => [
-                                                    // "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
-                                                    "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
-                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
-                                                ]
-                                            ];
-
-                                            // Assume these are already defined somewhere
-                                            $position_associate = $array['position'];  // e.g., "Intern", "Centre Incharge", etc.
-                                            $engagement_associate = $array['engagement']; // New variable you want to use if not Centre Incharge
-
-                                            if (str_contains($position_associate, "Centre Incharge")) {
-                                                // If position is Centre Incharge, only show Centre Incharge links
-                                                foreach ($links["Centre Incharge"] as $text => $url) {
-                                                    echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
-                                                }
+                                        // Check the engagement and job type, and set the values accordingly
+                                        if (isset($settings[$array['engagement']])) {
+                                            if ($array['engagement'] === 'Employee' && isset($settings['Employee'][$array['job_type']])) {
+                                                list($notice_period, $mintenure, $workinghours, $workday) = $settings['Employee'][$array['job_type']];
                                             } else {
-                                                // Otherwise, use engagement type to find the correct links
-                                                foreach ($links as $key => $items) {
-                                                    if (str_contains($engagement_associate, $key)) {
-                                                        foreach ($items as $text => $url) {
-                                                            echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                list($notice_period, $mintenure, $workinghours, $workday) = $settings[$array['engagement']];
+                                            }
+                                        }
+
+                                        // Now incorporate the $notice_period into the statement
+                                        ?>
+
+                                        <?php if ($array['job_type'] === "Contractual") { ?>
+                                            <li>This contract is prepared for a tenure of <?php echo $mintenure; ?> starting from the date of joining as mentioned in the joining letter.</li>
+                                            <li>If you fail to serve the contract period as mentioned above, you shall be liable to pay RSSI ₹5000/- as a penalty.</li>
+                                        <?php } ?>
+                                        <?php if ($array['job_type'] != "Contractual") { ?>
+                                            <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
+                                            <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
+                                        <?php } ?>
+
+                                        <li>Leaves will be governed by the Organization's Leave Policy. The Organization retains the right to amend, modify, or replace the Leave Policy as deemed necessary. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
+
+                                        <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
+
+                                        <?php if ($array['job_type'] != "Contractual") { ?>
+                                            <li>
+                                                You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
+                                            </li>
+                                        <?php } ?>
+
+                                        <li>You are expected to be active and responsive throughout your service period.</li>
+                                        <li>
+                                            <p>Working Hours:</p>
+                                            The work schedule comprises <?php echo $workday; ?> days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
+                                            <?php if ($array['college_name'] == "upes") { ?>
+                                                For the two-month internship program,
+                                                you will be assigned to one month in the morning shift and one month in the afternoon shift,
+                                                based on business requirements.
+                                            <?php } ?>
+                                            <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
+                                        </li>
+                                        <li>
+                                            <p>Primary responsibility:</p>
+                                            Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
+                                            <ol type="A">
+                                                <?php
+                                                $links = [
+                                                    "Intern" => [
+                                                        "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
+                                                        "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
+                                                    ],
+                                                    "Centre Incharge" => [
+                                                        "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view",
+                                                        "Key Responsibilities of Centre In-Charge" => "https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view"
+                                                    ],
+                                                    "Employee" => [
+                                                        "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                    ],
+                                                    "Volunteer" => [
+                                                        // "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                        "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
+                                                        "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
+                                                    ]
+                                                ];
+
+                                                // Assume these are already defined somewhere
+                                                $position_associate = $array['position'];  // e.g., "Intern", "Centre Incharge", etc.
+                                                $engagement_associate = $array['engagement']; // New variable you want to use if not Centre Incharge
+
+                                                if (str_contains($position_associate, "Centre Incharge")) {
+                                                    // If position is Centre Incharge, only show Centre Incharge links
+                                                    foreach ($links["Centre Incharge"] as $text => $url) {
+                                                        echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                    }
+                                                } else {
+                                                    // Otherwise, use engagement type to find the correct links
+                                                    foreach ($links as $key => $items) {
+                                                        if (str_contains($engagement_associate, $key)) {
+                                                            foreach ($items as $text => $url) {
+                                                                echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                            }
+                                                            break; // Stop after first match
                                                         }
-                                                        break; // Stop after first match
                                                     }
                                                 }
-                                            }
-                                            ?>
-                                        </ol>
+                                                ?>
+                                            </ol>
 
+                                        </li>
+                                    <?php endif; ?>
+                                    <li>
+                                        It is strictly prohibited to discuss any confidential information
+                                        <?php if (!($isPaidMembership)): ?>
+                                            i.e. salary, increment percentage, appraisal rating (IPF) etc.
+                                        <?php endif; ?>
+                                        with any other colleague or on social networking platforms like Facebook, Instagram, LinkedIn etc. HR can take legal action in case of any non-compliance.
                                     </li>
-                                    <li>It is strictly prohibited to discuss any confidential information i.e. salary, increment percentage, appraisal rating (IPF) etc. with any other colleague or on social networking platforms like Facebook, Instagram, LinkedIn etc. HR can take legal action in case of any non-compliance.</li>
 
                                     <li>Please note, with this post you will/may get access to the confidential data of our volunteers/interns/employees (Aadhar card number, PAN, Voter Card number, etc.) and students (Aadhar number of students and parents, Date of birth, contact number - especially for girls students), please handle those carefully. No part of the RSSI website, pictures, or documents labelled as RSSI Internal or RSSI confidential may be republished, displayed, or distributed on or through any means or media without explicit prior written permission. You would be liable for any kind of Data Breach if it takes place using your credentials.</li>
 
