@@ -186,8 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'remarks',
             'scode',
             'photo',
-            'security_deposit',
-            'is_paid_membership'
+            'security_deposit'
         ];
 
         $user_editable_fields = [
@@ -235,19 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($field === 'absconding') {
                 $new_value = isset($_POST['absconding']) && $_POST['absconding'] === "Yes" ? "Yes" : null;
                 $current_value = $current_data[$field];
-            } elseif ($field === 'is_paid_membership') {
-
-                // Normalize new_value from POST (accept "1", "TRUE", "true")
-                $postRaw = isset($_POST['is_paid_membership']) ? $_POST['is_paid_membership'] : null;
-                $new_value = ($postRaw === '1' || $postRaw === 'TRUE' || $postRaw === 'true') ? 't' : 'f';
-
-                // Normalize current DB value strictly
-                $dbRaw = $current_data[$field]; // could be 't'/'f', true/false, '1'/'0', or null
-                if ($dbRaw === true || $dbRaw === 't' || $dbRaw === '1' || $dbRaw === 1) {
-                    $current_value = 't';
-                } else {
-                    $current_value = 'f';
-                }
             } elseif (isset($_POST[$field])) {
                 $new_value = trim($_POST[$field]) === "" ? null : pg_escape_string($con, trim($_POST[$field]));
                 $current_value = $current_data[$field];
@@ -1951,26 +1937,6 @@ echo "<script>
                                                                                                 'N/A' : ($array['donate_security_deposit'] == 'no' ? 'Yes' : 'No');
                                                                                             ?>
                                                                                         </p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td><label for="is_paid_membership">Paid Membership:</label></td>
-                                                                                    <td>
-                                                                                        <!-- Display text -->
-                                                                                        <span id="is_paid_membershipText">
-                                                                                            <?php echo (!empty($array['is_paid_membership']) && ($array['is_paid_membership'] === 't' || $array['is_paid_membership'] === true)) ? "Yes" : ""; ?>
-                                                                                        </span>
-
-                                                                                        <!-- Container for checkbox and label -->
-                                                                                        <div id="is_paid_membership-container" style="display: none;">
-                                                                                            <!-- Hidden field to send FALSE if checkbox is unchecked -->
-                                                                                            <input type="hidden" name="is_paid_membership" value="FALSE">
-
-                                                                                            <input type="checkbox" name="is_paid_membership" id="is_paid_membership" value="TRUE"
-                                                                                                <?php echo (!empty($array["is_paid_membership"]) && ($array["is_paid_membership"] === 't' || $array["is_paid_membership"] === true)) ? "checked" : ""; ?>
-                                                                                                disabled class="form-check-input">
-                                                                                            <label class="form-check-label ms-2" for="is_paid_membership">Yes</label>
-                                                                                        </div>
                                                                                     </td>
                                                                                 </tr>
                                                                             </tbody>
