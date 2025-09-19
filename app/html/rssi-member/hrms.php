@@ -186,7 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'remarks',
             'scode',
             'photo',
-            'security_deposit'
+            'security_deposit',
+            'is_paid_membership'
         ];
 
         $user_editable_fields = [
@@ -233,6 +234,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Special handling for textarea fields and absconding
             if ($field === 'absconding') {
                 $new_value = isset($_POST['absconding']) && $_POST['absconding'] === "Yes" ? "Yes" : null;
+                $current_value = $current_data[$field];
+            } elseif ($field === 'is_paid_membership') {
+                $new_value = isset($_POST['is_paid_membership']) && $_POST['is_paid_membership'] === 't' ? 't' : 'f';
                 $current_value = $current_data[$field];
             } elseif (isset($_POST[$field])) {
                 $new_value = trim($_POST[$field]) === "" ? null : pg_escape_string($con, trim($_POST[$field]));
@@ -1811,14 +1815,11 @@ echo "<script>
                                                                                 <td>
                                                                                     <span id="abscondingText"><?php echo htmlspecialchars($array['absconding'] ?? ''); ?></span>
 
-                                                                                    <!-- Container for checkbox and label -->
                                                                                     <div id="absconding-container" style="display: none;">
                                                                                         <!-- Hidden field to send NULL if checkbox is unchecked -->
                                                                                         <input type="hidden" name="absconding" value="NULL">
-
-                                                                                        <input type="checkbox" name="absconding" id="absconding" value="Yes"
-                                                                                            <?php echo ($array["absconding"] == "Yes") ? "checked" : ""; ?>
-                                                                                            disabled class="form-check-input">
+                                                                                        <input class="form-check-input" type="checkbox" name="absconding" id="absconding" value="Yes"
+                                                                                            <?php echo ($array["absconding"] == "Yes") ? "checked" : ""; ?>>
                                                                                         <label class="form-check-label ms-2" for="absconding">Yes</label>
                                                                                     </div>
                                                                                 </td>
@@ -1939,6 +1940,22 @@ echo "<script>
                                                                                         </p>
                                                                                     </td>
                                                                                 </tr>
+                                                                                <tr>
+                                                                                    <td><label for="is_paid_membership">Paid Membership:</label></td>
+                                                                                    <td>
+                                                                                        <span id="is_paid_membershipText">
+                                                                                            <?php echo (isset($array['is_paid_membership']) && $array['is_paid_membership'] === 't') ? 'Yes' : ''; ?>
+                                                                                        </span>
+
+                                                                                        <div id="is_paid_membership-container" style="display: none;">
+                                                                                            <!-- Hidden field to send f if checkbox is unchecked -->
+                                                                                            <input type="hidden" name="is_paid_membership" value="f">
+                                                                                            <input class="form-check-input" type="checkbox" name="is_paid_membership" id="is_paid_membership" value="t"
+                                                                                                <?php echo ($array["is_paid_membership"] == 't') ? "checked" : ""; ?>>
+                                                                                            <label class="form-check-label ms-2" for="is_paid_membership">Yes</label>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
@@ -2011,90 +2028,111 @@ echo "<script>
     </script>
     <script>
         function toggleEdit(sectionId) {
-            // Get the section based on the provided sectionId
             const section = document.getElementById(sectionId);
+            if (!section) return;
 
-            // Get all input, select, textarea, and checkbox elements in the section
-            const inputs = section.querySelectorAll('input, select, textarea, input[type="checkbox"]');
+            // Determine next mode: if currently editing -> go to view; otherwise go to edit
+            const currentlyEditing = section.classList.contains('editing');
+            const toEdit = !currentlyEditing;
 
-            // Only proceed if there are input fields (input, select, textarea, checkbox) in the section
-            if (inputs.length > 0) {
-                // Toggle edit mode for input elements in the section
-                const textElements = section.querySelectorAll('span');
+            // mark section
+            section.classList.toggle('editing', toEdit);
 
-                // Toggle visibility of inputs (edit mode) and text (view mode)
-                inputs.forEach(input => {
-                    if (input.tagName.toLowerCase() === "textarea" || input.type === "checkbox") {
-                        if (input.type === "checkbox") {
-                            // For checkboxes, toggle the 'disabled' state and visibility of its container
-                            const container = input.closest('div'); // Get the parent container (e.g., upload_marksheet)
-                            if (container) {
-                                container.style.display = container.style.display === 'none' ? 'block' : 'none'; // Toggle visibility of checkbox container
-                                input.disabled = !input.disabled; // Toggle the disabled state of the checkbox
-                            }
-                        } else if (input.tagName.toLowerCase() === "textarea") {
-                            // For textarea, toggle visibility and disabled state
-                            input.disabled = !input.disabled;
-                            input.style.display = input.disabled ? 'none' : 'block'; // Toggle textarea visibility
-                        }
+            // Handle all inputs/selects/textareas (skip hidden inputs)
+            const inputs = section.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.type === 'hidden') return;
+
+                // Checkbox special handling: show/hide its container if present
+                if (input.type === 'checkbox') {
+                    const containerById = section.querySelector('#' + input.id + '-container');
+                    const container = containerById || input.closest('div') || input.parentElement;
+
+                    // enable/disable checkbox
+                    input.disabled = !toEdit;
+
+                    // show checkbox container in edit mode, hide in view mode
+                    if (container) {
+                        container.style.display = toEdit ? 'inline-block' : 'none';
                     } else {
-                        // For other inputs (e.g., select, text input), toggle the 'disabled' state and visibility
-                        input.disabled = !input.disabled;
-                        input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
+                        input.style.display = toEdit ? 'inline-block' : 'none';
                     }
-                });
-
-                // Toggle visibility of text elements (span elements)
-                textElements.forEach(text => {
-                    text.style.display = text.style.display === 'none' ? 'inline' : 'none'; // Toggle text visibility
-                });
-
-                // Toggle icons (replace pencil with save)
-                const editIcon = section.querySelector('.edit-icon');
-                const saveIcon = section.querySelector('.save-icon');
-
-                if (editIcon && saveIcon) {
-                    editIcon.style.display = 'none'; // Hide pencil icon
-                    saveIcon.style.display = 'inline'; // Show save icon
+                    return;
                 }
 
-                // Explicitly handle the #upload_marksheet container and its checkbox
-                const uploadMarksheetContainer = section.querySelector('#upload_marksheet');
-                const markSheetCheckbox = section.querySelector('#markSheetCheckbox');
-
-                if (uploadMarksheetContainer && markSheetCheckbox) {
-                    uploadMarksheetContainer.style.display = uploadMarksheetContainer.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
-                    markSheetCheckbox.disabled = !markSheetCheckbox.disabled; // Toggle checkbox disabled state
-                    markSheetCheckbox.style.display = markSheetCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
+                // textarea: block vs none; other inputs: inline-block vs none
+                input.disabled = !toEdit;
+                if (input.tagName.toLowerCase() === 'textarea') {
+                    input.style.display = toEdit ? 'block' : 'none';
+                } else {
+                    input.style.display = toEdit ? 'inline-block' : 'none';
                 }
+            });
 
-                // Explicitly handle the #workexperienceDocumentSection container and its checkbox
-                const workexperienceDocumentSection = section.querySelector('#workexperienceDocumentSection');
-                const workexperienceDocumentCheckbox = section.querySelector('#workexperienceDocumentCheckbox');
+            // Toggle view-only spans. We treat spans with an id as "view spans" (e.g. #abscondingText).
+            section.querySelectorAll('span').forEach(span => {
+                if (!span.id) return; // skip plain spans (labels etc.)
+                span.style.display = toEdit ? 'none' : 'inline';
+            });
 
-                if (workexperienceDocumentSection && workexperienceDocumentCheckbox) {
-                    workexperienceDocumentSection.style.display = workexperienceDocumentSection.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
-                    workexperienceDocumentCheckbox.disabled = !workexperienceDocumentCheckbox.disabled; // Toggle checkbox disabled state
-                    workexperienceDocumentCheckbox.style.display = workexperienceDocumentCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
+            // Update view-texts from inputs when leaving edit mode
+            if (!toEdit) {
+                // absconding checkbox -> #abscondingText
+                const absCheckbox = section.querySelector('#absconding');
+                const absText = section.querySelector('#abscondingText');
+                if (absCheckbox && absText) {
+                    absText.textContent = absCheckbox.checked ? 'Yes' : '';
                 }
-
-                // Explicitly handle the #casteCertificateSection container and its checkbox
-                const casteCertificateSection = section.querySelector('#casteCertificateSection');
-                const casteCertificateCheckbox = section.querySelector('#casteCertificateCheckbox');
-
-                if (casteCertificateSection && casteCertificateCheckbox) {
-                    casteCertificateSection.style.display = casteCertificateSection.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
-                    casteCertificateCheckbox.disabled = !casteCertificateCheckbox.disabled; // Toggle checkbox disabled state
-                    casteCertificateCheckbox.style.display = casteCertificateCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
+                // is_paid_membership checkbox -> #is_paid_membershipText
+                const paidCheckbox = section.querySelector('#is_paid_membership');
+                const paidText = section.querySelector('#is_paid_membershipText');
+                if (paidCheckbox && paidText) {
+                    paidText.textContent = paidCheckbox.checked ? 't' : '';
                 }
             }
+
+            // Toggle icons if present (pencil/edit vs save)
+            const editIcon = section.querySelector('.edit-icon');
+            const saveIcon = section.querySelector('.save-icon');
+            if (editIcon) editIcon.style.display = toEdit ? 'none' : 'inline';
+            if (saveIcon) saveIcon.style.display = toEdit ? 'inline' : 'none';
+
+            // Generic function for checkbox sections
+            function toggleCheckboxSection(containerId, checkboxId) {
+                const container = section.querySelector(containerId);
+                const checkbox = section.querySelector(checkboxId);
+
+                if (container && checkbox) {
+                    const formCheck = checkbox.closest('.form-check');
+
+                    // Always show the container when toggling edit
+                    container.style.display = 'block';
+
+                    if (inEditMode) {
+                        // Switch to edit mode → enable + show checkbox + label
+                        if (formCheck) formCheck.style.display = 'block';
+                        checkbox.disabled = false;
+                        checkbox.style.display = 'inline';
+                    } else {
+                        // Switch back to view mode → disable + hide checkbox
+                        if (formCheck) formCheck.style.display = 'none';
+                        checkbox.disabled = true;
+                        checkbox.style.display = 'none';
+                    }
+                }
+            }
+
+            // Apply to all three sections
+            toggleCheckboxSection('#upload_marksheet', '#markSheetCheckbox');
+            toggleCheckboxSection('#workexperienceDocumentSection', '#workexperienceDocumentCheckbox');
+            toggleCheckboxSection('#casteCertificateSection', '#casteCertificateCheckbox');
         }
 
         function saveChanges() {
-            // Submit the form when the save button is clicked
             document.getElementById('signup').submit();
         }
     </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Loop through the pendingFields array and check which fields have 'Pending' status
