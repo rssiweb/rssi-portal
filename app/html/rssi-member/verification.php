@@ -2,10 +2,19 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 @$id = strtoupper($_GET['get_id']);
-$result = pg_query($con, "SELECT * FROM certificate 
-              LEFT JOIN (SELECT associatenumber, scode, fullname, photo, engagement, position, filterstatus FROM rssimyaccount_members) faculty 
-              ON certificate.awarded_to_id = faculty.associatenumber 
-              WHERE associatenumber = '$id'"); //select query for viewing users.  
+$result = pg_query($con, "
+    SELECT DISTINCT ON (certificate.awarded_to_id) 
+           certificate.*, faculty.*
+    FROM certificate
+    LEFT JOIN (
+        SELECT associatenumber, scode, fullname, photo, engagement, position, filterstatus
+        FROM rssimyaccount_members
+    ) faculty 
+    ON certificate.awarded_to_id = faculty.associatenumber
+    WHERE faculty.associatenumber = '$id'
+      AND certificate.badge_name = 'Offer Letter'
+    ORDER BY certificate.awarded_to_id, certificate.issuedon DESC
+");
 $resultArr = pg_fetch_all($result);
 if (!$result) {
     echo "An error occurred.\n";
