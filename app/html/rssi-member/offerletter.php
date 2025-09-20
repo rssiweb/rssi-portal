@@ -250,17 +250,26 @@ $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
 
                                 <p>Upon acceptance of the offer, you will receive a joining letter outlining your designated start date and initial assignment location. Please note that the validity of the joining letter is contingent upon the successful completion of all onboarding prerequisites.</p>
 
-                                <p>Please find attached the terms and conditions of your employment.</p>
-                                <?php if (!($isPaidMembership)): ?>
-                                    <p><b><u>COMPENSATION and BENEFITS</u></b></p>
-                                    <ol>
-                                        <li>Your gross salary including all benefits will be <b>₹<?= $array['salary'] ?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
+                                <p>Please find attached the terms and conditions of your engagement with us.</p>
+
+                                <p><b><u>COMPENSATION and BENEFITS</u></b></p>
+                                <ol>
+                                    <li>
+                                        Your gross salary including all benefits will be
+                                        <b>₹<?= $array['salary'] ?>/- per annum</b>,
+                                        as per the terms and conditions set out herein.
+                                        <?php if (!empty($array['salary']) && $array['salary'] > 0): ?>
+                                            Please refer to the attached Annexure 1 for a complete breakdown of your compensation.
+                                        <?php endif; ?>
+                                    </li>
+                                    <?php if (!($isPaidMembership)): ?>
                                         <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
                                             You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
-                                    </ol>
-                                <?php endif; ?>
+                                    <?php endif; ?>
+                                </ol>
+
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
-                                <ol start="<?= $isPaidMembership ? 1 : 3 ?>">
+                                <ol start="<?= $isPaidMembership ? 2 : 3 ?>">
                                     <?php if (!($isPaidMembership)): ?>
                                         <?php
                                         // Initialize the notice period, minimum tenure, and working hours

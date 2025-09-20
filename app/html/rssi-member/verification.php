@@ -2,7 +2,10 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 @$id = strtoupper($_GET['get_id']);
-$result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.  
+$result = pg_query($con, "SELECT * FROM certificate 
+              LEFT JOIN (SELECT associatenumber, scode, fullname, photo, engagement, position, filterstatus FROM rssimyaccount_members) faculty 
+              ON certificate.awarded_to_id = faculty.associatenumber 
+              WHERE associatenumber = '$id'"); //select query for viewing users.  
 $resultArr = pg_fetch_all($result);
 if (!$result) {
     echo "An error occurred.\n";
@@ -14,15 +17,18 @@ if (!$result) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -103,13 +109,16 @@ if (!$result) {
                             <tbody>
                                 <tr>
 
-                                    <td><img src="<?php echo $array['photo'] ?>" width=100px /></td>
+                                    <td>
+                                        <img src="<?php echo !empty($array['photo']) ? $array['photo'] : 'https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg'; ?>" width="100px" />
+                                    </td>
+
                                     <td id="cw2"><b><?php echo $array['fullname'] ?> (<?php echo $array['associatenumber'] ?>)</b><br>
                                         <span style="line-height: 3;"><?php echo $array['engagement'] ?></span><br>
-                                        <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?>
+                                        <?php echo $array['position'] ?>
                                     </td>
-                                    <!-- <td id="cw1"><?php echo $array['filterstatus'] ?></td> -->
-                                    <td id="cw1">
+                                    <td id="cw1"><?php echo $array['filterstatus'] ?></td>
+                                    <!-- <td id="cw1">
                                         <?php
                                         $status = $array['filterstatus'];
                                         if ($status == 'Active') {
@@ -122,9 +131,9 @@ if (!$result) {
                                             echo 'Unknown Status';
                                         }
                                         ?>
-                                    </td>
+                                    </td> -->
 
-                                    <td id="cw1"><?php echo $array['approveddate'] ?></td>
+                                    <td id="cw1"><?php echo date("d/m/Y g:i a", strtotime($array['issuedon'])) ?></td>
                                 </tr>
                             <?php
                         } else if ($id == "") {
