@@ -440,7 +440,7 @@ $resultArr = pg_fetch_all($result);
                                         <div class="input-help">
                                             <select name="badge_name" class="form-select" style="width: max-content; display: inline-block" required>
                                                 <?php if ($badge_name == null) { ?>
-                                                    <option disabled selected hidden>Badge name</option>
+                                                    <option value="" selected hidden>Badge name</option>
                                                 <?php } else { ?>
                                                     <option hidden selected><?php echo $badge_name ?></option>
                                                 <?php } ?>
@@ -711,126 +711,136 @@ $resultArr = pg_fetch_all($result);
 
                             <br>
 
-                            <?php echo '
-                   <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                            <th scope="col">Certificate no</th>' ?>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php echo '<th scope="col">Nominee Details</th>' ?>
-                            <?php } ?>
-                            <?php echo ' <th scope="col">Badge name</th>
-                            <th scope="col" width="20%">Remarks</th>
-                            <th scope="col">Gems</th>
-                            <th scope="col">Issued on</th>
-                            <th scope="col">Nominated by</th>
-                            <th scope="col">Certificate</th>' ?>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php echo '<th scope="col"></th>' ?>
-                            <?php } ?>
-                            <?php echo '</tr>
-                            </thead>' ?>
-                            <?php if ($resultArr != null) {
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '
-                            <tr>
-                                <td>' . $array['certificate_no'] . '</td>' ?>
-                                    <?php if ($role == 'Admin') { ?>
-                                        <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['awarded_to_student_name'] . @$array['awarded_to_name'] . '</td>' ?>
-                                    <?php } ?>
-                                    <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
-
-                                    <?php
-                                    $comment = $array['comment'];
-                                    $certificateNo = $array['certificate_no'];
-                                    ?>
-
-                                    <div id="comment-container-<?php echo $certificateNo; ?>">
-                                        <p>
-                                            <?php if (isset($comment) && strlen($comment) > 90) { ?>
-                                                <span id="full-comment-<?php echo $certificateNo; ?>" class="d-inline">
-                                                    <?php echo substr($comment, 0, 90); ?>
-                                                    <span id="more-text-<?php echo $certificateNo; ?>" class="d-none">
-                                                        <?php echo substr($comment, 90); ?>
-                                                    </span>
-                                                </span>
-                                                <a href="javascript:void(0);" onclick="toggleComment('<?php echo $certificateNo; ?>')" id="toggle-link-<?php echo $certificateNo; ?>">
-                                                    <span id="toggle-text-<?php echo $certificateNo; ?>">Show more</span>
-                                                    <span id="toggle-text-more-<?php echo $certificateNo; ?>" class="d-none">Show less</span>
-                                                </a>
-                                            <?php } else { ?>
-                                                <span><?php echo $comment; ?></span>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Certificate no</th>
+                                            <?php if ($role == 'Admin') { ?>
+                                                <th scope="col">Nominee Details</th>
                                             <?php } ?>
-                                        </p>
-                                    </div>
-                                    <?php echo '</td><td>' . $array['gems'] . '</td>' ?>
-                                    <?php if ($array['issuedon'] == null) { ?>
-                                        <?php echo '<td></td>' ?>
-                                    <?php } else { ?>
-                                        <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['issuedon'])) . '</td>' ?>
-                                    <?php } ?>
+                                            <th scope="col">Badge name</th>
+                                            <th scope="col" width="20%">Remarks</th>
+                                            <th scope="col">Gems</th>
+                                            <th scope="col">Issued on</th>
+                                            <th scope="col">Nominated by</th>
+                                            <th scope="col">Certificate</th>
+                                            <?php if ($role == 'Admin') { ?>
+                                                <th scope="col">Actions</th>
+                                            <?php } ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if ($resultArr != null) { ?>
+                                            <?php foreach ($resultArr as $array) { ?>
+                                                <tr>
+                                                    <td><?= $array['certificate_no']; ?></td>
 
-                                    <?php echo '<td>' . $array['nominated_by_name'] . '</td>' ?>
+                                                    <?php if ($role == 'Admin') { ?>
+                                                        <td>
+                                                            <?= $array['awarded_to_id']; ?><br>
+                                                            <?= @$array['fullname'] . @$array['awarded_to_student_name'] . @$array['awarded_to_name']; ?>
+                                                        </td>
+                                                    <?php } ?>
 
-                                    <?php if ($array['certificate_url'] == null && $array['pdf_certificate'] == true) { ?>
-                                        <?php echo '<td><a href="pdf_certificate_of_appreciation.php?certificate_no=' . $array['certificate_no'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
-                                    <?php } elseif ($array['certificate_url'] == null) { ?>
-                                        <?php echo '<td></td>' ?>
-                                    <?php } else { ?>
-                                        <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
-                                    <?php } ?>
+                                                    <td><?= $array['badge_name']; ?></td>
 
-                                    <?php if ($role == 'Admin') { ?>
+                                                    <td>
+                                                        <?php
+                                                        $comment = $array['comment'];
+                                                        $certificateNo = $array['certificate_no'];
+                                                        ?>
+                                                        <div id="comment-container-<?= $certificateNo; ?>">
+                                                            <p>
+                                                                <?php if (isset($comment) && strlen($comment) > 90) { ?>
+                                                                    <span id="full-comment-<?= $certificateNo; ?>" class="d-inline">
+                                                                        <?= substr($comment, 0, 90); ?>
+                                                                        <span id="more-text-<?= $certificateNo; ?>" class="d-none">
+                                                                            <?= substr($comment, 90); ?>
+                                                                        </span>
+                                                                    </span>
+                                                                    <a href="javascript:void(0);" onclick="toggleComment('<?= $certificateNo; ?>')" id="toggle-link-<?= $certificateNo; ?>">
+                                                                        <span id="toggle-text-<?= $certificateNo; ?>">Show more</span>
+                                                                        <span id="toggle-text-more-<?= $certificateNo; ?>" class="d-none">Show less</span>
+                                                                    </a>
+                                                                <?php } else { ?>
+                                                                    <span><?= $comment; ?></span>
+                                                                <?php } ?>
+                                                            </p>
+                                                        </div>
+                                                    </td>
 
-                                        <?php echo '
+                                                    <td><?= $array['gems']; ?></td>
 
-                                <td>' ?>
-                                        <?php if (@$array['awarded_to_phone'] != null || @$array['out_phone'] != null || @$array['awarded_to_student_phone'] != null) {
+                                                    <td>
+                                                        <?php if ($array['issuedon'] != null) { ?>
+                                                            <?= @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?>
+                                                        <?php } ?>
+                                                    </td>
 
-                                            if (@$array['badge_name'] == 'Offer Letter' || @$array['badge_name'] == 'Joining Letter') {
+                                                    <td><?= $array['nominated_by_name']; ?></td>
 
-                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYour ' . $array['badge_name'] . ' has been issued. Please check your email and take the necessary action.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '"></i></a>' ?>
+                                                    <td>
+                                                        <?php if ($array['certificate_url'] == null && $array['pdf_certificate'] == true) { ?>
+                                                            <a href="pdf_certificate_of_appreciation.php?certificate_no=<?= $array['certificate_no']; ?>" target="_blank">
+                                                                <i class="bi bi-file-earmark-pdf" style="font-size:16px; color:#777777" title="<?= $array['certificate_no']; ?>"></i>
+                                                            </a>
+                                                        <?php } elseif ($array['certificate_url'] != null) { ?>
+                                                            <a href="<?= $array['certificate_url']; ?>" target="_blank">
+                                                                <i class="bi bi-file-earmark-pdf" style="font-size:16px; color:#777777" title="<?= $array['certificate_no']; ?>"></i>
+                                                            </a>
+                                                        <?php } ?>
+                                                    </td>
 
-                                            <?php } else {
-
-                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '"></i></a>' ?>
-
-                                            <?php }
-                                        } else { ?>
-                                            <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
+                                                    <?php if ($role == 'Admin') { ?>
+                                                        <td>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
+                                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li>
+                                                                        <?php if (@$array['awarded_to_phone'] != null || @$array['out_phone'] != null || @$array['awarded_to_student_phone'] != null) { ?>
+                                                                            <?php if ($array['badge_name'] == 'Offer Letter' || $array['badge_name'] == 'Joining Letter') { ?>
+                                                                                <a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91<?= @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone']; ?>&text=Dear <?= @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name']; ?> (<?= $array['awarded_to_id']; ?>),%0A%0AYour <?= $array['badge_name']; ?> has been issued. Please check your email and take the necessary action.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank">
+                                                                                    <i class="bi bi-whatsapp"></i> Send WhatsApp
+                                                                                </a>
+                                                                            <?php } else { ?>
+                                                                                <a class="dropdown-item" href="https://api.whatsapp.com/send?phone=91<?= @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone']; ?>&text=Dear <?= @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name']; ?> (<?= $array['awarded_to_id']; ?>),%0A%0AYou have received <?= $array['badge_name']; ?>. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or click the link below:%0A%0A<?= $array['certificate_url']; ?>%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank">
+                                                                                    <i class="bi bi-whatsapp"></i> Send WhatsApp
+                                                                                </a>
+                                                                            <?php } ?>
+                                                                        <?php } else { ?>
+                                                                            <span class="dropdown-item disabled"><i class="bi bi-whatsapp"></i> No Phone</span>
+                                                                        <?php } ?>
+                                                                    </li>
+                                                                    <li>
+                                                                        <form name="cmsdelete_<?= $array['certificate_no']; ?>" action="#" method="POST" style="display:inline;">
+                                                                            <input type="hidden" name="form-type" value="cmsdelete">
+                                                                            <input type="hidden" name="cmsid" value="<?= $array['certificate_no']; ?>">
+                                                                            <button type="submit" onclick="validateForm()" class="dropdown-item">
+                                                                                <i class="bi bi-x-lg"></i> Delete
+                                                                            </button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    <?php } ?>
+                                                </tr>
+                                            <?php } ?>
+                                        <?php } elseif (@$get_certificate_no == "" && @$get_nomineeid == "" && $academic_year == "") { ?>
+                                            <tr>
+                                                <td colspan="9">Please select Filter value.</td>
+                                            </tr>
+                                        <?php } elseif (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
+                                            <tr>
+                                                <td colspan="9">No matching records found. Please try different filter values.</td>
+                                            </tr>
                                         <?php } ?>
-
-                                        <?php echo '&nbsp;&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="cmsdelete">
-                                <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
-                                
-                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['certificate_no'] . '"><i class="bi bi-x-lg"></i></button> </form>
-                                </td>' ?>
-                                    <?php } ?>
-                                <?php }
-                                echo '</tr>' ?>
-                            <?php
-                            } else if (@$get_certificate_no == "" && @$get_nomineeid == "" && $academic_year == "") { ?>
-                                <tr>
-                                    <td colspan="5">Please select Filter value.</td>
-                                </tr>
-                                ?>
-                                <tr>
-                                    <td colspan="5">Please select Filter value.</td>
-                                </tr>
-                            <?php
-                            } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                                <tr>
-                                    <td colspan="5">No matching records found. Please try different filter values.</td>
-                                </tr>
-                            <?php
-                            }
-                            echo '</tbody>
-                    </table>
-                    </div>'
-                            ?>
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;

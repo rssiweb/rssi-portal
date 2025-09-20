@@ -430,11 +430,10 @@ if (!$phoneNumber) {
                                     </td>';
                                 } ?>
                                 </tr>
-                            <?php } else if ($visitid == null && $contact == null && $visitdatefrom == null) {
+                            <?php } else if ($visitid == null && $contact == null && $date_from == null && $date_to == null) {
                             ?>
                                 <tr>
-                                    <td colspan="5">Please provide either the Visit ID, Contact, Visit Date, or Academic
-                                        Year.</td>
+                                    <td colspan="5">Please provide either the Visit ID, Contact, or Visit Date.</td>
                                 </tr>
                             <?php
                             } else {
