@@ -17,24 +17,22 @@ include("../../util/email.php");
 if ($role == 'Admin') {
     $user_id = isset($_GET['user_id']) ? strtoupper(trim($_GET['user_id'])) : '';
 
-    // Base query (latest upload per file and user)
+    // Base query:
+    // For all file_name values → latest upload only
+    // For 'additional_certificate' → show all certificate_name entries
     $baseQuery = "
-        SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
+        SELECT 
+            a.remarks AS aremarks, 
+            a.*, 
+            rm.fullname, 
+            rm.associatenumber
         FROM archive a
         JOIN rssimyaccount_members rm
             ON (a.uploaded_for = rm.associatenumber OR a.uploaded_for = rm.applicationnumber)
-        INNER JOIN (
-            SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
-            FROM archive
-            GROUP BY uploaded_for, file_name
-        ) latest_archive
-            ON a.uploaded_for = latest_archive.uploaded_for
-            AND a.file_name = latest_archive.file_name
-            AND a.uploaded_on = latest_archive.latest_upload
         WHERE 1=1
     ";
 
-    // Add filters dynamically
+    // Apply filter by user if given
     if (!empty($user_id)) {
         $baseQuery .= " AND (rm.associatenumber = '$user_id' OR rm.applicationnumber = '$user_id')";
     }
@@ -44,7 +42,19 @@ if ($role == 'Admin') {
         $baseQuery .= " AND a.verification_status IS NULL";
     }
 
-    $baseQuery .= " ORDER BY a.doc_id DESC";
+    // Include only latest uploads except for 'additional_certificate'
+    $baseQuery .= "
+        AND (
+            a.file_name = 'additional_certificate'
+            OR (a.file_name != 'additional_certificate' AND a.uploaded_on = (
+                SELECT MAX(uploaded_on)
+                FROM archive sub
+                WHERE sub.uploaded_for = a.uploaded_for
+                AND sub.file_name = a.file_name
+            ))
+        )
+        ORDER BY a.doc_id DESC
+    ";
 
     $result = pg_query($con, $baseQuery);
 }
@@ -53,6 +63,7 @@ if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
 $resultArr = pg_fetch_all($result);
 ?>
 
@@ -270,7 +281,19 @@ $resultArr = pg_fetch_all($result);
                                                             . ')'
                                                         ?>
                                                     </td>
-                                                    <td><?= isset($array['file_name']) ? htmlspecialchars($array['file_name']) : '-' ?></td>
+                                                    <td>
+                                                        <?php
+                                                        if (isset($array['file_name']) && ($array['file_name'] === 'additional_certificate' || $array['file_name'] === 'additional_doc')) {
+                                                            echo isset($array['certificate_name']) && !empty($array['certificate_name'])
+                                                                ? htmlspecialchars($array['certificate_name'])
+                                                                : 'Unnamed Certificate';
+                                                        } else {
+                                                            echo isset($array['file_name']) && !empty($array['file_name'])
+                                                                ? htmlspecialchars($array['file_name'])
+                                                                : '-';
+                                                        }
+                                                        ?>
+                                                    </td>
                                                     <td>
                                                         <?php if (!empty($array['file_path'])): ?>
                                                             <a href="<?= htmlspecialchars($array['file_path']) ?>" target="_blank">Document</a>
