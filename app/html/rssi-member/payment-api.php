@@ -474,27 +474,40 @@ if ($formtype == "get_details") {
   }
 }
 
-if ($formtype == "update-document") {
-  // Get the document ID, status, and remarks from the POST data
-  $docId = $_POST['doc_id'];
-  $status = $_POST['status'];
-  $remarks = $_POST['remarks'];
-  $field_status = ($_POST['status'] == 'Verified') ? 'disabled' : null;
-  $reviewed_by = $_POST['reviewed_by'];
-  $reviewed_on = date('Y-m-d H:i:s');
+// Add this to your payment-api.php file to handle bulk approvals
+if ($_POST['form-type'] == 'bulk-archive-approval') {
+  $reviewer_id = $_POST['reviewer_id'];
+  $selected_docs = explode(',', $_POST['selected_docs']);
+  $bulk_action_type = $_POST['bulk_action_type'];
+  $bulk_field_status = $_POST['bulk_field_status'];
+  $bulk_reviewer_remarks = $_POST['bulk_reviewer_remarks'];
 
-  // Prepare the SQL query to update the document status and remarks
-  $query = "UPDATE archive SET verification_status = $1, remarks = $2, field_status = $3,reviewed_by = $4,reviewed_on = $5 WHERE doc_id = $6";
-  $result = pg_query_params($con, $query, array($status, $remarks, $field_status, $reviewed_by, $reviewed_on, $docId));
+  $success_count = 0;
+  $error_count = 0;
 
-  // Check if the update was successful
-  if ($result) {
-    // Send a successful JSON response
-    echo json_encode(['success' => true, 'message' => 'Document status updated successfully.']);
-  } else {
-    // Send a failure JSON response
-    echo json_encode(['success' => false, 'message' => 'Failed to update document status.']);
+  foreach ($selected_docs as $doc_id) {
+    $verification_status = ($bulk_action_type == 'approve') ? 'Verified' : 'Rejected';
+
+    $update_query = "UPDATE archive SET 
+                        verification_status = '$verification_status',
+                        field_status = '$bulk_field_status',
+                        remarks = '$bulk_reviewer_remarks',
+                        reviewed_by = '$reviewer_id',
+                        reviewed_on = NOW()
+                        WHERE doc_id = '$doc_id'";
+
+    if (pg_query($con, $update_query)) {
+      $success_count++;
+    } else {
+      $error_count++;
+    }
   }
+
+  echo json_encode([
+    'success' => true,
+    'message' => "Bulk action completed: $success_count successful, $error_count failed"
+  ]);
+  exit;
 }
 
 if ($formtype == "donation_form") {

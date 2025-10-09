@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
-
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -15,45 +13,40 @@ validation();
 
 date_default_timezone_set('Asia/Kolkata');
 include("../../util/email.php");
-if ($role == 'Admin') {
-    $id = isset($_GET['get_status']) ? $_GET['get_status'] : 'Active';
-    @$user_id = strtoupper($_GET['user_id']);
 
-    if ($user_id > 0) {
-        $result = pg_query($con, "
+if ($role == 'Admin') {
+    $user_id = isset($_GET['user_id']) ? strtoupper(trim($_GET['user_id'])) : '';
+
+    // Base query (latest upload per file and user)
+    $baseQuery = "
         SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
         FROM archive a
         JOIN rssimyaccount_members rm
-        ON (a.uploaded_for = rm.associatenumber OR a.uploaded_for = rm.applicationnumber)
+            ON (a.uploaded_for = rm.associatenumber OR a.uploaded_for = rm.applicationnumber)
         INNER JOIN (
             SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
             FROM archive
             GROUP BY uploaded_for, file_name
-        ) latest_archive 
-        ON a.uploaded_for = latest_archive.uploaded_for 
-        AND a.file_name = latest_archive.file_name 
-        AND a.uploaded_on = latest_archive.latest_upload
-        WHERE (rm.associatenumber = '$user_id' OR rm.applicationnumber = '$user_id') AND rm.filterstatus = '$id'
-    ");
-    } else {
-        $result = pg_query($con, "
-            SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
-            FROM archive a
-            JOIN rssimyaccount_members rm
-            ON a.uploaded_for = rm.associatenumber 
-            OR a.uploaded_for = rm.applicationnumber
-            INNER JOIN (
-                SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
-                FROM archive
-                GROUP BY uploaded_for, file_name
-            ) latest_archive 
-            ON a.uploaded_for = latest_archive.uploaded_for 
-            AND a.file_name = latest_archive.file_name 
+        ) latest_archive
+            ON a.uploaded_for = latest_archive.uploaded_for
+            AND a.file_name = latest_archive.file_name
             AND a.uploaded_on = latest_archive.latest_upload
-            WHERE rm.filterstatus = '$id'
-            ORDER BY a.doc_id DESC
-        ");
+        WHERE 1=1
+    ";
+
+    // Add filters dynamically
+    if (!empty($user_id)) {
+        $baseQuery .= " AND (rm.associatenumber = '$user_id' OR rm.applicationnumber = '$user_id')";
     }
+
+    // If no filter selected → show only Pending verification
+    if (empty($user_id)) {
+        $baseQuery .= " AND a.verification_status IS NULL";
+    }
+
+    $baseQuery .= " ORDER BY a.doc_id DESC";
+
+    $result = pg_query($con, $baseQuery);
 }
 
 if (!$result) {
@@ -90,7 +83,6 @@ $resultArr = pg_fetch_all($result);
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
 
-
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -103,7 +95,6 @@ $resultArr = pg_fetch_all($result);
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
@@ -114,6 +105,11 @@ $resultArr = pg_fetch_all($result);
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <!-- In your head section -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <style>
         .x-btn:focus,
@@ -129,6 +125,45 @@ $resultArr = pg_fetch_all($result);
         .input-help {
             vertical-align: top;
             display: inline-block;
+        }
+
+        /* Row selection styles */
+        .clickable-row {
+            cursor: pointer;
+        }
+
+        .clickable-row:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .selected-row {
+            background-color: #e3f2fd !important;
+            border-left: 4px solid #2196F3;
+        }
+
+        .bulk-actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .selection-count {
+            font-weight: bold;
+            color: #2196F3;
+            background: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .bulk-review-btn {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
@@ -164,22 +199,14 @@ $resultArr = pg_fetch_all($result);
                             <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
 
                                 <form action="" method="GET" style="display: flex; align-items: center;">
-                                    <div class="form-group" style="margin-right: 10px;">
-                                        <select name="get_status" id="get_status" class="form-select">
-                                            <?php if ($id == null) { ?>
-                                                <option disabled selected hidden>Select Status</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $id ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>Active</option>
-                                            <option>Inactive</option>
-                                        </select>
-                                        <!-- <small class="form-text text-muted">Select Status</small> -->
-                                    </div>
-                                    <div class="form-group" style="margin-right: 10px;">
-                                        <input name="user_id" id="user_id" class="form-control" style="width: auto;" placeholder="User id" value="<?php echo $user_id ?>">
+                                    <div class="col-md-3 col-lg-2 pe-4">
+                                        <div class="form-group">
+                                            <select class="form-select" id="user_id" name="user_id" required>
+                                                <?php if (!empty($user_id)): ?>
+                                                    <option value="<?= $user_id ?>" selected><?= $user_id ?></option>
+                                                <?php endif; ?>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
@@ -189,10 +216,32 @@ $resultArr = pg_fetch_all($result);
                                 </form>
                             <?php } ?>
                             <br>
+
+                            <!-- Bulk Actions Panel -->
+                            <div class="bulk-actions" id="bulkActionsPanel" style="display: none;">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <span id="selectedCountText">0</span> document(s) selected for review
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <button type="button" class="btn btn-primary btn-sm bulk-review-btn" onclick="showBulkReviewModal()">
+                                            <i class="bi bi-check2-all"></i> Bulk Review
+                                            <span class="selection-count" id="selectedCount">0</span>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearSelection()">
+                                            <i class="bi bi-x"></i> Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-hover" id="table-id">
                                     <thead>
                                         <tr>
+                                            <th width="50px">
+                                                <input type="checkbox" id="selectAll" class="form-check-input">
+                                            </th>
                                             <th>#</th>
                                             <th>Associate number</th>
                                             <th>File Name</th>
@@ -203,251 +252,130 @@ $resultArr = pg_fetch_all($result);
                                             <th>Field Status</th>
                                             <th>Reviewed by</th>
                                             <th>Reviewed on</th>
-                                            <?php if ($role == 'Admin') : ?>
-                                                <th></th>
-                                            <?php endif; ?>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if ($resultArr != null) : ?>
+                                        <?php if (!empty($resultArr)) : ?>
                                             <?php foreach ($resultArr as $array) : ?>
-                                                <tr>
-                                                    <td><?= $array['doc_id'] ?></td>
-                                                    <td><?= $array['fullname'] . '&nbsp;(' . $array['associatenumber'] . ')' ?></td>
-                                                    <td><?= $array['file_name'] ?></td>
-                                                    <td><a href="<?= $array['file_path'] ?>" target="_blank">Document</a></td>
-                                                    <td><?= $array['uploaded_by'] ?></td>
-                                                    <td><?= $array['uploaded_on'] ? date("d/m/Y g:i a", strtotime($array['uploaded_on'])) : '' ?></td>
-                                                    <td><?= $array['verification_status'] ?></td>
-                                                    <td><?= $array['field_status'] ?></td>
-                                                    <td><?= $array['reviewed_by'] ?></td>
-                                                    <td><?= $array['reviewed_on'] ? date("d/m/Y g:i a", strtotime($array['reviewed_on'])) : '' ?></td>
-                                                    <?php if ($role == 'Admin') : ?>
-                                                        <td>
-                                                            <button type="button" href="javascript:void(0)" onclick="showDetails('<?= $array['doc_id'] ?>')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                                                <i class="bi bi-box-arrow-up-right" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i>
-                                                            </button>
-                                                            <!-- Add other Admin controls here -->
-                                                        </td>
-                                                    <?php endif; ?>
+                                                <tr class="clickable-row" data-doc-id="<?= isset($array['doc_id']) ? htmlspecialchars($array['doc_id']) : '' ?>">
+                                                    <td>
+                                                        <input type="checkbox" class="row-checkbox form-check-input" value="<?= isset($array['doc_id']) ? htmlspecialchars($array['doc_id']) : '' ?>">
+                                                    </td>
+                                                    <td><?= isset($array['doc_id']) ? htmlspecialchars($array['doc_id']) : '' ?></td>
+                                                    <td>
+                                                        <?=
+                                                        (isset($array['fullname']) ? htmlspecialchars($array['fullname']) : '-')
+                                                            . ' ('
+                                                            . (isset($array['associatenumber']) ? htmlspecialchars($array['associatenumber']) : '-')
+                                                            . ')'
+                                                        ?>
+                                                    </td>
+                                                    <td><?= isset($array['file_name']) ? htmlspecialchars($array['file_name']) : '-' ?></td>
+                                                    <td>
+                                                        <?php if (!empty($array['file_path'])): ?>
+                                                            <a href="<?= htmlspecialchars($array['file_path']) ?>" target="_blank">Document</a>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $uploadedBy = isset($array['uploaded_by']) ? trim($array['uploaded_by']) : '';
+                                                        $associateNumber = isset($array['associatenumber']) ? trim($array['associatenumber']) : '';
+                                                        $applicationNumber = isset($array['applicationnumber']) ? trim($array['applicationnumber']) : '';
+
+                                                        if ($uploadedBy === $associateNumber || $uploadedBy === $applicationNumber) {
+                                                            echo 'Self';
+                                                        } elseif (!empty($uploadedBy)) {
+                                                            echo htmlspecialchars($uploadedBy);
+                                                        } else {
+                                                            echo '-';
+                                                        }
+                                                        ?>
+                                                    </td>
+                                                    <td><?= !empty($array['uploaded_on']) ? date("d/m/Y g:i a", strtotime($array['uploaded_on'])) : '-' ?></td>
+                                                    <td
+                                                        title="<?= isset($array['aremarks']) && !empty($array['aremarks'])
+                                                                    ? htmlspecialchars($array['aremarks'])
+                                                                    : 'No remarks available' ?>">
+                                                        <?= isset($array['verification_status']) && !empty($array['verification_status'])
+                                                            ? htmlspecialchars($array['verification_status'])
+                                                            : '-' ?>
+                                                    </td>
+                                                    <td><?= isset($array['field_status']) ? htmlspecialchars($array['field_status']) : '-' ?></td>
+                                                    <td><?= isset($array['reviewed_by']) ? htmlspecialchars($array['reviewed_by']) : '-' ?></td>
+                                                    <td><?= !empty($array['reviewed_on']) ? date("d/m/Y g:i a", strtotime($array['reviewed_on'])) : '-' ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
-                                        <?php elseif (@$get_certificate_no == "" && @$get_nomineeid == "") : ?>
+                                        <?php elseif (empty($user_id)) : ?>
                                             <tr>
-                                                <td colspan="7">Please select Filter value.</td>
+                                                <td colspan="12" class="text-center text-muted">
+                                                    No pending verifications found. Please select a filter to view specific data.
+                                                </td>
                                             </tr>
-                                        <?php elseif (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) : ?>
+                                        <?php else : ?>
                                             <tr>
-                                                <td colspan="7">No record found for <?= $get_certificate_no . $get_nomineeid ?>.</td>
+                                                <td colspan="12" class="text-center text-muted">
+                                                    No records found for the selected filters.
+                                                </td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <!--------------- POP-UP BOX --------------->
-                            <style>
-                                .modal {
-                                    background-color: rgba(0, 0, 0, 0.4);
-                                    /* Black w/ opacity */
-                                }
-                            </style>
-                            <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
+                            <!--------------- BULK REVIEW MODAL --------------->
+                            <div class="modal fade" id="bulkReviewModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Document Approval</h1>
-                                            <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <h5 class="modal-title">Bulk Review</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <div style="width:100%; text-align:right">
-                                                <p id="status_details" class="badge" style="display: inline;"></p>
-                                            </div>
-
-                                            <form id="archiveform" action="#" method="POST">
-                                                <input type="hidden" name="form-type" value="archiveapproval" readonly>
-                                                <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-                                                <input type="hidden" name="doc_idd" id="doc_idd" readonly>
+                                            <form id="bulkReviewForm" action="#" method="POST">
+                                                <input type="hidden" name="form-type" value="bulk-archive-approval" readonly>
+                                                <input type="hidden" name="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
+                                                <input type="hidden" name="selected_docs" id="selected_docs" readonly>
 
                                                 <div class="mb-3">
-                                                    <label for="reviewer_status" class="form-label">Status</label>
-                                                    <select name="reviewer_status" id="reviewer_status" class="form-select" required>
-                                                        <option disabled selected hidden>Review Status</option>
-                                                        <option value="Verified">Verified</option>
-                                                        <option value="Rejected">Rejected</option>
-                                                    </select>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="field_status" class="form-label">Status</label>
-                                                    <select name="field_status" id="field_status" class="form-select" required>
-                                                        <option disabled selected hidden>Field Status</option>
-                                                        <option value="disabled">disabled</option>
-                                                        <option value="null">null</option>
+                                                    <label for="bulk_action_type" class="form-label">Action</label>
+                                                    <select name="bulk_action_type" id="bulk_action_type" class="form-select" required>
+                                                        <option value="" disabled selected hidden>Select Action</option>
+                                                        <option value="approve">Approve</option>
+                                                        <option value="reject">Reject</option>
                                                     </select>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="reviewer_remarks" class="form-label">Reviewer Remarks</label>
-                                                    <textarea name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="Reviewer remarks"></textarea>
-                                                    <small id="passwordHelpBlock" class="form-text text-muted">Reviewer remarks</small>
+                                                    <label for="bulk_field_status" class="form-label">Field Status</label>
+                                                    <select name="bulk_field_status" id="bulk_field_status" class="form-select" required>
+                                                        <option value="disabled">Disabled</option>
+                                                        <option value="null" selected>Null</option>
+                                                    </select>
                                                 </div>
 
-                                                <button type="submit" id="archiveupdate" class="btn btn-danger btn-sm">Update</button>
+                                                <div class="mb-3">
+                                                    <label for="bulk_reviewer_remarks" class="form-label">Reviewer Remarks</label>
+                                                    <textarea name="bulk_reviewer_remarks" id="bulk_reviewer_remarks" class="form-control" placeholder="Enter remarks for bulk action" required></textarea>
+                                                    <small class="form-text text-muted">These remarks will be applied to all selected documents</small>
+                                                </div>
+
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle"></i> This action will affect <span id="modalSelectedCount" class="fw-bold">0</span> document(s).
+                                                </div>
                                             </form>
-
-                                            <div class="modal-footer">
-                                                <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelButton">Cancel</button>
+                                            <button type="button" class="btn btn-primary" id="confirmButton" onclick="submitBulkAction()">
+                                                <span class="button-text">Confirm</span>
+                                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>;
-                                // Get the modal
-                                var modal = document.getElementById("myModal");
-                                // Get the <span> element that closes the modal
-                                var closedetails = [
-                                    document.getElementById("closedetails-header"),
-                                    document.getElementById("closedetails-footer")
-                                ];
-
-                                function showDetails(id) {
-                                    var mydata = undefined;
-                                    data.forEach(item => {
-                                        if (item["doc_id"] == id) {
-                                            mydata = item;
-                                        }
-                                    });
-
-                                    var keys = Object.keys(mydata);
-                                    keys.forEach(key => {
-                                        var span = modal.getElementsByClassName(key);
-                                        if (span.length > 0)
-                                            span[0].innerHTML = mydata[key];
-                                    });
-                                    modal.style.display = "block";
-                                    // Update status_details content with the doc_id value
-                                    var statusDetailsElement = document.getElementById("status_details");
-                                    if (statusDetailsElement) {
-                                        statusDetailsElement.textContent = mydata["doc_id"];
-                                    }
-                                    //class add 
-                                    var status = document.getElementById("status_details");
-                                    if (mydata["verification_status"] === "Verified") {
-                                        status.classList.add("bg-success");
-                                        status.classList.remove("bg-danger");
-                                    } else {
-                                        status.classList.remove("bg-success");
-                                        status.classList.add("bg-danger");
-                                    }
-                                    //class add end
-
-                                    var profile = document.getElementById("doc_idd");
-                                    profile.value = mydata["doc_id"];
-
-                                    if (mydata["verification_status"] !== null) {
-                                        profile = document.getElementById("reviewer_status");
-                                        profile.value = mydata["verification_status"];
-                                    }
-                                    if (mydata["field_status"] !== null) {
-                                        profile = document.getElementById("field_status");
-                                        profile.value = mydata["field_status"];
-                                    }
-
-                                    var textarea = document.getElementById("reviewer_remarks");
-                                    if (mydata["aremarks"] !== null) {
-                                        textarea.value = mydata["aremarks"];
-                                    } else {
-                                        textarea.value = ""; // or any default value you want to set when remarks is null
-                                    }
-
-                                    if (mydata["verification_status"] == 'Rejected') {
-                                        document.getElementById("archiveupdate").disabled = true;
-                                    } else {
-                                        document.getElementById("archiveupdate").disabled = false;
-                                    }
-                                }
-
-                                // When the user clicks the button, open the modal 
-                                // When the user clicks on <span> (x), close the modal
-                                closedetails.forEach(function(element) {
-                                    element.addEventListener("click", closeModal);
-                                });
-
-                                function closeModal() {
-                                    var modal1 = document.getElementById("myModal");
-                                    modal1.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it
-                                // window.onclick = function(event) {
-                                //     if (event.target == modal) {
-                                //         modal.style.display = "none";
-                                //     }
-                                // }
-                            </script>
-
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>;
-                                //For form submission - to update Remarks
-                                const scriptURL = 'payment-api.php'
-
-                                function validateForm() {
-                                    if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-
-                                        data.forEach(item => {
-                                            const form = document.forms['archivedelete_' + item.doc_id]
-                                            form.addEventListener('submit', e => {
-                                                e.preventDefault()
-                                                fetch(scriptURL, {
-                                                        method: 'POST',
-                                                        body: new FormData(document.forms['archivedelete_' + item.doc_id])
-                                                    })
-                                                    .then(response =>
-                                                        alert("Record has been deleted.") +
-                                                        location.reload()
-                                                    )
-                                                    .catch(error => console.error('Error!', error.message))
-                                            })
-
-                                            console.log(item)
-                                        })
-                                    } else {
-                                        alert("Record has NOT been deleted.");
-                                        return false;
-                                    }
-                                }
-
-                                const form = document.getElementById('archiveform')
-                                form.addEventListener('submit', e => {
-                                    e.preventDefault()
-                                    fetch(scriptURL, {
-                                            method: 'POST',
-                                            body: new FormData(document.getElementById('archiveform'))
-                                        })
-                                        .then(response =>
-                                            alert("Record has been updated.") +
-                                            location.reload()
-                                        )
-                                        .catch(error => console.error('Error!', error.message))
-                                })
-
-                                // data.forEach(item => {
-                                //     const formId = 'email-form-' + item.doc_id
-                                //     const form = document.forms[formId]
-                                //     form.addEventListener('submit', e => {
-                                //         e.preventDefault()
-                                //         fetch('mailer.php', {
-                                //                 method: 'POST',
-                                //                 body: new FormData(document.forms[formId])
-                                //             })
-                                //             .then(response =>
-                                //                 alert("Email has been sent.")
-                                //             )
-                                //             .catch(error => console.error('Error!', error.message))
-                                //     })
-                                // })
-                            </script>
 
                         </div>
 
@@ -465,21 +393,221 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Check if resultArr is empty
+            // Initialize DataTables if resultArr is not empty
             <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
                 $('#table-id').DataTable({
                     paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
+                    "order": [],
+                    "columnDefs": [{
+                            "orderable": false,
+                            "targets": 0
+                        } // Disable sorting for checkbox column
+                    ]
                 });
             <?php endif; ?>
+
+            // Row selection functionality
+            $('.clickable-row').click(function(e) {
+                // Don't trigger selection if checkbox was clicked
+                if ($(e.target).is('input[type="checkbox"]') || $(e.target).is('a')) {
+                    return;
+                }
+
+                const checkbox = $(this).find('.row-checkbox');
+                checkbox.prop('checked', !checkbox.prop('checked'));
+                updateRowSelection(this);
+                updateBulkActionsPanel();
+            });
+
+            // Checkbox change handler
+            $('.row-checkbox').change(function() {
+                updateRowSelection($(this).closest('tr'));
+                updateBulkActionsPanel();
+            });
+
+            // Select all functionality
+            $('#selectAll').change(function() {
+                const isChecked = $(this).prop('checked');
+                $('.row-checkbox').prop('checked', isChecked);
+                $('.clickable-row').each(function() {
+                    updateRowSelection(this);
+                });
+                updateBulkActionsPanel();
+            });
+        });
+
+        function updateRowSelection(row) {
+            const $row = $(row);
+            const isChecked = $row.find('.row-checkbox').prop('checked');
+
+            if (isChecked) {
+                $row.addClass('selected-row');
+            } else {
+                $row.removeClass('selected-row');
+            }
+        }
+
+        function updateBulkActionsPanel() {
+            const selectedCount = $('.row-checkbox:checked').length;
+            const $bulkPanel = $('#bulkActionsPanel');
+            const $selectedCount = $('#selectedCount');
+            const $selectedCountText = $('#selectedCountText');
+
+            $selectedCount.text(selectedCount);
+            $selectedCountText.text(selectedCount);
+
+            if (selectedCount > 0) {
+                $bulkPanel.show();
+            } else {
+                $bulkPanel.hide();
+            }
+
+            // Update select all checkbox
+            const totalRows = $('.row-checkbox').length;
+            const allChecked = $('.row-checkbox:checked').length === totalRows;
+            $('#selectAll').prop('checked', allChecked);
+        }
+
+        function clearSelection() {
+            $('.row-checkbox').prop('checked', false);
+            $('.clickable-row').removeClass('selected-row');
+            updateBulkActionsPanel();
+        }
+
+        function showBulkReviewModal() {
+            const selectedDocs = getSelectedDocIds();
+            if (selectedDocs.length === 0) {
+                alert('Please select at least one document.');
+                return;
+            }
+
+            // Reset form
+            $('#bulk_action_type').val('');
+            $('#bulk_reviewer_remarks').val('');
+            $('#modalSelectedCount').text(selectedDocs.length);
+            $('#selected_docs').val(selectedDocs.join(','));
+
+            // Reset confirm button to normal state
+            resetConfirmButton();
+
+            new bootstrap.Modal(document.getElementById('bulkReviewModal')).show();
+        }
+
+        function setSubmittingState() {
+            const confirmButton = document.getElementById('confirmButton');
+            const cancelButton = document.getElementById('cancelButton');
+            const buttonText = confirmButton.querySelector('.button-text');
+            const spinner = confirmButton.querySelector('.spinner-border');
+
+            // Disable button and show spinner
+            confirmButton.disabled = true;
+            buttonText.textContent = 'Submitting...';
+            spinner.classList.remove('d-none');
+
+            // Also disable cancel button during submission
+            cancelButton.disabled = true;
+        }
+
+        function resetConfirmButton() {
+            const confirmButton = document.getElementById('confirmButton');
+            const cancelButton = document.getElementById('cancelButton');
+            const buttonText = confirmButton.querySelector('.button-text');
+            const spinner = confirmButton.querySelector('.spinner-border');
+
+            // Enable button and hide spinner
+            confirmButton.disabled = false;
+            buttonText.textContent = 'Confirm';
+            spinner.classList.add('d-none');
+
+            // Enable cancel button
+            cancelButton.disabled = false;
+        }
+
+        function getSelectedDocIds() {
+            const selectedDocs = [];
+            $('.row-checkbox:checked').each(function() {
+                selectedDocs.push($(this).val());
+            });
+            return selectedDocs;
+        }
+
+        async function submitBulkAction() {
+            const actionType = $('#bulk_action_type').val();
+            const remarks = $('#bulk_reviewer_remarks').val();
+
+            if (!actionType) {
+                alert('Please select an action (Approve or Reject).');
+                return;
+            }
+
+            if (!remarks.trim()) {
+                alert('Please enter remarks for the bulk action.');
+                return;
+            }
+
+            // Set submitting state
+            setSubmittingState();
+
+            try {
+                const form = document.getElementById('bulkReviewForm');
+                const formData = new FormData(form);
+
+                const response = await fetch('payment-api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Close modal first
+                    bootstrap.Modal.getInstance(document.getElementById('bulkReviewModal')).hide();
+                    // Show success message
+                    alert(data.message);
+                    // Reload page to see changes
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Unknown error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+                // Reset button state on error
+                resetConfirmButton();
+            }
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#user_id').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5'
+            });
         });
     </script>
-
-
 </body>
 
 </html>
