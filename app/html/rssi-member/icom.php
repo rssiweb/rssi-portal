@@ -330,6 +330,10 @@ validation();
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Payment ID</label>
+                                <input type="text" id="edit-payment-id" class="form-control" placeholder="Enter Payment ID if applicable">
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Remarks</label>
                                 <textarea id="edit-remarks" class="form-control" rows="3"></textarea>
                             </div>
@@ -359,6 +363,55 @@ validation();
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const orderType = document.getElementById("edit-order-type");
+            const paymentStatus = document.getElementById("edit-payment-status");
+            const paymentId = document.getElementById("edit-payment-id");
+
+            // Function to handle enabling/disabling based on conditions
+            function updateFieldStates() {
+                const orderTypeValue = orderType.value;
+                const paymentStatusValue = paymentStatus.value;
+
+                if (orderTypeValue === "New") {
+                    // For New orders
+                    paymentStatus.value = "";
+                    paymentStatus.disabled = true;
+                    paymentStatus.required = false;
+
+                    paymentId.value = "";
+                    paymentId.disabled = true;
+                    paymentId.required = false;
+
+                } else if (orderTypeValue === "Reissue") {
+                    // For Reissue orders
+                    paymentStatus.disabled = false;
+                    paymentStatus.required = true;
+
+                    if (paymentStatusValue === "Paid") {
+                        paymentId.disabled = false;
+                        paymentId.required = true;
+                    } else {
+                        paymentId.value = "";
+                        paymentId.disabled = true;
+                        paymentId.required = false;
+                    }
+                }
+            }
+
+            // Event listeners
+            orderType.addEventListener("change", updateFieldStates);
+            paymentStatus.addEventListener("change", updateFieldStates);
+
+            // Initialize on modal show (Bootstrap 5 event)
+            const editOrderModal = document.getElementById("editOrderModal");
+            editOrderModal.addEventListener("shown.bs.modal", function() {
+                updateFieldStates();
+            });
+        });
+    </script>
 
     <script>
         $(document).ready(function() {
@@ -543,6 +596,7 @@ validation();
                                             <th>Status</th>
                                             <th>Type</th>
                                             <th>Payment</th>
+                                            <th>Payment Id</th>
                                             <th>Remarks</th>
                                             <th>Last Issued</th>
                                             <th>Times Issued</th>
@@ -573,6 +627,7 @@ validation();
                                             </span>
                                         </td>
                                         <td>${item.payment_status || '-'}</td>
+                                        <td>${item.payment_id || '-'}</td>
                                         <td>${item.remarks || '-'}</td>
                                         <td>${item.last_issued ? new Date(item.last_issued).toLocaleDateString('en-GB') : '-'}</td>
                                         <td>${item.times_issued || '-'}</td>
@@ -703,11 +758,33 @@ validation();
                             btn.prop('disabled', true);
                             $('#save-spinner').removeClass('d-none');
 
+                            const orderType = $('#edit-order-type').val();
+                            const paymentStatus = $('#edit-payment-status').val();
+                            const paymentId = $('#edit-payment-id').val().trim();
+
+                            // Validation logic
+                            if (orderType === 'Reissue') {
+                                if (!paymentStatus) {
+                                    alert('Please select a Payment Status for Reissue orders.');
+                                    btn.prop('disabled', false);
+                                    $('#save-spinner').addClass('d-none');
+                                    return;
+                                }
+
+                                if ((paymentStatus === 'Paid' || paymentStatus === 'Partial') && !paymentId) {
+                                    alert('Please enter a Payment ID for Paid status.');
+                                    btn.prop('disabled', false);
+                                    $('#save-spinner').addClass('d-none');
+                                    return;
+                                }
+                            }
+
                             $.post('id_process_order.php', {
                                     action: 'update_order',
                                     id: $('#edit-order-id').val(),
                                     order_type: $('#edit-order-type').val(),
                                     payment_status: $('#edit-payment-status').val(),
+                                    payment_id: $('#edit-payment-id').val().trim(),
                                     remarks: $('#edit-remarks').val()
                                 })
                                 .done(function(response) {

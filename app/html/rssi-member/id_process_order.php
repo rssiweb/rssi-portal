@@ -457,7 +457,7 @@ function handleUpdateOrder()
     $paramCount = 1;
 
     // Add all possible fields that can be updated
-    $updatableFields = ['order_type', 'payment_status', 'remarks'];
+    $updatableFields = ['order_type', 'payment_status', 'payment_id', 'remarks'];
 
     foreach ($updatableFields as $field) {
         if (isset($_POST[$field])) {
