@@ -75,7 +75,12 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <!-- =========================
@@ -83,7 +88,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -109,7 +114,7 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <form action="" method="GET">
                                         <div class="form-group">
@@ -123,47 +128,15 @@ $resultArr = pg_fetch_all($result);
                                                 </select>
                                             </div>
                                             <div class="col2 left" style="display: inline-block;">
-                                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                                <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
                                                     <i class="bi bi-search"></i>&nbsp;Search
                                                 </button>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
-                                <div class="col-md-6 text-end">
-                                    Record count: <?php echo sizeof($resultArr) ?>
-                                </div>
                             </div>
 
-                            <script>
-                                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                    var currentYear = new Date().getFullYear() - 1;
-                                <?php } else { ?>
-                                    var currentYear = new Date().getFullYear();
-                                <?php } ?>
-
-                                for (var i = 0; i < 5; i++) {
-                                    var next = currentYear + 1;
-                                    var year = currentYear + '-' + next;
-                                    //next.toString().slice(-2) 
-                                    $('#get_aid').append(new Option(year, year));
-                                    currentYear--;
-                                }
-                            </script>
-                            <br><br>
-                            <p>Select Number Of Rows</p>
-                            <div class="form-group">
-                                <select class="form-select" name="state" id="maxRows">
-                                    <option value="5000">Show ALL Rows</option>
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="15">15</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                    <option value="70">70</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
@@ -183,233 +156,93 @@ $resultArr = pg_fetch_all($result);
                                             <th scope="col">Closed on</th>
                                         </tr>
                                     </thead>
-                                    <?php
-                                    if ($resultArr != null) {
-                                        echo '<tbody>';
-                                        foreach ($resultArr as $array) {
-                                            $roleBasedLink = "";
-                                            if ($associatenumber == $array['appraisee_associatenumber']) {
-                                                // If the logged-in person is the appraisee
-                                                $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
-                                            } elseif ($associatenumber == $array['manager_associatenumber']) {
-                                                // If the logged-in person is the manager
-                                                $roleBasedLink = 'manager_response.php?goalsheetid=' . $array['goalsheetid'];
-                                            } elseif ($associatenumber == $array['reviewer_associatenumber']) {
-                                                // If the logged-in person is the reviewer
-                                                $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
-                                            } else {
-                                                // For any other role (optional)
+                                    <?php if ($resultArr != null) : ?>
+                                        <tbody>
+                                            <?php foreach ($resultArr as $array) :
                                                 $roleBasedLink = '';
-                                            }
-                                    ?>
-                                            <tr>
-                                                <td>
-                                                    <?php
-                                                    if ($roleBasedLink != '') {
-                                                        echo '<a href="' . $roleBasedLink . '" target="_blank">' . $array['goalsheetid'] . '</a>';
-                                                    } else {
-                                                        echo $array['goalsheetid'];
-                                                    }
-                                                    ?>
-                                                </td>
-                                                <td><?php echo $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')'; ?></td>
-                                                <td>
-                                                    <?php
-                                                    $managerInfo = $array['mname1'];
-                                                    if (!empty($array['manager1_associatenumber'])) {
-                                                        $managerInfo .= ' (' . $array['manager1_associatenumber'] . ')';
-                                                    }
-                                                    echo $managerInfo;
-                                                    ?>
-                                                </td>
-                                                <td><?php echo $array['mname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
-                                                <td><?php echo $array['rname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
-                                                <td><?php echo $array['appraisaltype'] . '<br>' . $array['appraisalyear']; ?></td>
-                                                <td><?php echo isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null ?></td>
-                                                <td><?php echo isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null ?></td>
-                                                <td><?php echo date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])); ?></td>
-                                                <td><?php echo $array['ipf']; ?></td>
-                                                <td>
-                                                    <?php
-                                                    $status = '';
-
-                                                    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Self-assessment';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Manager assessment in progress';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Reviewer assessment in progress';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                                        $status = 'IPF released';
-                                                    } elseif ($array['ipf_response'] == 'accepted') {
-                                                        $status = 'IPF Accepted';
-                                                    } elseif ($array['ipf_response'] == 'rejected') {
-                                                        $status = 'IPF Rejected';
-                                                    } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
-                                                        $status = 'Incomplete';
-                                                    }
-                                                    echo $status;
-                                                    ?>
-
-                                                </td>
-                                                <td><?php echo ($array['ipf_response_on'] == null ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on']))); ?></td>
-                                                <td>
-                                                    <?php
-                                                    if ($array['ipf_process_closed_by'] == null && $role == 'Admin') {
-                                                        echo '
-                            <form name="ipfclose' . $array['goalsheetid'] . '" action="#" method="POST">
-                                <input type="hidden" name="form-type" type="text" value="ipfclose">
-                                <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['goalsheetid'] . '">
-                                <input type="hidden" name="ipf_process_closed_by" id="ipf_process_closed_by" type="text" value="' . $associatenumber . '">
-                                <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                                padding: 0px;
-                                border: none;" title="Closed"><i class="bi bi-box-arrow-up"></i></button>
-                            </form>
-                            ';
-                                                    } else {
-                                                        echo date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on']));
-                                                    }
-                                                    ?>
-                                                </td>
-                                            </tr>
-                                    <?php
-                                        }
-                                        echo '</tbody>';
-                                    } elseif (@$id == null) {
-                                        echo '<tr>
-                    <td colspan="6">Please select Filter value.</td>
-                </tr>';
-                                    } else {
-                                        echo '<tr>
-                    <td colspan="6">No record found for ' . @$id . '</td>
-                </tr>';
-                                    }
-                                    ?>
+                                                if ($associatenumber == $array['appraisee_associatenumber']) {
+                                                    $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
+                                                } elseif ($associatenumber == $array['manager_associatenumber']) {
+                                                    $roleBasedLink = 'manager_response.php?goalsheetid=' . $array['goalsheetid'];
+                                                } elseif ($associatenumber == $array['reviewer_associatenumber']) {
+                                                    $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
+                                                }
+                                            ?>
+                                                <tr>
+                                                    <td>
+                                                        <?php if ($roleBasedLink != '') : ?>
+                                                            <a href="<?= $roleBasedLink ?>" target="_blank"><?= $array['goalsheetid'] ?></a>
+                                                        <?php else : ?>
+                                                            <?= $array['goalsheetid'] ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><?= $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')' ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $managerInfo = $array['mname1'];
+                                                        if (!empty($array['manager1_associatenumber'])) {
+                                                            $managerInfo .= ' (' . $array['manager1_associatenumber'] . ')';
+                                                        }
+                                                        echo $managerInfo;
+                                                        ?>
+                                                    </td>
+                                                    <td><?= $array['mname'] . ' (' . $array['manager_associatenumber'] . ')' ?></td>
+                                                    <td><?= $array['rname'] . ' (' . $array['reviewer_associatenumber'] . ')' ?></td>
+                                                    <td><?= $array['appraisaltype'] . '<br>' . $array['appraisalyear'] ?></td>
+                                                    <td><?= isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : '' ?></td>
+                                                    <td><?= isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : '' ?></td>
+                                                    <td><?= date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) ?></td>
+                                                    <td><?= $array['ipf'] ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $status = '';
+                                                        if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                            $status = 'Self-assessment';
+                                                        } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                            $status = 'Manager assessment in progress';
+                                                        } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                            $status = 'Reviewer assessment in progress';
+                                                        } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+                                                            $status = 'IPF released';
+                                                        } elseif ($array['ipf_response'] == 'accepted') {
+                                                            $status = 'IPF Accepted';
+                                                        } elseif ($array['ipf_response'] == 'rejected') {
+                                                            $status = 'IPF Rejected';
+                                                        } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
+                                                            $status = 'Incomplete';
+                                                        }
+                                                        echo $status;
+                                                        ?>
+                                                    </td>
+                                                    <td><?= $array['ipf_response_on'] ? date('d/m/y h:i:s a', strtotime($array['ipf_response_on'])) : '' ?></td>
+                                                    <td>
+                                                        <?php if ($array['ipf_process_closed_by'] == null && $role == 'Admin') : ?>
+                                                            <form name="ipfclose<?= $array['goalsheetid'] ?>" action="#" method="POST">
+                                                                <input type="hidden" name="form-type" value="ipfclose">
+                                                                <input type="hidden" name="ipfid" value="<?= $array['goalsheetid'] ?>">
+                                                                <input type="hidden" name="ipf_process_closed_by" value="<?= $associatenumber ?>">
+                                                                <button type="submit" id="yes" style="display:inline-flex; width:fit-content; word-wrap:break-word; outline:none; background:none; padding:0; border:none;" title="Closed">
+                                                                    <i class="bi bi-box-arrow-up"></i>
+                                                                </button>
+                                                            </form>
+                                                        <?php else : ?>
+                                                            <?= date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    <?php elseif (@$id == null) : ?>
+                                        <tr>
+                                            <td colspan="6">Please select Filter value.</td>
+                                        </tr>
+                                    <?php else : ?>
+                                        <tr>
+                                            <td colspan="6">No record found for <?= @$id ?></td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </table>
                             </div>
-
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
 
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
@@ -461,7 +294,34 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
+    <script>
+        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+            var currentYear = new Date().getFullYear() - 1;
+        <?php } else { ?>
+            var currentYear = new Date().getFullYear();
+        <?php } ?>
 
+        for (var i = 0; i < 5; i++) {
+            var next = currentYear + 1;
+            var year = currentYear + '-' + next;
+            //next.toString().slice(-2) 
+            $('#get_aid').append(new Option(year, year));
+            currentYear--;
+        }
+    </script>
 </body>
 
 </html>
