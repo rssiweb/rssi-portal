@@ -171,7 +171,7 @@ $resultArr = pg_fetch_all($result);
                                                 <tr>
                                                     <td>
                                                         <?php if ($roleBasedLink != '') : ?>
-                                                            <a href="<?= $roleBasedLink ?>" target="_blank"><?= $array['goalsheetid'] ?></a>
+                                                            <a href="<?= $roleBasedLink ?>"><?= $array['goalsheetid'] ?></a>
                                                         <?php else : ?>
                                                             <?= $array['goalsheetid'] ?>
                                                         <?php endif; ?>

@@ -141,10 +141,12 @@ if (@$_POST['form-type'] == "appraisee_response") {
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 </head>
 
 <body>
-    <?php include 'inactive_session_expire_check.php'; ?>
     <?php if (@$goalsheetid != null && @$cmdtuples == 0) { ?>
 
         <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
@@ -163,370 +165,404 @@ if (@$_POST['form-type'] == "appraisee_response") {
             }
         </script>
     <?php } ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-    <div class="container mt-5">
-        <form method="GET" action="" id="searchForm">
-            <div class="form-group mb-3">
-                <label for="role_search" class="form-label">Role:</label>
-                <select class="form-select" name="role_search" required>
+    <main id="main" class="main">
 
-                    <?php if (@$_GET['role_search'] == null) { ?>
-                        <option selected>--Select Role--</option>
-                    <?php
-                    } else { ?>
-                        <option selected>--Select Role--</option>
-                        <option hidden selected><?php echo @$_GET['role_search'] ?></option>
-                    <?php }
-                    ?>
-                    <option value="Teacher">Teacher</option>
-                    <option value="Faculty">Faculty</option>
-                    <option value="Intern">Intern</option>
-                    <option value="Centre In-Charge">Centre In-Charge</option>
-                    <option value="Centre Coordinator">Centre Coordinator</option>
-                    <option value="Member">Member</option>
-                    <option value="HR">HR</option>
-                    <option value="Counselor">Counselor</option>
-                    <option value="Support Staff">Support Staff</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            <button type="submit" name="searchBtn" class="btn btn-primary mb-3" id="searchBtn">
-                <span id="btnText">Search</span>
-                <span id="loadingIndicator" style="display: none;">Loading...</span>
-            </button>
-        </form>
+        <div class="pagetitle">
+            <h1>Goal Setting</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Performance management</a></li>
+                    <li class="breadcrumb-item"><a href="my_appraisal.php">My Appraisal</a></li>
+                    <li class="breadcrumb-item active">Goal Setting</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-        <script>
-            document.getElementById('searchForm').addEventListener('submit', function() {
-                // Display loading indicator in the button
-                document.getElementById('btnText').style.display = 'none';
-                document.getElementById('loadingIndicator').style.display = 'inline-block';
-                document.getElementById('searchBtn').setAttribute('disabled', 'disabled');
+        <section class="section dashboard">
+            <div class="row">
 
-                // You may want to use AJAX to submit the form and fetch results from the server.
-                // For demonstration purposes, I'll simulate a delay using setTimeout.
-                setTimeout(function() {
-                    // Hide loading indicator and restore button text after a delay (replace this with your actual logic)
-                    document.getElementById('btnText').style.display = 'inline-block';
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    document.getElementById('searchBtn').removeAttribute('disabled');
-                }, 2000); // 2000 milliseconds (2 seconds) delay, replace with your actual AJAX call
-            });
-        </script>
-        <br>
-        <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Goal Setting Form</h2>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <div class="container mt-5">
+                                <form method="GET" action="" id="searchForm">
+                                    <div class="form-group mb-3">
+                                        <label for="role_search" class="form-label">Role:</label>
+                                        <select class="form-select" name="role_search" required>
+
+                                            <?php if (@$_GET['role_search'] == null) { ?>
+                                                <option selected>--Select Role--</option>
+                                            <?php
+                                            } else { ?>
+                                                <option selected>--Select Role--</option>
+                                                <option hidden selected><?php echo @$_GET['role_search'] ?></option>
+                                            <?php }
+                                            ?>
+                                            <option value="Teacher">Teacher</option>
+                                            <option value="Faculty">Faculty</option>
+                                            <option value="Intern">Intern</option>
+                                            <option value="Centre In-Charge">Centre In-Charge</option>
+                                            <option value="Centre Coordinator">Centre Coordinator</option>
+                                            <option value="Member">Member</option>
+                                            <option value="HR">HR</option>
+                                            <option value="Counselor">Counselor</option>
+                                            <option value="Support Staff">Support Staff</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" name="searchBtn" class="btn btn-primary mb-3" id="searchBtn">
+                                        <span id="btnText">Search</span>
+                                        <span id="loadingIndicator" style="display: none;">Loading...</span>
+                                    </button>
+                                </form>
+
+                                <script>
+                                    document.getElementById('searchForm').addEventListener('submit', function() {
+                                        // Display loading indicator in the button
+                                        document.getElementById('btnText').style.display = 'none';
+                                        document.getElementById('loadingIndicator').style.display = 'inline-block';
+                                        document.getElementById('searchBtn').setAttribute('disabled', 'disabled');
+
+                                        // You may want to use AJAX to submit the form and fetch results from the server.
+                                        // For demonstration purposes, I'll simulate a delay using setTimeout.
+                                        setTimeout(function() {
+                                            // Hide loading indicator and restore button text after a delay (replace this with your actual logic)
+                                            document.getElementById('btnText').style.display = 'inline-block';
+                                            document.getElementById('loadingIndicator').style.display = 'none';
+                                            document.getElementById('searchBtn').removeAttribute('disabled');
+                                        }, 2000); // 2000 milliseconds (2 seconds) delay, replace with your actual AJAX call
+                                    });
+                                </script>
+                                <br>
+                                <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Goal Setting Form</h2>
 
 
-        <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
-        <p></p>
-        <hr>
-        <?php if (sizeof($resultArr) > 0) { ?>
-            <?php
-            foreach ($resultArr as $array) {
-            ?>
-                <form method="post" name="process" id="process" onsubmit="return checkAssociateNumbers()">
+                                <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
+                                <p></p>
+                                <hr>
+                                <?php if (sizeof($resultArr) > 0) { ?>
+                                    <?php
+                                    foreach ($resultArr as $array) {
+                                    ?>
+                                        <form method="post" name="process" id="process" onsubmit="return checkAssociateNumbers()">
 
-                    <input type="hidden" name="form-type" value="appraisee_response">
-                    <!-- Add a checkbox at the beginning -->
-                    <div class="form-check mb-3">
-                        <input type="checkbox" class="form-check-input" id="disableFieldsCheckbox">
-                        <label class="form-check-label" for="disableFieldsCheckbox">Modify role-specific goal database</label>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="appraisee_associate_number" class="form-label">Appraisee Associate Number:</label>
-                                <input type="text" class="form-control" name="appraisee_associate_number" required>
-                                <div id="appraisee_associate_number_help" class="form-text">Please enter the unique associate number of the appraisee.</div>
-                            </div>
+                                            <input type="hidden" name="form-type" value="appraisee_response">
+                                            <!-- Add a checkbox at the beginning -->
+                                            <div class="form-check mb-3">
+                                                <input type="checkbox" class="form-check-input" id="disableFieldsCheckbox">
+                                                <label class="form-check-label" for="disableFieldsCheckbox">Modify role-specific goal database</label>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="appraisee_associate_number" class="form-label">Appraisee Associate Number:</label>
+                                                        <input type="text" class="form-control" name="appraisee_associate_number" required>
+                                                        <div id="appraisee_associate_number_help" class="form-text">Please enter the unique associate number of the appraisee.</div>
+                                                    </div>
 
-                            <div class="form-group mb-3">
-                                <label for="manager1_associatenumber" class="form-label">Immediate Manager Associate Number:</label>
-                                <input type="text" class="form-control" name="manager1_associatenumber">
-                                <div id="manager1_associatenumber_help" class="form-text">Please enter the unique associate number of the immediate manager.</div>
-                            </div>
-                        </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="manager1_associatenumber" class="form-label">Immediate Manager Associate Number:</label>
+                                                        <input type="text" class="form-control" name="manager1_associatenumber">
+                                                        <div id="manager1_associatenumber_help" class="form-text">Please enter the unique associate number of the immediate manager.</div>
+                                                    </div>
+                                                </div>
 
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="manager_associate_number" class="form-label">Manager Associate Number:</label>
-                                <input type="text" class="form-control" name="manager_associate_number" required>
-                                <div id="manager_associate_number_help" class="form-text">Please enter the unique associate number of the manager.</div>
-                            </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="manager_associate_number" class="form-label">Manager Associate Number:</label>
+                                                        <input type="text" class="form-control" name="manager_associate_number" required>
+                                                        <div id="manager_associate_number_help" class="form-text">Please enter the unique associate number of the manager.</div>
+                                                    </div>
 
-                            <div class="form-group mb-3">
-                                <label for="reviewer_associate_number" class="form-label">Reviewer Associate Number:</label>
-                                <input type="text" class="form-control" name="reviewer_associate_number" required>
-                                <div id="reviewer_associate_number_help" class="form-text">Please enter the unique associate number of the reviewer.</div>
-                            </div>
-                        </div>
-                    </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="reviewer_associate_number" class="form-label">Reviewer Associate Number:</label>
+                                                        <input type="text" class="form-control" name="reviewer_associate_number" required>
+                                                        <div id="reviewer_associate_number_help" class="form-text">Please enter the unique associate number of the reviewer.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="role" class="form-label">Role:</label>
-                                <select class="form-select" name="role" required>
-                                    <option disabled selected>--Select Role--</option>
-                                    <option value="Teacher">Teacher</option>
-                                    <option value="Faculty">Faculty</option>
-                                    <option value="Intern">Intern</option>
-                                    <option value="Centre In-Charge">Centre In-Charge</option>
-                                    <option value="Centre Coordinator">Centre Coordinator</option>
-                                    <option value="Member">Member</option>
-                                    <option value="HR">HR</option>
-                                    <option value="Counselor">Counselor</option>
-                                    <option value="Support Staff">Support Staff</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="role" class="form-label">Role:</label>
+                                                        <select class="form-select" name="role" required>
+                                                            <option disabled selected>--Select Role--</option>
+                                                            <option value="Teacher">Teacher</option>
+                                                            <option value="Faculty">Faculty</option>
+                                                            <option value="Intern">Intern</option>
+                                                            <option value="Centre In-Charge">Centre In-Charge</option>
+                                                            <option value="Centre Coordinator">Centre Coordinator</option>
+                                                            <option value="Member">Member</option>
+                                                            <option value="HR">HR</option>
+                                                            <option value="Counselor">Counselor</option>
+                                                            <option value="Support Staff">Support Staff</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="appraisal_type" class="form-label">Appraisal Type:</label>
-                                <select class="form-select" name="appraisal_type" required>
-                                    <option disabled selected>--Select an option--</option>
-                                    <option value="Annual">Annual</option>
-                                    <option value="Quarterly">Quarterly</option>
-                                    <option value="Project End">Project End</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="appraisal_type" class="form-label">Appraisal Type:</label>
+                                                        <select class="form-select" name="appraisal_type" required>
+                                                            <option disabled selected>--Select an option--</option>
+                                                            <option value="Annual">Annual</option>
+                                                            <option value="Quarterly">Quarterly</option>
+                                                            <option value="Project End">Project End</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
+                                            <div class="row">
+                                                <div class="col-md-4">
 
-                            <div class="form-group mb-3">
-                                <label for="effective_start_date" class="form-label">Effective Start Date:</label>
-                                <input type="date" class="form-control" name="effective_start_date" required>
-                                <div id="effective_start_date_help" class="form-text">Please select the effective start date.</div>
-                            </div>
-                        </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="effective_start_date" class="form-label">Effective Start Date:</label>
+                                                        <input type="date" class="form-control" name="effective_start_date" required>
+                                                        <div id="effective_start_date_help" class="form-text">Please select the effective start date.</div>
+                                                    </div>
+                                                </div>
 
-                        <div class="col-md-4">
+                                                <div class="col-md-4">
 
-                            <div class="form-group mb-3">
-                                <label for="effective_end_date" class="form-label">Effective End Date:</label>
-                                <input type="date" class="form-control" name="effective_end_date" required>
-                                <div id="effective_end_date_help" class="form-text">Please select the effective end date.</div>
-                            </div>
-                        </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="effective_end_date" class="form-label">Effective End Date:</label>
+                                                        <input type="date" class="form-control" name="effective_end_date" required>
+                                                        <div id="effective_end_date_help" class="form-text">Please select the effective end date.</div>
+                                                    </div>
+                                                </div>
 
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label for="appraisal_year" class="form-label">Appraisal Year:</label>
-                                <select class="form-select" name="appraisal_year" id="appraisal_year" required>
-                                    <?php if ($appraisal_year == null) { ?>
-                                        <option hidden selected>--Select Appraisal Year--</option>
-                                    <?php } else { ?>
-                                        <option hidden selected><?php echo $appraisal_year ?></option>
+                                                <div class="col-md-4">
+                                                    <div class="form-group mb-3">
+                                                        <label for="appraisal_year" class="form-label">Appraisal Year:</label>
+                                                        <select class="form-select" name="appraisal_year" id="appraisal_year" required>
+                                                            <?php if ($appraisal_year == null) { ?>
+                                                                <option hidden selected>--Select Appraisal Year--</option>
+                                                            <?php } else { ?>
+                                                                <option hidden selected><?php echo $appraisal_year ?></option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <h2>Goals</h2>
+                                            <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Parameter</th>
+                                                        <th scope="col">Expectation</th>
+                                                        <th scope="col">Max Rating</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_1" value="<?php echo $array['parameter_1'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_1" value="<?php echo $array['expectation_1'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_1" value="<?php echo $array['max_rating_1'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_2" value="<?php echo $array['parameter_2'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_2" value="<?php echo $array['expectation_2'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_2" value="<?php echo $array['max_rating_2'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_3" value="<?php echo $array['parameter_3'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_3" value="<?php echo $array['expectation_3'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_3" value="<?php echo $array['max_rating_3'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_4" value="<?php echo $array['parameter_4'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_4" value="<?php echo $array['expectation_4'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_4" value="<?php echo $array['max_rating_4'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_5" value="<?php echo $array['parameter_5'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_5" value="<?php echo $array['expectation_5'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_5" value="<?php echo $array['max_rating_5'] ?>"></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_6" value="<?php echo $array['parameter_6'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_6" value="<?php echo $array['expectation_6'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_6" value="<?php echo $array['max_rating_6'] ?>"></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_7" value="<?php echo $array['parameter_7'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_7" value="<?php echo $array['expectation_7'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_7" value="<?php echo $array['max_rating_7'] ?>"></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_8" value="<?php echo $array['parameter_8'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_8" value="<?php echo $array['expectation_8'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_8" value="<?php echo $array['max_rating_8'] ?>"></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_9" value="<?php echo $array['parameter_9'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_9" value="<?php echo $array['expectation_9'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_9" value="<?php echo $array['max_rating_9'] ?>"></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_10" value="<?php echo $array['parameter_10'] ?>"></td>
+                                                        <td><input type="text" class="form-control" name="expectation_10" value="<?php echo $array['expectation_10'] ?>"></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_10" value="<?php echo $array['max_rating_10'] ?>"></td>
+                                                    </tr>
+
+                                                </tbody>
+                                            </table>
+
+                                            <h2>Attributes</h2>
+                                            <p>Attributes are competencies essential for performing a role.</p>
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Parameter</th>
+                                                        <th scope="col">Expectation</th>
+                                                        <th scope="col">Max Rating</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_11" value="<?php echo $array['parameter_11'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_11"><?php echo $array['expectation_11'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_11" value="<?php echo $array['max_rating_11'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_12" value="<?php echo $array['parameter_12'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_12"><?php echo $array['expectation_12'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_12" value="<?php echo $array['max_rating_12'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_13" value="<?php echo $array['parameter_13'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_13"><?php echo $array['expectation_13'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_13" value="<?php echo $array['max_rating_13'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_14" value="<?php echo $array['parameter_14'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_14"><?php echo $array['expectation_14'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_14" value="<?php echo $array['max_rating_14'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_15" value="<?php echo $array['parameter_15'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_15"><?php echo $array['expectation_15'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_15" value="<?php echo $array['max_rating_15'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_16" value="<?php echo $array['parameter_16'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_16"><?php echo $array['expectation_16'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_16" value="<?php echo $array['max_rating_16'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_17" value="<?php echo $array['parameter_17'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_17"><?php echo $array['expectation_17'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_17" value="<?php echo $array['max_rating_17'] ?>"></textarea></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_18" value="<?php echo $array['parameter_18'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_18"><?php echo $array['expectation_18'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_18" value="<?php echo $array['max_rating_18'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_19" value="<?php echo $array['parameter_19'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_19"><?php echo $array['expectation_19'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_19" value="<?php echo $array['max_rating_19'] ?>"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="parameter_20" value="<?php echo $array['parameter_20'] ?>"></td>
+                                                        <td><textarea class="form-control" name="expectation_20"><?php echo $array['expectation_20'] ?></textarea></td>
+                                                        <td><input type="number" class="form-control" name="max_rating_20" value="<?php echo $array['max_rating_20'] ?>"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <button type="submit" id="submit2" class="btn btn-warning">Update</button>
+                                            <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
+                                            <button type="submit" id="submit" class="btn btn-success">Submit</button>
+
+                                            <script>
+                                                var form = document.getElementById('process');
+                                                var submit2Button = document.getElementById('submit2');
+                                                var submit3Button = document.getElementById('submit3');
+                                                var submit1Button = document.getElementById('submit');
+                                                var disableCheckbox = document.getElementById('disableFieldsCheckbox');
+
+                                                // Initial check on page load
+                                                updateButtonVisibility();
+
+                                                // Add event listeners to the submit buttons
+                                                submit2Button.addEventListener('click', function() {
+                                                    form.action = 'goal_db_update.php';
+                                                });
+
+                                                submit3Button.addEventListener('click', function() {
+                                                    form.action = 'goal_db_add.php';
+                                                });
+
+                                                submit1Button.addEventListener('click', function() {
+                                                    form.action = 'process.php';
+                                                });
+
+                                                // Add an event listener to the checkbox
+                                                disableCheckbox.addEventListener('change', function() {
+                                                    updateButtonVisibility();
+                                                });
+
+                                                function updateButtonVisibility() {
+                                                    // If the checkbox is checked, show Update and Add New buttons, and hide Submit button
+                                                    if (disableCheckbox.checked) {
+                                                        submit2Button.style.display = 'inline-block';
+                                                        submit3Button.style.display = 'inline-block';
+                                                        submit1Button.style.display = 'none';
+                                                    } else {
+                                                        // If the checkbox is unchecked, show Submit button, and hide Update and Add New buttons
+                                                        submit2Button.style.display = 'none';
+                                                        submit3Button.style.display = 'none';
+                                                        submit1Button.style.display = 'inline-block';
+                                                    }
+                                                }
+                                            </script>
+                                            <br><br>
+                                        </form>
+
                                     <?php } ?>
-                                </select>
+                                <?php
+                                } else if ($role_search == null) {
+                                ?>
+                                    <p>Please enter the Student ID.</p>
+                                <?php
+                                } else {
+                                ?>
+                                    <p>We could not find any records matching the entered Student ID.</p>
+                                <?php } ?>
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <h2>Goals</h2>
-                    <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th scope="col">Parameter</th>
-                                <th scope="col">Expectation</th>
-                                <th scope="col">Max Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_1" value="<?php echo $array['parameter_1'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_1" value="<?php echo $array['expectation_1'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_1" value="<?php echo $array['max_rating_1'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_2" value="<?php echo $array['parameter_2'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_2" value="<?php echo $array['expectation_2'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_2" value="<?php echo $array['max_rating_2'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_3" value="<?php echo $array['parameter_3'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_3" value="<?php echo $array['expectation_3'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_3" value="<?php echo $array['max_rating_3'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_4" value="<?php echo $array['parameter_4'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_4" value="<?php echo $array['expectation_4'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_4" value="<?php echo $array['max_rating_4'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_5" value="<?php echo $array['parameter_5'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_5" value="<?php echo $array['expectation_5'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_5" value="<?php echo $array['max_rating_5'] ?>"></td>
-                            </tr>
+                </div><!-- End Reports -->
+            </div>
+        </section>
 
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_6" value="<?php echo $array['parameter_6'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_6" value="<?php echo $array['expectation_6'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_6" value="<?php echo $array['max_rating_6'] ?>"></td>
-                            </tr>
+    </main><!-- End #main -->
 
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_7" value="<?php echo $array['parameter_7'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_7" value="<?php echo $array['expectation_7'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_7" value="<?php echo $array['max_rating_7'] ?>"></td>
-                            </tr>
-
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_8" value="<?php echo $array['parameter_8'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_8" value="<?php echo $array['expectation_8'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_8" value="<?php echo $array['max_rating_8'] ?>"></td>
-                            </tr>
-
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_9" value="<?php echo $array['parameter_9'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_9" value="<?php echo $array['expectation_9'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_9" value="<?php echo $array['max_rating_9'] ?>"></td>
-                            </tr>
-
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_10" value="<?php echo $array['parameter_10'] ?>"></td>
-                                <td><input type="text" class="form-control" name="expectation_10" value="<?php echo $array['expectation_10'] ?>"></td>
-                                <td><input type="number" class="form-control" name="max_rating_10" value="<?php echo $array['max_rating_10'] ?>"></td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-
-                    <h2>Attributes</h2>
-                    <p>Attributes are competencies essential for performing a role.</p>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th scope="col">Parameter</th>
-                                <th scope="col">Expectation</th>
-                                <th scope="col">Max Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_11" value="<?php echo $array['parameter_11'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_11"><?php echo $array['expectation_11'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_11" value="<?php echo $array['max_rating_11'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_12" value="<?php echo $array['parameter_12'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_12"><?php echo $array['expectation_12'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_12" value="<?php echo $array['max_rating_12'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_13" value="<?php echo $array['parameter_13'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_13"><?php echo $array['expectation_13'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_13" value="<?php echo $array['max_rating_13'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_14" value="<?php echo $array['parameter_14'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_14"><?php echo $array['expectation_14'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_14" value="<?php echo $array['max_rating_14'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_15" value="<?php echo $array['parameter_15'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_15"><?php echo $array['expectation_15'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_15" value="<?php echo $array['max_rating_15'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_16" value="<?php echo $array['parameter_16'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_16"><?php echo $array['expectation_16'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_16" value="<?php echo $array['max_rating_16'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_17" value="<?php echo $array['parameter_17'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_17"><?php echo $array['expectation_17'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_17" value="<?php echo $array['max_rating_17'] ?>"></textarea></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_18" value="<?php echo $array['parameter_18'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_18"><?php echo $array['expectation_18'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_18" value="<?php echo $array['max_rating_18'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_19" value="<?php echo $array['parameter_19'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_19"><?php echo $array['expectation_19'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_19" value="<?php echo $array['max_rating_19'] ?>"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" class="form-control" name="parameter_20" value="<?php echo $array['parameter_20'] ?>"></td>
-                                <td><textarea class="form-control" name="expectation_20"><?php echo $array['expectation_20'] ?></textarea></td>
-                                <td><input type="number" class="form-control" name="max_rating_20" value="<?php echo $array['max_rating_20'] ?>"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button type="submit" id="submit2" class="btn btn-warning">Update</button>
-                    <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
-                    <button type="submit" id="submit" class="btn btn-success">Submit</button>
-
-                    <script>
-                        var form = document.getElementById('process');
-                        var submit2Button = document.getElementById('submit2');
-                        var submit3Button = document.getElementById('submit3');
-                        var submit1Button = document.getElementById('submit');
-                        var disableCheckbox = document.getElementById('disableFieldsCheckbox');
-
-                        // Initial check on page load
-                        updateButtonVisibility();
-
-                        // Add event listeners to the submit buttons
-                        submit2Button.addEventListener('click', function() {
-                            form.action = 'goal_db_update.php';
-                        });
-
-                        submit3Button.addEventListener('click', function() {
-                            form.action = 'goal_db_add.php';
-                        });
-
-                        submit1Button.addEventListener('click', function() {
-                            form.action = 'process.php';
-                        });
-
-                        // Add an event listener to the checkbox
-                        disableCheckbox.addEventListener('change', function() {
-                            updateButtonVisibility();
-                        });
-
-                        function updateButtonVisibility() {
-                            // If the checkbox is checked, show Update and Add New buttons, and hide Submit button
-                            if (disableCheckbox.checked) {
-                                submit2Button.style.display = 'inline-block';
-                                submit3Button.style.display = 'inline-block';
-                                submit1Button.style.display = 'none';
-                            } else {
-                                // If the checkbox is unchecked, show Submit button, and hide Update and Add New buttons
-                                submit2Button.style.display = 'none';
-                                submit3Button.style.display = 'none';
-                                submit1Button.style.display = 'inline-block';
-                            }
-                        }
-                    </script>
-                    <br><br>
-                </form>
-
-            <?php } ?>
-        <?php
-        } else if ($role_search == null) {
-        ?>
-            <p>Please enter the Student ID.</p>
-        <?php
-        } else {
-        ?>
-            <p>We could not find any records matching the entered Student ID.</p>
-        <?php } ?>
-    </div>
-
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Bootstrap JS -->
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         function checkAssociateNumbers() {
@@ -550,32 +586,6 @@ if (@$_POST['form-type'] == "appraisee_response") {
             return true;
         }
     </script>
-
-
-    <!-- <script>
-        var form = document.getElementById('process'), // select form by ID
-            btn1 = document.querySelectorAll('button')[0];
-
-        btn1.addEventListener('click', lockForm);
-
-        function lockForm() {
-            if (form.classList.toggle('locked')) {
-                // Form is now locked
-                btn1.textContent = 'Unlock Form';
-                [].slice.call(form.elements).forEach(function(item) {
-                    item.disabled = true;
-                });
-            } else {
-                // Form is now unlocked
-                btn1.textContent = 'Lock Form';
-                [].slice.call(form.elements).forEach(function(item) {
-                    item.disabled = false;
-                });
-            }
-        }
-        // Lock the form when the page is loaded
-        lockForm();
-    </script> -->
     <script>
         $(document).ready(function() {
             $('input[required], select[required], textarea[required]').each(function() {

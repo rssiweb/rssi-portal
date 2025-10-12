@@ -961,7 +961,7 @@
         id: 'work',
         linkId: 'gpsLink',
         url: 'gps.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'gpsLink',
         url: 'gps_history.php'
@@ -1060,6 +1060,24 @@
         id: 'performance',
         linkId: 'my_appraisalLink',
         url: 'ipf-management.php'
+      }, {
+        id: 'performance',
+        linkId: 'my_appraisalLink',
+        url: 'manager_response.php'
+      },
+      {
+        id: 'performance',
+        linkId: 'my_appraisalLink',
+        url: 'appraisee_response.php'
+      },
+      {
+        id: 'performance',
+        linkId: 'my_appraisalLink',
+        url: 'reviewer_response.php'
+      },{
+        id: 'performance',
+        linkId: 'my_appraisalLink',
+        url: 'process.php'
       },
       {
         id: 'work',

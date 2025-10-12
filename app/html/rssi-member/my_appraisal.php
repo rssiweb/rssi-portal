@@ -279,7 +279,7 @@ function displayTDs($array)
                                 <?php
                                 if ($role == 'Admin') { ?>
                                     <div class="col" style="display: inline-block; width:100%; text-align:right">
-                                        <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                                        <span class="noticea"><a href="process.php"  title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
                                     </div>
                                 <?php } ?>
 
@@ -386,7 +386,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -478,7 +478,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -571,7 +571,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
 
