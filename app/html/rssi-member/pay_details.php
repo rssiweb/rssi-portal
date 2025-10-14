@@ -79,29 +79,46 @@ if (!$result) {
     exit;
 }
 
-// Initialize total net pay variable
-$totalNetPay = 0;
 $totalGrossPay = 0;
+$totalNetPay = 0;
 
 // Loop through the payslip entries
 while ($row = pg_fetch_assoc($result)) {
     $payslipEntryID = $row['payslip_entry_id'];
 
-    // Query to get the total earnings for each payslip entry
-    $earningsQuery = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslipEntryID' AND components = 'Earning' AND subcategory !='Bonus Payout'") or die(pg_last_error());
-    $earningsResult = pg_fetch_assoc($earningsQuery);
-    $earnings = $earningsResult['sum'];
+    // --- Earnings excluding Bonus Payout (for Gross Pay) ---
+    $grossEarningsQuery = pg_query($con, "
+        SELECT COALESCE(SUM(amount), 0) AS total_gross_earning
+        FROM payslip_component 
+        WHERE payslip_entry_id = '$payslipEntryID'
+        AND components = 'Earning'
+        AND subcategory != 'Bonus Payout'
+    ") or die(pg_last_error());
+    $grossEarnings = pg_fetch_result($grossEarningsQuery, 0, 'total_gross_earning');
 
-    // Query to get the total deductions for each payslip entry
-    $deductionsQuery = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslipEntryID' AND components = 'Deduction'") or die(pg_last_error());
-    $deductionsResult = pg_fetch_assoc($deductionsQuery);
-    $deductions = $deductionsResult['sum'];
+    // --- Earnings including Bonus Payout (for Net Pay) ---
+    $netEarningsQuery = pg_query($con, "
+        SELECT COALESCE(SUM(amount), 0) AS total_net_earning
+        FROM payslip_component 
+        WHERE payslip_entry_id = '$payslipEntryID'
+        AND components = 'Earning'
+    ") or die(pg_last_error());
+    $netEarnings = pg_fetch_result($netEarningsQuery, 0, 'total_net_earning');
 
-    // Calculate the net pay
-    $grossPay = $earnings;
-    $netPay = $earnings - $deductions;
+    // --- Deductions (all included) ---
+    $deductionsQuery = pg_query($con, "
+        SELECT COALESCE(SUM(amount), 0) AS total_deduction
+        FROM payslip_component 
+        WHERE payslip_entry_id = '$payslipEntryID'
+        AND components = 'Deduction'
+    ") or die(pg_last_error());
+    $deductions = pg_fetch_result($deductionsQuery, 0, 'total_deduction');
 
-    // Add the net pay to the total net pay
+    // --- Calculate Gross and Net Pay ---
+    $grossPay = $grossEarnings;                    // Excludes Bonus Payout
+    $netPay = $netEarnings - $deductions;          // Includes Bonus Payout
+
+    // --- Add to totals ---
     $totalGrossPay += $grossPay;
     $totalNetPay += $netPay;
 }
@@ -290,13 +307,36 @@ $resultArr = pg_fetch_all($result);
                                             <?php foreach ($resultArr as $array):
                                                 $payslip_entry_id = $array['payslip_entry_id'];
 
-                                                $result_component_earning_total = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslip_entry_id' AND components = 'Earning'");
+                                                // --- Earnings excluding Bonus Payout (for total_earning / Gross) ---
+                                                $result_component_earning_total = pg_query($con, "
+                                                    SELECT COALESCE(SUM(amount), 0) 
+                                                    FROM payslip_component 
+                                                    WHERE payslip_entry_id = '$payslip_entry_id' 
+                                                    AND components = 'Earning' 
+                                                    AND subcategory != 'Bonus Payout'
+                                                ");
                                                 $total_earning = pg_fetch_result($result_component_earning_total, 0, 0);
 
-                                                $result_component_deduction_total = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslip_entry_id' AND components = 'Deduction'");
+                                                // --- Earnings including Bonus Payout (for Net Pay) ---
+                                                $result_component_earning_with_bonus = pg_query($con, "
+                                                    SELECT COALESCE(SUM(amount), 0) 
+                                                    FROM payslip_component 
+                                                    WHERE payslip_entry_id = '$payslip_entry_id' 
+                                                    AND components = 'Earning'
+                                                ");
+                                                $earning_including_bonus = pg_fetch_result($result_component_earning_with_bonus, 0, 0);
+
+                                                // --- Deductions (all included) ---
+                                                $result_component_deduction_total = pg_query($con, "
+                                                    SELECT COALESCE(SUM(amount), 0) 
+                                                    FROM payslip_component 
+                                                    WHERE payslip_entry_id = '$payslip_entry_id' 
+                                                    AND components = 'Deduction'
+                                                ");
                                                 $total_deduction = pg_fetch_result($result_component_deduction_total, 0, 0);
 
-                                                $net_pay = $total_earning - $total_deduction;
+                                                // --- Net Pay (includes Bonus Payout) ---
+                                                $net_pay = $earning_including_bonus - $total_deduction;
                                             ?>
                                                 <tr>
                                                     <td><?= htmlspecialchars($array['payslip_entry_id']) ?></td>
