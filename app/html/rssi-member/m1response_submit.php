@@ -27,7 +27,7 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
 
     // Collect the manager remarks and rating obtained from $_POST and store them in arrays
     for ($i = 1; $i <= 20; $i++) {
-        $manager_remarks[$i] = $_POST['manager_remarks_' . $i];
+        $manager_remarks[$i] = $_POST['manager_remarks_' . $i] ?? null;
         $rating_obtained[$i] = isset($_POST['rating_obtained_' . $i]) ? (int)$_POST['rating_obtained_' . $i] : null;
     }
 

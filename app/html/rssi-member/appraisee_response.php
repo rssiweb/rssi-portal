@@ -329,7 +329,7 @@ if (!$result) {
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_1">
                                                                     <?php echo $array['parameter_1'] ?>
                                                                 </td>
                                                                 <td>
@@ -345,7 +345,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_2">
                                                                     <?php echo $array['parameter_2'] ?>
                                                                 </td>
                                                                 <td>
@@ -361,7 +361,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_3">
                                                                     <?php echo $array['parameter_3'] ?>
                                                                 </td>
                                                                 <td>
@@ -377,7 +377,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_4">
                                                                     <?php echo $array['parameter_4'] ?>
                                                                 </td>
                                                                 <td>
@@ -393,7 +393,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_5">
                                                                     <?php echo $array['parameter_5'] ?>
                                                                 </td>
                                                                 <td>
@@ -409,7 +409,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_6">
                                                                     <?php echo $array['parameter_6'] ?>
                                                                 </td>
                                                                 <td>
@@ -425,7 +425,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_7">
                                                                     <?php echo $array['parameter_7'] ?>
                                                                 </td>
                                                                 <td>
@@ -441,7 +441,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_8">
                                                                     <?php echo $array['parameter_8'] ?>
                                                                 </td>
                                                                 <td>
@@ -457,7 +457,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_9">
                                                                     <?php echo $array['parameter_9'] ?>
                                                                 </td>
                                                                 <td>
@@ -473,7 +473,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_10">
                                                                     <?php echo $array['parameter_10'] ?>
                                                                 </td>
                                                                 <td>
@@ -506,7 +506,7 @@ if (!$result) {
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_11">
                                                                     <?php echo $array['parameter_11'] ?>
                                                                 </td>
                                                                 <td>
@@ -522,7 +522,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_12">
                                                                     <?php echo $array['parameter_12'] ?>
                                                                 </td>
                                                                 <td>
@@ -538,7 +538,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_13">
                                                                     <?php echo $array['parameter_13'] ?>
                                                                 </td>
                                                                 <td>
@@ -554,7 +554,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_14">
                                                                     <?php echo $array['parameter_14'] ?>
                                                                 </td>
                                                                 <td>
@@ -570,7 +570,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_15">
                                                                     <?php echo $array['parameter_15'] ?>
                                                                 </td>
                                                                 <td>
@@ -586,7 +586,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_16">
                                                                     <?php echo $array['parameter_16'] ?>
                                                                 </td>
                                                                 <td>
@@ -602,7 +602,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_17">
                                                                     <?php echo $array['parameter_17'] ?>
                                                                 </td>
                                                                 <td>
@@ -618,7 +618,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_18">
                                                                     <?php echo $array['parameter_18'] ?>
                                                                 </td>
                                                                 <td>
@@ -634,7 +634,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_19">
                                                                     <?php echo $array['parameter_19'] ?>
                                                                 </td>
                                                                 <td>
@@ -650,7 +650,7 @@ if (!$result) {
                                                                 </td>
                                                             </tr>
                                                             <tr>
-                                                                <td>
+                                                                <td id="parameter_20">
                                                                     <?php echo $array['parameter_20'] ?>
                                                                 </td>
                                                                 <td>
@@ -957,6 +957,24 @@ if (!$result) {
                 return false;
             }
         })
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            for (let i = 1; i <= 20; i++) {
+                const parameterCell = document.getElementById('parameter_' + i);
+                const remarksTextarea = document.getElementById('appraisee_response_' + i);
+
+                // Proceed only if elements exist
+                if (parameterCell && remarksTextarea) {
+                    const parameterValue = parameterCell.textContent.trim();
+
+                    // Disable fields if parameter cell is empty
+                    if (!parameterValue) {
+                        remarksTextarea.disabled = true;
+                    }
+                }
+            }
+        });
     </script>
 </body>
 

@@ -338,7 +338,6 @@ if (!$result) {
                                                             <tr>
                                                                 <th scope="col" id="cw">Parameter</th>
                                                                 <th scope="col" id="cw">Expectation</th>
-                                                                <!-- <th scope="col">Max Rating</th> -->
                                                                 <th scope="col">Appraisee Response</th>
                                                                 <th scope="col">Rating Obtained</th>
                                                                 <th scope="col">Manager Remarks</th>
@@ -346,9 +345,8 @@ if (!$result) {
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_1'] ?></td>
+                                                                <td id="parameter_1"><?php echo $array['parameter_1'] ?></td>
                                                                 <td><?php echo $array['expectation_1'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_1'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_1" id="appraisee_response_1" disabled><?php echo $array['appraisee_response_1'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_1" id="rating_obtained_1" class="form-select rating-select">
@@ -372,9 +370,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_1" id="manager_remarks_1"><?php echo $array['manager_remarks_1'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_2'] ?></td>
+                                                                <td id="parameter_2"><?php echo $array['parameter_2'] ?></td>
                                                                 <td><?php echo $array['expectation_2'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_2'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_2" id="appraisee_response_2" disabled><?php echo $array['appraisee_response_2'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_2" id="rating_obtained_2" class="form-select rating-select">
@@ -397,9 +394,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_2" id="manager_remarks_2"><?php echo $array['manager_remarks_2'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_3'] ?></td>
+                                                                <td id="parameter_3"><?php echo $array['parameter_3'] ?></td>
                                                                 <td><?php echo $array['expectation_3'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_3'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_3" id="appraisee_response_3" disabled><?php echo $array['appraisee_response_3'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_3" id="rating_obtained_3" class="form-select rating-select">
@@ -422,9 +418,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_3" id="manager_remarks_3"><?php echo $array['manager_remarks_3'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_4'] ?></td>
+                                                                <td id="parameter_4"><?php echo $array['parameter_4'] ?></td>
                                                                 <td><?php echo $array['expectation_4'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_4'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_4" id="appraisee_response_4" disabled><?php echo $array['appraisee_response_4'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_4" id="rating_obtained_4" class="form-select rating-select">
@@ -447,9 +442,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_4" id="manager_remarks_4"><?php echo $array['manager_remarks_4'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_5'] ?></td>
+                                                                <td id="parameter_5"><?php echo $array['parameter_5'] ?></td>
                                                                 <td><?php echo $array['expectation_5'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_5'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_5" id="appraisee_response_5" disabled><?php echo $array['appraisee_response_5'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_5" id="rating_obtained_5" class="form-select rating-select">
@@ -472,9 +466,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_5" id="manager_remarks_5"><?php echo $array['manager_remarks_5'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_6'] ?></td>
+                                                                <td id="parameter_6"><?php echo $array['parameter_6'] ?></td>
                                                                 <td><?php echo $array['expectation_6'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_6'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_6" id="appraisee_response_6" disabled><?php echo $array['appraisee_response_6'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_6" id="rating_obtained_6" class="form-select rating-select">
@@ -497,9 +490,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_6" id="manager_remarks_6"><?php echo $array['manager_remarks_6'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_7'] ?></td>
+                                                                <td id="parameter_7"><?php echo $array['parameter_7'] ?></td>
                                                                 <td><?php echo $array['expectation_7'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_7'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_7" id="appraisee_response_7" disabled><?php echo $array['appraisee_response_7'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_7" id="rating_obtained_7" class="form-select rating-select">
@@ -522,9 +514,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_7" id="manager_remarks_7"><?php echo $array['manager_remarks_7'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_8'] ?></td>
+                                                                <td id="parameter_8"><?php echo $array['parameter_8'] ?></td>
                                                                 <td><?php echo $array['expectation_8'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_8'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_8" id="appraisee_response_8" disabled><?php echo $array['appraisee_response_8'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_8" id="rating_obtained_8" class="form-select rating-select">
@@ -547,9 +538,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_8" id="manager_remarks_8"><?php echo $array['manager_remarks_8'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_9'] ?></td>
+                                                                <td id="parameter_9"><?php echo $array['parameter_9'] ?></td>
                                                                 <td><?php echo $array['expectation_9'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_9'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_9" id="appraisee_response_9" disabled><?php echo $array['appraisee_response_9'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_9" id="rating_obtained_9" class="form-select rating-select">
@@ -572,9 +562,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_9" id="manager_remarks_9"><?php echo $array['manager_remarks_9'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_10'] ?></td>
+                                                                <td id="parameter_10"><?php echo $array['parameter_10'] ?></td>
                                                                 <td><?php echo $array['expectation_10'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_10'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_10" id="appraisee_response_10" disabled><?php echo $array['appraisee_response_10'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_10" id="rating_obtained_10" class="form-select rating-select">
@@ -609,7 +598,6 @@ if (!$result) {
                                                             <tr>
                                                                 <th scope="col" id="cw">Parameter</th>
                                                                 <th scope="col" id="cw1">Expectation</th>
-                                                                <!-- <th scope="col">Max Rating</th> -->
                                                                 <th scope="col">Appraisee Response</th>
                                                                 <th scope="col">Rating Obtained</th>
                                                                 <th scope="col">Manager Remarks</th>
@@ -617,9 +605,8 @@ if (!$result) {
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_11'] ?></td>
+                                                                <td id="parameter_11"><?php echo $array['parameter_11'] ?></td>
                                                                 <td><?php echo $array['expectation_11'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_11'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_11" id="appraisee_response_11" disabled><?php echo $array['appraisee_response_11'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_11" id="rating_obtained_11" class="form-select rating-select">
@@ -642,9 +629,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_11" id="manager_remarks_11"><?php echo $array['manager_remarks_11'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_12'] ?></td>
+                                                                <td id="parameter_12"><?php echo $array['parameter_12'] ?></td>
                                                                 <td><?php echo $array['expectation_12'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_12'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_12" id="appraisee_response_12" disabled><?php echo $array['appraisee_response_12'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_12" id="rating_obtained_12" class="form-select rating-select">
@@ -667,9 +653,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_12" id="manager_remarks_12"><?php echo $array['manager_remarks_12'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_13'] ?></td>
+                                                                <td id="parameter_13"><?php echo $array['parameter_13'] ?></td>
                                                                 <td><?php echo $array['expectation_13'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_13'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_13" id="appraisee_response_13" disabled><?php echo $array['appraisee_response_13'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_13" id="rating_obtained_13" class="form-select rating-select">
@@ -692,9 +677,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_13" id="manager_remarks_13"><?php echo $array['manager_remarks_13'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_14'] ?></td>
+                                                                <td id="parameter_14"><?php echo $array['parameter_14'] ?></td>
                                                                 <td><?php echo $array['expectation_14'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_14'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_14" id="appraisee_response_14" disabled><?php echo $array['appraisee_response_14'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_14" id="rating_obtained_14" class="form-select rating-select">
@@ -717,9 +701,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_14" id="manager_remarks_14"><?php echo $array['manager_remarks_14'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_15'] ?></td>
+                                                                <td id="parameter_15"><?php echo $array['parameter_15'] ?></td>
                                                                 <td><?php echo $array['expectation_15'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_15'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_15" id="appraisee_response_15" disabled><?php echo $array['appraisee_response_15'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_15" id="rating_obtained_15" class="form-select rating-select">
@@ -742,9 +725,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_15" id="manager_remarks_15"><?php echo $array['manager_remarks_15'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_16'] ?></td>
+                                                                <td id="parameter_16"><?php echo $array['parameter_16'] ?></td>
                                                                 <td><?php echo $array['expectation_16'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_16'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_16" id="appraisee_response_16" disabled><?php echo $array['appraisee_response_16'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_16" id="rating_obtained_16" class="form-select rating-select">
@@ -767,9 +749,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_16" id="manager_remarks_16"><?php echo $array['manager_remarks_16'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_17'] ?></td>
+                                                                <td id="parameter_17"><?php echo $array['parameter_17'] ?></td>
                                                                 <td><?php echo $array['expectation_17'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_17'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_17" id="appraisee_response_17" disabled><?php echo $array['appraisee_response_17'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_17" id="rating_obtained_17" class="form-select rating-select">
@@ -792,9 +773,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_17" id="manager_remarks_17"><?php echo $array['manager_remarks_17'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_18'] ?></td>
+                                                                <td id="parameter_18"><?php echo $array['parameter_18'] ?></td>
                                                                 <td><?php echo $array['expectation_18'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_18'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_18" id="appraisee_response_18" disabled><?php echo $array['appraisee_response_18'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_18" id="rating_obtained_18" class="form-select rating-select">
@@ -817,9 +797,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_18" id="manager_remarks_18"><?php echo $array['manager_remarks_18'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_19'] ?></td>
+                                                                <td id="parameter_19"><?php echo $array['parameter_19'] ?></td>
                                                                 <td><?php echo $array['expectation_19'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_19'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_19" id="appraisee_response_19" disabled><?php echo $array['appraisee_response_19'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_19" id="rating_obtained_19" class="form-select rating-select">
@@ -842,9 +821,8 @@ if (!$result) {
                                                                 <td><textarea name="manager_remarks_19" id="manager_remarks_19"><?php echo $array['manager_remarks_19'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
-                                                                <td><?php echo $array['parameter_20'] ?></td>
+                                                                <td id="parameter_20"><?php echo $array['parameter_20'] ?></td>
                                                                 <td><?php echo $array['expectation_20'] ?></td>
-                                                                <!-- <td><?php echo $array['max_rating_20'] ?></td> -->
                                                                 <td><textarea name="appraisee_response_20" id="appraisee_response_20" disabled><?php echo $array['appraisee_response_20'] ?></textarea></td>
                                                                 <td>
                                                                     <select name="rating_obtained_20" id="rating_obtained_20" class="form-select rating-select">
@@ -1107,6 +1085,26 @@ if (!$result) {
                 thArray.forEach((th, index) => {
                     th.style.width = colWidths[index] + 'px';
                 });
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            for (let i = 1; i <= 20; i++) {
+                const parameterCell = document.getElementById('parameter_' + i);
+                const ratingSelect = document.getElementById('rating_obtained_' + i);
+                const remarksTextarea = document.getElementById('manager_remarks_' + i);
+
+                // Proceed only if elements exist
+                if (parameterCell && ratingSelect && remarksTextarea) {
+                    const parameterValue = parameterCell.textContent.trim();
+
+                    // Disable fields if parameter cell is empty
+                    if (!parameterValue) {
+                        ratingSelect.disabled = true;
+                        remarksTextarea.disabled = true;
+                    }
+                }
             }
         });
     </script>

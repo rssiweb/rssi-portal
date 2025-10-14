@@ -23,7 +23,7 @@ if (@$_POST['form-type'] === "appraisee_response_update") {
 
     // Collect the appraisee responses from $_POST and store them in the array
     for ($i = 1; $i <= 20; $i++) {
-        $appraisee_responses[$i] = $_POST['appraisee_response_' . $i];
+        $appraisee_responses[$i] = $_POST['appraisee_response_' . $i] ?? null;
     }
 
     // Prepare the SQL update query with placeholders
