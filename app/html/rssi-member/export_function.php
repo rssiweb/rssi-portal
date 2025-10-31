@@ -1259,18 +1259,40 @@ attendance_data AS (
             ELSE NULL
         END AS late_status,
 
-        -- Exit status logic remains unchanged
-        CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'exit'
-                AND d.attendance_date = DATE(e.end_date_time)
-            ) THEN 'Exc.'
-            ELSE NULL
-        END AS exit_status,
+        -- Exit status logic with Early Exit (EE) condition
+CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM exception_requests e
+        WHERE e.submitted_by = m.associatenumber
+        AND e.status = 'Approved'
+        AND e.exception_type = 'exit'
+        AND d.attendance_date = DATE(e.end_date_time)
+    ) THEN 'Exc.'
+    -- Early Exit condition: no exception found AND punch_out exists AND punch_out is before exit_time
+    -- EXCEPT when it's a half-day leave (HF status) - don't show EE for approved half-day leaves
+    WHEN NOT EXISTS (
+        SELECT 1
+        FROM exception_requests e
+        WHERE e.submitted_by = m.associatenumber
+        AND e.status = 'Approved'
+        AND e.exception_type = 'exit'
+        AND d.attendance_date = DATE(e.end_date_time)
+    ) AND p.punch_out IS NOT NULL 
+       AND ds.exit_time IS NOT NULL
+       AND EXTRACT(EPOCH FROM p.punch_out::time) < EXTRACT(EPOCH FROM ds.exit_time)
+       -- Exclude half-day leave cases
+       AND NOT EXISTS (
+           SELECT 1
+           FROM leavedb_leavedb l
+           WHERE l.applicantid = m.associatenumber
+           AND l.status = 'Approved'
+           AND l.halfday = 1
+           AND l.shift IN ('AFN', 'MSH', 'ASH')
+           AND d.attendance_date BETWEEN l.fromdate AND l.todate
+       ) THEN 'EE'
+    ELSE NULL
+END AS exit_status,
 
         -- Status 'Exc.' for overridden punch-in time from exception
         CASE
