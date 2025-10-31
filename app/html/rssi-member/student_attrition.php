@@ -1148,7 +1148,7 @@ if (!empty($students)) {
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
                                                     <tr>
-                                                        <td colspan="10" class="text-center py-4">
+                                                        <td colspan="12" class="text-center py-4">
                                                             <i class="fas fa-exclamation-circle fa-2x mb-3 text-muted"></i>
                                                             <p class="text-muted">No students found with the selected filters.</p>
                                                         </td>

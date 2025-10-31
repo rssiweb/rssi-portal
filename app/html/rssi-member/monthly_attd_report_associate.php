@@ -788,6 +788,32 @@ pg_close($con);
                                 </div>
                             </div>
                         </div>
+                        <!-- EE (Early Exit) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingEE">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEE" aria-expanded="false" aria-controls="collapseEE">
+                                    EE (Early Exit)
+                                </button>
+                            </h2>
+                            <div id="collapseEE" class="accordion-collapse collapse" aria-labelledby="headingEE" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <p>This status is assigned when:</p>
+                                    <ol>
+                                        <li>The associate punches out before their scheduled exit time.</li>
+                                        <li>There is no approved exit exception request for that day.</li>
+                                        <li>It is not a half-day leave with afternoon shift (AFN, ASH, MSH).</li>
+                                    </ol>
+                                    <p>Example:</p>
+                                    <ul>
+                                        <li>Scheduled exit time: 6:30 PM</li>
+                                        <li>Punch-out time: 6:15 PM (15 minutes early)</li>
+                                        <li>No exit exception approved: Status is EE.</li>
+                                    </ul>
+                                    <p><strong>Note:</strong> Early exit is not marked if the associate has an approved half-day leave for the afternoon shift.</p>
+                                    <p>Result: <strong>EE</strong> (Early Exit)</p>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Exc. (Exception) -->
                         <div class="accordion-item">
