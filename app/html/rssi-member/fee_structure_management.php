@@ -503,6 +503,32 @@ if (!empty($statusCondition)) {
         .reset-btn {
             margin-top: 32px;
         }
+
+        /* Add row selection styles */
+        .table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .table tbody tr.selected {
+            background-color: #e3f2fd !important;
+            border-left: 3px solid #0d6efd;
+        }
+
+        /* Ensure checkboxes are properly aligned */
+        .table .form-check-input {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* Disable row selection for inactive fees */
+        .table tbody tr.inactive-fee {
+            cursor: default;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -1123,6 +1149,67 @@ if (!empty($statusCondition)) {
                 deactivateModal.show();
             });
 
+            // Row selection functionality
+            function setupRowSelection(tableType) {
+                const tableContainer = $(`#${tableType.toLowerCase()}BulkActions`).closest('.mb-4').find('.table-responsive');
+                const table = tableContainer.find('table');
+                const checkboxes = $(`.fee-checkbox[data-fee-type="${tableType.toLowerCase()}"]`);
+
+                console.log(`Setting up row selection for ${tableType}, found ${checkboxes.length} checkboxes`);
+
+                // Remove any existing click handlers to prevent duplicates
+                table.find('tbody tr').off('click.rowSelection');
+
+                // Handle row click
+                table.find('tbody tr').on('click.rowSelection', function(e) {
+                    // Don't trigger if clicking on the checkbox itself or actions dropdown
+                    if ($(e.target).is('input[type="checkbox"]') ||
+                        $(e.target).closest('.dropdown, .btn-deactivate, .btn-deactivate-student, .dropdown-toggle, .dropdown-menu').length) {
+                        return;
+                    }
+
+                    const checkbox = $(this).find('.fee-checkbox');
+                    const isActive = !$(this).hasClass('inactive-fee');
+
+                    console.log('Row clicked, checkbox found:', checkbox.length, 'isActive:', isActive);
+
+                    // Only allow selection for active fees
+                    if (checkbox.length > 0 && isActive) {
+                        const isChecked = checkbox.prop('checked');
+                        checkbox.prop('checked', !isChecked).trigger('change');
+                        console.log('Checkbox toggled to:', !isChecked);
+                    }
+                });
+
+                // Remove any existing change handlers to prevent duplicates
+                checkboxes.off('change.rowSelection');
+
+                // Handle checkbox change to update row styling
+                checkboxes.on('change.rowSelection', function() {
+                    const row = $(this).closest('tr');
+                    if ($(this).is(':checked')) {
+                        row.addClass('selected');
+                    } else {
+                        row.removeClass('selected');
+                    }
+
+                    console.log('Checkbox changed, row selected:', $(this).is(':checked'));
+
+                    // Update bulk actions
+                    updateBulkActions(tableType);
+                });
+
+                // Initialize selected state for existing checkboxes
+                checkboxes.each(function() {
+                    const row = $(this).closest('tr');
+                    if ($(this).is(':checked')) {
+                        row.addClass('selected');
+                    } else {
+                        row.removeClass('selected');
+                    }
+                });
+            }
+
             // Bulk Selection Functionality
             function setupBulkActions(tableType) {
                 const selectAll = $(`#selectAll${tableType}`);
@@ -1132,27 +1219,29 @@ if (!empty($statusCondition)) {
                 const applyBtn = $(`#apply${tableType}BulkAction`);
                 const cancelBtn = $(`#cancel${tableType}Selection`);
 
+                console.log(`Setting up bulk actions for ${tableType}, found ${checkboxes.length} checkboxes`);
+
                 // Select All functionality
-                selectAll.on('change', function() {
+                selectAll.off('change.bulkActions').on('change.bulkActions', function() {
                     const isChecked = $(this).is(':checked');
-                    checkboxes.prop('checked', isChecked);
+                    checkboxes.prop('checked', isChecked).trigger('change');
                     updateBulkActions(tableType);
                 });
 
                 // Individual checkbox change
-                checkboxes.on('change', function() {
+                checkboxes.off('change.bulkActions').on('change.bulkActions', function() {
                     updateBulkActions(tableType);
                 });
 
                 // Cancel selection
-                cancelBtn.on('click', function() {
-                    checkboxes.prop('checked', false);
+                cancelBtn.off('click').on('click', function() {
+                    checkboxes.prop('checked', false).trigger('change');
                     selectAll.prop('checked', false);
                     bulkActions.hide();
                 });
 
                 // Apply bulk action
-                applyBtn.on('click', function() {
+                applyBtn.off('click').on('click', function() {
                     const selectedIds = checkboxes.filter(':checked').map(function() {
                         return $(this).data('fee-id');
                     }).get();
@@ -1173,6 +1262,12 @@ if (!empty($statusCondition)) {
                         bulkModal.show();
                     }
                 });
+
+                // Initialize row selection for this table type
+                setupRowSelection(tableType);
+
+                // Initial update
+                updateBulkActions(tableType);
             }
 
             function updateBulkActions(tableType) {
@@ -1191,11 +1286,15 @@ if (!empty($statusCondition)) {
                 // Update select all checkbox
                 const totalActive = checkboxes.length;
                 $(`#selectAll${tableType}`).prop('checked', selectedCount === totalActive && totalActive > 0);
+
+                console.log(`Updated bulk actions for ${tableType}: ${selectedCount} selected out of ${totalActive}`);
             }
 
-            // Initialize bulk actions for both tables
-            setupBulkActions('Standard');
-            setupBulkActions('Student');
+            // Initialize bulk actions and row selection for both tables with delay to ensure DOM is ready
+            setTimeout(() => {
+                setupBulkActions('Standard');
+                setupBulkActions('Student');
+            }, 100);
 
             // Month input handling
             const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1239,6 +1338,15 @@ if (!empty($statusCondition)) {
                     if (tabTrigger) {
                         const tab = new bootstrap.Tab(tabTrigger);
                         tab.show();
+
+                        // Reinitialize bulk actions when tab is shown
+                        setTimeout(() => {
+                            if (tabName === 'multiple') {
+                                setupBulkActions('Standard');
+                            } else if (tabName === 'student-specific') {
+                                setupBulkActions('Student');
+                            }
+                        }, 300);
                     }
                 }
             }
@@ -1252,6 +1360,15 @@ if (!empty($statusCondition)) {
                     urlParams.set('tab', tabName);
                     const newUrl = window.location.pathname + '?' + urlParams.toString();
                     history.replaceState(null, null, newUrl);
+
+                    // Reinitialize bulk actions when tab changes
+                    setTimeout(() => {
+                        if (tabName === 'multiple') {
+                            setupBulkActions('Standard');
+                        } else if (tabName === 'student-specific') {
+                            setupBulkActions('Student');
+                        }
+                    }, 300);
                 }
             });
 
@@ -1284,6 +1401,7 @@ if (!empty($statusCondition)) {
             $('.alert').alert('dispose');
         });
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Set current month as default for all Effective From fields
@@ -1323,6 +1441,7 @@ if (!empty($statusCondition)) {
             }
         });
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const feeTab = document.getElementById('feeTab');
@@ -1373,6 +1492,7 @@ if (!empty($statusCondition)) {
             });
         });
     </script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
@@ -1380,12 +1500,26 @@ if (!empty($statusCondition)) {
                 // Initialize DataTables only if resultArr is not empty
                 $('#feeTable').DataTable({
                     // paging: false,
-                    "order": [] // Disable initial sorting
+                    "order": [], // Disable initial sorting
+                    "drawCallback": function(settings) {
+                        // Re-initialize row selection after DataTables redraws
+                        console.log('DataTables redraw completed, reinitializing row selection');
+                        setTimeout(() => {
+                            setupBulkActions('Standard');
+                        }, 100);
+                    },
+                    "initComplete": function(settings, json) {
+                        console.log('DataTables initialization completed');
+                        setTimeout(() => {
+                            setupBulkActions('Standard');
+                        }, 200);
+                    }
                     // other options...
                 });
             <?php endif; ?>
         });
     </script>
+
     <!-- Initialize Select2 -->
     <script>
         $(document).ready(function() {
@@ -1397,6 +1531,7 @@ if (!empty($statusCondition)) {
             });
         });
     </script>
+
     <script>
         // Add this script to your page
         document.addEventListener('DOMContentLoaded', function() {
