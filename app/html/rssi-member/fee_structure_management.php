@@ -159,6 +159,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
+    // ADD BULK DEACTIVATION CODE RIGHT HERE - AFTER the individual deactivation block
+    elseif (isset($_POST['bulk_deactivate_fees'])) {
+        $feeIds = explode(',', $_POST['fee_ids']);
+        $deactivateDate = $_POST['deactivate_date'];
+        $feeType = $_POST['fee_type'] ?? 'standard';
+
+        // Validate date
+        if (empty($deactivateDate)) {
+            echo "<script>
+                    alert('Please select a deactivation date');
+                    window.location.href = 'fee_structure_management.php';
+                  </script>";
+            exit;
+        }
+
+        // Validate fee IDs
+        $validFeeIds = array_filter($feeIds, function ($id) {
+            return is_numeric($id) && $id > 0;
+        });
+
+        if (empty($validFeeIds)) {
+            echo "<script>
+                    alert('Invalid fee IDs');
+                    window.location.href = 'fee_structure_management.php';
+                  </script>";
+            exit;
+        }
+
+        // Determine which table to update based on fee type
+        $tableName = ($feeType === 'student') ? 'student_specific_fees' : 'fee_structure';
+        $idField = ($feeType === 'student') ? 'id' : 'id';
+
+        // Begin transaction
+        pg_query($con, "BEGIN");
+
+        try {
+            $successCount = 0;
+            $errorIds = [];
+
+            foreach ($validFeeIds as $feeId) {
+                // First verify the fee exists and is active
+                $checkQuery = "SELECT 1 FROM $tableName 
+                              WHERE $idField = $feeId 
+                              AND (effective_until IS NULL OR effective_until >= '$deactivateDate')";
+                $checkResult = pg_query($con, $checkQuery);
+
+                if (pg_num_rows($checkResult) == 0) {
+                    $errorIds[] = $feeId;
+                    continue;
+                }
+
+                // Update effective_until date
+                $updateQuery = "UPDATE $tableName 
+                               SET effective_until = '$deactivateDate'
+                               WHERE $idField = $feeId
+                               AND (effective_until IS NULL OR effective_until > '$deactivateDate')";
+
+                if (pg_query($con, $updateQuery)) {
+                    $successCount++;
+                } else {
+                    $errorIds[] = $feeId;
+                }
+            }
+
+            if ($successCount > 0) {
+                pg_query($con, "COMMIT");
+
+                $message = "Successfully deactivated $successCount fee(s).";
+                if (!empty($errorIds)) {
+                    $message .= " Failed to deactivate " . count($errorIds) . " fee(s) (IDs: " . implode(', ', $errorIds) . ").";
+                }
+
+                echo "<script>
+                        alert('$message');
+                        window.location.href = 'fee_structure_management.php';
+                      </script>";
+            } else {
+                throw new Exception("Failed to deactivate any fees. Please check if the fees are already inactive.");
+            }
+        } catch (Exception $e) {
+            pg_query($con, "ROLLBACK");
+            echo "<script>
+                    alert('Failed to bulk deactivate fees: " . addslashes($e->getMessage()) . "');
+                    window.location.href = 'fee_structure_management.php';
+                  </script>";
+        }
+        exit;
+    }
 }
 
 // Get all categories
@@ -620,10 +708,29 @@ if (!empty($statusCondition)) {
                                                 <!-- Standard Fee Structure Table -->
                                                 <div class="mb-4">
                                                     <h5 class="mb-3"><i class="fas fa-list-alt me-2"></i>Standard Fee Structure</h5>
+                                                    <!-- Bulk Actions for Standard Fees -->
+                                                    <div class="bulk-actions mb-3" id="standardBulkActions" style="display: none;">
+                                                        <div class="d-flex align-items-center gap-2 p-3 bg-light rounded">
+                                                            <span class="fw-medium" id="selectedStandardCount">0 fees selected</span>
+                                                            <select class="form-select form-select-sm" style="width: auto;" id="standardBulkAction">
+                                                                <option value="">Choose action...</option>
+                                                                <option value="deactivate">Deactivate Selected</option>
+                                                            </select>
+                                                            <button class="btn btn-sm btn-danger" id="applyStandardBulkAction">
+                                                                <i class="fas fa-play me-1"></i> Apply
+                                                            </button>
+                                                            <button class="btn btn-sm btn-secondary" id="cancelStandardSelection">
+                                                                <i class="fas fa-times me-1"></i> Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                     <div class="table-responsive">
                                                         <table class="table table-hover" id="feeTable">
                                                             <thead class="table-light">
                                                                 <tr>
+                                                                    <th>
+                                                                        <input type="checkbox" id="selectAllStandard" class="form-check-input">
+                                                                    </th>
                                                                     <th>Class</th>
                                                                     <th>Plan</th>
                                                                     <th>Fee Type</th>
@@ -651,6 +758,11 @@ if (!empty($statusCondition)) {
                                                                         $rowClass = $isActive ? 'active-fee' : 'inactive-fee';
                                                                     ?>
                                                                         <tr>
+                                                                            <td>
+                                                                                <?php if ($isActive): ?>
+                                                                                    <input type="checkbox" class="form-check-input fee-checkbox" data-fee-id="<?= $fee['id'] ?>" data-fee-type="standard">
+                                                                                <?php endif; ?>
+                                                                            </td>
                                                                             <td><?= $fee['class'] ?></td>
                                                                             <td><?= $fee['student_type'] ?></td>
                                                                             <td><?= $fee['category_name'] ?></td>
@@ -745,6 +857,23 @@ if (!empty($statusCondition)) {
                                                 <div>
                                                     <h5 class="mb-3"><i class="fas fa-user-graduate me-2"></i>Student Specific Fees</h5>
 
+                                                    <!-- Bulk Actions for Student Fees -->
+                                                    <div class="bulk-actions mb-3" id="studentBulkActions" style="display: none;">
+                                                        <div class="d-flex align-items-center gap-2 p-3 bg-light rounded">
+                                                            <span class="fw-medium" id="selectedStudentCount">0 fees selected</span>
+                                                            <select class="form-select form-select-sm" style="width: auto;" id="studentBulkAction">
+                                                                <option value="">Choose action...</option>
+                                                                <option value="deactivate">Deactivate Selected</option>
+                                                            </select>
+                                                            <button class="btn btn-sm btn-danger" id="applyStudentBulkAction">
+                                                                <i class="fas fa-play me-1"></i> Apply
+                                                            </button>
+                                                            <button class="btn btn-sm btn-secondary" id="cancelStudentSelection">
+                                                                <i class="fas fa-times me-1"></i> Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
                                                     <!-- Filter Form -->
                                                     <form method="get" class="mb-3">
                                                         <!-- Add this to both filter forms (standard and student-specific) -->
@@ -767,6 +896,9 @@ if (!empty($statusCondition)) {
                                                         <table class="table table-hover">
                                                             <thead class="table-light">
                                                                 <tr>
+                                                                    <th>
+                                                                        <input type="checkbox" id="selectAllStudent" class="form-check-input">
+                                                                    </th>
                                                                     <th>Student</th>
                                                                     <th>Class</th>
                                                                     <th>Category</th>
@@ -791,6 +923,11 @@ if (!empty($statusCondition)) {
                                                                             $isActive = empty($fee['effective_until']) || $fee['effective_until'] >= date('Y-m-d');
                                                                         ?>
                                                                             <tr>
+                                                                                <td>
+                                                                                    <?php if ($isActive): ?>
+                                                                                        <input type="checkbox" class="form-check-input fee-checkbox" data-fee-id="<?= $fee['id'] ?>" data-fee-type="student">
+                                                                                    <?php endif; ?>
+                                                                                </td>
                                                                                 <td><?= htmlspecialchars($fee['studentname']) ?></td>
                                                                                 <td><?= htmlspecialchars($fee['class']) ?></td>
                                                                                 <td><?= htmlspecialchars($fee['category_name']) ?></td>
@@ -890,6 +1027,48 @@ if (!empty($statusCondition)) {
             </div>
         </div>
     </div>
+    <!-- Bulk Deactivation Modal -->
+    <div class="modal fade" id="bulkDeactivateModal" tabindex="-1" aria-labelledby="bulkDeactivateModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="bulkDeactivateModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Bulk Deactivate Fees
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="" id="bulkDeactivateForm">
+                    <input type="hidden" name="bulk_deactivate_fees" value="1">
+                    <input type="hidden" id="bulkFeeIds" name="fee_ids">
+                    <input type="hidden" id="bulkFeeType" name="fee_type" value="">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="bulk_deactivate_date" class="form-label">Deactivation Date:</label>
+                            <input type="date" class="form-control" id="bulk_deactivate_date" name="deactivate_date"
+                                min="<?= date('Y-m-d') ?>" required>
+                        </div>
+                        <div class="alert alert-warning mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1">Warning</h6>
+                                    <p class="mb-0" id="bulkDeactivateMessage">This will deactivate the selected fees.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-check me-1"></i> Confirm Bulk Deactivation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Required JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -898,6 +1077,7 @@ if (!empty($statusCondition)) {
 
     <script>
         $(document).ready(function() {
+            // Initialize Select2
             function initializeSelect2() {
                 $('#spf_id').select2({
                     ajax: {
@@ -930,19 +1110,174 @@ if (!empty($statusCondition)) {
                 initializeSelect2();
             }
 
-            // Handle both standard and student fee deactivation
+            // Handle individual deactivation
             $(document).on('click', '.btn-deactivate, .btn-deactivate-student', function() {
                 const feeId = $(this).data('fee-id');
                 const isStudentFee = $(this).data('fee-type') === 'student';
 
                 $('#deactivateFeeId').val(feeId);
                 $('#deactivateFeeType').val(isStudentFee ? 'student' : 'standard');
-
-                // Set default deactivation date to today
                 $('#deactivate_date').val(new Date().toISOString().split('T')[0]);
 
                 const deactivateModal = new bootstrap.Modal(document.getElementById('deactivateModal'));
                 deactivateModal.show();
+            });
+
+            // Bulk Selection Functionality
+            function setupBulkActions(tableType) {
+                const selectAll = $(`#selectAll${tableType}`);
+                const checkboxes = $(`.fee-checkbox[data-fee-type="${tableType.toLowerCase()}"]`);
+                const bulkActions = $(`#${tableType.toLowerCase()}BulkActions`);
+                const selectedCount = $(`#selected${tableType}Count`);
+                const applyBtn = $(`#apply${tableType}BulkAction`);
+                const cancelBtn = $(`#cancel${tableType}Selection`);
+
+                // Select All functionality
+                selectAll.on('change', function() {
+                    const isChecked = $(this).is(':checked');
+                    checkboxes.prop('checked', isChecked);
+                    updateBulkActions(tableType);
+                });
+
+                // Individual checkbox change
+                checkboxes.on('change', function() {
+                    updateBulkActions(tableType);
+                });
+
+                // Cancel selection
+                cancelBtn.on('click', function() {
+                    checkboxes.prop('checked', false);
+                    selectAll.prop('checked', false);
+                    bulkActions.hide();
+                });
+
+                // Apply bulk action
+                applyBtn.on('click', function() {
+                    const selectedIds = checkboxes.filter(':checked').map(function() {
+                        return $(this).data('fee-id');
+                    }).get();
+
+                    if (selectedIds.length === 0) {
+                        alert('Please select at least one fee to deactivate.');
+                        return;
+                    }
+
+                    const bulkAction = $(`#${tableType.toLowerCase()}BulkAction`).val();
+                    if (bulkAction === 'deactivate') {
+                        $('#bulkFeeIds').val(selectedIds.join(','));
+                        $('#bulkFeeType').val(tableType.toLowerCase());
+                        $('#bulk_deactivate_date').val(new Date().toISOString().split('T')[0]);
+                        $('#bulkDeactivateMessage').text(`This will deactivate ${selectedIds.length} selected ${tableType.toLowerCase()} fees.`);
+
+                        const bulkModal = new bootstrap.Modal(document.getElementById('bulkDeactivateModal'));
+                        bulkModal.show();
+                    }
+                });
+            }
+
+            function updateBulkActions(tableType) {
+                const checkboxes = $(`.fee-checkbox[data-fee-type="${tableType.toLowerCase()}"]`);
+                const selectedCount = checkboxes.filter(':checked').length;
+                const bulkActions = $(`#${tableType.toLowerCase()}BulkActions`);
+                const countElement = $(`#selected${tableType}Count`);
+
+                if (selectedCount > 0) {
+                    countElement.text(`${selectedCount} ${tableType.toLowerCase()} fee(s) selected`);
+                    bulkActions.show();
+                } else {
+                    bulkActions.hide();
+                }
+
+                // Update select all checkbox
+                const totalActive = checkboxes.length;
+                $(`#selectAll${tableType}`).prop('checked', selectedCount === totalActive && totalActive > 0);
+            }
+
+            // Initialize bulk actions for both tables
+            setupBulkActions('Standard');
+            setupBulkActions('Student');
+
+            // Month input handling
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            $('.month-first-day').each(function() {
+                $(this).val(currentMonth);
+                updateDateFromMonthInput(this, true);
+            }).on('change', function() {
+                updateDateFromMonthInput(this, true);
+            });
+
+            $('.month-last-day').each(function() {
+                updateDateFromMonthInput(this, false);
+            }).on('change', function() {
+                updateDateFromMonthInput(this, false);
+            });
+
+            function updateDateFromMonthInput(monthInput, isFirstDay) {
+                if (!monthInput.value) return;
+
+                const [year, month] = monthInput.value.split('-');
+                const date = isFirstDay ?
+                    new Date(year, month - 1, 1) : // First day of month
+                    new Date(year, month, 0); // Last day of month
+
+                const hiddenInput = monthInput.nextElementSibling;
+                if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
+                    hiddenInput.value = date.toISOString().split('T')[0];
+                }
+            }
+
+            // Tab URL handling
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            function activateTabFromQuery() {
+                const tabName = getQueryParam('tab');
+                if (tabName) {
+                    const tabTrigger = document.querySelector(`[data-bs-target="#${tabName}"]`);
+                    if (tabTrigger) {
+                        const tab = new bootstrap.Tab(tabTrigger);
+                        tab.show();
+                    }
+                }
+            }
+
+            // Update URL with tab parameter when a tab is clicked
+            $('#feeTab').on('click', '.nav-link', function(e) {
+                const target = $(this).data('bs-target');
+                if (target) {
+                    const tabName = target.replace('#', '');
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('tab', tabName);
+                    const newUrl = window.location.pathname + '?' + urlParams.toString();
+                    history.replaceState(null, null, newUrl);
+                }
+            });
+
+            // Add tab parameter to filter forms
+            $('form[method="get"]').on('submit', function() {
+                const activeTab = $('.nav-link.active');
+                if (activeTab.length) {
+                    const target = activeTab.data('bs-target');
+                    if (target) {
+                        const tabName = target.replace('#', '');
+                        let tabInput = $(this).find('input[name="tab"]');
+                        if (tabInput.length === 0) {
+                            $(this).append('<input type="hidden" name="tab" value="' + tabName + '">');
+                        } else {
+                            tabInput.val(tabName);
+                        }
+                    }
+                }
+            });
+
+            // Activate correct tab on page load
+            activateTabFromQuery();
+
+            // Handle back/forward navigation
+            $(window).on('popstate', function() {
+                activateTabFromQuery();
             });
 
             // Prevent alert from auto-closing
