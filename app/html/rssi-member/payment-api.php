@@ -1039,7 +1039,7 @@ if ($formtype === "attendance") {
   }
 
   // Check if mandatory training is pending and stop further processing
-  if ($mandatory_training_pending === true) {
+  if ($mandatory_training_pending === 't') {
     echo json_encode(array(
       "error" => "Error recording attendance. Mandatory training is pending for this associate. Please contact support.",
       "mandatory_training_pending" => $mandatory_training_pending
