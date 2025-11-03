@@ -316,6 +316,7 @@ if ($get_id) {
                                             <th>Set by</th>
                                             <th>Changed on</th>
                                             <th>Changed by</th>
+                                            <th>2fc Enabled</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -323,7 +324,7 @@ if ($get_id) {
                                             foreach ($resultArrr as $array) { ?>
                                                 <tr>
                                                     <td>
-                                                        <?php echo @$array['associatenumber'] . @$array['student_id'] . @$array['application_number']; ?>
+                                                        <?php echo @$array['fullname'] . @$array['student_id'] . @$array['application_number']; ?>
                                                         <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
                                                             <p class="badge bg-warning">defaulter</p>
                                                         <?php } ?>
@@ -339,6 +340,9 @@ if ($get_id) {
                                                     </td>
                                                     <td>
                                                         <?php echo $array['password_updated_by']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $array['twofa_enabled'] ?? ''; ?>
                                                     </td>
                                                 </tr>
                                             <?php }
