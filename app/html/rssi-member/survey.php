@@ -45,6 +45,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $otherService = isset($_POST['otherService']) ? $_POST['otherService'] : null;
         $bookAppointment = isset($_POST['bookAppointment']) ? $_POST['bookAppointment'] : 'no';
 
+        // Job assistance data
+        $needJobAssistance = isset($_POST['needJobAssistance']) ? $_POST['needJobAssistance'] : 'no';
+
         // Process "Other" service if selected
         if (in_array('Other', $servicesNeeded) && !empty($otherService)) {
             // Replace "Other" with the specified service
@@ -59,9 +62,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     parent_name, address, contact, house_stay, family_members, 
                     earning_source, additional_info, surveyor_id, family_id, 
                     alt_contact, interest_in_admission, timestamp, other_earning_source_input,
-                    need_assistance, services_needed, book_appointment
+                    need_assistance, services_needed, book_appointment, need_job_assistance
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
                 )";
 
         // Execute the query for survey data insertion
@@ -81,12 +84,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $otherEarningSourceInput,
             $needAssistance,
             json_encode($servicesNeeded),
-            $bookAppointment
+            $bookAppointment,
+            $needJobAssistance
         ));
 
         // Check if the query was successful
         if (!$result) {
-            throw new Exception("Failed to insert survey data");
+            throw new Exception("Failed to insert survey data: " . pg_last_error($con));
         }
 
         // Check if we need to create a public health record and appointment
@@ -151,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ));
 
             if (!$phrResult) {
-                throw new Exception("Failed to insert public health record");
+                throw new Exception("Failed to insert public health record: " . pg_last_error($con));
             }
 
             $phrRow = pg_fetch_assoc($phrResult);
@@ -177,7 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ));
 
                 if (!$appointmentResult) {
-                    throw new Exception("Failed to insert appointment");
+                    throw new Exception("Failed to insert appointment: " . pg_last_error($con));
                 }
             }
         }
@@ -186,6 +190,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (isset($_POST['students']) && is_array($_POST['students']) && count($_POST['students']) > 0 && $interestInAdmission === "yes") {
             // Insert each student's data into the student_data table
             foreach ($_POST['students'] as $student) {
+                // Skip empty student records
+                if (empty($student['name'])) {
+                    continue;
+                }
+
                 // Ensure that array keys exist before accessing them
                 $gender = isset($student['gender']) ? $student['gender'] : null;
                 $grade = isset($student['grade']) ? $student['grade'] : null;
@@ -211,7 +220,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // Check if the query was successful
                 if (!$studentResult) {
-                    throw new Exception("Failed to insert student data");
+                    throw new Exception("Failed to insert student data: " . pg_last_error($con));
+                }
+            }
+        }
+
+        // Check if job seeker data is available and needJobAssistance is "Yes"
+        if (isset($_POST['jobSeekers']) && is_array($_POST['jobSeekers']) && count($_POST['jobSeekers']) > 0 && $needJobAssistance === "yes") {
+
+            // Insert each job seeker's data into the job_seeker_data table
+            foreach ($_POST['jobSeekers'] as $jobSeeker) {
+                // Skip empty rows (in case user added but didn't fill)
+                if (empty($jobSeeker['name']) && empty($jobSeeker['contact'])) {
+                    continue;
+                }
+
+                // Ensure that array keys exist before accessing them
+                $name = isset($jobSeeker['name']) ? pg_escape_string($con, $jobSeeker['name']) : null;
+                $age = isset($jobSeeker['age']) ? intval($jobSeeker['age']) : null;
+                $contact = isset($jobSeeker['contact']) ? pg_escape_string($con, $jobSeeker['contact']) : null;
+                $education = isset($jobSeeker['education']) ? pg_escape_string($con, $jobSeeker['education']) : null;
+                $skills = isset($jobSeeker['skills']) ? pg_escape_string($con, $jobSeeker['skills']) : null;
+                $preferences = isset($jobSeeker['preferences']) ? pg_escape_string($con, $jobSeeker['preferences']) : null;
+
+                // Validate required fields
+                if (empty($name) || empty($age) || empty($contact) || empty($education)) {
+                    continue; // Skip incomplete records
+                }
+
+                // Build the SQL query for job seeker data insertion
+                $jobSeekerQuery = "INSERT INTO job_seeker_data (
+                                    family_id, name, age, contact, education, 
+                                    skills, preferences, created_at
+                                ) VALUES (
+                                    $1, $2, $3, $4, $5, $6, $7, $8
+                                )";
+
+                // Execute the query for job seeker data insertion
+                $jobSeekerResult = pg_query_params($con, $jobSeekerQuery, array(
+                    $family_id,
+                    $name,
+                    $age,
+                    $contact,
+                    $education,
+                    $skills,
+                    $preferences,
+                    $timestamp
+                ));
+
+                // Check if the query was successful
+                if (!$jobSeekerResult) {
+                    throw new Exception("Failed to insert job seeker data: " . pg_last_error($con));
                 }
             }
         }
@@ -452,6 +511,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                 <option value="no">No</option>
                                                                 <option value="yes">Yes</option>
                                                             </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Job Search Assistance Section -->
+                                                <div class="card mb-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Job Search Assistance</h5>
+
+                                                        <!-- Need Job Assistance -->
+                                                        <div class="mb-3">
+                                                            <label for="needJobAssistance" class="form-label">Do you need any assistance regarding job search?</label>
+                                                            <select class="form-select" id="needJobAssistance" name="needJobAssistance" onchange="toggleJobAssistanceSection()" required>
+                                                                <option value="" selected disabled>Select option</option>
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Job Seeker Details -->
+                                                        <div id="jobSeekerSection" style="display: none;">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Job Seeker Details</label>
+                                                                <div id="jobSeekerRows">
+                                                                    <!-- Initial row will be added here -->
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addJobSeekerRow()">
+                                                                    <i class="bi bi-plus"></i> Add Another Job Seeker
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -901,7 +990,211 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Add event listeners for the main toggles
             document.getElementById('needAssistance').addEventListener('change', toggleAppointmentSection);
             document.getElementById('bookAppointment').addEventListener('change', togglePersonalInfoSection);
+            // Add event listener for job assistance
+            document.getElementById('needJobAssistance').addEventListener('change', toggleJobAssistanceSection);
         });
+    </script>
+    <script>
+        // Job Seeker Management
+        let jobSeekerRowCount = 0;
+
+        function toggleJobAssistanceSection() {
+            const needJobAssistance = document.getElementById('needJobAssistance').value;
+            const jobSeekerSection = document.getElementById('jobSeekerSection');
+
+            if (needJobAssistance === 'yes') {
+                jobSeekerSection.style.display = 'block';
+                // Add initial row if none exists
+                if (jobSeekerRowCount === 0) {
+                    addJobSeekerRow();
+                }
+            } else {
+                jobSeekerSection.style.display = 'none';
+                // Clear all rows
+                document.getElementById('jobSeekerRows').innerHTML = '';
+                jobSeekerRowCount = 0;
+            }
+        }
+
+        function addJobSeekerRow() {
+            jobSeekerRowCount++;
+            const jobSeekerRows = document.getElementById('jobSeekerRows');
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'job-seeker-row mb-3 p-3 border rounded';
+            rowDiv.id = `jobSeekerRow-${jobSeekerRowCount}`;
+
+            rowDiv.innerHTML = `
+        <div class="row">
+            <div class="col-md-12 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input same-as-parent" type="checkbox" 
+                           id="sameAsParent-${jobSeekerRowCount}" 
+                           onchange="fillFromParent(${jobSeekerRowCount})">
+                    <label class="form-check-label" for="sameAsParent-${jobSeekerRowCount}">
+                        Same as parent/guardian details
+                    </label>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-2">
+                <label for="jobSeekerName-${jobSeekerRowCount}" class="form-label">Name</label>
+                <input type="text" class="form-control job-seeker-name" 
+                       id="jobSeekerName-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][name]" required>
+            </div>
+            
+            <div class="col-md-3 mb-2">
+                <label for="jobSeekerAge-${jobSeekerRowCount}" class="form-label">Age</label>
+                <input type="number" class="form-control job-seeker-age" 
+                       id="jobSeekerAge-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][age]" min="18" max="65" required>
+            </div>
+            
+            <div class="col-md-3 mb-2">
+                <label for="jobSeekerContact-${jobSeekerRowCount}" class="form-label">Contact Number</label>
+                <input type="tel" class="form-control job-seeker-contact" 
+                       id="jobSeekerContact-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][contact]" 
+                       pattern="[0-9]{10}" required>
+            </div>
+            
+            <div class="col-md-6 mb-2">
+                <label for="jobSeekerEducation-${jobSeekerRowCount}" class="form-label">Educational Qualification</label>
+                <select class="form-select job-seeker-education" 
+                        id="jobSeekerEducation-${jobSeekerRowCount}" 
+                        name="jobSeekers[${jobSeekerRowCount}][education]" required>
+                    <option value="" selected disabled>Select qualification</option>
+                    <!-- Basic Literacy Levels -->
+                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
+
+                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
+                    <option value="Can Read English Only">Can Read – English Only</option>
+                    <option value="Can Read Both">Can Read – Hindi & English</option>
+
+                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
+                    <option value="Can Write English Only">Can Write – English Only</option>
+                    <option value="Can Write Both">Can Write – Hindi & English</option>
+
+                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
+                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
+                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
+
+                    <!-- School Level -->
+                    <option value="Below 5th">Below 5th Standard</option>
+                    <option value="5th Pass">5th Pass</option>
+                    <option value="8th Pass">8th Pass</option>
+                    <option value="Below 10th">Below 10th</option>
+
+                    <option value="10th Pass">10th Pass</option>
+                    <option value="12th Pass">12th Pass</option>
+
+                    <!-- Higher Education -->
+                    <option value="Diploma">Diploma</option>
+                    <option value="Graduate">Graduate</option>
+                    <option value="Post Graduate">Post Graduate</option>
+                    <option value="Doctorate">Doctorate</option>
+
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="col-md-6 mb-2">
+                <label for="jobSeekerSkills-${jobSeekerRowCount}" class="form-label">Skills/Experience</label>
+                <input type="text" class="form-control" 
+                       id="jobSeekerSkills-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][skills]" 
+                       placeholder="e.g., Computer skills, driving, etc.">
+            </div>
+            
+            <div class="col-md-12 mb-2">
+                <label for="jobSeekerPreferences-${jobSeekerRowCount}" class="form-label">Job Preferences</label>
+                <input type="text" class="form-control" 
+                       id="jobSeekerPreferences-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][preferences]" 
+                       placeholder="e.g., Full-time, part-time, specific industry">
+            </div>
+            
+            ${jobSeekerRowCount > 1 ? `
+            <div class="col-md-12">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeJobSeekerRow(${jobSeekerRowCount})">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+            jobSeekerRows.appendChild(rowDiv);
+        }
+
+        function removeJobSeekerRow(rowId) {
+            const rowToRemove = document.getElementById(`jobSeekerRow-${rowId}`);
+            if (rowToRemove) {
+                rowToRemove.remove();
+                // Update the remaining rows if needed
+                updateJobSeekerRowNumbers();
+            }
+        }
+
+        function updateJobSeekerRowNumbers() {
+            // This function would renumber rows if needed after deletion
+            // For simplicity, we'll keep the current implementation
+        }
+
+        function fillFromParent(rowId) {
+            const checkbox = document.getElementById(`sameAsParent-${rowId}`);
+            const nameField = document.getElementById(`jobSeekerName-${rowId}`);
+            const contactField = document.getElementById(`jobSeekerContact-${rowId}`);
+
+            if (checkbox.checked) {
+                // Fill with parent/guardian details
+                const parentName = document.getElementById('parentName').value;
+                const parentContact = document.getElementById('contact').value;
+
+                if (parentName) nameField.value = parentName;
+                if (parentContact) contactField.value = parentContact;
+
+                // Disable these fields when auto-filled
+                nameField.disabled = true;
+                contactField.disabled = true;
+            } else {
+                // Clear and enable fields
+                nameField.value = '';
+                contactField.value = '';
+                nameField.disabled = false;
+                contactField.disabled = false;
+            }
+        }
+
+        function validateForm() {
+            // Existing validation code...
+
+            // Validate job seeker section if needed
+            const needJobAssistance = document.getElementById('needJobAssistance').value;
+            if (needJobAssistance === 'yes') {
+                const jobSeekerRows = document.querySelectorAll('.job-seeker-row');
+                if (jobSeekerRows.length === 0) {
+                    alert('Please add at least one job seeker details.');
+                    return false;
+                }
+
+                // Validate each job seeker row
+                for (let i = 0; i < jobSeekerRows.length; i++) {
+                    const name = jobSeekerRows[i].querySelector('.job-seeker-name').value;
+                    const age = jobSeekerRows[i].querySelector('.job-seeker-age').value;
+                    const contact = jobSeekerRows[i].querySelector('.job-seeker-contact').value;
+                    const education = jobSeekerRows[i].querySelector('.job-seeker-education').value;
+
+                    if (!name || !age || !contact || !education) {
+                        alert('Please fill all required fields for job seeker details.');
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
     </script>
 </body>
 
