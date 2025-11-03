@@ -530,6 +530,12 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                         </span>
                                                     </button>
                                                 </li>
+                                                <!-- Add this to your nav-tabs section after the existing tabs -->
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link <?= $selected_tab == 'calendar' ? 'active' : '' ?>" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab" aria-controls="calendar" aria-selected="<?= $selected_tab == 'calendar' ? 'true' : 'false' ?>">
+                                                        <i class="bi bi-calendar3"></i> Calendar View
+                                                    </button>
+                                                </li>
                                             </ul>
 
                                             <div class="tab-content p-3 border border-top-0 rounded-bottom" id="cleaningTabsContent">
@@ -568,6 +574,39 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
                                                                 <p class="mt-2">Loading completed records...</p>
                                                             </div>
                                                         <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Add this to your tab-content section after the completed tab -->
+                                            <div class="tab-pane fade <?= $selected_tab == 'calendar' ? 'show active' : '' ?>" id="calendar" role="tabpanel" aria-labelledby="calendar-tab">
+                                                <h5 class="mb-3">Cleaning Calendar View</h5>
+                                                <div class="filter-section mb-3">
+                                                    <div class="row g-2 align-items-center">
+                                                        <div class="col-md-3">
+                                                            <label for="calendar_month" class="form-label">Select Month</label>
+                                                            <input type="month" class="form-control" id="calendar_month" name="calendar_month" value="<?= date('Y-m') ?>">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label for="calendar_location" class="form-label">Facility Location</label>
+                                                            <select class="form-select" id="calendar_location" name="calendar_location">
+                                                                <option value="">All Locations</option>
+                                                                <option value="Ground Floor - Student Washroom">Ground Floor - Student Washroom</option>
+                                                                <option value="Ground Floor - Teacher Washroom">Ground Floor - Teacher Washroom</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <button type="button" class="btn btn-primary mt-4" onclick="loadCalendarData()">
+                                                                <i class="bi bi-arrow-clockwise"></i> Load
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="calendar-content">
+                                                    <div class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Loading...</span>
+                                                        </div>
+                                                        <p class="mt-2">Loading calendar data...</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -959,3 +998,188 @@ function displayCleaningRecords($records, $approval_level)
     }
 }
 ?>
+<script>
+    // Define these variables in global scope
+    let initialTab, academicYear;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+        const urlParams = new URLSearchParams(window.location.search);
+        initialTab = urlParams.get('tab'); // Now in global scope
+        academicYear = urlParams.get('academic_year'); // Now in global scope
+
+        // Activate initial tab if specified in URL
+        if (initialTab) {
+            const tabToActivate = document.querySelector(`[data-bs-target="#${initialTab}"]`);
+            if (tabToActivate) {
+                new bootstrap.Tab(tabToActivate).show();
+            }
+        }
+
+        // Update URL when tabs are changed
+        tabLinks.forEach(tabLink => {
+            tabLink.addEventListener('shown.bs.tab', function(event) {
+                const tabName = event.target.getAttribute('data-bs-target').replace('#', '');
+                updateUrlParameters(tabName);
+
+                // Load data for specific tabs
+                if (tabName === 'completed') {
+                    loadCompletedData();
+                } else if (tabName === 'calendar') {
+                    loadCalendarData();
+                }
+            });
+        });
+
+        function updateUrlParameters(tabName) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+
+            // Preserve academic_year if it exists
+            if (academicYear) {
+                url.searchParams.set('academic_year', academicYear);
+            }
+
+            window.history.replaceState({}, '', url);
+        }
+
+        // Initialize with correct parameters on page load
+        if (initialTab || academicYear) {
+            updateUrlParameters(initialTab || 'pending');
+        }
+
+        // Load completed data if completed tab is active on page load
+        if (initialTab === 'completed') {
+            loadCompletedData();
+        }
+
+        // Load calendar data if calendar tab is active on page load
+        if (initialTab === 'calendar') {
+            loadCalendarData();
+        }
+    });
+
+    function loadCompletedData(page = 1) {
+        const academicYear = document.getElementById('academic_year').value;
+        const contentDiv = document.getElementById('completed-content');
+
+        // Show loading state
+        contentDiv.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading completed records...</p>
+        </div>
+    `;
+
+        // Fetch data via AJAX
+        fetch('get_completed_data.php?academic_year=' + encodeURIComponent(academicYear) + '&page=' + page)
+            .then(response => response.text())
+            .then(data => {
+                contentDiv.innerHTML = data;
+                contentDiv.dataset.loaded = 'true';
+                // Update URL with current page
+                updateCompletedPageInUrl(page);
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading completed records. Please try again.
+                </div>
+            `;
+                console.error('Error:', error);
+            });
+    }
+
+    function loadCompletedPage(page) {
+        loadCompletedData(page);
+        return false; // Prevent default anchor behavior
+    }
+
+    function updateCompletedPageInUrl(page) {
+        const url = new URL(window.location);
+        url.searchParams.set('completed_page', page);
+        window.history.replaceState({}, '', url);
+    }
+
+    function validateCheckboxes() {
+        const isCleaned = document.getElementById('is_cleaned').checked;
+        const isSanitized = document.getElementById('is_sanitized').checked;
+        const isRestocked = document.getElementById('is_restocked').checked;
+        const errorDiv = document.getElementById('checkboxError');
+
+        if (!isCleaned && !isSanitized && !isRestocked) {
+            errorDiv.classList.remove('d-none');
+            return false; // Prevent form submission
+        }
+
+        errorDiv.classList.add('d-none');
+        return true; // Allow form submission
+    }
+
+    // Also add event listeners to hide error when any checkbox is checked
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        const errorDiv = document.getElementById('checkboxError');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    errorDiv.classList.add('d-none');
+                }
+            });
+        });
+    });
+
+    // Calendar functions
+    function loadCalendarData() {
+        const month = document.getElementById('calendar_month').value;
+        const location = document.getElementById('calendar_location').value;
+        const academicYear = document.getElementById('academic_year').value;
+        const contentDiv = document.getElementById('calendar-content');
+
+        // Show loading state
+        contentDiv.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading calendar data...</p>
+        </div>
+    `;
+
+        // Build query parameters
+        let params = new URLSearchParams();
+        params.append('month', month);
+        params.append('academic_year', academicYear);
+        if (location) {
+            params.append('location', location);
+        }
+
+        // Fetch data via AJAX
+        fetch('get_fhm_calendar_data.php?' + params.toString())
+            .then(response => response.text())
+            .then(data => {
+                contentDiv.innerHTML = data;
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading calendar data. Please try again.
+                </div>
+            `;
+                console.error('Error:', error);
+            });
+    }
+
+    // Load calendar data when calendar tab is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarTab = document.getElementById('calendar-tab');
+        if (calendarTab) {
+            calendarTab.addEventListener('shown.bs.tab', function() {
+                loadCalendarData();
+            });
+        }
+    });
+</script>
