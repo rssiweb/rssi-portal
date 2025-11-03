@@ -1001,7 +1001,7 @@ if ($formtype === "attendance") {
     $absconding = ""; // Assuming absconding is not present in rssimyprofile_student
   } else {
     // If no result is found in rssimyprofile_student table, fetch from rssimyaccount_members table
-    $select_status_query = 'SELECT filterstatus, fullname, engagement, absconding FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
+    $select_status_query = 'SELECT filterstatus, fullname, engagement, absconding, mandatory_training_pending FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
     pg_prepare($con, "select_status_members", $select_status_query);
     $status_result_members = pg_execute($con, "select_status_members", array($user_id));
     $status_row_members = pg_fetch_assoc($status_result_members);
@@ -1012,6 +1012,7 @@ if ($formtype === "attendance") {
       $name = $status_row_members['fullname'];
       $engagement = $status_row_members['engagement'];
       $absconding = $status_row_members['absconding'];
+      $mandatory_training_pending = $status_row_members['mandatory_training_pending'];
       $category = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
       $class = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
     } else {
@@ -1022,6 +1023,7 @@ if ($formtype === "attendance") {
       $category = 'default_category';
       $class = 'default_class';
       $absconding = 'default_absconding';
+      $mandatory_training_pending = 'default_mandatory_training_pending';
     }
   }
 
@@ -1032,6 +1034,15 @@ if ($formtype === "attendance") {
     echo json_encode(array(
       "error" => "Error recording attendance. The scanned account is flagged as inactive. Please contact support.",
       "absconding" => $absconding
+    ));
+    exit(); // Stop further execution so attendance is not inserted
+  }
+
+  // Check if mandatory training is pending and stop further processing
+  if ($mandatory_training_pending === true) {
+    echo json_encode(array(
+      "error" => "Error recording attendance. Mandatory training is pending for this associate. Please contact support.",
+      "mandatory_training_pending" => $mandatory_training_pending
     ));
     exit(); // Stop further execution so attendance is not inserted
   }

@@ -187,7 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'scode',
             'photo',
             'security_deposit',
-            'is_paid_membership'
+            'is_paid_membership',
+            'mandatory_training_pending'
         ];
 
         $user_editable_fields = [
@@ -1953,6 +1954,22 @@ echo "<script>
                                                                                             <input class="form-check-input" type="checkbox" name="is_paid_membership" id="is_paid_membership" value="t"
                                                                                                 <?php echo ($array["is_paid_membership"] == 't') ? "checked" : ""; ?>>
                                                                                             <label class="form-check-label ms-2" for="is_paid_membership">Yes</label>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><label for="mandatory_training_pending">Mandatory Training Pending:</label></td>
+                                                                                    <td>
+                                                                                        <span id="mandatory_training_pendingText">
+                                                                                            <?php echo (isset($array['mandatory_training_pending']) && $array['mandatory_training_pending'] === 't') ? 'Yes' : ''; ?>
+                                                                                        </span>
+
+                                                                                        <div id="mandatory_training_pending-container" style="display: none;">
+                                                                                            <!-- Hidden field to send f if checkbox is unchecked -->
+                                                                                            <input type="hidden" name="mandatory_training_pending" value="f">
+                                                                                            <input class="form-check-input" type="checkbox" name="mandatory_training_pending" id="mandatory_training_pending" value="t"
+                                                                                                <?php echo ($array["mandatory_training_pending"] == 't') ? "checked" : ""; ?>>
+                                                                                            <label class="form-check-label ms-2" for="mandatory_training_pending">Yes</label>
                                                                                         </div>
                                                                                     </td>
                                                                                 </tr>
