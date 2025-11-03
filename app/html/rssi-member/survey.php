@@ -1155,15 +1155,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if (parentName) nameField.value = parentName;
                 if (parentContact) contactField.value = parentContact;
 
-                // Disable these fields when auto-filled
-                nameField.disabled = true;
-                contactField.disabled = true;
+                // Use readonly instead of disabled to ensure data is submitted
+                nameField.readOnly = true;
+                contactField.readOnly = true;
+
+                // Add visual indication
+                nameField.style.backgroundColor = '#f8f9fa';
+                contactField.style.backgroundColor = '#f8f9fa';
             } else {
                 // Clear and enable fields
                 nameField.value = '';
                 contactField.value = '';
-                nameField.disabled = false;
-                contactField.disabled = false;
+                nameField.readOnly = false;
+                contactField.readOnly = false;
+
+                // Remove visual indication
+                nameField.style.backgroundColor = '';
+                contactField.style.backgroundColor = '';
             }
         }
 
