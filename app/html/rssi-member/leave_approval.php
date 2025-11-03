@@ -159,22 +159,42 @@ $status_filter = $_POST['status_filter'] ?? '';
 $type_filter = $_POST['type_filter'] ?? '';
 $applicant_id = $_POST['applicant_id'] ?? '';
 $leave_id = $_POST['leave_id'] ?? '';
+$enable_leave_id = isset($_POST['enable_leave_id']); // Check if checkbox was checked
 
 // Build query for TABLE VIEW
-$where_conditions = ["l.lyear = '$lyear'"];
-if (!empty($status_filter)) {
-    $where_conditions[] = "l.status = '$status_filter'";
-} else if (empty($status_filter) && empty($type_filter) && empty($applicant_id) && empty($leave_id)) {
-    $where_conditions[] = "l.status IN ('Pending', 'Under review') AND f.filterstatus = 'Active'";
-}
-if (!empty($type_filter)) {
-    $where_conditions[] = "l.typeofleave = '$type_filter'";
-}
-if (!empty($applicant_id)) {
-    $where_conditions[] = "l.applicantid = '$applicant_id'";
-}
-if (!empty($leave_id)) {
+$where_conditions = [];
+
+// If searching exclusively by leave_id - IGNORE ALL OTHER FILTERS including academic year
+if ($enable_leave_id && !empty($leave_id)) {
     $where_conditions[] = "l.leaveid = '$leave_id'";
+}
+// Normal multi-filter search
+else {
+    // Always apply academic year filter in normal mode
+    $where_conditions[] = "l.lyear = '$lyear'";
+
+    // Status filter
+    if (!empty($status_filter)) {
+        $where_conditions[] = "l.status = '$status_filter'";
+    } else if (empty($status_filter) && empty($type_filter) && empty($applicant_id) && empty($leave_id)) {
+        // Default: show only pending/under review when no specific filters are applied
+        $where_conditions[] = "l.status IN ('Pending', 'Under review') AND f.filterstatus = 'Active'";
+    }
+
+    // Type filter
+    if (!empty($type_filter)) {
+        $where_conditions[] = "l.typeofleave = '$type_filter'";
+    }
+
+    // Applicant ID filter
+    if (!empty($applicant_id)) {
+        $where_conditions[] = "l.applicantid = '$applicant_id'";
+    }
+
+    // Leave ID filter (when not in exclusive mode)
+    if (!empty($leave_id) && !$enable_leave_id) {
+        $where_conditions[] = "l.leaveid = '$leave_id'";
+    }
 }
 
 // Supervisor: show only team members' leaves
@@ -515,7 +535,9 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                         <form action="" method="POST" class="mb-3">
                                             <div class="form-group d-inline-block">
                                                 <div class="col2 d-inline-block">
-                                                    <input name="leave_id" id="leave_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Leave ID" value="<?php echo $leave_id ?>">
+                                                    <input name="leave_id" id="leave_id" class="form-control d-inline-block" style="width:max-content;"
+                                                        placeholder="Leave ID" value="<?php echo $leave_id ?>"
+                                                        <?php echo empty($leave_id) ? 'disabled' : '' ?>>
 
                                                     <input name="applicant_id" id="applicant_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Applicant ID" value="<?php echo $applicant_id ?>">
 
@@ -560,6 +582,12 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-secondary">
                                                     <i class="bi bi-arrow-clockwise"></i>&nbsp;Reset Filters
                                                 </a>
+                                            </div>
+                                            <!-- Checkbox to toggle Leave ID filter -->
+                                            <div class="form-check d-inline-block me-2">
+                                                <input class="form-check-input" type="checkbox" name="enable_leave_id" id="enable_leave_id"
+                                                    <?php echo !empty($leave_id) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="enable_leave_id">Search by Leave ID</label>
                                             </div>
                                         </form>
                                     </div>
@@ -1360,6 +1388,43 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 fullComment.show();
                 $(this).text('less');
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const enableLeaveIdCheckbox = document.getElementById('enable_leave_id');
+            const leaveIdInput = document.getElementById('leave_id');
+            const applicantIdInput = document.getElementById('applicant_id');
+            const lyearSelect = document.getElementById('lyear');
+            const statusFilterSelect = document.getElementById('status_filter');
+            const typeFilterSelect = document.getElementById('type_filter');
+
+            function toggleFilters() {
+                const isLeaveIdEnabled = enableLeaveIdCheckbox.checked;
+
+                // Toggle Leave ID field
+                leaveIdInput.disabled = !isLeaveIdEnabled;
+
+                // Toggle other filters
+                applicantIdInput.disabled = isLeaveIdEnabled;
+                lyearSelect.disabled = isLeaveIdEnabled;
+                statusFilterSelect.disabled = isLeaveIdEnabled;
+                typeFilterSelect.disabled = isLeaveIdEnabled;
+
+                // Clear other filters when Leave ID is enabled
+                if (isLeaveIdEnabled) {
+                    applicantIdInput.value = '';
+                    // Don't clear lyear as it's required
+                    statusFilterSelect.value = '';
+                    typeFilterSelect.value = '';
+                }
+            }
+
+            // Initialize on page load
+            toggleFilters();
+
+            // Add event listener for checkbox changes
+            enableLeaveIdCheckbox.addEventListener('change', toggleFilters);
         });
     </script>
 </body>
