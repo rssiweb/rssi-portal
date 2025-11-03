@@ -15,6 +15,84 @@ if ($role != 'Admin' && $role != 'SuperAdmin') {
     exit;
 }
 
+// Handle AJAX request for record fetching
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST['formType'] === 'ajax_fetch') {
+    $offset = $_POST['offset'] ?? 0;
+    $limit = $_POST['limit'] ?? 20;
+
+    // Filter parameters
+    $status_filter = $_POST['status_filter'] ?? 'active';
+    $education_filter = $_POST['education_filter'] ?? '';
+    $search_term = $_POST['search_term'] ?? '';
+    $search_mode = filter_var($_POST['search_mode'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+    // Build WHERE clause based on search mode
+    $where_conditions = [];
+    $params = [];
+    $param_count = 0;
+
+    if ($search_mode) {
+        // Search mode - only use search term
+        if (!empty($search_term)) {
+            $param_count++;
+            $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+            $params[] = "%$search_term%";
+        }
+    } else {
+        // Filter mode - use status and education filters
+        if ($status_filter === 'active') {
+            $where_conditions[] = "status = 'Active'";
+        } elseif ($status_filter === 'inactive') {
+            $where_conditions[] = "status = 'Inactive'";
+        }
+
+        if (!empty($education_filter)) {
+            $param_count++;
+            $where_conditions[] = "education = $" . $param_count;
+            $params[] = $education_filter;
+        }
+
+        // Also allow search in filter mode
+        if (!empty($search_term)) {
+            $param_count++;
+            $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+            $params[] = "%$search_term%";
+        }
+    }
+
+    $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
+
+    // Get job seekers data with pagination
+    $params[] = $limit;
+    $params[] = $offset;
+
+    $query = "SELECT js.*, s.parent_name, s.address, s.surveyor_id 
+              FROM job_seeker_data js 
+              LEFT JOIN survey_data s ON js.family_id = s.family_id 
+              $where_clause 
+              ORDER BY js.created_at DESC 
+              LIMIT $" . ($param_count + 1) . " OFFSET $" . ($param_count + 2);
+
+    $result = pg_query_params($con, $query, $params);
+
+    if ($result) {
+        $records = pg_fetch_all($result) ?: [];
+        $isLastBatch = !$limit || count($records) < $limit;
+
+        echo json_encode([
+            "success" => true,
+            "records" => $records,
+            "isLastBatch" => $isLastBatch,
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Error fetching data.",
+        ]);
+    }
+    exit;
+}
+
 // Handle actions
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['action'])) {
@@ -90,59 +168,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     exit;
 }
 
-// Pagination setup
-$records_per_page = 50;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $records_per_page;
-
-// Filter parameters
-$status_filter = isset($_GET['status']) ? $_GET['status'] : 'active';
-$education_filter = isset($_GET['education']) ? $_GET['education'] : '';
-$search_term = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
-
-// Build WHERE clause
-$where_conditions = [];
-$params = [];
-$param_count = 0;
-
-if ($status_filter === 'active') {
-    $where_conditions[] = "status = 'Active'";
-} elseif ($status_filter === 'inactive') {
-    $where_conditions[] = "status = 'Inactive'";
-}
-
-if (!empty($education_filter)) {
-    $param_count++;
-    $where_conditions[] = "education = $" . $param_count;
-    $params[] = $education_filter;
-}
-
-if (!empty($search_term)) {
-    $param_count++;
-    $where_conditions[] = "(name ILIKE $" . $param_count . " OR contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
-    $params[] = "%$search_term%";
-}
-
-$where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
-
-// Get total records count
-$count_query = "SELECT COUNT(*) FROM job_seeker_data $where_clause";
-$count_result = $params ? pg_query_params($con, $count_query, $params) : pg_query($con, $count_query);
+// Get total records count for initial load (without filters)
+$count_query = "SELECT COUNT(*) FROM job_seeker_data WHERE status = 'Active'";
+$count_result = pg_query($con, $count_query);
 $total_records = pg_fetch_result($count_result, 0, 0);
-$total_pages = ceil($total_records / $records_per_page);
-
-// Get job seekers data with pagination
-$params[] = $records_per_page;
-$params[] = $offset;
-
-$query = "SELECT js.*, s.parent_name, s.address, s.surveyor_id 
-          FROM job_seeker_data js 
-          LEFT JOIN survey_data s ON js.family_id = s.family_id 
-          $where_clause 
-          ORDER BY js.created_at DESC 
-          LIMIT $" . ($param_count + 1) . " OFFSET $" . ($param_count + 2);
-
-$result = pg_query_params($con, $query, $params);
 ?>
 
 <!DOCTYPE html>
@@ -158,8 +187,6 @@ $result = pg_query_params($con, $query, $params);
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
 
     <!-- Template Main CSS File -->
@@ -197,6 +224,46 @@ $result = pg_query_params($con, $query, $params);
         .detail-value {
             color: #212529;
         }
+
+        /* Loader styling */
+        #progressLoader .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .form-control:disabled {
+            background-color: #e9ecef;
+            opacity: 0.6;
+        }
+
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .has-remarks .dropdown-toggle {
+            color: #0d6efd;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -220,7 +287,7 @@ $result = pg_query_params($con, $query, $params);
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body mt-3">
                             <!-- Success/Error Messages -->
                             <?php if (isset($_SESSION['success_message'])): ?>
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -238,150 +305,135 @@ $result = pg_query_params($con, $query, $params);
                                 <?php unset($_SESSION['error_message']); ?>
                             <?php endif; ?>
 
+                            <!-- Add progress loader HTML -->
+                            <div id="pageOverlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                                <div id="progressLoader" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <p>Loading, please wait...</p>
+                                    <div class="loader"></div>
+                                </div>
+                            </div>
+
                             <!-- Filters -->
                             <div class="row mb-3">
                                 <div class="col-md-12">
-                                    <form method="GET" action="" class="row g-3">
+                                    <form id="filterForm" class="row g-3" onsubmit="handleFormSubmit(event)">
                                         <div class="col-md-3">
                                             <label for="status" class="form-label">Status</label>
-                                            <select class="form-select" id="status" name="status" onchange="this.form.submit()">
-                                                <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>All</option>
-                                                <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Active</option>
-                                                <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="all">All</option>
+                                                <option value="active" selected>Active</option>
+                                                <option value="inactive">Inactive</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label for="education" class="form-label">Education</label>
-                                            <select class="form-select" id="education" name="education" onchange="this.form.submit()">
+                                            <select class="form-select" id="education" name="education">
                                                 <option value="">All Education</option>
-                                                <option value="Below 10th" <?php echo $education_filter === 'Below 10th' ? 'selected' : ''; ?>>Below 10th</option>
-                                                <option value="10th Pass" <?php echo $education_filter === '10th Pass' ? 'selected' : ''; ?>>10th Pass</option>
-                                                <option value="12th Pass" <?php echo $education_filter === '12th Pass' ? 'selected' : ''; ?>>12th Pass</option>
-                                                <option value="Diploma" <?php echo $education_filter === 'Diploma' ? 'selected' : ''; ?>>Diploma</option>
-                                                <option value="Graduate" <?php echo $education_filter === 'Graduate' ? 'selected' : ''; ?>>Graduate</option>
-                                                <option value="Post Graduate" <?php echo $education_filter === 'Post Graduate' ? 'selected' : ''; ?>>Post Graduate</option>
-                                                <option value="Doctorate" <?php echo $education_filter === 'Doctorate' ? 'selected' : ''; ?>>Doctorate</option>
-                                                <option value="Other" <?php echo $education_filter === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                <!-- Basic Literacy Levels -->
+                                                <option value="Illiterate">Illiterate (Cannot read or write)</option>
+
+                                                <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
+                                                <option value="Can Read English Only">Can Read – English Only</option>
+                                                <option value="Can Read Both">Can Read – Hindi & English</option>
+
+                                                <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
+                                                <option value="Can Write English Only">Can Write – English Only</option>
+                                                <option value="Can Write Both">Can Write – Hindi & English</option>
+
+                                                <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
+                                                <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
+                                                <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
+
+                                                <!-- School Level -->
+                                                <option value="Below 5th">Below 5th Standard</option>
+                                                <option value="5th Pass">5th Pass</option>
+                                                <option value="8th Pass">8th Pass</option>
+                                                <option value="Below 10th">Below 10th</option>
+
+                                                <option value="10th Pass">10th Pass</option>
+                                                <option value="12th Pass">12th Pass</option>
+
+                                                <!-- Higher Education -->
+                                                <option value="Diploma">Diploma</option>
+                                                <option value="Graduate">Graduate</option>
+                                                <option value="Post Graduate">Post Graduate</option>
+                                                <option value="Doctorate">Doctorate</option>
+
+                                                <option value="Other">Other</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="search" class="form-label">Search</label>
-                                            <input type="text" class="form-control" id="search" name="search"
-                                                value="<?php echo htmlspecialchars($search_term); ?>"
-                                                placeholder="Search by name, contact, skills...">
+                                            <input type="text" class="form-control" id="search" name="search" placeholder="Search by name, contact, skills...">
                                         </div>
                                         <div class="col-md-2 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                                            <button type="button" id="applyFilters" class="btn btn-primary w-100">Apply Filters</button>
+                                        </div>
+                                        <div class="row mt-3 mb-3">
+                                            <div class="col-md-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="toggleSearchMode">
+                                                    <label class="form-check-label" for="toggleSearchMode">Enable Search Mode</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </form>
                                 </div>
                             </div>
 
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="recordsPerLoad" class="form-label me-2">Records Per Load:</label>
+                                    <select id="recordsPerLoad" class="form-select d-inline-block" style="width: auto;">
+                                        <option value="20" selected>20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                        <option value="200">200</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button class="btn btn-success" onclick="exportToExcel()">
+                                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Job Seekers Table -->
                             <div class="table-responsive">
-                                <table id="jobSeekersTable" class="table table-striped table-bordered">
+                                <table id="jobSeekersTable" class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
+                                            <th>Id</th>
                                             <th>Name</th>
                                             <th>Age</th>
                                             <th>Contact</th>
                                             <th>Education</th>
                                             <th>Skills</th>
                                             <th>Preferences</th>
-                                            <th>Parent/Guardian</th>
                                             <th>Surveyor ID</th>
                                             <th>Status</th>
-                                            <th>Remarks</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php
-                                        $serial_number = $offset + 1;
-                                        while ($row = pg_fetch_assoc($result)) {
-                                            echo "<tr data-job-seeker-id='" . $row['id'] . "' 
-                                                  data-name='" . htmlspecialchars($row['name']) . "' 
-                                                  data-age='" . htmlspecialchars($row['age']) . "' 
-                                                  data-contact='" . htmlspecialchars($row['contact']) . "' 
-                                                  data-education='" . htmlspecialchars($row['education']) . "' 
-                                                  data-skills='" . htmlspecialchars($row['skills'] ?? '') . "' 
-                                                  data-preferences='" . htmlspecialchars($row['preferences'] ?? '') . "'
-                                                  data-parent-name='" . htmlspecialchars($row['parent_name']) . "'
-                                                  data-address='" . htmlspecialchars($row['address']) . "'
-                                                  data-surveyor-id='" . htmlspecialchars($row['surveyor_id']) . "'
-                                                  data-remarks='" . htmlspecialchars($row['remarks'] ?? '') . "'
-                                                  data-created-at='" . htmlspecialchars($row['created_at']) . "'
-                                                  data-updated-at='" . htmlspecialchars($row['updated_at']) . "'>";
-                                            echo "<td>" . $serial_number++ . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['age']) . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['contact']) . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['education']) . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['skills'] ?? 'N/A') . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['preferences'] ?? 'N/A') . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['parent_name']) . "</td>";
-                                            echo "<td>" . htmlspecialchars($row['surveyor_id']) . "</td>";
-                                            echo "<td>";
-                                            echo "<span class='badge " . ($row['status'] === 'Active' ? 'bg-success' : 'bg-secondary') . "'>";
-                                            echo htmlspecialchars($row['status']);
-                                            echo "</span>";
-                                            echo "</td>";
-                                            echo "<td>";
-                                            if (!empty($row['remarks'])) {
-                                                echo "<button class='btn btn-sm btn-outline-info' data-bs-toggle='modal' data-bs-target='#viewRemarksModal' onclick='loadRemarksData(" . $row['id'] . ")' title='View Remarks'><i class='bi bi-eye'></i> View Remarks</button>";
-                                            } else {
-                                                echo "No remarks";
-                                            }
-                                            echo "</td>";
-                                            echo "<td>";
-                                            echo "<div class='btn-group'>";
-                                            // Status toggle
-                                            if ($row['status'] === 'Active') {
-                                                echo "<button class='btn btn-sm btn-warning' onclick='updateStatus(" . $row['id'] . ", \"Inactive\")' title='Mark Inactive'><i class='bi bi-pause-fill'></i></button>";
-                                            } else {
-                                                echo "<button class='btn btn-sm btn-success' onclick='updateStatus(" . $row['id'] . ", \"Active\")' title='Mark Active'><i class='bi bi-play-fill'></i></button>";
-                                            }
-                                            // Edit button
-                                            echo "<button class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-target='#editModal' onclick='loadJobSeekerDataDirect(" . $row['id'] . ")' title='Edit Details'><i class='bi bi-pencil'></i></button>";
-                                            // Add remark
-                                            echo "<button class='btn btn-sm btn-info' data-bs-toggle='modal' data-bs-target='#addRemarkModal' onclick='setJobSeekerId(" . $row['id'] . ")' title='Add Remark'><i class='bi bi-chat-left-text'></i></button>";
-                                            echo "</div>";
-                                            echo "</td>";
-                                            echo "</tr>";
-                                        }
-                                        ?>
+                                    <tbody id="data-tbody">
+                                        <!-- Data will be loaded here dynamically -->
                                     </tbody>
                                 </table>
                             </div>
 
-                            <!-- Pagination -->
-                            <?php if ($total_pages > 1): ?>
-                                <nav aria-label="Page navigation">
-                                    <ul class="pagination justify-content-center">
-                                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>">Previous</a>
-                                        </li>
-                                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                                <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>"><?php echo $i; ?></a>
-                                            </li>
-                                        <?php endfor; ?>
-                                        <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>">Next</a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            <?php endif; ?>
+                            <div class="text-center mt-3">
+                                <button id="loadMoreBtn" class="btn btn-primary">Load More</button>
+                                <div id="loadingIndicator" class="mt-2" style="display: none;">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Loading more records...</span>
+                                </div>
+                            </div>
 
                             <div class="row mt-3">
-                                <div class="col-md-6">
-                                    <p>Showing <?php echo min($records_per_page, $total_records - $offset); ?> of <?php echo $total_records; ?> records</p>
-                                </div>
-                                <div class="col-md-6 text-end">
-                                    <button class="btn btn-success" onclick="exportToExcel()">
-                                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
-                                    </button>
+                                <div class="col-md-12 text-center">
+                                    <p id="recordsInfo">Total records: <span id="totalRecords"><?php echo $total_records; ?></span></p>
                                 </div>
                             </div>
                         </div>
@@ -462,10 +514,6 @@ $result = pg_query_params($con, $query, $params);
                                 <div class="detail-row">
                                     <span class="detail-label">Preferences:</span>
                                     <span class="detail-value" id="viewPreferences"></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Parent/Guardian:</span>
-                                    <span class="detail-value" id="viewParentName"></span>
                                 </div>
                                 <div class="detail-row">
                                     <span class="detail-label">Status:</span>
@@ -576,34 +624,300 @@ $result = pg_query_params($con, $query, $params);
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <script>
-        // Initialize DataTable
+        let offset = 0;
+        let isLastBatch = false;
+        let currentFilters = {
+            status_filter: 'active',
+            education_filter: '',
+            search_term: ''
+        };
+
+        // Toggle search mode functionality
         $(document).ready(function() {
-            $('#jobSeekersTable').DataTable({
-                "paging": false,
-                "searching": false,
-                "info": false,
-                "ordering": true,
-                "dom": 'Bfrtip',
-                "buttons": [
-                    'copy', 'csv', 'excel', 'pdf'
-                ]
+            const toggleSearch = $('#toggleSearchMode');
+            const statusField = $('#status');
+            const educationField = $('#education');
+            const searchField = $('#search');
+            const applyFiltersBtn = $('#applyFilters');
+
+            // Read URL parameters first
+            readURLParameters();
+
+            function toggleSearchMode() {
+                if (toggleSearch.is(':checked')) {
+                    // Search mode enabled
+                    statusField.prop('disabled', true);
+                    educationField.prop('disabled', true);
+                    searchField.prop('disabled', false);
+                    applyFiltersBtn.text('Search');
+
+                    // Clear other filters when switching to search mode
+                    currentFilters.status_filter = 'all';
+                    currentFilters.education_filter = '';
+                    statusField.val('all');
+                    educationField.val('');
+                } else {
+                    // Search mode disabled - reset to active only
+                    statusField.prop('disabled', false);
+                    educationField.prop('disabled', false);
+                    searchField.prop('disabled', true);
+                    applyFiltersBtn.text('Apply Filters');
+
+                    // Reset to active only and clear search
+                    statusField.val('active');
+                    currentFilters.status_filter = 'active';
+                    currentFilters.education_filter = '';
+                    currentFilters.search_term = ''; // Clear search term
+                    educationField.val('');
+                    searchField.val(''); // Clear search input field
+                }
+                // Update URL when mode changes
+                updateURLParameters();
+            }
+
+            // Initial state - disable search field by default
+            toggleSearchMode();
+
+            // On checkbox change
+            toggleSearch.change(function() {
+                toggleSearchMode();
+                // Apply filters immediately when mode changes
+                applyFilters();
             });
 
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+            // Handle Enter key in search field
+            searchField.keypress(function(event) {
+                if (event.which === 13) { // Enter key
+                    event.preventDefault();
+                    applyFilters();
+                }
+            });
+
+            // Handle form submit (for Enter key in any field)
+            $('#filterForm').on('submit', function(event) {
+                event.preventDefault();
+                applyFilters();
+                return false;
+            });
+
+            // Initial load
+            fetchRecords();
+
+            // Load more button
+            $("#loadMoreBtn").click(() => {
+                fetchRecords();
+            });
+
+            // Apply filters button
+            $("#applyFilters").click(applyFilters);
+
+            // Records per load change
+            $("#recordsPerLoad").change(() => {
+                fetchRecords(true);
+            });
+
+            // Initialize dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+            var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
             });
         });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function() {
+            readURLParameters();
+            applyFilters();
+        });
+
+        const fetchRecords = async (reset = false) => {
+            if (reset) {
+                offset = 0;
+                isLastBatch = false;
+                $('#data-tbody').empty();
+                $('#loadMoreBtn').show();
+            }
+
+            if (isLastBatch && !reset) return;
+
+            const limit = parseInt($('#recordsPerLoad').val());
+            $('#loadingIndicator').show();
+            $('#loadMoreBtn').prop('disabled', true);
+
+            try {
+                const response = await $.post("", {
+                    formType: 'ajax_fetch',
+                    offset: offset,
+                    limit: limit,
+                    status_filter: currentFilters.status_filter,
+                    education_filter: currentFilters.education_filter,
+                    search_term: currentFilters.search_term,
+                    search_mode: $('#toggleSearchMode').is(':checked')
+                });
+
+                const data = JSON.parse(response);
+
+                if (data.success) {
+                    const tbody = $("#data-tbody");
+                    const records = data.records;
+
+                    if (records.length > 0) {
+                        records.forEach((record, index) => {
+                            const hasRemarks = record.remarks && record.remarks.trim() !== '';
+                            const rowClass = hasRemarks ? 'has-remarks' : '';
+
+                            const row = `
+                            <tr data-job-seeker-id="${record.id}" 
+                                data-name="${escapeHtml(record.name)}" 
+                                data-age="${escapeHtml(record.age)}" 
+                                data-contact="${escapeHtml(record.contact)}" 
+                                data-education="${escapeHtml(record.education)}" 
+                                data-skills="${escapeHtml(record.skills || '')}" 
+                                data-preferences="${escapeHtml(record.preferences || '')}"
+                                data-parent-name="${escapeHtml(record.parent_name || '')}"
+                                data-address="${escapeHtml(record.address || '')}"
+                                data-surveyor-id="${escapeHtml(record.surveyor_id || '')}"
+                                data-remarks="${escapeHtml(record.remarks || '')}"
+                                data-created-at="${escapeHtml(record.created_at || '')}"
+                                data-updated-at="${escapeHtml(record.updated_at || '')}"
+                                class="${rowClass}">
+                                <td>${escapeHtml(record.id)}</td>
+                                <td>${escapeHtml(record.name)}</td>
+                                <td>${escapeHtml(record.age)}</td>
+                                <td>${escapeHtml(record.contact)}</td>
+                                <td>${escapeHtml(record.education)}</td>
+                                <td>${escapeHtml(record.skills || 'N/A')}</td>
+                                <td>${escapeHtml(record.preferences || 'N/A')}</td>
+                                <td>${escapeHtml(record.surveyor_id || 'N/A')}</td>
+                                <td>${escapeHtml(record.status)}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu action-dropdown">
+                                            ${hasRemarks ? 
+                                                `<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewRemarksModal" onclick="loadRemarksData(${record.id})"><i class="bi bi-eye me-2"></i>View Remarks</a></li>` : 
+                                                ''}
+                                            <li><a class="dropdown-item" href="#" onclick="updateStatus(${record.id}, '${record.status === 'Active' ? 'Inactive' : 'Active'}')">
+                                                <i class="bi ${record.status === 'Active' ? 'bi-pause-fill' : 'bi-play-fill'} me-2"></i>
+                                                ${record.status === 'Active' ? 'Mark Inactive' : 'Mark Active'}
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal" onclick="loadJobSeekerDataDirect(${record.id})">
+                                                <i class="bi bi-pencil me-2"></i>Edit Data
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addRemarkModal" onclick="setJobSeekerId(${record.id})">
+                                                <i class="bi bi-chat-left-text me-2"></i>Add Remark
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                            tbody.append(row);
+                        });
+
+                        offset += records.length;
+                        isLastBatch = data.isLastBatch;
+
+                        if (isLastBatch) {
+                            $('#loadMoreBtn').hide();
+                        }
+
+                        // Update records info
+                        $('#totalRecords').text(offset);
+                    } else if (reset) {
+                        tbody.html('<tr><td colspan="10" class="text-center">No records found</td></tr>');
+                        $('#loadMoreBtn').hide();
+                    }
+                } else {
+                    alert(data.message || "Failed to load records.");
+                }
+            } catch (error) {
+                console.error("Error fetching records:", error);
+                alert("Error loading records. Please try again.");
+            } finally {
+                $('#loadingIndicator').hide();
+                $('#loadMoreBtn').prop('disabled', false);
+            }
+        };
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
+        }
+
+        function applyFilters() {
+            const searchMode = $('#toggleSearchMode').is(':checked');
+
+            currentFilters = {
+                status_filter: $('#status').val(),
+                education_filter: $('#education').val(),
+                search_term: searchMode ? $('#search').val() : '' // Only include search term in search mode
+            };
+
+            // Update URL parameters without reloading page
+            updateURLParameters();
+
+            fetchRecords(true);
+        }
+
+        function updateURLParameters() {
+            const params = new URLSearchParams();
+            params.set('status', currentFilters.status_filter);
+            params.set('education', currentFilters.education_filter);
+            params.set('search', currentFilters.search_term);
+            params.set('search_mode', $('#toggleSearchMode').is(':checked') ? '1' : '0');
+
+            // Update URL without reloading page
+            const newUrl = window.location.pathname + '?' + params.toString();
+            window.history.pushState({}, '', newUrl);
+        }
+
+        function readURLParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Set status filter
+            if (urlParams.has('status')) {
+                $('#status').val(urlParams.get('status'));
+                currentFilters.status_filter = urlParams.get('status');
+            }
+
+            // Set education filter
+            if (urlParams.has('education')) {
+                $('#education').val(urlParams.get('education'));
+                currentFilters.education_filter = urlParams.get('education');
+            }
+
+            // Set search term - but only if search_mode is enabled
+            const searchMode = urlParams.has('search_mode') ? urlParams.get('search_mode') === '1' : false;
+            if (urlParams.has('search') && searchMode) {
+                $('#search').val(urlParams.get('search'));
+                currentFilters.search_term = urlParams.get('search');
+            } else {
+                // Clear search if search_mode is disabled
+                $('#search').val('');
+                currentFilters.search_term = '';
+            }
+
+            // Set search mode checkbox
+            if (urlParams.has('search_mode')) {
+                $('#toggleSearchMode').prop('checked', searchMode);
+
+                // Trigger the toggle to update UI state
+                if (searchMode) {
+                    $('#toggleSearchMode').trigger('change');
+                }
+            }
+        }
 
         function updateStatus(id, status) {
             if (confirm('Are you sure you want to change the status to ' + status + '?')) {
@@ -641,13 +955,15 @@ $result = pg_query_params($con, $query, $params);
 
         function exportToExcel() {
             // Get current filter parameters
-            const params = new URLSearchParams(window.location.search);
+            const params = new URLSearchParams();
+            params.append('status', currentFilters.status_filter);
+            params.append('education', currentFilters.education_filter);
+            params.append('search', currentFilters.search_term);
 
             // Redirect to export script with current filters
             window.location.href = 'export_job_seekers.php?' + params.toString();
         }
 
-        // Function to load job seeker data using data attributes
         function loadJobSeekerDataDirect(id) {
             const row = document.querySelector(`tr[data-job-seeker-id="${id}"]`);
             if (row) {
@@ -663,27 +979,22 @@ $result = pg_query_params($con, $query, $params);
             }
         }
 
-        // Function to load remarks data for view modal
         function loadRemarksData(id) {
             const row = document.querySelector(`tr[data-job-seeker-id="${id}"]`);
             if (row) {
-                // Set job seeker details
                 document.getElementById('viewName').textContent = row.dataset.name;
                 document.getElementById('viewAge').textContent = row.dataset.age;
                 document.getElementById('viewContact').textContent = row.dataset.contact;
                 document.getElementById('viewEducation').textContent = row.dataset.education;
                 document.getElementById('viewSkills').textContent = row.dataset.skills || 'N/A';
                 document.getElementById('viewPreferences').textContent = row.dataset.preferences || 'N/A';
-                document.getElementById('viewParentName').textContent = row.dataset.parentName;
                 document.getElementById('viewAddress').textContent = row.dataset.address || 'N/A';
 
-                // Set status with badge
-                const status = row.querySelector('.badge').textContent;
+                const status = row.cells[8].textContent; // Status is in the 9th column (index 8)
                 const statusElement = document.getElementById('viewStatus');
                 statusElement.textContent = status;
                 statusElement.className = 'badge ' + (status === 'Active' ? 'bg-success' : 'bg-secondary');
 
-                // Set remarks content
                 const remarksContent = document.getElementById('viewRemarksContent');
                 if (row.dataset.remarks && row.dataset.remarks.trim() !== '') {
                     remarksContent.textContent = row.dataset.remarks;
@@ -694,12 +1005,10 @@ $result = pg_query_params($con, $query, $params);
                     remarksContent.style.fontStyle = 'italic';
                 }
 
-                // Store the current job seeker ID for adding new remarks
                 document.getElementById('addRemarkJobSeekerId').value = id;
             }
         }
 
-        // Function to add new remark from view modal
         function addNewRemark() {
             const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewRemarksModal'));
             const addModal = new bootstrap.Modal(document.getElementById('addRemarkModal'));
@@ -710,31 +1019,8 @@ $result = pg_query_params($con, $query, $params);
             }, 500);
         }
 
-        // Form validation for edit modal
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            const age = parseInt(document.getElementById('editAge').value);
-            const contact = document.getElementById('editContact').value;
-
-            if (age < 18 || age > 65) {
-                e.preventDefault();
-                alert('Age must be between 18 and 65');
-                return false;
-            }
-
-            if (!/^\d{10}$/.test(contact)) {
-                e.preventDefault();
-                alert('Contact number must be exactly 10 digits');
-                return false;
-            }
-
-            return true;
-        });
-
-        // Function to handle edit form submission with loading state
         function handleEditSubmit(event) {
             event.preventDefault();
-
-            // Validate form
             const age = parseInt(document.getElementById('editAge').value);
             const contact = document.getElementById('editContact').value;
 
@@ -748,7 +1034,6 @@ $result = pg_query_params($con, $query, $params);
                 return false;
             }
 
-            // Show loading state
             const submitBtn = document.getElementById('editSubmitBtn');
             const submitText = submitBtn.querySelector('.submit-text');
             const loadingSpinner = submitBtn.querySelector('.loading-spinner');
@@ -757,7 +1042,6 @@ $result = pg_query_params($con, $query, $params);
             loadingSpinner.style.display = 'inline';
             submitBtn.disabled = true;
 
-            // Submit the form
             const form = event.target;
             const formData = new FormData(form);
 
@@ -774,7 +1058,6 @@ $result = pg_query_params($con, $query, $params);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    // Reset button state on error
                     submitText.style.display = 'inline';
                     loadingSpinner.style.display = 'none';
                     submitBtn.disabled = false;
@@ -784,11 +1067,8 @@ $result = pg_query_params($con, $query, $params);
             return false;
         }
 
-        // Function to handle add remark form submission with loading state
         function handleAddRemarkSubmit(event) {
             event.preventDefault();
-
-            // Show loading state
             const submitBtn = document.getElementById('addRemarkSubmitBtn');
             const submitText = submitBtn.querySelector('.submit-text');
             const loadingSpinner = submitBtn.querySelector('.loading-spinner');
@@ -797,7 +1077,6 @@ $result = pg_query_params($con, $query, $params);
             loadingSpinner.style.display = 'inline';
             submitBtn.disabled = true;
 
-            // Submit the form
             const form = event.target;
             const formData = new FormData(form);
 
@@ -814,7 +1093,6 @@ $result = pg_query_params($con, $query, $params);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    // Reset button state on error
                     submitText.style.display = 'inline';
                     loadingSpinner.style.display = 'none';
                     submitBtn.disabled = false;
@@ -824,9 +1102,7 @@ $result = pg_query_params($con, $query, $params);
             return false;
         }
 
-        // Function to reset modal forms when they are hidden
         document.addEventListener('DOMContentLoaded', function() {
-            // Reset edit modal
             const editModal = document.getElementById('editModal');
             editModal.addEventListener('hidden.bs.modal', function() {
                 const submitBtn = document.getElementById('editSubmitBtn');
@@ -838,7 +1114,6 @@ $result = pg_query_params($con, $query, $params);
                 submitBtn.disabled = false;
             });
 
-            // Reset add remark modal
             const addRemarkModal = document.getElementById('addRemarkModal');
             addRemarkModal.addEventListener('hidden.bs.modal', function() {
                 const submitBtn = document.getElementById('addRemarkSubmitBtn');
