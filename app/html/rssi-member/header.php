@@ -426,6 +426,11 @@
             </a>
           </li>
           <li>
+            <a id="job_seekers" href="job_seekers.php">
+              <span>View Job Seekers</span>
+            </a>
+          </li>
+          <li>
             <a id="appointments" href="appointments.php">
               <span>View Appointments</span>
             </a>
@@ -1197,6 +1202,10 @@
         id: 'survey',
         linkId: 'enquiry_portal',
         url: 'enquiry_portal.php'
+      }, {
+        id: 'survey',
+        linkId: 'job_seekers',
+        url: 'job_seekers.php'
       },
       {
         id: 'survey',

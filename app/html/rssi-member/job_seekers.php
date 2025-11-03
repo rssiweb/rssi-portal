@@ -44,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
             $where_conditions[] = "status = 'Active'";
         } elseif ($status_filter === 'inactive') {
             $where_conditions[] = "status = 'Inactive'";
+        } elseif ($status_filter === 'all') {
+            // Show all statuses - no condition needed
         }
 
         if (!empty($education_filter)) {
@@ -61,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
     }
 
     $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
+
+    // Get total count for filtered results
+    $count_query = "SELECT COUNT(*) FROM job_seeker_data js LEFT JOIN survey_data s ON js.family_id = s.family_id $where_clause";
+    $count_result = pg_query_params($con, $count_query, $params);
+    $total_filtered_records = pg_fetch_result($count_result, 0, 0);
 
     // Get job seekers data with pagination
     $params[] = $limit;
@@ -83,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
             "success" => true,
             "records" => $records,
             "isLastBatch" => $isLastBatch,
+            "totalFiltered" => (int)$total_filtered_records,
+            "currentOffset" => $offset,
+            "currentLimit" => $limit
         ]);
     } else {
         echo json_encode([
@@ -264,6 +274,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             color: #0d6efd;
             font-weight: bold;
         }
+
+        #recordsInfo {
+            font-weight: 600;
+            color: #495057;
+        }
     </style>
 </head>
 
@@ -433,7 +448,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
                             <div class="row mt-3">
                                 <div class="col-md-12 text-center">
-                                    <p id="recordsInfo">Total records: <span id="totalRecords"><?php echo $total_records; ?></span></p>
+                                    <p id="recordsInfo">Loading records...</p>
                                 </div>
                             </div>
                         </div>
@@ -634,6 +649,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             education_filter: '',
             search_term: ''
         };
+        let totalFilteredRecords = 0;
+        let currentOffset = 0;
+        let currentLimit = 20;
 
         // Toggle search mode functionality
         $(document).ready(function() {
@@ -735,6 +753,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         const fetchRecords = async (reset = false) => {
             if (reset) {
                 offset = 0;
+                currentOffset = 0;
                 isLastBatch = false;
                 $('#data-tbody').empty();
                 $('#loadMoreBtn').show();
@@ -743,6 +762,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             if (isLastBatch && !reset) return;
 
             const limit = parseInt($('#recordsPerLoad').val());
+            currentLimit = limit;
             $('#loadingIndicator').show();
             $('#loadMoreBtn').prop('disabled', true);
 
@@ -762,6 +782,10 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 if (data.success) {
                     const tbody = $("#data-tbody");
                     const records = data.records;
+
+                    // Update global variables with response data
+                    totalFilteredRecords = data.totalFiltered || 0;
+                    currentOffset = data.currentOffset || 0;
 
                     if (records.length > 0) {
                         records.forEach((record, index) => {
@@ -820,17 +844,19 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                         });
 
                         offset += records.length;
+                        currentOffset = offset;
                         isLastBatch = data.isLastBatch;
 
                         if (isLastBatch) {
                             $('#loadMoreBtn').hide();
                         }
 
-                        // Update records info
-                        $('#totalRecords').text(offset);
+                        // Update records info with proper showing X of Y format
+                        updateRecordsInfo();
                     } else if (reset) {
                         tbody.html('<tr><td colspan="10" class="text-center">No records found</td></tr>');
                         $('#loadMoreBtn').hide();
+                        updateRecordsInfo(); // Update even when no records
                     }
                 } else {
                     alert(data.message || "Failed to load records.");
@@ -855,6 +881,27 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
         }
 
+        function updateRecordsInfo() {
+            const showingCount = Math.min(currentOffset, totalFilteredRecords);
+            const totalCount = totalFilteredRecords;
+
+            let infoText = '';
+            if (totalCount === 0) {
+                infoText = '0 of 0 records showing';
+            } else {
+                infoText = `<strong>${showingCount}</strong> of <strong>${totalCount}</strong> records showing`;
+
+                // Add additional info when not all records are loaded
+                if (showingCount < totalCount && !isLastBatch) {
+                    infoText += ` <span class="text-muted">(${totalCount - showingCount} more available)</span>`;
+                } else if (isLastBatch) {
+                    infoText += ' <span class="text-success">(all records loaded)</span>';
+                }
+            }
+
+            $('#recordsInfo').html(infoText);
+        }
+
         function applyFilters() {
             const searchMode = $('#toggleSearchMode').is(':checked');
 
@@ -863,6 +910,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 education_filter: $('#education').val(),
                 search_term: searchMode ? $('#search').val() : '' // Only include search term in search mode
             };
+
+            // Reset the offset and total when filters change
+            offset = 0;
+            currentOffset = 0;
+            totalFilteredRecords = 0;
 
             // Update URL parameters without reloading page
             updateURLParameters();
