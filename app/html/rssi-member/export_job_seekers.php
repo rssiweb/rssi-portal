@@ -7,12 +7,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-
-// Check user role and permissions
-if ($role != 'Admin' && $role != 'SuperAdmin') {
-    echo "<script>alert('You are not authorized to access this page.'); window.location.href='home.php';</script>";
-    exit;
-}
+validation();
 
 // Get filter parameters
 $status_filter = isset($_GET['status']) ? $_GET['status'] : 'active';

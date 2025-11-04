@@ -8,13 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-
-// Check user role and permissions
-if ($role != 'Admin' && $role != 'SuperAdmin') {
-    echo "<script>alert('You are not authorized to access this page.'); window.location.href='home.php';</script>";
-    exit;
-}
-
+validation();
 // Handle AJAX request for record fetching
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST['formType'] === 'ajax_fetch') {
     $offset = $_POST['offset'] ?? 0;
