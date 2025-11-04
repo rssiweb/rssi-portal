@@ -331,18 +331,18 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             <!-- Filters -->
                             <div class="row mb-3">
                                 <div class="col-md-12">
-                                    <form id="filterForm" class="row g-3" onsubmit="handleFormSubmit(event)">
-                                        <div class="col-md-3">
-                                            <label for="status" class="form-label">Status</label>
-                                            <select class="form-select" id="status" name="status">
+                                    <form id="filterForm" class="mb-3 d-inline-block" onsubmit="handleFormSubmit(event)">
+                                        <div class="d-inline-block">
+                                            <label for="status" class="form-label d-block">Status</label>
+                                            <select class="form-select d-inline-block" id="status" name="status">
                                                 <option value="all">All</option>
                                                 <option value="active" selected>Active</option>
                                                 <option value="inactive">Inactive</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-3">
-                                            <label for="education" class="form-label">Education</label>
-                                            <select class="form-select" id="education" name="education">
+                                        <div class="d-inline-block">
+                                            <label for="education" class="form-label d-block">Education</label>
+                                            <select class="form-select d-inline-block" id="education" name="education">
                                                 <option value="">All Education</option>
                                                 <!-- Basic Literacy Levels -->
                                                 <option value="Illiterate">Illiterate (Cannot read or write)</option>
@@ -377,12 +377,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                                 <option value="Other">Other</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label for="search" class="form-label">Search</label>
-                                            <input type="text" class="form-control" id="search" name="search" placeholder="Search by name, contact, skills...">
+                                        <div class="d-inline-block">
+                                            <label for="search" class="form-label d-block">Search</label>
+                                            <input type="text" class="form-control d-inline-block" style="width:300px;" id="search" name="search" placeholder="Search by name, contact, skills...">
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" id="applyFilters" class="btn btn-primary w-100">Apply Filters</button>
+                                        <div class="d-inline-block mt-3 mt-md-0 ms-md-3 ms-0 align-bottom">
+                                            <button type="button" id="applyFilters" class="btn btn-primary d-inline-block">Apply Filters</button>
                                         </div>
                                         <div class="row mt-3 mb-3">
                                             <div class="col-md-12">
