@@ -315,7 +315,7 @@ $resultArr = pg_fetch_all($result);
                                                 . "4) Improper scanning of the uploaded document. Please scan the entire document and if the address or any other relevant information is mentioned on the other side, scan both sides of the National Identifier.\n\n"
                                                 . "Please ensure that the scanned document is clearly legible, and re-upload the same.";
                                             $message4 = "Your document has been successfully verified. You will receive your interview schedule soon.";
-                                            $message5 = "We are pleased to inform you that your interview slot for the Faculty position has been successfully booked. Please take note of the following details:\n\n"
+                                            $message5 = "We are pleased to inform you that your interview slot has been successfully booked. Please take note of the following details:\n\n"
                                                 . "Reporting Date & Time: " . (!empty($array['tech_interview_schedule']) && $array['tech_interview_schedule'] !== null
                                                     ? (new DateTime($array['tech_interview_schedule']))->format('d/m/Y h:i a')
                                                     : 'No interview scheduled') . "\n"
@@ -339,7 +339,7 @@ $resultArr = pg_fetch_all($result);
                                                 . "• Educational certificates\n"
                                                 . "• Professional certifications (if any)\n"
                                                 . "• Any other relevant paperwork\n\n"
-                                                . "Please note that the interview process typically takes approximately 2.5 hours. However, in certain unforeseen circumstances, it may take longer.\n\n"
+                                                . "Please note that the interview process typically takes around 1.5 hours. However, in certain unforeseen circumstances, it may take longer.\n\n"
                                                 . "We look forward to meeting you.";
 
                                             // Generate WhatsApp links

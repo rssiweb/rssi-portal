@@ -599,13 +599,36 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 <label for="editEducation" class="form-label">Education <span class="text-danger">*</span></label>
                                 <select class="form-select" id="editEducation" name="education" required>
                                     <option value="">Select qualification</option>
+                                    <!-- Basic Literacy Levels -->
+                                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
+
+                                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
+                                    <option value="Can Read English Only">Can Read – English Only</option>
+                                    <option value="Can Read Both">Can Read – Hindi & English</option>
+
+                                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
+                                    <option value="Can Write English Only">Can Write – English Only</option>
+                                    <option value="Can Write Both">Can Write – Hindi & English</option>
+
+                                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
+                                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
+                                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
+
+                                    <!-- School Level -->
+                                    <option value="Below 5th">Below 5th Standard</option>
+                                    <option value="5th Pass">5th Pass</option>
+                                    <option value="8th Pass">8th Pass</option>
                                     <option value="Below 10th">Below 10th</option>
+
                                     <option value="10th Pass">10th Pass</option>
                                     <option value="12th Pass">12th Pass</option>
+
+                                    <!-- Higher Education -->
                                     <option value="Diploma">Diploma</option>
                                     <option value="Graduate">Graduate</option>
                                     <option value="Post Graduate">Post Graduate</option>
                                     <option value="Doctorate">Doctorate</option>
+
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
