@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
         // Search mode - only use search term
         if (!empty($search_term)) {
             $param_count++;
-            $where_conditions[] = "(sd.student_name ILIKE $" . $param_count . " OR s.contact ILIKE $" . $param_count . " OR s.parent_name ILIKE $" . $param_count . " OR sd.family_id ILIKE $" . $param_count . ")";
+            $where_conditions[] = "(sd.student_name ILIKE $" . $param_count . " OR s.contact ILIKE $" . $param_count . " OR s.parent_name ILIKE $" . $param_count . " OR s.family_id ILIKE $" . $param_count . " OR s.address ILIKE $" . $param_count . ")";
             $params[] = "%$search_term%";
         }
     } else {
@@ -43,15 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
         // Also allow search in filter mode
         if (!empty($search_term)) {
             $param_count++;
-            $where_conditions[] = "(sd.student_name ILIKE $" . $param_count . " OR s.contact ILIKE $" . $param_count . " OR s.parent_name ILIKE $" . $param_count . " OR sd.family_id ILIKE $" . $param_count . ")";
+            $where_conditions[] = "(sd.student_name ILIKE $" . $param_count . " OR s.contact ILIKE $" . $param_count . " OR s.parent_name ILIKE $" . $param_count . " OR s.family_id ILIKE $" . $param_count . " OR s.address ILIKE $" . $param_count . ")";
             $params[] = "%$search_term%";
         }
     }
 
     $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
 
-    // Get total count for filtered results
-    $count_query = "SELECT COUNT(*) FROM student_data sd LEFT JOIN survey_data s ON sd.family_id = s.family_id $where_clause";
+    // Get total count for filtered results - FIXED: Use survey_data as primary table
+    $count_query = "SELECT COUNT(*) FROM survey_data s 
+                    LEFT JOIN student_data sd ON s.family_id = sd.family_id 
+                    $where_clause";
     $count_result = pg_query_params($con, $count_query, $params);
     $total_filtered_records = pg_fetch_result($count_result, 0, 0);
 
@@ -59,10 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
     $params[] = $limit;
     $params[] = $offset;
 
-    $query = "SELECT sd.*, s.parent_name, s.address, s.surveyor_id, s.contact, s.earning_source, s.other_earning_source_input, 
-                     s.timestamp, rm.fullname AS surveyor_name
-              FROM student_data sd 
-              LEFT JOIN survey_data s ON sd.family_id = s.family_id 
+    $query = "SELECT s.*, sd.id as student_id, sd.student_name, sd.age, sd.gender, sd.grade, sd.status as student_status, 
+                     sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name,
+                     rm.fullname AS surveyor_name
+              FROM survey_data s 
+              LEFT JOIN student_data sd ON s.family_id = sd.family_id 
               LEFT JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber
               $where_clause 
               ORDER BY s.timestamp DESC 
@@ -107,7 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
 }
 
 // Get total records count for initial load (without filters)
-$count_query = "SELECT COUNT(*) FROM student_data WHERE status = 'Active'";
+$count_query = "SELECT COUNT(*) FROM survey_data";
 $count_result = pg_query($con, $count_query);
 $total_records = pg_fetch_result($count_result, 0, 0);
 ?>
@@ -203,6 +206,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         .status-badge {
             font-size: 0.875em;
             padding: 0.35em 0.65em;
+        }
+
+        .no-student-data {
+            color: #6c757d;
+            font-style: italic;
         }
     </style>
 </head>
@@ -314,7 +322,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 </div>
                                 <div class="col-md-6 text-end">
                                     <button class="btn btn-success" onclick="exportToExcel()">
-                                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
                                     </button>
                                 </div>
                             </div>
@@ -384,10 +392,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             <select class="form-select" id="statusSelect" name="status" required>
                                 <option value="">Select Status</option>
 
-                                <!-- Active/Inactive -->
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-
                                 <!-- Inquiry Stage -->
                                 <option value="Came for Inquiry">Came for Inquiry</option>
                                 <option value="Telephonic Inquiry">Telephonic Inquiry</option>
@@ -430,12 +434,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="viewDetailsModalLabel">Student Details</h5>
+                    <h5 class="modal-title" id="viewDetailsModalLabel">Survey Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="student-details">
-                        <h6 class="mb-3">Student Information</h6>
+                        <h6 class="mb-3">Survey Information</h6>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="detail-row">
@@ -636,26 +640,28 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
                     if (records.length > 0) {
                         records.forEach((record, index) => {
-                            const statusClass = getStatusClass(record.status);
+                            const hasStudentData = record.student_name !== null && record.student_name !== '';
+                            const statusClass = getStatusClass(record.student_status);
+                            const displayStatus = hasStudentData ? (record.student_status || 'No Status') : 'No Student Data';
 
                             const row = `
-                            <tr data-student-id="${record.id}" 
-                                data-student-name="${escapeHtml(record.student_name)}" 
-                                data-age="${escapeHtml(record.age)}" 
-                                data-gender="${escapeHtml(record.gender)}" 
-                                data-grade="${escapeHtml(record.grade)}" 
+                            <tr data-student-id="${record.student_id || ''}" 
+                                data-student-name="${escapeHtml(record.student_name || '')}" 
+                                data-age="${escapeHtml(record.age || '')}" 
+                                data-gender="${escapeHtml(record.gender || '')}" 
+                                data-grade="${escapeHtml(record.grade || '')}" 
                                 data-parent-name="${escapeHtml(record.parent_name || '')}"
                                 data-contact="${escapeHtml(record.contact || '')}"
                                 data-address="${escapeHtml(record.address || '')}"
                                 data-family-id="${escapeHtml(record.family_id || '')}"
                                 data-earning-source="${escapeHtml(record.earning_source === "other" ? record.other_earning_source_input : record.earning_source || '')}"
-                                data-status="${escapeHtml(record.status || '')}">
+                                data-status="${escapeHtml(record.student_status || '')}">
                                 <td>${offset + index + 1}</td>
                                 <td>${escapeHtml(record.family_id || 'N/A')}</td>
-                                <td>${escapeHtml(record.student_name)}</td>
-                                <td>${escapeHtml(record.age)}</td>
-                                <td>${escapeHtml(record.gender)}</td>
-                                <td>${escapeHtml(record.grade)}</td>
+                                <td class="${!hasStudentData ? 'no-student-data' : ''}">${hasStudentData ? escapeHtml(record.student_name) : 'No Student Data'}</td>
+                                <td>${hasStudentData ? escapeHtml(record.age) : 'N/A'}</td>
+                                <td>${hasStudentData ? escapeHtml(record.gender) : 'N/A'}</td>
+                                <td>${hasStudentData ? escapeHtml(record.grade) : 'N/A'}</td>
                                 <td>${escapeHtml(record.parent_name || 'N/A')}</td>
                                 <td>${record.contact ? `<a href="tel:${record.contact}">${escapeHtml(record.contact)}</a>` : 'N/A'}</td>
                                 <td>
@@ -667,19 +673,21 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 </td>
                                 <td>${escapeHtml(record.surveyor_name || 'N/A')}</td>
                                 <td>${escapeHtml(record.timestamp || 'N/A')}</td>
-                                <td>${escapeHtml(record.status)}</td>
+                                <td><span class="badge status-badge ${statusClass}">${escapeHtml(displayStatus)}</span></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
                                         <ul class="dropdown-menu action-dropdown">
-                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewDetailsModal" onclick="loadStudentDetails(${record.id})">
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewDetailsModal" onclick="loadStudentDetails(${record.student_id || 'null'}, ${hasStudentData})">
                                                 <i class="bi bi-eye me-2"></i>View Details
                                             </a></li>
-                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal" onclick="setStudentId(${record.id}, '${escapeHtml(record.status)}')">
-                                                <i class="bi bi-pencil me-2"></i>Update Status
-                                            </a></li>
+                                            ${hasStudentData ? 
+                                                `<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal" onclick="setStudentId(${record.student_id}, '${escapeHtml(record.student_status || '')}')">
+                                                    <i class="bi bi-pencil me-2"></i>Update Status
+                                                </a></li>` : 
+                                                ''}
                                         </ul>
                                     </div>
                                 </td>
@@ -716,11 +724,23 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         };
 
         function getStatusClass(status) {
+            if (!status || status === 'No Student Data') return 'bg-secondary';
             switch (status) {
                 case 'No Show':
+                case 'Not Interested':
+                case 'Not Reachable':
                     return 'bg-warning';
                 case 'Enrollment Completed':
+                    return 'bg-success';
+                case 'Enrollment Initiated':
+                case 'Interested - Decision Pending':
                     return 'bg-info';
+                case 'Follow-up Pending':
+                    return 'bg-danger';
+                case 'Follow-up Done':
+                case 'Came for Inquiry':
+                case 'Telephonic Inquiry':
+                    return 'bg-primary';
                 default:
                     return 'bg-secondary';
             }
@@ -825,20 +845,20 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             document.getElementById('statusSelect').value = currentStatus;
         }
 
-        function loadStudentDetails(id) {
-            const row = document.querySelector(`tr[data-student-id="${id}"]`);
+        function loadStudentDetails(studentId, hasStudentData) {
+            const row = document.querySelector(`tr[data-student-id="${studentId}"]`);
             if (row) {
-                document.getElementById('viewStudentName').textContent = row.dataset.studentName;
-                document.getElementById('viewAge').textContent = row.dataset.age;
-                document.getElementById('viewGender').textContent = row.dataset.gender;
-                document.getElementById('viewGrade').textContent = row.dataset.grade;
+                document.getElementById('viewStudentName').textContent = hasStudentData ? row.dataset.studentName : 'No Student Data';
+                document.getElementById('viewAge').textContent = hasStudentData ? row.dataset.age : 'N/A';
+                document.getElementById('viewGender').textContent = hasStudentData ? row.dataset.gender : 'N/A';
+                document.getElementById('viewGrade').textContent = hasStudentData ? row.dataset.grade : 'N/A';
                 document.getElementById('viewParentName').textContent = row.dataset.parentName || 'N/A';
                 document.getElementById('viewContact').textContent = row.dataset.contact || 'N/A';
                 document.getElementById('viewAddress').textContent = row.dataset.address || 'N/A';
                 document.getElementById('viewFamilyId').textContent = row.dataset.familyId || 'N/A';
                 document.getElementById('viewEarningSource').textContent = row.dataset.earningSource || 'N/A';
 
-                const status = row.dataset.status;
+                const status = hasStudentData ? (row.dataset.status || 'No Status') : 'No Student Data';
                 const statusElement = document.getElementById('viewStatus');
                 statusElement.textContent = status;
                 statusElement.className = 'badge status-badge ' + getStatusClass(status);
