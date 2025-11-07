@@ -70,7 +70,7 @@ $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_condition
 
 // Get ALL filtered records (no LIMIT for export)
 $query = "SELECT s.*, sd.id as student_id, sd.student_name, sd.age, sd.gender, sd.grade, sd.status as student_status,
-                 sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name,
+                 sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name, sd.remarks,
                  rm.fullname AS surveyor_name
           FROM survey_data s 
           LEFT JOIN student_data sd ON s.family_id = sd.family_id 
@@ -84,25 +84,59 @@ if (!$result) {
     die("Error fetching data for export: " . pg_last_error($con));
 }
 
-// Set headers for CSV download
-header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename="survey_data_export_' . date('Y-m-d_H-i-s') . '.csv"');
+// Include PHPExcel library (you might need to download and include it)
+// For now, we'll create a formatted CSV that Excel can open nicely
+
+// Set headers for Excel download
+header('Content-Type: application/vnd.ms-excel');
+header('Content-Disposition: attachment; filename="survey_data_export_' . date('Y-m-d_H-i-s') . '.xls"');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-// Create output stream
+// Create output
 $output = fopen('php://output', 'w');
 
-// Add BOM for UTF-8 to help Excel with special characters
-fputs($output, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+// Add headers with tab separation for Excel
+fwrite($output, "Survey Results List\t\t\t\t\t\t\t\t\t\t\t\t\n");
+fwrite($output, "Generated on: " . date('Y-m-d H:i:s') . "\t\t\t\t\t\t\t\t\t\t\t\t\n");
+fwrite($output, "Filters Applied:\t\t\t\t\t\t\t\t\t\t\t\t\n");
 
-// CSV headers
+// Add filter information
+$filters = [];
+if ($status_filter !== 'all') $filters[] = "Status: " . $status_filter;
+if ($surveyor_filter !== 'all') {
+    $surveyor_name = 'All Surveyors';
+    if ($surveyor_filter !== 'all') {
+        $surveyor_query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = $1";
+        $surveyor_result = pg_query_params($con, $surveyor_query, array($surveyor_filter));
+        if ($surveyor_result && pg_num_rows($surveyor_result) > 0) {
+            $surveyor_row = pg_fetch_assoc($surveyor_result);
+            $surveyor_name = $surveyor_row['fullname'];
+        }
+    }
+    $filters[] = "Surveyor: " . $surveyor_name;
+}
+if (!empty($date_from) && !empty($date_to)) $filters[] = "Date Range: " . $date_from . " to " . $date_to;
+if (!empty($search_term)) $filters[] = "Search: " . $search_term;
+
+if (empty($filters)) {
+    fwrite($output, "All Records\t\t\t\t\t\t\t\t\t\t\t\t\n");
+} else {
+    foreach ($filters as $filter) {
+        fwrite($output, $filter . "\t\t\t\t\t\t\t\t\t\t\t\t\n");
+    }
+}
+
+// Empty line
+fwrite($output, "\t\t\t\t\t\t\t\t\t\t\t\t\n");
+
+// Column headers (matching your screenshot)
 $headers = array(
     'SL No',
     'Family ID',
     'Student Name',
     'Age',
-    'Gender', 
+    'Gender',
     'Grade',
     'Parent Name',
     'Contact',
@@ -119,15 +153,15 @@ $headers = array(
     'Coaching Name'
 );
 
-fputcsv($output, $headers);
+fputcsv($output, $headers, "\t");
 
 $counter = 1;
 while ($row = pg_fetch_assoc($result)) {
     // Format earning source
-    $earning_source = ($row['earning_source'] === "other") ? 
-        ($row['other_earning_source_input'] ?? $row['earning_source']) : 
+    $earning_source = ($row['earning_source'] === "other") ?
+        ($row['other_earning_source_input'] ?? $row['earning_source']) :
         $row['earning_source'];
-    
+
     // Format CSA services needed (handle array/string)
     $csa_services = '';
     if (!empty($row['services_needed'])) {
@@ -151,7 +185,7 @@ while ($row = pg_fetch_assoc($result)) {
             $csa_services = $row['services_needed'];
         }
     }
-    
+
     $data = array(
         $counter,
         $row['family_id'] ?? 'N/A',
@@ -173,11 +207,10 @@ while ($row = pg_fetch_assoc($result)) {
         $row['already_coaching'] ?? 'N/A',
         $row['coaching_name'] ?? 'N/A'
     );
-    
-    fputcsv($output, $data);
+
+    fputcsv($output, $data, "\t");
     $counter++;
 }
 
 fclose($output);
 exit;
-?>

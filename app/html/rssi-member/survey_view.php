@@ -522,8 +522,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                     </select>
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <button class="btn btn-success" onclick="exportToExcel()">
-                                        <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                                    <button class="btn btn-success" onclick="exportToExcel()" id="exportBtn">
+                                        <i class="bi bi-file-earmark-excel"></i>
+                                        <span class="export-text">Export to Excel</span>
+                                        <span class="export-loading" style="display: none;">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            Exporting...
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -803,27 +808,25 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             // Read URL parameters first
             readURLParameters();
 
-            function toggleSearchMode() {
+            function toggleSearchMode(preserveFilters = false) {
                 if (toggleSearch.is(':checked')) {
-                    // Search mode enabled - enable search field only
-                    statusField.val('all');
+                    // Search mode enabled
+                    if (!preserveFilters) {
+                        statusField.val('all');
+                        $('#surveyor_filter').empty();
+                        $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
+                        $('#surveyor_filter').val('all').trigger('change');
+                        dateRangeField.val('');
 
-                    // Handle Select2 differently - clear and set to 'all'
-                    $('#surveyor_filter').empty();
-                    $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
-                    $('#surveyor_filter').val('all').trigger('change');
-
-                    dateRangeField.val('');
-
-                    // UPDATE currentFilters for search mode
-                    currentFilters = {
-                        status_filter: 'all',
-                        search_term: currentFilters.search_term, // Keep existing search term
-                        date_from: '',
-                        date_to: '',
-                        surveyor_filter: 'all' // This will be used in URL
-                    };
-                    currentDateRange = '';
+                        currentFilters = {
+                            status_filter: 'all',
+                            search_term: currentFilters.search_term,
+                            date_from: '',
+                            date_to: '',
+                            surveyor_filter: 'all'
+                        };
+                        currentDateRange = '';
+                    }
 
                     statusField.prop('disabled', true);
                     surveyorField.prop('disabled', true);
@@ -831,23 +834,19 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     searchField.prop('disabled', false);
                     applyFiltersBtn.text('Search');
                 } else {
-                    // Search mode disabled - disable search field, enable other fields
-                    searchField.val('');
+                    // Search mode disabled
+                    if (!preserveFilters) {
+                        searchField.val('');
 
-                    // Handle Select2 differently - clear and set to 'all'
-                    $('#surveyor_filter').empty();
-                    $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
-                    $('#surveyor_filter').val('all').trigger('change');
-
-                    // UPDATE currentFilters for filter mode
-                    currentFilters = {
-                        status_filter: 'all',
-                        search_term: '',
-                        date_from: '',
-                        date_to: '',
-                        surveyor_filter: 'all' // This will be used in URL
-                    };
-                    currentDateRange = '';
+                        currentFilters = {
+                            status_filter: 'all',
+                            search_term: '',
+                            date_from: '',
+                            date_to: '',
+                            surveyor_filter: 'all'
+                        };
+                        currentDateRange = '';
+                    }
 
                     statusField.prop('disabled', false);
                     surveyorField.prop('disabled', false);
@@ -856,8 +855,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     applyFiltersBtn.text('Apply Filters');
                 }
 
-                // Update URL when mode changes
-                updateURLParameters();
+                if (!preserveFilters) {
+                    updateURLParameters();
+                }
             }
 
             function readURLParameters() {
@@ -900,10 +900,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     currentFilters.search_term = urlParams.get('search');
                 }
 
+                // In the readURLParameters function:
                 if (urlParams.has('search_mode')) {
                     const searchMode = urlParams.get('search_mode') === '1';
                     $('#toggleSearchMode').prop('checked', searchMode);
-                    toggleSearchMode();
+                    toggleSearchMode(true); // Pass true to preserve filters
                 }
             }
             // Handle browser back/forward buttons
@@ -911,9 +912,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 readURLParameters();
                 applyFilters();
             });
-            // Initial state - search disabled by default
+            // In the initial state setup:
             $('#toggleSearchMode').prop('checked', false);
-            toggleSearchMode();
+            toggleSearchMode(true); // Pass true to preserve filters
 
             // On checkbox change - only update UI, don't apply filters automatically
             toggleSearch.change(function() {
@@ -1368,6 +1369,15 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         }
 
         function exportToExcel() {
+            const exportBtn = document.getElementById('exportBtn');
+            const exportText = exportBtn.querySelector('.export-text');
+            const exportLoading = exportBtn.querySelector('.export-loading');
+
+            // Show loading state
+            exportText.style.display = 'none';
+            exportLoading.style.display = 'inline';
+            exportBtn.disabled = true;
+
             const params = new URLSearchParams();
             params.append('status', currentFilters.status_filter);
             params.append('search', currentFilters.search_term);
@@ -1378,6 +1388,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             params.append('search_mode', $('#toggleSearchMode').is(':checked') ? '1' : '0');
 
             window.location.href = 'export_students.php?' + params.toString();
+
+            // Reset button state after a delay (in case download doesn't start)
+            setTimeout(() => {
+                exportText.style.display = 'inline';
+                exportLoading.style.display = 'none';
+                exportBtn.disabled = false;
+            }, 5000);
         }
 
         // Add event listener for the update status form
