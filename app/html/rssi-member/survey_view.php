@@ -831,6 +831,53 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 updateURLParameters();
             }
 
+            function readURLParameters() {
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (urlParams.has('status')) {
+                    $('#status').val(urlParams.get('status'));
+                    currentFilters.status_filter = urlParams.get('status');
+                }
+
+                if (urlParams.has('surveyor')) {
+                    $('#surveyor_filter').val(urlParams.get('surveyor'));
+                    currentFilters.surveyor_filter = urlParams.get('surveyor');
+                }
+
+                if (urlParams.has('date_range')) {
+                    const dateRange = urlParams.get('date_range');
+                    $('#date_range').val(dateRange);
+                    currentDateRange = dateRange;
+
+                    const dates = dateRange.split(' to ');
+                    if (dates.length === 2) {
+                        currentFilters.date_from = dates[0];
+                        currentFilters.date_to = dates[1];
+                    }
+                } else {
+                    if (urlParams.has('date_from') && urlParams.has('date_to')) {
+                        const dateFrom = urlParams.get('date_from');
+                        const dateTo = urlParams.get('date_to');
+                        const dateRange = dateFrom + ' to ' + dateTo;
+                        $('#date_range').val(dateRange);
+                        currentDateRange = dateRange;
+                        currentFilters.date_from = dateFrom;
+                        currentFilters.date_to = dateTo;
+                    }
+                }
+
+                if (urlParams.has('search')) {
+                    $('#search').val(urlParams.get('search'));
+                    currentFilters.search_term = urlParams.get('search');
+                }
+
+                if (urlParams.has('search_mode')) {
+                    const searchMode = urlParams.get('search_mode') === '1';
+                    $('#toggleSearchMode').prop('checked', searchMode);
+                    toggleSearchMode();
+                }
+            }
+
             // Initial state - search disabled by default
             $('#toggleSearchMode').prop('checked', false);
             toggleSearchMode();
@@ -1136,53 +1183,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             window.history.pushState({}, '', newUrl);
         }
 
-        function readURLParameters() {
-            const urlParams = new URLSearchParams(window.location.search);
-
-            if (urlParams.has('status')) {
-                $('#status').val(urlParams.get('status'));
-                currentFilters.status_filter = urlParams.get('status');
-            }
-
-            if (urlParams.has('surveyor')) {
-                $('#surveyor_filter').val(urlParams.get('surveyor'));
-                currentFilters.surveyor_filter = urlParams.get('surveyor');
-            }
-
-            if (urlParams.has('date_range')) {
-                const dateRange = urlParams.get('date_range');
-                $('#date_range').val(dateRange);
-                currentDateRange = dateRange;
-
-                const dates = dateRange.split(' to ');
-                if (dates.length === 2) {
-                    currentFilters.date_from = dates[0];
-                    currentFilters.date_to = dates[1];
-                }
-            } else {
-                if (urlParams.has('date_from') && urlParams.has('date_to')) {
-                    const dateFrom = urlParams.get('date_from');
-                    const dateTo = urlParams.get('date_to');
-                    const dateRange = dateFrom + ' to ' + dateTo;
-                    $('#date_range').val(dateRange);
-                    currentDateRange = dateRange;
-                    currentFilters.date_from = dateFrom;
-                    currentFilters.date_to = dateTo;
-                }
-            }
-
-            if (urlParams.has('search')) {
-                $('#search').val(urlParams.get('search'));
-                currentFilters.search_term = urlParams.get('search');
-            }
-
-            if (urlParams.has('search_mode')) {
-                const searchMode = urlParams.get('search_mode') === '1';
-                $('#toggleSearchMode').prop('checked', searchMode);
-                toggleSearchMode();
-            }
-        }
-
         function setStudentId(id, currentStatus) {
             document.getElementById('updateStatusStudentId').value = id;
             document.getElementById('statusSelect').value = currentStatus;
@@ -1331,7 +1331,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 </div>
             `;
             $('.card-body').prepend(alertHtml);
-            
+
             // Auto dismiss after 5 seconds
             setTimeout(() => {
                 $('.alert').alert('close');
@@ -1371,4 +1371,5 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         });
     </script>
 </body>
+
 </html>
