@@ -481,6 +481,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                             <div class="col-md-3">
                                                 <label for="surveyor_filter" class="form-label">Surveyor</label>
                                                 <select class="form-select" id="surveyor_filter" name="surveyor_filter">
+                                                    <option value="all" selected>All Surveyors</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-3">
@@ -901,28 +902,30 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             // Handle reset filters
             resetFiltersBtn.click(function() {
-                // Reset all form fields to initial state
-                $('#status').val('all');
-                $('#surveyor_filter').val('all');
-                $('#date_range').val('');
-                $('#search').val('');
-                $('#toggleSearchMode').prop('checked', false); // Uncheck search mode
-
-                // Reset current filters
-                currentFilters = {
-                    status_filter: 'all',
-                    search_term: '',
-                    date_from: '',
-                    date_to: '',
-                    surveyor_filter: 'all'
-                };
+                // First, update currentFilters to 'all'
+                currentFilters.surveyor_filter = 'all';
+                currentFilters.status_filter = 'all';
+                currentFilters.search_term = '';
+                currentFilters.date_from = '';
+                currentFilters.date_to = '';
                 currentDateRange = '';
 
-                // Update UI to initial state
-                toggleSearchMode();
-
-                // Update URL
+                // Then update the URL immediately with the correct values
                 updateURLParameters();
+
+                // Now reset the UI elements
+                $('#status').val('all');
+                $('#date_range').val('');
+                $('#search').val('');
+                $('#toggleSearchMode').prop('checked', false);
+
+                // Reset Select2 - clear first, then set to all
+                $('#surveyor_filter').empty();
+                $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
+                $('#surveyor_filter').val('all').trigger('change');
+
+                // Update UI state
+                toggleSearchMode();
 
                 // Apply reset filters
                 applyFilters();
