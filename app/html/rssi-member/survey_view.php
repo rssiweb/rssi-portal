@@ -244,15 +244,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
     }
 }
 
-// Get surveyors for filter dropdown
-$surveyors_query = "SELECT DISTINCT rm.associatenumber, rm.fullname 
-                   FROM survey_data s 
-                   LEFT JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber 
-                   WHERE rm.fullname IS NOT NULL 
-                   ORDER BY rm.fullname";
-$surveyors_result = pg_query($con, $surveyors_query);
-$surveyors = pg_fetch_all($surveyors_result) ?: [];
-
 // Get total records count for initial load (without filters)
 $count_query = "SELECT COUNT(*) FROM survey_data";
 $count_result = pg_query($con, $count_query);
@@ -278,10 +269,17 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
     <!-- Add daterangepicker CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- jQuery Library -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <!-- Add moment.js and daterangepicker JS -->
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <style>
         .student-details {
@@ -483,12 +481,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                             <div class="col-md-3">
                                                 <label for="surveyor_filter" class="form-label">Surveyor</label>
                                                 <select class="form-select" id="surveyor_filter" name="surveyor_filter">
-                                                    <option value="all" selected>All Surveyors</option>
-                                                    <?php foreach ($surveyors as $surveyor): ?>
-                                                        <option value="<?php echo $surveyor['associatenumber']; ?>">
-                                                            <?php echo htmlspecialchars($surveyor['fullname']); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-3">
@@ -501,7 +493,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                                 <label for="search" class="form-label">Search</label>
                                                 <input type="text" class="form-control" id="search" name="search" placeholder="Search by name, contact, parent name, family ID, address, surveyor...">
                                             </div>
-                                            <div class="col-md-4 d-flex align-items-end">
+                                            <div class="col-md-4 d-flex align-items-end mt-3 mt-md-0">
                                                 <button type="button" id="applyFilters" class="btn btn-primary me-2">Apply Filters</button>
                                                 <button type="button" id="resetFilters" class="btn btn-outline-secondary">Reset</button>
                                             </div>
@@ -748,7 +740,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
     </div>
 
     <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Add daterangepicker CSS and JS -->
@@ -1367,6 +1358,33 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 submitText.style.display = 'inline';
                 loadingSpinner.style.display = 'none';
                 submitBtn.disabled = false;
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#surveyor_filter').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                // multiple: true
             });
         });
     </script>
