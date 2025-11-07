@@ -806,21 +806,56 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             function toggleSearchMode() {
                 if (toggleSearch.is(':checked')) {
                     // Search mode enabled - enable search field only
+                    statusField.val('all');
+
+                    // Handle Select2 differently - clear and set to 'all'
+                    $('#surveyor_filter').empty();
+                    $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
+                    $('#surveyor_filter').val('all').trigger('change');
+
+                    dateRangeField.val('');
+
+                    // UPDATE currentFilters for search mode
+                    currentFilters = {
+                        status_filter: 'all',
+                        search_term: currentFilters.search_term, // Keep existing search term
+                        date_from: '',
+                        date_to: '',
+                        surveyor_filter: 'all' // This will be used in URL
+                    };
+                    currentDateRange = '';
+
                     statusField.prop('disabled', true);
                     surveyorField.prop('disabled', true);
                     dateRangeField.prop('disabled', true);
-                    searchField.prop('disabled', false); // Enable search field
+                    searchField.prop('disabled', false);
                     applyFiltersBtn.text('Search');
                 } else {
                     // Search mode disabled - disable search field, enable other fields
                     searchField.val('');
+
+                    // Handle Select2 differently - clear and set to 'all'
+                    $('#surveyor_filter').empty();
+                    $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
+                    $('#surveyor_filter').val('all').trigger('change');
+
+                    // UPDATE currentFilters for filter mode
+                    currentFilters = {
+                        status_filter: 'all',
+                        search_term: '',
+                        date_from: '',
+                        date_to: '',
+                        surveyor_filter: 'all' // This will be used in URL
+                    };
+                    currentDateRange = '';
+
                     statusField.prop('disabled', false);
                     surveyorField.prop('disabled', false);
                     dateRangeField.prop('disabled', false);
-                    searchField.prop('disabled', true); // Disable search field
+                    searchField.prop('disabled', true);
                     applyFiltersBtn.text('Apply Filters');
-                    currentFilters.search_term = '';
                 }
+
                 // Update URL when mode changes
                 updateURLParameters();
             }
