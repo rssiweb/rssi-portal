@@ -139,6 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $education = pg_escape_string($con, $_POST['education']);
                 $skills = pg_escape_string($con, $_POST['skills']);
                 $preferences = pg_escape_string($con, $_POST['preferences']);
+                $address = pg_escape_string($con, $_POST['address'] ?? '');
 
                 $query = "UPDATE job_seeker_data SET 
                          name = $1, 
@@ -146,7 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                          contact = $3, 
                          education = $4, 
                          skills = $5, 
-                         preferences = $6, 
+                         preferences = $6,
+                         address1 = $8, 
                          updated_at = CURRENT_TIMESTAMP 
                          WHERE id = $7";
 
@@ -157,13 +159,47 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $education,
                     $skills,
                     $preferences,
-                    $id
+                    $id,
+                    $address
                 ));
 
                 if ($result) {
                     $_SESSION['success_message'] = "Job seeker details updated successfully!";
                 } else {
                     $_SESSION['error_message'] = "Failed to update job seeker details!";
+                }
+                break;
+
+            // Add this to your existing POST handler switch statement
+            case 'add_job_seeker':
+                $name = pg_escape_string($con, $_POST['name']);
+                $age = intval($_POST['age']);
+                $contact = pg_escape_string($con, $_POST['contact']);
+                $education = pg_escape_string($con, $_POST['education']);
+                $skills = pg_escape_string($con, $_POST['skills']);
+                $preferences = pg_escape_string($con, $_POST['preferences']);
+                $address = pg_escape_string($con, $_POST['address'] ?? '');
+
+                // Generate a unique ID or use auto-increment if your table has it
+                $query = "INSERT INTO job_seeker_data (
+                name, age, contact, education, skills, preferences, address1, created_by, status, created_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Active', CURRENT_TIMESTAMP)";
+
+                $result = pg_query_params($con, $query, array(
+                    $name,
+                    $age,
+                    $contact,
+                    $education,
+                    $skills,
+                    $preferences,
+                    $address,
+                    $associatenumber
+                ));
+
+                if ($result) {
+                    $_SESSION['success_message'] = "Job seeker added successfully!";
+                } else {
+                    $_SESSION['error_message'] = "Failed to add job seeker!";
                 }
                 break;
         }
@@ -401,8 +437,15 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                     </select>
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <button class="btn btn-success" onclick="exportToExcel()">
-                                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                                    <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#newApplicationModal">
+                                        <i class="bi bi-person-plus"></i> New Application
+                                    </button>
+                                    <button class="btn btn-success" onclick="exportToExcel()" id="exportBtn">
+                                        <i class="bi bi-file-earmark-excel"></i> <span class="export-text">Export to Excel</span>
+                                        <span class="export-loading" style="display: none;">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            Exporting...
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -419,6 +462,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                             <th>Education</th>
                                             <th>Skills</th>
                                             <th>Preferences</th>
+                                            <th>Address</th>
                                             <th>Surveyor ID</th>
                                             <th>Status</th>
                                             <th>Actions</th>
@@ -637,6 +681,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             <label for="editPreferences" class="form-label">Job Preferences</label>
                             <input type="text" class="form-control" id="editPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
                         </div>
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="editAddress" name="address" rows="3"
+                                placeholder="Enter full address"></textarea>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -645,6 +694,98 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             <span class="loading-spinner" style="display: none;">
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 Saving...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Application Modal -->
+    <div class="modal fade" id="newApplicationModal" tabindex="-1" aria-labelledby="newApplicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newApplicationModalLabel">Add New Job Seeker</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="" id="newApplicationForm" onsubmit="handleNewApplicationSubmit(event)">
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add_job_seeker">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="newName" class="form-label">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="newName" name="name" required>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label for="newAge" class="form-label">Age <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="newAge" name="age" min="18" max="65" required>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label for="newContact" class="form-label">Contact <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="newContact" name="contact" pattern="[0-9]{10}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="newEducation" class="form-label">Education <span class="text-danger">*</span></label>
+                                <select class="form-select" id="newEducation" name="education" required>
+                                    <option value="">Select qualification</option>
+                                    <!-- Basic Literacy Levels -->
+                                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
+                                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
+                                    <option value="Can Read English Only">Can Read – English Only</option>
+                                    <option value="Can Read Both">Can Read – Hindi & English</option>
+                                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
+                                    <option value="Can Write English Only">Can Write – English Only</option>
+                                    <option value="Can Write Both">Can Write – Hindi & English</option>
+                                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
+                                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
+                                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
+                                    <!-- School Level -->
+                                    <option value="Below 5th">Below 5th Standard</option>
+                                    <option value="5th Pass">5th Pass</option>
+                                    <option value="8th Pass">8th Pass</option>
+                                    <option value="Below 10th">Below 10th</option>
+                                    <option value="10th Pass">10th Pass</option>
+                                    <option value="12th Pass">12th Pass</option>
+                                    <!-- Higher Education -->
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Graduate">Graduate</option>
+                                    <option value="Post Graduate">Post Graduate</option>
+                                    <option value="Doctorate">Doctorate</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="newSkills" class="form-label">Skills/Experience</label>
+                                <input type="text" class="form-control" id="newSkills" name="skills" placeholder="e.g., Computer skills, driving, etc.">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newPreferences" class="form-label">Job Preferences</label>
+                            <input type="text" class="form-control" id="newPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="newAddress" name="address" rows="3" placeholder="Enter full address"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="newApplicationSubmitBtn">
+                            <span class="submit-text">Add Job Seeker</span>
+                            <span class="loading-spinner" style="display: none;">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Adding...
                             </span>
                         </button>
                     </div>
@@ -818,8 +959,8 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 data-skills="${escapeHtml(record.skills || '')}" 
                                 data-preferences="${escapeHtml(record.preferences || '')}"
                                 data-parent-name="${escapeHtml(record.parent_name || '')}"
-                                data-address="${escapeHtml(record.address || '')}"
-                                data-surveyor-id="${escapeHtml(record.surveyor_id || '')}"
+                                data-address="${escapeHtml(record.address || record.address1 || '')}"
+                                data-surveyor-id="${escapeHtml(record.surveyor_id || record.created_by)}"
                                 data-remarks="${escapeHtml(record.remarks || '')}"
                                 data-created-at="${escapeHtml(record.created_at || '')}"
                                 data-updated-at="${escapeHtml(record.updated_at || '')}"
@@ -831,7 +972,8 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 <td>${escapeHtml(record.education)}</td>
                                 <td>${escapeHtml(record.skills || 'N/A')}</td>
                                 <td>${escapeHtml(record.preferences || 'N/A')}</td>
-                                <td>${escapeHtml(record.surveyor_id || 'N/A')}</td>
+                                <td>${escapeHtml(record.address || record.address1 || 'N/A')}</td>
+                                <td>${escapeHtml(record.surveyor_id || record.created_by)}</td>
                                 <td>${escapeHtml(record.status)}</td>
                                 <td>
                                     <div class="dropdown">
@@ -1023,6 +1165,14 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         }
 
         function exportToExcel() {
+            const exportBtn = document.getElementById('exportBtn');
+            const exportText = exportBtn.querySelector('.export-text');
+            const exportLoading = exportBtn.querySelector('.export-loading');
+
+            // Show loading state
+            exportText.style.display = 'none';
+            exportLoading.style.display = 'inline';
+            exportBtn.disabled = true;
             // Get current filter parameters
             const params = new URLSearchParams();
             params.append('status', currentFilters.status_filter);
@@ -1031,6 +1181,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             // Redirect to export script with current filters
             window.location.href = 'export_job_seekers.php?' + params.toString();
+
+            // Reset button state after a delay (in case download doesn't start)
+            setTimeout(() => {
+                exportText.style.display = 'inline';
+                exportLoading.style.display = 'none';
+                exportBtn.disabled = false;
+            }, 5000);
         }
 
         function loadJobSeekerDataDirect(id) {
@@ -1043,6 +1200,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 document.getElementById('editEducation').value = row.dataset.education;
                 document.getElementById('editSkills').value = row.dataset.skills || '';
                 document.getElementById('editPreferences').value = row.dataset.preferences || '';
+                document.getElementById('editAddress').value = row.dataset.address || '';
             } else {
                 alert('Error: Could not find job seeker data');
             }
@@ -1194,6 +1352,68 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 submitBtn.disabled = false;
                 document.getElementById('remark').value = '';
             });
+        });
+
+        function handleNewApplicationSubmit(event) {
+            event.preventDefault();
+            const age = parseInt(document.getElementById('newAge').value);
+            const contact = document.getElementById('newContact').value;
+
+            // Validation
+            if (age < 18 || age > 65) {
+                alert('Age must be between 18 and 65');
+                return false;
+            }
+
+            if (!/^\d{10}$/.test(contact)) {
+                alert('Contact number must be exactly 10 digits');
+                return false;
+            }
+
+            const submitBtn = document.getElementById('newApplicationSubmitBtn');
+            const submitText = submitBtn.querySelector('.submit-text');
+            const loadingSpinner = submitBtn.querySelector('.loading-spinner');
+
+            submitText.style.display = 'none';
+            loadingSpinner.style.display = 'inline';
+            submitBtn.disabled = true;
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.text();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    submitText.style.display = 'inline';
+                    loadingSpinner.style.display = 'none';
+                    submitBtn.disabled = false;
+                    alert('Error submitting form. Please try again.');
+                });
+
+            return false;
+        }
+        const newApplicationModal = document.getElementById('newApplicationModal');
+        newApplicationModal.addEventListener('hidden.bs.modal', function() {
+            const submitBtn = document.getElementById('newApplicationSubmitBtn');
+            const submitText = submitBtn.querySelector('.submit-text');
+            const loadingSpinner = submitBtn.querySelector('.loading-spinner');
+
+            submitText.style.display = 'inline';
+            loadingSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+
+            // Reset form fields
+            document.getElementById('newApplicationForm').reset();
         });
     </script>
 </body>

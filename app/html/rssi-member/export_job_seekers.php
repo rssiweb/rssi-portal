@@ -52,7 +52,7 @@ if ($search_mode) {
 $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
 
 // Get job seekers data
-$query = "SELECT js.*, s.parent_name, s.address, s.surveyor_id 
+$query = "SELECT js.*, s.parent_name, COALESCE(js.address1, s.address) AS address, COALESCE(js.created_by, s.surveyor_id) AS surveyor_id 
           FROM job_seeker_data js 
           LEFT JOIN survey_data s ON js.family_id = s.family_id 
           $where_clause 
@@ -80,7 +80,7 @@ if ($search_mode) {
 }
 echo "\n";
 
-echo "ID\tName\tAge\tContact\tEducation\tSkills\tPreferences\tParent/Guardian\tAddress\tSurveyor ID\tStatus\tRemarks\tCreated Date\n";
+echo "ID\tName\tAge\tContact\tEducation\tSkills\tPreferences\tAddress\tSurveyor ID\tStatus\tRemarks\tCreated Date\n";
 
 while ($row = pg_fetch_assoc($result)) {
     $id = $row['id'];
@@ -90,14 +90,12 @@ while ($row = pg_fetch_assoc($result)) {
     $education = $row['education'];
     $skills = str_replace(["\t", "\n", "\r"], ' ', $row['skills'] ?? '');
     $preferences = str_replace(["\t", "\n", "\r"], ' ', $row['preferences'] ?? '');
-    $parent_name = str_replace(["\t", "\n", "\r"], ' ', $row['parent_name']);
     $address = str_replace(["\t", "\n", "\r"], ' ', $row['address']);
     $surveyor_id = $row['surveyor_id'];
     $status = $row['status'];
     $remarks = str_replace(["\t", "\n", "\r"], ' ', $row['remarks'] ?? '');
     $created_date = $row['created_at'];
-    
-    echo "$id\t$name\t$age\t$contact\t$education\t$skills\t$preferences\t$parent_name\t$address\t$surveyor_id\t$status\t$remarks\t$created_date\n";
+
+    echo "$id\t$name\t$age\t$contact\t$education\t$skills\t$preferences\t$address\t$surveyor_id\t$status\t$remarks\t$created_date\n";
 }
 exit;
-?>
