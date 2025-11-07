@@ -1386,6 +1386,22 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 allowClear: true,
                 // multiple: true
             });
+            // Force set the value after a short delay
+            setTimeout(function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const surveyorValue = urlParams.get('surveyor');
+
+                if (surveyorValue && surveyorValue !== 'all') {
+                    $('#surveyor_filter').val(surveyorValue).trigger('change');
+
+                    // If still not showing, manually create option
+                    if ($('#surveyor_filter').val() !== surveyorValue) {
+                        const displayText = surveyorValue; // You might want to fetch the name
+                        const option = new Option(displayText, surveyorValue, true, true);
+                        $('#surveyor_filter').append(option).trigger('change');
+                    }
+                }
+            }, 500);
         });
     </script>
 </body>
