@@ -955,9 +955,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 $('#search').val('');
                 $('#toggleSearchMode').prop('checked', false);
 
-                // Reset Select2 - clear first, then set to all
-                $('#surveyor_filter').empty();
-                $('#surveyor_filter').append('<option value="all" selected>All Surveyors</option>');
+                // CRITICAL: Properly reset Select2 to "all"
                 $('#surveyor_filter').val('all').trigger('change');
 
                 // Update UI state
@@ -965,6 +963,20 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
                 // Apply reset filters
                 applyFilters();
+            });
+
+            // Handle Select2 clear event
+            $('#surveyor_filter').on('select2:clear', function() {
+                // When Select2 is cleared, ensure the value is set to 'all'
+                $(this).val('all').trigger('change');
+            });
+
+            // Also handle change event to catch manual clearing
+            $('#surveyor_filter').on('change', function() {
+                const currentValue = $(this).val();
+                if (!currentValue || currentValue === '' || (Array.isArray(currentValue) && currentValue.length === 0)) {
+                    $(this).val('all').trigger('change');
+                }
             });
 
             // Initial load
@@ -1180,12 +1192,22 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 }
             }
 
+            // CRITICAL FIX: Ensure Select2 value is properly captured
+            let surveyorFilterValue = $('#surveyor_filter').val();
+
+            // If Select2 is cleared/empty, set to 'all'
+            if (!surveyorFilterValue || surveyorFilterValue === '' || surveyorFilterValue.length === 0) {
+                surveyorFilterValue = 'all';
+                // Also update the Select2 display to show "All Surveyors"
+                $('#surveyor_filter').val('all').trigger('change');
+            }
+
             currentFilters = {
                 status_filter: searchMode ? 'all' : $('#status').val(),
                 search_term: $('#search').val(),
                 date_from: searchMode ? '' : dateFrom,
                 date_to: searchMode ? '' : dateTo,
-                surveyor_filter: searchMode ? 'all' : $('#surveyor_filter').val()
+                surveyor_filter: searchMode ? 'all' : surveyorFilterValue
             };
 
             // Reset the offset and total when filters change
@@ -1201,12 +1223,16 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
         function updateURLParameters() {
             const params = new URLSearchParams();
+
+            // Ensure all values are properly set, especially for Select2
+            const surveyorValue = currentFilters.surveyor_filter === 'all' ? 'all' : currentFilters.surveyor_filter;
+
             params.set('status', currentFilters.status_filter);
             params.set('search', currentFilters.search_term);
             params.set('date_from', currentFilters.date_from);
             params.set('date_to', currentFilters.date_to);
             params.set('date_range', currentDateRange);
-            params.set('surveyor', currentFilters.surveyor_filter);
+            params.set('surveyor', surveyorValue);
             params.set('search_mode', $('#toggleSearchMode').is(':checked') ? '1' : '0');
 
             const newUrl = window.location.pathname + '?' + params.toString();
@@ -1440,7 +1466,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true
+            }).on('select2:clear', function() {
+                // Ensure value is set to 'all' when cleared
+                $(this).val('all').trigger('change');
             });
+
             // Force set the value after a short delay
             setTimeout(function() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1455,6 +1485,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                         const option = new Option(displayText, surveyorValue, true, true);
                         $('#surveyor_filter').append(option).trigger('change');
                     }
+                } else {
+                    // Ensure it's set to 'all' if not specified or explicitly 'all'
+                    $('#surveyor_filter').val('all').trigger('change');
                 }
             }, 500);
         });
