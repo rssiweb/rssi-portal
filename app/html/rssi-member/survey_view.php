@@ -821,11 +821,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     applyFiltersBtn.text('Search');
                 } else {
                     // Search mode disabled - disable search field, enable other fields
+                    searchField.val('');
                     statusField.prop('disabled', false);
                     surveyorField.prop('disabled', false);
                     dateRangeField.prop('disabled', false);
                     searchField.prop('disabled', true); // Disable search field
                     applyFiltersBtn.text('Apply Filters');
+                    currentFilters.search_term = '';
                 }
                 // Update URL when mode changes
                 updateURLParameters();
@@ -877,7 +879,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     toggleSearchMode();
                 }
             }
-
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', function() {
+                readURLParameters();
+                applyFilters();
+            });
             // Initial state - search disabled by default
             $('#toggleSearchMode').prop('checked', false);
             toggleSearchMode();
@@ -952,12 +958,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 const currentParams = new URLSearchParams(window.location.search);
                 $('#currentFilters').val(currentParams.toString());
             });
-        });
-
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', function() {
-            readURLParameters();
-            applyFilters();
         });
 
         const fetchRecords = async (reset = false) => {
