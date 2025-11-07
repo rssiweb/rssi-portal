@@ -657,7 +657,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 <td>${escapeHtml(record.gender)}</td>
                                 <td>${escapeHtml(record.grade)}</td>
                                 <td>${escapeHtml(record.parent_name || 'N/A')}</td>
-                                <td>${escapeHtml(record.contact || 'N/A')}</td>
+                                <td>${record.contact ? `<a href="tel:${record.contact}">${escapeHtml(record.contact)}</a>` : 'N/A'}</td>
                                 <td>
                                     <span class="short-address">${record.address && record.address.length > 30 ? record.address.substring(0, 30) + "..." : (record.address || 'N/A')}</span>
                                     ${record.address && record.address.length > 30 ? 
