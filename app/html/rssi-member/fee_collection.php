@@ -71,7 +71,7 @@ $firstDayOfMonth = "$year-$monthNumber-01";
 $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
 // Check if filters are applied
-$hasFilters = !empty($class) || !empty($studentIds);
+$hasFilters = !empty($class) || !empty($studentIds) || !empty($category);
 
 if ($hasFilters) {
     // Get student data
