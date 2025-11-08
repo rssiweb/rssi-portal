@@ -1460,8 +1460,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             $(".view-history").click(function() {
                 // Get current month/year from URL
                 const urlParams = new URLSearchParams(window.location.search);
-                const month = urlParams.get('month') || '';
-                const year = urlParams.get('year') || '';
+                const monthYear = urlParams.get('month_year') || '';
 
                 const studentId = $(this).data("student-id");
                 const studentName = $(this).data("student-name");
@@ -1480,8 +1479,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                     method: "GET",
                     data: {
                         student_id: studentId,
-                        month: month,
-                        year: year
+                        month_year: monthYear
                     },
                     success: function(data) {
                         $("#historyContent").html(data);

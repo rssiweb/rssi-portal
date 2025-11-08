@@ -2,8 +2,27 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 $studentId = $_GET['student_id'] ?? '';
-$month = $_GET['month'] ?? '';
-$year = $_GET['year'] ?? '';
+$monthYear = $_GET['month_year'] ?? date('Y-m'); // NEW parameter
+
+// Extract month and year from month_year parameter
+if (!empty($monthYear)) {
+    $date = DateTime::createFromFormat('Y-m', $monthYear);
+    if ($date !== false) {
+        $month = $date->format('F'); // Full month name (e.g., "November")
+        $year = $date->format('Y');  // Year (e.g., "2025")
+        $monthNumber = $date->format('m'); // Month number (e.g., "11")
+    } else {
+        // Fallback to current month
+        $month = date('F');
+        $year = date('Y');
+        $monthNumber = date('m');
+    }
+} else {
+    // Fallback to current month
+    $month = date('F');
+    $year = date('Y');
+    $monthNumber = date('m');
+}
 
 if (empty($studentId)) {
     die("Student ID is required");
