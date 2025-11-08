@@ -40,10 +40,17 @@ function getStudentInfoForDate($con, $studentId, $targetDate)
 
 // Get filter parameters
 $status = $_GET['status'] ?? 'Active';
-$month = $_GET['month'] ?? date('F');
-$year = $_GET['year'] ?? date('Y');
+$monthYear = $_GET['month_year'] ?? date('Y-m'); // e.g., 2025-02
+$category = $_GET['category'] ?? [];
 $class = $_GET['class'] ?? [];
 $studentIds = $_GET['student_ids'] ?? [];
+
+// Handle category parameter - could be string or array
+if (!is_array($category) && !empty($category)) {
+    $category = [$category];
+} elseif (empty($category)) {
+    $category = [];
+}
 
 // Handle class parameter - could be string or array
 if (!is_array($class) && !empty($class)) {
@@ -57,8 +64,9 @@ if (!is_array($studentIds)) {
     $studentIds = !empty($studentIds) ? [$studentIds] : [];
 }
 
-// Convert month name to number and get date range
-$monthNumber = date('m', strtotime("$month 1, $year"));
+list($year, $monthNumber) = explode('-', $monthYear);
+$month = date('F', strtotime("$year-$monthNumber-01"));
+
 $firstDayOfMonth = "$year-$monthNumber-01";
 $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
@@ -74,6 +82,15 @@ if ($hasFilters) {
               AND (s.doa <= '$lastDayOfMonth' AND 
                   (s.filterstatus = 'Active' OR 
                    (s.filterstatus = 'Inactive' AND s.effectivefrom > '$firstDayOfMonth')))";
+
+    // Add category filter if categories are selected
+    if (!empty($category)) {
+        $escapedCategories = array_map(function ($cat) use ($con) {
+            return pg_escape_string($con, $cat);
+        }, $category);
+        $categoryList = implode("','", $escapedCategories);
+        $query .= " AND s.category IN ('$categoryList')";
+    }
 
     // Add class filter if classes are selected
     if (!empty($class)) {
@@ -547,24 +564,30 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                     <div class="card-body">
                                         <!-- Updated Filters Form -->
                                         <form method="get" class="row g-3 mb-4 mt-4">
-                                            <div class="col-md-2">
-                                                <select name="status" class="form-select">
-                                                    <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active Students</option>
-                                                    <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive Students</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <select name="month" class="form-select">
-                                                    <?php foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m): ?>
-                                                        <option value="<?= $m ?>" <?= $month == $m ? 'selected' : '' ?>><?= $m ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
                                             <div class="col-md-1">
-                                                <select name="year" class="form-select">
-                                                    <?php for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++): ?>
-                                                        <option value="<?= $y ?>" <?= $year == $y ? 'selected' : '' ?>><?= $y ?></option>
-                                                    <?php endfor; ?>
+                                                <select name="status" class="form-select">
+                                                    <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active</option>
+                                                    <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="month"
+                                                    name="month_year"
+                                                    class="form-control"
+                                                    value="<?= date('Y-m', strtotime("$month 1, $year")) ?>"
+                                                    min="<?= date('Y-m', strtotime('-1 year')) ?>"
+                                                    max="<?= date('Y-m', strtotime('+1 year')) ?>">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="category[]" class="form-select select2-categories" multiple="multiple" id="categorySelect">
+                                                    <?php
+                                                    // Pre-select any existing categories
+                                                    if (!empty($category)) {
+                                                        foreach ($category as $selectedCategory) {
+                                                            echo '<option value="' . htmlspecialchars($selectedCategory) . '" selected>' . htmlspecialchars($selectedCategory) . '</option>';
+                                                        }
+                                                    }
+                                                    ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
@@ -1527,6 +1550,28 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 },
                 placeholder: "Search and select class(es)",
                 // allowClear: true,
+                minimumInputLength: 0,
+                width: '100%'
+            });
+            // Initialize category select2 with AJAX
+            $('#categorySelect').select2({
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: "Search and select category(ies)",
                 minimumInputLength: 0,
                 width: '100%'
             });
