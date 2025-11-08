@@ -704,7 +704,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                         <!-- Replace the table section with this: -->
                                         <?php if (!$hasFilters && empty($_GET)): ?>
                                             <div class="alert alert-info mt-3">
-                                                <i class="fas fa-info-circle"></i> Please select at least one class or enter a student ID to view fee data.
+                                                <i class="fas fa-info-circle"></i> Please select at least one filter to view fee data.
                                             </div>
                                         <?php elseif (empty($processedStudents)): ?>
                                             <div class="alert alert-warning mt-3">
@@ -1497,15 +1497,22 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
         $("#exportReport").click(function(e) {
             e.preventDefault();
 
-            // Get all current filter values
+            // Get all current filter values from the form
             const status = $("select[name='status']").val();
-            const month = $("select[name='month']").val();
-            const year = $("select[name='year']").val();
+            const monthYear = $("input[name='month_year']").val(); // Changed to match your form
+            const category = $("#categorySelect").val() || [];
             const classFilter = $("#classSelect").val() || [];
-            const studentIds = $("#student-select").val() || []; // Changed from student_id to studentIds array
+            const studentIds = $("#student-select").val() || [];
 
             // Build export URL with all current filters
-            let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`;
+            let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month_year=${encodeURIComponent(monthYear)}`;
+
+            // Add category filters if any are selected
+            if (category.length > 0) {
+                category.forEach(c => {
+                    exportUrl += `&category[]=${encodeURIComponent(c)}`;
+                });
+            }
 
             // Add class filters if any are selected
             if (classFilter.length > 0) {
@@ -1514,7 +1521,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 });
             }
 
-            // Add student IDs if provided (changed from single student_id)
+            // Add student IDs if provided
             if (studentIds.length > 0) {
                 studentIds.forEach(id => {
                     exportUrl += `&student_ids[]=${encodeURIComponent(id)}`;
