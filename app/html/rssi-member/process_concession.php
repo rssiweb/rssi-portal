@@ -27,10 +27,18 @@ function cleanArrayParam($param)
 // Get and validate all required parameters - with proper array handling
 $redirectParams = [
     'status' => $_REQUEST['status'] ?? 'Active',
-    'month' => $_REQUEST['month'] ?? date('F'),
-    'year' => $_REQUEST['year'] ?? date('Y'),
+    'month_year' => $_REQUEST['month_year'] ?? date('Y-m'), // e.g., 2025-02
     'search_term' => $_REQUEST['search_term'] ?? ''
 ];
+
+// Handle category parameter (can be array or string)
+if (isset($_REQUEST['category'])) {
+    $redirectParams['category'] = is_array($_REQUEST['category'])
+        ? cleanArrayParam($_REQUEST['category'])
+        : [$_REQUEST['category']];
+} else {
+    $redirectParams['category'] = [];
+}
 
 // Handle class parameter (can be array or string)
 if (isset($_REQUEST['class'])) {
