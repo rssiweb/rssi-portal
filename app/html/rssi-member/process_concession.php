@@ -130,30 +130,6 @@ $doclink = null;
 if (isset($_FILES['supporting_document']) && $_FILES['supporting_document']['error'] === UPLOAD_ERR_OK) {
     $uploadedFile = $_FILES['supporting_document'];
 
-    // Validate file type
-    $allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    $maxFileSize = 5 * 1024 * 1024; // 5MB
-
-    if (!in_array($uploadedFile['type'], $allowedTypes)) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid file type. Allowed types: PDF, JPG, PNG, DOC, DOCX',
-            'redirect' => buildRedirectUrl($redirectParams)
-        ]);
-        exit;
-    }
-
-    if ($uploadedFile['size'] > $maxFileSize) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => 'File size too large. Maximum size is 5MB',
-            'redirect' => buildRedirectUrl($redirectParams)
-        ]);
-        exit;
-    }
-
     // Generate unique filename and upload to Google Drive
     $filename = "concession_" . $studentId . "_" . time();
     $parent = '1oG6jwPuVpjbRPof6gHZvVwmjw3iYscPj'; // Use your concession documents folder ID

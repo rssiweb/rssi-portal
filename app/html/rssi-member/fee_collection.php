@@ -942,8 +942,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                             <!-- Add this after the reason textarea -->
                             <div class="col-md-12 mb-3">
                                 <label for="supportingDocument" class="form-label">Supporting Document</label>
-                                <input type="file" class="form-control" id="supportingDocument" name="supporting_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                                <div class="form-text">Upload supporting documents (PDF, JPG, PNG, DOC). Max file size: 5MB</div>
+                                <input type="file" class="form-control" id="supportingDocument" name="supporting_document">
                             </div>
                             <div class="col-md-8">
                                 <label for="concessionReason" class="form-label">Reason</label>
