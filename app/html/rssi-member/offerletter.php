@@ -43,9 +43,34 @@ if (!$result) {
 // Example: set $array to the first row
 $array = $resultArr[0] ?? [];
 $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
-
+$isVolunteer = ($array['engagement'] ?? '') === 'Volunteer';
 ?>
+<?php
+$documents = [
 
+    // Intern docs
+    "intern_handbook" => [
+        "Internship Handbook",
+        "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view"
+    ],
+    "intern_orientation" => [
+        "Internship Program Orientation",
+        "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
+    ],
+
+    // Centre Incharge docs
+    "ci_key_responsibilities" => [
+        "Key Responsibilities of Centre In-Charge",
+        "https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view"
+    ],
+
+    // Teacher doc
+    "teacher_overview" => [
+        "Role and Responsibilities Overview",
+        "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+    ]
+];
+?>
 <!DOCTYPE html>
 <html>
 
@@ -306,14 +331,16 @@ $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
                                         <?php } ?>
                                         <?php if ($array['job_type'] != "Contractual") { ?>
                                             <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
-                                            <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
+                                            <?php if (!($isVolunteer)): ?>
+                                                <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
+                                            <?php endif; ?>
                                         <?php } ?>
 
                                         <li>Leaves will be governed by the Organization's Leave Policy. The Organization retains the right to amend, modify, or replace the Leave Policy as deemed necessary. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
 
                                         <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
 
-                                        <?php if ($array['job_type'] != "Contractual") { ?>
+                                        <?php if ($array['job_type'] != "Contractual" && !($isVolunteer)) { ?>
                                             <li>
                                                 You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
                                             </li>
@@ -335,44 +362,41 @@ $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
                                             Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
                                             <ol type="A">
                                                 <?php
-                                                $links = [
-                                                    "Intern" => [
-                                                        "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
-                                                        "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
-                                                    ],
-                                                    "Centre Incharge" => [
-                                                        "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view",
-                                                        "Key Responsibilities of Centre In-Charge" => "https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view"
-                                                    ],
-                                                    "Employee" => [
-                                                        "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
-                                                    ],
-                                                    "Volunteer" => [
-                                                        // "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
-                                                        "Internship Handbook" => "https://drive.google.com/file/d/1jRuxE811Y8sOC0c90f6NhPpkZndszRHQ/view",
-                                                        "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
-                                                    ]
-                                                ];
+                                                $position = strtolower($array['position']);
+                                                $engagement = strtolower($array['engagement']);
+                                                $output = [];
 
-                                                // Assume these are already defined somewhere
-                                                $position_associate = $array['position'];  // e.g., "Intern", "Centre Incharge", etc.
-                                                $engagement_associate = $array['engagement']; // New variable you want to use if not Centre Incharge
+                                                /* 1. If position intern */
+                                                if (stripos($position, "intern") !== false) {
+                                                    $output[] = $documents["intern_handbook"];
+                                                    $output[] = $documents["intern_orientation"];
+                                                }
 
-                                                if (str_contains($position_associate, "Centre Incharge")) {
-                                                    // If position is Centre Incharge, only show Centre Incharge links
-                                                    foreach ($links["Centre Incharge"] as $text => $url) {
-                                                        echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
-                                                    }
-                                                } else {
-                                                    // Otherwise, use engagement type to find the correct links
-                                                    foreach ($links as $key => $items) {
-                                                        if (str_contains($engagement_associate, $key)) {
-                                                            foreach ($items as $text => $url) {
-                                                                echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
-                                                            }
-                                                            break; // Stop after first match
-                                                        }
-                                                    }
+                                                /* 2. If position centre incharge AND engagement employee → CI + Teacher docs */ elseif (strpos($position, "centre incharge") !== false && $engagement === "employee") {
+                                                    $output[] = $documents["ci_key_responsibilities"];
+                                                    $output[] = $documents["teacher_overview"];
+                                                }
+
+                                                /* 3. engagement employee AND position teacher → teacher doc */ elseif ($engagement === "employee" && strpos($position, "teacher") !== false) {
+                                                    $output[] = $documents["teacher_overview"];
+                                                }
+
+                                                /* 4. position teacher AND engagement volunteer → teacher doc */ elseif ($engagement === "volunteer" && strpos($position, "teacher") !== false) {
+                                                    $output[] = $documents["teacher_overview"];
+                                                }
+
+                                                /* 5. engagement volunteer AND NOT a teacher → no docs (do nothing) */ elseif ($engagement === "volunteer") {
+                                                    $output = []; // explicit → no docs
+                                                }
+
+                                                /* Default: no docs unless specified above */ else {
+                                                    $output = [];
+                                                }
+
+                                                /* Print final results */
+                                                foreach ($output as $doc) {
+                                                    list($title, $url) = $doc;
+                                                    echo "<li><a href=\"$url\" target=\"_blank\">$title</a></li>";
                                                 }
                                                 ?>
                                             </ol>
