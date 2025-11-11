@@ -43,7 +43,7 @@ if (!$result) {
 // Example: set $array to the first row
 $array = $resultArr[0] ?? [];
 $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
-$isVolunteer = ($array['engagement'] ?? '') === 'Volunteer';
+$isVolunteer = ($array['engagement'] ?? '') === 'Volunteer' && !str_contains($array['position'] ?? '', 'Intern');
 ?>
 <?php
 $documents = [
@@ -310,15 +310,29 @@ $documents = [
                                                 'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
                                             ],
                                             'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
-                                            'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
+                                            'Volunteer' => ["fifteen (15) days", "", "4-hour", "3"],
+                                            'VolunteerIntern' => ["thirty (30) days", "4 months", "4-hour", "3"],
                                         ];
 
                                         // Check the engagement and job type, and set the values accordingly
                                         if (isset($settings[$array['engagement']])) {
+
                                             if ($array['engagement'] === 'Employee' && isset($settings['Employee'][$array['job_type']])) {
                                                 list($notice_period, $mintenure, $workinghours, $workday) = $settings['Employee'][$array['job_type']];
                                             } else {
-                                                list($notice_period, $mintenure, $workinghours, $workday) = $settings[$array['engagement']];
+
+                                                // ✅ NEW COMBINATION: Volunteer + Position Intern
+                                                if (
+                                                    $array['engagement'] === 'Volunteer' &&
+                                                    stripos($array['position'], 'Intern') !== false
+                                                ) {
+                                                    list($notice_period, $mintenure, $workinghours, $workday) = $settings['VolunteerIntern'];
+                                                }
+
+                                                // Normal behavior
+                                                else {
+                                                    list($notice_period, $mintenure, $workinghours, $workday) = $settings[$array['engagement']];
+                                                }
                                             }
                                         }
 
@@ -362,30 +376,30 @@ $documents = [
                                             Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
                                             <ol type="A">
                                                 <?php
-                                                $position = strtolower($array['position']);
-                                                $engagement = strtolower($array['engagement']);
+                                                $position_doc = strtolower($array['position']);
+                                                $engagement_doc = strtolower($array['engagement']);
                                                 $output = [];
 
                                                 /* 1. If position intern */
-                                                if (stripos($position, "intern") !== false) {
+                                                if (stripos($position_doc, "intern") !== false) {
                                                     $output[] = $documents["intern_handbook"];
                                                     $output[] = $documents["intern_orientation"];
                                                 }
 
-                                                /* 2. If position centre incharge AND engagement employee → CI + Teacher docs */ elseif (strpos($position, "centre incharge") !== false && $engagement === "employee") {
+                                                /* 2. If position centre incharge AND engagement employee → CI + Teacher docs */ elseif (strpos($position_doc, "centre incharge") !== false && $engagement_doc === "employee") {
                                                     $output[] = $documents["ci_key_responsibilities"];
                                                     $output[] = $documents["teacher_overview"];
                                                 }
 
-                                                /* 3. engagement employee AND position teacher → teacher doc */ elseif ($engagement === "employee" && strpos($position, "teacher") !== false) {
+                                                /* 3. engagement employee AND position teacher → teacher doc */ elseif ($engagement_doc === "employee" && strpos($position_doc, "teacher") !== false) {
                                                     $output[] = $documents["teacher_overview"];
                                                 }
 
-                                                /* 4. position teacher AND engagement volunteer → teacher doc */ elseif ($engagement === "volunteer" && strpos($position, "teacher") !== false) {
+                                                /* 4. position teacher AND engagement volunteer → teacher doc */ elseif ($engagement_doc === "volunteer" && strpos($position_doc, "teacher") !== false) {
                                                     $output[] = $documents["teacher_overview"];
                                                 }
 
-                                                /* 5. engagement volunteer AND NOT a teacher → no docs (do nothing) */ elseif ($engagement === "volunteer") {
+                                                /* 5. engagement volunteer AND NOT a teacher → no docs (do nothing) */ elseif ($engagement_doc === "volunteer") {
                                                     $output = []; // explicit → no docs
                                                 }
 

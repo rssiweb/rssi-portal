@@ -529,6 +529,7 @@ function generateRequiredAttribute($field)
                                                 <option value="">Select Document Type</option>
                                                 <option value="caste_certificate">Caste Certificate</option>
                                                 <option value="college_id">College ID</option>
+                                                <option value="internship_report">Internship Report</option>
                                                 <!-- Add more options as needed -->
                                             </select>
                                         </div>
