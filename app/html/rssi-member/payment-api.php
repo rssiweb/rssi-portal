@@ -1127,6 +1127,7 @@ if (@$_POST['form-type'] == "admission") {
   $caste = $_POST['caste'];
   $c_auth_session_id = isset($_POST['c_auth_session_id']) ? $_POST['c_auth_session_id'] : null;
   $is_verified = false; // default
+  $sup_document = $_FILES['supporting-document'];
 
   if ($c_auth_session_id) {
     $query = "SELECT is_verified FROM cash_verification_codes WHERE session_id = $1 LIMIT 1";
@@ -1202,8 +1203,15 @@ if (@$_POST['form-type'] == "admission") {
       $parent_caste_document = '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E';
       $doclink_caste_document = uploadeToDrive($caste_document, $parent_caste_document, $filename_caste_document);
     }
+    if (empty($_FILES['supporting-document']['name'])) {
+      $doclink_sup_document = null;
+    } else {
+      $filename_sup_document = "sup_" . $student_name . "_" . time();
+      $parent_sup_document = '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC';
+      $doclink_sup_document = uploadeToDrive($sup_document, $parent_sup_document, $filename_sup_document);
+    }
 
-    $student = "INSERT INTO rssimyprofile_student (type_of_admission,studentname,dateofbirth,gender,student_photo_raw,aadhar_available,studentaadhar,upload_aadhar_card,guardiansname,relationwithstudent,guardianaadhar,stateofdomicile,postaladdress,permanentaddress,contact,emailaddress,preferredbranch,class,schooladmissionrequired,nameoftheschool,nameoftheboard,medium,familymonthlyincome,totalnumberoffamilymembers,payment_mode,c_authentication_code,transaction_id,student_id,nameofthesubjects,doa,caste,caste_document) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$permanent_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select','$timestamp','$caste','$doclink_caste_document')";
+    $student = "INSERT INTO rssimyprofile_student (type_of_admission,studentname,dateofbirth,gender,student_photo_raw,aadhar_available,studentaadhar,upload_aadhar_card,guardiansname,relationwithstudent,guardianaadhar,stateofdomicile,postaladdress,permanentaddress,contact,emailaddress,preferredbranch,class,schooladmissionrequired,nameoftheschool,nameoftheboard,medium,familymonthlyincome,totalnumberoffamilymembers,payment_mode,c_authentication_code,transaction_id,student_id,nameofthesubjects,doa,caste,caste_document,supporting_doc) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$permanent_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select','$timestamp','$caste','$doclink_caste_document','$doclink_sup_document')";
 
     $result = pg_query($con, $student);
 

@@ -50,7 +50,8 @@ $fieldNames = [
     'student_photo' => 'Student Photo',
     'aadhar_card_upload' => 'Aadhar Card Upload',
     'caste_document' => 'Caste Document',
-    'effective_from_date' => 'Effective From Date'
+    'effective_from_date' => 'Effective From Date',
+    'supporting_doc' => 'Supporting Document'
 ];
 
 // Retrieve student ID from form input
@@ -143,6 +144,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $student_photo = $_FILES['student-photo'] ?? null;
     $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
     $caste_document = $_FILES['caste-document'] ?? null;
+    $supporting_doc = $_FILES['supporting-document'] ?? null;
 
     // Check if new files were uploaded
     if (!empty($student_photo['name'])) {
@@ -167,6 +169,13 @@ if (@$_POST['form-type'] == "admission_admin") {
         $doclink_caste_document = uploadeToDrive($caste_document, $parent, $filename);
         $updates[] = "caste_document='$doclink_caste_document'";
         $changedFields[] = 'caste_document';
+    }
+    if (!empty($supporting_doc['name'])) {
+        $filename = "supportingdoc_" . $student_id . "_" . $timestamp;
+        $parent = '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC';
+        $doclink_supporting_doc = uploadeToDrive($supporting_doc, $parent, $filename);
+        $updates[] = "supporting_doc='$doclink_supporting_doc'";
+        $changedFields[] = 'supporting_doc';
     }
 
     // Handle effective_from_date separately
@@ -699,6 +708,29 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                 <input type="hidden" id="type-of-admission" name="type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
                                                                 <input type="hidden" id="effective-from-date" name="effective_from_date" value="<?php echo $array['effective_from_date'] ?? '' ?>">
                                                                 <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="supporting-document">Supporting Document:</label>
+                                                            </td>
+                                                            <td>
+                                                                <!-- File input for uploading a supporting document -->
+                                                                <input type="file" class="form-control" id="supporting-document"
+                                                                    name="supporting-document" accept=".pdf,.jpg,.jpeg,.png">
+
+                                                                <!-- Display existing document link if available -->
+                                                                <?php if (!empty($array['supporting_doc'])): ?>
+                                                                    <div>
+                                                                        <a href="<?php echo htmlspecialchars($array['supporting_doc']); ?>" target="_blank">
+                                                                            View Current Document
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
+
+                                                                <small id="supporting-document-help" class="form-text text-muted">
+                                                                    Upload the supporting document (PDF, JPG, JPEG, or PNG).
+                                                                </small>
                                                             </td>
                                                         </tr>
                                                         <tr>
