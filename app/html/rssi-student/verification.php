@@ -12,27 +12,31 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $student_id = $row[1];
     $studentname = $row[3];
     $gender = $row[4];
-    $age = $row[5];
+    $dateofbirth = $row[12];
     $status = $row[21];
     $remarks = $row[22];
     $photourl = $row[24];
     $filterstatus = $row[33];
     $doa = $row[40];
-    $special_service = $row[50];} ?>
+    $special_service = $row[50];
+} ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -43,7 +47,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -87,58 +91,58 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </div>
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
-            
-                <form id="myform" action="" method="GET" onsubmit="process()">
-                    <div class="form-group" style="display: inline-block;">
-                        <div class="col2" style="display: inline-block;">
-                            <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $id ?>">
-                        </div>
-                    </div>
-                    <div class="col2 left" style="display: inline-block;">
-                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                    </div>
-                </form>
 
-                <table class="table">
-                    <thead>
+            <form id="myform" action="" method="GET" onsubmit="process()">
+                <div class="form-group" style="display: inline-block;">
+                    <div class="col2" style="display: inline-block;">
+                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $id ?>">
+                    </div>
+                </div>
+                <div class="col2 left" style="display: inline-block;">
+                    <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                </div>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Photo</th>
+                        <th scope="col" id="cw2">Student details</th>
+                        <th scope="col" id="cw1">Current Status</th>
+                        <th scope="col" id="cw1">Date of Admission</th>
+                    </tr>
+                </thead>
+                <?php if (@$student_id > 0) {
+                ?>
+                    <tbody>
                         <tr>
-                            <th scope="col">Photo</th>
-                            <th scope="col" id="cw2">Student details</th>
-                            <th scope="col" id="cw1">Current Status</th>
-                            <th scope="col" id="cw1">Date of Admission</th>
-                        </tr>
-                    </thead>
-                    <?php if (@$student_id > 0) {
-                    ?>
-                        <tbody>
-                            <tr>
 
-                                <td style="line-height: 1.7;"><img src="<?php echo $photourl ?>" width=100px /></td>
-                                <td id="cw2" style="line-height: 1.7;"><b><?php echo $studentname ?> (<?php echo $student_id ?>)</b><br>
-                                    <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?>&nbsp;Years)
-                                </td>
-                                <td id="cw1" style="line-height: 1.7;"><?php echo $filterstatus ?></td>
-                                <td id="cw1" style="line-height: 1.7;"><?php echo $doa ?></td>
-                            </tr>
-                        </tbody>
-                </table>
-            <?php
-                    } else if ($id == "") {
-            ?>
-                <tr>
-                    <td>Please enter Student ID.</td>
-                </tr>
-            <?php
-                    } else {
-            ?>
-                <tr>
-                    <td>No record found for <?php echo $id ?></td>
-                </tr>
-            <?php }
-            ?>
-            </tbody>
+                            <td style="line-height: 1.7;"><img src="<?php echo $photourl ?>" width=100px /></td>
+                            <td id="cw2" style="line-height: 1.7;"><b><?php echo $studentname ?> (<?php echo $student_id ?>)</b><br>
+                                <span style="line-height: 3;"><?php echo $gender ?> (<?php echo (new DateTime())->diff(new DateTime($dateofbirth))->y; ?> Years)
+                            </td>
+                            <td id="cw1" style="line-height: 1.7;"><?php echo $filterstatus ?></td>
+                            <td id="cw1" style="line-height: 1.7;"><?php echo $doa ?></td>
+                        </tr>
+                    </tbody>
             </table>
+        <?php
+                } else if ($id == "") {
+        ?>
+            <tr>
+                <td>Please enter Student ID.</td>
+            </tr>
+        <?php
+                } else {
+        ?>
+            <tr>
+                <td>No record found for <?php echo $id ?></td>
+            </tr>
+        <?php }
+        ?>
+        </tbody>
+        </table>
 
 
         </div>
