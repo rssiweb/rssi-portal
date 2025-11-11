@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
-
+include("../../util/drive.php");
 // Set default response headers
 header('Content-Type: application/json');
 
@@ -123,6 +123,43 @@ if ($effectiveUntil && !DateTime::createFromFormat('Y-m-d', $effectiveUntil)) {
     exit;
 }
 
+// Add this after your input validation section and before the transaction start
+
+// Handle file upload
+$doclink = null;
+if (isset($_FILES['supporting_document']) && $_FILES['supporting_document']['error'] === UPLOAD_ERR_OK) {
+    $uploadedFile = $_FILES['supporting_document'];
+
+    // Validate file type
+    $allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+
+    if (!in_array($uploadedFile['type'], $allowedTypes)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid file type. Allowed types: PDF, JPG, PNG, DOC, DOCX',
+            'redirect' => buildRedirectUrl($redirectParams)
+        ]);
+        exit;
+    }
+
+    if ($uploadedFile['size'] > $maxFileSize) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'File size too large. Maximum size is 5MB',
+            'redirect' => buildRedirectUrl($redirectParams)
+        ]);
+        exit;
+    }
+
+    // Generate unique filename and upload to Google Drive
+    $filename = "concession_" . $studentId . "_" . time();
+    $parent = '1oG6jwPuVpjbRPof6gHZvVwmjw3iYscPj'; // Use your concession documents folder ID
+    $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+}
+
 // Start transaction
 if (!pg_query($con, "BEGIN")) {
     http_response_code(500);
@@ -136,9 +173,10 @@ if (!pg_query($con, "BEGIN")) {
 
 try {
     $insertedCount = 0;
+    // Replace your current insert query with this:
     $insertQuery = "INSERT INTO student_concessions 
-                   (student_id, category_id, concession_amount, reason, effective_from, effective_until, created_by,concession_category)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7,$8)";
+               (student_id, category_id, concession_amount, reason, effective_from, effective_until, created_by, concession_category, supporting_document)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
 
     // Prepare statement
     $stmt = pg_prepare($con, "insert_concession", $insertQuery);
@@ -159,7 +197,8 @@ try {
             $effectiveFrom,
             $effectiveUntil,
             $associatenumber,
-            $concession_category
+            $concession_category,
+            $doclink  // Add this parameter - will be null if no file uploaded
         ];
 
         $result = pg_execute($con, "insert_concession", $params);

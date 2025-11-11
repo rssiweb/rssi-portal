@@ -903,7 +903,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                     <h5 class="modal-title" id="concessionModalLabel">Add Concession</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="concessionForm">
+                <form id="concessionForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -938,6 +938,12 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                         <i class="bi bi-info-circle"></i> Category Info
                                     </button>
                                 </div>
+                            </div>
+                            <!-- Add this after the reason textarea -->
+                            <div class="col-md-12 mb-3">
+                                <label for="supportingDocument" class="form-label">Supporting Document</label>
+                                <input type="file" class="form-control" id="supportingDocument" name="supporting_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                <div class="form-text">Upload supporting documents (PDF, JPG, PNG, DOC). Max file size: 5MB</div>
                             </div>
                             <div class="col-md-8">
                                 <label for="concessionReason" class="form-label">Reason</label>
@@ -997,23 +1003,18 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                 e.preventDefault();
 
                 var form = $(this);
-                var formData = form.serialize();
+                var formData = new FormData(this); // Use FormData for file upload
 
-                // Get all current URL parameters
+                // Get all current URL parameters and append to FormData
                 var urlParams = new URLSearchParams(window.location.search);
-
-                // Add all parameters to form data
                 urlParams.forEach(function(value, key) {
-                    // Handle array parameters (like class[])
                     if (key.endsWith('[]')) {
-                        // Get all values for this array parameter
                         var values = urlParams.getAll(key);
                         values.forEach(function(val) {
-                            formData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(val);
+                            formData.append(key, val);
                         });
                     } else {
-                        // Handle regular parameters
-                        formData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                        formData.append(key, value);
                     }
                 });
 
@@ -1022,19 +1023,20 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
                 // Show loading state
                 submitBtn.prop('disabled', true).html(`
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Processing...
-        `);
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Processing...
+            `);
 
                 // AJAX request
                 $.ajax({
                     url: 'process_concession.php',
                     type: 'POST',
                     data: formData,
+                    processData: false, // Important for file upload
+                    contentType: false, // Important for file upload
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            // Redirect with all parameters
                             window.location.href = response.redirect;
                         } else {
                             alert(response.message);
