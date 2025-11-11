@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -543,6 +544,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                                                 <th>Effective From</th>
                                                                 <th>Effective Until</th>
                                                                 <th>Reason</th>
+                                                                <th>Supporting Document</th>
                                                                 <th>Created By</th>
                                                                 <th>Created At</th>
                                                                 <th>Actions</th>
@@ -568,6 +570,13 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                                                         <td><?= $concession['formatted_from_date'] ?></td>
                                                                         <td><?= $concession['formatted_until_date'] ?></td>
                                                                         <td><?= nl2br(htmlspecialchars($concession['reason'])) ?></td>
+                                                                        <td>
+                                                                            <?php if (!empty($concession['supporting_document'])): ?>
+                                                                                <a href="<?= htmlspecialchars($concession['supporting_document']) ?>" target="_blank">View</a>
+                                                                            <?php else: ?>
+                                                                                N/A
+                                                                            <?php endif; ?>
+                                                                        </td>
                                                                         <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
                                                                         <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
                                                                         <td>
@@ -607,6 +616,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                                                 <th>Effective From</th>
                                                                 <th>Effective Until</th>
                                                                 <th>Reason</th>
+                                                                <th>Supporting Document</th>
                                                                 <th>Created By</th>
                                                                 <th>Created At</th>
                                                                 <th>Actions</th>
@@ -632,6 +642,13 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                                                         <td><?= $concession['formatted_from_date'] ?></td>
                                                                         <td><?= $concession['formatted_until_date'] ?></td>
                                                                         <td><?= nl2br(htmlspecialchars($concession['reason'])) ?></td>
+                                                                        <td>
+                                                                            <?php if (!empty($concession['supporting_document'])): ?>
+                                                                                <a href="<?= htmlspecialchars($concession['supporting_document']) ?>" target="_blank">View</a>
+                                                                            <?php else: ?>
+                                                                                N/A
+                                                                            <?php endif; ?>
+                                                                        </td>
                                                                         <td><?= htmlspecialchars($concession['created_by_name']) ?></td>
                                                                         <td><?= date('d M Y H:i', strtotime($concession['created_at'])) ?></td>
                                                                         <td>
@@ -891,7 +908,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                             <h5 class="modal-title">Edit Concession</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form id="editConcessionForm">
+                        <form id="editConcessionForm" enctype="multipart/form-data">
                             <div class="modal-body">
                                 <input type="hidden" name="id" value="${response.data.id}">
                                 <div class="row mb-3">
@@ -912,6 +929,12 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                                             <option value="">-- Select Category --</option>
                                             ${generateOptions(response.data.concession_category)}
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label for="editSupportingDocument" class="form-label">Supporting Document</label>
+                                        <input type="file" class="form-control" id="editSupportingDocument" name="supporting_document">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -972,13 +995,18 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                 const originalText = submitBtn.html();
 
                 submitBtn.prop('disabled', true).html(`
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...
-            `);
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...
+    `);
+
+                // Use FormData to handle file upload
+                var formData = new FormData(this);
 
                 $.ajax({
                     url: 'update_concession.php',
                     type: 'POST',
-                    data: form.serialize(),
+                    data: formData,
+                    processData: false, // Important for file upload
+                    contentType: false, // Important for file upload
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
@@ -1088,17 +1116,29 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
 
                     let changes = [];
 
-                    // Check each field for changes
+                    // Check each field for changes - ADDED supporting_document
                     const fieldsToCheck = [
                         'concession_category', 'concession_amount',
-                        'effective_from', 'effective_until', 'reason'
+                        'effective_from', 'effective_until', 'reason', 'supporting_document'
                     ];
 
                     fieldsToCheck.forEach(field => {
                         const oldVal = oldData[field];
                         const newVal = newData[field];
 
-                        if (oldVal !== newVal) {
+                        // Skip if both are null/undefined/empty or equal
+                        if ((!oldVal && !newVal) || oldVal === newVal) return;
+
+                        // Handle supporting_document field differently
+                        if (field === 'supporting_document') {
+                            if (!oldVal && newVal) {
+                                changes.push('Document: Added');
+                            } else if (oldVal && !newVal) {
+                                changes.push('Document: Removed');
+                            } else if (oldVal !== newVal) {
+                                changes.push('Document: Updated');
+                            }
+                        } else {
                             // Format field name for display
                             const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
@@ -1114,7 +1154,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
                         }
                     });
 
-                    return changes.join('<br>');
+                    return changes.length > 0 ? changes.join('<br>') : 'No changes detected';
                 } catch (e) {
                     console.error('Error formatting changes:', e);
                     return 'Changes could not be displayed';
