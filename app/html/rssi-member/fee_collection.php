@@ -998,7 +998,37 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     </div>
     <script>
         $(document).ready(function() {
+            // Function to toggle file field requirement
+            function toggleFileRequirement() {
+                var selectedCategory = $('#concessionCategory').val();
+                var fileInput = $('#supportingDocument');
+
+                if (selectedCategory === 'financial_hardship') {
+                    fileInput.prop('required', true);
+                } else {
+                    fileInput.prop('required', false);
+                }
+            }
+
+            // Initial check on page load
+            toggleFileRequirement();
+
+            // Check when category changes
+            $('#concessionCategory').change(function() {
+                toggleFileRequirement();
+            });
             $('#concessionForm').on('submit', function(e) {
+                var selectedCategory = $('#concessionCategory').val();
+                var fileInput = $('#supportingDocument')[0];
+
+                // Validate file for financial hardship
+                if (selectedCategory === 'financial_hardship') {
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        alert('Supporting document is required for Financial Hardship concessions.');
+                        e.preventDefault();
+                        return false;
+                    }
+                }
                 e.preventDefault();
 
                 var form = $(this);
