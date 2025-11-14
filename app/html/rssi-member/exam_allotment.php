@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                             <?php echo htmlspecialchars($_GET['teacher_id']); ?>
                                                         </option>
                                                     <?php else: ?>
-                                                        <option disabled selected hidden>Select Teacher's ID</option>
+                                                        <!-- Ajax will populate options here -->
                                                     <?php endif; ?>
                                                 </select>
                                             </div>
@@ -456,14 +456,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $("#exam_type").prop('disabled', false);
             $("#academic_year").prop('disabled', false);
             $("#subject").prop('disabled', false);
-            $("#teacher_id_viva").prop('disabled', false);
+            $("#teacher_id").prop('disabled', false);
         } else {
             // Enable input fields if checkbox is checked
             $("#exam_id").prop('disabled', false);
             $("#exam_type").prop('disabled', true);
             $("#academic_year").prop('disabled', true);
             $("#subject").prop('disabled', true);
-            $("#teacher_id_viva").prop('disabled', true);
+            $("#teacher_id").prop('disabled', true);
         }
 
         // Add event listener to checkbox
@@ -474,14 +474,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $("#exam_type").prop('disabled', true);
                 $("#academic_year").prop('disabled', true);
                 $("#subject").prop('disabled', true);
-                $("#teacher_id_viva").prop('disabled', true);
+                $("#teacher_id").prop('disabled', true);
             } else {
                 // Enable input fields if checkbox is not checked
                 $("#exam_id").prop('disabled', true);
                 $("#exam_type").prop('disabled', false);
                 $("#academic_year").prop('disabled', false);
                 $("#subject").prop('disabled', false);
-                $("#teacher_id_viva").prop('disabled', false);
+                $("#teacher_id").prop('disabled', false);
             }
         });
     </script>
