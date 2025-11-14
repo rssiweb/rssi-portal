@@ -309,7 +309,8 @@ if (isset($_POST['update_exam'])) {
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term
+                            q: params.term,
+                            isActive: true
                         };
                     },
                     processResults: function(data) {

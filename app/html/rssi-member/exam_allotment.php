@@ -10,26 +10,6 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-if ($role == 'Admin' || $role == 'Offline Manager') {
-    // Fetching the data and populating the $teachers array
-    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
-    $result = pg_query($con, $query);
-
-    if (!$result) {
-        die("Error in SQL query: " . pg_last_error());
-    }
-
-    $teachers = array();
-    while ($row = pg_fetch_assoc($result)) {
-        $teachers[] = $row;
-    }
-
-    // Free resultset
-    pg_free_result($result);
-}
-
-$results = [];
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Initialize query with base SELECT statement
@@ -96,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Only execute the query if a filter is provided
     if ($filterProvided) {
         // Add filter for Teacher ID (applies to both teacher_id_viva and teacher_id_written)
-        if (!empty($_GET['teacher_id_viva'])) {
+        if (!empty($_GET['teacher_id'])) {
             $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 1) . ")";
-            $params[] = $_GET['teacher_id_viva'];
+            $params[] = $_GET['teacher_id'];
         }
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
@@ -160,6 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -249,16 +231,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                         </div>
                                         <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                                             <div class="col-md-3">
-                                                <label for="teacher_id_viva" class="form-label">Teacher ID</label>
-                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva">
-                                                    <option disabled selected hidden>Select Teacher's ID</option>
-                                                    <?php foreach ($teachers as $teacher) { ?>
-                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && $_GET['teacher_id_viva'] == $teacher['associatenumber']) ? 'selected' : ''; ?>>
-                                                            <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
+                                                <label for="teacher_id" class="form-label">Teacher ID</label>
+                                                <select class="form-select select2" id="teacher_id" name="teacher_id">
+
+                                                    <?php if (!empty($_GET['teacher_id'])): ?>
+                                                        <!-- Pre-fill selected value -->
+                                                        <option value="<?php echo htmlspecialchars($_GET['teacher_id']); ?>" selected>
+                                                            <?php echo htmlspecialchars($_GET['teacher_id']); ?>
                                                         </option>
-                                                    <?php } ?>
-                                                    <option disabled>---</option>
-                                                    <option value="clear">Clear Selection</option>
+                                                    <?php else: ?>
+                                                        <option disabled selected hidden>Select Teacher's ID</option>
+                                                    <?php endif; ?>
                                                 </select>
                                             </div>
                                         <?php } ?>
@@ -463,16 +446,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     label.appendChild(asterisk);
                 }
             });
-
-            // Handle clear selection option
-            var selects = document.querySelectorAll('select');
-            selects.forEach(function(select) {
-                select.addEventListener('change', function() {
-                    if (this.value === 'clear') {
-                        this.selectedIndex = 0;
-                    }
-                });
-            });
         });
     </script>
     <script>
@@ -551,6 +524,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     alert("Please select an Exam Type or check 'Search by Exam ID'");
                     document.getElementById("exam_type").focus();
                 }
+            });
+        });
+    </script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#teacher_id').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            isActive: true
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                // multiple: true
             });
         });
     </script>

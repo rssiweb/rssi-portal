@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                                 <div class="row exam-info">
                                                     <div class="col-md-6"><strong>Academic Year: </strong><?php echo $unique_exam['academic_year']; ?></div>
-                                                    <div class="col-md-6"><strong>Subject:</strong> <?php echo $unique_exam['subject']; ?></div>
+                                                    <div class="col-md-6"><strong>Subject:</strong> <span class="text-danger"><?php echo $unique_exam['subject']; ?></span></div>
 
                                                 </div>
 
