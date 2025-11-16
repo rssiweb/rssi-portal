@@ -595,33 +595,100 @@ if ($class_category_data) {
             <?php } elseif ($student_exists && !$no_records_found && isset($marks_result)) { ?>
 
                 <?php
-                function calculateGrade($percentage)
-                {
-                    if ($percentage >= 90) {
-                        return ["A1", "Excellent"];
-                    } elseif ($percentage >= 80) {
-                        return ["A2", "Very Good"];
-                    } elseif ($percentage >= 70) {
-                        return ["B1", "Good"];
-                    } elseif ($percentage >= 60) {
-                        return ["B2", "Above Average"];
-                    } elseif ($percentage >= 50) {
-                        return ["C1", "Fair / Average"];
-                    } elseif ($percentage >= 40) {
-                        return ["C2", "Below Average"];
-                    } elseif ($percentage >= 20) {
-                        return ["D", "Poor"];
-                    } else {
-                        return ["E", "Fail"];
+                // ---------------------------------------
+                // 1) Compute percentage
+                // ---------------------------------------
+                $percentage = ($total_obtained_marks / $total_full_marks) * 100;
+                $formattedPercentage = number_format($percentage, 2);
+
+                // ---------------------------------------
+                // 2) Determine latest exam date (written & viva)
+                // ---------------------------------------
+                $written_date = null;
+                $viva_date = null;
+
+                foreach ($ordered_marks_data as $row) {
+                    if (!empty($row['exam_date_written']) && $row['exam_date_written'] !== '0000-00-00') {
+                        $written_date = $row['exam_date_written'];
+                    }
+                    if (!empty($row['exam_date_viva']) && $row['exam_date_viva'] !== '0000-00-00') {
+                        $viva_date = $row['exam_date_viva'];
                     }
                 }
 
-                $percentage = ($total_obtained_marks / $total_full_marks) * 100;
-                $formattedPercentage = number_format($percentage, 2);
-                $gradeAndDesc = calculateGrade($percentage);
+                $latest_exam_date = max($written_date, $viva_date);
 
-                // Determine pass or fail based on the formatted percentage
-                $passOrFail = ($percentage < 20) ? 'Fail' : 'Pass';
+                // ---------------------------------------
+                // 3) Fetch applicable grade rule based on latest exam date
+                // ---------------------------------------
+                $rule_query = "
+                    SELECT rule_id
+                    FROM grade_rules
+                    WHERE valid_from <= $1
+                    AND (valid_to IS NULL OR valid_to >= $1)
+                    ORDER BY valid_from DESC
+                    LIMIT 1
+                ";
+                $rule_result = pg_query_params($con, $rule_query, [$latest_exam_date]);
+
+                if ($rule_result && pg_num_rows($rule_result) > 0) {
+                    $rule_row = pg_fetch_assoc($rule_result);
+                    $rule_id = $rule_row['rule_id'];
+                } else {
+                    // fallback if no matching rule found
+                    $rule_id = null;
+                }
+
+                // ---------------------------------------
+                // 4) Fetch grade & description from grade_rule_details
+                // ---------------------------------------
+                if ($rule_id !== null) {
+                    $grade_query = "
+                        SELECT grade, description
+                        FROM grade_rule_details
+                        WHERE rule_id = $1
+                        AND $2 BETWEEN min_percentage AND max_percentage
+                        LIMIT 1
+                    ";
+                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, $percentage]);
+
+                    if ($grade_result && pg_num_rows($grade_result) > 0) {
+                        $grade_row = pg_fetch_assoc($grade_result);
+                        $grade = $grade_row['grade'];
+                        $gradeDescription = $grade_row['description'];
+                    } else {
+                        $grade = "N/A";
+                        $gradeDescription = "Grade not defined";
+                    }
+                } else {
+                    $grade = "N/A";
+                    $gradeDescription = "No grading rule applied";
+                }
+
+                // ---------------------------------------
+                // 5) Fetch fail cutoff directly from DB
+                // ---------------------------------------
+                $fail_query = "
+                    SELECT max_percentage
+                    FROM grade_rule_details
+                    WHERE rule_id = $1
+                    AND LOWER(description) = 'fail'
+                ";
+
+                $fail_result = pg_query_params($con, $fail_query, [$rule_id]);
+
+                $failMax = 0;
+
+                if ($fail_result) {
+                    while ($row = pg_fetch_assoc($fail_result)) {
+                        if ($row['max_percentage'] > $failMax) {
+                            $failMax = $row['max_percentage'];
+                        }
+                    }
+                }
+
+                // Determine Pass / Fail
+                $passOrFail = ($percentage > $failMax) ? 'Pass' : 'Fail';
                 ?>
 
                 <table class="table" border="0">
@@ -731,7 +798,7 @@ if ($class_category_data) {
             <td colspan='2'><strong>$total_full_marks</strong></td>
             <td colspan='2'></td>
             <td><strong>$total_obtained_marks ($formattedPercentage%)</strong></td>
-            <th>$gradeAndDesc[0]-$gradeAndDesc[1]</th>
+            <th>$grade-$gradeDescription</th>
                 </tr>";
                     echo "</table>"; ?>
                     <table border="0" align="right" style="width: 50%; margin: 0 auto;">
@@ -809,6 +876,44 @@ if ($class_category_data) {
                             <td><?php echo $exam_percentages['Annual']; ?></td>
                         </tr>
                     </table>
+                    <?php
+                    // ---------------------------------------
+                    // Fetch full grade table for display
+                    // ---------------------------------------
+                    $grade_table_query = "
+                        SELECT min_percentage, max_percentage, grade, description
+                        FROM grade_rule_details
+                        WHERE rule_id = $1
+                        ORDER BY min_percentage DESC
+                    ";
+
+                    $grade_table_result = pg_query_params($con, $grade_table_query, [$rule_id]);
+                    ?>
+                    <?php if ($grade_table_result && pg_num_rows($grade_table_result) > 0): ?>
+                        <div style="margin-top: 10px; font-size: 10px; width: 280px;">
+                            <table class="table table-bordered" style="margin-bottom: 0;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" style="text-align:center; font-size:11px;">Grade Scale</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align:center;">Percentage</th>
+                                        <th style="text-align:center;">Grade</th>
+                                        <th style="text-align:center;">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while ($gRow = pg_fetch_assoc($grade_table_result)): ?>
+                                        <tr>
+                                            <td><?php echo $gRow['min_percentage'] . "% – " . $gRow['max_percentage'] . "%"; ?></td>
+                                            <td><?php echo $gRow['grade']; ?></td>
+                                            <td><?php echo $gRow['description']; ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
 
                     <p class="report-footer visible-print-block" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
                 <?php }
