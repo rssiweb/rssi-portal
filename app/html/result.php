@@ -876,7 +876,7 @@ if ($class_category_data) {
                             <td><?php echo $exam_percentages['Annual']; ?></td>
                         </tr>
                     </table>
-                    <?php
+                    <!-- <?php
                     // ---------------------------------------
                     // Fetch full grade table for display
                     // ---------------------------------------
@@ -913,7 +913,7 @@ if ($class_category_data) {
                                 </tbody>
                             </table>
                         </div>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <p class="report-footer visible-print-block" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
                 <?php }
