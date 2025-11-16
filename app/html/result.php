@@ -507,12 +507,10 @@ if ($class_category_data) {
 
         .report-footer {
             position: fixed;
-            bottom: 0px;
-            height: 20px;
-            display: block;
-            width: 90%;
-            border-top: solid 1px #ccc;
-            overflow: visible;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-top: 1px solid #ccc;
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -876,46 +874,29 @@ if ($class_category_data) {
                             <td><?php echo $exam_percentages['Annual']; ?></td>
                         </tr>
                     </table>
-                    <!-- <?php
-                    // ---------------------------------------
-                    // Fetch full grade table for display
-                    // ---------------------------------------
-                    $grade_table_query = "
-                        SELECT min_percentage, max_percentage, grade, description
-                        FROM grade_rule_details
-                        WHERE rule_id = $1
-                        ORDER BY min_percentage DESC
+                    <?php
+                    // Find the passing percentage
+                    $passing_query = "
+                        SELECT min_percentage 
+                        FROM grade_rule_details 
+                        WHERE rule_id = $1 
+                        AND LOWER(description) NOT LIKE '%fail%'
+                        ORDER BY min_percentage ASC 
+                        LIMIT 1
                     ";
+                    $passing_result = pg_query_params($con, $passing_query, [$rule_id]);
 
-                    $grade_table_result = pg_query_params($con, $grade_table_query, [$rule_id]);
+                    $passing_percentage = 'N/A';
+                    if ($passing_result && pg_num_rows($passing_result) > 0) {
+                        $passing_row = pg_fetch_assoc($passing_result);
+                        $passing_percentage = $passing_row['min_percentage'] . '%';
+                    }
                     ?>
-                    <?php if ($grade_table_result && pg_num_rows($grade_table_result) > 0): ?>
-                        <div style="margin-top: 10px; font-size: 10px; width: 280px;">
-                            <table class="table table-bordered" style="margin-bottom: 0;">
-                                <thead>
-                                    <tr>
-                                        <th colspan="3" style="text-align:center; font-size:11px;">Grade Scale</th>
-                                    </tr>
-                                    <tr>
-                                        <th style="text-align:center;">Percentage</th>
-                                        <th style="text-align:center;">Grade</th>
-                                        <th style="text-align:center;">Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php while ($gRow = pg_fetch_assoc($grade_table_result)): ?>
-                                        <tr>
-                                            <td><?php echo $gRow['min_percentage'] . "% – " . $gRow['max_percentage'] . "%"; ?></td>
-                                            <td><?php echo $gRow['grade']; ?></td>
-                                            <td><?php echo $gRow['description']; ?></td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?> -->
 
-                    <p class="report-footer visible-print-block" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
+                    <div class="report-footer visible-print-block" style="text-align: right;">
+                        <p>A - Absent denotes that the student was absent during the exam for that particular subject.</p>
+                        <p>Minimum passing marks: <?php echo $passing_percentage ?? 'N/A'; ?></p>
+                    </div>
                 <?php }
         } elseif ($exam_type == "" && $student_id == "") {
                 ?>
