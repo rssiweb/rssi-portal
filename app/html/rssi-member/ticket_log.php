@@ -39,14 +39,30 @@ if ($filter_academic_year) {
         $filter_academic_year = $current_year . '-' . ($current_year + 1);
     }
 }
-// Check if the form is submitted by checking academic year, which is always present in the form
-$form_submitted = isset($_POST['academic_year']);
 
-// Apply default only when it's not a form submission
-$use_default_status = !$form_submitted;
+// Check if the form is submitted by checking if any filter was applied
+$form_submitted = !empty($_POST) && (
+    $filter_ticket_id ||
+    $filter_type ||
+    $filter_category ||
+    $filter_concerned_individual ||
+    $filter_raised_by ||
+    $filter_assigned_to ||
+    !empty($filter_status) ||
+    (isset($_POST['academic_year']) && $_POST['academic_year'] != $filter_academic_year)
+);
 
-// Set the filter for the query
-$filter_status_for_query = $use_default_status ? ['Open', 'In Progress'] : $filter_status;
+// Set the filter for the query - show Open and In Progress only when no status is selected
+if (empty($filter_status) && !$form_submitted) {
+    // First load - no filters applied, show only Open and In Progress
+    $filter_status_for_query = ['Open', 'In Progress'];
+} else if (empty($filter_status) && $form_submitted) {
+    // Form was submitted but no status selected - show all statuses
+    $filter_status_for_query = [];
+} else {
+    // Statuses were explicitly selected
+    $filter_status_for_query = $filter_status;
+}
 
 // Get unique values for filter dropdowns
 $type_query = "SELECT DISTINCT action FROM support_ticket WHERE action IS NOT NULL ORDER BY action";
@@ -147,7 +163,7 @@ if ($filter_assigned_to) {
     $query .= " AND a.assigned_to = '" . pg_escape_string($con, $filter_assigned_to) . "'";
 }
 
-// Apply multi-select status filter
+// Apply multi-select status filter only if we have statuses to filter by
 if (!empty($filter_status_for_query)) {
     $escapedStatuses = array_map(function ($status) use ($con) {
         return "'" . pg_escape_string($con, $status) . "'";
@@ -169,7 +185,7 @@ if (!$result) {
 // Fetch all results
 $resultArr = pg_fetch_all($result);
 
-// Dashboard metrics
+// Dashboard metrics - always calculate for the current academic year without status filtering
 $metrics_query = "
     SELECT 
         COUNT(*) as total_tickets,
@@ -559,17 +575,22 @@ if (count($selected_associates) > 0) {
                                     <div class="form-text">Select Assigned To</div>
                                 </div>
 
-                                <div class="col-md-2">
-                                    <select id="status" name="status[]" class="form-control select2" multiple>
-                                        <?php
-                                        $selected_statuses = $use_default_status ? ['Open', 'In Progress'] : $filter_status;
-                                        ?>
-                                        <option value="In Progress" <?php echo in_array('In Progress', $selected_statuses) ? 'selected' : ''; ?>>In Progress</option>
-                                        <option value="Open" <?php echo in_array('Open', $selected_statuses) ? 'selected' : ''; ?>>Open</option>
-                                        <option value="Closed" <?php echo in_array('Closed', $selected_statuses) ? 'selected' : ''; ?>>Closed</option>
-                                        <option value="Resolved" <?php echo in_array('Resolved', $selected_statuses) ? 'selected' : ''; ?>>Resolved</option>
+                                <!-- In your HTML form -->
+                                <div class="col-md-6">
+                                    <!-- <label for="status" class="form-label">Status (Multi-select)</label> -->
+                                    <select class="form-select" id="status" name="status[]" multiple>
+                                        <option value="Open" <?php echo (in_array('Open', $filter_status)) ? 'selected' : ''; ?>>Open</option>
+                                        <option value="In Progress" <?php echo (in_array('In Progress', $filter_status)) ? 'selected' : ''; ?>>In Progress</option>
+                                        <option value="Resolved" <?php echo (in_array('Resolved', $filter_status)) ? 'selected' : ''; ?>>Resolved</option>
+                                        <option value="Closed" <?php echo (in_array('Closed', $filter_status)) ? 'selected' : ''; ?>>Closed</option>
                                     </select>
-                                    <div class="form-text">Select Status (Multi-select)</div>
+                                    <div class="form-text">
+                                        <?php if (empty($filter_status) && !$form_submitted): ?>
+                                            <em>Showing Open and In Progress tickets by default. Select specific statuses to filter.</em>
+                                        <?php elseif (empty($filter_status) && $form_submitted): ?>
+                                            <em>Showing all statuses. Select specific statuses to filter.</em>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-2">
