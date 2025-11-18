@@ -352,36 +352,51 @@ if (!empty($ticket['raised_for'])) {
     }
 }
 
-// Query to fetch categories from the database
-$query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
-$result = pg_query($con, $query);
+// Get the current action type for this ticket
+$current_action = $ticket['action'] ?? '';
 
-// Initialize an array to store categories
-$categories = [];
-
-while ($row = pg_fetch_assoc($result)) {
-    $categories[$row['category_type']][] = $row['category_name'];
-}
-
-// Handle category update
+// Handle category update with AJAX
 if (isset($_POST['category_update'])) {
-    // Update the category in the database
-    pg_query_params($con, "
+    $category = isset($_POST['category']) ? $_POST['category'] : [];
+
+    // Filter out empty values and trim whitespace
+    $filtered_categories = array_filter($category, function ($cat) {
+        return !empty(trim($cat));
+    });
+
+    // Remove duplicates and reindex array
+    $filtered_categories = array_values(array_unique($filtered_categories));
+
+    if (empty($filtered_categories)) {
+        echo json_encode(['success' => false, 'message' => 'Please select at least one category']);
+        exit;
+    }
+
+    // Proceed with the update
+    $category_json = json_encode($filtered_categories, JSON_UNESCAPED_UNICODE);
+    $result = pg_query_params($con, "
         UPDATE support_ticket 
         SET category = $1 
         WHERE ticket_id = $2
-    ", array($category, $ticket_id));
-
-    // Refresh the category after updating it
-    $result = pg_query_params($con, "
-        SELECT category 
-        FROM support_ticket 
-        WHERE ticket_id = $1
-    ", array($ticket_id));
+    ", array($category_json, $ticket_id));
 
     if ($result) {
-        $ticket['category'] = pg_fetch_result($result, 0, 'category');
+        // CRITICAL: Fetch FRESH data from database after update
+        $refresh_result = pg_query_params($con, "
+            SELECT category 
+            FROM support_ticket 
+            WHERE ticket_id = $1
+        ", array($ticket_id));
+
+        if ($refresh_result) {
+            $ticket['category'] = pg_fetch_result($refresh_result, 0, 'category');
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Category updated successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to update category. Please try again.']);
     }
+    exit;
 }
 ?>
 <?php
@@ -654,32 +669,34 @@ if (!function_exists('makeClickableLinks')) {
                                                                                 <input type="hidden" name="category_update" value="1">
                                                                                 <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_id, ENT_QUOTES, 'UTF-8'); ?>">
 
+                                                                                <!-- Current Action Display -->
+                                                                                <div class="mb-3">
+                                                                                    <label class="form-label">Current Action</label>
+                                                                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($current_action); ?>" readonly>
+                                                                                    <div class="form-text">Categories are filtered based on the selected action</div>
+                                                                                </div>
+
                                                                                 <!-- Category -->
                                                                                 <div class="mb-3">
-                                                                                    <select id="category" name="category[]" class="form-control" multiple="multiple" style="width:100%">
-                                                                                        <?php
-                                                                                        // Decode current categories
-                                                                                        $current_categories = !empty($ticket['category']) ? json_decode($ticket['category'], true) : [];
-
-                                                                                        // Generate options
-                                                                                        foreach ($categories as $type => $category_list) {
-                                                                                            echo '<optgroup label="' . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . '">';
-                                                                                            foreach ($category_list as $category) {
-                                                                                                $selected = in_array($category, $current_categories) ? ' selected' : '';
-                                                                                                echo '<option value="' . htmlspecialchars($category, ENT_QUOTES, 'UTF-8') . '"' . $selected . '>'
-                                                                                                    . htmlspecialchars($category, ENT_QUOTES, 'UTF-8') . '</option>';
-                                                                                            }
-                                                                                            echo '</optgroup>';
-                                                                                        }
-                                                                                        ?>
+                                                                                    <label for="category" class="form-label">Category</label>
+                                                                                    <select id="category" name="category[]" class="form-control" multiple="multiple" style="width:100%" disabled>
+                                                                                        <option value="">Loading categories...</option>
                                                                                     </select>
+                                                                                    <!-- Loading indicator below the input field -->
+                                                                                    <div class="d-none mt-2" id="categoryLoading">
+                                                                                        <div class="d-flex align-items-center">
+                                                                                            <div class="spinner-border spinner-border-sm text-secondary me-2" role="status">
+                                                                                                <span class="visually-hidden">Loading...</span>
+                                                                                            </div>
+                                                                                            <span class="small text-muted">Loading categories...</span>
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
                                                                             </form>
-
                                                                         </div>
                                                                         <div class="modal-footer">
                                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                                            <button type="submit" form="categoryForm" class="btn btn-primary">Update</button>
+                                                                            <button type="submit" form="categoryForm" class="btn btn-primary" id="updateCategoryBtn" disabled>Update</button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -885,14 +902,164 @@ if (!function_exists('makeClickableLinks')) {
             });
         });
     </script>
-    <!-- Include the select2 script -->
     <script>
         $(document).ready(function() {
-            $('#category').select2({
-                dropdownParent: $('#categoryModal'),
-                placeholder: "Select a category...",
-                allowClear: true,
-                // Other select2 options if needed
+            const currentAction = '<?php echo $current_action; ?>';
+
+            // Initialize Select2 when modal is shown
+            $('#categoryModal').on('shown.bs.modal', function() {
+                initializeCategorySelect2();
+                loadCategoriesForAction(currentAction);
+            });
+
+            // Reset button state when modal is hidden
+            $('#categoryModal').on('hidden.bs.modal', function() {
+                resetButtonState();
+            });
+
+            function initializeCategorySelect2() {
+                $('#category').select2({
+                    dropdownParent: $('#categoryModal'),
+                    placeholder: "Select a category...",
+                    allowClear: true,
+                    width: '100%'
+                }).on('change', function() {
+                    validateCategorySelection();
+                });
+            }
+
+            function loadCategoriesForAction(action) {
+                const $categorySelect = $('#category');
+                const $categoryLoading = $('#categoryLoading');
+                const $updateBtn = $('#updateCategoryBtn');
+
+                // Reset and disable category field
+                $categorySelect.empty().prop('disabled', true);
+                $categorySelect.trigger('change');
+
+                // Show loading spinner below the field
+                $categoryLoading.removeClass('d-none');
+                $updateBtn.prop('disabled', true);
+
+                if (!action) {
+                    $categorySelect.prop('disabled', true);
+                    $categoryLoading.addClass('d-none');
+                    return;
+                }
+
+                // AJAX call to get categories AND current selections
+                $.ajax({
+                    url: 'get_categories.php',
+                    type: 'GET',
+                    data: {
+                        action: action,
+                        ticket_id: '<?php echo $ticket_id; ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        $categorySelect.empty();
+
+                        if (response.categories && response.categories.length > 0) {
+                            // Add only actual categories, no empty option
+                            response.categories.forEach(function(category) {
+                                $categorySelect.append(
+                                    $('<option>', {
+                                        value: category,
+                                        text: category
+                                    })
+                                );
+                            });
+
+                            // Enable the select
+                            $categorySelect.prop('disabled', false);
+
+                            // Use current categories from AJAX response (fresh from DB)
+                            if (response.current_categories && response.current_categories.length > 0) {
+                                $('#category').val(null).trigger('change');
+                                setTimeout(function() {
+                                    $('#category').val(response.current_categories).trigger('change');
+                                }, 100);
+                            }
+
+                        } else {
+                            $categorySelect.append('<option value="" disabled>No categories available</option>');
+                            $categorySelect.prop('disabled', true);
+                        }
+
+                        // Hide loading spinner
+                        $categoryLoading.addClass('d-none');
+                        $categorySelect.trigger('change');
+                        validateCategorySelection();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load categories:', error);
+
+                        $categorySelect.empty();
+                        $categorySelect.prop('disabled', true);
+                        $categoryLoading.addClass('d-none');
+                        $categorySelect.trigger('change');
+
+                        alert('Failed to load categories. Please try again.');
+                    }
+                });
+            }
+
+            function validateCategorySelection() {
+                const selectedCategories = $('#category').val();
+                const filteredCategories = selectedCategories ? selectedCategories.filter(function(category) {
+                    return category !== "" && category !== null && category !== undefined;
+                }) : [];
+
+                const isValid = filteredCategories.length > 0;
+                $('#updateCategoryBtn').prop('disabled', !isValid);
+            }
+
+            function resetButtonState() {
+                const $btn = $('#updateCategoryBtn');
+                $btn.prop('disabled', true).html('Update');
+            }
+
+            // AJAX form submission
+            $('#categoryForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const selectedCategories = $('#category').val();
+                const filteredCategories = selectedCategories ? selectedCategories.filter(function(category) {
+                    return category !== "" && category !== null && category !== undefined;
+                }) : [];
+
+                if (filteredCategories.length === 0) {
+                    alert('Please select at least one category');
+                    return false;
+                }
+
+                // Show loading state on button
+                const $btn = $('#updateCategoryBtn');
+                const originalText = $btn.html();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Updating...');
+
+                // AJAX submission
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            $('#categoryModal').modal('hide');
+                            // No need to refresh data - next modal open will fetch fresh from DB
+                        } else {
+                            alert(response.message);
+                            resetButtonState();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', error);
+                        alert('An error occurred while updating category. Please try again.');
+                        resetButtonState();
+                    }
+                });
             });
         });
     </script>
