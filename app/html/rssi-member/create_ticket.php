@@ -199,16 +199,17 @@ if ($_POST) {
                                                 <!-- Category Section with Loading State -->
                                                 <div class="mb-3">
                                                     <label for="category" class="form-label">Category</label>
-                                                    <div class="input-group">
-                                                        <select id="category" name="category[]" class="form-control" multiple="multiple" disabled>
-                                                            <option value="">Select an action first...</option>
-                                                        </select>
-                                                        <span class="input-group-text d-none" id="categoryLoading">
-                                                            <div class="spinner-border spinner-border-sm" role="status">
+                                                    <select id="category" name="category[]" class="form-control" multiple="multiple" disabled>
+                                                        <option value="">Select an action first...</option>
+                                                    </select>
+                                                    <!-- Loading indicator below the input field -->
+                                                    <div class="d-none mt-2" id="categoryLoading">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="spinner-border spinner-border-sm text-secondary me-2" role="status">
                                                                 <span class="visually-hidden">Loading...</span>
                                                             </div>
-                                                            <span class="ms-2">Loading categories...</span>
-                                                        </span>
+                                                            <span class="small text-muted">Loading categories...</span>
+                                                        </div>
                                                     </div>
                                                     <div class="form-text">Please select an action first to enable category selection</div>
                                                 </div>
@@ -252,11 +253,16 @@ if ($_POST) {
 
     <!-- Include the select2 script -->
     <script>
+        // Update the initial Select2 initialization
         $(document).ready(function() {
+            // Initialize Select2 for category (initially disabled)
             $('#category').select2({
-                placeholder: "Select a category...",
-                allowClear: true
+                placeholder: "Select an action first...",
+                allowClear: true,
+                disabled: true
             });
+
+            // ... rest of your existing code for associates and category loading
         });
     </script>
     <script>
@@ -307,7 +313,7 @@ if ($_POST) {
                 $categorySelect.append('<option value="">Loading categories...</option>');
                 $categorySelect.trigger('change');
 
-                // Show loading spinner
+                // Show loading spinner below the field
                 $categoryLoading.removeClass('d-none');
 
                 // Disable associates until categories are loaded
@@ -323,7 +329,7 @@ if ($_POST) {
                 }
 
                 $.ajax({
-                    url: 'get_categories.php',
+                    url: 'get_categories_create_ticket.php',
                     type: 'GET',
                     data: {
                         action: action
