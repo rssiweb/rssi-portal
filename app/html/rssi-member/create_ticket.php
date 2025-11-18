@@ -53,17 +53,6 @@ if ($_POST) {
         ), $email);
     }
 }
-
-// Query to fetch categories from the database
-$query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
-$result = pg_query($con, $query);
-
-// Initialize an array to store categories
-$categories = [];
-
-while ($row = pg_fetch_assoc($result)) {
-    $categories[$row['category_type']][] = $row['category_name'];
-}
 ?>
 
 <!doctype html>
@@ -207,21 +196,21 @@ while ($row = pg_fetch_assoc($result)) {
                                                         <option value="Critical">Critical</option>
                                                     </select>
                                                 </div>
-                                                <!-- Category -->
+                                                <!-- Category Section with Loading State -->
                                                 <div class="mb-3">
                                                     <label for="category" class="form-label">Category</label>
-                                                    <select id="category" name="category[]" class="form-control" multiple="multiple">
-                                                        <option value="">Select a category...</option>
-                                                        <?php foreach ($categories as $type => $category_list): ?>
-                                                            <optgroup label="<?php echo htmlspecialchars($type); ?>">
-                                                                <?php foreach ($category_list as $category): ?>
-                                                                    <option value="<?php echo htmlspecialchars($category); ?>">
-                                                                        <?php echo htmlspecialchars($category); ?>
-                                                                    </option>
-                                                                <?php endforeach; ?>
-                                                            </optgroup>
-                                                        <?php endforeach; ?>
-                                                    </select>
+                                                    <div class="input-group">
+                                                        <select id="category" name="category[]" class="form-control" multiple="multiple" disabled>
+                                                            <option value="">Select an action first...</option>
+                                                        </select>
+                                                        <span class="input-group-text d-none" id="categoryLoading">
+                                                            <div class="spinner-border spinner-border-sm" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                            <span class="ms-2">Loading categories...</span>
+                                                        </span>
+                                                    </div>
+                                                    <div class="form-text">Please select an action first to enable category selection</div>
                                                 </div>
 
                                                 <!-- Raised For (Associates/Students) -->
@@ -261,20 +250,6 @@ while ($row = pg_fetch_assoc($result)) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
-    <script>
-        $(document).ready(function() {
-
-            // Toggle associates field based on action selection
-            $('#action_selection').change(function() {
-                const action = $(this).val();
-                if (action === '' || action === 'support_ticket') {
-                    $('#associates').prop('disabled', true);
-                } else {
-                    $('#associates').prop('disabled', false);
-                }
-            }).trigger('change'); // Trigger change event to set initial state
-        });
-    </script>
     <!-- Include the select2 script -->
     <script>
         $(document).ready(function() {
@@ -310,6 +285,114 @@ while ($row = pg_fetch_assoc($result)) {
                 allowClear: true,
                 // multiple: true
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for category (initially disabled)
+            $('#category').select2({
+                placeholder: "Select an action first...",
+                allowClear: true,
+                disabled: true
+            });
+
+            // Function to load categories via AJAX with loading state
+            function loadCategories(action) {
+                const $categorySelect = $('#category');
+                const $categoryLoading = $('#categoryLoading');
+                const $associatesSelect = $('#associates');
+
+                // Reset and disable category field
+                $categorySelect.empty().prop('disabled', true);
+                $categorySelect.append('<option value="">Loading categories...</option>');
+                $categorySelect.trigger('change');
+
+                // Show loading spinner
+                $categoryLoading.removeClass('d-none');
+
+                // Disable associates until categories are loaded
+                $associatesSelect.prop('disabled', true);
+
+                if (!action) {
+                    // No action selected
+                    $categorySelect.empty().append('<option value="">Select an action first...</option>');
+                    $categoryLoading.addClass('d-none');
+                    $categorySelect.prop('disabled', true);
+                    $associatesSelect.prop('disabled', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: 'get_categories.php',
+                    type: 'GET',
+                    data: {
+                        action: action
+                    },
+                    dataType: 'json',
+                    success: function(categories) {
+                        $categorySelect.empty();
+
+                        if (categories && categories.length > 0) {
+                            // Add default option
+                            $categorySelect.append('<option value="">Select a category...</option>');
+
+                            // Add categories
+                            categories.forEach(function(category) {
+                                $categorySelect.append(
+                                    $('<option>', {
+                                        value: category,
+                                        text: category
+                                    })
+                                );
+                            });
+
+                            // Enable the select
+                            $categorySelect.prop('disabled', false);
+
+                            // Enable associates if needed based on action
+                            if (action === '' || action === 'support_ticket') {
+                                $associatesSelect.prop('disabled', true);
+                            } else {
+                                $associatesSelect.prop('disabled', false);
+                            }
+
+                        } else {
+                            // No categories found for this action
+                            $categorySelect.append('<option value="">No categories available for this action</option>');
+                            $categorySelect.prop('disabled', true);
+                            $associatesSelect.prop('disabled', true);
+                        }
+
+                        // Hide loading spinner and refresh Select2
+                        $categoryLoading.addClass('d-none');
+                        $categorySelect.trigger('change');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load categories:', error);
+
+                        $categorySelect.empty().append('<option value="">Error loading categories</option>');
+                        $categorySelect.prop('disabled', true);
+                        $associatesSelect.prop('disabled', true);
+
+                        // Hide loading spinner
+                        $categoryLoading.addClass('d-none');
+                        $categorySelect.trigger('change');
+
+                        // Show error message to user
+                        alert('Failed to load categories. Please try again.');
+                    },
+                    timeout: 10000 // 10 second timeout
+                });
+            }
+
+            // Load categories when action changes
+            $('#action_selection').change(function() {
+                const action = $(this).val();
+                loadCategories(action);
+            });
+
+            // Initialize based on current action selection
+            loadCategories($('#action_selection').val());
         });
     </script>
 </body>
