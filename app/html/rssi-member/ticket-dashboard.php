@@ -237,10 +237,6 @@ if ($ticket_id) {
     }
 }
 
-// Fetch data for dropdown
-$dropdown_result = pg_query($con, "SELECT associatenumber AS id, fullname FROM rssimyaccount_members WHERE filterstatus='Active'");
-$results = pg_fetch_all($dropdown_result);
-
 // Fetch all assignment history from the support_ticket_assignment table
 $assignment_results = pg_query_params($con, "
 WITH assignment_status AS (
@@ -497,12 +493,21 @@ if (!function_exists('makeClickableLinks')) {
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
                                                     <select id="assigned_to" name="assigned_to" class="form-select" required>
-                                                        <option <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>Clear Selection</option>
-                                                        <?php foreach ($results as $result): ?>
-                                                            <option value="<?php echo htmlspecialchars($result['id']); ?>" <?php echo $result['id'] === $ticket['assigned_to'] ? 'selected' : ''; ?>>
-                                                                <?php echo htmlspecialchars($result['fullname']); ?> (<?php echo htmlspecialchars($result['id']); ?>)
-                                                            </option>
-                                                        <?php endforeach; ?>
+                                                        <option value="">Clear Selection</option>
+                                                        <?php if (!empty($ticket['assigned_to'])):
+                                                            // Fetch the specific assigned person's details
+                                                            $assigned_query = "SELECT associatenumber as id, fullname 
+                                                            FROM rssimyaccount_members 
+                                                            WHERE associatenumber = $1";
+                                                            $assigned_result = pg_query_params($con, $assigned_query, array($ticket['assigned_to']));
+                                                            if ($assigned_result && pg_num_rows($assigned_result) > 0):
+                                                                $assigned_person = pg_fetch_assoc($assigned_result);
+                                                        ?>
+                                                                <option value="<?php echo htmlspecialchars($assigned_person['id']); ?>" selected>
+                                                                    <?php echo htmlspecialchars($assigned_person['fullname']); ?> (<?php echo htmlspecialchars($assigned_person['id']); ?>)
+                                                                </option>
+                                                        <?php endif;
+                                                        endif; ?>
                                                     </select>
                                                 </div>
 
@@ -1195,7 +1200,35 @@ if (!function_exists('makeClickableLinks')) {
                 });
         }
     </script>
-
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#assigned_to').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term, // search term
+                            isActive: true // only active associates
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                width: '300px'
+                // multiple: true
+            });
+        });
+    </script>
 </body>
 
 </html>
