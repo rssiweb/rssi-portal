@@ -550,7 +550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true

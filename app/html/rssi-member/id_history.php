@@ -786,7 +786,7 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
                 },
                 placeholder: 'Search by name or ID',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
         });

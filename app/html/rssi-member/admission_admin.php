@@ -404,7 +404,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select student',
                 allowClear: true,
                 width: '100%' // Ensure proper width

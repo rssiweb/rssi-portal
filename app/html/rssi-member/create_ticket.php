@@ -54,18 +54,6 @@ if ($_POST) {
     }
 }
 
-// Query to fetch associates and students
-$query = "SELECT associatenumber AS id, fullname AS name FROM rssimyaccount_members where filterstatus='Active'
-          UNION
-          SELECT student_id AS id, studentname AS name FROM rssimyprofile_student where filterstatus='Active'";
-
-$result = pg_query($con, $query);
-
-$results = [];
-while ($row = pg_fetch_assoc($result)) {
-    $results[] = ['id' => htmlspecialchars($row['id']), 'text' => htmlspecialchars($row['name']) . " (" . htmlspecialchars($row['id']) . ")"];
-}
-
 // Query to fetch categories from the database
 $query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
 $result = pg_query($con, $query);
@@ -191,6 +179,7 @@ while ($row = pg_fetch_assoc($result)) {
                                                     <option value="">Select an Action</option>
                                                     <option value="support_ticket">Create Support Ticket</option>
                                                     <option value="incident">Raise Incident</option>
+                                                    <option value="memo">Memo</option>
                                                     <option value="escalation">Escalation</option>
                                                 </select>
                                             </div>
@@ -274,13 +263,6 @@ while ($row = pg_fetch_assoc($result)) {
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for the associates input field
-            $('#associates').select2({
-                data: <?php echo json_encode($results); ?>,
-                placeholder: "Type and select associates/students",
-                allowClear: true,
-                tags: false
-            });
 
             // Toggle associates field based on action selection
             $('#action_selection').change(function() {
@@ -299,6 +281,34 @@ while ($row = pg_fetch_assoc($result)) {
             $('#category').select2({
                 placeholder: "Select a category...",
                 allowClear: true
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#associates').select2({
+                ajax: {
+                    url: 'search_beneficiaries.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term, // search term
+                            isActiveOnly: true
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Select person(s)',
+                allowClear: true,
+                // multiple: true
             });
         });
     </script>

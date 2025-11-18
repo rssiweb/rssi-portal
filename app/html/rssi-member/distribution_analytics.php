@@ -926,7 +926,7 @@ for ($i = -5; $i <= 1; $i++) {
                 },
                 placeholder: 'Search by name or ID',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
         });

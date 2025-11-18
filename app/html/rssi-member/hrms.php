@@ -745,7 +745,7 @@ echo "<script>
                     },
                     cache: true
                 },
-                minimumInputLength: 1, // Require at least 1 character to start searching
+                minimumInputLength: 2, // Require at least 1 character to start searching
                 placeholder: "Enter Associate Number", // Placeholder text
                 allowClear: true // Allow clearing the selection
             });

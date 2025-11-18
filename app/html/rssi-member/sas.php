@@ -490,7 +490,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Search by name or ID',
                 width: '100%'
             });
@@ -512,7 +512,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Search by category',
                 width: '100%'
             });
@@ -534,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Search by class',
                 width: '100%'
             });

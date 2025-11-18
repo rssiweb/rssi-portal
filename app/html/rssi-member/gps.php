@@ -1033,7 +1033,7 @@ $resultArr = pg_fetch_all($result);
                 if (!$element.hasClass("select2-hidden-accessible")) {
                     $element.select2({
                         ajax: ajaxConfig,
-                        minimumInputLength: 1,
+                        minimumInputLength: 2,
                         placeholder: 'Select associate(s)',
                         allowClear: true,
                         width: '100%',

@@ -824,7 +824,7 @@ validation();
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: 'Search by name, ID, or contact',
                     allowClear: false,
                     closeOnSelect: true,

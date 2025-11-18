@@ -2796,7 +2796,7 @@ function getStudentVerificationBadge($linkedStudents)
                         };
                     }
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 allowClear: true,
                 placeholder: 'Search by name'
             });
@@ -2821,7 +2821,7 @@ function getStudentVerificationBadge($linkedStudents)
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     allowClear: true,
                     placeholder: 'Search by name'
                 });
@@ -2847,7 +2847,7 @@ function getStudentVerificationBadge($linkedStudents)
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     allowClear: true,
                     placeholder: 'Search female beneficiaries'
                 });
@@ -2873,7 +2873,7 @@ function getStudentVerificationBadge($linkedStudents)
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: 'Search female beneficiaries',
                     closeOnSelect: true
                 });

@@ -320,7 +320,7 @@ if (isset($_POST['update_exam'])) {
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true

@@ -374,7 +374,7 @@ while ($row = pg_fetch_assoc($result)) {
                     width: '100%',
                     placeholder: 'Search and select item...',
                     allowClear: true,
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     ajax: {
                         url: 'search_products.php',
                         dataType: 'json',

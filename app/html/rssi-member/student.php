@@ -341,7 +341,7 @@ function formatContact($role, $contact)
           },
           cache: true
         },
-        minimumInputLength: 1,
+        minimumInputLength: 2,
         placeholder: 'Select student',
         allowClear: true,
         width: '100%' // Ensure proper width

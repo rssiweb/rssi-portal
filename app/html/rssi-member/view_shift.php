@@ -180,7 +180,7 @@ pg_close($con); // Close the connection
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 multiple: false

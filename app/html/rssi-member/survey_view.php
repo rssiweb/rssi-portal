@@ -1464,7 +1464,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true

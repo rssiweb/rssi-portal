@@ -225,7 +225,7 @@ pg_close($con);
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Search by category',
                 width: '100%'
             });

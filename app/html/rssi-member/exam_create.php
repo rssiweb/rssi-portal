@@ -602,7 +602,7 @@ if (@$_POST['form-type'] == "exam") {
                         },
                         cache: true
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: 'Select teacher',
                     allowClear: true,
                     templateResult: function(teacher) {
@@ -647,7 +647,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by name or ID',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
 
@@ -667,7 +667,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by name or ID',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
 
@@ -687,7 +687,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by category',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
 
@@ -707,7 +707,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by class',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
         });

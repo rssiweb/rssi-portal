@@ -368,7 +368,7 @@ $units = pg_fetch_all($units_result) ?: [];
                         },
                         cache: true
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: 'Search for items',
                     dropdownParent: $('#addItemModal'),
                     closeOnSelect: true,

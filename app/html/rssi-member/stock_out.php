@@ -294,7 +294,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     }),
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select beneficiary(s)',
                 allowClear: true,
                 multiple: true
@@ -325,7 +325,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select an item',
                 templateResult: item => {
                     if (item.loading) return item.text;
@@ -448,7 +448,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
                     }),
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select a group',
                 allowClear: true
             });

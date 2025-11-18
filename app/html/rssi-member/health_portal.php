@@ -2394,7 +2394,7 @@ function getBaseFilterUrl()
                         };
                     }
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 allowClear: true,
                 placeholder: 'Search by name'
             });
@@ -2419,7 +2419,7 @@ function getBaseFilterUrl()
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     allowClear: true,
                     placeholder: 'Search by name'
                 });
@@ -2445,7 +2445,7 @@ function getBaseFilterUrl()
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     allowClear: true,
                     placeholder: 'Search female students'
                 });
@@ -2471,7 +2471,7 @@ function getBaseFilterUrl()
                             };
                         }
                     },
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: 'Search female students',
                     closeOnSelect: true
                 });

@@ -7,9 +7,12 @@ header('Content-Type: application/json');
 $searchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
 $gender = isset($_GET['gender']) ? trim($_GET['gender']) : null;
 $isStockout = isset($_GET['isStockout']) && $_GET['isStockout'] == 'true';
+$isActiveOnly = isset($_GET['isActiveOnly']) && $_GET['isActiveOnly'] == 'true';
 
 // If this is a stock-out request, only include active members and students
 if ($isStockout) {
+    $sources = ['student', 'member'];
+} else if ($isActiveOnly) {
     $sources = ['student', 'member'];
 } else {
     $sources = isset($_GET['sources']) ? explode(',', trim($_GET['sources'])) : ['public_health', 'student', 'member'];
@@ -44,12 +47,12 @@ try {
                      FROM public_health_records 
                      WHERE registration_completed = true AND (name ILIKE $1 OR contact_number ILIKE $1)";
         $phrParams = ["%{$searchTerm}%"];
-        
+
         if ($gender) {
             $phrQuery .= " AND gender = $2";
             $phrParams[] = $gender;
         }
-        
+
         $phrResult = pg_query_params($con, $phrQuery, $phrParams);
         if ($phrResult) {
             while ($row = pg_fetch_assoc($phrResult)) {
@@ -63,12 +66,12 @@ try {
                          FROM rssimyprofile_student
                          WHERE filterstatus='Active' AND (studentname ILIKE $1 OR student_id ILIKE $1 OR contact ILIKE $1)";
         $studentParams = ["%{$searchTerm}%"];
-        
+
         if ($gender) {
             $studentQuery .= " AND gender = $2";
             $studentParams[] = $gender;
         }
-        
+
         $studentResult = pg_query_params($con, $studentQuery, $studentParams);
         if ($studentResult) {
             while ($row = pg_fetch_assoc($studentResult)) {
@@ -82,12 +85,12 @@ try {
                         FROM rssimyaccount_members
                         WHERE filterstatus='Active' AND (fullname ILIKE $1 OR associatenumber ILIKE $1 OR phone ILIKE $1)";
         $memberParams = ["%{$searchTerm}%"];
-        
+
         if ($gender) {
             $memberQuery .= " AND gender = $2";
             $memberParams[] = $gender;
         }
-        
+
         $memberResult = pg_query_params($con, $memberQuery, $memberParams);
         if ($memberResult) {
             while ($row = pg_fetch_assoc($memberResult)) {
@@ -104,7 +107,7 @@ try {
         // For stock-out, show ID in parentheses
         if ($isStockout) {
             $displayText .= ' (' . $row['id'] . ')';
-        } 
+        }
         // For other cases, show contact number if available
         elseif (!empty($row['contact_number'])) {
             $displayText .= ' (' . $row['contact_number'] . ')';

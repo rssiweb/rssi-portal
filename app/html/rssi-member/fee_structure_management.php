@@ -1120,7 +1120,7 @@ if (!empty($statusCondition)) {
                     },
                     placeholder: 'Search by name or ID',
                     width: '100%',
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     multiple: true,
                     theme: 'bootstrap-5'
                 });

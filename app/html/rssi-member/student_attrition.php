@@ -1203,7 +1203,7 @@ if (!empty($students)) {
                 },
                 placeholder: 'Search by name or ID',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
 
@@ -1223,7 +1223,7 @@ if (!empty($students)) {
                 },
                 placeholder: 'Search by category',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
 
@@ -1243,7 +1243,7 @@ if (!empty($students)) {
                 },
                 placeholder: 'Search by class',
                 width: '100%',
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 multiple: true
             });
         });

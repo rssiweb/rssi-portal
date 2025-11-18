@@ -480,7 +480,7 @@ pg_close($con);
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 // allowClear: true,
                 multiple: true

@@ -1040,7 +1040,7 @@ $result = pg_query_params($con, $query, $query_builder['params']);
                         };
                     }
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Search by name, ID, or contact',
                 allowClear: false,
                 closeOnSelect: true,

@@ -687,7 +687,7 @@ if (count($selected_associates) > 0) {
                         cache: true
                     },
                     theme: 'bootstrap-5',
-                    minimumInputLength: 1,
+                    minimumInputLength: 2,
                     placeholder: placeholderText,
                     allowClear: true
                 });

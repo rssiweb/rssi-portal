@@ -206,7 +206,7 @@ $resultArr = pg_fetch_all($result);
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true
@@ -233,7 +233,7 @@ $resultArr = pg_fetch_all($result);
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
                 // multiple: true
