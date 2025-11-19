@@ -33,7 +33,7 @@ $totalcl = pg_query($con, "SELECT COALESCE(SUM(days), 0)
                            WHERE applicantid='$associatenumber' 
                              AND typeofleave='Casual Leave' 
                              AND lyear='$lyear' 
-                             AND (status!='Rejected' OR status IS NULL)");
+                             AND (status!='Rejected' OR STATUS IS NULL)");
 $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day), 0) 
                          FROM leaveadjustment 
                          WHERE adj_applicantid='$associatenumber' 
@@ -117,7 +117,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     // Validate leave balance and process application
     if (($slbalance >= $day && $typeofleave === "Sick Leave") ||
         ($clbalance >= $day && $typeofleave === "Casual Leave") ||
-        $typeofleave === "Leave Without Pay" || "Adjustment Leave"
+        $typeofleave === "Leave Without Pay" || $typeofleave === "Adjustment Leave"
     ) {
 
         $doclink = !empty($uploadedFile['name'])
@@ -270,6 +270,16 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                 animation: none;
             }
         }
+
+        .disabled-option {
+            color: #6c757d !important;
+            background-color: #f8f9fa !important;
+        }
+
+        .form-check-input:disabled {
+            background-color: #e9ecef;
+            border-color: #6c757d;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -373,9 +383,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                     </div>
 
                                                     <!-- Half Day -->
-                                                    <div id="filter-checksh" class="mb-2">
-                                                        <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal(); toggleShiftField()" disabled />
-                                                        <label for="is_userh" style="font-weight: 400;">Half day</label>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal(); toggleShiftField()" disabled />
+                                                        <label class="form-check-label" for="is_userh" style="font-weight: 400;">Half day</label>
                                                     </div>
 
                                                     <!-- Day Count -->
@@ -409,8 +419,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                         <label for="typeofleave" class="form-label">Types of Leave</label>
                                                         <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
                                                             <option disabled selected hidden value="">Select</option>
-                                                            <option value="Sick Leave">Sick Leave</option>
-                                                            <option value="Casual Leave">Casual Leave</option>
+                                                            <option value="Sick Leave" <?php echo ($slbalance <= 0) ? 'disabled class="disabled-option"' : ''; ?>>Sick Leave</option>
+                                                            <option value="Casual Leave" <?php echo ($clbalance <= 0) ? 'disabled class="disabled-option"' : ''; ?>>Casual Leave</option>
 
                                                             <?php if ($position !== 'Intern'): ?>
                                                                 <option value="Leave Without Pay">Leave Without Pay</option>
@@ -440,11 +450,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                     </div>
 
                                                     <span name="hidden-panel_ack" id="hidden-panel_ack">
-                                                        <div class="form-group mb-2">
-                                                            <div id="filter-checksh">
-                                                                <input type="checkbox" name="ack" id="ack" value="1" />
-                                                                <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
-                                                            </div>
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="checkbox" name="ack" id="ack" value="1" />
+                                                            <label class="form-check-label" for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
                                                         </div>
                                                     </span>
                                                     <button type="submit" name="search_by_id" class="btn btn-primary">Submit</button>
@@ -522,12 +530,14 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
         });
     </script>
     <script>
+        // PHP variables for JavaScript use
+        const slbalance = <?php echo $slbalance; ?>;
+        const clbalance = <?php echo $clbalance; ?>;
+
         function checkLeaveType() {
             // Get today's date from the server (IST timezone) and normalize it to midnight
             const today = new Date('<?php echo date("Y-m-d"); ?>T00:00:00');
             today.setHours(0, 0, 0, 0); // Normalize to midnight
-
-            console.log("Today's normalized date (from server):", today); // Log the normalized today value
 
             // Get fromdate and todate values from input fields
             const fromdate = new Date(document.getElementById("fromdate").value);
@@ -537,34 +547,75 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
             fromdate.setHours(0, 0, 0, 0);
             todate.setHours(0, 0, 0, 0);
 
-            console.log("Normalized fromdate:", fromdate); // Log the normalized fromdate
-            console.log("Normalized todate:", todate); // Log the normalized todate
+            // Calculate days for balance check
+            const days = calculateDays();
 
             // Reset typeofleave if fromdate or todate changes
             document.getElementById("typeofleave").value = ""; // Reset the selected value
 
-            // Disable Casual Leave if fromdate or todate is today or in the past
-            if (fromdate <= today || todate <= today) {
-                document.getElementById("typeofleave").options[2].disabled = true; // Disable Casual Leave
-                document.getElementById("leaveWarning").innerText = "You have selected current or past date. You are not eligible to apply for Casual Leave.";
+            // Get leave type options
+            const sickLeaveOption = document.getElementById("typeofleave").options[1];
+            const casualLeaveOption = document.getElementById("typeofleave").options[2];
+
+            // Disable Sick Leave if no balance or insufficient balance for selected days
+            if (slbalance <= 0 || (days > 0 && slbalance < days)) {
+                sickLeaveOption.disabled = true;
+                sickLeaveOption.className = 'disabled-option';
             } else {
-                document.getElementById("typeofleave").options[2].disabled = false; // Enable Casual Leave
-                document.getElementById("leaveWarning").innerText = ""; // Clear warning message
+                sickLeaveOption.disabled = false;
+                sickLeaveOption.className = '';
             }
+
+            // Disable Casual Leave based on date AND balance conditions
+            if (fromdate <= today || todate <= today) {
+                // Past dates - always disable Casual Leave
+                casualLeaveOption.disabled = true;
+                casualLeaveOption.className = 'disabled-option';
+                document.getElementById("leaveWarning").innerText = "You have selected current or past date. You are not eligible to apply for Casual Leave.";
+            } else if (clbalance <= 0 || (days > 0 && clbalance < days)) {
+                // Future dates but no balance or insufficient balance - disable without warning
+                casualLeaveOption.disabled = true;
+                casualLeaveOption.className = 'disabled-option';
+                document.getElementById("leaveWarning").innerText = ""; // Clear warning message
+            } else {
+                // Future dates with sufficient balance
+                casualLeaveOption.disabled = false;
+                casualLeaveOption.className = '';
+                document.getElementById("leaveWarning").innerText = "";
+            }
+        }
+
+        function calculateDays() {
+            if (!document.getElementById("todate").value || !document.getElementById("fromdate").value) {
+                return 0;
+            }
+
+            const todate = new Date(document.getElementById("todate").value);
+            const fromdate = new Date(document.getElementById("fromdate").value);
+            const diffTime = todate - fromdate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            const isHalfDay = document.getElementById('is_userh').checked;
+
+            return isHalfDay ? diffDays / 2 : diffDays;
         }
     </script>
     <script>
-        if (<?php echo $slbalance ?> <= 0) {
-            document.getElementById("typeofleave").options[1].disabled = true;
-        } else {
-            document.getElementById("typeofleave").options[1].disabled = false;
-        }
+        // Initial setup based on PHP balances
+        document.addEventListener('DOMContentLoaded', function() {
+            const sickLeaveOption = document.getElementById("typeofleave").options[1];
+            const casualLeaveOption = document.getElementById("typeofleave").options[2];
 
-        if (<?php echo $clbalance ?> <= 0) {
-            document.getElementById("typeofleave").options[2].disabled = true;
-        } else {
-            document.getElementById("typeofleave").options[2].disabled = false;
-        }
+            if (slbalance <= 0) {
+                sickLeaveOption.disabled = true;
+                sickLeaveOption.className = 'disabled-option';
+            }
+
+            if (clbalance <= 0) {
+                casualLeaveOption.disabled = true;
+                casualLeaveOption.className = 'disabled-option';
+            }
+        });
     </script>
     <script>
         function toggleShiftField() {
@@ -600,25 +651,21 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                     } else {
                         document.getElementById("is_userh").disabled = false;
                     }
-                    if ($('#is_userh').not(':checked').length > 0) {
-                        return (diffDays);
 
-                    } else if (event.target.checked) {
-                        return (diffDays / 2);
-                    }
                     const checkbox = document.getElementById('is_userh');
-                    checkbox.addEventListener('change', (event) => {
-                        if (event.target.checked) {
-                            return (diffDays / 2);
-                        } else if ($('#is_userh').not(':checked').length > 0) {
-                            return (diffDays);
-                        }
-                    })
+                    if (checkbox.checked) {
+                        return (diffDays / 2);
+                    } else {
+                        return (diffDays);
+                    }
                 }
                 document.getElementById("numdays2").value = GetDays();
 
                 document.getElementById("todate").min = document.getElementById("fromdate").value;
                 document.getElementById("fromdate").max = document.getElementById("todate").value;
+
+                // Recheck leave type when dates change to update balance validation
+                checkLeaveType();
             }
         }
     </script>
