@@ -19,6 +19,10 @@ $date = date('Y-m-d H:i:s');
 
 if ($role == 'Admin') {
     $id = isset($_GET['get_id']) ? strtoupper($_GET['get_id']) : null;
+    $removeMinDuration = isset($_GET['remove_min_duration']) ? $_GET['remove_min_duration'] : null;
+    $customWorkingDays = isset($_GET['custom_working_days']) ? $_GET['custom_working_days'] : null;
+    $customWorkingHours = isset($_GET['custom_working_hours']) ? $_GET['custom_working_hours'] : null;
+    $ctc = isset($_GET['ctc']) ? $_GET['ctc'] : null;
 
     if ($id) {
         $result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE associatenumber='$id'");
@@ -199,24 +203,75 @@ $documents = [
         <?php if ($role == 'Admin') { ?>
             <form action="" method="GET" class="no-print">
                 <br>
+
+                <!-- Associate ID -->
                 <div class="form-group" style="display: inline-block;">
                     <div class="col2" style="display: inline-block;">
-
-                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
+                        <input name="get_id"
+                            class="form-control"
+                            style="width:max-content; display:inline-block"
+                            placeholder="Associate Id"
+                            value="<?php echo $id; ?>"
+                            required>
                     </div>
                 </div>
-
-                <div class="col2 left" style="display: inline-block;">
-                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                        <i class="bi bi-search"></i>&nbsp;Search</button>
-                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button>
+                <!-- CTC -->
+                <div class="form-group" style="display:inline-block; margin-left:10px;">
+                    <label>CTC (per annum):</label>
+                    <input type="number"
+                        name="ctc"
+                        class="form-control"
+                        style="width:120px; display:inline-block;"
+                        value="<?php echo htmlspecialchars($ctc ?? ''); ?>">
                 </div>
+
+                <!-- Remove Minimum Duration -->
+                <div class="form-group" style="display:inline-block; margin-left:10px;">
+                    <label>Remove Min Duration:</label>
+                    <select name="remove_min_duration" class="form-control" style="width:auto; display:inline-block;">
+                        <option value="">No</option>
+                        <option value="yes" <?php if ($removeMinDuration === "yes") echo "selected"; ?>>Yes</option>
+                    </select>
+                </div>
+
+                <!-- Custom Working Days -->
+                <div class="form-group" style="display:inline-block; margin-left:10px;">
+                    <label>Working Days:</label>
+                    <input type="number"
+                        name="custom_working_days"
+                        class="form-control"
+                        style="width:80px; display:inline-block;"
+                        value="<?php echo htmlspecialchars($customWorkingDays ?? ''); ?>">
+                </div>
+
+                <!-- Custom Working Hours -->
+                <div class="form-group" style="display:inline-block; margin-left:10px;">
+                    <label>Working Hours:</label>
+                    <input type="text"
+                        name="custom_working_hours"
+                        class="form-control"
+                        style="width:120px; display:inline-block;"
+                        value="<?php echo htmlspecialchars($customWorkingHours ?? ''); ?>">
+                </div>
+
+                <!-- Buttons -->
+                <div class="col2 left" style="display: inline-block; margin-left:10px;">
+                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                        <i class="bi bi-search"></i>&nbsp;Search
+                    </button>
+                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
+                        <i class="bi bi-save"></i>&nbsp;Save
+                    </button>
+                </div>
+
             </form>
         <?php } ?>
 
         <?php if ($role != 'Admin') { ?>
             <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
-                <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button><br><br>
+                <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;">
+                    <i class="bi bi-save"></i>&nbsp;Save
+                </button><br><br>
             </div>
         <?php } ?>
 
@@ -279,11 +334,13 @@ $documents = [
 
                                 <p><b><u>COMPENSATION and BENEFITS</u></b></p>
                                 <ol>
+                                    <?php     // Choose custom CTC if given, else use the DB value
+                                    $finalCtc = !empty($ctc) ? $ctc : $array['salary']; ?>
                                     <li>
                                         Your gross salary including all benefits will be
-                                        <b>₹<?= $array['salary'] ?>/- per annum</b>,
+                                        <b>₹<?= $finalCtc ?>/- per annum</b>,
                                         as per the terms and conditions set out herein.
-                                        <?php if (!empty($array['salary']) && $array['salary'] > 0): ?>
+                                        <?php if (!empty($finalCtc) && $finalCtc > 0): ?>
                                             Please refer to the attached Annexure 1 for a complete breakdown of your compensation.
                                         <?php endif; ?>
                                     </li>
@@ -354,22 +411,45 @@ $documents = [
 
                                         <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
 
-                                        <?php if ($array['job_type'] != "Contractual" && !($isVolunteer)) { ?>
+                                        <?php
+                                        // Show this clause only when:
+                                        // 1) remove_min_duration is NOT "yes"
+                                        // 2) job_type is not Contractual
+                                        // 3) not a volunteer
+
+                                        if ($removeMinDuration !== "yes" && $array['job_type'] != "Contractual" && !$isVolunteer) {
+                                        ?>
                                             <li>
-                                                You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
+                                                You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least
+                                                <?php echo $mintenure; ?>
+                                                from the original joining date in accordance with the Service Agreement clause.
                                             </li>
-                                        <?php } ?>
+                                        <?php
+                                        }
+                                        ?>
 
                                         <li>You are expected to be active and responsive throughout your service period.</li>
+                                        <?php
+                                        // Choose custom value if present, else default
+                                        $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
+                                        $finalWorkingHours = !empty($customWorkingHours) ? $customWorkingHours : $workinghours;
+                                        ?>
+
                                         <li>
                                             <p>Working Hours:</p>
-                                            The work schedule comprises <?php echo $workday; ?> days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
+                                            The work schedule comprises <?php echo $finalWorkday; ?> days per week,
+                                            with each day requiring a <?php echo $finalWorkingHours; ?> commitment,
+                                            inclusive of essential administrative tasks as required.
+
                                             <?php if ($array['college_name'] == "upes") { ?>
                                                 For the two-month internship program,
                                                 you will be assigned to one month in the morning shift and one month in the afternoon shift,
                                                 based on business requirements.
                                             <?php } ?>
-                                            <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
+
+                                            <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes,
+                                            contingent upon real-time demands pertaining to non-academic activities and similar operational necessities.
+                                            You should be flexible in terms of working hours.
                                         </li>
                                         <li>
                                             <p>Primary responsibility:</p>
