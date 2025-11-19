@@ -553,6 +553,16 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
             // Reset typeofleave if fromdate or todate changes
             document.getElementById("typeofleave").value = ""; // Reset the selected value
 
+            // Reset and hide ALL related panels when leave type is reset
+            document.getElementById("hidden-panel_creason").style.display = "none";
+            document.getElementById("response").innerHTML = "";
+            document.getElementById("hidden-panel").style.display = "none";
+            document.getElementById("hidden-panel_ack").style.display = "none";
+
+            // Reset file input and acknowledgement checkbox
+            document.getElementById("medicalcertificate").value = "";
+            document.getElementById("ack").checked = false;
+
             // Get leave type options
             const sickLeaveOption = document.getElementById("typeofleave").options[1];
             const casualLeaveOption = document.getElementById("typeofleave").options[2];
@@ -671,23 +681,12 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     </script>
     <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
     <script>
-        if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Adjustment Leave" && document.getElementById('typeofleave').value == "Casual Leave") {
-
-            document.getElementById("ack").required = false;
-        } else {
-
-            document.getElementById("ack").required = true;
-        }
-
         const randvar = document.getElementById('typeofleave');
 
         randvar.addEventListener('change', (event) => {
             if (document.getElementById('typeofleave').value == "Sick Leave") {
-
                 document.getElementById("ack").required = true;
-
             } else {
-
                 document.getElementById("ack").required = false;
             }
         })
@@ -715,6 +714,18 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
         $(document).ready(function() {
             $("select.typeofleave").change(function() {
                 var selectedtypeofleave = $(".typeofleave option:selected").val();
+
+                // Hide ALL panels and reset fields if no leave type is selected
+                if (!selectedtypeofleave) {
+                    $("#hidden-panel_creason").hide();
+                    $("#response").html("");
+                    $("#hidden-panel").hide();
+                    $("#hidden-panel_ack").hide();
+                    $("#medicalcertificate").val("");
+                    $("#ack").prop('checked', false);
+                    return;
+                }
+
                 $.ajax({
                     type: "POST",
                     url: "process-request.php",
@@ -723,41 +734,26 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                     }
                 }).done(function(data) {
                     $("#response").html(data);
+
+                    // Show/hide panels based on leave type
+                    if (selectedtypeofleave == "Sick Leave") {
+                        $("#hidden-panel_creason").show();
+                        $("#hidden-panel").show();
+                        $("#hidden-panel_ack").show();
+                    } else if (selectedtypeofleave == "Casual Leave") {
+                        $("#hidden-panel_creason").show();
+                        $("#hidden-panel").hide();
+                        $("#hidden-panel_ack").hide();
+                        $("#medicalcertificate").val(""); // Reset file input
+                        $("#ack").prop('checked', false); // Uncheck acknowledgement
+                    } else if (selectedtypeofleave == "Leave Without Pay" || selectedtypeofleave == "Adjustment Leave") {
+                        $("#hidden-panel_creason").hide();
+                        $("#hidden-panel").hide();
+                        $("#hidden-panel_ack").hide();
+                        $("#medicalcertificate").val(""); // Reset file input
+                        $("#ack").prop('checked', false); // Uncheck acknowledgement
+                    }
                 });
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            $("#typeofleave").change(function() {
-                var leaveType = $("#typeofleave").val();
-
-                // Reset checkbox and file input if hidden
-                if (leaveType !== "Sick Leave") {
-                    // Uncheck the 'ack' checkbox if leave type is not Sick Leave
-                    $("#ack").prop('checked', false);
-                    // Reset the file input field when the 'Documents' section is hidden
-                    $("#medicalcertificate").val('');
-                }
-
-                // Show and hide panels based on the leave type
-                if (leaveType == "Sick Leave") {
-                    $("#hidden-panel").show();
-                    $("#hidden-panel_ack").show();
-                    $("#hidden-panel_creason").show();
-                } else if (leaveType == "Casual Leave") {
-                    $("#hidden-panel").hide();
-                    $("#hidden-panel_ack").hide();
-                    $("#hidden-panel_creason").show();
-                } else if (leaveType == "Leave Without Pay" || leaveType == "Adjustment Leave") {
-                    $("#hidden-panel").hide();
-                    $("#hidden-panel_ack").hide();
-                    $("#hidden-panel_creason").hide();
-                } else {
-                    $("#hidden-panel").hide();
-                    $("#hidden-panel_ack").hide();
-                    $("#hidden-panel_creason").hide();
-                }
             });
         });
     </script>
