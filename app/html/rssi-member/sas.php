@@ -512,7 +512,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
                     },
                     cache: true
                 },
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 placeholder: 'Search by category',
                 width: '100%'
             });
@@ -534,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
                     },
                     cache: true
                 },
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 placeholder: 'Search by class',
                 width: '100%'
             });

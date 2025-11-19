@@ -687,7 +687,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by category',
                 width: '100%',
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 multiple: true
             });
 
@@ -707,7 +707,7 @@ if (@$_POST['form-type'] == "exam") {
                 },
                 placeholder: 'Search by class',
                 width: '100%',
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 multiple: true
             });
         });

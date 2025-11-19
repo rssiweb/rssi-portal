@@ -546,6 +546,7 @@ $resultArr = pg_fetch_all($result);
                                                 <div class="col-md-6">
                                                     <a id="offer_letter" href="" target="_blank">Offer Letter</a><br>
                                                     <a id="joining_letter" href="" target="_blank">Joining Letter</a><br>
+                                                    <a id="comp_letter" href="" target="_blank">Compensation Letter</a>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <a id="certificate_issue" href="" target="_blank">Issue Document</a><br>
@@ -610,6 +611,7 @@ $resultArr = pg_fetch_all($result);
 
                                         document.getElementById("wbt_details").href = "/rssi-member/iexplore_defaulters.php?associateId=" + mydata.associatenumber;
                                         document.getElementById("offer_letter").href = "/rssi-member/offerletter.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("comp_letter").href = "/rssi-member/comp-letter.php?get_id=" + mydata.associatenumber;
                                         document.getElementById("certificate_issue").href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata.associatenumber + "&awarded_to_name=" + mydata.fullname;
                                         document.getElementById("certificate_view").href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata.associatenumber;
                                         document.getElementById("experience_letter").href = "/rssi-member/expletter.php?get_id=" + mydata.associatenumber;

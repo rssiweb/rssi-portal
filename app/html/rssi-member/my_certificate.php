@@ -447,6 +447,7 @@ $resultArr = pg_fetch_all($result);
                                                 <option>Certificate Of Appreciation</option>
                                                 <option>Certificate Of Appreciation (Smile)</option>
                                                 <option>Completion Certificate</option>
+                                                <option>Compensation Letter</option>
                                                 <option>Experience Letter</option>
                                                 <option>Joining Letter</option>
                                                 <option>Learning Achievement Award</option>
