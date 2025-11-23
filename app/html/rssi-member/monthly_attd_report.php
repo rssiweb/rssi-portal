@@ -165,18 +165,6 @@ pg_close($con);
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-
-        gtag('config', 'AW-11316670180');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -191,15 +179,6 @@ pg_close($con);
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
     <!-- Initialize the multi-select plugin (using Select2 as example) -->
@@ -231,25 +210,6 @@ pg_close($con);
             });
         });
     </script>
-
-    <style>
-        .blink-text {
-            color: red;
-            animation: blinkAnimation 1s infinite;
-        }
-
-        @keyframes blinkAnimation {
-
-            0%,
-            50% {
-                opacity: 0;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-    </style>
 </head>
 
 <body>
