@@ -19,122 +19,121 @@ $category_ids = isset($_GET['category_ids']) ? $_GET['category_ids'] : [];
 // Check if months are selected
 $months_selected = !empty($from_month) && !empty($to_month);
 
-// Build the query
-$query = "
-    SELECT 
-        fp.id,
-        fp.student_id,
-        s.studentname,
-        fp.academic_year,
-        fp.month,
-        fp.amount,
-        fp.payment_type,
-        fp.transaction_id,
-        fp.collected_by,
-        m.fullname as collector_name,
-        fp.collection_date,
-        fp.notes,
-        fc.category_name
-    FROM fee_payments fp
-    LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
-    LEFT JOIN rssimyaccount_members m ON fp.collected_by = m.associatenumber
-    LEFT JOIN fee_categories fc ON fp.category_id = fc.id
-    WHERE 1=1
-";
+// Initialize variables
+$has_data = false;
+$total_amount = 0;
+$total_records = 0;
+$result = null;
+$month_wise_result = null;
+$category_wise_result = null;
+$month_wise_totals = [];
+$category_wise_totals = [];
+$chart_labels = [];
+$chart_data = [];
+$pie_labels = [];
+$pie_data = [];
+$pie_colors = [];
 
-$params = [];
-$param_count = 0;
-
-// Add date range filter only if months are selected
+// Build the query only if months are selected
 if ($months_selected) {
-    // Convert YYYY-MM to academic year and month for filtering
-    list($from_year, $from_month_num) = explode('-', $from_month);
-    list($to_year, $to_month_num) = explode('-', $to_month);
+    $query = "
+        SELECT 
+            fp.id,
+            fp.student_id,
+            s.studentname,
+            fp.academic_year,
+            fp.month,
+            fp.amount,
+            fp.payment_type,
+            fp.transaction_id,
+            fp.collected_by,
+            m.fullname as collector_name,
+            fp.collection_date,
+            fp.notes,
+            fc.category_name
+        FROM fee_payments fp
+        LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
+        LEFT JOIN rssimyaccount_members m ON fp.collected_by = m.associatenumber
+        LEFT JOIN fee_categories fc ON fp.category_id = fc.id
+        WHERE 1=1
+    ";
 
-    $from_month_name = date('F', mktime(0, 0, 0, $from_month_num, 1));
-    $to_month_name = date('F', mktime(0, 0, 0, $to_month_num, 1));
+    $params = [];
+    $param_count = 0;
 
-    // For academic year: if month is Jan-Mar, academic year is previous year
-    $from_academic_year = ($from_month_num >= 4) ? $from_year : $from_year - 1;
-    $to_academic_year = ($to_month_num >= 4) ? $to_year : $to_year - 1;
+    // Add date range filter
+    if ($months_selected) {
+        // Convert YYYY-MM to academic year and month for filtering
+        list($from_year, $from_month_num) = explode('-', $from_month);
+        list($to_year, $to_month_num) = explode('-', $to_month);
 
-    // Create month order mapping
-    $month_order = [
-        'January' => 1,
-        'February' => 2,
-        'March' => 3,
-        'April' => 4,
-        'May' => 5,
-        'June' => 6,
-        'July' => 7,
-        'August' => 8,
-        'September' => 9,
-        'October' => 10,
-        'November' => 11,
-        'December' => 12
-    ];
+        $from_month_name = date('F', mktime(0, 0, 0, $from_month_num, 1));
+        $to_month_name = date('F', mktime(0, 0, 0, $to_month_num, 1));
 
-    // SIMPLIFIED AND CORRECT FILTERING LOGIC:
-    // We need to find records where:
-    // 1. Academic year is between from_academic_year and to_academic_year
-    // 2. For the start academic year, only include months >= from_month
-    // 3. For the end academic year, only include months <= to_month
+        $from_academic_year = ($from_month_num >= 4) ? $from_year : $from_year - 1;
+        $to_academic_year = ($to_month_num >= 4) ? $to_year : $to_year - 1;
 
-    $query .= " AND (";
+        $month_order = [
+            'January' => 1,
+            'February' => 2,
+            'March' => 3,
+            'April' => 4,
+            'May' => 5,
+            'June' => 6,
+            'July' => 7,
+            'August' => 8,
+            'September' => 9,
+            'October' => 10,
+            'November' => 11,
+            'December' => 12
+        ];
 
-    // Case 1: Academic years completely between the range
-    if ($to_academic_year - $from_academic_year > 1) {
-        $query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
-    }
+        $query .= " AND (";
 
-    // Case 2: Same academic year (both from and to in same academic year)
-    if ($from_academic_year == $to_academic_year) {
-        $query .= " (fp.academic_year::integer = $from_academic_year AND 
-            CASE fp.month 
-                WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-            END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
-    } else {
-        // Case 3: Different academic years
-        // Start academic year - months from start month to March (month order 1-12)
-        $query .= " (fp.academic_year::integer = $from_academic_year AND 
-            CASE fp.month 
-                WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-            END >= {$month_order[$from_month_name]}) OR";
-
-        // Middle academic years (if any)
         if ($to_academic_year - $from_academic_year > 1) {
             $query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
         }
 
-        // End academic year - months from April to end month
-        $query .= " (fp.academic_year::integer = $to_academic_year AND 
-            CASE fp.month 
-                WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-            END <= {$month_order[$to_month_name]})";
+        if ($from_academic_year == $to_academic_year) {
+            $query .= " (fp.academic_year::integer = $from_academic_year AND 
+                CASE fp.month 
+                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
+        } else {
+            $query .= " (fp.academic_year::integer = $from_academic_year AND 
+                CASE fp.month 
+                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                END >= {$month_order[$from_month_name]}) OR";
+
+            if ($to_academic_year - $from_academic_year > 1) {
+                $query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
+            }
+
+            $query .= " (fp.academic_year::integer = $to_academic_year AND 
+                CASE fp.month 
+                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                END <= {$month_order[$to_month_name]})";
+        }
+
+        $query .= ")";
     }
 
-    $query .= ")";
-}
-
-// Only add other filters and execute query if months are selected
-if ($months_selected) {
-    // Add student_id filter
+    // Add other filters
     if (!empty($student_id)) {
         $param_count++;
         $query .= " AND fp.student_id = $$param_count";
         $params[] = $student_id;
     }
 
-    // Add category filter
     if (!empty($category_ids) && is_array($category_ids)) {
         $category_placeholders = [];
         foreach ($category_ids as $category_id) {
@@ -160,178 +159,172 @@ if ($months_selected) {
     // Execute query
     $result = pg_query_params($con, $query, $params);
 
-    // Additional queries for analytics
-    if ($months_selected) {
-        // Month-wise totals query
-        $month_wise_query = "
-            SELECT 
-                fp.academic_year,
-                fp.month,
-                SUM(fp.amount) as month_total,
-                COUNT(*) as payment_count
-            FROM fee_payments fp
-            LEFT JOIN fee_categories fc ON fp.category_id = fc.id
-            WHERE 1=1
-        ";
+    // Check if we have data
+    if ($result && pg_num_rows($result) > 0) {
+        $has_data = true;
+        $total_records = pg_num_rows($result);
 
-        // Add the same date range conditions
-        $month_wise_query .= " AND (";
-        if ($to_academic_year - $from_academic_year > 1) {
-            $month_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
+        // Calculate total amount
+        while ($row = pg_fetch_assoc($result)) {
+            $total_amount += floatval($row['amount']);
         }
+        pg_result_seek($result, 0); // Reset pointer to beginning
 
-        if ($from_academic_year == $to_academic_year) {
-            $month_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
-        } else {
-            $month_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END >= {$month_order[$from_month_name]}) OR";
+        // Analytics queries
+        if ($months_selected) {
+            // Month-wise totals query
+            $month_wise_query = "
+                SELECT 
+                    fp.academic_year,
+                    fp.month,
+                    SUM(fp.amount) as month_total,
+                    COUNT(*) as payment_count
+                FROM fee_payments fp
+                LEFT JOIN fee_categories fc ON fp.category_id = fc.id
+                WHERE 1=1
+            ";
 
+            // Add the same date range conditions
+            $month_wise_query .= " AND (";
             if ($to_academic_year - $from_academic_year > 1) {
                 $month_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
             }
 
-            $month_wise_query .= " (fp.academic_year::integer = $to_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END <= {$month_order[$to_month_name]})";
-        }
-        $month_wise_query .= ")";
+            if ($from_academic_year == $to_academic_year) {
+                $month_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
+            } else {
+                $month_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END >= {$month_order[$from_month_name]}) OR";
 
-        // Add other filters
-        if (!empty($student_id)) {
-            $month_wise_query .= " AND fp.student_id = '$student_id'";
-        }
-        if (!empty($category_ids) && is_array($category_ids)) {
-            $category_ids_str = implode("','", $category_ids);
-            $month_wise_query .= " AND fc.id IN ('$category_ids_str')";
-        }
+                if ($to_academic_year - $from_academic_year > 1) {
+                    $month_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
+                }
 
-        $month_wise_query .= " GROUP BY fp.academic_year, fp.month
-                              ORDER BY fp.academic_year DESC, 
-                              CASE fp.month 
-                                  WHEN 'April' THEN 1 WHEN 'May' THEN 2 WHEN 'June' THEN 3 
-                                  WHEN 'July' THEN 4 WHEN 'August' THEN 5 WHEN 'September' THEN 6 
-                                  WHEN 'October' THEN 7 WHEN 'November' THEN 8 WHEN 'December' THEN 9 
-                                  WHEN 'January' THEN 10 WHEN 'February' THEN 11 WHEN 'March' THEN 12 
-                              END DESC";
-
-        $month_wise_result = pg_query($con, $month_wise_query);
-        $month_wise_totals = [];
-        $chart_labels = [];
-        $chart_data = [];
-
-        if ($month_wise_result) {
-            while ($row = pg_fetch_assoc($month_wise_result)) {
-                $month_wise_totals[] = $row;
-                $chart_labels[] = $row['month'] . ' ' . $row['academic_year'];
-                $chart_data[] = floatval($row['month_total']);
+                $month_wise_query .= " (fp.academic_year::integer = $to_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END <= {$month_order[$to_month_name]})";
             }
-        }
+            $month_wise_query .= ")";
 
-        // Category-wise totals query
-        $category_wise_query = "
-            SELECT 
-                fc.category_name,
-                SUM(fp.amount) as category_total,
-                COUNT(*) as payment_count
-            FROM fee_payments fp
-            LEFT JOIN fee_categories fc ON fp.category_id = fc.id
-            WHERE 1=1
-        ";
+            // Add other filters
+            if (!empty($student_id)) {
+                $month_wise_query .= " AND fp.student_id = '$student_id'";
+            }
+            if (!empty($category_ids) && is_array($category_ids)) {
+                $category_ids_str = implode("','", $category_ids);
+                $month_wise_query .= " AND fc.id IN ('$category_ids_str')";
+            }
 
-        // Add the same date range conditions
-        $category_wise_query .= " AND (";
-        if ($to_academic_year - $from_academic_year > 1) {
-            $category_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
-        }
+            $month_wise_query .= " GROUP BY fp.academic_year, fp.month
+                                  ORDER BY fp.academic_year DESC, 
+                                  CASE fp.month 
+                                      WHEN 'April' THEN 1 WHEN 'May' THEN 2 WHEN 'June' THEN 3 
+                                      WHEN 'July' THEN 4 WHEN 'August' THEN 5 WHEN 'September' THEN 6 
+                                      WHEN 'October' THEN 7 WHEN 'November' THEN 8 WHEN 'December' THEN 9 
+                                      WHEN 'January' THEN 10 WHEN 'February' THEN 11 WHEN 'March' THEN 12 
+                                  END DESC";
 
-        if ($from_academic_year == $to_academic_year) {
-            $category_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
-        } else {
-            $category_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END >= {$month_order[$from_month_name]}) OR";
+            $month_wise_result = pg_query($con, $month_wise_query);
 
+            if ($month_wise_result && pg_num_rows($month_wise_result) > 0) {
+                while ($row = pg_fetch_assoc($month_wise_result)) {
+                    $month_wise_totals[] = $row;
+                    $chart_labels[] = $row['month'] . ' ' . $row['academic_year'];
+                    $chart_data[] = floatval($row['month_total']);
+                }
+            }
+
+            // Category-wise totals query
+            $category_wise_query = "
+                SELECT 
+                    fc.category_name,
+                    SUM(fp.amount) as category_total,
+                    COUNT(*) as payment_count
+                FROM fee_payments fp
+                LEFT JOIN fee_categories fc ON fp.category_id = fc.id
+                WHERE 1=1
+            ";
+
+            // Add the same date range conditions
+            $category_wise_query .= " AND (";
             if ($to_academic_year - $from_academic_year > 1) {
                 $category_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
             }
 
-            $category_wise_query .= " (fp.academic_year::integer = $to_academic_year AND 
-                CASE fp.month 
-                    WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
-                    WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
-                    WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
-                    WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
-                END <= {$month_order[$to_month_name]})";
-        }
-        $category_wise_query .= ")";
+            if ($from_academic_year == $to_academic_year) {
+                $category_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END BETWEEN {$month_order[$from_month_name]} AND {$month_order[$to_month_name]})";
+            } else {
+                $category_wise_query .= " (fp.academic_year::integer = $from_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END >= {$month_order[$from_month_name]}) OR";
 
-        // Add other filters
-        if (!empty($student_id)) {
-            $category_wise_query .= " AND fp.student_id = '$student_id'";
-        }
-        if (!empty($category_ids) && is_array($category_ids)) {
-            $category_ids_str = implode("','", $category_ids);
-            $category_wise_query .= " AND fc.id IN ('$category_ids_str')";
-        }
+                if ($to_academic_year - $from_academic_year > 1) {
+                    $category_wise_query .= " (fp.academic_year::integer > $from_academic_year AND fp.academic_year::integer < $to_academic_year) OR";
+                }
 
-        $category_wise_query .= " GROUP BY fc.category_name
-                                 ORDER BY category_total DESC";
+                $category_wise_query .= " (fp.academic_year::integer = $to_academic_year AND 
+                    CASE fp.month 
+                        WHEN 'January' THEN 1 WHEN 'February' THEN 2 WHEN 'March' THEN 3 
+                        WHEN 'April' THEN 4 WHEN 'May' THEN 5 WHEN 'June' THEN 6 
+                        WHEN 'July' THEN 7 WHEN 'August' THEN 8 WHEN 'September' THEN 9 
+                        WHEN 'October' THEN 10 WHEN 'November' THEN 11 WHEN 'December' THEN 12 
+                    END <= {$month_order[$to_month_name]})";
+            }
+            $category_wise_query .= ")";
 
-        $category_wise_result = pg_query($con, $category_wise_query);
-        $category_wise_totals = [];
-        $pie_labels = [];
-        $pie_data = [];
-        $pie_colors = [];
+            // Add other filters
+            if (!empty($student_id)) {
+                $category_wise_query .= " AND fp.student_id = '$student_id'";
+            }
+            if (!empty($category_ids) && is_array($category_ids)) {
+                $category_ids_str = implode("','", $category_ids);
+                $category_wise_query .= " AND fc.id IN ('$category_ids_str')";
+            }
 
-        if ($category_wise_result) {
-            $color_palette = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#6f42c1', '#e83e8c', '#fd7e14'];
-            $color_index = 0;
+            $category_wise_query .= " GROUP BY fc.category_name
+                                     ORDER BY category_total DESC";
 
-            while ($row = pg_fetch_assoc($category_wise_result)) {
-                $category_wise_totals[] = $row;
-                $pie_labels[] = $row['category_name'];
-                $pie_data[] = floatval($row['category_total']);
-                $pie_colors[] = $color_palette[$color_index % count($color_palette)];
-                $color_index++;
+            $category_wise_result = pg_query($con, $category_wise_query);
+
+            if ($category_wise_result && pg_num_rows($category_wise_result) > 0) {
+                $color_palette = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#6f42c1', '#e83e8c', '#fd7e14'];
+                $color_index = 0;
+
+                while ($row = pg_fetch_assoc($category_wise_result)) {
+                    $category_wise_totals[] = $row;
+                    $pie_labels[] = $row['category_name'];
+                    $pie_data[] = floatval($row['category_total']);
+                    $pie_colors[] = $color_palette[$color_index % count($color_palette)];
+                    $color_index++;
+                }
             }
         }
     }
-}
-
-// Calculate totals
-$total_amount = 0;
-$total_records = 0;
-if ($months_selected && $result) {
-    $total_records = pg_num_rows($result);
-    while ($row = pg_fetch_assoc($result)) {
-        $total_amount += floatval($row['amount']);
-    }
-    pg_result_seek($result, 0); // Reset pointer to beginning
 }
 ?>
 
@@ -402,6 +395,18 @@ if ($months_selected && $result) {
         .analytics-card {
             height: 100%;
         }
+
+        .no-data-message {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .no-data-message i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
     </style>
 </head>
 
@@ -435,15 +440,9 @@ if ($months_selected && $result) {
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="card mt-4">
-                                            <!-- <div class="card-header">
-                                                <h4 class="card-title">
-                                                    <i class="fas fa-money-bill-wave me-2"></i>
-                                                    Fee Payments Report
-                                                </h4>
-                                            </div> -->
                                             <div class="card-body">
-                                                <!-- Summary Cards - Only show if months are selected -->
-                                                <?php if ($months_selected): ?>
+                                                <!-- Summary Cards - Only show if we have data -->
+                                                <?php if ($months_selected && $has_data): ?>
                                                     <div class="row mt-4 mb-4">
                                                         <div class="col-md-3">
                                                             <div class="card summary-card bg-primary text-white">
@@ -496,7 +495,6 @@ if ($months_selected && $result) {
                                                             <label for="student_id" class="form-label">Student ID</label>
                                                             <select class="form-control" id="student_id" name="student_id" style="width:100%;">
                                                                 <?php if (!empty($student_id)): ?>
-                                                                    <!-- Preload selected value -->
                                                                     <option value="<?php echo htmlspecialchars($student_id); ?>" selected>
                                                                         <?php echo htmlspecialchars($student_id); ?>
                                                                     </option>
@@ -522,8 +520,16 @@ if ($months_selected && $result) {
                                                     </form>
                                                 </div>
 
-                                                <!-- Analytics Section -->
-                                                <?php if ($months_selected): ?>
+                                                <!-- No Data Alert -->
+                                                <?php if ($months_selected && !$has_data): ?>
+                                                    <div class="alert alert-info alert-dismissible fade show mt-4" role="alert">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>No data found</strong> for the selected criteria. Please try different filters.
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <!-- Analytics Section - Only show if we have data -->
+                                                <?php if ($months_selected && $has_data): ?>
                                                     <div class="analytics-section">
                                                         <div class="row">
                                                             <!-- Month-wise Collection -->
@@ -536,31 +542,38 @@ if ($months_selected && $result) {
                                                                         </h5>
                                                                     </div>
                                                                     <div class="card-body">
-                                                                        <div class="chart-container">
-                                                                            <canvas id="monthChart"></canvas>
-                                                                        </div>
-                                                                        <div class="table-responsive mt-3">
-                                                                            <table class="table table-sm table-bordered">
-                                                                                <thead>
-                                                                                    <tr>
-                                                                                        <th>Academic Year</th>
-                                                                                        <th>Month</th>
-                                                                                        <th>Total Amount</th>
-                                                                                        <th>Payments</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody>
-                                                                                    <?php foreach ($month_wise_totals as $month_data): ?>
+                                                                        <?php if (!empty($month_wise_totals)): ?>
+                                                                            <div class="chart-container">
+                                                                                <canvas id="monthChart"></canvas>
+                                                                            </div>
+                                                                            <div class="table-responsive mt-3">
+                                                                                <table class="table table-sm table-bordered">
+                                                                                    <thead>
                                                                                         <tr>
-                                                                                            <td><?php echo htmlspecialchars($month_data['academic_year']); ?></td>
-                                                                                            <td><?php echo htmlspecialchars($month_data['month']); ?></td>
-                                                                                            <td>₹<?php echo number_format($month_data['month_total'], 2); ?></td>
-                                                                                            <td><?php echo htmlspecialchars($month_data['payment_count']); ?></td>
+                                                                                            <th>Academic Year</th>
+                                                                                            <th>Month</th>
+                                                                                            <th>Total Amount</th>
+                                                                                            <th>Payments</th>
                                                                                         </tr>
-                                                                                    <?php endforeach; ?>
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        <?php foreach ($month_wise_totals as $month_data): ?>
+                                                                                            <tr>
+                                                                                                <td><?php echo htmlspecialchars($month_data['academic_year']); ?></td>
+                                                                                                <td><?php echo htmlspecialchars($month_data['month']); ?></td>
+                                                                                                <td>₹<?php echo number_format($month_data['month_total'], 2); ?></td>
+                                                                                                <td><?php echo htmlspecialchars($month_data['payment_count']); ?></td>
+                                                                                            </tr>
+                                                                                        <?php endforeach; ?>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        <?php else: ?>
+                                                                            <div class="no-data-message">
+                                                                                <i class="fas fa-chart-line"></i><br>
+                                                                                No analytics data available for month-wise collection.
+                                                                            </div>
+                                                                        <?php endif; ?>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -575,29 +588,36 @@ if ($months_selected && $result) {
                                                                         </h5>
                                                                     </div>
                                                                     <div class="card-body">
-                                                                        <div class="chart-container">
-                                                                            <canvas id="categoryChart"></canvas>
-                                                                        </div>
-                                                                        <div class="table-responsive mt-3">
-                                                                            <table class="table table-sm table-bordered">
-                                                                                <thead>
-                                                                                    <tr>
-                                                                                        <th>Category</th>
-                                                                                        <th>Total Amount</th>
-                                                                                        <th>Payments</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody>
-                                                                                    <?php foreach ($category_wise_totals as $category_data): ?>
+                                                                        <?php if (!empty($category_wise_totals)): ?>
+                                                                            <div class="chart-container">
+                                                                                <canvas id="categoryChart"></canvas>
+                                                                            </div>
+                                                                            <div class="table-responsive mt-3">
+                                                                                <table class="table table-sm table-bordered">
+                                                                                    <thead>
                                                                                         <tr>
-                                                                                            <td><?php echo htmlspecialchars($category_data['category_name']); ?></td>
-                                                                                            <td>₹<?php echo number_format($category_data['category_total'], 2); ?></td>
-                                                                                            <td><?php echo htmlspecialchars($category_data['payment_count']); ?></td>
+                                                                                            <th>Category</th>
+                                                                                            <th>Total Amount</th>
+                                                                                            <th>Payments</th>
                                                                                         </tr>
-                                                                                    <?php endforeach; ?>
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        <?php foreach ($category_wise_totals as $category_data): ?>
+                                                                                            <tr>
+                                                                                                <td><?php echo htmlspecialchars($category_data['category_name']); ?></td>
+                                                                                                <td>₹<?php echo number_format($category_data['category_total'], 2); ?></td>
+                                                                                                <td><?php echo htmlspecialchars($category_data['payment_count']); ?></td>
+                                                                                            </tr>
+                                                                                        <?php endforeach; ?>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        <?php else: ?>
+                                                                            <div class="no-data-message">
+                                                                                <i class="fas fa-chart-pie"></i><br>
+                                                                                No analytics data available for category-wise collection.
+                                                                            </div>
+                                                                        <?php endif; ?>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -612,7 +632,7 @@ if ($months_selected && $result) {
                                                             <i class="fas fa-exclamation-triangle me-2"></i>
                                                             <strong>Please select a month range</strong> to view fee payments data. Choose both "From" and "To" months above and click "Apply Filters".
                                                         </div>
-                                                    <?php else: ?>
+                                                    <?php elseif ($has_data): ?>
                                                         <table class="table table-bordered table-hover" id="paymentsTable">
                                                             <thead>
                                                                 <tr>
@@ -631,31 +651,22 @@ if ($months_selected && $result) {
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <?php if ($result && pg_num_rows($result) > 0): ?>
-                                                                    <?php while ($row = pg_fetch_assoc($result)): ?>
-                                                                        <tr>
-                                                                            <td><?php echo htmlspecialchars($row['id']); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['student_id']); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['studentname'] ?? ''); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['month']); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['category_name']); ?></td>
-                                                                            <td>₹<?php echo number_format($row['amount'], 2); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['payment_type']); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['transaction_id'] ?? ''); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['collector_name']); ?></td>
-                                                                            <td><?php echo date('d-M-Y', strtotime($row['collection_date'])); ?></td>
-                                                                            <td><?php echo htmlspecialchars($row['notes'] ?? ''); ?></td>
-                                                                        </tr>
-                                                                    <?php endwhile; ?>
-                                                                <?php else: ?>
+                                                                <?php while ($row = pg_fetch_assoc($result)): ?>
                                                                     <tr>
-                                                                        <td colspan="12" class="text-center text-muted py-4">
-                                                                            <i class="fas fa-search fa-2x mb-2"></i><br>
-                                                                            No fee payments found matching the selected criteria.
-                                                                        </td>
+                                                                        <td><?php echo htmlspecialchars($row['id']); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['studentname'] ?? ''); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['month']); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['category_name']); ?></td>
+                                                                        <td>₹<?php echo number_format($row['amount'], 2); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['payment_type']); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['transaction_id'] ?? ''); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['collector_name']); ?></td>
+                                                                        <td><?php echo date('d-M-Y', strtotime($row['collection_date'])); ?></td>
+                                                                        <td><?php echo htmlspecialchars($row['notes'] ?? ''); ?></td>
                                                                     </tr>
-                                                                <?php endif; ?>
+                                                                <?php endwhile; ?>
                                                             </tbody>
                                                         </table>
                                                     <?php endif; ?>
@@ -684,8 +695,8 @@ if ($months_selected && $result) {
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize DataTable only if table exists
-            <?php if ($months_selected): ?>
+            // Initialize DataTable only if we have data and table exists
+            <?php if ($months_selected && $has_data): ?>
                 $('#paymentsTable').DataTable({
                     "pageLength": 25,
                     "order": [
@@ -706,103 +717,109 @@ if ($months_selected && $result) {
                 }
             });
 
-            // Initialize Charts
-            <?php if ($months_selected && isset($chart_labels) && isset($chart_data)): ?>
+            // Initialize Charts only if we have data
+            <?php if ($months_selected && $has_data && !empty($chart_labels) && !empty($chart_data)): ?>
                 // Month-wise Line Chart
-                const monthCtx = document.getElementById('monthChart').getContext('2d');
-                const monthChart = new Chart(monthCtx, {
-                    type: 'line',
-                    data: {
-                        labels: <?php echo json_encode($chart_labels); ?>,
-                        datasets: [{
-                            label: 'Collection Amount (₹)',
-                            data: <?php echo json_encode($chart_data); ?>,
-                            backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                            borderColor: '#4e73df',
-                            borderWidth: 2,
-                            pointBackgroundColor: '#4e73df',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return '₹' + value.toLocaleString();
+                const monthCtx = document.getElementById('monthChart');
+                if (monthCtx) {
+                    const monthChart = new Chart(monthCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: <?php echo json_encode($chart_labels); ?>,
+                            datasets: [{
+                                label: 'Collection Amount (₹)',
+                                data: <?php echo json_encode($chart_data); ?>,
+                                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                                borderColor: '#4e73df',
+                                borderWidth: 2,
+                                pointBackgroundColor: '#4e73df',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 7,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '₹' + value.toLocaleString();
+                                        }
+                                    },
+                                    grid: {
+                                        drawBorder: false
                                     }
                                 },
-                                grid: {
-                                    drawBorder: false
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        },
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Amount: ₹' + context.parsed.y.toLocaleString();
+                                x: {
+                                    grid: {
+                                        display: false
                                     }
                                 }
                             },
-                            legend: {
-                                display: true,
-                                position: 'top',
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return 'Amount: ₹' + context.parsed.y.toLocaleString();
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
                             }
-                        },
-                        interaction: {
-                            intersect: false,
-                            mode: 'index'
                         }
-                    }
-                });
+                    });
+                }
+            <?php endif; ?>
 
+            <?php if ($months_selected && $has_data && !empty($pie_labels) && !empty($pie_data)): ?>
                 // Category-wise Pie Chart
-                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-                const categoryChart = new Chart(categoryCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: <?php echo json_encode($pie_labels); ?>,
-                        datasets: [{
-                            data: <?php echo json_encode($pie_data); ?>,
-                            backgroundColor: <?php echo json_encode($pie_colors); ?>,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ₹${value.toLocaleString()} (${percentage}%)`;
+                const categoryCtx = document.getElementById('categoryChart');
+                if (categoryCtx) {
+                    const categoryChart = new Chart(categoryCtx.getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: <?php echo json_encode($pie_labels); ?>,
+                            datasets: [{
+                                data: <?php echo json_encode($pie_data); ?>,
+                                backgroundColor: <?php echo json_encode($pie_colors); ?>,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${label}: ₹${value.toLocaleString()} (${percentage}%)`;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
             <?php endif; ?>
         });
     </script>
@@ -816,7 +833,8 @@ if ($months_selected && $result) {
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term
+                            q: params.term,
+                            isActive: true
                         };
                     },
                     processResults: function(data) {
@@ -829,14 +847,13 @@ if ($months_selected && $result) {
                 minimumInputLength: 2,
                 placeholder: 'Select student',
                 allowClear: true,
-                width: '100%' // Ensure proper width
+                width: '100%'
             });
         });
     </script>
     <script>
         $(document).ready(function() {
-
-            // Initialize Select2
+            // Initialize Select2 for categories
             $('#category_ids').select2({
                 placeholder: "Select Fee Categories",
                 allowClear: true,
@@ -873,8 +890,7 @@ if ($months_selected && $result) {
                     },
                     dataType: "json",
                     success: function(data) {
-                        $('#category_ids').empty(); // clear placeholders
-
+                        $('#category_ids').empty();
                         data.forEach(function(item) {
                             var option = new Option(item.category_name, item.id, true, true);
                             $('#category_ids').append(option).trigger('change');
@@ -882,10 +898,8 @@ if ($months_selected && $result) {
                     }
                 });
             <?php endif; ?>
-
         });
     </script>
-
 </body>
 
 </html>
