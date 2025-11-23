@@ -179,37 +179,8 @@ pg_close($con);
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-
     <!-- Initialize the multi-select plugin (using Select2 as example) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            $('#categories').select2({
-                ajax: {
-                    url: 'fetch_category.php',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1,
-                placeholder: 'Search by category',
-                width: '100%'
-            });
-        });
-    </script>
 </head>
 
 <body>
@@ -311,69 +282,68 @@ pg_close($con);
                                     <div class="alert alert-warning mt-3">
                                         Please select at least one category to view attendance data.
                                     </div>
-                                    <?php exit; ?>
-                                <?php endif; ?>
-                                <?php
-                                // Explode the month into year and month components
-                                $components = explode("-", $month);
-                                if (count($components) === 2) {
-                                    $year = $components[0];
-                                    $monthNumber = $components[1];
+                                <?php else: ?>
+                                    <?php
+                                    // Explode the month into year and month components
+                                    $components = explode("-", $month);
+                                    if (count($components) === 2) {
+                                        $year = $components[0];
+                                        $monthNumber = $components[1];
 
-                                    // Create a DateTime object using the year and month
-                                    $dateTime = new DateTime("$year-$monthNumber-01");
-                                } else {
-                                    // Handle the case where $month is not in the expected format
-                                    $dateTime = null;
-                                }
-                                ?>
-                                <div class="row align-items-center">
-                                    <div class="col-6">
-                                        <?php if ($dateTime !== null) : ?>
-                                            You are viewing data for
-                                            <span class="blink-text">
-                                                <?= $dateTime->format('F Y') ?>
-                                            </span>
-                                        <?php else : ?>
-                                            Invalid month format
-                                        <?php endif; ?>
+                                        // Create a DateTime object using the year and month
+                                        $dateTime = new DateTime("$year-$monthNumber-01");
+                                    } else {
+                                        // Handle the case where $month is not in the expected format
+                                        $dateTime = null;
+                                    }
+                                    ?>
+                                    <div class="row align-items-center">
+                                        <div class="col-6">
+                                            <?php if ($dateTime !== null) : ?>
+                                                You are viewing data for
+                                                <span class="blink-text">
+                                                    <?= $dateTime->format('F Y') ?>
+                                                </span>
+                                            <?php else : ?>
+                                                Invalid month format
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                </div>
-                                <br>
-                                <br>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Student ID</th>
-                                                <th>Student Name</th>
-                                                <th>Category</th>
-                                                <th>Class</th>
-                                                <th>Status</th>
-                                                <th>Present</th>
-                                                <th>Total Class</th>
-                                                <th>Percentage</th>
+                                    <br>
+                                    <br>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student ID</th>
+                                                    <th>Student Name</th>
+                                                    <th>Category</th>
+                                                    <th>Class</th>
+                                                    <th>Status</th>
+                                                    <th>Present</th>
+                                                    <th>Total Class</th>
+                                                    <th>Percentage</th>
 
-                                                <?php
-                                                // Generate header row with attendance dates
-                                                $dates = array_unique(array_column($attendanceData, 'attendance_date'));
-                                                foreach ($dates as $date) {
-                                                    $formattedDate = date("j", strtotime($date)); // Format the date
-                                                    echo "<th>$formattedDate</th>";
-                                                }
-                                                ?>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            // Process attendance data and fill the table
-                                            $currentStudent = null;
-                                            foreach ($attendanceData as $row) {
-                                                if ($currentStudent !== $row['student_id']) {
-                                                    if ($currentStudent !== null) {
-                                                        echo "</tr>";
+                                                    <?php
+                                                    // Generate header row with attendance dates
+                                                    $dates = array_unique(array_column($attendanceData, 'attendance_date'));
+                                                    foreach ($dates as $date) {
+                                                        $formattedDate = date("j", strtotime($date)); // Format the date
+                                                        echo "<th>$formattedDate</th>";
                                                     }
-                                                    echo "<tr>
+                                                    ?>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                // Process attendance data and fill the table
+                                                $currentStudent = null;
+                                                foreach ($attendanceData as $row) {
+                                                    if ($currentStudent !== $row['student_id']) {
+                                                        if ($currentStudent !== null) {
+                                                            echo "</tr>";
+                                                        }
+                                                        echo "<tr>
                                                         <td>{$row['student_id']}</td>
                                                         <td>{$row['studentname']}</td>
                                                         <td>{$row['category']}</td>
@@ -382,27 +352,61 @@ pg_close($con);
                                                         <td>{$row['attended_classes']}</td>
                                                         <td>{$row['total_classes']}</td>
                                                         <td>{$row['attendance_percentage']}</td>";
-                                                    $currentStudent = $row['student_id'];
+                                                        $currentStudent = $row['student_id'];
+                                                    }
+                                                    echo "<td>{$row['attendance_status']}</td>";
                                                 }
-                                                echo "<td>{$row['attendance_status']}</td>";
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                             </div>
                         </div>
                     </div>
                 </div>
         </section>
+    <?php endif; ?>
     </main>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
+    <!-- Initialize Select2 AFTER all scripts are loaded -->
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#categories').select2({
+                ajax: {
+                    url: 'fetch_category.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by category',
+                width: '100%'
+            });
+
+            // Your other main.js functionality can go here
+            // or keep it in main.js if it's properly structured
+        });
+    </script>
 </body>
 
 </html>
