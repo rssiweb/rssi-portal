@@ -323,13 +323,6 @@ if ($months_selected) {
     }
 }
 
-// Get fee categories for dropdown
-$categories_result = pg_query($con, "SELECT id, category_name FROM fee_categories ORDER BY category_name");
-$categories = [];
-while ($row = pg_fetch_assoc($categories_result)) {
-    $categories[$row['id']] = $row['category_name'];
-}
-
 // Calculate totals
 $total_amount = 0;
 $total_records = 0;
@@ -349,7 +342,13 @@ if ($months_selected && $result) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fee Payments Report</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
@@ -407,244 +406,282 @@ if ($months_selected && $result) {
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h4 class="card-title">
-                            <i class="fas fa-money-bill-wave me-2"></i>
-                            Fee Payments Report
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        <!-- Summary Cards - Only show if months are selected -->
-                        <?php if ($months_selected): ?>
-                            <div class="row mb-4">
-                                <div class="col-md-3">
-                                    <div class="card summary-card bg-primary text-white">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <div class="text-white-50 small">Total Records</div>
-                                                    <div class="fs-5 fw-bold"><?php echo $total_records; ?></div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-list fa-2x text-white-50"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card summary-card bg-success text-white">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <div class="text-white-50 small">Total Amount</div>
-                                                    <div class="fs-5 fw-bold">₹<?php echo number_format($total_amount, 2); ?></div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-rupee-sign fa-2x text-white-50"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-                        <!-- Filter Section -->
-                        <div class="filter-section">
-                            <form method="GET" class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Month Range *</label>
-                                    <div class="input-group">
-                                        <input type="month" class="form-control" id="from_month" name="from_month"
-                                            value="<?php echo htmlspecialchars($from_month); ?>" required>
-                                        <span class="input-group-text">to</span>
-                                        <input type="month" class="form-control" id="to_month" name="to_month"
-                                            value="<?php echo htmlspecialchars($to_month); ?>" required>
-                                    </div>
-                                    <div class="form-text text-danger">Please select both From and To months to view results</div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="student_id" class="form-label">Student ID</label>
-                                    <input type="text" class="form-control" id="student_id" name="student_id"
-                                        value="<?php echo htmlspecialchars($student_id); ?>"
-                                        placeholder="Enter Student ID">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="category_ids" class="form-label">Fee Categories</label>
-                                    <select class="form-select" id="category_ids" name="category_ids[]" multiple="multiple">
-                                        <?php foreach ($categories as $id => $name): ?>
-                                            <option value="<?php echo $id; ?>"
-                                                <?php echo in_array($id, $category_ids) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($name); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-filter me-1"></i> Apply Filters
-                                    </button>
-                                    <a href="fee_payments_report.php" class="btn btn-secondary">
-                                        <i class="fas fa-redo me-1"></i> Reset
-                                    </a>
-                                </div>
-                            </form>
-                        </div>
+    <main id="main" class="main">
 
-                        <!-- Analytics Section -->
-                        <?php if ($months_selected): ?>
-                            <div class="analytics-section">
+        <div class="pagetitle">
+            <h1>Fee Payments Report</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
+                    <li class="breadcrumb-item active">Fee Payments Report</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid">
                                 <div class="row">
-                                    <!-- Month-wise Collection -->
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card analytics-card">
-                                            <div class="card-header">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="fas fa-calendar-alt me-2"></i>
-                                                    Month-wise Collection
-                                                </h5>
-                                            </div>
+                                    <div class="col-12">
+                                        <div class="card mt-4">
+                                            <!-- <div class="card-header">
+                                                <h4 class="card-title">
+                                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                                    Fee Payments Report
+                                                </h4>
+                                            </div> -->
                                             <div class="card-body">
-                                                <div class="chart-container">
-                                                    <canvas id="monthChart"></canvas>
-                                                </div>
-                                                <div class="table-responsive mt-3">
-                                                    <table class="table table-sm table-bordered">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Academic Year</th>
-                                                                <th>Month</th>
-                                                                <th>Total Amount</th>
-                                                                <th>Payments</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($month_wise_totals as $month_data): ?>
-                                                                <tr>
-                                                                    <td><?php echo htmlspecialchars($month_data['academic_year']); ?></td>
-                                                                    <td><?php echo htmlspecialchars($month_data['month']); ?></td>
-                                                                    <td>₹<?php echo number_format($month_data['month_total'], 2); ?></td>
-                                                                    <td><?php echo htmlspecialchars($month_data['payment_count']); ?></td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                <!-- Summary Cards - Only show if months are selected -->
+                                                <?php if ($months_selected): ?>
+                                                    <div class="row mt-4 mb-4">
+                                                        <div class="col-md-3">
+                                                            <div class="card summary-card bg-primary text-white">
+                                                                <div class="card-body mt-2">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <div>
+                                                                            <div class="text-white-50 small">Total Records</div>
+                                                                            <div class="fs-5 fw-bold"><?php echo $total_records; ?></div>
+                                                                        </div>
+                                                                        <div class="col-auto">
+                                                                            <i class="fas fa-list fa-2x text-white-50"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="card summary-card bg-success text-white">
+                                                                <div class="card-body mt-2">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <div>
+                                                                            <div class="text-white-50 small">Total Amount</div>
+                                                                            <div class="fs-5 fw-bold">₹<?php echo number_format($total_amount, 2); ?></div>
+                                                                        </div>
+                                                                        <div class="col-auto">
+                                                                            <i class="fas fa-rupee-sign fa-2x text-white-50"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
 
-                                    <!-- Category-wise Collection -->
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card analytics-card">
-                                            <div class="card-header">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="fas fa-chart-pie me-2"></i>
-                                                    Category-wise Collection
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="chart-container">
-                                                    <canvas id="categoryChart"></canvas>
+                                                <!-- Filter Section -->
+                                                <div class="filter-section">
+                                                    <form method="GET" class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Month Range *</label>
+                                                            <div class="input-group">
+                                                                <input type="month" class="form-control" id="from_month" name="from_month"
+                                                                    value="<?php echo htmlspecialchars($from_month); ?>" required>
+                                                                <span class="input-group-text">to</span>
+                                                                <input type="month" class="form-control" id="to_month" name="to_month"
+                                                                    value="<?php echo htmlspecialchars($to_month); ?>" required>
+                                                            </div>
+                                                            <div class="form-text text-danger">Please select both From and To months to view results</div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label for="student_id" class="form-label">Student ID</label>
+                                                            <select class="form-control" id="student_id" name="student_id" style="width:100%;">
+                                                                <?php if (!empty($student_id)): ?>
+                                                                    <!-- Preload selected value -->
+                                                                    <option value="<?php echo htmlspecialchars($student_id); ?>" selected>
+                                                                        <?php echo htmlspecialchars($student_id); ?>
+                                                                    </option>
+                                                                <?php endif; ?>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label for="category_ids" class="form-label">Fee Categories</label>
+                                                            <select class="form-select" id="category_ids" name="category_ids[]" multiple="multiple" style="width:100%;">
+                                                                <?php foreach ($category_ids as $id): ?>
+                                                                    <option value="<?php echo $id; ?>" selected></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="fas fa-filter me-1"></i> Apply Filters
+                                                            </button>
+                                                            <a href="fee_payments_report.php" class="btn btn-secondary">
+                                                                <i class="fas fa-redo me-1"></i> Reset
+                                                            </a>
+                                                        </div>
+                                                    </form>
                                                 </div>
-                                                <div class="table-responsive mt-3">
-                                                    <table class="table table-sm table-bordered">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Category</th>
-                                                                <th>Total Amount</th>
-                                                                <th>Payments</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($category_wise_totals as $category_data): ?>
+
+                                                <!-- Analytics Section -->
+                                                <?php if ($months_selected): ?>
+                                                    <div class="analytics-section">
+                                                        <div class="row">
+                                                            <!-- Month-wise Collection -->
+                                                            <div class="col-md-6 mb-4">
+                                                                <div class="card analytics-card">
+                                                                    <div class="card-header">
+                                                                        <h5 class="card-title mb-0">
+                                                                            <i class="fas fa-calendar-alt me-2"></i>
+                                                                            Month-wise Collection
+                                                                        </h5>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <div class="chart-container">
+                                                                            <canvas id="monthChart"></canvas>
+                                                                        </div>
+                                                                        <div class="table-responsive mt-3">
+                                                                            <table class="table table-sm table-bordered">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Academic Year</th>
+                                                                                        <th>Month</th>
+                                                                                        <th>Total Amount</th>
+                                                                                        <th>Payments</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    <?php foreach ($month_wise_totals as $month_data): ?>
+                                                                                        <tr>
+                                                                                            <td><?php echo htmlspecialchars($month_data['academic_year']); ?></td>
+                                                                                            <td><?php echo htmlspecialchars($month_data['month']); ?></td>
+                                                                                            <td>₹<?php echo number_format($month_data['month_total'], 2); ?></td>
+                                                                                            <td><?php echo htmlspecialchars($month_data['payment_count']); ?></td>
+                                                                                        </tr>
+                                                                                    <?php endforeach; ?>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Category-wise Collection -->
+                                                            <div class="col-md-6 mb-4">
+                                                                <div class="card analytics-card">
+                                                                    <div class="card-header">
+                                                                        <h5 class="card-title mb-0">
+                                                                            <i class="fas fa-chart-pie me-2"></i>
+                                                                            Category-wise Collection
+                                                                        </h5>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <div class="chart-container">
+                                                                            <canvas id="categoryChart"></canvas>
+                                                                        </div>
+                                                                        <div class="table-responsive mt-3">
+                                                                            <table class="table table-sm table-bordered">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Category</th>
+                                                                                        <th>Total Amount</th>
+                                                                                        <th>Payments</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    <?php foreach ($category_wise_totals as $category_data): ?>
+                                                                                        <tr>
+                                                                                            <td><?php echo htmlspecialchars($category_data['category_name']); ?></td>
+                                                                                            <td>₹<?php echo number_format($category_data['category_total'], 2); ?></td>
+                                                                                            <td><?php echo htmlspecialchars($category_data['payment_count']); ?></td>
+                                                                                        </tr>
+                                                                                    <?php endforeach; ?>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <!-- Results Section -->
+                                                <div class="table-responsive">
+                                                    <?php if (!$months_selected): ?>
+                                                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                                            <strong>Please select a month range</strong> to view fee payments data. Choose both "From" and "To" months above and click "Apply Filters".
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <table class="table table-bordered table-hover" id="paymentsTable">
+                                                            <thead>
                                                                 <tr>
-                                                                    <td><?php echo htmlspecialchars($category_data['category_name']); ?></td>
-                                                                    <td>₹<?php echo number_format($category_data['category_total'], 2); ?></td>
-                                                                    <td><?php echo htmlspecialchars($category_data['payment_count']); ?></td>
+                                                                    <th>ID</th>
+                                                                    <th>Student ID</th>
+                                                                    <th>Student Name</th>
+                                                                    <th>Academic Year</th>
+                                                                    <th>Month</th>
+                                                                    <th>Category</th>
+                                                                    <th>Amount</th>
+                                                                    <th>Payment Type</th>
+                                                                    <th>Transaction ID</th>
+                                                                    <th>Collected By</th>
+                                                                    <th>Collection Date</th>
+                                                                    <th>Notes</th>
                                                                 </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php if ($result && pg_num_rows($result) > 0): ?>
+                                                                    <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                                        <tr>
+                                                                            <td><?php echo htmlspecialchars($row['id']); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['studentname'] ?? ''); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['month']); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['category_name']); ?></td>
+                                                                            <td>₹<?php echo number_format($row['amount'], 2); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['payment_type']); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['transaction_id'] ?? ''); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['collector_name']); ?></td>
+                                                                            <td><?php echo date('d-M-Y', strtotime($row['collection_date'])); ?></td>
+                                                                            <td><?php echo htmlspecialchars($row['notes'] ?? ''); ?></td>
+                                                                        </tr>
+                                                                    <?php endwhile; ?>
+                                                                <?php else: ?>
+                                                                    <tr>
+                                                                        <td colspan="12" class="text-center text-muted py-4">
+                                                                            <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                                            No fee payments found matching the selected criteria.
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php endif; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        <?php endif; ?>
-
-                        <!-- Results Section -->
-                        <div class="table-responsive">
-                            <?php if (!$months_selected): ?>
-                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Please select a month range</strong> to view fee payments data. Choose both "From" and "To" months above and click "Apply Filters".
-                                </div>
-                            <?php else: ?>
-                                <table class="table table-bordered table-hover" id="paymentsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Student ID</th>
-                                            <th>Student Name</th>
-                                            <th>Academic Year</th>
-                                            <th>Month</th>
-                                            <th>Category</th>
-                                            <th>Amount</th>
-                                            <th>Payment Type</th>
-                                            <th>Transaction ID</th>
-                                            <th>Collected By</th>
-                                            <th>Collection Date</th>
-                                            <th>Notes</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if ($result && pg_num_rows($result) > 0): ?>
-                                            <?php while ($row = pg_fetch_assoc($result)): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($row['id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['student_id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['studentname'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['month']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['category_name']); ?></td>
-                                                    <td>₹<?php echo number_format($row['amount'], 2); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['payment_type']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['transaction_id'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['collector_name']); ?></td>
-                                                    <td><?php echo date('d-M-Y', strtotime($row['collection_date'])); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['notes'] ?? ''); ?></td>
-                                                </tr>
-                                            <?php endwhile; ?>
-                                        <?php else: ?>
-                                            <tr>
-                                                <td colspan="12" class="text-center text-muted py-4">
-                                                    <i class="fas fa-search fa-2x mb-2"></i><br>
-                                                    No fee payments found matching the selected criteria.
-                                                </td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            <?php endif; ?>
                         </div>
                     </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
-        </div>
-    </div>
+        </section>
 
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
             // Initialize DataTable only if table exists
@@ -657,13 +694,6 @@ if ($months_selected && $result) {
                     "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
                 });
             <?php endif; ?>
-
-            // Initialize Select2 for multi-select
-            $('#category_ids').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Select fee categories',
-                allowClear: true
-            });
 
             // Date validation - ensure to_month is not before from_month
             $('#from_month, #to_month').change(function() {
@@ -776,6 +806,86 @@ if ($months_selected && $result) {
             <?php endif; ?>
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for student IDs
+            $('#student_id').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Select student',
+                allowClear: true,
+                width: '100%' // Ensure proper width
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+
+            // Initialize Select2
+            $('#category_ids').select2({
+                placeholder: "Select Fee Categories",
+                allowClear: true,
+                ajax: {
+                    url: "fetch_fee_categories.php",
+                    type: "GET",
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: $.map(data, function(item) {
+                                return {
+                                    id: item.id,
+                                    text: item.category_name
+                                };
+                            })
+                        };
+                    }
+                }
+            });
+
+            // Load preselected category names
+            <?php if (!empty($category_ids)): ?>
+                $.ajax({
+                    url: "fetch_fee_categories.php",
+                    type: "GET",
+                    data: {
+                        preload: "<?php echo implode(',', $category_ids); ?>"
+                    },
+                    dataType: "json",
+                    success: function(data) {
+                        $('#category_ids').empty(); // clear placeholders
+
+                        data.forEach(function(item) {
+                            var option = new Option(item.category_name, item.id, true, true);
+                            $('#category_ids').append(option).trigger('change');
+                        });
+                    }
+                });
+            <?php endif; ?>
+
+        });
+    </script>
+
 </body>
 
 </html>
@@ -790,8 +900,5 @@ if (isset($month_wise_result) && $month_wise_result) {
 }
 if (isset($category_wise_result) && $category_wise_result) {
     pg_free_result($category_wise_result);
-}
-if ($categories_result) {
-    pg_free_result($categories_result);
 }
 ?>

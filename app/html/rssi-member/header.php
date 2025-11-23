@@ -488,6 +488,11 @@
             </a>
           </li>
           <li>
+            <a id="fee_payments_report" href="fee_payments_report.php">
+              <span>Fee Payments Report</span>
+            </a>
+          </li>
+          <li>
             <a id="fee_structure_management" href="fee_structure_management.php">
               <span>Fee Structure Management</span>
             </a>
@@ -1253,6 +1258,10 @@
         id: 'feePortal',
         linkId: 'settlement',
         url: 'settlement.php'
+      }, {
+        id: 'feePortal',
+        linkId: 'fee_payments_report',
+        url: 'fee_payments_report.php'
       },
       {
         id: 'feePortal',
