@@ -314,7 +314,7 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                     <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                         <div id="filter-checks" class="mt-2">
-                                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                             <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
                                         </div>
                                     <?php } ?>

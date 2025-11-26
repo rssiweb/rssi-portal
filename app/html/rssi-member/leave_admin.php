@@ -290,11 +290,11 @@ $resultArr = pg_fetch_all($result);
                                 <div class="row">
                                     <div class="col text-end">
                                         <span class="noticea">
-                                            <a href="leaveadjustment.php" target="_blank" title="Click to adjust leave">Leave Adjustment</a>
+                                            <a href="leaveadjustment.php" title="Click to adjust leave">Leave Adjustment</a>
                                         </span>
                                         |
                                         <span class="noticea">
-                                            <a href="leaveallo.php" target="_blank" title="Click to allocate leave">Leave Allocation</a>
+                                            <a href="leaveallo.php" title="Click to allocate leave">Leave Allocation</a>
                                         </span>
                                     </div>
                                 </div>
