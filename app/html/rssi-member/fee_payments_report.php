@@ -502,7 +502,7 @@ if ($months_selected) {
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label for="category_ids" class="form-label">Fee Categories</label>
-                                                            <select class="form-select" id="category_ids" name="category_ids[]" multiple="multiple" style="width:100%;">
+                                                            <select class="form-select" id="category_ids" name="category_ids[]" multiple="multiple">
                                                                 <?php foreach ($category_ids as $id): ?>
                                                                     <option value="<?php echo $id; ?>" selected></option>
                                                                 <?php endforeach; ?>
@@ -846,7 +846,6 @@ if ($months_selected) {
                 minimumInputLength: 2,
                 placeholder: 'Select student',
                 allowClear: true,
-                width: '100%'
             });
         });
     </script>
