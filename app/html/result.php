@@ -370,10 +370,13 @@ if ($class_category_data) {
                 $class_marks[] = $row;
             }
 
+            // NEW: Calculate ranks with tie handling
+            $class_marks = calculateRanksWithTies($class_marks);
+
             // Find the rank of the specific student
-            foreach ($class_marks as $index => $student) {
+            foreach ($class_marks as $student) {
                 if ($student['student_id'] == $student_id) {
-                    $rank = $index + 1;
+                    $rank = $student['rank'];
                     break;
                 }
             }
@@ -381,7 +384,7 @@ if ($class_category_data) {
     }
 
     // If we didn't find the student in grouped classes or there were no grouped classes,
-    // calculate rank within their own class
+    // calculate rank within their own class with tie handling
     if ($rank === 'N/A') {
         $individual_class_query = "
         SELECT emd.student_id, 
@@ -413,14 +416,53 @@ if ($class_category_data) {
                 $class_marks[] = $row;
             }
 
-            foreach ($class_marks as $index => $student) {
+            // NEW: Calculate ranks with tie handling
+            $class_marks = calculateRanksWithTies($class_marks);
+
+            foreach ($class_marks as $student) {
                 if ($student['student_id'] == $student_id) {
-                    $rank = $index + 1;
+                    $rank = $student['rank'];
                     break;
                 }
             }
         }
     }
+}
+
+/**
+ * Calculate ranks with proper tie handling
+ * Students with same total marks get the same rank
+ */
+function calculateRanksWithTies($students)
+{
+    if (empty($students)) {
+        return [];
+    }
+
+    $ranked_students = [];
+    $current_rank = 1;
+    $previous_marks = null;
+    $skip_count = 0;
+
+    foreach ($students as $index => $student) {
+        $current_marks = $student['total_marks'];
+
+        if ($current_marks === $previous_marks) {
+            // Same marks as previous student - same rank
+            $student['rank'] = $current_rank;
+            $skip_count++;
+        } else {
+            // Different marks - increment rank considering skipped positions
+            $current_rank += $skip_count;
+            $student['rank'] = $current_rank;
+            $skip_count = 1; // Reset skip count for new rank group
+        }
+
+        $previous_marks = $current_marks;
+        $ranked_students[] = $student;
+    }
+
+    return $ranked_students;
 }
 ?>
 
