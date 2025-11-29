@@ -18,7 +18,7 @@ $students_query = "
     SELECT 
         student.student_id, 
         student.studentname AS student_name, 
-        student.class,
+        exam_marks_data.class,
         student.category,
         exam_marks_data.exam_id, 
         ROUND(exam_marks_data.viva_marks) AS viva_marks, 
@@ -82,21 +82,21 @@ if (!empty($class_filter)) {
     $placeholders = array_map(function ($key) {
         return '$' . ($key + 3);
     }, array_keys($class_filter));
-    $students_query .= " AND student.class IN (" . implode(', ', $placeholders) . ")";
+    $students_query .= " AND exam_marks_data.class IN (" . implode(', ', $placeholders) . ")";
 }
 // Order the results
 $students_query .= "ORDER BY 
         CASE 
-            WHEN student.class = 'Nursery' THEN 1
-            WHEN student.class = 'LKG' THEN 2
-            WHEN student.class = 'UKG' THEN 3
+            WHEN exam_marks_data.class = 'Nursery' THEN 1
+            WHEN exam_marks_data.class = 'LKG' THEN 2
+            WHEN exam_marks_data.class = 'UKG' THEN 3
             ELSE 4
         END,
         CASE 
-            WHEN student.class = 'Nursery' THEN 0
-            WHEN student.class = 'LKG' THEN 0
-            WHEN student.class = 'UKG' THEN 0
-            ELSE CAST(student.class AS INTEGER)
+            WHEN exam_marks_data.class = 'Nursery' THEN 0
+            WHEN exam_marks_data.class = 'LKG' THEN 0
+            WHEN exam_marks_data.class = 'UKG' THEN 0
+            ELSE CAST(exam_marks_data.class AS INTEGER)
         END";
 
 // Prepare query parameters

@@ -21,7 +21,7 @@ $percentage_query = "
         rssimyprofile_student.studentname,
         rssimyprofile_student.filterstatus,
         rssimyprofile_student.category,
-        rssimyprofile_student.class,
+        exam_marks_data.class,
         exams.exam_type,
         ROUND(exam_marks_data.written_marks) AS written_marks,
         ROUND(exam_marks_data.viva_marks) AS viva_marks,
@@ -43,12 +43,12 @@ if (!empty($class_filter)) {
     $placeholders = array_map(function ($key) {
         return '$' . ($key + 3);
     }, array_keys($class_filter));
-    $percentage_query .= " AND rssimyprofile_student.class IN (" . implode(', ', $placeholders) . ")";
+    $percentage_query .= " AND exam_marks_data.class IN (" . implode(', ', $placeholders) . ")";
 }
 
 // Append ordering
 $percentage_query .= " 
-    ORDER BY rssimyprofile_student.class, exams.exam_type";
+    ORDER BY exam_marks_data.class, exams.exam_type";
 // Prepare query parameters
 $params = [$academic_year, $exam_type_f];
 if (!empty($class_filter)) {
