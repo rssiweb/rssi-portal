@@ -395,8 +395,9 @@ if ($class_category_data) {
         AND e.academic_year = $2
         AND emd.class = (
             SELECT emd2.class 
-            FROM exam_marks_data emd2 
-            WHERE emd2.student_id = $3 
+            FROM exam_marks_data emd2
+            JOIN exams e2 ON emd2.exam_id = e2.exam_id 
+            WHERE emd2.student_id = $3 AND e2.exam_type = $1 AND e2.academic_year = $2
             ORDER BY emd2.id DESC 
             LIMIT 1
         )
