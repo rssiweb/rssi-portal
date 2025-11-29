@@ -200,7 +200,12 @@ validation();
                                                                     <a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a>
                                                                 </td> -->
                                                                 <td>
-                                                                    <a href="https://www.rssi.in/result-portal.php" target="_blank">Results</a>
+                                                                    <p>
+                                                                        <a href="https://www.rssi.in/result-portal" target="_blank">View Result</a>
+                                                                    </p>
+                                                                    <p>
+                                                                        <a href="print-result.php" target="_blank">Generate Report Card</a>
+                                                                    </p>
                                                                 </td>
                                                             </tr>
                                                         </tbody>
