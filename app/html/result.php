@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
 
     // Extract the start year from the academic year
     list($start_year, $end_year) = explode('-', $academic_year);
-    $start_year = intval($start_year);  // Ensure it's an integer
+    $start_year = intval($start_year);
 
     // Determine the start and end dates based on the exam type and academic year
     $today_date = date('Y-m-d');
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         $start_date = "$start_year-12-01";
         $end_date = ($start_year + 1) . "-03-31";
     }
-    $end_date = min($end_date, $today_date); // Consider the current date if before the term end date
+    $end_date = min($end_date, $today_date);
 
     // Get the filter data from the form
     $student_id = $_GET['student_id'];
@@ -58,9 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             exams.full_marks_viva, 
             exams.exam_date_written, 
             exams.exam_date_viva, 
-            student.doa, 
-            student.dateofbirth, 
-            student.photourl,
+            student.doa,
             CASE
                 WHEN attendance_written.attendance_status IS NULL 
                     AND student.doa <= exams.exam_date_written 
@@ -222,13 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             $attendance_result = pg_query_params($con, $attendance_query, [$student_id]);
 
             if ($attendance_result) {
-                $attendance_data = pg_fetch_assoc($attendance_result);  // Fetch a single row as an associative array
+                $attendance_data = pg_fetch_assoc($attendance_result);
                 $average_attendance_percentage = $attendance_data['attendance_percentage'];
                 $first_attendance_date = $attendance_data['first_attendance_date'];
-                // Output attendance data for debugging
-                // echo "<pre>";
-                // print_r($attendance_data);
-                // echo "</pre>";
             } else {
                 $average_attendance_percentage = "N/A";
             }
@@ -237,66 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         }
     }
 }
-?>
-<?php
-// Fetch exam results and calculate percentages for all exams conducted this academic year
-$percentage_query = "
-    SELECT 
-        exams.exam_type,
-        ROUND(exam_marks_data.written_marks) AS written_marks,
-        ROUND(exam_marks_data.viva_marks) AS viva_marks,
-        exams.full_marks_written,
-        exams.full_marks_viva
-    FROM exam_marks_data
-    JOIN exams ON exam_marks_data.exam_id = exams.exam_id
-    WHERE exam_marks_data.student_id = $1
-    AND exams.academic_year = $2
-    ORDER BY exams.exam_type";
 
-// Prepare for storing exam percentages
-$exam_percentages = [
-    'First Term' => 'N/A',
-    'Half Yearly' => 'N/A',
-    'Annual' => 'N/A'
-];
-
-// Run the query to fetch marks data
-$percentage_result = pg_query_params($con, $percentage_query, [$student_id, $academic_year]);
-
-if ($percentage_result) {
-    // Initialize variables to calculate marks for each exam type
-    $exam_types = ['First Term', 'Half Yearly', 'Annual'];
-
-    // Loop through each exam type and calculate percentage
-    foreach ($exam_types as $exam_label) { // Using $exam_label instead of $exam_type
-        // Initialize totals for each exam type using unique variable names
-        $full_marks_for_exam = 0;
-        $obtained_marks_for_exam = 0;
-
-        // Fetch and process the data for the current exam type
-        pg_result_seek($percentage_result, 0); // Reset the result pointer before processing
-        while ($row = pg_fetch_assoc($percentage_result)) {
-            if ($row['exam_type'] == $exam_label) { // Compare with $exam_label
-                // Sum full marks and obtained marks using new variable names
-                $full_marks_for_exam += $row['full_marks_written'] + $row['full_marks_viva'];
-                $obtained_marks_for_exam += $row['written_marks'] + $row['viva_marks'];
-            }
-        }
-
-        // Calculate percentage if total marks are greater than zero
-        if ($full_marks_for_exam > 0) {
-            $percentage = ($obtained_marks_for_exam / $full_marks_for_exam) * 100;
-            $exam_percentages[$exam_label] = number_format($percentage, 2) . '%'; // Store result using $exam_label
-        } else {
-            $exam_percentages[$exam_label] = 'N/A';  // No data or no full marks
-        }
-    }
-}
-
-// Now you can use the $exam_percentages array to display the values in the HTML table
-
-?>
-<?php
 // SQL query to fetch class and category from exam_marks_data based on filter criteria
 $class_category_query = "
     SELECT emd.class, emd.category 
@@ -305,15 +240,14 @@ $class_category_query = "
     WHERE emd.student_id = $1 
       AND e.exam_type = $2 
       AND e.academic_year = $3
-    LIMIT 1;";  // Assuming class and category will be the same, fetching one row
+    LIMIT 1;";
 
 // Execute query
 $class_category_result = pg_query_params($con, $class_category_query, [$student_id, $exam_type, $academic_year]);
 $class_category_data = pg_fetch_assoc($class_category_result);
-?>
-<?php
+
+// Calculate rank
 if ($class_category_data) {
-    // Step 1: Find grouped exam IDs for the exam type and academic year
     $class_group_query = "
     SELECT DISTINCT emd.exam_id
     FROM exam_marks_data emd
@@ -337,14 +271,12 @@ if ($class_category_data) {
 
     // Only proceed with grouped ranking if we found grouped exams
     if (!empty($grouped_exam_ids)) {
-        // Step 2: Build dynamic placeholders for IN clause
         $placeholders = [];
         foreach ($grouped_exam_ids as $index => $id) {
             $placeholders[] = '$' . ($index + 3);
         }
         $placeholders_str = implode(',', $placeholders);
 
-        // Step 3: Create the query to fetch student ranks across grouped classes
         $class_group_query = "
         SELECT emd.student_id, 
                ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
@@ -357,10 +289,7 @@ if ($class_category_data) {
         ORDER BY total_marks DESC;
         ";
 
-        // Merge parameters for pg_query_params
         $params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
-
-        // Step 4: Execute the query
         $class_group_result = pg_query_params($con, $class_group_query, $params);
 
         if ($class_group_result) {
@@ -369,10 +298,8 @@ if ($class_category_data) {
                 $class_marks[] = $row;
             }
 
-            // NEW: Calculate ranks with tie handling
             $class_marks = calculateRanksWithTies($class_marks);
 
-            // Find the rank of the specific student
             foreach ($class_marks as $student) {
                 if ($student['student_id'] == $student_id) {
                     $rank = $student['rank'];
@@ -416,7 +343,6 @@ if ($class_category_data) {
                 $class_marks[] = $row;
             }
 
-            // NEW: Calculate ranks with tie handling
             $class_marks = calculateRanksWithTies($class_marks);
 
             foreach ($class_marks as $student) {
@@ -464,563 +390,573 @@ function calculateRanksWithTies($students)
 
     return $ranked_students;
 }
-?>
 
+// Calculate percentage and grade
+if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_marks > 0) {
+    $percentage = ($total_obtained_marks / $total_full_marks) * 100;
+    $formattedPercentage = number_format($percentage, 2);
+
+    // Determine latest exam date (written & viva)
+    $written_date = null;
+    $viva_date = null;
+
+    foreach ($ordered_marks_data as $row) {
+        if (!empty($row['exam_date_written']) && $row['exam_date_written'] !== '0000-00-00') {
+            $written_date = $row['exam_date_written'];
+        }
+        if (!empty($row['exam_date_viva']) && $row['exam_date_viva'] !== '0000-00-00') {
+            $viva_date = $row['exam_date_viva'];
+        }
+    }
+
+    $latest_exam_date = max($written_date, $viva_date);
+
+    // Fetch applicable grade rule based on latest exam date
+    $rule_query = "
+        SELECT rule_id
+        FROM grade_rules
+        WHERE valid_from <= $1
+        AND (valid_to IS NULL OR valid_to >= $1)
+        ORDER BY valid_from DESC
+        LIMIT 1
+    ";
+    $rule_result = pg_query_params($con, $rule_query, [$latest_exam_date]);
+
+    if ($rule_result && pg_num_rows($rule_result) > 0) {
+        $rule_row = pg_fetch_assoc($rule_result);
+        $rule_id = $rule_row['rule_id'];
+    } else {
+        $rule_id = null;
+    }
+
+    // Fetch grade & description from grade_rule_details
+    if ($rule_id !== null) {
+        $grade_query = "
+            SELECT grade, description
+            FROM grade_rule_details
+            WHERE rule_id = $1
+            AND $2 BETWEEN min_percentage AND max_percentage
+            LIMIT 1
+        ";
+        $grade_result = pg_query_params($con, $grade_query, [$rule_id, $percentage]);
+
+        if ($grade_result && pg_num_rows($grade_result) > 0) {
+            $grade_row = pg_fetch_assoc($grade_result);
+            $grade = $grade_row['grade'];
+            $gradeDescription = $grade_row['description'];
+        } else {
+            $grade = "N/A";
+            $gradeDescription = "Grade not defined";
+        }
+    } else {
+        $grade = "N/A";
+        $gradeDescription = "No grading rule applied";
+    }
+
+    // Fetch fail cutoff directly from DB
+    $fail_query = "
+        SELECT max_percentage
+        FROM grade_rule_details
+        WHERE rule_id = $1
+        AND LOWER(description) = 'fail'
+    ";
+
+    $fail_result = pg_query_params($con, $fail_query, [$rule_id]);
+
+    $failMax = 0;
+
+    if ($fail_result) {
+        while ($row = pg_fetch_assoc($fail_result)) {
+            if ($row['max_percentage'] > $failMax) {
+                $failMax = $row['max_percentage'];
+            }
+        }
+    }
+
+    // Determine Pass / Fail
+    $passOrFail = ($percentage > $failMax) ? 'Pass' : 'Fail';
+
+    // Format rank with ordinal suffix
+    function addOrdinalSuffix($number)
+    {
+        if (!in_array(($number % 100), [11, 12, 13])) {
+            switch ($number % 10) {
+                case 1:
+                    return $number . 'st';
+                case 2:
+                    return $number . 'nd';
+                case 3:
+                    return $number . 'rd';
+            }
+        }
+        return $number . 'th';
+    }
+
+    $formattedRank = ($rank !== 'N/A') ? addOrdinalSuffix($rank) : 'N/A';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'AW-11316670180');
-    </script>
-    <meta name="description" content="">
-    <meta name="author" content="">
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>
-        <?php
-        if (
-            !isset($student_id) || !isset($exam_type) || !isset($academic_year) ||
-            $student_id === "" || $exam_type === "" || $academic_year === ""
-        ) {
-            echo 'Result Portal';
-        } else {
-            echo htmlspecialchars("$student_id" . "_" . "$exam_type" . "_" . "$academic_year");
-        }
-        ?>
-    </title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Comfortaa');
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
 
         body {
-            background: #ffffff;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
         }
 
-        @media (min-width:767px) {
-            .top {
-                margin-top: 2%
-            }
+        .container {
+            max-width: 1200px;
         }
 
-        @media (max-width:767px) {
-            .top {
-                margin-top: 10%
-            }
-
-            .topbutton {
-                margin-top: 5%
-            }
+        .header {
+            background: linear-gradient(135deg, var(--primary), #2980b9);
+            color: white;
+            padding: 20px 0;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
         }
 
-        @media print {
-            .noprint {
-                visibility: hidden;
-                position: absolute;
-                left: 0;
-                top: 0;
-            }
-
-            .footer {
-                position: fixed;
-                bottom: 0;
-            }
+        .logo {
+            font-weight: 700;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
         }
 
-        @media screen {
-            .no-display {
-                display: none;
-            }
+        .logo i {
+            margin-right: 10px;
+            font-size: 28px;
         }
 
-        .report-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 30px;
+            <?php if (!$student_exists || $no_records_found): ?>display: none;
+            <?php endif; ?>
+        }
+
+        .student-header {
+            background: linear-gradient(135deg, var(--dark), #34495e);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .student-info h3 {
+            margin: 0 0 5px;
+            font-weight: 600;
+        }
+
+        .student-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .result-summary {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-card {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card.pass {
+            border-left: 4px solid var(--success);
+        }
+
+        .summary-card.fail {
+            border-left: 4px solid var(--danger);
+        }
+
+        .summary-card.rank {
+            border-left: 4px solid var(--warning);
+        }
+
+        .summary-card.attendance {
+            border-left: 4px solid var(--primary);
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .marks-table {
             width: 100%;
-            border-top: 1px solid #ccc;
+            border-collapse: collapse;
+        }
+
+        .marks-table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        .marks-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .marks-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .subject-name {
+            font-weight: 600;
+        }
+
+        .total-row {
+            background-color: var(--light);
+            font-weight: 700;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        .no-result {
+            text-align: center;
+            padding: 50px 20px;
+            <?php if ($student_exists && !$no_records_found): ?>display: none;
+            <?php endif; ?>
+        }
+
+        .no-result i {
+            font-size: 60px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .btn-search {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-search:hover {
+            background: #2980b9;
+        }
+
+        .print-btn {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+
+        .print-btn:hover {
+            background: #1c2833;
         }
 
         @media print {
-            .watermark {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(-45deg);
-                font-size: 60px;
-                width: 80%;
-                color: rgba(0, 0, 0, 0.1);
-                /* Light gray with transparency */
-                z-index: 9999;
-                pointer-events: none;
-                font-weight: bold;
-                text-align: center;
-                opacity: 0.3;
+
+            .search-box,
+            .no-print {
+                display: none;
+            }
+
+            .result-card {
+                box-shadow: none;
+                margin: 0;
             }
         }
 
-        /*@media print {
-            .watermark {
-                position: fixed;
-                width: 100%;
-                height: 100%;
-                top: 0;
-                left: 0;
-                z-index: 9999;
-                pointer-events: none;
-                opacity: 0.1;
-                background: url('path/to/watermark-image.png') center center no-repeat;
-                background-size: 50% auto;
+        @media (max-width: 768px) {
+            .student-header {
+                flex-direction: column;
+                text-align: center;
             }
-        }*/
 
-        @media screen {
-            .watermark {
-                display: none;
+            .student-photo {
+                margin-right: 0;
+                margin-bottom: 15px;
             }
+
+            .result-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <div class="col-md-12">
-        <?php if ($print == FALSE) { ?>
-            <div class="noprint" style="display: flex; justify-content: flex-end; margin-top: 2%;">
-                <form action="" method="GET" id="formid">
-                    <input name="student_id" class="form-control" style="width: max-content; display: inline-block;" required placeholder="Student ID" value="<?php echo @$student_id ?>">
-                    <select name="exam_type" class="form-control" style="width: max-content; display: inline-block;" required>
-                        <?php if ($exam_type == null) { ?>
-                            <option disabled selected hidden value="">Select Exam Name</option>
-                        <?php } else { ?>
-                            <option hidden selected><?php echo $exam_type ?></option>
-                        <?php } ?>
-                        <option>First Term</option>
-                        <option>Half Yearly</option>
-                        <option>Annual</option>
-                    </select>
-                    <select name="academic_year" id="academic_year" class="form-control" style="width: max-content; display: inline-block;" required>
-                        <?php if ($academic_year == null) { ?>
-                            <option disabled selected hidden value="">Select Year</option>
-                        <?php } else { ?>
-                            <option hidden selected><?php echo $academic_year ?></option>
-                        <?php } ?>
-                    </select>
-                    <div class="col topbutton" style="display: inline-block;">
-                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                        <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-print"></i>&nbsp;Print</button>
+    <div class="header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="logo">
+                        <i class="fas fa-graduation-cap"></i>
+                        Student Result Portal
                     </div>
-                </form>
-                <br>
+                </div>
+                <div class="col-md-6 text-right">
+                    <p>Check your exam results online</p>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <script>
-                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                    var currentYear = new Date().getFullYear() - 1;
-                <?php } else { ?>
-                    var currentYear = new Date().getFullYear();
-                <?php } ?>
+    <div class="container">
+        <div class="search-box">
+            <h3><i class="fas fa-search"></i> Find Your Result</h3>
+            <p class="text-muted">Enter your details to view your exam result</p>
 
-                for (var i = 0; i < 5; i++) {
-                    var next = currentYear + 1;
-                    var year = currentYear + '-' + next;
-                    //next.toString().slice(-2) 
-                    $('#academic_year').append(new Option(year, year));
-                    currentYear--;
-                }
-            </script>
-        <?php } ?>
-
-        <?php
-        if ($exam_type > 0) {
-            // Show error messages if any
-            if (isset($_GET['student_id']) && !$student_exists) { ?>
-                <div class="container alert alert-danger" role="alert" style="margin-top:20px;">
-                    <h4 class="alert-heading">Student Not Found</h4>
-                    <p>We couldn't find any student with the ID: <strong><?php echo htmlspecialchars($student_id); ?></strong></p>
-                    <hr>
-                    <p class="mb-0">Please verify the student ID and try again. If you believe this is an error, please contact support.</p>
-                </div>
-            <?php } elseif ($no_records_found) { ?>
-                <div class="container alert alert-warning" role="alert" style="margin-top:20px;">
-                    <h4 class="alert-heading">No Records Found</h4>
-                    <p>We couldn't find any exam records matching your search criteria:</p>
-                    <ul>
-                        <li><strong>Student ID:</strong> <?php echo htmlspecialchars($student_id); ?></li>
-                        <li><strong>Exam Type:</strong> <?php echo htmlspecialchars($exam_type); ?></li>
-                        <li><strong>Academic Year:</strong> <?php echo htmlspecialchars($academic_year); ?></li>
-                    </ul>
-                    <hr>
-                    <p class="mb-0">Please verify your search parameters and try again. If you believe this is an error, please contact your administrator.</p>
-                </div>
-            <?php } elseif ($student_exists && !$no_records_found && isset($marks_result)) { ?>
-
-                <?php
-                // ---------------------------------------
-                // 1) Compute percentage
-                // ---------------------------------------
-                $percentage = ($total_obtained_marks / $total_full_marks) * 100;
-                $formattedPercentage = number_format($percentage, 2);
-
-                // ---------------------------------------
-                // 2) Determine latest exam date (written & viva)
-                // ---------------------------------------
-                $written_date = null;
-                $viva_date = null;
-
-                foreach ($ordered_marks_data as $row) {
-                    if (!empty($row['exam_date_written']) && $row['exam_date_written'] !== '0000-00-00') {
-                        $written_date = $row['exam_date_written'];
-                    }
-                    if (!empty($row['exam_date_viva']) && $row['exam_date_viva'] !== '0000-00-00') {
-                        $viva_date = $row['exam_date_viva'];
-                    }
-                }
-
-                $latest_exam_date = max($written_date, $viva_date);
-
-                // ---------------------------------------
-                // 3) Fetch applicable grade rule based on latest exam date
-                // ---------------------------------------
-                $rule_query = "
-                    SELECT rule_id
-                    FROM grade_rules
-                    WHERE valid_from <= $1
-                    AND (valid_to IS NULL OR valid_to >= $1)
-                    ORDER BY valid_from DESC
-                    LIMIT 1
-                ";
-                $rule_result = pg_query_params($con, $rule_query, [$latest_exam_date]);
-
-                if ($rule_result && pg_num_rows($rule_result) > 0) {
-                    $rule_row = pg_fetch_assoc($rule_result);
-                    $rule_id = $rule_row['rule_id'];
-                } else {
-                    // fallback if no matching rule found
-                    $rule_id = null;
-                }
-
-                // ---------------------------------------
-                // 4) Fetch grade & description from grade_rule_details
-                // ---------------------------------------
-                if ($rule_id !== null) {
-                    $grade_query = "
-                        SELECT grade, description
-                        FROM grade_rule_details
-                        WHERE rule_id = $1
-                        AND $2 BETWEEN min_percentage AND max_percentage
-                        LIMIT 1
-                    ";
-                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, $percentage]);
-
-                    if ($grade_result && pg_num_rows($grade_result) > 0) {
-                        $grade_row = pg_fetch_assoc($grade_result);
-                        $grade = $grade_row['grade'];
-                        $gradeDescription = $grade_row['description'];
-                    } else {
-                        $grade = "N/A";
-                        $gradeDescription = "Grade not defined";
-                    }
-                } else {
-                    $grade = "N/A";
-                    $gradeDescription = "No grading rule applied";
-                }
-
-                // ---------------------------------------
-                // 5) Fetch fail cutoff directly from DB
-                // ---------------------------------------
-                $fail_query = "
-                    SELECT max_percentage
-                    FROM grade_rule_details
-                    WHERE rule_id = $1
-                    AND LOWER(description) = 'fail'
-                ";
-
-                $fail_result = pg_query_params($con, $fail_query, [$rule_id]);
-
-                $failMax = 0;
-
-                if ($fail_result) {
-                    while ($row = pg_fetch_assoc($fail_result)) {
-                        if ($row['max_percentage'] > $failMax) {
-                            $failMax = $row['max_percentage'];
-                        }
-                    }
-                }
-
-                // Determine Pass / Fail
-                $passOrFail = ($percentage > $failMax) ? 'Pass' : 'Fail';
-                ?>
-
-                <table class="table" border="0">
-                    <thead> <!--class="no-display"-->
-                        <tr>
-                            <td colspan=4>
-                                <div class="row">
-                                    <div class="col" style="display: inline-block; width:65%;">
-
-                                        <?php
-                                        if ($student_details['category'] == 'LG1') {
-                                            echo '<p><b>KALPANA BUDS SCHOOL</b></p>';
-                                        } else {
-                                            echo '<p><b>RSSI NGO</b></p>';
-                                        }
-                                        ?>
-                                        <p>(A division of Rina Shiksha Sahayak Foundation)</p>
-                                        <p>NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
-                                        <p>Email: info@rssi.in, Website: www.rssi.in</p>
-                                    </div>
-                                    <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
-                                        <p style="font-size: small;">Scan QR code to check authenticity</p>
-                                        <?php
-                                        $exam = str_replace(" ", "%20", $exam_type);
-                                        $url = "https://login.rssi.in/result.php?student_id=$student_id&exam_type=$exam_type&academic_year=$academic_year";
-                                        $url_u = urlencode($url); ?>
-                                        <!-- https://qrcode.tec-it.com/API/QRCode?data= -->
-                                        <img class="qrimage" src="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo $url_u ?>" width="80px" />&nbsp;
-                                        <img src=<?php echo $student_details['photourl'] ?> width=80px height=80px />
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="4">
-                                <h3 style="text-align:center;margin-top: 10px;font-family: 'Cinzel', serif;">Report card</h3>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>STUDENT ID</td>
-                            <th><?php echo $student_details['student_id'] ?></th>
-                            <td> LEARNING GROUP/CLASS </td>
-                            <th><?php echo $class_category_data['category'] ?>/<?php echo $class_category_data['class'] ?></th>
-                        </tr>
-                        <tr>
-                            <td>NAME OF STUDENT</td>
-                            <th><?php echo $student_details['studentname'] ?></th>
-                            <td>DATE OF BIRTH</td>
-                            <th><?php echo date("d/m/Y", strtotime($student_details['dateofbirth'])) ?></th>
-                        </tr>
-                    </tbody>
-                </table>
-                <table>
-                    <tr>
-                        <td style="text-align:center;"><b><?php echo $exam_type ?>&nbsp;Exam&nbsp; <?php echo $academic_year ?></b></td>
-                    </tr>
-                </table>
-                <br>
-                <table class="table" border="1" align="center" style="width: 100%;">
-                    <tr>
-                        <th>Subject</th>
-                        <th colspan="2">Full Marks</th>
-                        <th colspan="2">Marks Obtained</th>
-                        <th>Total Marks Obtained</th>
-                        <th>Positional grade</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th>Viva</th>
-                        <th>Written</th>
-                        <th>Viva</th>
-                        <th>Written</th>
-                        <th></th>
-                    </tr>
-
-                    <?php foreach ($ordered_marks_data as $row) {
-                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
-                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
-                        $total_marks = 0;
-
-                        if ($row['written_attendance_status'] == 'A' && $row['viva_attendance_status'] != 'A') {
-                            $total_marks = $row['viva_marks'];
-                        } elseif ($row['viva_attendance_status'] == 'A' && $row['written_attendance_status'] != 'A') {
-                            $total_marks = $row['written_marks'];
-                        } elseif ($row['written_attendance_status'] != 'A' && $row['viva_attendance_status'] != 'A') {
-                            $total_marks = $row['written_marks'] + $row['viva_marks'];
-                        } else {
-                            $total_marks = 0;
-                        } // Calculate total marks
-                        echo "<tr>
-                <td>" . $row['subject'] . "</td>
-                <td>" . $row['full_marks_viva'] . "</td>
-                <td>" . $row['full_marks_written'] . "</td>
-                <td>" . $viva_marks . "</td>
-                <td>" . $written_marks . "</td>
-                <td>" . $total_marks . "</td>
-                <!--<td>" . $row['written_attendance_status'] . "</td>-->
-                <!--<td>" . $row['viva_attendance_status'] . "</td>-->
-            </tr>";
-                    }
-
-                    // Add total row
-                    echo "<tr>
-            <td><strong>Total</strong></td>
-            <td colspan='2'><strong>$total_full_marks</strong></td>
-            <td colspan='2'></td>
-            <td><strong>$total_obtained_marks ($formattedPercentage%)</strong></td>
-            <th>$grade-$gradeDescription</th>
-                </tr>";
-                    echo "</table>"; ?>
-                    <table border="0" align="right" style="width: 50%; margin: 0 auto;">
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <table class="table" border="0" style="width: 100%;">
-                                        <tbody>
-                                            <tr>
-                                                <td>Result</td>
-                                                <th><?php echo strtoupper($passOrFail) ?></th>
-                                            </tr>
-                                            <tr>
-                                                <td>Overall ranking</td>
-                                                <?php
-                                                function addOrdinalSuffix($number)
-                                                {
-                                                    if (!in_array(($number % 100), [11, 12, 13])) {
-                                                        switch ($number % 10) {
-                                                            case 1:
-                                                                return $number . 'st';
-                                                            case 2:
-                                                                return $number . 'nd';
-                                                            case 3:
-                                                                return $number . 'rd';
-                                                        }
-                                                    }
-                                                    return $number . 'th';
-                                                }
-
-                                                echo ($formattedPercentage >= 75 && $rank <= 3) ? "<th>" . addOrdinalSuffix($rank) . "</th>" : "<th></th>";
-                                                ?>
-                                            </tr>
-                                            <tr>
-                                                <td>Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>)</td>
-                                                <td><?php echo $average_attendance_percentage ?></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <table class="table visible-print-block" border="0" style="width: 100%; margin-top: 20%;">
-                                        <tbody>
-                                            <tr>
-                                                <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-
-                    <table class="table" border="1" style="width: 45%;">
-                        <tr>
-                            <th colspan="2">Summary of Examinations for Academic Year <?php echo $academic_year; ?></th>
-                        </tr>
-                        <tr>
-                            <th>Exam Type</th>
-                            <th>Marks Obtained</th>
-                        </tr>
-                        <tr>
-                            <td>First Term</td>
-                            <td><?php echo $exam_percentages['First Term']; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Half Yearly</td>
-                            <td><?php echo $exam_percentages['Half Yearly']; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Annual</td>
-                            <td><?php echo $exam_percentages['Annual']; ?></td>
-                        </tr>
-                    </table>
-                    <?php
-                    // Find the passing percentage
-                    $passing_query = "
-                        SELECT min_percentage 
-                        FROM grade_rule_details 
-                        WHERE rule_id = $1 
-                        AND LOWER(description) NOT LIKE '%fail%'
-                        ORDER BY min_percentage ASC 
-                        LIMIT 1
-                    ";
-                    $passing_result = pg_query_params($con, $passing_query, [$rule_id]);
-
-                    $passing_percentage = 'N/A';
-                    if ($passing_result && pg_num_rows($passing_result) > 0) {
-                        $passing_row = pg_fetch_assoc($passing_result);
-                        $passing_percentage = $passing_row['min_percentage'] . '%';
-                    }
-                    ?>
-
-                    <div class="report-footer visible-print-block" style="text-align: right;">
-                        <p>A - Absent denotes that the student was absent during the exam for that particular subject.</p>
-                        <p>Minimum passing marks: <?php echo $passing_percentage ?? 'N/A'; ?></p>
+            <form id="resultForm" method="GET">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="student_id">Student ID</label>
+                            <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Enter your student ID" value="<?php echo htmlspecialchars($student_id); ?>" required>
+                        </div>
                     </div>
-                <?php }
-        } elseif ($exam_type == "" && $student_id == "") {
-                ?>
-                <div class="noprint">
-                    <style>
-                        h1 {
-                            font-size: 36px;
-                            text-align: center;
-                            margin-top: 50px;
-                        }
-
-                        p {
-                            font-size: 24px;
-                            text-align: center;
-                            margin-top: 20px;
-                        }
-
-                        form {
-                            margin: 50px auto;
-                            width: 400px;
-                            border: 2px solid #ccc;
-                            padding: 20px;
-                            border-radius: 10px;
-                        }
-                    </style>
-
-                    <h1>Welcome to the Online Result Portal of RSSI NGO</h1>
-                    <p>Please enter your Student ID, Exam Name, and Year to view your result.</p>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="exam_type">Exam Type</label>
+                            <select class="form-control" id="exam_type" name="exam_type" required>
+                                <option value="">Select Exam</option>
+                                <option value="First Term" <?php echo ($exam_type == 'First Term') ? 'selected' : ''; ?>>First Term</option>
+                                <option value="Half Yearly" <?php echo ($exam_type == 'Half Yearly') ? 'selected' : ''; ?>>Half Yearly</option>
+                                <option value="Annual" <?php echo ($exam_type == 'Annual') ? 'selected' : ''; ?>>Annual</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="academic_year">Academic Year</label>
+                            <select class="form-control" id="academic_year" name="academic_year" required>
+                                <option value="">Select Year</option>
+                                <?php
+                                $currentYear = (date('m') == 1 || date('m') == 2 || date('m') == 3) ? date('Y') - 1 : date('Y');
+                                for ($i = 0; $i < 5; $i++) {
+                                    $year = $currentYear - $i;
+                                    $nextYear = $year + 1;
+                                    $academicYear = $year . '-' . $nextYear;
+                                    $selected = ($academic_year == $academicYear) ? 'selected' : '';
+                                    echo "<option value=\"$academicYear\" $selected>$academicYear</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            <?php
-        }
-            ?>
+                <div class="text-right">
+                    <button type="submit" class="btn-search">
+                        <i class="fas fa-check"></i> View Result
+                    </button>
+                    <button type="button" class="print-btn no-print" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Result
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <?php if (isset($_GET['student_id']) && (!$student_exists || $no_records_found)): ?>
+            <div class="no-result" id="noResult">
+                <i class="fas fa-file-alt"></i>
+                <h3>No Result Found</h3>
+                <p>Please check your Student ID, Exam Type, and Academic Year</p>
+            </div>
+        <?php else: ?>
+            <div class="no-result" id="noResult" style="display: none;">
+                <i class="fas fa-file-alt"></i>
+                <h3>No Result Found</h3>
+                <p>Please check your Student ID, Exam Type, and Academic Year</p>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($student_exists && !$no_records_found && isset($marks_result)): ?>
+            <div class="result-card" id="resultCard">
+                <div class="student-header">
+                    <div class="student-info">
+                        <h3 id="studentName"><?php echo htmlspecialchars($student_details['studentname']); ?></h3>
+                        <p>Student ID: <span id="displayStudentId"><?php echo htmlspecialchars($student_details['student_id']); ?></span> | Class: <span id="studentClass"><?php echo htmlspecialchars($class_category_data['category'] . '/' . $class_category_data['class']); ?></span></p>
+                        Exam: <span id="examInfo"><?php echo htmlspecialchars($exam_type . ' ' . $academic_year); ?></span></p>
+                    </div>
+                </div>
+
+                <div class="result-summary">
+                    <div class="summary-card <?php echo strtolower($passOrFail); ?>" id="passFailCard">
+                        <div class="summary-label">Result</div>
+                        <div class="summary-value" id="passFailValue"><?php echo $passOrFail; ?></div>
+                        <div class="summary-grade" id="gradeValue"><?php echo $grade . ' - ' . $gradeDescription; ?></div>
+                    </div>
+
+                    <div class="summary-card rank">
+                        <div class="summary-label">Rank</div>
+                        <div class="summary-value" id="rankValue">
+                            <?php
+                            if ($formattedPercentage >= 75 && $rank <= 3) {
+                                echo $formattedRank;
+                            } else {
+                                echo "--";
+                            }
+                            ?>
+                        </div>
+                        <div class="summary-desc">in class</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Total Marks</div>
+                        <div class="summary-value" id="totalMarks"><?php echo $total_obtained_marks; ?></div>
+                        <div class="summary-desc">out of <span id="totalFullMarks"><?php echo $total_full_marks; ?></span> (<?php echo $formattedPercentage; ?>%)</div>
+                    </div>
+
+                    <div class="summary-card attendance">
+                        <div class="summary-label">Attendance</div>
+                        <div class="summary-value" id="attendanceValue"><?php echo $average_attendance_percentage ?? 'N/A'; ?></div>
+                        <div class="summary-desc">for the term</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Full Marks</th>
+                                <th>Written Marks</th>
+                                <th>Viva Marks</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marksTableBody">
+                            <?php
+                            $grandFullMarks = 0;
+                            $grandWrittenMarks = 0;
+                            $grandVivaMarks = 0;
+                            $grandTotalMarks = 0;
+
+                            foreach ($ordered_marks_data as $row):
+                                $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
+                                $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
+
+                                // Calculate total marks
+                                if ($row['written_attendance_status'] == 'A' && $row['viva_attendance_status'] != 'A') {
+                                    $total_marks = $row['viva_marks'];
+                                } elseif ($row['viva_attendance_status'] == 'A' && $row['written_attendance_status'] != 'A') {
+                                    $total_marks = $row['written_marks'];
+                                } elseif ($row['written_attendance_status'] != 'A' && $row['viva_attendance_status'] != 'A') {
+                                    $total_marks = $row['written_marks'] + $row['viva_marks'];
+                                } else {
+                                    $total_marks = 0;
+                                }
+
+                                $subjectFullMarks = $row['full_marks_written'] + $row['full_marks_viva'];
+
+                                $grandFullMarks += $subjectFullMarks;
+                                if ($written_marks !== 'A') $grandWrittenMarks += $written_marks;
+                                if ($viva_marks !== 'A') $grandVivaMarks += $viva_marks;
+                                $grandTotalMarks += $total_marks;
+                            ?>
+                                <tr>
+                                    <td class="subject-name"><?php echo htmlspecialchars($row['subject']); ?></td>
+                                    <td><?php echo $subjectFullMarks; ?></td>
+                                    <td><?php echo $written_marks; ?></td>
+                                    <td><?php echo $viva_marks; ?></td>
+                                    <td><?php echo $total_marks; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>Grand Total</strong></td>
+                                <td><strong><?php echo $grandFullMarks; ?></strong></td>
+                                <td><strong><?php echo $grandWrittenMarks; ?></strong></td>
+                                <td><strong><?php echo $grandVivaMarks; ?></strong></td>
+                                <td><strong><?php echo $grandTotalMarks; ?></strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
-    <div id="watermark" class="watermark">
-        PREVIEW COPY – NOT VALID FOR OFFICIAL USE
+
+    <div class="footer">
+        <p>&copy; <?php echo date('Y'); ?> Student Result Portal. All rights reserved.</p>
+        <p>For any discrepancies, please contact your school administration.</p>
     </div>
+
     <script>
-        function submit() {
-            document.getElementById("formid").click();
-            document.lostpasswordform.submit();
-        }
+        // Simple form validation
+        document.getElementById('resultForm').addEventListener('submit', function(e) {
+            const studentId = document.getElementById('student_id').value;
+            const examType = document.getElementById('exam_type').value;
+            const academicYear = document.getElementById('academic_year').value;
+
+            if (!studentId || !examType || !academicYear) {
+                e.preventDefault();
+                alert('Please fill in all fields before submitting.');
+            }
+        });
     </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>
