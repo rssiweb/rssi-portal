@@ -6,7 +6,6 @@ include(__DIR__ . "/../util/login_util.php");
 $student_id = $_GET['student_id'] ?? '';
 $exam_type = $_GET['exam_type'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
-$print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 
 // Initialize flags
 $student_exists = false;
@@ -134,98 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                 $total_full_marks += $data['full_marks_written'] + $data['full_marks_viva'];
                 $total_obtained_marks += $data['written_marks'] + $data['viva_marks'];
             }
-
-            // Calculate the attendance details for the specified period
-            $attendance_query = "
-                WITH date_range AS (
-                    SELECT DISTINCT a.date AS attendance_date
-                    FROM attendance a
-                    WHERE a.date BETWEEN '$start_date' AND '$end_date'
-                ),
-                holidays AS (
-                    SELECT holiday_date FROM holidays 
-                    WHERE holiday_date BETWEEN '$start_date' AND '$end_date'
-                ),
-                student_exceptions AS (
-                    SELECT 
-                        m.student_id,
-                        e.exception_date AS attendance_date
-                    FROM 
-                        student_class_days_exceptions e
-                    JOIN 
-                        student_exception_mapping m ON e.exception_id = m.exception_id
-                    WHERE 
-                        e.exception_date BETWEEN '$start_date' AND '$end_date'
-                        AND m.student_id = $1
-                ),
-                attendance_data AS (
-                    SELECT
-                        s.student_id,
-                        dr.attendance_date,
-                        COALESCE(
-                            CASE
-                                WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
-                                WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
-                                WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
-                                WHEN a.user_id IS NULL
-                                    AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = dr.attendance_date)
-                                    AND EXISTS (
-                                        SELECT 1 FROM student_class_days cw
-                                        WHERE cw.category = s.category
-                                        AND cw.effective_from <= dr.attendance_date
-                                        AND (cw.effective_to IS NULL OR cw.effective_to >= dr.attendance_date)
-                                        AND POSITION(TO_CHAR(dr.attendance_date, 'Dy') IN cw.class_days) > 0
-                                    )
-                                    AND s.doa <= dr.attendance_date
-                                    THEN 'A' -- Absent only if it's a class day and not holiday/exception
-                                ELSE NULL -- NULL for non-class days
-                            END
-                        ) AS attendance_status
-                    FROM date_range dr
-                    CROSS JOIN rssimyprofile_student s
-                    LEFT JOIN (
-                        SELECT DISTINCT user_id, date
-                        FROM attendance
-                    ) a ON s.student_id = a.user_id AND a.date = dr.attendance_date
-                    LEFT JOIN holidays h ON dr.attendance_date = h.holiday_date
-                    LEFT JOIN student_exceptions ex ON dr.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
-                    WHERE s.student_id = $1
-                    AND dr.attendance_date >= s.doa
-                ),
-                first_attendance AS (
-                    SELECT MIN(attendance_date) AS first_attendance_date
-                    FROM attendance_data
-                )
-                SELECT
-                    student_id,
-                    attendance_date,
-                    attendance_status,
-                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) AS total_classes,
-                    (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) AS attended_classes,
-                    CASE
-                        WHEN (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery) = 0 THEN NULL
-                        ELSE CONCAT(
-                            ROUND(
-                                ((SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status = 'P') AS subquery) * 100.0) /
-                                (SELECT COUNT(*) FROM (SELECT DISTINCT attendance_date FROM attendance_data WHERE attendance_status IS NOT NULL) AS subquery), 2
-                            ),
-                            '%'
-                        )
-                    END AS attendance_percentage,
-                    (SELECT first_attendance_date FROM first_attendance) AS first_attendance_date
-                FROM attendance_data
-                ORDER BY attendance_date
-            ";
-
-            $attendance_result = pg_query_params($con, $attendance_query, [$student_id]);
-
-            if ($attendance_result) {
-                $attendance_data = pg_fetch_assoc($attendance_result);
-                $average_attendance_percentage = $attendance_data['attendance_percentage'];
-                $first_attendance_date = $attendance_data['first_attendance_date'];
-            } else {
-                $average_attendance_percentage = "N/A";
-            }
         } else {
             $no_records_found = true;
         }
@@ -245,151 +152,6 @@ $class_category_query = "
 // Execute query
 $class_category_result = pg_query_params($con, $class_category_query, [$student_id, $exam_type, $academic_year]);
 $class_category_data = pg_fetch_assoc($class_category_result);
-
-// Calculate rank
-if ($class_category_data) {
-    $class_group_query = "
-    SELECT DISTINCT emd.exam_id
-    FROM exam_marks_data emd
-    JOIN exams e ON emd.exam_id = e.exam_id
-    WHERE e.exam_type = $1
-      AND e.academic_year = $2
-    GROUP BY emd.exam_id
-    HAVING COUNT(DISTINCT emd.class) > 1;
-    ";
-
-    $class_group_result = pg_query_params($con, $class_group_query, [$exam_type, $academic_year]);
-
-    $grouped_exam_ids = [];
-    if ($class_group_result) {
-        while ($row = pg_fetch_assoc($class_group_result)) {
-            $grouped_exam_ids[] = $row['exam_id'];
-        }
-    }
-
-    $rank = 'N/A';
-
-    // Only proceed with grouped ranking if we found grouped exams
-    if (!empty($grouped_exam_ids)) {
-        $placeholders = [];
-        foreach ($grouped_exam_ids as $index => $id) {
-            $placeholders[] = '$' . ($index + 3);
-        }
-        $placeholders_str = implode(',', $placeholders);
-
-        $class_group_query = "
-        SELECT emd.student_id, 
-               ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
-        FROM exam_marks_data emd
-        JOIN exams e ON emd.exam_id = e.exam_id
-        WHERE e.exam_type = $1
-          AND e.academic_year = $2
-          AND emd.exam_id IN ($placeholders_str)
-        GROUP BY emd.student_id
-        ORDER BY total_marks DESC;
-        ";
-
-        $params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
-        $class_group_result = pg_query_params($con, $class_group_query, $params);
-
-        if ($class_group_result) {
-            $class_marks = [];
-            while ($row = pg_fetch_assoc($class_group_result)) {
-                $class_marks[] = $row;
-            }
-
-            $class_marks = calculateRanksWithTies($class_marks);
-
-            foreach ($class_marks as $student) {
-                if ($student['student_id'] == $student_id) {
-                    $rank = $student['rank'];
-                    break;
-                }
-            }
-        }
-    }
-
-    // If we didn't find the student in grouped classes or there were no grouped classes,
-    // calculate rank within their own class with tie handling
-    if ($rank === 'N/A') {
-        $individual_class_query = "
-        SELECT emd.student_id, 
-            ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
-        FROM exam_marks_data emd
-        JOIN exams e ON emd.exam_id = e.exam_id
-        WHERE e.exam_type = $1
-        AND e.academic_year = $2
-        AND emd.class = (
-            SELECT emd2.class 
-            FROM exam_marks_data emd2
-            JOIN exams e2 ON emd2.exam_id = e2.exam_id 
-            WHERE emd2.student_id = $3 AND e2.exam_type = $1 AND e2.academic_year = $2
-            ORDER BY emd2.id DESC 
-            LIMIT 1
-        )
-        GROUP BY emd.student_id
-        ORDER BY total_marks DESC;
-        ";
-
-        $individual_class_result = pg_query_params(
-            $con,
-            $individual_class_query,
-            [$exam_type, $academic_year, $student_id]
-        );
-
-        if ($individual_class_result) {
-            $class_marks = [];
-            while ($row = pg_fetch_assoc($individual_class_result)) {
-                $class_marks[] = $row;
-            }
-
-            $class_marks = calculateRanksWithTies($class_marks);
-
-            foreach ($class_marks as $student) {
-                if ($student['student_id'] == $student_id) {
-                    $rank = $student['rank'];
-                    break;
-                }
-            }
-        }
-    }
-}
-
-/**
- * Calculate ranks with proper tie handling
- * Students with same total marks get the same rank
- */
-function calculateRanksWithTies($students)
-{
-    if (empty($students)) {
-        return [];
-    }
-
-    $ranked_students = [];
-    $current_rank = 1;
-    $previous_marks = null;
-    $skip_count = 0;
-
-    foreach ($students as $index => $student) {
-        $current_marks = $student['total_marks'];
-
-        if ($current_marks === $previous_marks) {
-            // Same marks as previous student - same rank
-            $student['rank'] = $current_rank;
-            $skip_count++;
-        } else {
-            // Different marks - increment rank considering skipped positions
-            $current_rank += $skip_count;
-            $student['rank'] = $current_rank;
-            $skip_count = 1; // Reset skip count for new rank group
-        }
-
-        $previous_marks = $current_marks;
-        $ranked_students[] = $student;
-    }
-
-    return $ranked_students;
-}
 
 // Calculate percentage and grade
 if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_marks > 0) {
@@ -475,24 +237,6 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
 
     // Determine Pass / Fail
     $passOrFail = ($percentage > $failMax) ? 'Pass' : 'Fail';
-
-    // Format rank with ordinal suffix
-    function addOrdinalSuffix($number)
-    {
-        if (!in_array(($number % 100), [11, 12, 13])) {
-            switch ($number % 10) {
-                case 1:
-                    return $number . 'st';
-                case 2:
-                    return $number . 'nd';
-                case 3:
-                    return $number . 'rd';
-            }
-        }
-        return $number . 'th';
-    }
-
-    $formattedRank = ($rank !== 'N/A') ? addOrdinalSuffix($rank) : 'N/A';
 }
 ?>
 <!DOCTYPE html>
@@ -502,6 +246,7 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Result Portal</title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -696,12 +441,6 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
             }
         }
 
-        @media (max-width: 768px) {
-            .result-summary {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
         .footer {
             text-align: center;
             padding: 20px;
@@ -821,7 +560,6 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
                         </tr>
                     </table>
                 </div>
-
 
                 <div class="table-responsive">
                     <table class="marks-table">
