@@ -197,7 +197,7 @@ validation();
                                                                     <a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a>
                                                                 </td> -->
                                                                 <td>
-                                                                    <a href="../result.php" target="_blank">Results</a>
+                                                                    <a href="result.php" target="_blank">Results</a>
                                                                 </td>
                                                             </tr>
                                                         </tbody>

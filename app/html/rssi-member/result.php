@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../bootstrap.php';
-include(__DIR__ . "/../util/login_util.php");
+require_once __DIR__ . "/../../bootstrap.php";
 
+include("../../util/login_util.php");
 // Set initial values for form fields
 $student_id = $_GET['student_id'] ?? '';
 $exam_type = $_GET['exam_type'] ?? '';
@@ -11,6 +11,7 @@ $print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 // Initialize flags
 $student_exists = false;
 $no_records_found = false;
+
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset($_GET['exam_type']) && isset($_GET['academic_year'])) {
@@ -499,7 +500,8 @@ function calculateRanksWithTies($students)
         ?>
     </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
@@ -1011,9 +1013,11 @@ function calculateRanksWithTies($students)
         }
             ?>
     </div>
-    <div id="watermark" class="watermark">
-        PREVIEW COPY – NOT VALID FOR OFFICIAL USE
-    </div>
+    <?php if ($role !== 'Admin'): ?>
+        <div id="watermark" class="watermark">
+            PREVIEW COPY – NOT VALID FOR OFFICIAL USE
+        </div>
+    <?php endif; ?>
     <script>
         function submit() {
             document.getElementById("formid").click();
