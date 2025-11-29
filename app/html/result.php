@@ -564,72 +564,37 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
             <?php endif; ?>
         }
 
-        .student-header {
-            background: linear-gradient(135deg, var(--dark), #34495e);
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
+        /* Student Info section */
+        .student-info-section {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
         }
 
-        .student-info h3 {
-            margin: 0 0 5px;
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .label-cell {
+            padding: 6px 12px;
+            width: 25%;
+            color: #7f8c8d;
+            font-weight: 600;
+            border-right: 1px solid #eee;
+        }
+
+        .value-cell {
+            padding: 6px 12px;
+            width: 25%;
+            border-right: 1px solid #eee;
             font-weight: 600;
         }
 
-        .student-info p {
-            margin: 0;
-            opacity: 0.9;
-        }
-
-        .result-summary {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .summary-card {
-            background: var(--light);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-
-        .summary-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .summary-card.pass {
-            border-left: 4px solid var(--success);
-        }
-
-        .summary-card.fail {
-            border-left: 4px solid var(--danger);
-        }
-
-        .summary-card.rank {
-            border-left: 4px solid var(--warning);
-        }
-
-        .summary-card.attendance {
-            border-left: 4px solid var(--primary);
-        }
-
-        .summary-value {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 10px 0;
-        }
-
-        .summary-label {
-            font-size: 14px;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
+        /* Marks Table */
         .marks-table {
             width: 100%;
             border-collapse: collapse;
@@ -660,14 +625,22 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
             font-weight: 700;
         }
 
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-top: 30px;
+        /* Summary Section */
+        .result-summary {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin: 20px 0;
         }
 
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        /* No Result */
         .no-result {
             text-align: center;
             padding: 50px 20px;
@@ -724,26 +697,20 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
         }
 
         @media (max-width: 768px) {
-            .student-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .student-photo {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-
             .result-summary {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
-        .alert {
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 30px;
         }
     </style>
+
 </head>
 
 <body>
@@ -833,47 +800,28 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
 
         <?php if ($student_exists && !$no_records_found && isset($marks_result)): ?>
             <div class="result-card" id="resultCard">
-                <div class="student-header">
-                    <div class="student-info">
-                        <h3 id="studentName"><?php echo htmlspecialchars($student_details['studentname']); ?></h3>
-                        <p>Student ID: <span id="displayStudentId"><?php echo htmlspecialchars($student_details['student_id']); ?></span> | Class: <span id="studentClass"><?php echo htmlspecialchars($class_category_data['category'] . '/' . $class_category_data['class']); ?></span></p>
-                        Exam: <span id="examInfo"><?php echo htmlspecialchars($exam_type . ' ' . $academic_year); ?></span></p>
-                    </div>
+                <div class="student-info-section">
+                    <table class="info-table">
+                        <tr>
+                            <td class="label-cell">Student ID</td>
+                            <td class="value-cell"><?php echo htmlspecialchars($student_details['student_id']); ?></td>
+
+                            <td class="label-cell">Exam</td>
+                            <td class="value-cell"><?php echo htmlspecialchars($exam_type); ?> <?php echo htmlspecialchars($academic_year); ?></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label-cell">Student Name</td>
+                            <td class="value-cell" colspan="3"><?php echo htmlspecialchars($student_details['studentname']); ?></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label-cell">Class</td>
+                            <td class="value-cell"><?php echo htmlspecialchars($class_category_data['category'] . '/' . $class_category_data['class']); ?></td>
+                        </tr>
+                    </table>
                 </div>
 
-                <div class="result-summary">
-                    <div class="summary-card <?php echo strtolower($passOrFail); ?>" id="passFailCard">
-                        <div class="summary-label">Result</div>
-                        <div class="summary-value" id="passFailValue"><?php echo $passOrFail; ?></div>
-                        <div class="summary-grade" id="gradeValue"><?php echo $grade . ' - ' . $gradeDescription; ?></div>
-                    </div>
-
-                    <div class="summary-card rank">
-                        <div class="summary-label">Rank</div>
-                        <div class="summary-value" id="rankValue">
-                            <?php
-                            if ($formattedPercentage >= 75 && $rank <= 3) {
-                                echo $formattedRank;
-                            } else {
-                                echo "--";
-                            }
-                            ?>
-                        </div>
-                        <div class="summary-desc">in class</div>
-                    </div>
-
-                    <div class="summary-card">
-                        <div class="summary-label">Total Marks</div>
-                        <div class="summary-value" id="totalMarks"><?php echo $total_obtained_marks; ?></div>
-                        <div class="summary-desc">out of <span id="totalFullMarks"><?php echo $total_full_marks; ?></span> (<?php echo $formattedPercentage; ?>%)</div>
-                    </div>
-
-                    <div class="summary-card attendance">
-                        <div class="summary-label">Attendance</div>
-                        <div class="summary-value" id="attendanceValue"><?php echo $average_attendance_percentage ?? 'N/A'; ?></div>
-                        <div class="summary-desc">for the term</div>
-                    </div>
-                </div>
 
                 <div class="table-responsive">
                     <table class="marks-table">
@@ -933,6 +881,22 @@ if (isset($total_obtained_marks) && isset($total_full_marks) && $total_full_mark
                                 <td><strong><?php echo $grandTotalMarks; ?></strong></td>
                             </tr>
                         </tfoot>
+                    </table>
+                </div>
+                <div class="result-summary">
+                    <table class="summary-table">
+                        <tr>
+                            <td class="label-cell">Marks Obtained</td>
+                            <td class="value-cell">
+                                <?php echo $total_obtained_marks; ?>/<?php echo $total_full_marks; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Result</td>
+                            <td class="value-cell" colspan="3">
+                                <?php echo $passOrFail; ?>
+                            </td>
+                        </tr>
                     </table>
                 </div>
             </div>
