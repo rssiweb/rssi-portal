@@ -16,15 +16,18 @@ validation();
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
@@ -197,7 +200,7 @@ validation();
                                                                     <a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a>
                                                                 </td> -->
                                                                 <td>
-                                                                    <a href="result.php" target="_blank">Results</a>
+                                                                    <a href="https://www.rssi.in/result-portal.php" target="_blank">Results</a>
                                                                 </td>
                                                             </tr>
                                                         </tbody>

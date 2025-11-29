@@ -152,6 +152,11 @@
               <span>Add Students (Post Exam Creation)</span>
             </a>
           </li>
+          <li>
+            <a id="print-result" href="print-result.php" target="_blank">
+              <span>Print Report Card</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
