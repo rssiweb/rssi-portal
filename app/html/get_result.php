@@ -5,16 +5,25 @@ include(__DIR__ . "/../util/login_util.php");
 // Security: Multiple checks
 function isAllowedAccess()
 {
-    // Check API Key
     $valid_api_key = 'YOUR_SECRET_API_KEY';
     $provided_api_key = $_GET['api_key'] ?? '';
 
-    // Check Origin
-    $allowed_origins = ['http://localhost:8082', 'https://login.rssi.in'];
+    // Allowed origins
+    $allowed_origins = [
+        'http://localhost:8082',
+        'https://login.rssi.in',
+        'https://rssi.in',
+        'https://www.rssi.in'
+    ];
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-    // Check Referer
-    $allowed_domains = ['localhost', 'login.rssi.in'];
+    // Allowed referer domains
+    $allowed_domains = [
+        'localhost',
+        'login.rssi.in',
+        'rssi.in',
+        'www.rssi.in'
+    ];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $is_allowed_referer = false;
 
@@ -25,10 +34,9 @@ function isAllowedAccess()
         }
     }
 
-    // Return true if any security check passes
-    return ($provided_api_key === $valid_api_key) ||
-        (in_array($origin, $allowed_origins)) ||
-        $is_allowed_referer;
+    return ($provided_api_key === $valid_api_key)
+        || in_array($origin, $allowed_origins)
+        || $is_allowed_referer;
 }
 
 if (!isAllowedAccess()) {
