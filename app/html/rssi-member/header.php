@@ -152,6 +152,11 @@
               <span>Add Students (Post Exam Creation)</span>
             </a>
           </li>
+          <li>
+            <a id="result-publication" href="result-publication.php">
+              <span>Result Publication Dates</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -782,6 +787,10 @@
         id: 'acadamis',
         linkId: 'append-students',
         url: 'append-students.php'
+      }, {
+        id: 'acadamis',
+        linkId: 'result-publication',
+        url: 'result-publication.php'
       }, {
         id: 'acadamis',
         linkId: 'createExam',

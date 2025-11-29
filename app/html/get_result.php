@@ -57,9 +57,43 @@ $academic_year = $_GET['academic_year'] ?? '';
 // Initialize flags
 $student_exists = false;
 $no_records_found = false;
+$result_published = false;
+
+// NEW FUNCTION: Check if result is published
+function isResultPublished($con, $exam_type, $academic_year)
+{
+    $query = "SELECT publish_date FROM result_publication_dates 
+              WHERE exam_type = $1 AND academic_year = $2";
+    $result = pg_query_params($con, $query, [$exam_type, $academic_year]);
+
+    if ($result && pg_num_rows($result) > 0) {
+        $row = pg_fetch_assoc($result);
+        $publish_date = strtotime($row['publish_date']);
+        $current_date = time();
+
+        return $current_date >= $publish_date;
+    }
+
+    // If no record exists, consider result as not published
+    return false;
+}
 
 // Check if required parameters are provided
 if (isset($_GET['student_id']) && isset($_GET['exam_type']) && isset($_GET['academic_year'])) {
+
+    // Check if result is published
+    $result_published = isResultPublished($con, $exam_type, $academic_year);
+
+    if (!$result_published) {
+        // Result not published yet
+        echo '<div class="alert alert-info text-center">
+                <i class="glyphicon glyphicon-time"></i>
+                <h4>Result Not Published Yet</h4>
+                <p>The result for ' . htmlspecialchars($exam_type) . ' exam of academic year ' . htmlspecialchars($academic_year) . ' has not been published yet.</p>
+                <p>Please check back later or contact your school administration.</p>
+              </div>';
+        exit;
+    }
 
     // Extract the start year from the academic year
     list($start_year, $end_year) = explode('-', $academic_year);
