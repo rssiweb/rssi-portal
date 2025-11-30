@@ -39,7 +39,7 @@
                 Role : <?php echo $role ?>
                 <?php if (count($active_roles) > 1) { ?>
                   <a href="#" data-bs-toggle="modal" data-bs-target="#switchRoleModal" class="ms-2">
-                    <i class="bi bi-arrow-repeat" title="Switch Role"></i>
+                    <i class="bi bi-arrow-repeat text-muted" title="Switch to another role"></i>
                   </a>
                 <?php } ?>
               </span>
