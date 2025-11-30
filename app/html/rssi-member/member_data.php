@@ -42,3 +42,18 @@ while ($row = pg_fetch_assoc($run)) {
     $twofa_enabled = $row['twofa_enabled'];
     $twofa_secret = $row['twofa_secret'];
 }
+$active_roles_query = "
+    SELECT r.role_name 
+    FROM associate_roles ar
+    JOIN roles r ON r.id = ar.role_id
+    WHERE ar.associatenumber = '$associatenumber'
+      AND (ar.effective_to IS NULL OR ar.effective_to >= CURRENT_DATE)
+    ORDER BY r.role_name;
+";
+
+$active_roles_run = pg_query($con, $active_roles_query);
+
+$active_roles = [];
+while ($r = pg_fetch_assoc($active_roles_run)) {
+    $active_roles[] = $r['role_name'];
+}

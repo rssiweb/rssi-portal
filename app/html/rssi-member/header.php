@@ -35,7 +35,14 @@
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
               <h6><?php echo $fullname ?></h6>
-              <span>Role :&nbsp;<?php echo $role ?></span>
+              <span>
+                Role : <?php echo $role ?>
+                <?php if (count($active_roles) > 1) { ?>
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#switchRoleModal" class="ms-2">
+                    <i class="bi bi-arrow-repeat" title="Switch Role"></i>
+                  </a>
+                <?php } ?>
+              </span>
             </li>
             <li>
               <hr class="dropdown-divider">
@@ -91,6 +98,33 @@
     </nav><!-- End Icons Navigation -->
 
   </header><!-- End Header -->
+
+  <!-- Switch Role Modal -->
+  <div class="modal fade" id="switchRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="switchRoleForm" class="modal-content" method="POST" action="switch_role.php">
+        <div class="modal-header">
+          <h5 class="modal-title">Switch Role</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <label class="form-label">Select a Role</label>
+          <select name="new_role" id="roleDropdown" class="form-select" required>
+            <option value="">Loading...</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="updateBtn" class="btn btn-primary" type="submit" disabled>
+            <span class="button-text">Update Role</span>
+            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -1346,4 +1380,90 @@
     toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
     toggleCollapsedClass('sas.php', 'attendX');
+  </script>
+  <script>
+    document.getElementById('switchRoleModal').addEventListener('show.bs.modal', function() {
+
+      const dropdown = document.getElementById('roleDropdown');
+      const updateBtn = document.getElementById('updateBtn');
+
+      dropdown.innerHTML = "<option value=''>Loading...</option>";
+      updateBtn.disabled = true;
+
+      fetch('fetch_roles.php')
+        .then(response => response.json())
+        .then(data => {
+
+          dropdown.innerHTML = ""; // clear dropdown
+
+          // If NO current role → show "Select Role"
+          if (!data.current_role) {
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Role";
+            dropdown.appendChild(defaultOption);
+          }
+
+          // Populate roles dynamically
+          data.roles.forEach(role => {
+            const option = document.createElement("option");
+            option.value = role.id;
+            option.textContent = role.role_name;
+
+            // Auto-select current role by name
+            if (role.role_name === data.current_role) {
+              option.selected = true;
+            }
+
+            dropdown.appendChild(option);
+          });
+
+          updateBtn.disabled = false;
+        })
+        .catch(err => {
+          dropdown.innerHTML = "<option>Error loading roles</option>";
+          updateBtn.disabled = true;
+          console.error("Error fetching roles:", err);
+        });
+
+    });
+  </script>
+
+  <script>
+    document.getElementById("switchRoleForm").addEventListener("submit", function(e) {
+      e.preventDefault(); // Prevent page reload
+
+      const updateBtn = document.getElementById("updateBtn");
+      const buttonText = updateBtn.querySelector(".button-text");
+      const spinner = updateBtn.querySelector(".spinner-border");
+
+      // Show loading state
+      updateBtn.disabled = true;
+      buttonText.textContent = "Updating...";
+      spinner.classList.remove("d-none");
+
+      const formData = new FormData(this);
+
+      fetch("switch_role.php", {
+          method: "POST",
+          body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+          alert(res.message);
+
+          if (res.status === "success") {
+            location.reload(); // Only reload on success
+          }
+        })
+        .catch(() => {
+          alert("Something went wrong!");
+        })
+        .finally(() => {
+          // Reset button state (in case of error or if page doesn't reload)
+          updateBtn.disabled = false;
+          buttonText.textContent = "Update Role";
+          spinner.classList.add("d-none");
+        });
+    });
   </script>
