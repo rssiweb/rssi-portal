@@ -102,7 +102,7 @@ for ($i = 0; $i < 4; $i++) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Result Publication Dates</title>
+    <title>Result Scheduler</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -138,12 +138,13 @@ for ($i = 0; $i < 4; $i++) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Result Publication Dates</h1>
+            <h1>Result Scheduler</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Academic</a></li>
-                    <li class="breadcrumb-item active">Result Publication Dates</li>
+                    <li class="breadcrumb-item"><a href="exam-management.php">Exam Management</a></li>
+                    <li class="breadcrumb-item active">Result Scheduler</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

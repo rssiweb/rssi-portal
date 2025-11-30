@@ -152,43 +152,8 @@
             </a>
           </li>
           <li>
-            <a id="createExam" href="exam_create.php">
-              <span>Create Exam</span>
-            </a>
-          </li>
-          <li>
-            <a id="examAllotment" href="exam_allotment.php">
-              <span>Exam Allotment</span>
-            </a>
-          </li>
-          <li>
-            <a id="examSummary" href="exam_summary_report.php">
-              <span>Exam Summary Report</span>
-            </a>
-          </li>
-          <li>
-            <a id="progress_curve" href="progress_curve.php">
-              <span>Students' Progress Curve</span>
-            </a>
-          </li>
-          <li>
-            <a id="reexam" href="reexam.php">
-              <span>Re-examination Form</span>
-            </a>
-          </li>
-          <li>
-            <a id="reexam_record" href="reexam_record.php">
-              <span>Re-examination Records</span>
-            </a>
-          </li>
-          <li>
-            <a id="append-students" href="append-students.php">
-              <span>Add Students (Post Exam Creation)</span>
-            </a>
-          </li>
-          <li>
-            <a id="result-publication" href="result-publication.php">
-              <span>Result Publication Dates</span>
+            <a id="exam-management" href="exam-management.php">
+              <span>Exam Management</span>
             </a>
           </li>
         </ul>
@@ -823,39 +788,43 @@
         url: 'append-students.php'
       }, {
         id: 'acadamis',
-        linkId: 'result-publication',
-        url: 'result-publication.php'
+        linkId: 'result-scheduler',
+        url: 'result-scheduler.php'
       }, {
         id: 'acadamis',
-        linkId: 'createExam',
+        linkId: 'exam-management',
         url: 'exam_create.php'
       },
       {
         id: 'acadamis',
-        linkId: 'progress_curve',
+        linkId: 'exam-management',
         url: 'progress_curve.php'
       },
       {
         id: 'acadamis',
-        linkId: 'examAllotment',
+        linkId: 'exam-management',
         url: 'exam_allotment.php'
       },
       {
         id: 'acadamis',
-        linkId: 'examAllotment',
+        linkId: 'exam-management',
         url: 'exam_marks_upload.php'
       }, {
         id: 'acadamis',
-        linkId: 'examSummary',
+        linkId: 'exam-management',
         url: 'exam_summary_report.php'
       }, {
         id: 'acadamis',
-        linkId: 'reexam',
+        linkId: 'exam-management',
         url: 'reexam.php'
       }, {
         id: 'acadamis',
-        linkId: 'reexam_record',
+        linkId: 'exam-management',
         url: 'reexam_record.php'
+      },{
+        id: 'acadamis',
+        linkId: 'exam-management',
+        url: 'exam-management.php'
       },
       {
         id: 'myservices',

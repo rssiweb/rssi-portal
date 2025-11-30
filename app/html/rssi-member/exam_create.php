@@ -237,6 +237,7 @@ if (@$_POST['form-type'] == "exam") {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item">Academic</li>
+                    <li class="breadcrumb-item"><a href="exam-management.php">Exam Management</a></li>
                     <li class="breadcrumb-item active">Create Exam</li>
                 </ol>
             </nav>

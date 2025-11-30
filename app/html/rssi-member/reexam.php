@@ -143,7 +143,8 @@ $classlist = [
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item"><a href="#">Academic</a></li>
+                    <li class="breadcrumb-item"><a href="exam-management.php">Exam Management</a></li>
                     <li class="breadcrumb-item active">Re-examination</li>
                 </ol>
             </nav>
