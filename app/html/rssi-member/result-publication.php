@@ -122,43 +122,6 @@ for ($i = 0; $i < 4; $i++) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        .btn-custom {
-            background-color: #0d6efd;
-            color: white;
-            padding: 0.5rem 2rem;
-            border: none;
-            border-radius: 0.375rem;
-        }
-
-        .btn-custom:hover {
-            background-color: #0b5ed7;
-        }
-
-        .date-filter-card {
-            background: #f8f9fa;
-            border-left: 4px solid #0d6efd;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-        }
-
-        .creator-info {
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        .creator-name {
-            font-weight: 500;
-            color: #495057;
-        }
-
-        .creator-datetime {
-            font-size: 0.8rem;
-            color: #868e96;
-        }
-    </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
@@ -221,7 +184,7 @@ for ($i = 0; $i < 4; $i++) {
                                 </div>
 
                                 <div class="col-12">
-                                    <button type="submit" class="btn btn-custom">
+                                    <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-calendar-check"></i> Schedule Publication
                                     </button>
                                 </div>
@@ -232,7 +195,7 @@ for ($i = 0; $i < 4; $i++) {
 
                 <!-- Date Range Filter -->
                 <div class="col-12">
-                    <div class="card date-filter-card">
+                    <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Filter Published Results</h5>
                             <form method="GET" class="row g-3" id="dateFilterForm">
@@ -271,10 +234,10 @@ for ($i = 0; $i < 4; $i++) {
                             </h5>
 
                             <div class="table-responsive">
-                                <table class="table table-bordered table-striped" id="resultsTable">
+                                <table class="table" id="resultsTable">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
+                                            <th>Id</th>
                                             <th>Exam Type</th>
                                             <th>Academic Year</th>
                                             <th>Publication Date</th>
@@ -285,63 +248,62 @@ for ($i = 0; $i < 4; $i++) {
                                     <tbody>
                                         <?php
                                         $current_date = date('Y-m-d H:i:s');
-                                        $list_query = "SELECT rpd.*, ram.fullname 
-                                                      FROM result_publication_dates rpd 
-                                                      LEFT JOIN rssimyaccount_members ram ON rpd.created_by = ram.associatenumber 
-                                                      WHERE rpd.publish_date BETWEEN $1 AND $2 
-                                                      ORDER BY rpd.publish_date DESC";
-                                        $list_result = pg_query_params($con, $list_query, [$start_date . ' 00:00:00', $end_date . ' 23:59:59']);
+                                        $list_query = "
+                                            SELECT rpd.*, ram.fullname 
+                                            FROM result_publication_dates rpd 
+                                            LEFT JOIN rssimyaccount_members ram 
+                                                ON rpd.created_by = ram.associatenumber 
+                                            WHERE rpd.publish_date BETWEEN $1 AND $2 
+                                            ORDER BY rpd.publish_date DESC
+                                        ";
 
-                                        if ($list_result && pg_num_rows($list_result) > 0) {
-                                            $counter = 1;
-                                            while ($row = pg_fetch_assoc($list_result)) {
+                                        $list_result = pg_query_params(
+                                            $con,
+                                            $list_query,
+                                            [$start_date . ' 00:00:00', $end_date . ' 23:59:59']
+                                        );
+
+                                        if ($list_result && pg_num_rows($list_result) > 0):
+
+                                            while ($row = pg_fetch_assoc($list_result)):
+
                                                 $publish_timestamp = strtotime($row['publish_date']);
                                                 $current_timestamp = time();
 
                                                 // Determine status
-                                                if ($current_timestamp >= $publish_timestamp) {
-                                                    $status = '<span class="badge bg-success">Published</span>';
-                                                } else {
-                                                    $status = '<span class="badge bg-warning">Scheduled</span>';
-                                                }
+                                                $status = ($current_timestamp >= $publish_timestamp)
+                                                    ? '<span class="badge bg-success">Published</span>'
+                                                    : '<span class="badge bg-warning">Scheduled</span>';
 
-                                                // Format creator information
-                                                $creator_name = $row['fullname'] ?: 'Unknown User';
-                                                $creator_id = $row['created_by'] ?: 'N/A';
-                                                $created_date = date('d/m/Y h:i A', strtotime($row['created_at']));
-
-                                                echo "<tr>
-                                                        <td>{$counter}</td>
-                                                        <td>{$row['exam_type']}</td>
-                                                        <td>{$row['academic_year']}</td>
-                                                        <td>" . date('d/m/Y h:i A', $publish_timestamp) . "</td>
-                                                        <td>{$status}</td>
-                                                        <td class='creator-info'>
-                                                            <div class='creator-name'>{$creator_name}</div>
-                                                            <div class='creator-datetime'>{$created_date}</div>
-                                                            <div class='creator-datetime'>ID: {$creator_id}</div>
-                                                        </td>
-                                                      </tr>";
-                                                $counter++;
-                                            }
-                                        } else {
-                                            echo "<tr><td colspan='6' class='text-center py-4'>
-                                                    <i class='bi bi-inbox display-4 text-muted'></i><br>
-                                                    No publication dates found for the selected date range.
-                                                  </td></tr>";
-                                        }
+                                                // Creator information
+                                                $creator_name  = $row['fullname'] ?: 'Unknown User';
+                                                $created_date  = date('d/m/Y h:i A', strtotime($row['created_at']));
                                         ?>
+                                                <tr>
+                                                    <td><?= htmlspecialchars($row['id']) ?></td>
+                                                    <td><?= htmlspecialchars($row['exam_type']) ?></td>
+                                                    <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                                                    <td><?= date('d/m/Y h:i A', $publish_timestamp) ?></td>
+                                                    <td><?= $status ?></td>
+                                                    <td>
+                                                        <?= htmlspecialchars($creator_name) ?>
+                                                        <div class="text-muted small"><?= $created_date ?></div>
+                                                    </td>
+                                                </tr>
+                                            <?php
+                                            endwhile;
+
+                                        else:
+                                            ?>
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4">
+                                                    <i class="bi bi-inbox display-4 text-muted"></i><br>
+                                                    No publication dates found for the selected date range.
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
-                            </div>
-
-                            <!-- Date Range Summary -->
-                            <div class="mt-3 text-muted small">
-                                <i class="bi bi-info-circle"></i>
-                                Showing results scheduled between
-                                <strong><?= date('M j, Y', strtotime($start_date)) ?></strong>
-                                and
-                                <strong><?= date('M j, Y', strtotime($end_date)) ?></strong>
                             </div>
                         </div>
                     </div>
@@ -365,15 +327,11 @@ for ($i = 0; $i < 4; $i++) {
             if ($('#resultsTable tbody tr').length > 0 &&
                 !$('#resultsTable tbody tr td').hasClass('text-center')) {
 
+                // Initialize DataTables only if resultArr is not empty
                 $('#resultsTable').DataTable({
-                    "pageLength": 25,
-                    "language": {
-                        "search": "Search records:",
-                        "lengthMenu": "Show _MENU_ records per page",
-                        "info": "Showing _START_ to _END_ of _TOTAL_ records",
-                        "infoEmpty": "No records available",
-                        "infoFiltered": "(filtered from _MAX_ total records)"
-                    }
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
                 });
             }
 
