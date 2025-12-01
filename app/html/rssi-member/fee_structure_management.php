@@ -952,12 +952,12 @@ if (!empty($statusCondition)) {
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="alert alert-info">
-                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            <!-- <i class="fas fa-info-circle me-2"></i> -->
                                                             <strong>Instructions:</strong>
                                                             1. Download the template CSV file.<br>
                                                             2. Fill in the data (remove sample rows).<br>
                                                             3. Upload the CSV file here.
-                                                            <a href="download_csv_template.php" class="btn btn-sm btn-outline-light ms-2">
+                                                            <a href="download_csv_template.php" class="btn btn-outline-info btn-sm ms-2">
                                                                 <i class="fas fa-download me-1"></i> Download Template
                                                             </a>
                                                         </div>
@@ -1022,7 +1022,7 @@ if (!empty($statusCondition)) {
                                                                     </tbody>
                                                                 </table>
                                                             </div>
-                                                            <div class="d-flex justify-content-between mt-3">
+                                                            <div class="d-flex justify-content-between align-items-center mt-3">
                                                                 <div id="previewSummary"></div>
                                                                 <button type="button" class="btn btn-success" id="confirmImport" style="display: none;">
                                                                     <i class="fas fa-check me-1"></i> Confirm Import
