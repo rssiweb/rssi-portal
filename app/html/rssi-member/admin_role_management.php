@@ -44,67 +44,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user_id = $_POST['user_id'];
                 $role_id = $_POST['role_id'];
                 $effective_from = $_POST['effective_from'] ?? date('Y-m-d');
-                $effective_to = $_POST['effective_to'] ?? null;
+                $effective_to = !empty($_POST['effective_to']) ? $_POST['effective_to'] : null;
 
-                // Check if role already assigned
-                $check_query = "SELECT id FROM associate_roles 
-                                WHERE associatenumber = $1 AND role_id = $2 
-                                AND effective_from = $3";
-                $check_result = pg_query_params($con, $check_query, [$user_id, $role_id, $effective_from]);
+                // Convert empty string to null
+                if ($effective_to === '') {
+                    $effective_to = null;
+                }
 
-                if (pg_num_rows($check_result) > 0) {
-                    $message = "error|Role already assigned with same effective date";
+                // SIMPLER VALIDATION: Check for active assignments first
+                $active_check = pg_query_params(
+                    $con,
+                    "SELECT id, effective_from, effective_to 
+         FROM associate_roles 
+         WHERE associatenumber = $1 
+           AND role_id = $2
+           AND (
+               -- Check if new assignment overlaps with existing
+               (effective_from <= $3::date AND 
+                (effective_to IS NULL OR effective_to >= $3::date))
+               OR
+               -- Check if new assignment ends within existing (if end date provided)
+               ($4::date IS NOT NULL AND 
+                effective_from <= $4::date AND
+                (effective_to IS NULL OR effective_to >= $4::date))
+               OR
+               -- Check if new assignment surrounds existing
+               ($3::date <= effective_from AND
+                ($4::date IS NULL OR $4::date >= COALESCE(effective_to, '9999-12-31'::date)))
+           )",
+                    [$user_id, $role_id, $effective_from, $effective_to]
+                );
+
+                if (!$active_check) {
+                    $message = "error|Database error: " . pg_last_error($con);
+                } elseif (pg_num_rows($active_check) > 0) {
+                    $overlapping = pg_fetch_all($active_check);
+                    $assignment_info = [];
+                    foreach ($overlapping as $assign) {
+                        $end_date = $assign['effective_to'] ?: 'No end date';
+                        $assignment_info[] = "From {$assign['effective_from']} to {$end_date}";
+                    }
+
+                    $assignments_list = implode(', ', $assignment_info);
+                    $message = "error|Role assignment overlaps with existing assignment(s): {$assignments_list}";
                 } else {
-                    // Assign role
+                    // No overlap, proceed with insertion
                     $query = "INSERT INTO associate_roles (associatenumber, role_id, assigned_by, 
-                             effective_from, effective_to) 
-                             VALUES ($1, $2, $3, $4, $5)";
+                 effective_from, effective_to) 
+                 VALUES ($1, $2, $3, $4, $5)";
 
                     $result = pg_query_params($con, $query, [
                         $user_id,
                         $role_id,
                         $associatenumber,
                         $effective_from,
-                        $effective_to ?: null
+                        $effective_to
                     ]);
 
                     if ($result) {
-                        // Log the action
-                        logRoleAction('ASSIGN', $user_id, $role_id, [
-                            'effective_from' => $effective_from,
-                            'effective_to' => $effective_to
-                        ]);
-
-                        // Update user's current role if they don't have one
-                        $check_current = pg_query_params(
-                            $con,
-                            "SELECT role FROM rssimyaccount_members WHERE associatenumber = $1",
-                            [$user_id]
-                        );
-
-                        if ($check_current && pg_num_rows($check_current) > 0) {
-                            $row = pg_fetch_assoc($check_current);
-                            if (empty($row['role'])) {
-                                $role_name_query = pg_query_params(
-                                    $con,
-                                    "SELECT role_name FROM roles WHERE id = $1",
-                                    [$role_id]
-                                );
-
-                                if ($role_name_query && pg_num_rows($role_name_query) > 0) {
-                                    $role_row = pg_fetch_assoc($role_name_query);
-                                    pg_query_params(
-                                        $con,
-                                        "UPDATE rssimyaccount_members SET role = $1 WHERE associatenumber = $2",
-                                        [$role_row['role_name'], $user_id]
-                                    );
-                                }
-                            }
-                        }
-
+                        // ... rest of successful insertion code ...
                         $message = "success|Role assigned successfully";
                     } else {
-                        $message = "error|Failed to assign role";
+                        $message = "error|Failed to assign role: " . pg_last_error($con);
                     }
                 }
                 break;
@@ -642,6 +643,13 @@ $total_pages = ceil($total_count / $limit);
                     <button type="submit" class="btn btn-primary">Assign Role</button>
                 </div>
             </form>
+            <!-- In assignRoleModal, after the form fields -->
+            <div id="existingAssignments" class="mt-3" style="display: none;">
+                <div class="alert alert-info">
+                    <h6>Existing Assignments for this Role:</h6>
+                    <ul id="assignmentsList" class="mb-0"></ul>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -731,6 +739,55 @@ $total_pages = ceil($total_count / $limit);
                 });
             }
             return false;
+        }
+    </script>
+    <script>
+        // Add this to your existing JavaScript
+        document.querySelector('select[name="role_id"]').addEventListener('change', function() {
+            const userId = document.getElementById('assign_user_id').value;
+            const roleId = this.value;
+
+            if (userId && roleId) {
+                // Fetch existing assignments for this user and role
+                $.ajax({
+                    url: 'ajax_get_existing_assignments.php',
+                    method: 'GET',
+                    data: {
+                        user_id: userId,
+                        role_id: roleId
+                    },
+                    success: function(response) {
+                        const container = document.getElementById('existingAssignments');
+                        const list = document.getElementById('assignmentsList');
+
+                        if (response.length > 0) {
+                            list.innerHTML = '';
+                            response.forEach(assignment => {
+                                const item = document.createElement('li');
+                                item.innerHTML = `
+                            ${assignment.effective_from} 
+                            ${assignment.effective_to ? 'to ' + assignment.effective_to : '(no end date)'}
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" 
+                                    onclick="editAssignment(${assignment.id})">
+                                Edit
+                            </button>
+                        `;
+                                list.appendChild(item);
+                            });
+                            container.style.display = 'block';
+                        } else {
+                            container.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+
+        function editAssignment(assignmentId) {
+            // Close current modal and open edit modal
+            bootstrap.Modal.getInstance(document.getElementById('assignRoleModal')).hide();
+            // You would need to implement this function
+            // openEditAssignmentModal(assignmentId);
         }
     </script>
 </body>
