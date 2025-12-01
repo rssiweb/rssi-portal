@@ -40,6 +40,7 @@ if ($_POST) {
 // Get filter parameters
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'active';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'hr-policy'; // Get active tab from URL
 
 // Build the query based on filters
 $query = "SELECT * FROM policy WHERE ";
@@ -206,17 +207,17 @@ $resultArr = pg_fetch_all($result);
                                             <span class="input-help">
                                                 <select name="policytype" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($category == null) { ?>
-                                                        <option disabled selected hidden>Category</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $category ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <option>Internal</option>
-                                                    <option>Confidential</option>
-                                                    <option>Public</option>
-                                                    <option>HR Policy</option>
+                                                        <option value="" disabled selected hidden>Category</option>
+                                                    <?php } else { ?>
+                                                        <option value="<?php echo $category ?>" selected hidden><?php echo $category ?></option>
+                                                    <?php } ?>
+
+                                                    <option value="Internal">Internal</option>
+                                                    <option value="Confidential">Confidential</option>
+                                                    <option value="Public">Public</option>
+                                                    <option value="HR Policy">HR Policy</option>
                                                 </select>
+
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
                                             </span>
 
@@ -265,15 +266,15 @@ $resultArr = pg_fetch_all($result);
                                 </form>
 
                                 <div class="filter-buttons mb-3">
-                                    <a href="resourcehub.php?filter=active<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
+                                    <a href="?tab=<?php echo $active_tab; ?>&filter=active<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
                                         class="btn btn-sm btn-filter <?php echo $filter == 'active' ? 'btn-primary' : 'btn-outline-primary'; ?>">
                                         Active
                                     </a>
-                                    <a href="resourcehub.php?filter=inactive<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
+                                    <a href="?tab=<?php echo $active_tab; ?>&filter=inactive<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
                                         class="btn btn-sm btn-filter <?php echo $filter == 'inactive' ? 'btn-primary' : 'btn-outline-primary'; ?>">
                                         Inactive
                                     </a>
-                                    <a href="resourcehub.php?filter=all<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
+                                    <a href="?tab=<?php echo $active_tab; ?>&filter=all<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
                                         class="btn btn-sm btn-filter <?php echo $filter == 'all' ? 'btn-primary' : 'btn-outline-primary'; ?>">
                                         All
                                     </a>
@@ -283,20 +284,36 @@ $resultArr = pg_fetch_all($result);
                             <!-- Tabs for HR Policy and Other Policies -->
                             <ul class="nav nav-tabs" id="policyTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link <?php echo (!isset($_GET['tab']) || (isset($_GET['tab']) && $_GET['tab'] == 'hr-policy')) ? 'active' : ''; ?>" id="hr-policy-tab" data-bs-toggle="tab" data-bs-target="#hr-policy" type="button" role="tab" aria-controls="hr-policy" aria-selected="true">
+                                    <a href="?tab=hr-policy&filter=<?php echo $filter; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
+                                        class="nav-link <?php echo ($active_tab == 'hr-policy') ? 'active' : ''; ?>"
+                                        id="hr-policy-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#hr-policy"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="hr-policy"
+                                        aria-selected="<?php echo ($active_tab == 'hr-policy') ? 'true' : 'false'; ?>">
                                         HR Policies
-                                    </button>
+                                    </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'other-policy') ? 'active' : ''; ?>" id="other-policy-tab" data-bs-toggle="tab" data-bs-target="#other-policy" type="button" role="tab" aria-controls="other-policy" aria-selected="false">
+                                    <a href="?tab=other-policy&filter=<?php echo $filter; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
+                                        class="nav-link <?php echo ($active_tab == 'other-policy') ? 'active' : ''; ?>"
+                                        id="other-policy-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#other-policy"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="other-policy"
+                                        aria-selected="<?php echo ($active_tab == 'other-policy') ? 'true' : 'false'; ?>">
                                         Other Documents
-                                    </button>
+                                    </a>
                                 </li>
                             </ul>
 
                             <div class="tab-content" id="policyTabsContent">
                                 <!-- HR Policy Tab -->
-                                <div class="tab-pane fade <?php echo (!isset($_GET['tab']) || (isset($_GET['tab']) && $_GET['tab'] == 'hr-policy')) ? 'show active' : ''; ?>" id="hr-policy" role="tabpanel" aria-labelledby="hr-policy-tab">
+                                <div class="tab-pane fade <?php echo ($active_tab == 'hr-policy') ? 'show active' : ''; ?>" id="hr-policy" role="tabpanel" aria-labelledby="hr-policy-tab">
                                     <div class="table-responsive">
                                         <table class="table hr-policy-table" id="hr-policy-table">
                                             <thead>
@@ -402,7 +419,7 @@ $resultArr = pg_fetch_all($result);
                                 </div>
 
                                 <!-- Other Policy Tab -->
-                                <div class="tab-pane fade <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'other-policy') ? 'show active' : ''; ?>" id="other-policy" role="tabpanel" aria-labelledby="other-policy-tab">
+                                <div class="tab-pane fade <?php echo ($active_tab == 'other-policy') ? 'show active' : ''; ?>" id="other-policy" role="tabpanel" aria-labelledby="other-policy-tab">
                                     <div class="table-responsive">
                                         <table class="table other-policy-table" id="other-policy-table">
                                             <thead>
@@ -513,30 +530,48 @@ $resultArr = pg_fetch_all($result);
                                 var searchTerm = "<?php echo $search ?>";
                                 var searchInHrPolicies = <?php echo $searchInHrPolicies ? 'true' : 'false' ?>;
                                 var searchInOtherPolicies = <?php echo $searchInOtherPolicies ? 'true' : 'false' ?>;
+                                var activeTab = "<?php echo isset($_GET['tab']) ? $_GET['tab'] : 'hr-policy'; ?>";
+                                var currentFilter = "<?php echo isset($_GET['filter']) ? $_GET['filter'] : 'active'; ?>";
 
                                 // Switch to the tab with search results if applicable
                                 $(document).ready(function() {
-                                    // If we have a search term, switch to the appropriate tab
+                                    // Set the active tab based on URL parameter
+                                    if (activeTab === 'hr-policy') {
+                                        $('#hr-policy-tab').tab('show');
+                                    } else if (activeTab === 'other-policy') {
+                                        $('#other-policy-tab').tab('show');
+                                    }
+
+                                    // If we have a search term, switch to the appropriate tab (overrides URL if needed)
                                     if (searchTerm) {
                                         if (searchInHrPolicies && !searchInOtherPolicies) {
                                             // Only HR policies have matches
                                             $('#hr-policy-tab').tab('show');
                                             $('#activeTabInput').val('hr-policy');
+                                            updateUrlTabParam('hr-policy');
                                         } else if (searchInOtherPolicies && !searchInHrPolicies) {
                                             // Only other policies have matches
                                             $('#other-policy-tab').tab('show');
                                             $('#activeTabInput').val('other-policy');
+                                            updateUrlTabParam('other-policy');
                                         }
-                                        // If both have matches, stay on the current tab or use the tab parameter from URL
+                                        // If both have matches, stay on the current tab from URL
                                     }
 
-                                    // Update the active tab input when tabs are changed
-                                    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                                    // Update the active tab input and URL when tabs are changed
+                                    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
                                         var target = $(e.target).attr("data-bs-target");
+                                        var tabValue = '';
+
                                         if (target === "#hr-policy") {
-                                            $('#activeTabInput').val('hr-policy');
+                                            tabValue = 'hr-policy';
                                         } else if (target === "#other-policy") {
-                                            $('#activeTabInput').val('other-policy');
+                                            tabValue = 'other-policy';
+                                        }
+
+                                        if (tabValue) {
+                                            $('#activeTabInput').val(tabValue);
+                                            updateUrlTabParam(tabValue);
                                         }
                                     });
 
@@ -544,14 +579,18 @@ $resultArr = pg_fetch_all($result);
                                     <?php if (!empty($hrPolicies)) : ?>
                                         $('#hr-policy-table').DataTable({
                                             "order": [], // Disable initial sorting
-                                            "searching": false // Disable DataTables search as we have our own
+                                            "searching": false, // Disable DataTables search as we have our own
+                                            "stateSave": true,
+                                            "stateDuration": -1
                                         });
                                     <?php endif; ?>
 
                                     <?php if (!empty($otherPolicies)) : ?>
                                         $('#other-policy-table').DataTable({
                                             "order": [], // Disable initial sorting
-                                            "searching": false // Disable DataTables search as we have our own
+                                            "searching": false, // Disable DataTables search as we have our own
+                                            "stateSave": true,
+                                            "stateDuration": -1
                                         });
                                     <?php endif; ?>
 
@@ -564,7 +603,38 @@ $resultArr = pg_fetch_all($result);
                                             }
                                         });
                                     }
+
+                                    // Handle browser back/forward buttons
+                                    window.addEventListener('popstate', function() {
+                                        var urlParams = new URLSearchParams(window.location.search);
+                                        var tabParam = urlParams.get('tab') || 'hr-policy';
+
+                                        // Show the correct tab based on URL
+                                        if (tabParam === 'hr-policy') {
+                                            $('#hr-policy-tab').tab('show');
+                                        } else if (tabParam === 'other-policy') {
+                                            $('#other-policy-tab').tab('show');
+                                        }
+                                    });
                                 });
+
+                                // Function to update URL tab parameter without reloading
+                                function updateUrlTabParam(tabValue) {
+                                    var urlParams = new URLSearchParams(window.location.search);
+                                    urlParams.set('tab', tabValue);
+
+                                    // Keep other existing parameters
+                                    if (!urlParams.has('filter') && currentFilter) {
+                                        urlParams.set('filter', currentFilter);
+                                    }
+
+                                    if (searchTerm && !urlParams.has('search')) {
+                                        urlParams.set('search', searchTerm);
+                                    }
+
+                                    var newUrl = window.location.pathname + '?' + urlParams.toString();
+                                    history.pushState(null, '', newUrl);
+                                }
 
                                 data.forEach(item => {
                                     const form = document.getElementById('edit_' + item.policyid);
@@ -587,8 +657,23 @@ $resultArr = pg_fetch_all($result);
                                                     method: 'POST',
                                                     body: new FormData(document.forms['policybody_' + item.policyid])
                                                 })
-                                                .then(response => alert("Record has been updated.") +
-                                                    location.reload())
+                                                .then(response => {
+                                                    // Preserve tab parameter when reloading
+                                                    var urlParams = new URLSearchParams(window.location.search);
+                                                    var currentTab = urlParams.get('tab') || 'hr-policy';
+                                                    var currentFilter = urlParams.get('filter') || 'active';
+                                                    var currentSearch = urlParams.get('search') || '';
+
+                                                    var reloadUrl = 'resourcehub.php?tab=' + currentTab +
+                                                        '&filter=' + currentFilter;
+
+                                                    if (currentSearch) {
+                                                        reloadUrl += '&search=' + encodeURIComponent(currentSearch);
+                                                    }
+
+                                                    alert("Record has been updated.");
+                                                    window.location.href = reloadUrl;
+                                                })
                                                 .catch(error => console.error('Error!', error.message))
                                         })
                                     }
@@ -614,7 +699,20 @@ $resultArr = pg_fetch_all($result);
                                                 .then(response => response.json())
                                                 .then(data => {
                                                     if (data.success) {
-                                                        window.location.reload();
+                                                        // Preserve tab parameter when reloading
+                                                        var urlParams = new URLSearchParams(window.location.search);
+                                                        var currentTab = urlParams.get('tab') || 'hr-policy';
+                                                        var currentFilter = urlParams.get('filter') || 'active';
+                                                        var currentSearch = urlParams.get('search') || '';
+
+                                                        var reloadUrl = 'resourcehub.php?tab=' + currentTab +
+                                                            '&filter=' + currentFilter;
+
+                                                        if (currentSearch) {
+                                                            reloadUrl += '&search=' + encodeURIComponent(currentSearch);
+                                                        }
+
+                                                        window.location.href = reloadUrl;
                                                     } else {
                                                         alert('Error updating document status: ' + (data.error || 'Unknown error'));
                                                     }
