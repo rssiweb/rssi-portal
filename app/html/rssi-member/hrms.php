@@ -101,7 +101,7 @@ if ($result) {
 ?>
 <?php
 // Query the database to get the available roles (excluding inactive roles)
-$query = "SELECT role_name FROM roles WHERE is_inactive = FALSE";
+$query = "SELECT role_name FROM roles WHERE is_active = TRUE";
 $result = pg_query($con, $query);
 
 // Generate the role options
