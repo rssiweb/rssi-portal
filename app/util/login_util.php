@@ -311,6 +311,116 @@ function checkHRMSValidation($associatenumber, $currentPage)
     }
 }
 
+function isRoleActive($associatenumber, $current_role)
+{
+    global $con;
+
+    if (empty($current_role)) {
+        return [
+            'is_active' => false,
+            'has_active_roles' => false,
+            'message' => 'No role assigned'
+        ];
+    }
+
+    // Check if current role is still active
+    $query = "
+        SELECT COUNT(*) as count
+        FROM associate_roles ar
+        JOIN roles r ON r.id = ar.role_id
+        WHERE ar.associatenumber = $1
+          AND r.role_name = $2
+          AND ar.effective_from <= CURRENT_DATE
+          AND (ar.effective_to IS NULL OR ar.effective_to >= CURRENT_DATE)
+    ";
+
+    $result = pg_query_params($con, $query, [$associatenumber, $current_role]);
+
+    if ($result && pg_num_rows($result) > 0) {
+        $row = pg_fetch_assoc($result);
+        $is_active = ($row['count'] > 0);
+
+        return [
+            'is_active' => $is_active,
+            'message' => $is_active ? 'Role is active' : 'Role is no longer active'
+        ];
+    }
+
+    return [
+        'is_active' => false,
+        'message' => 'Unable to verify role'
+    ];
+}
+
+function getUserActiveRoles($associatenumber)
+{
+    global $con;
+
+    $query = "
+        SELECT r.id, r.role_name
+        FROM associate_roles ar
+        JOIN roles r ON r.id = ar.role_id
+        WHERE ar.associatenumber = $1
+          AND ar.effective_from <= CURRENT_DATE
+          AND (ar.effective_to IS NULL OR ar.effective_to >= CURRENT_DATE)
+        ORDER BY r.role_name ASC
+    ";
+
+    $result = pg_query_params($con, $query, [$associatenumber]);
+    $active_roles = [];
+
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            $active_roles[] = [
+                'id' => $row['id'],
+                'role_name' => $row['role_name']
+            ];
+        }
+    }
+
+    return $active_roles;
+}
+
+function checkAndRedirectRoleValidity()
+{
+    global $associatenumber, $role;
+    
+    if (!isset($associatenumber)) {
+        return; // Nothing to check
+    }
+    
+    // Get user's active roles
+    $active_roles = getUserActiveRoles($associatenumber);
+    
+    if (empty($active_roles)) {
+        // No active roles at all - show alert and redirect
+        echo '<script type="text/javascript">';
+        echo 'alert("Your account has no active roles assigned. Please contact support to assign a role.");';
+        echo 'window.location.href = "logout.php";';
+        echo '</script>';
+        exit();
+    } else {
+        // User has active roles, check if current role is valid
+        
+        // If $role is null/empty, they need to select a role
+        if (empty($role)) {
+            header("Location: force_role_update.php");
+            exit();
+        }
+        
+        // Check if current role is active
+        $role_check = isRoleActive($associatenumber, $role);
+        
+        if (!$role_check['is_active']) {
+            // Current role is not active, but they have other active roles
+            header("Location: force_role_update.php");
+            exit();
+        }
+        
+        // Role is valid, do nothing
+    }
+}
+
 function validation()
 {
     global $password_updated_by;
@@ -320,10 +430,14 @@ function validation()
     global $twofa_enabled; // added to check 2FA setup
     global $twofa_secret; // added to check 2FA setup
     global $absconding; // added to check absconding status
+    global $role;
     // Check default password
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
     checkTwoFA($twofa_enabled, $twofa_secret);
     checkAbsconding($absconding);
+
+    // Check role validity (NEW ADDITION - add this line)
+    checkAndRedirectRoleValidity();
 
     $checkPageAccessResult = checkPageAccess();
     if ($checkPageAccessResult != "allow") {

@@ -716,6 +716,11 @@
             </a>
           </li>
           <li>
+            <a id="admin_role_management" href="admin_role_management.php">
+              <span>RMC</span>
+            </a>
+          </li>
+          <li>
             <a id="amsLink" href="ams.php">
               <span>Announcement</span>
             </a>
@@ -1067,6 +1072,14 @@
         id: 'work',
         linkId: 'pmsLink',
         url: 'pms.php'
+      },{
+        id: 'work',
+        linkId: 'admin_role_management',
+        url: 'admin_role_management.php'
+      },{
+        id: 'work',
+        linkId: 'admin_role_management',
+        url: 'admin_role_audit.php'
       },
       {
         id: 'work',
