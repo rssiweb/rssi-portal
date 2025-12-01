@@ -34,8 +34,8 @@ $sixMonths = date('Y-m-d', strtotime('+6 months', strtotime($currentDate)));
 
 // Write sample rows with correct date format
 $sampleRows = [
-    ['STU001', 'Tuition Fee', '15000.00', $currentDate, $nextYear],
-    ['STU002', 'Library Fee', '2000.00', $currentDate, ''],
+    ['STU001', 'Tuition Fee', '15000.00', "'" . $currentDate, "'" . $nextYear],
+    ['STU002', 'Library Fee', '2000.00', "'" . $currentDate, ''],
 ];
 
 foreach ($sampleRows as $row) {
