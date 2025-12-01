@@ -529,6 +529,72 @@ if (!empty($statusCondition)) {
         .table tbody tr.inactive-fee {
             cursor: default;
         }
+
+        /* CSV Import Styles */
+        .csv-template-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+        }
+
+        .csv-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .csv-upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+        .csv-upload-area.dragover {
+            border-color: #198754;
+            background-color: #e8f5e9;
+        }
+
+        .csv-preview-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .import-summary {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .import-success {
+            background-color: #d1e7dd;
+            border-left: 4px solid #198754;
+        }
+
+        .import-error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .import-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        /* Template download button */
+        .btn-template {
+            background-color: #20c997;
+            border-color: #20c997;
+            color: white;
+        }
+
+        .btn-template:hover {
+            background-color: #199d76;
+            border-color: #199d76;
+            color: white;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -879,6 +945,92 @@ if (!empty($statusCondition)) {
                                                         </div>
                                                     </div>
                                                 </form>
+                                                <!-- Add this after the Assign Fee form in the Student Specific tab -->
+                                                <div class="card mb-4 shadow-sm">
+                                                    <div class="card-header bg-info text-white">
+                                                        <i class="fas fa-file-import me-2"></i> Bulk Import via CSV
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="alert alert-info">
+                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            <strong>Instructions:</strong>
+                                                            1. Download the template CSV file.<br>
+                                                            2. Fill in the data (remove sample rows).<br>
+                                                            3. Upload the CSV file here.
+                                                            <a href="download_csv_template.php" class="btn btn-sm btn-outline-light ms-2">
+                                                                <i class="fas fa-download me-1"></i> Download Template
+                                                            </a>
+                                                        </div>
+
+                                                        <form method="post" action="process_csv_import.php" enctype="multipart/form-data" id="csvImportForm">
+                                                            <div class="row mb-3">
+                                                                <div class="col-md-6">
+                                                                    <label for="csv_file" class="form-label">Select CSV File</label>
+                                                                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                                                                    <div class="form-text">Only CSV files are allowed. Max size: 10MB</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label">Action</label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="import_action" id="previewOnly" value="preview" checked>
+                                                                        <label class="form-check-label" for="previewOnly">
+                                                                            Preview Only (Don't Import)
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="import_action" id="importData" value="import">
+                                                                        <label class="form-check-label" for="importData">
+                                                                            Import Data
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <label for="effective_from_csv" class="form-label">Default Effective From (if not specified in CSV)</label>
+                                                                    <input type="date" class="form-control" id="effective_from_csv" name="effective_from_csv"
+                                                                        value="<?= date('Y-m-01') ?>" required>
+                                                                </div>
+                                                                <div class="col-md-6 d-flex align-items-end">
+                                                                    <button type="submit" class="btn btn-info" name="import_csv">
+                                                                        <i class="fas fa-upload me-1"></i> Upload & Process CSV
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+
+                                                        <!-- Preview Table (will be populated via AJAX) -->
+                                                        <div id="csvPreview" class="mt-4" style="display: none;">
+                                                            <h5><i class="fas fa-eye me-2"></i>CSV Preview</h5>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-bordered" id="previewTable">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th>Student ID</th>
+                                                                            <th>Student Name</th>
+                                                                            <th>Class</th>
+                                                                            <th>Category</th>
+                                                                            <th>Amount</th>
+                                                                            <th>Effective From</th>
+                                                                            <th>Effective Until</th>
+                                                                            <th>Status</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="previewBody">
+                                                                        <!-- Preview rows will be inserted here -->
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between mt-3">
+                                                                <div id="previewSummary"></div>
+                                                                <button type="button" class="btn btn-success" id="confirmImport" style="display: none;">
+                                                                    <i class="fas fa-check me-1"></i> Confirm Import
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <!-- Student Specific Fees Table -->
                                                 <div>
                                                     <h5 class="mb-3"><i class="fas fa-user-graduate me-2"></i>Student Specific Fees</h5>
@@ -1602,6 +1754,158 @@ if (!empty($statusCondition)) {
             if (urlTab && !document.querySelector('.nav-link.active')) {
                 activateTabFromQuery();
             }
+        });
+    </script>
+    <script>
+        // CSV Import Functionality
+        $(document).ready(function() {
+            // CSV Import form submission
+            $('#csvImportForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(this);
+
+                // Show loading state
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...');
+
+                $.ajax({
+                    url: 'process_csv_import.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    // In the success callback of your AJAX call, update this part:
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).html(originalText);
+
+                        if (response.success) {
+                            displayCSVPreview(response.data, response.summary);
+
+                            if (response.message) {
+                                // Show message in a better way
+                                const alertDiv = $('<div class="alert alert-info alert-dismissible fade show" role="alert">' +
+                                    '<i class="fas fa-info-circle me-2"></i>' + response.message +
+                                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                    '</div>');
+                                $('#csvPreview').before(alertDiv);
+                            }
+
+                            // Show errors if any
+                            if (response.errors && response.errors.length > 0) {
+                                const errorDiv = $('<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                    '<h5><i class="fas fa-exclamation-triangle me-2"></i>Validation Errors</h5>' +
+                                    '<ul class="mb-0">' +
+                                    response.errors.slice(0, 5).map(error => '<li>' + error + '</li>').join('') +
+                                    '</ul>' +
+                                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                    '</div>');
+                                $('#csvPreview').before(errorDiv);
+                            }
+
+                            if (form.find('input[name="import_action"]:checked').val() === 'preview') {
+                                $('#confirmImport').show().off('click').on('click', function() {
+                                    if (confirm(`About to import ${response.summary.valid_rows} records. Continue?`)) {
+                                        form.find('#importData').prop('checked', true);
+                                        $('#csvImportForm').submit();
+                                    }
+                                });
+                            } else {
+                                // Show success message
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            }
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error); // Debug log
+                        submitBtn.prop('disabled', false).html(originalText);
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            });
+
+            function displayCSVPreview(data, summary) {
+                console.log('Displaying preview:', data, summary); // Debug log
+
+                const previewBody = $('#previewBody');
+                previewBody.empty();
+
+                data.forEach(record => {
+                    const rowClass = record.is_valid ? '' : 'table-danger';
+                    const statusClass = record.status === 'Error' ? 'badge bg-danger' :
+                        record.status === 'Imported' ? 'badge bg-success' :
+                        record.status === 'Pending' ? 'badge bg-warning' : 'badge bg-secondary';
+
+                    const row = `
+                <tr class="${rowClass}">
+                    <td>${escapeHtml(record.student_id)}</td>
+                    <td>${escapeHtml(record.student_name || 'N/A')}</td>
+                    <td>${escapeHtml(record.class || 'N/A')}</td>
+                    <td>${escapeHtml(record.category_name)}</td>
+                    <td>₹${parseFloat(record.amount || 0).toFixed(2)}</td>
+                    <td>${escapeHtml(record.effective_from)}</td>
+                    <td>${escapeHtml(record.effective_until || 'N/A')}</td>
+                    <td><span class="${statusClass}">${escapeHtml(record.status)}</span></td>
+                </tr>
+            `;
+                    previewBody.append(row);
+                });
+
+                // Update summary
+                const summaryHtml = `
+            <div class="alert alert-light">
+                <strong>Summary:</strong><br>
+                Total Rows: ${summary.total_rows}<br>
+                Valid Rows: <span class="text-success">${summary.valid_rows}</span><br>
+                Errors: <span class="text-danger">${summary.error_rows}</span>
+            </div>
+        `;
+                $('#previewSummary').html(summaryHtml);
+
+                // Show preview section
+                $('#csvPreview').show();
+            }
+
+            function escapeHtml(text) {
+                if (text === null || text === undefined) return '';
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.toString().replace(/[&<>"']/g, function(m) {
+                    return map[m];
+                });
+            }
+
+            // File input validation
+            $('#csv_file').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Check file extension
+                    const fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith('.csv')) {
+                        alert('Please select a CSV file');
+                        $(this).val('');
+                    }
+
+                    // Check file size
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        alert('File size exceeds 10MB limit');
+                        $(this).val('');
+                    }
+                }
+            });
         });
     </script>
 </body>
