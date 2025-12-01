@@ -1760,11 +1760,15 @@ if (!empty($statusCondition)) {
         // CSV Import Functionality
         $(document).ready(function() {
             // CSV Import form submission
+            // CSV Import form submission
             $('#csvImportForm').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
                 const formData = new FormData(this);
+
+                // Store formData globally so it can be reused for confirm import
+                window.csvFormData = formData;
 
                 // Show loading state
                 const submitBtn = form.find('button[type="submit"]');
@@ -1778,7 +1782,6 @@ if (!empty($statusCondition)) {
                     processData: false,
                     contentType: false,
                     dataType: 'json',
-                    // In the success callback of your AJAX call, update this part:
                     success: function(response) {
                         submitBtn.prop('disabled', false).html(originalText);
 
@@ -1809,12 +1812,65 @@ if (!empty($statusCondition)) {
                             if (form.find('input[name="import_action"]:checked').val() === 'preview') {
                                 $('#confirmImport').show().off('click').on('click', function() {
                                     if (confirm(`About to import ${response.summary.valid_rows} records. Continue?`)) {
-                                        form.find('#importData').prop('checked', true);
-                                        $('#csvImportForm').submit();
+                                        // Disable the button and show spinner
+                                        const confirmBtn = $(this);
+                                        const originalText = confirmBtn.html();
+                                        confirmBtn.prop('disabled', true)
+                                            .html('<i class="fas fa-spinner fa-spin me-1"></i> Inserting...');
+
+                                        // Create new form data for import (reuse the stored one)
+                                        const importFormData = window.csvFormData || new FormData(form[0]);
+                                        importFormData.set('import_action', 'import');
+
+                                        // Submit for actual import
+                                        $.ajax({
+                                            url: 'process_csv_import.php',
+                                            type: 'POST',
+                                            data: importFormData,
+                                            processData: false,
+                                            contentType: false,
+                                            dataType: 'json',
+                                            success: function(importResponse) {
+                                                if (importResponse.success) {
+                                                    // Show success message
+                                                    const successDiv = $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                                        '<i class="fas fa-check-circle me-2"></i>' + importResponse.message +
+                                                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                                        '</div>');
+                                                    $('#csvPreview').before(successDiv);
+
+                                                    // Update preview with imported results
+                                                    displayCSVPreview(importResponse.data, importResponse.summary);
+
+                                                    // Hide the confirm button since import is complete
+                                                    confirmBtn.hide();
+
+                                                    // Show message that page will reload
+                                                    const reloadMsg = $('<div class="alert alert-info alert-dismissible fade show mt-2" role="alert">' +
+                                                        '<i class="fas fa-info-circle me-2"></i>Page will reload in 3 seconds to show updated data.' +
+                                                        '</div>');
+                                                    $('#csvPreview').before(reloadMsg);
+
+                                                    // Reload page after 3 seconds to show updated data
+                                                    setTimeout(() => {
+                                                        window.location.reload();
+                                                    }, 3000);
+                                                } else {
+                                                    // Re-enable button and show error
+                                                    confirmBtn.prop('disabled', false).html(originalText);
+                                                    alert('Error: ' + importResponse.message);
+                                                }
+                                            },
+                                            error: function(xhr, status, error) {
+                                                // Re-enable button on error
+                                                confirmBtn.prop('disabled', false).html(originalText);
+                                                alert('Import failed: ' + error);
+                                            }
+                                        });
                                     }
                                 });
                             } else {
-                                // Show success message
+                                // Show success message for direct import
                                 setTimeout(() => {
                                     window.location.reload();
                                 }, 1500);
@@ -1824,7 +1880,7 @@ if (!empty($statusCondition)) {
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('AJAX error:', status, error); // Debug log
+                        console.error('AJAX error:', status, error);
                         submitBtn.prop('disabled', false).html(originalText);
                         alert('An error occurred: ' + error);
                     }
