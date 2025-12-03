@@ -9,6 +9,7 @@ ob_start();
 
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/email.php");
+include(__DIR__ . "/../util/drive.php");
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
@@ -118,65 +119,46 @@ try {
 
     error_log("Recruiter found - ID: $recruiter_id, Name: $recruiter_name, Company: $company_name");
 
-    // Handle job file upload
-    $job_file_path = '';
+    // Handle job file upload to Google Drive (optional)
+    $job_drive_link = null;
+    $job_file_name = null;
+
     if (isset($_FILES['job_file']) && $_FILES['job_file']['error'] == UPLOAD_ERR_OK) {
-        $upload_dir = __DIR__ . '/../uploads/jobs/';
-        if (!file_exists($upload_dir)) {
-            if (!mkdir($upload_dir, 0755, true)) {
-                error_log("Failed to create jobs upload directory: $upload_dir");
-                // Don't throw exception, continue without file
-            }
+        $uploadedJobFile = $_FILES['job_file'];
+
+        // Check file size (5MB)
+        if ($uploadedJobFile['size'] > 5242880) {
+            throw new Exception('Job file size must be less than 5MB');
         }
 
-        if (file_exists($upload_dir)) {
-            $original_name = basename($_FILES['job_file']['name']);
-            $file_name = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_name);
-            $target_file = $upload_dir . $file_name;
+        // Allow certain file formats
+        $allowed_job_types = ['pdf', 'doc', 'docx'];
+        $original_job_name = basename($uploadedJobFile['name']);
+        $job_file_type = strtolower(pathinfo($original_job_name, PATHINFO_EXTENSION));
 
-            // Check file size (5MB)
-            if ($_FILES['job_file']['size'] > 5242880) {
-                throw new Exception('File size must be less than 5MB');
-            }
-
-            // Allow certain file formats
-            $allowed_types = ['pdf', 'doc', 'docx'];
-            $file_type = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
-
-            if (!in_array($file_type, $allowed_types)) {
-                throw new Exception('Only PDF, DOC, DOCX files are allowed');
-            }
-
-            // Check MIME type
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime_type = finfo_file($finfo, $_FILES['job_file']['tmp_name']);
-            finfo_close($finfo);
-
-            $allowed_mimes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ];
-
-            if (!in_array($mime_type, $allowed_mimes)) {
-                throw new Exception('Invalid file type');
-            }
-
-            if (move_uploaded_file($_FILES['job_file']['tmp_name'], $target_file)) {
-                $job_file_path = 'uploads/jobs/' . $file_name;
-                error_log("Job file uploaded successfully: " . $job_file_path);
-            } else {
-                $upload_error = $_FILES['job_file']['error'];
-                error_log("Job file upload failed with error code: " . $upload_error);
-                // Don't throw exception, continue without file
-            }
+        if (!in_array($job_file_type, $allowed_job_types)) {
+            throw new Exception('Only PDF, DOC, DOCX files are allowed for job description');
         }
-    } elseif (isset($_FILES['job_file'])) {
-        $upload_error = $_FILES['job_file']['error'];
-        if ($upload_error != UPLOAD_ERR_NO_FILE) {
-            error_log("Job file upload error: " . $upload_error);
+
+        // Sanitize filename for Google Drive
+        $safe_job_filename = preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_job_name);
+        $job_file_name = "job_" . time() . "_" . $recruiter_id . "_" . $safe_job_filename;
+
+        // Google Drive folder ID for job documents
+        $job_drive_folder_id = '11O8VUs9UdOtNY1hbnHh-zPKhpsXre7IM';
+
+        // Upload to Google Drive
+        $job_drive_link = uploadeToDrive($uploadedJobFile, $job_drive_folder_id, $job_file_name);
+
+        if (!$job_drive_link) {
+            error_log("Failed to upload job file to Google Drive, but continuing without it");
+            // Don't throw exception for optional file
+        } else {
+            error_log("Job file uploaded to Google Drive: " . $job_drive_link);
         }
     }
+
+    // Then in your INSERT query, use $job_drive_link instead of $job_file_path
 
     // Insert job post
     $query = "INSERT INTO job_posts (recruiter_id, job_title, job_type, location, salary, job_description, requirements, experience, vacancies, apply_by, job_file_path) 
@@ -195,7 +177,7 @@ try {
         $experience,
         $vacancies,
         $apply_by,
-        $job_file_path
+        $job_drive_link
     ]);
 
     if (!$result) {

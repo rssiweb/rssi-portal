@@ -9,6 +9,7 @@ ob_start();
 
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/email.php");
+include(__DIR__ . "/../util/drive.php");
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
@@ -92,28 +93,21 @@ try {
         throw new Exception('Aadhar number already registered');
     }
 
-    // Handle file upload
-    $aadhar_file_path = '';
-    if (isset($_FILES['aadhar_file']) && $_FILES['aadhar_file']['error'] == UPLOAD_ERR_OK) {
-        $upload_dir = __DIR__ . '/../uploads/aadhar/';
-        if (!file_exists($upload_dir)) {
-            if (!mkdir($upload_dir, 0755, true)) {
-                throw new Exception('Failed to create upload directory');
-            }
-        }
+    // Handle Aadhar file upload to Google Drive
+    $aadhar_drive_link = null;
+    $aadhar_file_name = null;
 
-        // Sanitize filename
-        $original_name = basename($_FILES['aadhar_file']['name']);
-        $file_name = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_name);
-        $target_file = $upload_dir . $file_name;
+    if (isset($_FILES['aadhar_file']) && $_FILES['aadhar_file']['error'] == UPLOAD_ERR_OK) {
+        $uploadedFile = $_FILES['aadhar_file'];
 
         // Check file size (2MB)
-        if ($_FILES['aadhar_file']['size'] > 2097152) {
+        if ($uploadedFile['size'] > 2097152) {
             throw new Exception('File size must be less than 2MB');
         }
 
         // Allow certain file formats
         $allowed_types = ['pdf', 'jpg', 'jpeg', 'png'];
+        $original_name = basename($uploadedFile['name']);
         $file_type = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
 
         if (!in_array($file_type, $allowed_types)) {
@@ -122,7 +116,7 @@ try {
 
         // Check MIME type for extra security
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime_type = finfo_file($finfo, $_FILES['aadhar_file']['tmp_name']);
+        $mime_type = finfo_file($finfo, $uploadedFile['tmp_name']);
         finfo_close($finfo);
 
         $allowed_mimes = [
@@ -136,15 +130,22 @@ try {
             throw new Exception('Invalid file type');
         }
 
-        if (move_uploaded_file($_FILES['aadhar_file']['tmp_name'], $target_file)) {
-            // Store relative path for database
-            $aadhar_file_path = 'uploads/aadhar/' . $file_name;
-            error_log("File uploaded successfully: " . $aadhar_file_path);
-        } else {
-            $upload_error = $_FILES['aadhar_file']['error'];
-            error_log("File upload failed with error code: " . $upload_error);
-            throw new Exception('Failed to upload file. Error code: ' . $upload_error);
+        // Sanitize filename for Google Drive
+        $safe_filename = preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_name);
+        $aadhar_file_name = "aadhar_" . time() . "_" . substr($aadhar_number, -4) . "_" . $safe_filename;
+
+        // Google Drive folder ID for Aadhar documents (create this folder in your Drive)
+        // Replace with your actual Google Drive folder ID
+        $drive_folder_id = '1LqQxq0V9DW6sRhlJL6ZW93eQHbV3OoUP';
+
+        // Upload to Google Drive
+        $aadhar_drive_link = uploadeToDrive($uploadedFile, $drive_folder_id, $aadhar_file_name);
+
+        if (!$aadhar_drive_link) {
+            throw new Exception('Failed to upload Aadhar file to Google Drive. Please try again.');
         }
+
+        error_log("Aadhar file uploaded to Google Drive: " . $aadhar_drive_link);
     } else {
         $upload_error = $_FILES['aadhar_file']['error'] ?? 'No file uploaded';
         error_log("File upload error: " . $upload_error);
@@ -163,7 +164,7 @@ try {
         $company_name,
         $phone,
         $aadhar_number,
-        $aadhar_file_path,
+        $aadhar_drive_link, // Store Google Drive link instead of local path
         $company_address
     ]);
 
