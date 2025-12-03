@@ -37,7 +37,9 @@ $job = pg_fetch_assoc($result);
 
 // Format dates
 $created_date = date('d/m/Y g:i a', strtotime($job['created_at']));
-$updated_date = date('d/m/Y g:i a', strtotime($job['updated_at']));
+$updated_date = !empty($job['updated_at'])
+    ? date('d/m/Y g:i a', strtotime($job['updated_at']))
+    : 'Not specified';
 $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
 ?>
 

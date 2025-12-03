@@ -1,157 +1,33 @@
-<!DOCTYPE html>
+Job Post Rejected - Job ID: {{job_id}}
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Job Post Rejected - RSSI Recruitment</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e74c3c;
-            margin-bottom: 30px;
-        }
-        .logo {
-            max-width: 150px;
-            margin-bottom: 20px;
-        }
-        .alert-icon {
-            color: #e74c3c;
-            font-size: 48px;
-            margin: 20px 0;
-        }
-        .job-details {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 4px solid #e74c3c;
-        }
-        .detail-item {
-            margin-bottom: 10px;
-        }
-        .detail-label {
-            font-weight: bold;
-            color: #555;
-            display: inline-block;
-            width: 120px;
-        }
-        .rejection-box {
-            background-color: #ffeaea;
-            border: 1px solid #e74c3c;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        .cta-button {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 5px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            text-align: center;
-            color: #777;
-            font-size: 14px;
-        }
-        .support-info {
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-    </style>
-</head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="alert-icon">⚠️</div>
-            <h1 style="color: #e74c3c; margin: 0;">Job Post Rejected</h1>
-            <p style="color: #666; margin-top: 10px;">RSSI Recruitment Portal</p>
-        </div>
 
-        <p>Dear {recruiter_name},</p>
-        
-        <p>We regret to inform you that your job post has been reviewed and rejected by our admin team.</p>
+    <p>Dear {{recruiter_name}},</p>
 
-        <div class="job-details">
-            <h3 style="color: #e74c3c; margin-top: 0;">Job Details</h3>
-            <div class="detail-item">
-                <span class="detail-label">Job Title:</span> {job_title}
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Company:</span> {company_name}
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Job ID:</span> #{job_id}
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Rejected On:</span> {rejection_date}
-            </div>
-        </div>
+    <p>Your job post has been reviewed and requires modifications.</p>
 
-        <?php if (!empty($rejection_reason)): ?>
-        <div class="rejection-box">
-            <h4 style="color: #e74c3c; margin-top: 0;">Reason for Rejection:</h4>
-            <p style="margin: 0; font-style: italic;">"{rejection_reason}"</p>
-        </div>
-        <?php endif; ?>
+    <h3>Job Details:</h3>
+    <ul>
+        <li><strong>Job Title:</strong> {{job_title}}</li>
+        <li><strong>Company:</strong> {{company_name}}</li>
+        <li><strong>Job ID:</strong> {{job_id}}</li>
+        <li><strong>Rejected Date:</strong> {{rejection_date}}</li>
+    </ul>
 
-        <p>Please review your job post and ensure it meets our <strong>posting guidelines</strong>:</p>
-        <ul>
-            <li>Complete and accurate job description</li>
-            <li>Clear job requirements and qualifications</li>
-            <li>Appropriate salary range (if specified)</li>
-            <li>Valid application deadline</li>
-            <li>Compliance with our terms of service</li>
-        </ul>
+    {{#if rejection_reason}}
+    <h3>Reason for Rejection:</h3>
+    <p>{{rejection_reason}}</p>
+    {{/if}}
 
-        <div style="text-align: center;">
-            <a href="https://rssi.in/recruiter/job_posts.php" class="cta-button">
-                View Your Job Posts
-            </a>
-        </div>
+    <p>Please review your job post and ensure it meets our posting guidelines before resubmitting.</p>
 
-        <p>If you believe this rejection was made in error, or if you have any questions, please contact our support team.</p>
+    <p>If you have any questions, please contact our support team at <a href="mailto:info@rssi.in">info@rssi.in</a> or
+        call us at +91-7980168159.</p>
 
-        <div class="support-info">
-            <p><strong>Need Help?</strong></p>
-            <p>Email: support@rssi.in<br>
-            Phone: +91-XXXXXXXXXX<br>
-            Hours: Monday-Friday, 9:00 AM - 6:00 PM IST</p>
-        </div>
-
-        <div class="footer">
-            <p>Thank you for using RSSI Recruitment Portal.</p>
-            <p>© <?php echo date('Y'); ?> RSSI Recruitment. All rights reserved.</p>
-            <p style="font-size: 12px; color: #999;">
-                This is an automated message. Please do not reply to this email.
-            </p>
-        </div>
-    </div>
+    <p style="font-size: 12px; color: #6c757d;">
+        This is a system generated notification.
+    </p>
 </body>
+
 </html>
