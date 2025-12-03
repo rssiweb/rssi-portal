@@ -100,7 +100,7 @@ try {
     
     // Send OTP email
     try {
-        $emailResult = sendEmail("otp_verification", $emailData, $email, false);
+        $emailResult = sendEmail("otp_verification_job", $emailData, $email, false);
         error_log("Email sent successfully to: $email");
     } catch (Exception $e) {
         error_log("Email sending failed: " . $e->getMessage());

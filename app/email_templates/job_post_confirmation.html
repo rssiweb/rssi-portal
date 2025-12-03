@@ -1,0 +1,119 @@
+Job Post Confirmation - Job ID: {{job_id}}
+<!-- Job Post Submission Confirmation -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
+    <title>Job Post Submission Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .job-details {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background-color: #ffc107;
+            color: #212529;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2>Job Post Submission Confirmation</h2>
+        <p>RSSI Recruitment Portal</p>
+    </div>
+
+    <div class="content">
+        <p>Dear {{recruiter_name}},</p>
+
+        <p>Thank you for submitting a job post through RSSI Recruitment Portal. Your job post has been received and is
+            currently <span class="status-badge">Pending Approval</span>.</p>
+
+        <div class="job-details">
+            <h3>Job Details:</h3>
+            <p><strong>Job Title:</strong> {{job_title}}</p>
+            <p><strong>Company:</strong> {{company_name}}</p>
+            <p><strong>Job ID:</strong> {{job_id}}</p>
+            <p><strong>Location:</strong> {{location}}</p>
+            <p><strong>Job Type:</strong> {{job_type}}</p>
+            <p><strong>Vacancies:</strong> {{vacancies}}</p>
+            <p><strong>Apply By:</strong> {{apply_by}}</p>
+            <p><strong>Submission Date:</strong> {{post_date}}</p>
+        </div>
+
+        <h4>What happens next?</h4>
+        <ol>
+            <li>Our admin team will review your job post within 24-48 hours</li>
+            <li>You will receive another email once the job is approved</li>
+            <li>Once approved, the job will be listed on our career portal</li>
+            <li>You will receive applications directly to your registered email</li>
+        </ol>
+
+        <p><strong>Note:</strong> You can track the status of your job post by logging into your account on the RSSI
+            portal.</p>
+
+        <p>If you need to make any changes to your job post or have any questions, please contact our recruitment team
+            at <a href="mailto:recruitment@rssi.in">recruitment@rssi.in</a> or call us at +91-XXXXXXXXXX.</p>
+
+        <p>Best regards,<br>
+            <strong>RSSI Recruitment Team</strong><br>
+            RSSI - Rajkot Shroffs Success Initiative
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>This is a system generated email. Please do not reply to this email.</p>
+        <p>Contact: recruitment@rssi.in | Website: <a href="https://rssi.in">https://rssi.in</a></p>
+    </div>
+</body>
+
+</html>
