@@ -131,8 +131,8 @@ try {
         }
 
         // Sanitize filename for Google Drive
-        $safe_filename = preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_name);
-        $aadhar_file_name = "aadhar_" . time() . "_" . substr($aadhar_number, -4) . "_" . $safe_filename;
+        $aadhar_file_name = "aadhar_" . time() . "_" . substr($aadhar_number, -4) . "_" .
+            preg_replace('/[^A-Za-z0-9_-]/', '_', strstr($original_name, '.', true) ?: $original_name);
 
         // Google Drive folder ID for Aadhar documents (create this folder in your Drive)
         // Replace with your actual Google Drive folder ID

@@ -141,8 +141,8 @@ try {
         }
 
         // Sanitize filename for Google Drive
-        $safe_job_filename = preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_job_name);
-        $job_file_name = "job_" . time() . "_" . $recruiter_id . "_" . $safe_job_filename;
+        $job_file_name = "job_" . time() . "_" . $recruiter_id . "_" .
+            preg_replace('/[^A-Za-z0-9_-]/', '_', strstr($original_job_name, '.', true) ?: $original_job_name);
 
         // Google Drive folder ID for job documents
         $job_drive_folder_id = '11O8VUs9UdOtNY1hbnHh-zPKhpsXre7IM';
