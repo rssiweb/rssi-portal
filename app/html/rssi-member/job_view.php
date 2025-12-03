@@ -105,7 +105,7 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            height: 100%;
+            /* height: 100%; */
         }
 
         .detail-card h6 {
@@ -151,220 +151,229 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
 
         <section class="section">
             <div class="row">
-                <div class="col-lg-12">
-                    <!-- Job Header -->
-                    <div class="job-header">
-                        <div class="container">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h2 class="mb-2"><?php echo htmlspecialchars($job['job_title']); ?></h2>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="bi bi-building me-2"></i>
-                                        <h5 class="mb-0"><?php echo htmlspecialchars($job['company_name']); ?></h5>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <span><i class="bi bi-geo-alt me-1"></i> <?php echo htmlspecialchars($job['location']); ?></span>
-                                        <span><i class="bi bi-briefcase me-1"></i> <?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></span>
-                                        <span><i class="bi bi-people me-1"></i> <?php echo $job['vacancies']; ?> Vacancies</span>
-                                        <span><i class="bi bi-calendar-check me-1"></i> Apply by: <?php echo $apply_by_date; ?></span>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="col-lg-12">
+                                <!-- Job Header -->
+                                <div class="job-header">
+                                    <div class="container">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h2 class="mb-2"><?php echo htmlspecialchars($job['job_title']); ?></h2>
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <i class="bi bi-building me-2"></i>
+                                                    <h5 class="mb-0"><?php echo htmlspecialchars($job['company_name']); ?></h5>
+                                                </div>
+                                                <div class="d-flex flex-wrap gap-3">
+                                                    <span><i class="bi bi-geo-alt me-1"></i> <?php echo htmlspecialchars($job['location']); ?></span>
+                                                    <span><i class="bi bi-briefcase me-1"></i> <?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></span>
+                                                    <span><i class="bi bi-people me-1"></i> <?php echo $job['vacancies']; ?> Vacancies</span>
+                                                    <span><i class="bi bi-calendar-check me-1"></i> Apply by: <?php echo $apply_by_date; ?></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-md-end">
+                                                <?php if ($job['status'] === 'pending'): ?>
+                                                    <span class="status-badge status-pending">Pending Approval</span>
+                                                <?php elseif ($job['status'] === 'approved'): ?>
+                                                    <span class="status-badge status-approved">Approved</span>
+                                                <?php elseif ($job['status'] === 'rejected'): ?>
+                                                    <span class="status-badge status-rejected">Rejected</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4 text-md-end">
-                                    <?php if ($job['status'] === 'pending'): ?>
-                                        <span class="status-badge status-pending">Pending Approval</span>
-                                    <?php elseif ($job['status'] === 'approved'): ?>
-                                        <span class="status-badge status-approved">Approved</span>
-                                    <?php elseif ($job['status'] === 'rejected'): ?>
-                                        <span class="status-badge status-rejected">Rejected</span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Job Details -->
-                    <div class="row">
-                        <!-- Job Information -->
-                        <div class="col-lg-8">
-                            <div class="detail-card">
-                                <h6><i class="bi bi-file-text me-2"></i>Job Description</h6>
-                                <div class="mb-4">
-                                    <?php echo nl2br(htmlspecialchars($job['job_description'])); ?>
-                                </div>
-
-                                <?php if (!empty($job['requirements'])): ?>
-                                    <h6><i class="bi bi-list-check me-2"></i>Requirements</h6>
-                                    <div class="mb-4">
-                                        <?php echo nl2br(htmlspecialchars($job['requirements'])); ?>
+                                <!-- Job Statistics (if needed later) -->
+                                <div class="detail-card mt-3">
+                                    <div class="row">
+                                        <div class="col-md-3 text-center">
+                                            <h3>0</h3>
+                                            <p class="text-muted mb-0">Views</p>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h3>0</h3>
+                                            <p class="text-muted mb-0">Applications</p>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h3><?php echo $job['vacancies']; ?></h3>
+                                            <p class="text-muted mb-0">Vacancies</p>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h3>
+                                                <?php
+                                                $days_left = ceil((strtotime($job['apply_by']) - time()) / (60 * 60 * 24));
+                                                echo $days_left > 0 ? $days_left : 0;
+                                                ?>
+                                            </h3>
+                                            <p class="text-muted mb-0">Days Left</p>
+                                        </div>
                                     </div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($job['benefits'])): ?>
-                                    <h6><i class="bi bi-gift me-2"></i>Benefits</h6>
-                                    <div class="mb-4">
-                                        <?php echo nl2br(htmlspecialchars($job['benefits'])); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Application Information -->
-                            <div class="detail-card">
-                                <h6><i class="bi bi-info-circle me-2"></i>Application Information</h6>
+                                </div>
+                                <!-- Job Details -->
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="info-item">
-                                            <span class="label">Job Type:</span>
-                                            <?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Experience:</span>
-                                            <?php echo $job['experience'] ?> years
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Salary:</span>
-                                            <?php echo $job['salary'] ? '₹' . number_format($job['salary']) : 'Not specified'; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-item">
-                                            <span class="label">Vacancies:</span>
-                                            <?php echo $job['vacancies']; ?>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Education:</span>
-                                            <?php echo !empty($job['education']) ? htmlspecialchars($job['education']) : 'Not specified'; ?>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Apply By:</span>
-                                            <?php echo $apply_by_date; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                    <!-- Job Information -->
+                                    <div class="col-lg-8">
+                                        <div class="detail-card">
+                                            <h6><i class="bi bi-file-text me-2"></i>Job Description</h6>
+                                            <div class="mb-4">
+                                                <?php echo nl2br(htmlspecialchars($job['job_description'])); ?>
+                                            </div>
 
-                        <!-- Sidebar - Recruiter & Job Info -->
-                        <div class="col-lg-4">
-                            <!-- Recruiter Information -->
-                            <div class="detail-card">
-                                <h6><i class="bi bi-person-badge me-2"></i>Recruiter Information</h6>
-                                <div class="info-item">
-                                    <span class="label">Name:</span>
-                                    <?php echo htmlspecialchars($job['recruiter_name']); ?>
-                                </div>
-                                <div class="info-item">
-                                    <span class="label">Company:</span>
-                                    <?php echo htmlspecialchars($job['company_name']); ?>
-                                </div>
-                                <div class="info-item">
-                                    <span class="label">Email:</span>
-                                    <a href="mailto:<?php echo htmlspecialchars($job['recruiter_email']); ?>">
-                                        <?php echo htmlspecialchars($job['recruiter_email']); ?>
-                                    </a>
-                                </div>
-                                <div class="info-item">
-                                    <span class="label">Phone:</span>
-                                    <a href="tel:<?php echo htmlspecialchars($job['recruiter_phone']); ?>">
-                                        <?php echo htmlspecialchars($job['recruiter_phone']); ?>
-                                    </a>
-                                </div>
-                                <?php if (!empty($job['recruiter_address'])): ?>
-                                    <div class="info-item">
-                                        <span class="label">Address:</span>
-                                        <?php
-                                        $address_parts = [];
-                                        if (!empty($job['recruiter_address'])) $address_parts[] = $job['recruiter_address'];
-                                        if (!empty($job['recruiter_city'])) $address_parts[] = $job['recruiter_city'];
-                                        if (!empty($job['recruiter_state'])) $address_parts[] = $job['recruiter_state'];
-                                        if (!empty($job['recruiter_pincode'])) $address_parts[] = $job['recruiter_pincode'];
-                                        echo htmlspecialchars(implode(', ', $address_parts));
-                                        ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
+                                            <?php if (!empty($job['requirements'])): ?>
+                                                <h6><i class="bi bi-list-check me-2"></i>Requirements</h6>
+                                                <div class="mb-4">
+                                                    <?php echo nl2br(htmlspecialchars($job['requirements'])); ?>
+                                                </div>
+                                            <?php endif; ?>
 
-                            <!-- Job Status Information -->
-                            <div class="detail-card">
-                                <h6><i class="bi bi-clock-history me-2"></i>Job Status</h6>
-                                <div class="info-item">
-                                    <span class="label">Status:</span>
-                                    <?php if ($job['status'] === 'pending'): ?>
-                                        <span class="status-badge status-pending">Pending</span>
-                                    <?php elseif ($job['status'] === 'approved'): ?>
-                                        <span class="status-badge status-approved">Approved</span>
-                                    <?php elseif ($job['status'] === 'rejected'): ?>
-                                        <span class="status-badge status-rejected">Rejected</span>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if ($job['status'] === 'rejected' && !empty($job['rejection_reason'])): ?>
-                                    <div class="info-item">
-                                        <span class="label">Rejection Reason:</span>
-                                        <?php echo htmlspecialchars($job['rejection_reason']); ?>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="info-item">
-                                    <span class="label">Posted On:</span>
-                                    <?php echo $created_date; ?>
-                                </div>
-                                <div class="info-item">
-                                    <span class="label">Last Updated:</span>
-                                    <?php echo $updated_date; ?>
-                                </div>
-                            </div>
+                                            <?php if (!empty($job['benefits'])): ?>
+                                                <h6><i class="bi bi-gift me-2"></i>Benefits</h6>
+                                                <div class="mb-4">
+                                                    <?php echo nl2br(htmlspecialchars($job['benefits'])); ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
 
-                            <!-- Quick Actions -->
-                            <div class="detail-card">
-                                <h6><i class="bi bi-lightning me-2"></i>Quick Actions</h6>
-                                <div class="d-grid gap-2">
-                                    <?php if ($job['status'] === 'pending'): ?>
-                                        <a href="job-approval.php" class="btn btn-success">
-                                            <i class="bi bi-check-circle me-2"></i>Go to Approval
-                                        </a>
-                                    <?php endif; ?>
-                                    <a href="job-approval.php" class="btn btn-outline-primary">
-                                        <i class="bi bi-arrow-left me-2"></i>Back to Job List
-                                    </a>
-                                    <?php if (!empty($job['status']) && $job['status'] !== 'pending'): ?>
-                                        <button type="button" class="btn btn-outline-info" onclick="window.print()">
-                                            <i class="bi bi-printer me-2"></i>Print Details
-                                        </button>
-                                    <?php endif; ?>
+                                        <!-- Application Information -->
+                                        <div class="detail-card">
+                                            <h6><i class="bi bi-info-circle me-2"></i>Application Information</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="info-item">
+                                                        <span class="label">Job Type:</span>
+                                                        <?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <span class="label">Experience:</span>
+                                                        <?php echo $job['experience'] ?> years
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <span class="label">Salary:</span>
+                                                        <?php echo $job['salary'] ? '₹' . number_format($job['salary']) : 'Not specified'; ?>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="info-item">
+                                                        <span class="label">Vacancies:</span>
+                                                        <?php echo $job['vacancies']; ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <span class="label">Education:</span>
+                                                        <?php echo !empty($job['education']) ? htmlspecialchars($job['education']) : 'Not specified'; ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <span class="label">Apply By:</span>
+                                                        <?php echo $apply_by_date; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sidebar - Recruiter & Job Info -->
+                                    <div class="col-lg-4">
+                                        <!-- Recruiter Information -->
+                                        <div class="detail-card">
+                                            <h6><i class="bi bi-person-badge me-2"></i>Recruiter Information</h6>
+                                            <div class="info-item">
+                                                <span class="label">Name:</span>
+                                                <?php echo htmlspecialchars($job['recruiter_name']); ?>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Company:</span>
+                                                <?php echo htmlspecialchars($job['company_name']); ?>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Email:</span>
+                                                <a href="mailto:<?php echo htmlspecialchars($job['recruiter_email']); ?>">
+                                                    <?php echo htmlspecialchars($job['recruiter_email']); ?>
+                                                </a>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Phone:</span>
+                                                <a href="tel:<?php echo htmlspecialchars($job['recruiter_phone']); ?>">
+                                                    <?php echo htmlspecialchars($job['recruiter_phone']); ?>
+                                                </a>
+                                            </div>
+                                            <?php if (!empty($job['recruiter_address'])): ?>
+                                                <div class="info-item">
+                                                    <span class="label">Address:</span>
+                                                    <?php
+                                                    $address_parts = [];
+                                                    if (!empty($job['recruiter_address'])) $address_parts[] = $job['recruiter_address'];
+                                                    if (!empty($job['recruiter_city'])) $address_parts[] = $job['recruiter_city'];
+                                                    if (!empty($job['recruiter_state'])) $address_parts[] = $job['recruiter_state'];
+                                                    if (!empty($job['recruiter_pincode'])) $address_parts[] = $job['recruiter_pincode'];
+                                                    echo htmlspecialchars(implode(', ', $address_parts));
+                                                    ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <!-- Job Status Information -->
+                                        <div class="detail-card">
+                                            <h6><i class="bi bi-clock-history me-2"></i>Job Status</h6>
+                                            <div class="info-item">
+                                                <span class="label">Status:</span>
+                                                <?php if ($job['status'] === 'pending'): ?>
+                                                    <span class="status-badge status-pending">Pending</span>
+                                                <?php elseif ($job['status'] === 'approved'): ?>
+                                                    <span class="status-badge status-approved">Approved</span>
+                                                <?php elseif ($job['status'] === 'rejected'): ?>
+                                                    <span class="status-badge status-rejected">Rejected</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($job['status'] === 'rejected' && !empty($job['rejection_reason'])): ?>
+                                                <div class="info-item">
+                                                    <span class="label">Rejection Reason:</span>
+                                                    <?php echo htmlspecialchars($job['rejection_reason']); ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="info-item">
+                                                <span class="label">Posted On:</span>
+                                                <?php echo $created_date; ?>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Last Updated:</span>
+                                                <?php echo $updated_date; ?>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick Actions -->
+                                        <div class="detail-card">
+                                            <h6><i class="bi bi-lightning me-2"></i>Quick Actions</h6>
+                                            <div class="d-grid gap-2">
+                                                <?php if ($job['status'] === 'pending'): ?>
+                                                    <a href="job-approval.php" class="btn btn-success">
+                                                        <i class="bi bi-check-circle me-2"></i>Go to Approval
+                                                    </a>
+                                                <?php endif; ?>
+                                                <a href="job-approval.php" class="btn btn-outline-primary">
+                                                    <i class="bi bi-arrow-left me-2"></i>Back to Job List
+                                                </a>
+                                                <?php if (!empty($job['status']) && $job['status'] !== 'pending'): ?>
+                                                    <button type="button" class="btn btn-outline-info" onclick="window.print()">
+                                                        <i class="bi bi-printer me-2"></i>Print Details
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Job Statistics (if needed later) -->
-                    <!-- <div class="detail-card mt-3">
-                        <div class="row">
-                            <div class="col-md-3 text-center">
-                                <h3>0</h3>
-                                <p class="text-muted mb-0">Views</p>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <h3>0</h3>
-                                <p class="text-muted mb-0">Applications</p>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <h3><?php echo $job['vacancies']; ?></h3>
-                                <p class="text-muted mb-0">Vacancies</p>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <h3>
-                                    <?php
-                                    $days_left = ceil((strtotime($job['apply_by']) - time()) / (60 * 60 * 24));
-                                    echo $days_left > 0 ? $days_left : 0;
-                                    ?>
-                                </h3>
-                                <p class="text-muted mb-0">Days Left</p>
-                            </div>
-                        </div>
-                    </div> -->
-                </div>
+                </div><!-- End Reports -->
             </div>
         </section>
 
-    </main>
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
