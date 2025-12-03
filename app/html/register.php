@@ -31,12 +31,12 @@ $response = ['success' => false, 'message' => ''];
 try {
     // Clear any previous output
     ob_clean();
-    
+
     // Check if it's a POST request
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception('Invalid request method. Use POST.');
     }
-    
+
     // Get form data
     $email = $_POST['email'] ?? '';
     $full_name = $_POST['full_name'] ?? '';
@@ -44,52 +44,54 @@ try {
     $phone = $_POST['phone'] ?? '';
     $aadhar_number = $_POST['aadhar_number'] ?? '';
     $company_address = $_POST['company_address'] ?? '';
-    
+
     // Debug log
     error_log("Registration attempt - Email: $email, Name: $full_name");
-    
+
     // Validation
-    if (empty($email) || empty($full_name) || empty($company_name) || 
-        empty($phone) || empty($aadhar_number) || empty($company_address)) {
+    if (
+        empty($email) || empty($full_name) || empty($company_name) ||
+        empty($phone) || empty($aadhar_number) || empty($company_address)
+    ) {
         throw new Exception('All fields are required');
     }
-    
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Invalid email format');
     }
-    
+
     if (!preg_match('/^[0-9]{12}$/', $aadhar_number)) {
         throw new Exception('Aadhar number must be 12 digits');
     }
-    
+
     // Check if email already registered
     $checkQuery = "SELECT id FROM recruiters WHERE email = $1";
     $checkResult = pg_query_params($con, $checkQuery, [$email]);
-    
+
     if (!$checkResult) {
         $error = pg_last_error($con);
         error_log("Database error checking email: " . $error);
         throw new Exception('Database error. Please try again.');
     }
-    
+
     if (pg_num_rows($checkResult) > 0) {
         throw new Exception('Email already registered');
     }
-    
+
     // Check if Aadhar already registered
     $checkAadharQuery = "SELECT id FROM recruiters WHERE aadhar_number = $1";
     $checkAadharResult = pg_query_params($con, $checkAadharQuery, [$aadhar_number]);
-    
+
     if (!$checkAadharResult) {
         $error = pg_last_error($con);
         error_log("Database error checking Aadhar: " . $error);
         throw new Exception('Database error. Please try again.');
     }
-    
+
     if (pg_num_rows($checkAadharResult) > 0) {
         throw new Exception('Aadhar number already registered');
     }
-    
+
     // Handle file upload
     $aadhar_file_path = '';
     if (isset($_FILES['aadhar_file']) && $_FILES['aadhar_file']['error'] == UPLOAD_ERR_OK) {
@@ -99,41 +101,41 @@ try {
                 throw new Exception('Failed to create upload directory');
             }
         }
-        
+
         // Sanitize filename
         $original_name = basename($_FILES['aadhar_file']['name']);
         $file_name = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '_', $original_name);
         $target_file = $upload_dir . $file_name;
-        
+
         // Check file size (2MB)
         if ($_FILES['aadhar_file']['size'] > 2097152) {
             throw new Exception('File size must be less than 2MB');
         }
-        
+
         // Allow certain file formats
         $allowed_types = ['pdf', 'jpg', 'jpeg', 'png'];
         $file_type = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
-        
+
         if (!in_array($file_type, $allowed_types)) {
             throw new Exception('Only PDF, JPG, JPEG, PNG files are allowed');
         }
-        
+
         // Check MIME type for extra security
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mime_type = finfo_file($finfo, $_FILES['aadhar_file']['tmp_name']);
         finfo_close($finfo);
-        
+
         $allowed_mimes = [
             'application/pdf',
             'image/jpeg',
             'image/jpg',
             'image/png'
         ];
-        
+
         if (!in_array($mime_type, $allowed_mimes)) {
             throw new Exception('Invalid file type');
         }
-        
+
         if (move_uploaded_file($_FILES['aadhar_file']['tmp_name'], $target_file)) {
             // Store relative path for database
             $aadhar_file_path = 'uploads/aadhar/' . $file_name;
@@ -148,13 +150,13 @@ try {
         error_log("File upload error: " . $upload_error);
         throw new Exception('Aadhar file is required or upload failed. Error: ' . $upload_error);
     }
-    
+
     // Insert into database using pg_query_params for security
     $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, is_verified) 
               VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING id";
-    
+
     error_log("Executing query: $query");
-    
+
     $result = pg_query_params($con, $query, [
         $email,
         $full_name,
@@ -164,16 +166,16 @@ try {
         $aadhar_file_path,
         $company_address
     ]);
-    
+
     if (!$result) {
         $error = pg_last_error($con);
         error_log("Database insert error: " . $error);
         throw new Exception('Registration failed: Database error - ' . $error);
     }
-    
+
     $recruiter_id = pg_fetch_result($result, 0, 0);
     error_log("Recruiter registered successfully with ID: $recruiter_id");
-    
+
     // Send confirmation email
     try {
         $emailData = [
@@ -184,18 +186,17 @@ try {
             "timestamp" => date("d/m/Y g:i a"),
             "recruiter_id" => $recruiter_id
         ];
-        
+
         $emailResult = sendEmail("recruiter_registration", $emailData, $email, false);
         error_log("Confirmation email sent to: $email");
     } catch (Exception $e) {
         error_log("Email sending failed: " . $e->getMessage());
         // Don't fail registration if email fails
     }
-    
+
     $response['success'] = true;
     $response['message'] = 'Registration successful';
     $response['recruiter_id'] = $recruiter_id;
-    
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
     error_log("Registration error: " . $e->getMessage());
@@ -207,4 +208,3 @@ echo json_encode($response);
 
 // End output buffering
 ob_end_flush();
-?>
