@@ -418,6 +418,38 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
             });
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            function linkifyTextNode(node) {
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+                if (node.nodeType === 3) {
+                    const text = node.nodeValue;
+                    if (urlRegex.test(text)) {
+                        const span = document.createElement("span");
+                        span.innerHTML = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                        node.replaceWith(span);
+                    }
+                }
+            }
+
+            function walk(node) {
+                node = node.firstChild;
+                while (node) {
+                    const nextNode = node.nextSibling;
+                    if (node.nodeType === 3) {
+                        linkifyTextNode(node);
+                    } else if (node.nodeType === 1) {
+                        walk(node);
+                    }
+                    node = nextNode;
+                }
+            }
+
+            walk(document.body);
+        });
+    </script>
 
 </body>
 

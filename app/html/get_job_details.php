@@ -14,9 +14,10 @@ try {
         exit;
     }
     
-    $query = "SELECT jp.*, r.company_name, r.full_name as recruiter_name
+    $query = "SELECT jp.*, r.company_name, r.full_name as recruiter_name, el.name as education_level_name
               FROM job_posts jp 
               JOIN recruiters r ON jp.recruiter_id = r.id 
+              LEFT JOIN education_levels el ON jp.education_levels = el.id 
               WHERE jp.id = $1 
               AND jp.status = 'approved'";
     
