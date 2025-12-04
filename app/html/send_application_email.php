@@ -27,7 +27,7 @@ try {
     ];
 
     // Send email
-    $result = sendEmail("job_application_confirmation", $emailData, $email, false);
+    $result = sendEmail("job_application_confirmation", $emailData, $email);
 
     // Always return success if we reach here (assuming email actually sent)
     // Check your server logs to confirm

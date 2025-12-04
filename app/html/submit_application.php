@@ -24,6 +24,15 @@ try {
         exit;
     }
     
+    // Validate email format if provided
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid email format'
+        ]);
+        exit;
+    }
+    
     // Start transaction
     pg_query($con, "BEGIN");
     
@@ -39,6 +48,7 @@ try {
     
     if (!$seeker_result) {
         pg_query($con, "ROLLBACK");
+        error_log("Failed to save applicant data: " . pg_last_error($con));
         echo json_encode([
             'success' => false,
             'message' => 'Failed to save applicant data'
@@ -59,6 +69,7 @@ try {
     
     if (!$application_result) {
         pg_query($con, "ROLLBACK");
+        error_log("Failed to submit application: " . pg_last_error($con));
         echo json_encode([
             'success' => false,
             'message' => 'Failed to submit application'
@@ -78,18 +89,46 @@ try {
     // Commit transaction
     pg_query($con, "COMMIT");
     
+    // Try to send email if email is provided
+    $email_sent = false;
+    $email_message = '';
+    
+    if (!empty($email)) {
+        include_once(__DIR__ . "/../util/email.php");
+        
+        $emailData = [
+            "applicant_name" => $name,
+            "job_title" => $job_title,
+            "job_id" => $job_id,
+            "application_date" => date("d/m/Y g:i a")
+        ];
+        
+        try {
+            $email_result = sendEmail("job_application_confirmation", $emailData, $email, false);
+            $email_sent = true;
+            $email_message = 'Confirmation email sent.';
+        } catch (Exception $e) {
+            error_log("Email sending failed: " . $e->getMessage());
+            $email_message = 'Application submitted but email sending failed.';
+        }
+    } else {
+        $email_message = 'Application submitted. No email provided for confirmation.';
+    }
+    
     echo json_encode([
         'success' => true,
-        'message' => 'Application submitted successfully',
+        'message' => 'Application submitted successfully! ' . $email_message,
         'applicant_id' => $seeker_id,
         'applicant_name' => $name,
         'email' => $email,
         'job_title' => $job_title,
-        'job_id' => $job_id  // Add this line
+        'job_id' => $job_id,
+        'email_sent' => $email_sent
     ]);
     
 } catch (Exception $e) {
     pg_query($con, "ROLLBACK");
+    error_log("Exception in submit_application.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage()
