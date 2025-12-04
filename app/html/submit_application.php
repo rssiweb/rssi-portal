@@ -70,7 +70,7 @@ try {
         $resume_file_name = "resume_" . time() . "_" . substr($phone, -4) . "_" .
             preg_replace('/[^A-Za-z0-9_-]/', '_', strstr($original_name, '.', true) ?: $original_name);
 
-        // Google Drive folder ID for Resumes (use the folder ID you provided: 18uRvl5MibzbL2FBa9X9mmXqydsqbVQad)
+        // Google Drive folder ID for Resumes
         $drive_folder_id = '18uRvl5MibzbL2FBa9X9mmXqydsqbVQad';
 
         // Upload to Google Drive - you need to have the uploadeToDrive function
