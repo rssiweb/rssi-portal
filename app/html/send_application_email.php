@@ -9,6 +9,7 @@ try {
     $email = $_POST['email'] ?? '';
     $name = $_POST['name'] ?? $_POST['applicant_name'] ?? '';
     $job_title = $_POST['job_title'] ?? '';
+    $job_id = $_POST['job_id'] ?? '';  // Add this line
 
     if (empty($email)) {
         echo json_encode([
@@ -21,6 +22,7 @@ try {
     $emailData = [
         "applicant_name" => $name,
         "job_title" => $job_title,
+        "job_id" => $job_id,  // Add this line
         "application_date" => date("d/m/Y g:i a")
     ];
 

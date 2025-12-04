@@ -84,7 +84,8 @@ try {
         'applicant_id' => $seeker_id,
         'applicant_name' => $name,
         'email' => $email,
-        'job_title' => $job_title
+        'job_title' => $job_title,
+        'job_id' => $job_id  // Add this line
     ]);
     
 } catch (Exception $e) {

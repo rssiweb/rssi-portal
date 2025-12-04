@@ -63,7 +63,8 @@ try {
             'message' => 'Application submitted successfully',
             'applicant_name' => $applicant_name,
             'email' => $email,
-            'job_title' => $job_title
+            'job_title' => $job_title,
+            'job_id' => $job_id  // Add this line
         ]);
     } else {
         echo json_encode([
