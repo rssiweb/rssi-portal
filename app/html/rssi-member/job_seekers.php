@@ -9,6 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+
 // Handle AJAX request for record fetching
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST['formType'] === 'ajax_fetch') {
     $offset = $_POST['offset'] ?? 0;
@@ -29,29 +30,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
         // Search mode - only use search term
         if (!empty($search_term)) {
             $param_count++;
-            $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+            $where_conditions[] = "(js.name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR js.skills ILIKE $" . $param_count . " OR js.preferences ILIKE $" . $param_count . " OR js.email ILIKE $" . $param_count . ")";
             $params[] = "%$search_term%";
         }
     } else {
         // Filter mode - use status and education filters
         if ($status_filter === 'active') {
-            $where_conditions[] = "status = 'Active'";
+            $where_conditions[] = "js.status = 'Active'";
         } elseif ($status_filter === 'inactive') {
-            $where_conditions[] = "status = 'Inactive'";
+            $where_conditions[] = "js.status = 'Inactive'";
         } elseif ($status_filter === 'all') {
             // Show all statuses - no condition needed
         }
 
         if (!empty($education_filter)) {
             $param_count++;
-            $where_conditions[] = "education = $" . $param_count;
+            $where_conditions[] = "js.education = $" . $param_count;
             $params[] = $education_filter;
         }
 
         // Also allow search in filter mode
         if (!empty($search_term)) {
             $param_count++;
-            $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+            $where_conditions[] = "(js.name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR js.skills ILIKE $" . $param_count . " OR js.preferences ILIKE $" . $param_count . " OR js.email ILIKE $" . $param_count . ")";
             $params[] = "%$search_term%";
         }
     }
@@ -59,7 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
     $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
 
     // Get total count for filtered results
-    $count_query = "SELECT COUNT(*) FROM job_seeker_data js LEFT JOIN survey_data s ON js.family_id = s.family_id $where_clause";
+    $count_query = "SELECT COUNT(*) FROM job_seeker_data js 
+                    LEFT JOIN survey_data s ON js.family_id = s.family_id 
+                    $where_clause";
     $count_result = pg_query_params($con, $count_query, $params);
     $total_filtered_records = pg_fetch_result($count_result, 0, 0);
 
@@ -67,8 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
     $params[] = $limit;
     $params[] = $offset;
 
-    $query = "SELECT js.*, s.parent_name, s.address, s.surveyor_id 
+    $query = "SELECT js.*, el.name as education_name, s.parent_name, s.address, s.surveyor_id 
               FROM job_seeker_data js 
+              LEFT JOIN education_levels el ON js.education = el.id
               LEFT JOIN survey_data s ON js.family_id = s.family_id 
               $where_clause 
               ORDER BY js.created_at DESC 
@@ -91,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType']) && $_POST
     } else {
         echo json_encode([
             "success" => false,
-            "message" => "Error fetching data.",
+            "message" => "Error fetching data: " . pg_last_error($con),
         ]);
     }
     exit;
@@ -134,33 +138,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             case 'update_job_seeker':
                 $id = $_POST['id'];
                 $name = pg_escape_string($con, $_POST['name']);
-                $age = intval($_POST['age']);
+                $dob = $_POST['dob'];
+                $email = pg_escape_string($con, $_POST['email'] ?? '');
                 $contact = pg_escape_string($con, $_POST['contact']);
-                $education = pg_escape_string($con, $_POST['education']);
+                $education = $_POST['education'];
                 $skills = pg_escape_string($con, $_POST['skills']);
                 $preferences = pg_escape_string($con, $_POST['preferences']);
                 $address = pg_escape_string($con, $_POST['address'] ?? '');
 
                 $query = "UPDATE job_seeker_data SET 
                          name = $1, 
-                         age = $2, 
-                         contact = $3, 
-                         education = $4, 
-                         skills = $5, 
-                         preferences = $6,
+                         dob = $2,
+                         email = $3, 
+                         contact = $4, 
+                         education = $5, 
+                         skills = $6, 
+                         preferences = $7,
                          address1 = $8, 
                          updated_at = CURRENT_TIMESTAMP 
-                         WHERE id = $7";
+                         WHERE id = $9";
 
                 $result = pg_query_params($con, $query, array(
                     $name,
-                    $age,
+                    $dob,
+                    $email,
                     $contact,
                     $education,
                     $skills,
                     $preferences,
-                    $id,
-                    $address
+                    $address,
+                    $id
                 ));
 
                 if ($result) {
@@ -170,24 +177,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
                 break;
 
-            // Add this to your existing POST handler switch statement
             case 'add_job_seeker':
                 $name = pg_escape_string($con, $_POST['name']);
-                $age = intval($_POST['age']);
+                $dob = $_POST['dob'];
+                $email = pg_escape_string($con, $_POST['email'] ?? '');
                 $contact = pg_escape_string($con, $_POST['contact']);
-                $education = pg_escape_string($con, $_POST['education']);
+                $education = $_POST['education'];
                 $skills = pg_escape_string($con, $_POST['skills']);
                 $preferences = pg_escape_string($con, $_POST['preferences']);
                 $address = pg_escape_string($con, $_POST['address'] ?? '');
 
-                // Generate a unique ID or use auto-increment if your table has it
                 $query = "INSERT INTO job_seeker_data (
-                name, age, contact, education, skills, preferences, address1, created_by, status, created_at
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Active', CURRENT_TIMESTAMP)";
+                    name, dob, email, contact, education, skills, preferences, 
+                    address1, created_by, status, created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active', CURRENT_TIMESTAMP)";
 
                 $result = pg_query_params($con, $query, array(
                     $name,
-                    $age,
+                    $dob,
+                    $email,
                     $contact,
                     $education,
                     $skills,
@@ -309,6 +317,32 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             font-weight: 600;
             color: #495057;
         }
+
+        .invalid-feedback {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875em;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .is-valid {
+            border-color: #198754 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-warning {
+            color: #ffc107 !important;
+        }
+
+        .text-success {
+            color: #198754 !important;
+        }
     </style>
 </head>
 
@@ -374,42 +408,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                             <label for="education" class="form-label d-block">Education</label>
                                             <select class="form-select d-inline-block" id="education" name="education">
                                                 <option value="">All Education</option>
-                                                <!-- Basic Literacy Levels -->
-                                                <option value="Illiterate">Illiterate (Cannot read or write)</option>
-
-                                                <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
-                                                <option value="Can Read English Only">Can Read – English Only</option>
-                                                <option value="Can Read Both">Can Read – Hindi & English</option>
-
-                                                <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
-                                                <option value="Can Write English Only">Can Write – English Only</option>
-                                                <option value="Can Write Both">Can Write – Hindi & English</option>
-
-                                                <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
-                                                <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
-                                                <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
-
-                                                <!-- School Level -->
-                                                <option value="Below 5th">Below 5th Standard</option>
-                                                <option value="5th Pass">5th Pass</option>
-                                                <option value="8th Pass">8th Pass</option>
-                                                <option value="Below 10th">Below 10th</option>
-
-                                                <option value="10th Pass">10th Pass</option>
-                                                <option value="12th Pass">12th Pass</option>
-
-                                                <!-- Higher Education -->
-                                                <option value="Diploma">Diploma</option>
-                                                <option value="Graduate">Graduate</option>
-                                                <option value="Post Graduate">Post Graduate</option>
-                                                <option value="Doctorate">Doctorate</option>
-
-                                                <option value="Other">Other</option>
+                                                <!-- Will be populated by JavaScript -->
                                             </select>
                                         </div>
                                         <div class="d-inline-block">
                                             <label for="search" class="form-label d-block">Search</label>
-                                            <input type="text" class="form-control d-inline-block" style="width:300px;" id="search" name="search" placeholder="Search by name, contact, skills...">
+                                            <input type="text" class="form-control d-inline-block" style="width:300px;" id="search" name="search" placeholder="Search by name, contact, skills, email...">
                                         </div>
                                         <div class="d-inline-block mt-3 mt-md-0 ms-md-3 ms-0 align-bottom">
                                             <button type="button" id="applyFilters" class="btn btn-primary d-inline-block">Apply Filters</button>
@@ -457,7 +461,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                         <tr>
                                             <th>Id</th>
                                             <th>Name</th>
+                                            <th>DOB</th>
                                             <th>Age</th>
+                                            <th>Email</th>
                                             <th>Contact</th>
                                             <th>Education</th>
                                             <th>Skills</th>
@@ -547,9 +553,19 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                     <span class="detail-value" id="viewName"></span>
                                 </div>
                                 <div class="detail-row">
+                                    <span class="detail-label">Date of Birth:</span>
+                                    <span class="detail-value" id="viewDob"></span>
+                                </div>
+                                <div class="detail-row">
                                     <span class="detail-label">Age:</span>
                                     <span class="detail-value" id="viewAge"></span>
                                 </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Email:</span>
+                                    <span class="detail-value" id="viewEmail"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="detail-row">
                                     <span class="detail-label">Contact:</span>
                                     <span class="detail-value" id="viewContact"></span>
@@ -558,15 +574,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                     <span class="detail-label">Education:</span>
                                     <span class="detail-value" id="viewEducation"></span>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
                                 <div class="detail-row">
                                     <span class="detail-label">Skills:</span>
                                     <span class="detail-value" id="viewSkills"></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Preferences:</span>
-                                    <span class="detail-value" id="viewPreferences"></span>
                                 </div>
                                 <div class="detail-row">
                                     <span class="detail-label">Status:</span>
@@ -575,7 +585,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             </div>
                         </div>
                         <div class="row mt-2">
-                            <div class="col-12">
+                            <div class="col-md-12">
+                                <div class="detail-row">
+                                    <span class="detail-label">Preferences:</span>
+                                    <span class="detail-value" id="viewPreferences"></span>
+                                </div>
                                 <div class="detail-row">
                                     <span class="detail-label">Address:</span>
                                     <span class="detail-value" id="viewAddress"></span>
@@ -622,69 +636,47 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             </div>
 
                             <div class="col-md-3 mb-3">
-                                <label for="editAge" class="form-label">Age <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="editAge" name="age" min="18" max="65" required>
+                                <label for="editDob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editDob" name="dob" required onchange="calculateEditAge()">
+                                <small class="form-text text-muted">Age: <span id="editCalculatedAge">--</span> years</small>
+                                <div class="invalid-feedback" id="editDobError"></div>
                             </div>
 
                             <div class="col-md-3 mb-3">
-                                <label for="editContact" class="form-label">Contact <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="editContact" name="contact" pattern="[0-9]{10}" required>
+                                <label for="editEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editEmail" name="email">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editEducation" class="form-label">Education <span class="text-danger">*</span></label>
-                                <select class="form-select" id="editEducation" name="education" required>
-                                    <option value="">Select qualification</option>
-                                    <!-- Basic Literacy Levels -->
-                                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
-
-                                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
-                                    <option value="Can Read English Only">Can Read – English Only</option>
-                                    <option value="Can Read Both">Can Read – Hindi & English</option>
-
-                                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
-                                    <option value="Can Write English Only">Can Write – English Only</option>
-                                    <option value="Can Write Both">Can Write – Hindi & English</option>
-
-                                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
-                                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
-                                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
-
-                                    <!-- School Level -->
-                                    <option value="Below 5th">Below 5th Standard</option>
-                                    <option value="5th Pass">5th Pass</option>
-                                    <option value="8th Pass">8th Pass</option>
-                                    <option value="Below 10th">Below 10th</option>
-
-                                    <option value="10th Pass">10th Pass</option>
-                                    <option value="12th Pass">12th Pass</option>
-
-                                    <!-- Higher Education -->
-                                    <option value="Diploma">Diploma</option>
-                                    <option value="Graduate">Graduate</option>
-                                    <option value="Post Graduate">Post Graduate</option>
-                                    <option value="Doctorate">Doctorate</option>
-
-                                    <option value="Other">Other</option>
-                                </select>
+                                <label for="editContact" class="form-label">Contact <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="editContact" name="contact" pattern="[0-9]{10}" required>
+                                <div class="invalid-feedback">Please enter a valid 10-digit contact number</div>
                             </div>
 
+                            <div class="col-md-6 mb-3">
+                                <label for="editEducation" class="form-label">Education <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editEducation" name="education" required>
+                                    <option value="" selected disabled>Select qualification</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="editSkills" class="form-label">Skills/Experience</label>
                                 <input type="text" class="form-control" id="editSkills" name="skills" placeholder="e.g., Computer skills, driving, etc.">
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="editPreferences" class="form-label">Job Preferences</label>
-                            <input type="text" class="form-control" id="editPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPreferences" class="form-label">Job Preferences</label>
+                                <input type="text" class="form-control" id="editPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="editAddress" class="form-label">Address</label>
-                            <textarea class="form-control" id="editAddress" name="address" rows="3"
-                                placeholder="Enter full address"></textarea>
+                            <textarea class="form-control" id="editAddress" name="address" rows="3" placeholder="Enter full address"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -721,57 +713,43 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             </div>
 
                             <div class="col-md-3 mb-3">
-                                <label for="newAge" class="form-label">Age <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="newAge" name="age" min="18" max="65" required>
+                                <label for="newDob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="newDob" name="dob" required onchange="calculateNewAge()">
+                                <small class="form-text text-muted">Age: <span id="newCalculatedAge">--</span> years</small>
+                                <div class="invalid-feedback" id="newDobError"></div>
                             </div>
 
                             <div class="col-md-3 mb-3">
-                                <label for="newContact" class="form-label">Contact <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="newContact" name="contact" pattern="[0-9]{10}" required>
+                                <label for="newEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="newEmail" name="email">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="newEducation" class="form-label">Education <span class="text-danger">*</span></label>
-                                <select class="form-select" id="newEducation" name="education" required>
-                                    <option value="">Select qualification</option>
-                                    <!-- Basic Literacy Levels -->
-                                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
-                                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
-                                    <option value="Can Read English Only">Can Read – English Only</option>
-                                    <option value="Can Read Both">Can Read – Hindi & English</option>
-                                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
-                                    <option value="Can Write English Only">Can Write – English Only</option>
-                                    <option value="Can Write Both">Can Write – Hindi & English</option>
-                                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
-                                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
-                                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
-                                    <!-- School Level -->
-                                    <option value="Below 5th">Below 5th Standard</option>
-                                    <option value="5th Pass">5th Pass</option>
-                                    <option value="8th Pass">8th Pass</option>
-                                    <option value="Below 10th">Below 10th</option>
-                                    <option value="10th Pass">10th Pass</option>
-                                    <option value="12th Pass">12th Pass</option>
-                                    <!-- Higher Education -->
-                                    <option value="Diploma">Diploma</option>
-                                    <option value="Graduate">Graduate</option>
-                                    <option value="Post Graduate">Post Graduate</option>
-                                    <option value="Doctorate">Doctorate</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                <label for="newContact" class="form-label">Contact <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="newContact" name="contact" pattern="[0-9]{10}" required>
+                                <div class="invalid-feedback">Please enter a valid 10-digit contact number</div>
                             </div>
 
+                            <div class="col-md-6 mb-3">
+                                <label for="newEducation" class="form-label">Education <span class="text-danger">*</span></label>
+                                <select class="form-select" id="newEducation" name="education" required>
+                                    <option value="" selected disabled>Select qualification</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="newSkills" class="form-label">Skills/Experience</label>
                                 <input type="text" class="form-control" id="newSkills" name="skills" placeholder="e.g., Computer skills, driving, etc.">
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="newPreferences" class="form-label">Job Preferences</label>
-                            <input type="text" class="form-control" id="newPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
+                            <div class="col-md-6 mb-3">
+                                <label for="newPreferences" class="form-label">Job Preferences</label>
+                                <input type="text" class="form-control" id="newPreferences" name="preferences" placeholder="e.g., Full-time, part-time, specific industry">
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -820,6 +798,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             const educationField = $('#education');
             const searchField = $('#search');
             const applyFiltersBtn = $('#applyFilters');
+
+            // Load education filter dropdown
+            loadEducationFilterDropdown();
 
             // Read URL parameters first
             readURLParameters();
@@ -902,6 +883,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
                 return new bootstrap.Dropdown(dropdownToggleEl);
             });
+
+            // Add event listener for when the new application modal is shown
+            const newApplicationModal = document.getElementById('newApplicationModal');
+            newApplicationModal.addEventListener('shown.bs.modal', function() {
+                // Load education levels when modal is shown
+                loadEducationDropdown('newEducation');
+            });
         });
 
         // Handle browser back/forward buttons
@@ -952,12 +940,26 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             const hasRemarks = record.remarks && record.remarks.trim() !== '';
                             const rowClass = hasRemarks ? 'has-remarks' : '';
 
+                            // Calculate age from DOB
+                            let age = '--';
+                            if (record.dob) {
+                                const dob = new Date(record.dob);
+                                const today = new Date();
+                                age = today.getFullYear() - dob.getFullYear();
+                                const monthDiff = today.getMonth() - dob.getMonth();
+                                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                                    age--;
+                                }
+                            }
+
                             const row = `
                             <tr data-job-seeker-id="${record.id}" 
-                                data-name="${escapeHtml(record.name)}" 
-                                data-age="${escapeHtml(record.age)}" 
+                                data-name="${escapeHtml(record.name)}"
+                                data-dob="${escapeHtml(record.dob || '')}" 
+                                data-email="${escapeHtml(record.email || '')}"
                                 data-contact="${escapeHtml(record.contact)}" 
                                 data-education="${escapeHtml(record.education)}" 
+                                data-education-name="${escapeHtml(record.education_name || '')}"
                                 data-skills="${escapeHtml(record.skills || '')}" 
                                 data-preferences="${escapeHtml(record.preferences || '')}"
                                 data-parent-name="${escapeHtml(record.parent_name || '')}"
@@ -969,9 +971,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 class="${rowClass}">
                                 <td>${escapeHtml(record.id)}</td>
                                 <td>${escapeHtml(record.name)}</td>
-                                <td>${escapeHtml(record.age)}</td>
+                                <td>${escapeHtml(record.dob || 'N/A')}</td>
+                                <td>${age}</td>
+                                <td>${escapeHtml(record.email || 'N/A')}</td>
                                 <td>${escapeHtml(record.contact)}</td>
-                                <td>${escapeHtml(record.education)}</td>
+                                <td>${escapeHtml(record.education_name || 'N/A')}</td>
                                 <td>${escapeHtml(record.skills || 'N/A')}</td>
                                 <td>${escapeHtml(record.preferences || 'N/A')}</td>
                                 <td>${escapeHtml(record.address || record.address1 || 'N/A')}</td>
@@ -1015,9 +1019,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                         // Update records info with proper showing X of Y format
                         updateRecordsInfo();
                     } else if (reset) {
-                        tbody.html('<tr><td colspan="10" class="text-center">No records found</td></tr>');
+                        tbody.html('<tr><td colspan="13" class="text-center">No records found</td></tr>');
                         $('#loadMoreBtn').hide();
-                        updateRecordsInfo(); // Update even when no records
+                        updateRecordsInfo();
                     }
                 } else {
                     alert(data.message || "Failed to load records.");
@@ -1069,7 +1073,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             currentFilters = {
                 status_filter: $('#status').val(),
                 education_filter: $('#education').val(),
-                search_term: searchMode ? $('#search').val() : '' // Only include search term in search mode
+                search_term: $('#search').val()
             };
 
             // Reset the offset and total when filters change
@@ -1132,6 +1136,82 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             }
         }
 
+        function loadEducationFilterDropdown() {
+            const API_BASE = window.location.hostname === 'localhost' ?
+                'http://localhost:8082/' :
+                'https://login.rssi.in/';
+
+            const educationFilter = document.getElementById('education');
+
+            $.ajax({
+                url: API_BASE + 'get_education_levels.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data && response.data.length > 0) {
+                        // Keep the "All Education" option
+                        let options = '<option value="">All Education</option>';
+
+                        response.data.forEach(education => {
+                            options += `<option value="${education.id}">${education.name}</option>`;
+                        });
+
+                        educationFilter.innerHTML = options;
+
+                        // Restore selected value from URL parameters if exists
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.has('education')) {
+                            const selectedValue = urlParams.get('education');
+                            educationFilter.value = selectedValue;
+                            currentFilters.education_filter = selectedValue;
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to load education levels for filter:', error);
+                }
+            });
+        }
+
+        function loadEducationDropdown(dropdownId, selectedValue = '') {
+            const API_BASE = window.location.hostname === 'localhost' ?
+                'http://localhost:8082/' :
+                'https://login.rssi.in/';
+
+            const dropdown = document.getElementById(dropdownId);
+
+            // Show loading state
+            dropdown.innerHTML = '<option value="" selected disabled>Loading education levels...</option>';
+
+            $.ajax({
+                url: API_BASE + 'get_education_levels.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data && response.data.length > 0) {
+                        // Clear and populate dropdown
+                        dropdown.innerHTML = '<option value="" selected disabled>Select qualification</option>';
+
+                        response.data.forEach(education => {
+                            const option = document.createElement('option');
+                            option.value = education.id;
+                            option.textContent = education.name;
+                            if (selectedValue == education.id) {
+                                option.selected = true;
+                            }
+                            dropdown.appendChild(option);
+                        });
+                    } else {
+                        dropdown.innerHTML = '<option value="" selected disabled>No education levels available</option>';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    dropdown.innerHTML = '<option value="" selected disabled>Error loading education levels</option>';
+                    console.error('AJAX error:', error);
+                }
+            });
+        }
+
         function updateStatus(id, status) {
             if (confirm('Are you sure you want to change the status to ' + status + '?')) {
                 const form = document.createElement('form');
@@ -1175,6 +1255,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             exportText.style.display = 'none';
             exportLoading.style.display = 'inline';
             exportBtn.disabled = true;
+
             // Get current filter parameters
             const params = new URLSearchParams();
             params.append('status', currentFilters.status_filter);
@@ -1197,12 +1278,18 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             if (row) {
                 document.getElementById('editJobSeekerId').value = id;
                 document.getElementById('editName').value = row.dataset.name;
-                document.getElementById('editAge').value = row.dataset.age;
+                document.getElementById('editDob').value = row.dataset.dob;
+                document.getElementById('editEmail').value = row.dataset.email || '';
                 document.getElementById('editContact').value = row.dataset.contact;
-                document.getElementById('editEducation').value = row.dataset.education;
                 document.getElementById('editSkills').value = row.dataset.skills || '';
                 document.getElementById('editPreferences').value = row.dataset.preferences || '';
                 document.getElementById('editAddress').value = row.dataset.address || '';
+
+                // Calculate and display age
+                calculateEditAge();
+
+                // Load education dropdown with selected value
+                loadEducationDropdown('editEducation', row.dataset.education);
             } else {
                 alert('Error: Could not find job seeker data');
             }
@@ -1212,14 +1299,31 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             const row = document.querySelector(`tr[data-job-seeker-id="${id}"]`);
             if (row) {
                 document.getElementById('viewName').textContent = row.dataset.name;
-                document.getElementById('viewAge').textContent = row.dataset.age;
+                document.getElementById('viewDob').textContent = row.dataset.dob || 'N/A';
+                document.getElementById('viewEmail').textContent = row.dataset.email || 'N/A';
                 document.getElementById('viewContact').textContent = row.dataset.contact;
-                document.getElementById('viewEducation').textContent = row.dataset.education;
+                document.getElementById('viewEducation').textContent = row.dataset.educationName || row.dataset.education || 'N/A';
                 document.getElementById('viewSkills').textContent = row.dataset.skills || 'N/A';
                 document.getElementById('viewPreferences').textContent = row.dataset.preferences || 'N/A';
                 document.getElementById('viewAddress').textContent = row.dataset.address || 'N/A';
 
-                const status = row.cells[8].textContent; // Status is in the 9th column (index 8)
+                // Calculate and show age
+                if (row.dataset.dob) {
+                    const dob = new Date(row.dataset.dob);
+                    const today = new Date();
+                    let age = today.getFullYear() - dob.getFullYear();
+                    const monthDiff = today.getMonth() - dob.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    document.getElementById('viewAge').textContent = age + ' years';
+                } else {
+                    document.getElementById('viewAge').textContent = 'N/A';
+                }
+
+                // Get status from the 11th column (index 10 since we have 13 columns)
+                const statusCell = row.cells[10];
+                const status = statusCell ? statusCell.textContent : 'N/A';
                 const statusElement = document.getElementById('viewStatus');
                 statusElement.textContent = status;
                 statusElement.className = 'badge ' + (status === 'Active' ? 'bg-success' : 'bg-secondary');
@@ -1248,18 +1352,148 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             }, 500);
         }
 
+        function calculateEditAge() {
+            const dobInput = document.getElementById('editDob');
+            const ageSpan = document.getElementById('editCalculatedAge');
+            const errorSpan = document.getElementById('editDobError');
+
+            if (dobInput.value) {
+                const dob = new Date(dobInput.value);
+                const today = new Date();
+
+                if (isNaN(dob.getTime())) {
+                    ageSpan.innerHTML = `<span class="text-danger">Invalid date</span>`;
+                    errorSpan.textContent = 'Please enter a valid date';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                if (dob > today) {
+                    ageSpan.innerHTML = `<span class="text-danger">Future date not allowed</span>`;
+                    errorSpan.textContent = 'Date cannot be in the future';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                // Update the age display
+                if (age < 18) {
+                    ageSpan.innerHTML = `<span class="text-danger">${age} (Minimum 18 required)</span>`;
+                    errorSpan.textContent = 'Age must be at least 18 years';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                } else if (age > 65) {
+                    ageSpan.innerHTML = `<span class="text-warning">${age} (Maximum 65)</span>`;
+                    errorSpan.textContent = 'Age cannot be more than 65 years';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    ageSpan.textContent = age;
+                    errorSpan.style.display = 'none';
+                    dobInput.classList.remove('is-invalid');
+                    return true;
+                }
+            } else {
+                ageSpan.textContent = '--';
+                errorSpan.style.display = 'none';
+                dobInput.classList.remove('is-invalid');
+                return false;
+            }
+        }
+
+        function calculateNewAge() {
+            const dobInput = document.getElementById('newDob');
+            const ageSpan = document.getElementById('newCalculatedAge');
+            const errorSpan = document.getElementById('newDobError');
+
+            if (dobInput.value) {
+                const dob = new Date(dobInput.value);
+                const today = new Date();
+
+                if (isNaN(dob.getTime())) {
+                    ageSpan.innerHTML = `<span class="text-danger">Invalid date</span>`;
+                    errorSpan.textContent = 'Please enter a valid date';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                if (dob > today) {
+                    ageSpan.innerHTML = `<span class="text-danger">Future date not allowed</span>`;
+                    errorSpan.textContent = 'Date cannot be in the future';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                // Update the age display
+                if (age < 18) {
+                    ageSpan.innerHTML = `<span class="text-danger">${age} (Minimum 18 required)</span>`;
+                    errorSpan.textContent = 'Age must be at least 18 years';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                } else if (age > 65) {
+                    ageSpan.innerHTML = `<span class="text-warning">${age} (Maximum 65)</span>`;
+                    errorSpan.textContent = 'Age cannot be more than 65 years';
+                    errorSpan.style.display = 'block';
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    ageSpan.textContent = age;
+                    errorSpan.style.display = 'none';
+                    dobInput.classList.remove('is-invalid');
+                    return true;
+                }
+            } else {
+                ageSpan.textContent = '--';
+                errorSpan.style.display = 'none';
+                dobInput.classList.remove('is-invalid');
+                return false;
+            }
+        }
+
         function handleEditSubmit(event) {
             event.preventDefault();
-            const age = parseInt(document.getElementById('editAge').value);
-            const contact = document.getElementById('editContact').value;
 
-            if (age < 18 || age > 65) {
-                alert('Age must be between 18 and 65');
+            // Validate DOB
+            const dobValid = calculateEditAge();
+            if (!dobValid) {
+                alert('Please fix the Date of Birth error before submitting');
                 return false;
             }
 
+            // Validate contact
+            const contact = document.getElementById('editContact').value;
             if (!/^\d{10}$/.test(contact)) {
+                document.getElementById('editContact').classList.add('is-invalid');
                 alert('Contact number must be exactly 10 digits');
+                return false;
+            } else {
+                document.getElementById('editContact').classList.remove('is-invalid');
+            }
+
+            // Validate education
+            const education = document.getElementById('editEducation').value;
+            if (!education) {
+                alert('Please select educational qualification');
                 return false;
             }
 
@@ -1331,44 +1565,30 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             return false;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const editModal = document.getElementById('editModal');
-            editModal.addEventListener('hidden.bs.modal', function() {
-                const submitBtn = document.getElementById('editSubmitBtn');
-                const submitText = submitBtn.querySelector('.submit-text');
-                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
-
-                submitText.style.display = 'inline';
-                loadingSpinner.style.display = 'none';
-                submitBtn.disabled = false;
-            });
-
-            const addRemarkModal = document.getElementById('addRemarkModal');
-            addRemarkModal.addEventListener('hidden.bs.modal', function() {
-                const submitBtn = document.getElementById('addRemarkSubmitBtn');
-                const submitText = submitBtn.querySelector('.submit-text');
-                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
-
-                submitText.style.display = 'inline';
-                loadingSpinner.style.display = 'none';
-                submitBtn.disabled = false;
-                document.getElementById('remark').value = '';
-            });
-        });
-
         function handleNewApplicationSubmit(event) {
             event.preventDefault();
-            const age = parseInt(document.getElementById('newAge').value);
-            const contact = document.getElementById('newContact').value;
 
-            // Validation
-            if (age < 18 || age > 65) {
-                alert('Age must be between 18 and 65');
+            // Validate DOB
+            const dobValid = calculateNewAge();
+            if (!dobValid) {
+                alert('Please fix the Date of Birth error before submitting');
                 return false;
             }
 
+            // Validate contact
+            const contact = document.getElementById('newContact').value;
             if (!/^\d{10}$/.test(contact)) {
+                document.getElementById('newContact').classList.add('is-invalid');
                 alert('Contact number must be exactly 10 digits');
+                return false;
+            } else {
+                document.getElementById('newContact').classList.remove('is-invalid');
+            }
+
+            // Validate education
+            const education = document.getElementById('newEducation').value;
+            if (!education) {
+                alert('Please select educational qualification');
                 return false;
             }
 
@@ -1404,18 +1624,53 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             return false;
         }
-        const newApplicationModal = document.getElementById('newApplicationModal');
-        newApplicationModal.addEventListener('hidden.bs.modal', function() {
-            const submitBtn = document.getElementById('newApplicationSubmitBtn');
-            const submitText = submitBtn.querySelector('.submit-text');
-            const loadingSpinner = submitBtn.querySelector('.loading-spinner');
 
-            submitText.style.display = 'inline';
-            loadingSpinner.style.display = 'none';
-            submitBtn.disabled = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const editModal = document.getElementById('editModal');
+            editModal.addEventListener('hidden.bs.modal', function() {
+                const submitBtn = document.getElementById('editSubmitBtn');
+                const submitText = submitBtn.querySelector('.submit-text');
+                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
 
-            // Reset form fields
-            document.getElementById('newApplicationForm').reset();
+                submitText.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+                submitBtn.disabled = false;
+
+                // Reset form validation
+                document.getElementById('editDobError').style.display = 'none';
+                document.getElementById('editDob').classList.remove('is-invalid');
+                document.getElementById('editContact').classList.remove('is-invalid');
+            });
+
+            const addRemarkModal = document.getElementById('addRemarkModal');
+            addRemarkModal.addEventListener('hidden.bs.modal', function() {
+                const submitBtn = document.getElementById('addRemarkSubmitBtn');
+                const submitText = submitBtn.querySelector('.submit-text');
+                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
+
+                submitText.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+                submitBtn.disabled = false;
+                document.getElementById('remark').value = '';
+            });
+
+            const newApplicationModal = document.getElementById('newApplicationModal');
+            newApplicationModal.addEventListener('hidden.bs.modal', function() {
+                const submitBtn = document.getElementById('newApplicationSubmitBtn');
+                const submitText = submitBtn.querySelector('.submit-text');
+                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
+
+                submitText.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+                submitBtn.disabled = false;
+
+                // Reset form fields and validation
+                document.getElementById('newApplicationForm').reset();
+                document.getElementById('newCalculatedAge').textContent = '--';
+                document.getElementById('newDobError').style.display = 'none';
+                document.getElementById('newDob').classList.remove('is-invalid');
+                document.getElementById('newContact').classList.remove('is-invalid');
+            });
         });
     </script>
 </body>
