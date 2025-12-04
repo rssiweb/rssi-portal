@@ -145,6 +145,7 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Worklist</a></li>
                     <li class="breadcrumb-item"><a href="job-approval.php">Job Approval</a></li>
                     <li class="breadcrumb-item active">Job Details</li>
                 </ol>

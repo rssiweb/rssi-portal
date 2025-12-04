@@ -583,6 +583,11 @@
               <span>iExplore Worklist</span>
             </a>
           </li>
+          <li>
+            <a id="job-approval" href="job-approval.php">
+              <span>Job Worklist</span>
+            </a>
+          </li>
         </ul>
       </li>
 
@@ -890,6 +895,14 @@
         id: 'worklist',
         linkId: 'iexplore_worklist',
         url: 'iexplore_worklist.php'
+      },{
+        id: 'worklist',
+        linkId: 'job-approval',
+        url: 'job-approval.php'
+      },{
+        id: 'worklist',
+        linkId: 'job-approval',
+        url: 'job_view.php'
       },
       {
         id: 'learning',
