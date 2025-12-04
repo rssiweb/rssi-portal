@@ -1096,13 +1096,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
             
             <div class="col-md-3 mb-2">
-    <label for="jobSeekerDob-${jobSeekerRowCount}" class="form-label">Date of Birth</label>
-    <input type="date" class="form-control job-seeker-dob" 
-           id="jobSeekerDob-${jobSeekerRowCount}" 
-           name="jobSeekers[${jobSeekerRowCount}][dob]" required
-           onchange="calculateAge(${jobSeekerRowCount})">
-    <small class="form-text text-muted">Age: <span id="calculatedAge-${jobSeekerRowCount}">--</span> years</small>
-</div>
+                <label for="jobSeekerDob-${jobSeekerRowCount}" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control job-seeker-dob" 
+                       id="jobSeekerDob-${jobSeekerRowCount}" 
+                       name="jobSeekers[${jobSeekerRowCount}][dob]" required
+                       onchange="calculateAge(${jobSeekerRowCount})">
+                <small class="form-text text-muted">Age: <span id="calculatedAge-${jobSeekerRowCount}">--</span> years</small>
+            </div>
             
             <div class="col-md-3 mb-2">
                 <label for="jobSeekerContact-${jobSeekerRowCount}" class="form-label">Contact Number</label>
@@ -1117,38 +1117,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <select class="form-select job-seeker-education" 
                         id="jobSeekerEducation-${jobSeekerRowCount}" 
                         name="jobSeekers[${jobSeekerRowCount}][education]" required>
-                    <option value="" selected disabled>Select qualification</option>
-                    <!-- Basic Literacy Levels -->
-                    <option value="Illiterate">Illiterate (Cannot read or write)</option>
-
-                    <option value="Can Read Hindi Only">Can Read – Hindi Only</option>
-                    <option value="Can Read English Only">Can Read – English Only</option>
-                    <option value="Can Read Both">Can Read – Hindi & English</option>
-
-                    <option value="Can Write Hindi Only">Can Write – Hindi Only</option>
-                    <option value="Can Write English Only">Can Write – English Only</option>
-                    <option value="Can Write Both">Can Write – Hindi & English</option>
-
-                    <option value="Can Read & Write Hindi Only">Can Read & Write – Hindi Only</option>
-                    <option value="Can Read & Write English Only">Can Read & Write – English Only</option>
-                    <option value="Can Read & Write Both">Can Read & Write – Hindi & English</option>
-
-                    <!-- School Level -->
-                    <option value="Below 5th">Below 5th Standard</option>
-                    <option value="5th Pass">5th Pass</option>
-                    <option value="8th Pass">8th Pass</option>
-                    <option value="Below 10th">Below 10th</option>
-
-                    <option value="10th Pass">10th Pass</option>
-                    <option value="12th Pass">12th Pass</option>
-
-                    <!-- Higher Education -->
-                    <option value="Diploma">Diploma</option>
-                    <option value="Graduate">Graduate</option>
-                    <option value="Post Graduate">Post Graduate</option>
-                    <option value="Doctorate">Doctorate</option>
-
-                    <option value="Other">Other</option>
+                    <option value="" selected disabled>Loading education levels...</option>
                 </select>
             </div>
             
@@ -1179,6 +1148,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     `;
 
             jobSeekerRows.appendChild(rowDiv);
+
+            // Load education levels for this row
+            loadEducationLevels(jobSeekerRowCount);
         }
 
         function removeJobSeekerRow(rowId) {
@@ -1318,6 +1290,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 dobInput.classList.remove('is-invalid');
                 return false;
             }
+        }
+    </script>
+    <script>
+        // Function to load education levels from API
+        function loadEducationLevels(rowId) {
+            const API_BASE = window.location.hostname === 'localhost' ?
+                'http://localhost:8082/' :
+                'https://login.rssi.in/';
+
+            const dropdown = document.getElementById(`jobSeekerEducation-${rowId}`);
+
+            // Show loading state
+            dropdown.innerHTML = '<option value="" selected disabled>Loading education levels...</option>';
+
+            $.ajax({
+                url: API_BASE + 'get_education_levels.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data && response.data.length > 0) {
+                        // Clear and populate dropdown
+                        dropdown.innerHTML = '<option value="" selected disabled>Select qualification</option>';
+
+                        response.data.forEach(education => {
+                            const option = document.createElement('option');
+                            option.value = education.id;
+                            option.textContent = education.name;
+                            dropdown.appendChild(option);
+                        });
+                    } else {
+                        // If no data or error, show fallback
+                        dropdown.innerHTML = '<option value="" selected disabled>No education levels available</option>';
+                        console.error('No education levels found or error:', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    dropdown.innerHTML = '<option value="" selected disabled>Error loading education levels</option>';
+                    console.error('AJAX error:', error);
+                }
+            });
         }
     </script>
 </body>
