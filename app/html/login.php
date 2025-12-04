@@ -21,7 +21,7 @@ try {
 
     // Check content type and get data accordingly
     $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
-    
+
     if (strpos($contentType, 'application/json') !== false) {
         // JSON data
         $data = json_decode(file_get_contents('php://input'), true);
@@ -46,7 +46,7 @@ try {
     }
 
     $user = pg_fetch_assoc($result);
-    
+
     if (!password_verify($password, $user['password'])) {
         throw new Exception('Invalid email or password');
     }
@@ -58,23 +58,28 @@ try {
     $response['success'] = true;
     $response['message'] = 'Login successful';
     $response['recruiter_id'] = $user['id'];
-    
-    // Check if password is a default password (2 uppercase letters + 6 digits)
+
+    // FIXED: Check if password is a default password (6 characters: letters and numbers only)
+    // This checks if the password is exactly 6 characters and contains only letters and numbers
     $isDefaultPassword = false;
-    if (strlen($password) === 8) {
-        $firstTwo = substr($password, 0, 2);
-        $lastSix = substr($password, 2);
-        if (ctype_upper($firstTwo) && is_numeric($lastSix)) {
-            $isDefaultPassword = true;
+    if (strlen($password) === 6) {
+        // Check if password contains only letters and numbers (no special characters)
+        if (preg_match('/^[a-zA-Z0-9]+$/', $password)) {
+            // Count letters and numbers
+            $letterCount = preg_match_all('/[a-zA-Z]/', $password);
+            $numberCount = preg_match_all('/[0-9]/', $password);
+
+            // If it has both letters and numbers (typical of our generated passwords)
+            if ($letterCount > 0 && $numberCount > 0) {
+                $isDefaultPassword = true;
+            }
         }
     }
-    
-    $response['requires_password_change'] = $isDefaultPassword;
 
+    $response['requires_password_change'] = $isDefaultPassword;
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
     error_log("Login error: " . $e->getMessage());
 }
 
 echo json_encode($response);
-?>
