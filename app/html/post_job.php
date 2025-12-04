@@ -211,7 +211,8 @@ try {
             "vacancies" => $vacancies,
             "location" => $location,
             "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
-            "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified"))
+            "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified")),
+            "education_qualification" => $education_qualification
         ];
 
         $emailResult = sendEmail("job_post_confirmation", $recruiterEmailData, $email, false);
@@ -256,6 +257,7 @@ try {
                     "location" => $location,
                     "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
                     "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified")),
+                    "education_qualification" => $education_qualification,
                     "approval_link" => "https://login.rssi.in/rssi-member/job_view.php?id=$job_id"
                 ];
 
