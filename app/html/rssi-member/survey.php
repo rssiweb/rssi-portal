@@ -237,20 +237,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // Ensure that array keys exist before accessing them
                 $name = isset($jobSeeker['name']) ? pg_escape_string($con, $jobSeeker['name']) : null;
-                $age = isset($jobSeeker['age']) ? intval($jobSeeker['age']) : null;
+                $dob = isset($jobSeeker['dob']) ? $jobSeeker['dob'] : null;
                 $contact = isset($jobSeeker['contact']) ? pg_escape_string($con, $jobSeeker['contact']) : null;
                 $education = isset($jobSeeker['education']) ? pg_escape_string($con, $jobSeeker['education']) : null;
                 $skills = isset($jobSeeker['skills']) ? pg_escape_string($con, $jobSeeker['skills']) : null;
                 $preferences = isset($jobSeeker['preferences']) ? pg_escape_string($con, $jobSeeker['preferences']) : null;
 
                 // Validate required fields
-                if (empty($name) || empty($age) || empty($contact) || empty($education)) {
+                if (empty($name) || empty($dob) || empty($contact) || empty($education)) {
                     continue; // Skip incomplete records
                 }
 
                 // Build the SQL query for job seeker data insertion
                 $jobSeekerQuery = "INSERT INTO job_seeker_data (
-                                    family_id, name, age, contact, education, 
+                                    family_id, name, dob, contact, education, 
                                     skills, preferences, created_at
                                 ) VALUES (
                                     $1, $2, $3, $4, $5, $6, $7, $8
@@ -260,7 +260,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $jobSeekerResult = pg_query_params($con, $jobSeekerQuery, array(
                     $family_id,
                     $name,
-                    $age,
+                    $dob,
                     $contact,
                     $education,
                     $skills,
@@ -607,7 +607,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                             <select class="form-select" id="interestInAdmission"
                                                                 name="interestInAdmission"
                                                                 onchange="toggleStudentFields()" required>
-                                                                <option selected disabled>Select an option
+                                                                <option value="" selected disabled>Select an option
                                                                 </option>
                                                                 <option value="no">No</option>
                                                                 <option value="yes">Yes</option>
@@ -1096,11 +1096,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
             
             <div class="col-md-3 mb-2">
-                <label for="jobSeekerAge-${jobSeekerRowCount}" class="form-label">Age</label>
-                <input type="number" class="form-control job-seeker-age" 
-                       id="jobSeekerAge-${jobSeekerRowCount}" 
-                       name="jobSeekers[${jobSeekerRowCount}][age]" min="18" max="65" required>
-            </div>
+    <label for="jobSeekerDob-${jobSeekerRowCount}" class="form-label">Date of Birth</label>
+    <input type="date" class="form-control job-seeker-dob" 
+           id="jobSeekerDob-${jobSeekerRowCount}" 
+           name="jobSeekers[${jobSeekerRowCount}][dob]" required
+           onchange="calculateAge(${jobSeekerRowCount})">
+    <small class="form-text text-muted">Age: <span id="calculatedAge-${jobSeekerRowCount}">--</span> years</small>
+</div>
             
             <div class="col-md-3 mb-2">
                 <label for="jobSeekerContact-${jobSeekerRowCount}" class="form-label">Contact Number</label>
@@ -1217,6 +1219,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Validate job seeker section if needed
             const needJobAssistance = document.getElementById('needJobAssistance').value;
+            // Update form validation in the validateForm() function
             if (needJobAssistance === 'yes') {
                 const jobSeekerRows = document.querySelectorAll('.job-seeker-row');
                 if (jobSeekerRows.length === 0) {
@@ -1226,19 +1229,95 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // Validate each job seeker row
                 for (let i = 0; i < jobSeekerRows.length; i++) {
+                    const rowNumber = i + 1;
                     const name = jobSeekerRows[i].querySelector('.job-seeker-name').value;
-                    const age = jobSeekerRows[i].querySelector('.job-seeker-age').value;
+                    const dob = jobSeekerRows[i].querySelector('.job-seeker-dob').value;
                     const contact = jobSeekerRows[i].querySelector('.job-seeker-contact').value;
                     const education = jobSeekerRows[i].querySelector('.job-seeker-education').value;
 
-                    if (!name || !age || !contact || !education) {
-                        alert('Please fill all required fields for job seeker details.');
+                    // First check for missing required fields
+                    if (!name || !dob || !contact || !education) {
+                        alert(`Please fill all required fields for Job Seeker #${rowNumber}.\n\nMissing fields:\n` +
+                            (!name ? '• Name\n' : '') +
+                            (!dob ? '• Date of Birth\n' : '') +
+                            (!contact ? '• Contact Number\n' : '') +
+                            (!education ? '• Educational Qualification\n' : ''));
+                        return false;
+                    }
+
+                    // Then check for age validation
+                    const calculatedAge = parseInt(document.getElementById(`calculatedAge-${rowNumber}`).textContent);
+                    if (isNaN(calculatedAge)) {
+                        alert(`Please enter a valid Date of Birth for Job Seeker #${rowNumber}.`);
+                        return false;
+                    }
+
+                    if (calculatedAge < 18) {
+                        alert(`Job Seeker #${rowNumber} must be at least 18 years old.\n\nCurrent age: ${calculatedAge} years`);
+                        return false;
+                    }
+
+                    if (calculatedAge > 65) {
+                        alert(`Job Seeker #${rowNumber} cannot be older than 65 years.\n\nCurrent age: ${calculatedAge} years`);
                         return false;
                     }
                 }
             }
 
             return true;
+        }
+    </script>
+    <script>
+        // Function to calculate age from date of birth
+        function calculateAge(rowId) {
+            const dobInput = document.getElementById(`jobSeekerDob-${rowId}`);
+            const ageSpan = document.getElementById(`calculatedAge-${rowId}`);
+
+            if (dobInput.value) {
+                const dob = new Date(dobInput.value);
+                const today = new Date();
+
+                // Check if date is valid
+                if (isNaN(dob.getTime())) {
+                    ageSpan.innerHTML = `<span class="text-danger">Invalid date</span>`;
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                // Check if date is not in the future
+                if (dob > today) {
+                    ageSpan.innerHTML = `<span class="text-danger">Future date not allowed</span>`;
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                }
+
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                // Adjust age if birthday hasn't occurred yet this year
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                // Update the age display
+                if (age < 18) {
+                    ageSpan.innerHTML = `<span class="text-danger">${age} (Minimum 18 required)</span>`;
+                    dobInput.classList.add('is-invalid');
+                    return false;
+                } else if (age > 65) {
+                    ageSpan.innerHTML = `<span class="text-warning">${age} (Maximum 65)</span>`;
+                    dobInput.classList.remove('is-invalid');
+                    return true;
+                } else {
+                    ageSpan.textContent = age;
+                    dobInput.classList.remove('is-invalid');
+                    return true;
+                }
+            } else {
+                ageSpan.textContent = '--';
+                dobInput.classList.remove('is-invalid');
+                return false;
+            }
         }
     </script>
 </body>
