@@ -238,6 +238,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Ensure that array keys exist before accessing them
                 $name = isset($jobSeeker['name']) ? pg_escape_string($con, $jobSeeker['name']) : null;
                 $dob = isset($jobSeeker['dob']) ? $jobSeeker['dob'] : null;
+                $email = isset($jobSeeker['email']) ? pg_escape_string($con, $jobSeeker['email']) : null;
                 $contact = isset($jobSeeker['contact']) ? pg_escape_string($con, $jobSeeker['contact']) : null;
                 $education = isset($jobSeeker['education']) ? pg_escape_string($con, $jobSeeker['education']) : null;
                 $skills = isset($jobSeeker['skills']) ? pg_escape_string($con, $jobSeeker['skills']) : null;
@@ -251,9 +252,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Build the SQL query for job seeker data insertion
                 $jobSeekerQuery = "INSERT INTO job_seeker_data (
                                     family_id, name, dob, contact, education, 
-                                    skills, preferences, created_at
+                                    skills, preferences, created_at, email
                                 ) VALUES (
-                                    $1, $2, $3, $4, $5, $6, $7, $8
+                                    $1, $2, $3, $4, $5, $6, $7, $8, $9
                                 )";
 
                 // Execute the query for job seeker data insertion
@@ -265,7 +266,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $education,
                     $skills,
                     $preferences,
-                    $timestamp
+                    $timestamp,
+                    $email
                 ));
 
                 // Check if the query was successful
@@ -515,36 +517,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                     </div>
                                                 </div>
 
-                                                <!-- Job Search Assistance Section -->
-                                                <div class="card mb-4">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title">Job Search Assistance</h5>
-
-                                                        <!-- Need Job Assistance -->
-                                                        <div class="mb-3">
-                                                            <label for="needJobAssistance" class="form-label">Do you need any assistance regarding job search?</label>
-                                                            <select class="form-select" id="needJobAssistance" name="needJobAssistance" onchange="toggleJobAssistanceSection()" required>
-                                                                <option value="" selected disabled>Select option</option>
-                                                                <option value="no">No</option>
-                                                                <option value="yes">Yes</option>
-                                                            </select>
-                                                        </div>
-
-                                                        <!-- Job Seeker Details -->
-                                                        <div id="jobSeekerSection" style="display: none;">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Job Seeker Details</label>
-                                                                <div id="jobSeekerRows">
-                                                                    <!-- Initial row will be added here -->
-                                                                </div>
-                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addJobSeekerRow()">
-                                                                    <i class="bi bi-plus"></i> Add Another Job Seeker
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
                                                 <!-- Personal Information for Appointment -->
                                                 <div id="personalInfoSection" style="display: none;">
                                                     <div class="card mb-4">
@@ -593,6 +565,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                 <input type="file" class="form-control" id="profilePhoto" name="profilePhoto" accept="image/*" capture="camera">
                                                                 <input type="hidden" id="photo_data" name="photo_data">
                                                                 <small class="text-muted">Take or upload a clear photo</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Job Search Assistance Section -->
+                                                <div class="card mb-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Job Search Assistance</h5>
+
+                                                        <!-- Need Job Assistance -->
+                                                        <div class="mb-3">
+                                                            <label for="needJobAssistance" class="form-label">Do you need any assistance regarding job search?</label>
+                                                            <select class="form-select" id="needJobAssistance" name="needJobAssistance" onchange="toggleJobAssistanceSection()" required>
+                                                                <option value="" selected disabled>Select option</option>
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Job Seeker Details -->
+                                                        <div id="jobSeekerSection" style="display: none;">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Job Seeker Details</label>
+                                                                <div id="jobSeekerRows">
+                                                                    <!-- Initial row will be added here -->
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addJobSeekerRow()">
+                                                                    <i class="bi bi-plus"></i> Add Another Job Seeker
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1088,14 +1090,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </div>
             
-            <div class="col-md-6 mb-2">
+            <!-- Row 1: Name, DOB, Contact -->
+            <div class="col-md-4 mb-2">
                 <label for="jobSeekerName-${jobSeekerRowCount}" class="form-label">Name</label>
                 <input type="text" class="form-control job-seeker-name" 
                        id="jobSeekerName-${jobSeekerRowCount}" 
                        name="jobSeekers[${jobSeekerRowCount}][name]" required>
             </div>
             
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <label for="jobSeekerDob-${jobSeekerRowCount}" class="form-label">Date of Birth</label>
                 <input type="date" class="form-control job-seeker-dob" 
                        id="jobSeekerDob-${jobSeekerRowCount}" 
@@ -1104,12 +1107,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <small class="form-text text-muted">Age: <span id="calculatedAge-${jobSeekerRowCount}">--</span> years</small>
             </div>
             
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <label for="jobSeekerContact-${jobSeekerRowCount}" class="form-label">Contact Number</label>
                 <input type="tel" class="form-control job-seeker-contact" 
                        id="jobSeekerContact-${jobSeekerRowCount}" 
                        name="jobSeekers[${jobSeekerRowCount}][contact]" 
                        pattern="[0-9]{10}" required>
+            </div>
+
+            <!-- Row 2: Email and Education -->
+            <div class="col-md-6 mb-2">
+                <label for="jobSeekerEmail-${jobSeekerRowCount}" class="form-label">Email Address</label>
+                <input type="email" class="form-control job-seeker-email"
+                       id="jobSeekerEmail-${jobSeekerRowCount}"
+                       name="jobSeekers[${jobSeekerRowCount}][email]"
+                       placeholder="example@email.com">
             </div>
             
             <div class="col-md-6 mb-2">
@@ -1121,26 +1133,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </select>
             </div>
             
-            <div class="col-md-6 mb-2">
+            <!-- Row 3: Skills -->
+            <div class="col-md-12 mb-2">
                 <label for="jobSeekerSkills-${jobSeekerRowCount}" class="form-label">Skills/Experience</label>
                 <input type="text" class="form-control" 
                        id="jobSeekerSkills-${jobSeekerRowCount}" 
                        name="jobSeekers[${jobSeekerRowCount}][skills]" 
-                       placeholder="e.g., Computer skills, driving, etc.">
+                       placeholder="e.g., Computer skills, driving, communication, etc.">
             </div>
             
+            <!-- Row 4: Job Preferences -->
             <div class="col-md-12 mb-2">
                 <label for="jobSeekerPreferences-${jobSeekerRowCount}" class="form-label">Job Preferences</label>
-                <input type="text" class="form-control" 
+                <textarea class="form-control" 
                        id="jobSeekerPreferences-${jobSeekerRowCount}" 
                        name="jobSeekers[${jobSeekerRowCount}][preferences]" 
-                       placeholder="e.g., Full-time, part-time, specific industry">
+                       rows="2"
+                       placeholder="e.g., Full-time, part-time, work from home, specific industry or location"></textarea>
             </div>
             
             ${jobSeekerRowCount > 1 ? `
+            <!-- Remove button for additional rows -->
             <div class="col-md-12">
                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeJobSeekerRow(${jobSeekerRowCount})">
-                    <i class="bi bi-trash"></i> Remove
+                    <i class="bi bi-trash"></i> Remove Job Seeker
                 </button>
             </div>
             ` : ''}
