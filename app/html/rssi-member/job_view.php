@@ -50,7 +50,7 @@ $applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.age, jsd
                             el.name as education_name
                      FROM job_applications ja
                      JOIN job_seeker_data jsd ON ja.job_seeker_id = jsd.id
-                     LEFT JOIN education_levels el ON jsd.education = el.id::text
+                     LEFT JOIN education_levels el ON jsd.education = el.id
                      WHERE ja.job_id = $1
                      ORDER BY ja.application_date DESC";
 

@@ -64,8 +64,10 @@ foreach ($education_levels as $edu) {
                             <input type="email" class="form-control" id="email" name="email">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="age" class="form-label">Age *</label>
-                            <input type="number" class="form-control" id="age" name="age" min="18" max="70" required>
+                            <label for="dob" class="form-label">Date of Birth *</label>
+                            <input type="date" class="form-control" id="dob" name="dob" required onchange="calculateAge()">
+                            <small class="form-text text-muted">Age: <span id="calculatedAge">--</span> years</small>
+                            <div class="invalid-feedback" id="dobError"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="education" class="form-label">Education Level *</label>
@@ -92,13 +94,14 @@ foreach ($education_levels as $edu) {
 
                         <!-- Resume Upload Section - Single PDF File Only -->
                         <div class="col-12 mb-3">
-                            <label class="form-label">Upload Resume (PDF only, max 5MB) *</label>
+                            <label class="form-label">Upload Resume (PDF only, max 5MB)</label>
                             <div class="file-upload-area">
                                 <input type="file" class="form-control" id="resumeFile" name="resume"
                                     accept=".pdf">
                                 <div class="form-text">
                                     <i class="bi bi-info-circle"></i> Upload a single PDF file (Max 5MB)
                                 </div>
+                                <small class="text-muted">Optional – You may upload later, but a resume helps you get shortlisted faster.</small>
                             </div>
                         </div>
                     </div>
@@ -149,4 +152,64 @@ foreach ($education_levels as $edu) {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
     });
+</script>
+<script>
+    function calculateAge() {
+        const dobInput = document.getElementById('dob');
+        const ageSpan = document.getElementById('calculatedAge');
+        const errorSpan = document.getElementById('dobError');
+
+        if (dobInput.value) {
+            const dob = new Date(dobInput.value);
+            const today = new Date();
+
+            if (isNaN(dob.getTime())) {
+                ageSpan.innerHTML = `<span class="text-danger">Invalid date</span>`;
+                errorSpan.textContent = 'Please enter a valid date';
+                errorSpan.style.display = 'block';
+                dobInput.classList.add('is-invalid');
+                return false;
+            }
+
+            if (dob > today) {
+                ageSpan.innerHTML = `<span class="text-danger">Future date not allowed</span>`;
+                errorSpan.textContent = 'Date cannot be in the future';
+                errorSpan.style.display = 'block';
+                dobInput.classList.add('is-invalid');
+                return false;
+            }
+
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            // Update the age display
+            if (age < 18) {
+                ageSpan.innerHTML = `<span class="text-danger">${age} (Minimum 18 required)</span>`;
+                errorSpan.textContent = 'Age must be at least 18 years';
+                errorSpan.style.display = 'block';
+                dobInput.classList.add('is-invalid');
+                return false;
+            } else if (age > 70) {
+                ageSpan.innerHTML = `<span class="text-warning">${age} (Maximum 70)</span>`;
+                errorSpan.textContent = 'Age cannot be more than 70 years';
+                errorSpan.style.display = 'block';
+                dobInput.classList.add('is-invalid');
+                return false;
+            } else {
+                ageSpan.textContent = age;
+                errorSpan.style.display = 'none';
+                dobInput.classList.remove('is-invalid');
+                return true;
+            }
+        } else {
+            ageSpan.textContent = '--';
+            errorSpan.style.display = 'none';
+            dobInput.classList.remove('is-invalid');
+            return false;
+        }
+    }
 </script>

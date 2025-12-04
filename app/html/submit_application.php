@@ -8,7 +8,7 @@ try {
     $phone = $_POST['phone'] ?? '';
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $age = $_POST['age'] ?? '';
+    $dob = $_POST['dob'] ?? '';
     $education = $_POST['education'] ?? '';
     $skills = $_POST['skills'] ?? '';
     $preferences = $_POST['preferences'] ?? '';
@@ -20,7 +20,7 @@ try {
     $resume_file_name = null;
 
     // Validate required fields
-    if (empty($phone) || empty($name) || empty($age) || empty($education) || empty($skills) || empty($job_id)) {
+    if (empty($phone) || empty($name) || empty($dob) || empty($education) || empty($skills) || empty($job_id)) {
         echo json_encode([
             'success' => false,
             'message' => 'All required fields must be filled'
@@ -37,7 +37,9 @@ try {
         exit;
     }
 
-    // Handle Resume file upload to Google Drive
+    // Handle Resume file upload to Google Drive - OPTIONAL
+    $resume_drive_link = null; // Initialize as null
+
     if (isset($_FILES['resume']) && $_FILES['resume']['error'] == UPLOAD_ERR_OK) {
         $uploadedFile = $_FILES['resume'];
 
@@ -73,9 +75,8 @@ try {
         // Google Drive folder ID for Resumes
         $drive_folder_id = '18uRvl5MibzbL2FBa9X9mmXqydsqbVQad';
 
-        // Upload to Google Drive - you need to have the uploadeToDrive function
+        // Upload to Google Drive
         if (!function_exists('uploadeToDrive')) {
-            // Include the Google Drive upload function
             include(__DIR__ . "/../util/drive.php");
         }
 
@@ -86,22 +87,19 @@ try {
         }
 
         error_log("Resume file uploaded to Google Drive: " . $resume_drive_link);
-    } else {
-        // Resume is required - throw error if not uploaded
-        $upload_error = $_FILES['resume']['error'] ?? 'No file uploaded';
-        if ($upload_error == UPLOAD_ERR_NO_FILE) {
-            throw new Exception('Resume file is required');
-        } else {
-            throw new Exception('Resume upload failed. Error: ' . $upload_error);
-        }
+    } elseif (isset($_FILES['resume']) && $_FILES['resume']['error'] != UPLOAD_ERR_NO_FILE) {
+        // If there's a file upload error (not just "no file" error), throw exception
+        $upload_error = $_FILES['resume']['error'];
+        throw new Exception('Resume upload failed. Error: ' . $upload_error);
     }
+    // If no resume uploaded (UPLOAD_ERR_NO_FILE), $resume_drive_link remains null
 
     // Start transaction
     pg_query($con, "BEGIN");
 
     // Insert into job_seeker_data WITH RESUME
     $seeker_query = "INSERT INTO job_seeker_data 
-                     (name, contact, email, age, education, skills, preferences, address1, resume, status, created_at) 
+                     (name, contact, email, dob, education, skills, preferences, address1, resume, status, created_at) 
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active', NOW()) 
                      RETURNING id";
 
@@ -109,7 +107,7 @@ try {
         $name,
         $phone,
         $email,
-        $age,
+        $dob,
         $education,
         $skills,
         $preferences,
