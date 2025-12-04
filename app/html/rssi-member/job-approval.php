@@ -306,7 +306,19 @@ $historyJobs = $historyResult ? pg_fetch_all($historyResult) : [];
                                                                 <p class="mb-1"><strong>Job Type:</strong> <?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></p>
                                                                 <p class="mb-1"><strong>Vacancies:</strong> <?php echo $job['vacancies']; ?></p>
                                                                 <p class="mb-1"><strong>Apply By:</strong> <?php echo date('d/m/Y', strtotime($job['apply_by'])); ?></p>
-                                                                <p class="mb-1"><strong>Salary:</strong> <?php echo $job['salary'] ? '₹' . $job['salary'] : 'Not specified'; ?></p>
+                                                                <p class="mb-1"><strong>Salary:</strong>
+                                                                    <?php
+                                                                    echo ($job['min_salary'] && $job['max_salary'])
+                                                                        ? '₹' . $job['min_salary'] . ' - ₹' . $job['max_salary'] . ' per month'
+                                                                        : ($job['min_salary']
+                                                                            ? '₹' . $job['min_salary'] . ' per month'
+                                                                            : ($job['max_salary']
+                                                                                ? 'Up to ₹' . $job['max_salary'] . ' per month'
+                                                                                : 'Not specified'
+                                                                            )
+                                                                        );
+                                                                    ?>
+                                                                </p>
                                                             </div>
 
                                                             <div class="mb-3">

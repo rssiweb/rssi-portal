@@ -18,11 +18,13 @@ if (!$job_id) {
     exit;
 }
 
-// Fetch job details with recruiter information
+// Fetch job details with recruiter information AND education level
 $query = "SELECT jp.*, r.full_name as recruiter_name, r.company_name, 
-                 r.email as recruiter_email, r.phone as recruiter_phone
+                 r.email as recruiter_email, r.phone as recruiter_phone,
+                 el.name as education_level_name
           FROM job_posts jp 
           JOIN recruiters r ON jp.recruiter_id = r.id 
+          LEFT JOIN education_levels el ON jp.education_levels = el.id 
           WHERE jp.id = $1";
 
 $result = pg_query_params($con, $query, [$job_id]);
@@ -224,6 +226,14 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
                                             <h6><i class="bi bi-file-text me-2"></i>Job Description</h6>
                                             <div class="mb-4">
                                                 <?php echo nl2br(htmlspecialchars($job['job_description'])); ?>
+                                                <?php
+                                                echo '<div class="mt-4">' .
+                                                    (!empty($job['job_file_path'])
+                                                        ? nl2br(htmlspecialchars($job['job_file_path']))
+                                                        : 'No file attached'
+                                                    ) .
+                                                    '</div>';
+                                                ?>
                                             </div>
 
                                             <?php if (!empty($job['requirements'])): ?>
@@ -256,7 +266,17 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
                                                     </div>
                                                     <div class="info-item">
                                                         <span class="label">Salary:</span>
-                                                        <?php echo $job['salary'] ? '₹' . number_format($job['salary']) : 'Not specified'; ?>
+                                                        <?php
+                                                        echo ($job['min_salary'] && $job['max_salary'])
+                                                            ? '₹' . number_format($job['min_salary']) . ' - ₹' . number_format($job['max_salary']) . ' per month'
+                                                            : ($job['min_salary']
+                                                                ? '₹' . number_format($job['min_salary']) . ' per month'
+                                                                : ($job['max_salary']
+                                                                    ? 'Up to ₹' . number_format($job['max_salary']) . ' per month'
+                                                                    : 'Not specified'
+                                                                )
+                                                            );
+                                                        ?>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -266,7 +286,7 @@ $apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
                                                     </div>
                                                     <div class="info-item">
                                                         <span class="label">Education:</span>
-                                                        <?php echo !empty($job['education']) ? htmlspecialchars($job['education']) : 'Not specified'; ?>
+                                                        <?php echo !empty($job['education_level_name']) ? htmlspecialchars($job['education_level_name']) : 'Not specified'; ?>
                                                     </div>
                                                     <div class="info-item">
                                                         <span class="label">Apply By:</span>
