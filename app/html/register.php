@@ -152,9 +152,14 @@ try {
         throw new Exception('Aadhar file is required or upload failed. Error: ' . $upload_error);
     }
 
+    // Generate default password (2 uppercase letters + 6 digits)
+$defaultPassword = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 2) . 
+                   substr(str_shuffle('0123456789'), 0, 6);
+$hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+
     // Insert into database using pg_query_params for security
-    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, is_verified) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING id";
+    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, is_verified) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) RETURNING id";
 
     error_log("Executing query: $query");
 
@@ -165,7 +170,8 @@ try {
         $phone,
         $aadhar_number,
         $aadhar_drive_link, // Store Google Drive link instead of local path
-        $company_address
+        $company_address,
+        $hashedPassword  // Add this line
     ]);
 
     if (!$result) {
@@ -185,7 +191,8 @@ try {
             "company_name" => $company_name,
             "registration_date" => date("d/m/Y"),
             "timestamp" => date("d/m/Y g:i a"),
-            "recruiter_id" => $recruiter_id
+            "recruiter_id" => $recruiter_id,
+            "temp_password" => $defaultPassword  // Add this line
         ];
 
         $emailResult = sendEmail("recruiter_registration", $emailData, $email, false);

@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 error_log("verify_otp.php accessed at: " . date('Y-m-d H:i:s'));
 error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
 
-$response = ['success' => false, 'message' => '', 'user_exists' => false];
+$response = ['success' => false, 'message' => '', 'user_exists' => false, 'has_password' => false];
 
 try {
     // Check content type and get data accordingly
@@ -64,70 +64,7 @@ try {
         throw new Exception('Database error: ' . $error);
     }
 
-    if (pg_num_rows($result) > 0) {
-        $row = pg_fetch_assoc($result);
-        $otp_id = $row['id'];
-        $expires_at = $row['expires_at'];
-        $created_at = $row['created_at'];
-
-        error_log("OTP found - ID: $otp_id, Created: $created_at, Expires: $expires_at");
-
-        // Check if OTP is expired
-        $current_time = date('Y-m-d H:i:s');
-        if (strtotime($current_time) > strtotime($expires_at)) {
-            error_log("OTP expired - Current: $current_time, Expires: $expires_at");
-
-            // Delete expired OTP
-            $deleteExpiredQuery = "DELETE FROM otp_verification WHERE id = $1";
-            $deleteExpiredResult = pg_query_params($con, $deleteExpiredQuery, [$otp_id]);
-
-            if ($deleteExpiredResult) {
-                error_log("Expired OTP deleted successfully");
-            }
-
-            throw new Exception('OTP has expired');
-        }
-
-        // DELETE THE OTP AFTER SUCCESSFUL VERIFICATION (instead of marking as used)
-        $deleteQuery = "DELETE FROM otp_verification WHERE id = $1";
-        $deleteResult = pg_query_params($con, $deleteQuery, [$otp_id]);
-
-        if (!$deleteResult) {
-            $error = pg_last_error($con);
-            error_log("Failed to delete OTP: " . $error);
-            // Continue anyway since OTP was verified
-        } else {
-            error_log("OTP deleted successfully after verification");
-        }
-
-        // Check if user exists and is verified
-        $userQuery = "SELECT id, full_name, company_name FROM recruiters WHERE email = $1 AND is_verified = true";
-        $userResult = pg_query_params($con, $userQuery, [$email]);
-
-        if (!$userResult) {
-            $error = pg_last_error($con);
-            error_log("Database error checking user: " . $error);
-            throw new Exception('Database error checking user');
-        }
-
-        $userExists = pg_num_rows($userResult) > 0;
-
-        // If user exists, get their details
-        if ($userExists) {
-            $userData = pg_fetch_assoc($userResult);
-            $response['user_details'] = [
-                'full_name' => $userData['full_name'],
-                'company_name' => $userData['company_name']
-            ];
-            error_log("User exists: " . print_r($userData, true));
-        } else {
-            error_log("User does not exist or not verified for email: $email");
-        }
-
-        $response['success'] = true;
-        $response['message'] = 'OTP verified successfully';
-        $response['user_exists'] = $userExists;
-    } else {
+    if (pg_num_rows($result) === 0) {
         // Check if OTP exists but is already used (or deleted)
         $usedQuery = "SELECT id FROM otp_verification WHERE email = $1 AND otp = $2";
         $usedResult = pg_query_params($con, $usedQuery, [$email, $otp]);
@@ -140,6 +77,81 @@ try {
             throw new Exception('Invalid or expired OTP');
         }
     }
+
+    // OTP found and valid
+    $row = pg_fetch_assoc($result);
+    $otp_id = $row['id'];
+    $expires_at = $row['expires_at'];
+    $created_at = $row['created_at'];
+
+    error_log("OTP found - ID: $otp_id, Created: $created_at, Expires: $expires_at");
+
+    // Check if OTP is expired
+    $current_time = date('Y-m-d H:i:s');
+    if (strtotime($current_time) > strtotime($expires_at)) {
+        error_log("OTP expired - Current: $current_time, Expires: $expires_at");
+
+        // Delete expired OTP
+        $deleteExpiredQuery = "DELETE FROM otp_verification WHERE id = $1";
+        $deleteExpiredResult = pg_query_params($con, $deleteExpiredQuery, [$otp_id]);
+
+        if ($deleteExpiredResult) {
+            error_log("Expired OTP deleted successfully");
+        }
+
+        throw new Exception('OTP has expired');
+    }
+
+    // DELETE THE OTP AFTER SUCCESSFUL VERIFICATION (instead of marking as used)
+    $deleteQuery = "DELETE FROM otp_verification WHERE id = $1";
+    $deleteResult = pg_query_params($con, $deleteQuery, [$otp_id]);
+
+    if (!$deleteResult) {
+        $error = pg_last_error($con);
+        error_log("Failed to delete OTP: " . $error);
+        // Continue anyway since OTP was verified
+    } else {
+        error_log("OTP deleted successfully after verification");
+    }
+
+    // Now check if user exists in recruiters table and if they have password
+    $userQuery = "SELECT id, full_name, company_name, password, is_verified 
+                  FROM recruiters 
+                  WHERE email = $1";
+    
+    $userResult = pg_query_params($con, $userQuery, [$email]);
+
+    if (!$userResult) {
+        $error = pg_last_error($con);
+        error_log("Database error checking recruiter: " . $error);
+        throw new Exception('Database error checking user');
+    }
+
+    if (pg_num_rows($userResult) > 0) {
+        // User exists in database
+        $userData = pg_fetch_assoc($userResult);
+        
+        $response['user_exists'] = true;
+        $response['has_password'] = !empty($userData['password']); // Check if password is set
+        $response['is_verified'] = $userData['is_verified'];
+        $response['user_details'] = [
+            'full_name' => $userData['full_name'],
+            'company_name' => $userData['company_name']
+        ];
+        $response['recruiter_id'] = $userData['id'];
+        
+        error_log("User exists - Has password: " . ($response['has_password'] ? 'Yes' : 'No'));
+        error_log("User data: " . print_r($userData, true));
+    } else {
+        // User doesn't exist yet
+        $response['user_exists'] = false;
+        $response['has_password'] = false;
+        error_log("User does not exist in recruiters table");
+    }
+
+    $response['success'] = true;
+    $response['message'] = 'OTP verified successfully';
+
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
     error_log("Exception in verify_otp.php: " . $e->getMessage());
@@ -147,3 +159,4 @@ try {
 
 error_log("Final response: " . json_encode($response));
 echo json_encode($response);
+?>
