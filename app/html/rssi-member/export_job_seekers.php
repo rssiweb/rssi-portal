@@ -24,36 +24,41 @@ if ($search_mode) {
     // Search mode - only use search term
     if (!empty($search_term)) {
         $param_count++;
-        $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+        $where_conditions[] = "(js.name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR js.skills ILIKE $" . $param_count . " OR js.preferences ILIKE $" . $param_count . " OR js.email ILIKE $" . $param_count . ")";
         $params[] = "%$search_term%";
     }
 } else {
     // Filter mode - use status and education filters
     if ($status_filter === 'active') {
-        $where_conditions[] = "status = 'Active'";
+        $where_conditions[] = "js.status = 'Active'";
     } elseif ($status_filter === 'inactive') {
-        $where_conditions[] = "status = 'Inactive'";
+        $where_conditions[] = "js.status = 'Inactive'";
+    } elseif ($status_filter === 'all') {
+        // Show all statuses - no condition needed
     }
 
     if (!empty($education_filter)) {
         $param_count++;
-        $where_conditions[] = "education = $" . $param_count;
+        $where_conditions[] = "js.education = $" . $param_count;
         $params[] = $education_filter;
     }
 
     // Also allow search in filter mode
     if (!empty($search_term)) {
         $param_count++;
-        $where_conditions[] = "(name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR skills ILIKE $" . $param_count . " OR preferences ILIKE $" . $param_count . ")";
+        $where_conditions[] = "(js.name ILIKE $" . $param_count . " OR js.contact ILIKE $" . $param_count . " OR js.skills ILIKE $" . $param_count . " OR js.preferences ILIKE $" . $param_count . " OR js.email ILIKE $" . $param_count . ")";
         $params[] = "%$search_term%";
     }
 }
 
 $where_clause = $where_conditions ? "WHERE " . implode(" AND ", $where_conditions) : "";
 
-// Get job seekers data
-$query = "SELECT js.*, s.parent_name, COALESCE(js.address1, s.address) AS address, COALESCE(js.created_by, s.surveyor_id) AS surveyor_id 
+// Get job seekers data with education name
+$query = "SELECT js.*, el.name as education_name, s.parent_name, 
+                 COALESCE(js.address1, s.address) AS address, 
+                 COALESCE(js.created_by, s.surveyor_id) AS surveyor_id 
           FROM job_seeker_data js 
+          LEFT JOIN education_levels el ON js.education = el.id
           LEFT JOIN survey_data s ON js.family_id = s.family_id 
           $where_clause 
           ORDER BY js.created_at DESC";
@@ -70,7 +75,7 @@ echo "Generated on: " . date('Y-m-d H:i:s') . "\n";
 
 // Add filter information
 echo "Filters Applied:\n";
-echo "Status: " . ($status_filter === 'active' ? 'Active' : ($status_filter === 'inactive' ? 'Inactive' : 'All')) . "\n";
+echo "Status: " . ($status_filter === 'active' ? 'Active' : ($status_filter === 'inactive' ? 'Inactive' : ($status_filter === 'all' ? 'All' : $status_filter))) . "\n";
 echo "Education: " . ($education_filter ?: 'All') . "\n";
 if ($search_mode) {
     echo "Search Mode: Enabled\n";
@@ -80,22 +85,33 @@ if ($search_mode) {
 }
 echo "\n";
 
-echo "ID\tName\tAge\tContact\tEducation\tSkills\tPreferences\tAddress\tSurveyor ID\tStatus\tRemarks\tCreated Date\n";
+// Updated headers with new fields
+echo "ID\tName\tDate of Birth\tAge\tEmail\tContact\tEducation\tSkills\tPreferences\tAddress\tSurveyor ID\tStatus\tRemarks\tCreated Date\n";
 
 while ($row = pg_fetch_assoc($result)) {
     $id = $row['id'];
     $name = str_replace(["\t", "\n", "\r"], ' ', $row['name']);
-    $age = $row['age'];
+
+    // Calculate age from DOB
+    $age = '--';
+    if ($row['dob']) {
+        $dob = new DateTime($row['dob']);
+        $today = new DateTime();
+        $age = $today->diff($dob)->y;
+    }
+
+    $dob = $row['dob'] ?: '';
+    $email = str_replace(["\t", "\n", "\r"], ' ', $row['email'] ?? '');
     $contact = $row['contact'];
-    $education = $row['education'];
+    $education = str_replace(["\t", "\n", "\r"], ' ', $row['education_name'] ?? ($row['education'] ?? ''));
     $skills = str_replace(["\t", "\n", "\r"], ' ', $row['skills'] ?? '');
     $preferences = str_replace(["\t", "\n", "\r"], ' ', $row['preferences'] ?? '');
-    $address = str_replace(["\t", "\n", "\r"], ' ', $row['address']);
-    $surveyor_id = $row['surveyor_id'];
+    $address = str_replace(["\t", "\n", "\r"], ' ', $row['address'] ?? '');
+    $surveyor_id = $row['surveyor_id'] ?? '';
     $status = $row['status'];
     $remarks = str_replace(["\t", "\n", "\r"], ' ', $row['remarks'] ?? '');
     $created_date = $row['created_at'];
 
-    echo "$id\t$name\t$age\t$contact\t$education\t$skills\t$preferences\t$address\t$surveyor_id\t$status\t$remarks\t$created_date\n";
+    echo "$id\t$name\t$dob\t$age\t$email\t$contact\t$education\t$skills\t$preferences\t$address\t$surveyor_id\t$status\t$remarks\t$created_date\n";
 }
 exit;
