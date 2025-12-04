@@ -245,7 +245,7 @@ try {
                     "location" => $location,
                     "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
                     "salary" => $salary ? "₹$salary per month" : "Not specified",
-                    "approval_link" => "https://admin.rssi.in/job-approval.php?id=$job_id"
+                    "approval_link" => "https://login.rssi.in/rssi-member/job_view.php?id=$job_id"
                 ];
 
                 // This will send to ALL admin emails at once (comma-separated)
