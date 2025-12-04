@@ -2,14 +2,16 @@ New Job Post Requires Approval - Job ID: {{job_id}}
 <!-- Admin Notification for Job Approval -->
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>New Job Post Requires Approval</title>
 </head>
+
 <body>
     <p>Dear Admin,</p>
-    
+
     <p>A new job post has been submitted and requires your approval.</p>
-    
+
     <p><strong>Job Details:</strong></p>
     <ul>
         <li><strong>Job Title:</strong> {{job_title}}</li>
@@ -18,20 +20,24 @@ New Job Post Requires Approval - Job ID: {{job_id}}
         <li><strong>Job ID:</strong> {{job_id}}</li>
         <li><strong>Location:</strong> {{location}}</li>
         <li><strong>Job Type:</strong> {{job_type}}</li>
+        <p><strong>Salary:</strong> {{salary}}</p>
+        <p><strong>Educational Qualification:</strong> {{education_qualification}}</p>
         <li><strong>Vacancies:</strong> {{vacancies}}</li>
         <li><strong>Apply By:</strong> {{apply_by}}</li>
         <li><strong>Submission Date:</strong> {{post_date}}</li>
     </ul>
-    
+
     <p><strong>Action Required:</strong> Please review and approve/reject this job post.</p>
-    
+
     <p><a href="{{approval_link}}">Click here to review and approve this job post</a></p>
-    
+
     <p>Best regards,<br>
-    <strong>RSSI Recruitment System</strong></p>
-    
+        <strong>RSSI Recruitment System</strong>
+    </p>
+
     <p style="font-size: 12px; color: #6c757d;">
         This is a system generated notification.
     </p>
 </body>
+
 </html>

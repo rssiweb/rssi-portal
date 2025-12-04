@@ -47,12 +47,15 @@ try {
     $job_title = $_POST['job_title'] ?? '';
     $job_type = $_POST['job_type'] ?? '';
     $location = $_POST['location'] ?? '';
-    $salary = $_POST['salary'] ?? '';
     $job_description = $_POST['job_description'] ?? '';
     $requirements = $_POST['requirements'] ?? '';
     $experience = $_POST['experience'] ?? '';
     $vacancies = $_POST['vacancies'] ?? '';
     $apply_by = $_POST['apply_by'] ?? '';
+    $min_salary = $_POST['min_salary'] ?? '';
+    $max_salary = $_POST['max_salary'] ?? '';
+    $education_qualification = $_POST['education_qualification'] ?? '';
+
 
     error_log("Job post attempt - Email: $email, Job Title: $job_title");
 
@@ -65,7 +68,11 @@ try {
         'job_description' => 'Job Description',
         'requirements' => 'Requirements',
         'vacancies' => 'Number of Vacancies',
-        'apply_by' => 'Apply By Date'
+        'apply_by' => 'Apply By Date',
+        'experience' => 'Experience',
+        'education_qualification' => 'Educational Qualification',
+        'min_salary' => 'Minimum Salary',
+        'max_salary' => 'Maximum Salary'
     ];
 
     foreach ($required_fields as $field => $label) {
@@ -161,8 +168,8 @@ try {
     // Then in your INSERT query, use $job_drive_link instead of $job_file_path
 
     // Insert job post
-    $query = "INSERT INTO job_posts (recruiter_id, job_title, job_type, location, salary, job_description, requirements, experience, vacancies, apply_by, job_file_path) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id";
+    $query = "INSERT INTO job_posts (recruiter_id, job_title, job_type, location, min_salary, max_salary, education_levels, job_description, requirements, experience, vacancies, apply_by, job_file_path) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id";
 
     error_log("Executing job insert query");
 
@@ -171,7 +178,9 @@ try {
         $job_title,
         $job_type,
         $location,
-        $salary,
+        $min_salary,
+        $max_salary,
+        $education_qualification,
         $job_description,
         $requirements,
         $experience,
@@ -200,7 +209,9 @@ try {
             "apply_by" => date("d/m/Y", strtotime($apply_by)),
             "timestamp" => date("d/m/Y g:i a"),
             "vacancies" => $vacancies,
-            "location" => $location
+            "location" => $location,
+            "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
+            "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified"))
         ];
 
         $emailResult = sendEmail("job_post_confirmation", $recruiterEmailData, $email, false);
@@ -244,7 +255,7 @@ try {
                     "vacancies" => $vacancies,
                     "location" => $location,
                     "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
-                    "salary" => $salary ? "₹$salary per month" : "Not specified",
+                    "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified")),
                     "approval_link" => "https://login.rssi.in/rssi-member/job_view.php?id=$job_id"
                 ];
 
