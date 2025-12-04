@@ -152,10 +152,9 @@ try {
         throw new Exception('Aadhar file is required or upload failed. Error: ' . $upload_error);
     }
 
-    // Generate default password (2 uppercase letters + 6 digits)
-$defaultPassword = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 2) . 
-                   substr(str_shuffle('0123456789'), 0, 6);
-$hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+    // Generate random password (6 characters: letters and numbers mixed)
+    $defaultPassword = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
+    $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 
     // Insert into database using pg_query_params for security
     $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, is_verified) 
