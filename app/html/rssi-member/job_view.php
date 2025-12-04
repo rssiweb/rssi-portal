@@ -45,7 +45,7 @@ $applications_data = pg_fetch_assoc($applications_result);
 $total_applications = $applications_data['total_applications'];
 
 // Fetch applicants data
-$applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.age, jsd.education, 
+$applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.dob, jsd.education, 
                             jsd.skills, jsd.preferences, jsd.address1, jsd.resume, jsd.status as applicant_status,
                             el.name as education_name
                      FROM job_applications ja
@@ -90,12 +90,20 @@ if ($export) {
 
     // CSV data
     foreach ($applicants as $applicant) {
+        // Calculate age from DOB
+        $age = '--';
+        if (!empty($applicant['dob'])) {
+            $dob = new DateTime($applicant['dob']);
+            $today = new DateTime();
+            $age = $today->diff($dob)->y;
+        }
+
         fputcsv($output, [
             $applicant['id'],
             $applicant['name'],
             $applicant['contact'],
             $applicant['email'],
-            $applicant['age'],
+            $age,  // Changed from $applicant['age'] to calculated $age
             $applicant['education_name'] ?? $applicant['education'],
             $applicant['skills'],
             $applicant['preferences'],
@@ -385,7 +393,18 @@ if ($export) {
                                                                     N/A
                                                                 <?php endif; ?>
                                                             </td>
-                                                            <td><?php echo htmlspecialchars($applicant['age']); ?></td>
+                                                            <td>
+                                                                <?php
+                                                                if (!empty($applicant['dob'])) {
+                                                                    $dob = new DateTime($applicant['dob']);
+                                                                    $today = new DateTime();
+                                                                    $age = $today->diff($dob)->y;
+                                                                    echo $age;
+                                                                } else {
+                                                                    echo 'N/A';
+                                                                }
+                                                                ?>
+                                                            </td>
                                                             <td><?php echo htmlspecialchars($applicant['education_name'] ?? $applicant['education']); ?></td>
                                                             <td>
                                                                 <span class="d-inline-block text-truncate" style="max-width: 150px;"

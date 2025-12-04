@@ -20,7 +20,7 @@ $query = "SELECT jsd.*, ja.application_date, ja.status as application_status,
                  el.name as education_name
           FROM job_seeker_data jsd
           JOIN job_applications ja ON jsd.id = ja.job_seeker_id
-          LEFT JOIN education_levels el ON jsd.education = el.id::text
+          LEFT JOIN education_levels el ON jsd.education = el.id
           WHERE jsd.id = $1 AND ja.job_id = $2";
 
 $result = pg_query_params($con, $query, [$applicant_id, $job_id]);
@@ -84,7 +84,16 @@ $applicant = pg_fetch_assoc($result);
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <strong>Age:</strong><br>
-                    <?php echo htmlspecialchars($applicant['age']); ?> years
+                    <?php
+                    if (!empty($applicant['dob'])) {
+                        $dob = new DateTime($applicant['dob']);
+                        $today = new DateTime();
+                        $age = $today->diff($dob)->y;
+                        echo $age . ' years';
+                    } else {
+                        echo 'N/A';
+                    }
+                    ?>
                 </div>
                 <div class="col-md-6 mb-2">
                     <strong>Education:</strong><br>
