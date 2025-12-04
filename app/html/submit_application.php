@@ -15,6 +15,10 @@ try {
     $address = $_POST['address'] ?? '';
     $job_id = $_POST['job_id'] ?? 0;
 
+    // Initialize resume variables
+    $resume_drive_link = null;
+    $resume_file_name = null;
+
     // Validate required fields
     if (empty($phone) || empty($name) || empty($age) || empty($education) || empty($skills) || empty($job_id)) {
         echo json_encode([
@@ -33,13 +37,72 @@ try {
         exit;
     }
 
+    // Handle Resume file upload to Google Drive
+    if (isset($_FILES['resume']) && $_FILES['resume']['error'] == UPLOAD_ERR_OK) {
+        $uploadedFile = $_FILES['resume'];
+
+        // Check file size (5MB)
+        if ($uploadedFile['size'] > 5 * 1024 * 1024) {
+            throw new Exception('Resume file size must be less than 5MB');
+        }
+
+        // Allow only PDF files
+        $allowed_types = ['pdf'];
+        $original_name = basename($uploadedFile['name']);
+        $file_type = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+
+        if (!in_array($file_type, $allowed_types)) {
+            throw new Exception('Only PDF files are allowed for resume');
+        }
+
+        // Check MIME type for extra security
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $uploadedFile['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed_mimes = ['application/pdf'];
+
+        if (!in_array($mime_type, $allowed_mimes)) {
+            throw new Exception('Invalid file type. Only PDF files are allowed.');
+        }
+
+        // Sanitize filename for Google Drive
+        $resume_file_name = "resume_" . time() . "_" . substr($phone, -4) . "_" .
+            preg_replace('/[^A-Za-z0-9_-]/', '_', strstr($original_name, '.', true) ?: $original_name) . ".pdf";
+
+        // Google Drive folder ID for Resumes (use the folder ID you provided: 18uRvl5MibzbL2FBa9X9mmXqydsqbVQad)
+        $drive_folder_id = '18uRvl5MibzbL2FBa9X9mmXqydsqbVQad';
+
+        // Upload to Google Drive - you need to have the uploadeToDrive function
+        if (!function_exists('uploadeToDrive')) {
+            // Include the Google Drive upload function
+            include(__DIR__ . "/../util/drive.php");
+        }
+
+        $resume_drive_link = uploadeToDrive($uploadedFile, $drive_folder_id, $resume_file_name);
+
+        if (!$resume_drive_link) {
+            throw new Exception('Failed to upload resume to Google Drive. Please try again.');
+        }
+
+        error_log("Resume file uploaded to Google Drive: " . $resume_drive_link);
+    } else {
+        // Resume is required - throw error if not uploaded
+        $upload_error = $_FILES['resume']['error'] ?? 'No file uploaded';
+        if ($upload_error == UPLOAD_ERR_NO_FILE) {
+            throw new Exception('Resume file is required');
+        } else {
+            throw new Exception('Resume upload failed. Error: ' . $upload_error);
+        }
+    }
+
     // Start transaction
     pg_query($con, "BEGIN");
 
-    // Insert into job_seeker_data
+    // Insert into job_seeker_data WITH RESUME
     $seeker_query = "INSERT INTO job_seeker_data 
-                     (name, contact, email, age, education, skills, preferences, address1, status, created_at) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Active', NOW()) 
+                     (name, contact, email, age, education, skills, preferences, address1, resume, status, created_at) 
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active', NOW()) 
                      RETURNING id";
 
     $seeker_result = pg_query_params($con, $seeker_query, [
@@ -50,7 +113,8 @@ try {
         $education,
         $skills,
         $preferences,
-        $address
+        $address,
+        $resume_drive_link  // Store the Google Drive link in resume column
     ]);
 
     if (!$seeker_result) {
@@ -58,7 +122,7 @@ try {
         error_log("Failed to save applicant data: " . pg_last_error($con));
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to save applicant data'
+            'message' => 'Failed to save applicant data: ' . pg_last_error($con)
         ]);
         exit;
     }
@@ -130,9 +194,11 @@ try {
         'email' => $email,
         'job_title' => $job_title,
         'job_id' => $job_id,
-        'email_sent' => $email_sent
+        'email_sent' => $email_sent,
+        'resume_uploaded' => !empty($resume_drive_link)
     ]);
 } catch (Exception $e) {
+    // Rollback transaction if started
     pg_query($con, "ROLLBACK");
     error_log("Exception in submit_application.php: " . $e->getMessage());
     echo json_encode([
