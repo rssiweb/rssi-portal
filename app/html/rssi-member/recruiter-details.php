@@ -316,354 +316,367 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
                 </div>
             </div>
         </div><!-- End Page Title -->
+        <section class="section dashboard">
+            <div class="row">
 
-        <!-- Profile Header -->
-        <div class="profile-header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <div class="profile-avatar">
-                            <i class="bi bi-person-badge"></i>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <h2 class="mb-1"><?php echo htmlspecialchars($recruiter['full_name']); ?></h2>
-                        <p class="mb-2">
-                            <i class="bi bi-building me-1"></i>
-                            <?php echo htmlspecialchars($recruiter['company_name']); ?>
-                        </p>
-                        <div class="d-flex gap-2">
-                            <?php if ($isActive): ?>
-                                <span class="badge bg-success badge-status">Active</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger badge-status">Inactive</span>
-                            <?php endif; ?>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                            <?php if ($isVerified): ?>
-                                <span class="badge bg-primary badge-status">Verified</span>
-                            <?php else: ?>
-                                <span class="badge bg-warning text-dark badge-status">Unverified</span>
-                            <?php endif; ?>
-
-                            <span class="badge bg-info badge-status">
-                                <i class="bi bi-calendar me-1"></i>
-                                Joined: <?php echo date('d M Y', strtotime($recruiter['created_at'])); ?>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <section class="section">
-            <div class="container">
-                <div class="row">
-                    <!-- Left Column: Basic Information -->
-                    <div class="col-lg-8">
-                        <div class="row">
-                            <!-- Contact Information Card -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card info-card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <i class="bi bi-telephone text-primary me-2"></i>Contact Information
-                                        </h5>
-                                        <div class="mb-3">
-                                            <div class="info-label">Email Address</div>
-                                            <div class="info-value">
-                                                <a href="mailto:<?php echo htmlspecialchars($recruiter['email']); ?>">
-                                                    <?php echo htmlspecialchars($recruiter['email']); ?>
-                                                </a>
+                        <div class="card-body">
+                            <br>
+                            <!-- Profile Header -->
+                            <div class="profile-header">
+                                <div class="container">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <div class="profile-avatar">
+                                                <i class="bi bi-person-badge"></i>
                                             </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <div class="info-label">Phone Number</div>
-                                            <div class="info-value">
-                                                <a href="tel:<?php echo htmlspecialchars($recruiter['phone']); ?>">
-                                                    <?php echo htmlspecialchars($recruiter['phone']); ?>
-                                                </a>
+                                        <div class="col">
+                                            <h2 class="mb-1"><?php echo htmlspecialchars($recruiter['full_name']); ?></h2>
+                                            <p class="mb-2">
+                                                <i class="bi bi-building me-1"></i>
+                                                <?php echo htmlspecialchars($recruiter['company_name']); ?>
+                                            </p>
+                                            <div class="d-flex gap-2">
+                                                <?php if ($isActive): ?>
+                                                    <span class="badge bg-success badge-status">Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger badge-status">Inactive</span>
+                                                <?php endif; ?>
+
+                                                <?php if ($isVerified): ?>
+                                                    <span class="badge bg-primary badge-status">Verified</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning text-dark badge-status">Unverified</span>
+                                                <?php endif; ?>
+
+                                                <span class="badge bg-info badge-status">
+                                                    <i class="bi bi-calendar me-1"></i>
+                                                    Joined: <?php echo date('d M Y', strtotime($recruiter['created_at'])); ?>
+                                                </span>
                                             </div>
                                         </div>
-                                        <?php if (!empty($recruiter['aadhar_number'])): ?>
-                                            <div class="mb-3">
-                                                <div class="info-label">Aadhar Number</div>
-                                                <div class="info-value">
-                                                    <?php echo htmlspecialchars($recruiter['aadhar_number']); ?>
-                                                    <?php if (!empty($recruiter['aadhar_file_path'])): ?>
-                                                        <br>
-                                                        <a href="<?php echo htmlspecialchars($recruiter['aadhar_file_path']); ?>"
-                                                            target="_blank" class="document-link mt-2">
-                                                            <i class="bi bi-file-earmark-pdf"></i> View Aadhar Document
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Company Information Card -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card info-card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <i class="bi bi-building text-success me-2"></i>Company Information
-                                        </h5>
-                                        <div class="mb-3">
-                                            <div class="info-label">Company Name</div>
-                                            <div class="info-value"><?php echo htmlspecialchars($recruiter['company_name']); ?></div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <div class="info-label">Company Address</div>
-                                            <div class="info-value"><?php echo nl2br(htmlspecialchars($recruiter['company_address'])); ?></div>
-                                        </div>
-                                        <?php if (!empty($recruiter['created_by'])): ?>
-                                            <div class="mb-3">
-                                                <div class="info-label">Created By</div>
-                                                <div class="info-value">
-                                                    <?php
-                                                    $createdBy = htmlspecialchars($recruiter['created_by']);
-                                                    echo $createdBy === 'admin' ? 'Admin' : ucfirst($createdBy);
-                                                    ?>
-                                                    <?php if (!empty($recruiter['admin_id'])): ?>
-                                                        (ID: <?php echo htmlspecialchars($recruiter['admin_id']); ?>)
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Notes Card -->
-                            <?php if (!empty($recruiter['notes'])): ?>
-                                <div class="col-12 mb-4">
-                                    <div class="card info-card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">
-                                                <i class="bi bi-sticky text-warning me-2"></i>Admin Notes
-                                            </h5>
-                                            <div class="notes-box">
-                                                <?php echo nl2br(htmlspecialchars($recruiter['notes'])); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Recent Jobs Card -->
-                            <div class="col-12 mb-4">
-                                <div class="card info-card">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h5 class="card-title mb-0">
-                                                <i class="bi bi-briefcase text-info me-2"></i>Recent Jobs Posted
-                                            </h5>
-                                            <span class="badge bg-primary">
-                                                Total: <?php echo $totalJobs; ?> | Active: <?php echo $activeJobs; ?>
-                                            </span>
-                                        </div>
-
-                                        <?php if (!empty($jobs)): ?>
-                                            <div class="table-responsive">
-                                                <table class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Job Title</th>
-                                                            <th>Type</th>
-                                                            <th>Location</th>
-                                                            <th>Salary</th>
-                                                            <th>Status</th>
-                                                            <th>Posted Date</th>
-                                                            <th>Apply By</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php foreach ($jobs as $job): ?>
-                                                            <?php
-                                                            $jobStatus = $job['status'];
-                                                            $statusClass = '';
-                                                            if ($jobStatus === 'active') $statusClass = 'bg-success';
-                                                            elseif ($jobStatus === 'pending') $statusClass = 'bg-warning text-dark';
-                                                            elseif ($jobStatus === 'rejected') $statusClass = 'bg-danger';
-                                                            else $statusClass = 'bg-secondary';
-                                                            ?>
-                                                            <tr>
-                                                                <td>
-                                                                    <a href="job_view.php?id=<?php echo $job['id']; ?>" class="text-decoration-none">
-                                                                        <?php echo htmlspecialchars($job['job_title']); ?>
+                            <section class="section">
+                                <div class="container">
+                                    <div class="row">
+                                        <!-- Left Column: Basic Information -->
+                                        <div class="col-lg-8">
+                                            <div class="row">
+                                                <!-- Contact Information Card -->
+                                                <div class="col-md-6 mb-4">
+                                                    <div class="card info-card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">
+                                                                <i class="bi bi-telephone text-primary me-2"></i>Contact Information
+                                                            </h5>
+                                                            <div class="mb-3">
+                                                                <div class="info-label">Email Address</div>
+                                                                <div class="info-value">
+                                                                    <a href="mailto:<?php echo htmlspecialchars($recruiter['email']); ?>">
+                                                                        <?php echo htmlspecialchars($recruiter['email']); ?>
                                                                     </a>
-                                                                </td>
-                                                                <td><?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></td>
-                                                                <td><?php echo htmlspecialchars($job['location']); ?></td>
-                                                                <td>
-                                                                    ₹<?php echo number_format($job['min_salary']); ?> -
-                                                                    ₹<?php echo number_format($job['max_salary']); ?>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                                        <?php echo ucfirst($jobStatus); ?>
-                                                                    </span>
-                                                                </td>
-                                                                <td><?php echo date('d M Y', strtotime($job['created_at'])); ?></td>
-                                                                <td><?php echo date('d M Y', strtotime($job['apply_by'])); ?></td>
-                                                            </tr>
-                                                        <?php endforeach; ?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <?php if ($totalJobs > 10): ?>
-                                                <div class="text-center mt-3">
-                                                    <a href="recruiter-jobs.php?id=<?php echo $recruiterId; ?>" class="btn btn-outline-primary">
-                                                        View All Jobs (<?php echo $totalJobs; ?>)
-                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <div class="info-label">Phone Number</div>
+                                                                <div class="info-value">
+                                                                    <a href="tel:<?php echo htmlspecialchars($recruiter['phone']); ?>">
+                                                                        <?php echo htmlspecialchars($recruiter['phone']); ?>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                            <?php if (!empty($recruiter['aadhar_number'])): ?>
+                                                                <div class="mb-3">
+                                                                    <div class="info-label">Aadhar Number</div>
+                                                                    <div class="info-value">
+                                                                        <?php echo htmlspecialchars($recruiter['aadhar_number']); ?>
+                                                                        <?php if (!empty($recruiter['aadhar_file_path'])): ?>
+                                                                            <br>
+                                                                            <a href="<?php echo htmlspecialchars($recruiter['aadhar_file_path']); ?>"
+                                                                                target="_blank" class="document-link mt-2">
+                                                                                <i class="bi bi-file-earmark-pdf"></i> View Aadhar Document
+                                                                            </a>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <div class="empty-state">
-                                                <i class="bi bi-briefcase"></i>
-                                                <h5>No Jobs Posted</h5>
-                                                <p>This recruiter hasn't posted any jobs yet.</p>
-                                                <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Create First Job
-                                                </a>
+
+                                                <!-- Company Information Card -->
+                                                <div class="col-md-6 mb-4">
+                                                    <div class="card info-card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">
+                                                                <i class="bi bi-building text-success me-2"></i>Company Information
+                                                            </h5>
+                                                            <div class="mb-3">
+                                                                <div class="info-label">Company Name</div>
+                                                                <div class="info-value"><?php echo htmlspecialchars($recruiter['company_name']); ?></div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <div class="info-label">Company Address</div>
+                                                                <div class="info-value"><?php echo nl2br(htmlspecialchars($recruiter['company_address'])); ?></div>
+                                                            </div>
+                                                            <?php if (!empty($recruiter['created_by'])): ?>
+                                                                <div class="mb-3">
+                                                                    <div class="info-label">Created By</div>
+                                                                    <div class="info-value">
+                                                                        <?php
+                                                                        $createdBy = htmlspecialchars($recruiter['created_by']);
+                                                                        echo $createdBy === 'admin' ? 'Admin' : ucfirst($createdBy);
+                                                                        ?>
+                                                                        <?php if (!empty($recruiter['admin_id'])): ?>
+                                                                            (ID: <?php echo htmlspecialchars($recruiter['admin_id']); ?>)
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Notes Card -->
+                                                <?php if (!empty($recruiter['notes'])): ?>
+                                                    <div class="col-12 mb-4">
+                                                        <div class="card info-card">
+                                                            <div class="card-body">
+                                                                <h5 class="card-title">
+                                                                    <i class="bi bi-sticky text-warning me-2"></i>Admin Notes
+                                                                </h5>
+                                                                <div class="notes-box">
+                                                                    <?php echo nl2br(htmlspecialchars($recruiter['notes'])); ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <!-- Recent Jobs Card -->
+                                                <div class="col-12 mb-4">
+                                                    <div class="card info-card">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                                <h5 class="card-title mb-0">
+                                                                    <i class="bi bi-briefcase text-info me-2"></i>Recent Jobs Posted
+                                                                </h5>
+                                                                <span class="badge bg-primary">
+                                                                    Total: <?php echo $totalJobs; ?> | Active: <?php echo $activeJobs; ?>
+                                                                </span>
+                                                            </div>
+
+                                                            <?php if (!empty($jobs)): ?>
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-hover">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Job Title</th>
+                                                                                <th>Type</th>
+                                                                                <th>Location</th>
+                                                                                <th>Salary</th>
+                                                                                <th>Status</th>
+                                                                                <th>Posted Date</th>
+                                                                                <th>Apply By</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <?php foreach ($jobs as $job): ?>
+                                                                                <?php
+                                                                                $jobStatus = $job['status'];
+                                                                                $statusClass = '';
+                                                                                if ($jobStatus === 'active') $statusClass = 'bg-success';
+                                                                                elseif ($jobStatus === 'pending') $statusClass = 'bg-warning text-dark';
+                                                                                elseif ($jobStatus === 'rejected') $statusClass = 'bg-danger';
+                                                                                else $statusClass = 'bg-secondary';
+                                                                                ?>
+                                                                                <tr>
+                                                                                    <td>
+                                                                                        <a href="job_view.php?id=<?php echo $job['id']; ?>" class="text-decoration-none">
+                                                                                            <?php echo htmlspecialchars($job['job_title']); ?>
+                                                                                        </a>
+                                                                                    </td>
+                                                                                    <td><?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></td>
+                                                                                    <td><?php echo htmlspecialchars($job['location']); ?></td>
+                                                                                    <td>
+                                                                                        ₹<?php echo number_format($job['min_salary']); ?> -
+                                                                                        ₹<?php echo number_format($job['max_salary']); ?>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="badge <?php echo $statusClass; ?>">
+                                                                                            <?php echo ucfirst($jobStatus); ?>
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td><?php echo date('d M Y', strtotime($job['created_at'])); ?></td>
+                                                                                    <td><?php echo date('d M Y', strtotime($job['apply_by'])); ?></td>
+                                                                                </tr>
+                                                                            <?php endforeach; ?>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                                <?php if ($totalJobs > 10): ?>
+                                                                    <div class="text-center mt-3">
+                                                                        <a href="recruiter-jobs.php?id=<?php echo $recruiterId; ?>" class="btn btn-outline-primary">
+                                                                            View All Jobs (<?php echo $totalJobs; ?>)
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            <?php else: ?>
+                                                                <div class="empty-state">
+                                                                    <i class="bi bi-briefcase"></i>
+                                                                    <h5>No Jobs Posted</h5>
+                                                                    <p>This recruiter hasn't posted any jobs yet.</p>
+                                                                    <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-primary">
+                                                                        <i class="bi bi-plus-circle"></i> Create First Job
+                                                                    </a>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        <?php endif; ?>
+                                        </div>
+
+                                        <!-- Right Column: Stats & Timeline -->
+                                        <div class="col-lg-4">
+                                            <div class="sticky-top" style="top: 100px;">
+                                                <!-- Statistics Card -->
+                                                <div class="card info-card mb-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title text-center mb-4">
+                                                            <i class="bi bi-bar-chart text-purple me-2"></i>Statistics
+                                                        </h5>
+                                                        <div class="row text-center">
+                                                            <div class="col-6 mb-4">
+                                                                <div class="stats-card">
+                                                                    <div class="stats-number"><?php echo $totalJobs; ?></div>
+                                                                    <div class="stats-label">Total Jobs</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6 mb-4">
+                                                                <div class="stats-card">
+                                                                    <div class="stats-number"><?php echo $activeJobs; ?></div>
+                                                                    <div class="stats-label">Active Jobs</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div class="stats-card">
+                                                                    <div class="stats-number">
+                                                                        <?php echo date('d M Y', strtotime($recruiter['created_at'])); ?>
+                                                                    </div>
+                                                                    <div class="stats-label">Joined Date</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div class="stats-card">
+                                                                    <div class="stats-number">
+                                                                        <?php
+                                                                        $days = floor((time() - strtotime($recruiter['created_at'])) / (60 * 60 * 24));
+                                                                        echo $days;
+                                                                        ?>
+                                                                    </div>
+                                                                    <div class="stats-label">Days Active</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Timeline Card -->
+                                                <div class="card info-card">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-4">
+                                                            <i class="bi bi-clock-history text-info me-2"></i>Activity Timeline
+                                                        </h5>
+                                                        <div class="timeline">
+                                                            <div class="timeline-item">
+                                                                <div class="timeline-date">
+                                                                    <?php echo date('d M Y, h:i A', strtotime($recruiter['created_at'])); ?>
+                                                                </div>
+                                                                <div class="timeline-title">Account Created</div>
+                                                                <div class="timeline-content">
+                                                                    Recruiter account was created in the system
+                                                                </div>
+                                                            </div>
+
+                                                            <?php if (!empty($recruiter['updated_at']) && $recruiter['updated_at'] !== $recruiter['created_at']): ?>
+                                                                <div class="timeline-item">
+                                                                    <div class="timeline-date">
+                                                                        <?php echo date('d M Y, h:i A', strtotime($recruiter['updated_at'])); ?>
+                                                                    </div>
+                                                                    <div class="timeline-title">Last Updated</div>
+                                                                    <div class="timeline-content">
+                                                                        Profile information was last updated
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <?php if (!empty($jobs)): ?>
+                                                                <?php
+                                                                // Get latest job
+                                                                $latestJob = $jobs[0];
+                                                                ?>
+                                                                <div class="timeline-item">
+                                                                    <div class="timeline-date">
+                                                                        <?php echo date('d M Y', strtotime($latestJob['created_at'])); ?>
+                                                                    </div>
+                                                                    <div class="timeline-title">Latest Job Posted</div>
+                                                                    <div class="timeline-content">
+                                                                        "<?php echo htmlspecialchars($latestJob['job_title']); ?>"
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <?php if ($isVerified): ?>
+                                                                <div class="timeline-item">
+                                                                    <div class="timeline-date">Verified</div>
+                                                                    <div class="timeline-title">Account Verified</div>
+                                                                    <div class="timeline-content">
+                                                                        Account has been verified by admin
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Quick Actions Card -->
+                                                <div class="card info-card mt-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-4">
+                                                            <i class="bi bi-lightning text-warning me-2"></i>Quick Actions
+                                                        </h5>
+                                                        <div class="d-grid gap-2">
+                                                            <a href="mailto:<?php echo htmlspecialchars($recruiter['email']); ?>" class="btn btn-outline-primary">
+                                                                <i class="bi bi-envelope me-2"></i>Send Email
+                                                            </a>
+                                                            <a href="tel:<?php echo htmlspecialchars($recruiter['phone']); ?>" class="btn btn-outline-success">
+                                                                <i class="bi bi-telephone me-2"></i>Call Recruiter
+                                                            </a>
+                                                            <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-outline-info">
+                                                                <i class="bi bi-plus-circle me-2"></i>Post New Job
+                                                            </a>
+                                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $recruiterId; ?>)">
+                                                                <i class="bi bi-trash me-2"></i>Delete Recruiter
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
                     </div>
-
-                    <!-- Right Column: Stats & Timeline -->
-                    <div class="col-lg-4">
-                        <div class="sticky-top" style="top: 100px;">
-                            <!-- Statistics Card -->
-                            <div class="card info-card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title text-center mb-4">
-                                        <i class="bi bi-bar-chart text-purple me-2"></i>Statistics
-                                    </h5>
-                                    <div class="row text-center">
-                                        <div class="col-6 mb-4">
-                                            <div class="stats-card">
-                                                <div class="stats-number"><?php echo $totalJobs; ?></div>
-                                                <div class="stats-label">Total Jobs</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 mb-4">
-                                            <div class="stats-card">
-                                                <div class="stats-number"><?php echo $activeJobs; ?></div>
-                                                <div class="stats-label">Active Jobs</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="stats-card">
-                                                <div class="stats-number">
-                                                    <?php echo date('d M Y', strtotime($recruiter['created_at'])); ?>
-                                                </div>
-                                                <div class="stats-label">Joined Date</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="stats-card">
-                                                <div class="stats-number">
-                                                    <?php
-                                                    $days = floor((time() - strtotime($recruiter['created_at'])) / (60 * 60 * 24));
-                                                    echo $days;
-                                                    ?>
-                                                </div>
-                                                <div class="stats-label">Days Active</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Timeline Card -->
-                            <div class="card info-card">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-4">
-                                        <i class="bi bi-clock-history text-info me-2"></i>Activity Timeline
-                                    </h5>
-                                    <div class="timeline">
-                                        <div class="timeline-item">
-                                            <div class="timeline-date">
-                                                <?php echo date('d M Y, h:i A', strtotime($recruiter['created_at'])); ?>
-                                            </div>
-                                            <div class="timeline-title">Account Created</div>
-                                            <div class="timeline-content">
-                                                Recruiter account was created in the system
-                                            </div>
-                                        </div>
-
-                                        <?php if (!empty($recruiter['updated_at']) && $recruiter['updated_at'] !== $recruiter['created_at']): ?>
-                                            <div class="timeline-item">
-                                                <div class="timeline-date">
-                                                    <?php echo date('d M Y, h:i A', strtotime($recruiter['updated_at'])); ?>
-                                                </div>
-                                                <div class="timeline-title">Last Updated</div>
-                                                <div class="timeline-content">
-                                                    Profile information was last updated
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($jobs)): ?>
-                                            <?php
-                                            // Get latest job
-                                            $latestJob = $jobs[0];
-                                            ?>
-                                            <div class="timeline-item">
-                                                <div class="timeline-date">
-                                                    <?php echo date('d M Y', strtotime($latestJob['created_at'])); ?>
-                                                </div>
-                                                <div class="timeline-title">Latest Job Posted</div>
-                                                <div class="timeline-content">
-                                                    "<?php echo htmlspecialchars($latestJob['job_title']); ?>"
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if ($isVerified): ?>
-                                            <div class="timeline-item">
-                                                <div class="timeline-date">Verified</div>
-                                                <div class="timeline-title">Account Verified</div>
-                                                <div class="timeline-content">
-                                                    Account has been verified by admin
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Quick Actions Card -->
-                            <div class="card info-card mt-4">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-4">
-                                        <i class="bi bi-lightning text-warning me-2"></i>Quick Actions
-                                    </h5>
-                                    <div class="d-grid gap-2">
-                                        <a href="mailto:<?php echo htmlspecialchars($recruiter['email']); ?>" class="btn btn-outline-primary">
-                                            <i class="bi bi-envelope me-2"></i>Send Email
-                                        </a>
-                                        <a href="tel:<?php echo htmlspecialchars($recruiter['phone']); ?>" class="btn btn-outline-success">
-                                            <i class="bi bi-telephone me-2"></i>Call Recruiter
-                                        </a>
-                                        <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-outline-info">
-                                            <i class="bi bi-plus-circle me-2"></i>Post New Job
-                                        </a>
-                                        <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $recruiterId; ?>)">
-                                            <i class="bi bi-trash me-2"></i>Delete Recruiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
         </section>
     </main>

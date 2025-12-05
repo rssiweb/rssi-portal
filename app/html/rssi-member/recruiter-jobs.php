@@ -42,7 +42,7 @@ $jobsQuery = "SELECT
                 j.created_at,
                 j.apply_by,
                 COUNT(ja.id) as applications_count
-              FROM jobs j
+              FROM job_posts j
               LEFT JOIN job_applications ja ON j.id = ja.job_id
               WHERE j.recruiter_id = $1 
               GROUP BY j.id
@@ -56,9 +56,205 @@ $jobs = pg_fetch_all($jobsResult) ?: [];
 <html lang="en">
 
 <head>
-    <!-- Similar structure as recruiter-details.php, focused on jobs table -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>All Jobs - <?php echo htmlspecialchars($recruiter['full_name']); ?></title>
-    <!-- Include same CSS/JS as recruiter-details.php -->
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #667eea;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            height: 100%;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: #212529;
+            margin-bottom: 1rem;
+        }
+
+        .badge-status {
+            padding: 0.5em 1em;
+            font-size: 0.875rem;
+        }
+
+        .stats-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e9ecef;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -2.1rem;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid white;
+            box-shadow: 0 0 0 3px #e9ecef;
+        }
+
+        .timeline-date {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-content {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .action-buttons {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .document-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.3s;
+        }
+
+        .document-link:hover {
+            background: #e9ecef;
+            color: #212529;
+            text-decoration: none;
+        }
+
+        .notes-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+    </style>
 </head>
 
 <body>
@@ -93,94 +289,101 @@ $jobs = pg_fetch_all($jobsResult) ?: [];
             </div>
         </div>
 
-        <section class="section">
-            <div class="container">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">All Jobs (<?php echo count($jobs); ?> jobs found)</h5>
+        <section class="section dashboard">
+            <div class="row">
 
-                        <?php if (!empty($jobs)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Job Title</th>
-                                            <th>Type</th>
-                                            <th>Location</th>
-                                            <th>Salary</th>
-                                            <th>Vacancies</th>
-                                            <th>Applications</th>
-                                            <th>Status</th>
-                                            <th>Posted Date</th>
-                                            <th>Apply By</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($jobs as $job): ?>
-                                            <?php
-                                            $jobStatus = $job['status'];
-                                            $statusClass = '';
-                                            if ($jobStatus === 'active') $statusClass = 'bg-success';
-                                            elseif ($jobStatus === 'pending') $statusClass = 'bg-warning text-dark';
-                                            elseif ($jobStatus === 'rejected') $statusClass = 'bg-danger';
-                                            else $statusClass = 'bg-secondary';
-                                            ?>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <h5 class="card-title">All Jobs (<?php echo count($jobs); ?> jobs found)</h5>
+
+                            <?php if (!empty($jobs)): ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
                                             <tr>
-                                                <td>
-                                                    <a href="job_view.php?id=<?php echo $job['id']; ?>" class="text-decoration-none">
-                                                        <?php echo htmlspecialchars($job['job_title']); ?>
-                                                    </a>
-                                                </td>
-                                                <td><?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></td>
-                                                <td><?php echo htmlspecialchars($job['location']); ?></td>
-                                                <td>
-                                                    ₹<?php echo number_format($job['min_salary']); ?> -
-                                                    ₹<?php echo number_format($job['max_salary']); ?>
-                                                </td>
-                                                <td><?php echo $job['vacancies']; ?></td>
-                                                <td>
-                                                    <span class="badge bg-info">
-                                                        <?php echo $job['applications_count']; ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo ucfirst($jobStatus); ?>
-                                                    </span>
-                                                </td>
-                                                <td><?php echo date('d M Y', strtotime($job['created_at'])); ?></td>
-                                                <td><?php echo date('d M Y', strtotime($job['apply_by'])); ?></td>
-                                                <td>
-                                                    <div class="btn-group">
-                                                        <a href="job-details.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                        <a href="job-edit.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-secondary">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
+                                                <th>Job Title</th>
+                                                <th>Type</th>
+                                                <th>Location</th>
+                                                <th>Salary</th>
+                                                <th>Vacancies</th>
+                                                <th>Applications</th>
+                                                <th>Status</th>
+                                                <th>Posted Date</th>
+                                                <th>Apply By</th>
+                                                <th>Actions</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="text-center py-5">
-                                <i class="bi bi-briefcase" style="font-size: 3rem; color: #dee2e6;"></i>
-                                <h5 class="mt-3">No Jobs Found</h5>
-                                <p>This recruiter hasn't posted any jobs yet.</p>
-                                <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Create First Job
-                                </a>
-                            </div>
-                        <?php endif; ?>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($jobs as $job): ?>
+                                                <?php
+                                                $jobStatus = $job['status'];
+                                                $statusClass = '';
+                                                if ($jobStatus === 'active') $statusClass = 'bg-success';
+                                                elseif ($jobStatus === 'pending') $statusClass = 'bg-warning text-dark';
+                                                elseif ($jobStatus === 'rejected') $statusClass = 'bg-danger';
+                                                else $statusClass = 'bg-secondary';
+                                                ?>
+                                                <tr>
+                                                    <td>
+                                                        <a href="job_view.php?id=<?php echo $job['id']; ?>" class="text-decoration-none">
+                                                            <?php echo htmlspecialchars($job['job_title']); ?>
+                                                        </a>
+                                                    </td>
+                                                    <td><?php echo ucfirst(str_replace('-', ' ', $job['job_type'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($job['location']); ?></td>
+                                                    <td>
+                                                        ₹<?php echo number_format($job['min_salary']); ?> -
+                                                        ₹<?php echo number_format($job['max_salary']); ?>
+                                                    </td>
+                                                    <td><?php echo $job['vacancies']; ?></td>
+                                                    <td>
+                                                        <span class="badge bg-info">
+                                                            <?php echo $job['applications_count']; ?>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge <?php echo $statusClass; ?>">
+                                                            <?php echo ucfirst($jobStatus); ?>
+                                                        </span>
+                                                    </td>
+                                                    <td><?php echo date('d M Y', strtotime($job['created_at'])); ?></td>
+                                                    <td><?php echo date('d M Y', strtotime($job['apply_by'])); ?></td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <a href="job-view.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                            <a href="job-edit.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center py-5">
+                                    <i class="bi bi-briefcase" style="font-size: 3rem; color: #dee2e6;"></i>
+                                    <h5 class="mt-3">No Jobs Found</h5>
+                                    <p>This recruiter hasn't posted any jobs yet.</p>
+                                    <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Create First Job
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </main>
+
+    </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
