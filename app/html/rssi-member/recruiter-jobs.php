@@ -354,7 +354,7 @@ $jobs = pg_fetch_all($jobsResult) ?: [];
                                                     <td><?php echo date('d M Y', strtotime($job['apply_by'])); ?></td>
                                                     <td>
                                                         <div class="btn-group">
-                                                            <a href="job-view.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                                            <a href="job_view.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                                 <i class="bi bi-eye"></i>
                                                             </a>
                                                             <a href="job-edit.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-outline-secondary">
