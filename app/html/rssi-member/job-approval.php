@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "company_name" => $jobData['company_name'],
                         "job_id" => $jobData['id'],
                         "approval_date" => date("d/m/Y g:i a"),
-                        "job_link" => "https://rssi.in/jobs/view.php?id=" . $jobData['id']
+                        "job_link" => "https://www.rssi.in/job_details?id=" . $jobData['id']
                     ];
 
                     sendEmail("job_approval_notification", $emailData, $jobData['email'], false);
