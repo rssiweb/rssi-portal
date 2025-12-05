@@ -10,13 +10,13 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// Fetch recruiters for dropdown
-$recruiters_query = "SELECT id, full_name, company_name, email FROM recruiters WHERE is_active = true ORDER BY company_name";
-$recruiters_result = pg_query($con, $recruiters_query);
-$recruiters = pg_fetch_all($recruiters_result) ?: [];
+// // Fetch recruiters for dropdown
+// $recruiters_query = "SELECT id, full_name, company_name, email FROM recruiters WHERE is_active = true ORDER BY company_name";
+// $recruiters_result = pg_query($con, $recruiters_query);
+// $recruiters = pg_fetch_all($recruiters_result) ?: [];
 
-// Store recruiter data as JSON for JavaScript access
-$recruiters_data = json_encode(array_column($recruiters, null, 'id'));
+// // Store recruiter data as JSON for JavaScript access
+// $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
 ?>
 
 <!doctype html>
@@ -45,9 +45,16 @@ $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <style>
         .file-upload-area {
@@ -118,14 +125,6 @@ $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
             z-index: 99999;
         }
     </style>
-
-    <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Add this in the head section -->
-    <script>
-        // Pass recruiters data to JavaScript
-        const recruitersData = <?php echo $recruiters_data ?: '{}'; ?>;
-    </script>
 </head>
 
 <body>
@@ -189,33 +188,25 @@ $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
                                                     <div class="row">
                                                         <div class="col-md-6 mb-3">
                                                             <label for="recruiter" class="form-label">Recruiter</label>
-                                                            <select class="form-select" id="recruiter" name="recruiter" required>
+                                                            <select class="form-select select2-recruiter" id="recruiter" name="recruiter" required>
                                                                 <option value="">Select Recruiter</option>
-                                                                <?php foreach ($recruiters as $recruiter): ?>
-                                                                    <option value="<?php echo $recruiter['id']; ?>">
-                                                                        <?php echo htmlspecialchars($recruiter['company_name'] . ' - ' . $recruiter['full_name']); ?>
-                                                                    </option>
-                                                                <?php endforeach; ?>
+                                                                <!-- Options will be loaded via AJAX -->
                                                             </select>
-                                                            <?php if (empty($recruiters)): ?>
-                                                                <div class="form-text text-warning">
-                                                                    No active recruiters found. <a href="recruiter-add.php">Add a recruiter first</a>.
-                                                                </div>
-                                                            <?php endif; ?>
+                                                            <!-- <div class="form-text">Start typing to search for a recruiter...</div> -->
                                                         </div>
                                                         <div class="col-md-6 mb-3">
                                                             <label for="recruiterEmailDisplay" class="form-label">Recruiter Email</label>
                                                             <input type="email" class="form-control" id="recruiterEmailDisplay" readonly>
                                                             <div class="form-text">Email will auto-populate when you select a recruiter</div>
                                                         </div>
-                                                        <div class="col-md-6 mb-3">
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4 mb-3">
                                                             <label for="jobTitle" class="form-label">Job Title</label>
                                                             <input type="text" class="form-control" id="jobTitle" name="jobTitle" required>
                                                         </div>
-                                                    </div>
 
-                                                    <div class="row">
-                                                        <div class="col-md-6 mb-3">
+                                                        <div class="col-md-4 mb-3">
                                                             <label for="jobType" class="form-label">Job Type</label>
                                                             <select class="form-select" id="jobType" name="jobType" required>
                                                                 <option value="">Select Type</option>
@@ -226,7 +217,8 @@ $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
                                                                 <option value="remote">Remote</option>
                                                             </select>
                                                         </div>
-                                                        <div class="col-md-6 mb-3">
+
+                                                        <div class="col-md-4 mb-3">
                                                             <label for="location" class="form-label">Location</label>
                                                             <input type="text" class="form-control" id="location" name="location" required>
                                                         </div>
@@ -612,42 +604,112 @@ $recruiters_data = json_encode(array_column($recruiters, null, 'id'));
         });
     </script>
     <script>
-        // Recruiter email handling
+        // API endpoint configuration
+        const API_BASE = window.location.hostname === 'localhost' ?
+            'http://localhost:8082/' :
+            'https://login.rssi.in/';
+        // Initialize Select2 for recruiter dropdown with AJAX
         $(document).ready(function() {
-            // Method 1: Using data attributes (simpler)
-            $('#recruiter').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const recruiterEmail = selectedOption.data('email') || '';
-
-                // Update the email display field
-                $('#recruiterEmailDisplay').val(recruiterEmail);
-
-                // If you also want to store it in a hidden field for form submission:
-                if ($('#recruiterEmail').length === 0) {
-                    // Add hidden field if it doesn't exist
-                    $(this).after('<input type="hidden" id="recruiterEmail" name="recruiterEmail">');
-                }
-                $('#recruiterEmail').val(recruiterEmail);
+            // Initialize Select2
+            $('#recruiter').select2({
+                // theme: 'bootstrap-5',
+                placeholder: 'Search for a recruiter...',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: API_BASE + 'get_recruiters.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.data,
+                            pagination: {
+                                more: data.pagination ? data.pagination.more : false
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                templateResult: formatRecruiterResult,
+                templateSelection: formatRecruiterSelection
             });
 
-            // Method 2: Using the global recruitersData object (alternative)
+            // Format how results are displayed in dropdown
+            function formatRecruiterResult(recruiter) {
+                if (recruiter.loading) {
+                    return 'Searching...';
+                }
+
+                if (!recruiter.id) {
+                    return recruiter.text;
+                }
+
+                const $container = $('<div>');
+                $container.append($('<strong>').text(recruiter.company));
+                $container.append($('<div class="small">').text(recruiter.name + ' • ' + recruiter.email));
+                return $container;
+            }
+
+            // Format how selected item is displayed
+            function formatRecruiterSelection(recruiter) {
+                if (!recruiter.id) {
+                    return recruiter.text;
+                }
+                return recruiter.company + ' - ' + recruiter.name;
+            }
+
+            // Handle recruiter selection change
             $('#recruiter').on('change', function() {
-                const recruiterId = $(this).val();
+                const selectedId = $(this).val();
+                const selectedOption = $(this).select2('data')[0];
 
-                if (recruiterId && recruitersData[recruiterId]) {
-                    const email = recruitersData[recruiterId].email;
-                    $('#recruiterEmailDisplay').val(email);
+                if (selectedOption && selectedOption.email) {
+                    // Update email display field
+                    $('#recruiterEmailDisplay').val(selectedOption.email);
 
-                    // Add/update hidden field
+                    // Store email in hidden field for form submission
                     if ($('#recruiterEmail').length === 0) {
                         $('#recruiter').after('<input type="hidden" id="recruiterEmail" name="recruiterEmail">');
                     }
-                    $('#recruiterEmail').val(email);
+                    $('#recruiterEmail').val(selectedOption.email);
+
+                    // Also store additional data if needed
+                    if ($('#recruiterName').length === 0) {
+                        $('#recruiterEmail').after('<input type="hidden" id="recruiterName" name="recruiterName">');
+                        $('#recruiterEmail').after('<input type="hidden" id="recruiterCompany" name="recruiterCompany">');
+                    }
+                    $('#recruiterName').val(selectedOption.name || '');
+                    $('#recruiterCompany').val(selectedOption.company || '');
+
+                    console.log('Selected Recruiter:', {
+                        id: selectedId,
+                        name: selectedOption.name,
+                        company: selectedOption.company,
+                        email: selectedOption.email
+                    });
                 } else {
+                    // Clear fields if no recruiter selected
                     $('#recruiterEmailDisplay').val('');
                     $('#recruiterEmail').val('');
+                    $('#recruiterName').val('');
+                    $('#recruiterCompany').val('');
                 }
             });
+
+            // Add hidden fields for additional recruiter data
+            if ($('#recruiterEmail').length === 0) {
+                $('#recruiter').after('<input type="hidden" id="recruiterEmail" name="recruiterEmail">');
+                $('#recruiter').after('<input type="hidden" id="recruiterName" name="recruiterName">');
+                $('#recruiter').after('<input type="hidden" id="recruiterCompany" name="recruiterCompany">');
+            }
         });
     </script>
 </body>
