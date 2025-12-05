@@ -412,7 +412,7 @@ $counts = pg_fetch_assoc($countResult);
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($recruiter['id']); ?></td>
                                                     <td>
-                                                        <strong><?php echo htmlspecialchars($recruiter['full_name']); ?></strong>
+                                                        <?php echo htmlspecialchars($recruiter['full_name']); ?>
                                                     </td>
                                                     <td><?php echo htmlspecialchars($recruiter['company_name']); ?></td>
                                                     <td>
