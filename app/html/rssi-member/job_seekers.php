@@ -228,7 +228,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Job Seekers Management</title>
+    <title>Job Seeker Records</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -352,12 +352,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Job Seekers Management</h1>
+            <h1>Job Seeker Records</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Survey</a></li>
-                    <li class="breadcrumb-item active">Job Seekers</li>
+                    <li class="breadcrumb-item"><a href="#">Job Assistance</a></li>
+                    <li class="breadcrumb-item active">Job Seeker Records</li>
                 </ol>
             </nav>
         </div>
