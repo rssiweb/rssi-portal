@@ -127,8 +127,21 @@ validation();
                                             <div class="card text-center position-relative">
                                                 <div class="card-body">
                                                     <i class="bi bi-check-circle icon"></i>
-                                                    <h5 class="card-title mt-2">Job Approval</h5>
-                                                    <p class="card-text">Review and approve/reject job postings submitted by recruiters.</p>
+                                                    <h5 class="card-title mt-2">Job Management</h5>
+                                                    <p class="card-text">View and manage job postings and applications, including reviewing details and approving or rejecting listings.</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <!-- Recruiter Management -->
+                                    <div class="col-md-4">
+                                        <a href="#" class="card-link">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <i class="bi bi-people icon"></i>
+                                                    <h5 class="card-title mt-2">Recruiter Management</h5>
+                                                    <p class="card-text">Manage existing recruiters and their companies.</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -160,27 +173,14 @@ validation();
                                         </a>
                                     </div>
 
-                                    <!-- Recruiter Management -->
+                                    <!-- Settings -->
                                     <div class="col-md-4">
                                         <a href="#" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
-                                                    <i class="bi bi-people icon"></i>
-                                                    <h5 class="card-title mt-2">Recruiter Management</h5>
-                                                    <p class="card-text">Manage existing recruiters and their companies.</p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-
-                                    <!-- Job Applications -->
-                                    <div class="col-md-4">
-                                        <a href="#" class="card-link">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <i class="bi bi-file-earmark-text icon"></i>
-                                                    <h5 class="card-title mt-2">Job Applications</h5>
-                                                    <p class="card-text">View and manage all job applications.</p>
+                                                    <i class="bi bi-gear icon"></i>
+                                                    <h5 class="card-title mt-2">Settings</h5>
+                                                    <p class="card-text">Configure job posting rules and notifications.</p>
                                                 </div>
                                             </div>
                                         </a>
