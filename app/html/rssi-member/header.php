@@ -430,11 +430,6 @@
             </a>
           </li>
           <li>
-            <a id="job_seekers" href="job_seekers.php">
-              <span>View Job Seekers</span>
-            </a>
-          </li>
-          <li>
             <a id="appointments" href="appointments.php">
               <span>View Appointments</span>
             </a>
@@ -442,6 +437,24 @@
           <li>
             <a id="enquiry_portal" href="enquiry_portal.php">
               <span>Enquiry Portal</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#job" data-bs-toggle="collapse" href="#">
+          <span>Job Assistance</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="job" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="job_seekers" href="job_seekers.php">
+              <span>Job Seeker Records</span>
+            </a>
+          </li>
+          <li>
+            <a id="job-admin" href="job-admin.php">
+              <span>Job Admin Panel</span>
             </a>
           </li>
         </ul>
@@ -581,11 +594,6 @@
           <li>
             <a id="iexplore_worklist" href="iexplore_worklist.php">
               <span>iExplore Worklist</span>
-            </a>
-          </li>
-          <li>
-            <a id="job-approval" href="job-approval.php">
-              <span>Job Worklist</span>
             </a>
           </li>
         </ul>
@@ -831,7 +839,7 @@
         id: 'acadamis',
         linkId: 'exam-management',
         url: 'reexam_record.php'
-      },{
+      }, {
         id: 'acadamis',
         linkId: 'exam-management',
         url: 'exam-management.php'
@@ -895,13 +903,17 @@
         id: 'worklist',
         linkId: 'iexplore_worklist',
         url: 'iexplore_worklist.php'
-      },{
-        id: 'worklist',
-        linkId: 'job-approval',
+      }, {
+        id: 'job',
+        linkId: 'job-admin',
         url: 'job-approval.php'
-      },{
-        id: 'worklist',
-        linkId: 'job-approval',
+      }, {
+        id: 'job',
+        linkId: 'job-admin',
+        url: 'job-admin.php'
+      }, {
+        id: 'job',
+        linkId: 'job-admin',
         url: 'job_view.php'
       },
       {
@@ -1085,11 +1097,11 @@
         id: 'work',
         linkId: 'pmsLink',
         url: 'pms.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'admin_role_management',
         url: 'admin_role_management.php'
-      },{
+      }, {
         id: 'work',
         linkId: 'admin_role_management',
         url: 'admin_role_audit.php'
@@ -1246,7 +1258,7 @@
         linkId: 'enquiry_portal',
         url: 'enquiry_portal.php'
       }, {
-        id: 'survey',
+        id: 'job',
         linkId: 'job_seekers',
         url: 'job_seekers.php'
       },

@@ -265,7 +265,8 @@ if ($export) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Worklist</a></li>
+                    <li class="breadcrumb-item"><a href="#">Job Assistance</a></li>
+                    <li class="breadcrumb-item"><a href="job-admin.php">Job Admin Panel</a></li>
                     <li class="breadcrumb-item"><a href="job-approval.php">Job Approval</a></li>
                     <li class="breadcrumb-item active">Job Details</li>
                 </ol>
