@@ -461,7 +461,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                         <tr>
                                             <th>Id</th>
                                             <th>Name</th>
-                                            <th>DOB</th>
+                                            <!-- <th>DOB</th> -->
                                             <th>Age</th>
                                             <th>Email</th>
                                             <th>Contact</th>
@@ -971,7 +971,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 class="${rowClass}">
                                 <td>${escapeHtml(record.id)}</td>
                                 <td>${escapeHtml(record.name)}</td>
-                                <td>${escapeHtml(record.dob || 'N/A')}</td>
+                                <!--<td>${escapeHtml(record.dob || 'N/A')}</td>-->
                                 <td>${age}</td>
                                 <td>${escapeHtml(record.email || 'N/A')}</td>
                                 <td>${escapeHtml(record.contact)}</td>
