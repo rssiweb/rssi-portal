@@ -136,7 +136,7 @@ validation();
 
                                     <!-- Recruiter Management -->
                                     <div class="col-md-4">
-                                        <a href="#" class="card-link">
+                                        <a href="recruiter-management.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-people icon"></i>
