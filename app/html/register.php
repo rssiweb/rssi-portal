@@ -43,9 +43,14 @@ try {
     $full_name = $_POST['full_name'] ?? '';
     $company_name = $_POST['company_name'] ?? '';
     $phone = $_POST['phone'] ?? '';
-    $aadhar_number = $_POST['aadhar_number'] ?? '';
+    $aadhar_number = trim($_POST['aadharNumber'] ?? '');
+    // Convert empty string to NULL for admin-created recruiters
+    if (empty(trim($aadhar_number))) {
+        $aadhar_number = null;
+    }
     $company_address = $_POST['company_address'] ?? '';
     $created_by = $_POST['created_by'] ?? null;  // Safe default
+    $notes = $_POST['notes'] ?? null;  // Optional
 
     // Debug log
     error_log("Registration attempt - Email: $email, Name: $full_name");
@@ -95,18 +100,20 @@ try {
         throw new Exception('Email already registered');
     }
 
-    // Check if Aadhar already registered
-    $checkAadharQuery = "SELECT id FROM recruiters WHERE aadhar_number = $1";
-    $checkAadharResult = pg_query_params($con, $checkAadharQuery, [$aadhar_number]);
+    // Check if Aadhar already registered (only if aadhar is provided)
+    if (!empty(trim($aadhar_number ?? ''))) {
+        $checkAadharQuery = "SELECT id FROM recruiters WHERE aadhar_number = $1";
+        $checkAadharResult = pg_query_params($con, $checkAadharQuery, [$aadhar_number]);
 
-    if (!$checkAadharResult) {
-        $error = pg_last_error($con);
-        error_log("Database error checking Aadhar: " . $error);
-        throw new Exception('Database error. Please try again.');
-    }
+        if (!$checkAadharResult) {
+            $error = pg_last_error($con);
+            error_log("Database error checking Aadhar: " . $error);
+            throw new Exception('Database error. Please try again.');
+        }
 
-    if (pg_num_rows($checkAadharResult) > 0) {
-        throw new Exception('Aadhar number already registered');
+        if (pg_num_rows($checkAadharResult) > 0) {
+            throw new Exception('Aadhar number already registered');
+        }
     }
 
     // Handle Aadhar file upload to Google Drive
@@ -178,8 +185,8 @@ try {
     $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 
     // Insert into database using pg_query_params for security
-    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, is_verified) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) RETURNING id";
+    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, notes, is_verified) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING id";
 
     error_log("Executing query: $query");
 
@@ -191,7 +198,8 @@ try {
         $aadhar_number,
         $aadhar_drive_link, // Store Google Drive link instead of local path
         $company_address,
-        $hashedPassword  // Add this line
+        $hashedPassword,  // Add this line
+        $notes
     ]);
 
     if (!$result) {

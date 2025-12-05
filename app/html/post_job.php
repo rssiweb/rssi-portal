@@ -55,6 +55,7 @@ try {
     $min_salary = $_POST['min_salary'] ?? '';
     $max_salary = $_POST['max_salary'] ?? '';
     $education_qualification = $_POST['education_qualification'] ?? '';
+    $benefits = $_POST['benefits'] ?? '';
 
 
     error_log("Job post attempt - Email: $email, Job Title: $job_title");
@@ -168,8 +169,8 @@ try {
     // Then in your INSERT query, use $job_drive_link instead of $job_file_path
 
     // Insert job post
-    $query = "INSERT INTO job_posts (recruiter_id, job_title, job_type, location, min_salary, max_salary, education_levels, job_description, requirements, experience, vacancies, apply_by, job_file_path) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id";
+    $query = "INSERT INTO job_posts (recruiter_id, job_title, job_type, location, min_salary, max_salary, education_levels, job_description, requirements, experience, vacancies, apply_by, job_file_path,benefits) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id";
 
     error_log("Executing job insert query");
 
@@ -186,7 +187,8 @@ try {
         $experience,
         $vacancies,
         $apply_by,
-        $job_drive_link
+        $job_drive_link,
+        $benefits
     ]);
 
     if (!$result) {
@@ -215,7 +217,7 @@ try {
             "education_qualification" => $education_qualification
         ];
 
-        $emailResult = sendEmail("job_post_confirmation", $recruiterEmailData, $email, false);
+        $emailResult = sendEmail("job_post_confirmation", $recruiterEmailData, $email);
         error_log("Confirmation email sent to recruiter: $email");
     } catch (Exception $e) {
         error_log("Email sending to recruiter failed: " . $e->getMessage());
@@ -223,53 +225,53 @@ try {
     }
 
     // Send notification to admin for approval
-    try {
-        // Use the same logic as your support system - check position column
-        $adminQuery = "SELECT email FROM rssimyaccount_members WHERE position IN ('Director', 'Chief Human Resources Officer') AND filterstatus = 'Active'";
-        $adminResult = pg_query($con, $adminQuery);
+    // try {
+    //     // Use the same logic as your support system - check position column
+    //     $adminQuery = "SELECT email FROM rssimyaccount_members WHERE position IN ('Director') AND filterstatus = 'Active'";
+    //     $adminResult = pg_query($con, $adminQuery);
 
-        if ($adminResult && pg_num_rows($adminResult) > 0) {
-            $adminEmails = [];
-            while ($row = pg_fetch_assoc($adminResult)) {
-                if (!empty($row['email'])) {
-                    $rawEmails = explode(',', $row['email']);
-                    foreach ($rawEmails as $rawEmail) {
-                        $rawEmail = trim($rawEmail);
-                        if (filter_var($rawEmail, FILTER_VALIDATE_EMAIL)) {
-                            $adminEmails[] = $rawEmail;
-                        }
-                    }
-                }
-            }
+    //     if ($adminResult && pg_num_rows($adminResult) > 0) {
+    //         $adminEmails = [];
+    //         while ($row = pg_fetch_assoc($adminResult)) {
+    //             if (!empty($row['email'])) {
+    //                 $rawEmails = explode(',', $row['email']);
+    //                 foreach ($rawEmails as $rawEmail) {
+    //                     $rawEmail = trim($rawEmail);
+    //                     if (filter_var($rawEmail, FILTER_VALIDATE_EMAIL)) {
+    //                         $adminEmails[] = $rawEmail;
+    //                     }
+    //                 }
+    //             }
+    //         }
 
-            if (!empty($adminEmails)) {
-                $adminEmailList = implode(',', $adminEmails);
+    //         if (!empty($adminEmails)) {
+    //             $adminEmailList = implode(',', $adminEmails);
 
-                $adminEmailData = [
-                    "recruiter_name" => $recruiter_name,
-                    "company_name" => $company_name,
-                    "email" => $email,
-                    "job_title" => $job_title,
-                    "job_id" => $job_id,
-                    "post_date" => date("d/m/Y g:i a"),
-                    "apply_by" => date("d/m/Y", strtotime($apply_by)),
-                    "vacancies" => $vacancies,
-                    "location" => $location,
-                    "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
-                    "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified")),
-                    "education_qualification" => $education_qualification,
-                    "approval_link" => "https://login.rssi.in/rssi-member/job_view.php?id=$job_id"
-                ];
+    //             $adminEmailData = [
+    //                 "recruiter_name" => $recruiter_name,
+    //                 "company_name" => $company_name,
+    //                 "email" => $email,
+    //                 "job_title" => $job_title,
+    //                 "job_id" => $job_id,
+    //                 "post_date" => date("d/m/Y g:i a"),
+    //                 "apply_by" => date("d/m/Y", strtotime($apply_by)),
+    //                 "vacancies" => $vacancies,
+    //                 "location" => $location,
+    //                 "job_type" => ucfirst(str_replace('-', ' ', $job_type)),
+    //                 "salary" => ($min_salary && $max_salary) ? "₹{$min_salary} - ₹{$max_salary} per month" : ($min_salary ? "₹{$min_salary} per month" : ($max_salary ? "Up to ₹{$max_salary} per month" : "Not specified")),
+    //                 "education_qualification" => $education_qualification,
+    //                 "approval_link" => "https://login.rssi.in/rssi-member/job_view.php?id=$job_id"
+    //             ];
 
-                // This will send to ALL admin emails at once (comma-separated)
-                sendEmail("job_post_admin_notification", $adminEmailData, $adminEmailList, false);
-                error_log("Notification email sent to " . count($adminEmails) . " admin(s): " . $adminEmailList);
-            }
-        }
-    } catch (Exception $e) {
-        error_log("Admin email notification failed: " . $e->getMessage());
-        // Don't fail job post if admin email fails
-    }
+    //             // This will send to ALL admin emails at once (comma-separated)
+    //             sendEmail("job_post_admin_notification", $adminEmailData, $adminEmailList, false);
+    //             error_log("Notification email sent to " . count($adminEmails) . " admin(s): " . $adminEmailList);
+    //         }
+    //     }
+    // } catch (Exception $e) {
+    //     error_log("Admin email notification failed: " . $e->getMessage());
+    //     // Don't fail job post if admin email fails
+    // }
 
     $response['success'] = true;
     $response['message'] = 'Job posted successfully. It is now pending approval.';

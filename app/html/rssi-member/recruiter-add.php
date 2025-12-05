@@ -254,7 +254,7 @@ validation();
                                                 <!-- Success Message -->
                                                 <div id="successMessage" style="display: none;">
                                                     <div class="alert alert-success text-center">
-                                                        <h4>✅ Recruiter Registered Successfully!</h4>
+                                                        <h4>Recruiter Registered Successfully!</h4>
                                                         <p>Recruiter has been registered and can now post jobs.</p>
                                                         <p>Login credentials have been sent to their email.</p>
                                                         <div class="mt-3">
