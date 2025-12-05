@@ -43,7 +43,7 @@ try {
     $full_name = $_POST['full_name'] ?? '';
     $company_name = $_POST['company_name'] ?? '';
     $phone = $_POST['phone'] ?? '';
-    $aadhar_number = trim($_POST['aadharNumber'] ?? '');
+    $aadhar_number = trim($_POST['aadhar_number'] ?? '');
     // Convert empty string to NULL for admin-created recruiters
     if (empty(trim($aadhar_number))) {
         $aadhar_number = null;
