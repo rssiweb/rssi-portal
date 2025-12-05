@@ -59,22 +59,8 @@ try {
     $response['message'] = 'Login successful';
     $response['recruiter_id'] = $user['id'];
 
-    // FIXED: Check if password is a default password (6 characters: letters and numbers only)
-    // This checks if the password is exactly 6 characters and contains only letters and numbers
-    $isDefaultPassword = false;
-    if (strlen($password) === 6) {
-        // Check if password contains only letters and numbers (no special characters)
-        if (preg_match('/^[a-zA-Z0-9]+$/', $password)) {
-            // Count letters and numbers
-            $letterCount = preg_match_all('/[a-zA-Z]/', $password);
-            $numberCount = preg_match_all('/[0-9]/', $password);
-
-            // If it has both letters and numbers (typical of our generated passwords)
-            if ($letterCount > 0 && $numberCount > 0) {
-                $isDefaultPassword = true;
-            }
-        }
-    }
+    // FIXED: Check if password is exactly 6 characters (no other checks)
+    $isDefaultPassword = (strlen($password) === 6);
 
     $response['requires_password_change'] = $isDefaultPassword;
 } catch (Exception $e) {

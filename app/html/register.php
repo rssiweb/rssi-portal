@@ -45,24 +45,40 @@ try {
     $phone = $_POST['phone'] ?? '';
     $aadhar_number = $_POST['aadhar_number'] ?? '';
     $company_address = $_POST['company_address'] ?? '';
+    $created_by = $_POST['created_by'] ?? null;  // Safe default
 
     // Debug log
     error_log("Registration attempt - Email: $email, Name: $full_name");
 
     // Validation
+    // Common required fields
     if (
-        empty($email) || empty($full_name) || empty($company_name) ||
-        empty($phone) || empty($aadhar_number) || empty($company_address)
+        empty($email) ||
+        empty($full_name) ||
+        empty($company_name) ||
+        empty($phone) ||
+        empty($company_address)
     ) {
         throw new Exception('All fields are required');
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        throw new Exception('Invalid email format');
+    // Aadhar validation
+    // Required ONLY when created_by is NOT 'admin'
+    if ($created_by !== 'admin') {
+
+        // Aadhar is required
+        if (empty($aadhar_number)) {
+            throw new Exception('Aadhar number is required');
+        }
+
+        // Validate format
+        if (!preg_match('/^[0-9]{12}$/', $aadhar_number)) {
+            throw new Exception('Aadhar number must be 12 digits');
+        }
     }
 
-    if (!preg_match('/^[0-9]{12}$/', $aadhar_number)) {
-        throw new Exception('Aadhar number must be 12 digits');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('Invalid email format');
     }
 
     // Check if email already registered
@@ -97,7 +113,16 @@ try {
     $aadhar_drive_link = null;
     $aadhar_file_name = null;
 
-    if (isset($_FILES['aadhar_file']) && $_FILES['aadhar_file']['error'] == UPLOAD_ERR_OK) {
+    // Check if file is uploaded
+    $fileUploaded = isset($_FILES['aadhar_file']) && $_FILES['aadhar_file']['error'] == UPLOAD_ERR_OK;
+
+    // If NOT admin → Aadhar file is required
+    if ($created_by !== 'admin' && !$fileUploaded) {
+        $upload_error = $_FILES['aadhar_file']['error'] ?? 'No file uploaded';
+        throw new Exception('Aadhar file is required. Error: ' . $upload_error);
+    }
+
+    if ($fileUploaded) {
         $uploadedFile = $_FILES['aadhar_file'];
 
         // Check file size (2MB)
@@ -146,10 +171,6 @@ try {
         }
 
         error_log("Aadhar file uploaded to Google Drive: " . $aadhar_drive_link);
-    } else {
-        $upload_error = $_FILES['aadhar_file']['error'] ?? 'No file uploaded';
-        error_log("File upload error: " . $upload_error);
-        throw new Exception('Aadhar file is required or upload failed. Error: ' . $upload_error);
     }
 
     // Generate random password (6 characters: letters and numbers mixed)
