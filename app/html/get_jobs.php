@@ -18,10 +18,17 @@ try {
 
     $params = [];
 
-    // Add search filter
     if (!empty($search)) {
-        $query .= " AND (jp.job_title ILIKE $1 OR r.company_name ILIKE $1 OR jp.location ILIKE $1)";
-        $params[] = "%$search%";
+        if (ctype_digit($search)) {
+            // Search by ID + other text fields
+            $query .= " AND (jp.id = $1 OR jp.job_title ILIKE $2 OR r.company_name ILIKE $2 OR jp.location ILIKE $2)";
+            $params[] = (int)$search;
+            $params[] = "%$search%";
+        } else {
+            // Search only in text fields
+            $query .= " AND (jp.job_title ILIKE $1 OR r.company_name ILIKE $1 OR jp.location ILIKE $1)";
+            $params[] = "%$search%";
+        }
     }
 
     // Add job type filter
