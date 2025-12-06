@@ -185,8 +185,8 @@ try {
     $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 
     // Insert into database using pg_query_params for security
-    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, notes, is_verified) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING id";
+    $query = "INSERT INTO recruiters (email, full_name, company_name, phone, aadhar_number, aadhar_file_path, company_address, password, notes, default_pass_updated_on, is_verified) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true) RETURNING id";
 
     error_log("Executing query: $query");
 
@@ -199,7 +199,8 @@ try {
         $aadhar_drive_link, // Store Google Drive link instead of local path
         $company_address,
         $hashedPassword,  // Add this line
-        $notes
+        $notes,
+        date("Y-m-d H:i:s")
     ]);
 
     if (!$result) {

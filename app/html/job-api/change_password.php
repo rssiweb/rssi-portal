@@ -41,7 +41,7 @@ try {
     }
 
     $user = pg_fetch_assoc($result);
-    
+
     if (!password_verify($currentPassword, $user['password'])) {
         throw new Exception('Current password is incorrect');
     }
@@ -50,8 +50,8 @@ try {
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
     // Update password
-    $updateQuery = "UPDATE recruiters SET password = $1 WHERE email = $2";
-    $updateResult = pg_query_params($con, $updateQuery, [$hashedPassword, $email]);
+    $updateQuery = "UPDATE recruiters SET password = $1, password_updated_by= $2, password_updated_on=$3 WHERE email = $4";
+    $updateResult = pg_query_params($con, $updateQuery, [$hashedPassword, $email, date("Y-m-d H:i:s"), $email]);
 
     if (!$updateResult) {
         throw new Exception('Failed to update password');
@@ -59,10 +59,8 @@ try {
 
     $response['success'] = true;
     $response['message'] = 'Password changed successfully';
-
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
 }
 
 echo json_encode($response);
-?>
