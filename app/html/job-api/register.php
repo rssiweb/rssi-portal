@@ -7,9 +7,9 @@ ini_set('log_errors', 1);
 // Start output buffering to catch any stray output
 ob_start();
 
-require_once __DIR__ . '/../bootstrap.php';
-include(__DIR__ . "/../util/email.php");
-include(__DIR__ . "/../util/drive.php");
+require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/email.php");
+include("../../util/drive.php");
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");

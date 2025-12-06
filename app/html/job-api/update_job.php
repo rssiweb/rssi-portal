@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../bootstrap.php';
-include(__DIR__ . "/../util/drive.php");
+require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/drive.php");
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");

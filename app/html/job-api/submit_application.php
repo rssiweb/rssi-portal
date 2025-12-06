@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/../bootstrap.php";
+require_once __DIR__ . "/../../bootstrap.php";
 
 header('Content-Type: application/json');
 
@@ -77,7 +77,7 @@ try {
 
         // Upload to Google Drive
         if (!function_exists('uploadeToDrive')) {
-            include(__DIR__ . "/../util/drive.php");
+            include("../../util/drive.php");
         }
 
         $resume_drive_link = uploadeToDrive($uploadedFile, $drive_folder_id, $resume_file_name);

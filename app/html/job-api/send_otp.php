@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../bootstrap.php';
-include(__DIR__ . "/../util/email.php");
+require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/email.php");
 
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");

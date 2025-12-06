@@ -287,8 +287,8 @@ validation();
         $(document).ready(function() {
             // API endpoint configuration
             const API_BASE = window.location.hostname === 'localhost' ?
-                'http://localhost:8082/' :
-                'https://login.rssi.in/';
+                'http://localhost:8082/job-api/' :
+                'https://login.rssi.in/job-api/';
 
             // File upload handling
             const fileInput = $('#aadharFile');

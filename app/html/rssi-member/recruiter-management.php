@@ -584,8 +584,8 @@ $counts = pg_fetch_assoc($countResult);
     <script>
         // API endpoint configuration
         const API_BASE = window.location.hostname === 'localhost' ?
-            'http://localhost:8082/' :
-            'https://login.rssi.in/';
+            'http://localhost:8082/job-api/' :
+            'https://login.rssi.in/job-api/';
         $(document).ready(function() {
             // Initialize DataTable
             $('#recruitersTable').DataTable({

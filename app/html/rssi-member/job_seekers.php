@@ -356,7 +356,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Job Assistance</a></li>
+                    <li class="breadcrumb-item">Job Assistance</li>
                     <li class="breadcrumb-item active">Job Seeker Records</li>
                 </ol>
             </nav>
@@ -780,6 +780,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
     <script src="../assets_new/js/main.js"></script>
 
     <script>
+        const API_BASE = window.location.hostname === 'localhost' ?
+            'http://localhost:8082/job-api/' :
+            'https://login.rssi.in/job-api/';
         let offset = 0;
         let isLastBatch = false;
         let currentFilters = {
@@ -1137,9 +1140,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         }
 
         function loadEducationFilterDropdown() {
-            const API_BASE = window.location.hostname === 'localhost' ?
-                'http://localhost:8082/' :
-                'https://login.rssi.in/';
 
             const educationFilter = document.getElementById('education');
 
@@ -1174,9 +1174,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         }
 
         function loadEducationDropdown(dropdownId, selectedValue = '') {
-            const API_BASE = window.location.hostname === 'localhost' ?
-                'http://localhost:8082/' :
-                'https://login.rssi.in/';
 
             const dropdown = document.getElementById(dropdownId);
 

@@ -1312,8 +1312,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Function to load education levels from API
         function loadEducationLevels(rowId) {
             const API_BASE = window.location.hostname === 'localhost' ?
-                'http://localhost:8082/' :
-                'https://login.rssi.in/';
+                'http://localhost:8082/job-api/' :
+                'https://login.rssi.in/job-api/';
 
             const dropdown = document.getElementById(`jobSeekerEducation-${rowId}`);
 

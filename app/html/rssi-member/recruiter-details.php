@@ -791,8 +791,8 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
     <script>
         // API endpoint configuration
         const API_BASE = window.location.hostname === 'localhost' ?
-            'http://localhost:8082/' :
-            'https://login.rssi.in/';
+            'http://localhost:8082/job-api/' :
+            'https://login.rssi.in/job-api/';
         $(document).ready(function() {
             // Initialize DataTable for jobs table
             $('table').DataTable({

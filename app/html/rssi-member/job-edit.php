@@ -780,8 +780,8 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
     <script>
         // API endpoint configuration
         const API_BASE = window.location.hostname === 'localhost' ?
-            'http://localhost:8082/' :
-            'https://login.rssi.in/';
+            'http://localhost:8082/job-api/' :
+            'https://login.rssi.in/job-api/';
         $(document).ready(function() {
             // Initialize Select2 for recruiter dropdown
             $('#recruiter').select2({

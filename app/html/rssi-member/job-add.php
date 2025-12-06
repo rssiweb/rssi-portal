@@ -342,11 +342,11 @@ validation();
     <script src="../assets_new/js/main.js"></script>
 
     <script>
+        // API endpoint configuration
+        const API_BASE = window.location.hostname === 'localhost' ?
+            'http://localhost:8082/job-api/' :
+            'https://login.rssi.in/job-api/';
         $(document).ready(function() {
-            // API endpoint configuration
-            const API_BASE = window.location.hostname === 'localhost' ?
-                'http://localhost:8082/' :
-                'https://login.rssi.in/';
 
             // Load education levels
             loadEducationLevels();
@@ -604,10 +604,6 @@ validation();
         });
     </script>
     <script>
-        // API endpoint configuration
-        const API_BASE = window.location.hostname === 'localhost' ?
-            'http://localhost:8082/' :
-            'https://login.rssi.in/';
         // Initialize Select2 for recruiter dropdown with AJAX
         $(document).ready(function() {
             // Initialize Select2
