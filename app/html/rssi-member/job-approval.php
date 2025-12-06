@@ -489,9 +489,24 @@ $historyJobs = $historyResult ? pg_fetch_all($historyResult) : [];
                                                                 <td><?php echo date('d/m/Y', strtotime($job['created_at'])); ?></td>
                                                                 <td><?php echo date('d/m/Y', strtotime($job['updated_at'])); ?></td>
                                                                 <td>
-                                                                    <a href="job_view.php?id=<?php echo $job['id']; ?>" class="btn btn-sm btn-info" title="View Details">
-                                                                        <i class="bi bi-eye"></i>
-                                                                    </a>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                            <i class="bi bi-three-dots-vertical"></i>
+                                                                        </button>
+
+                                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                                            <li>
+                                                                                <a class="dropdown-item" href="job_view.php?id=<?php echo $job['id']; ?>">
+                                                                                    <i class="bi bi-eye me-2"></i> View Job
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item" href="job-edit.php?id=<?php echo $job['id']; ?>">
+                                                                                    <i class="bi bi-pencil-square me-2"></i> Edit Job
+                                                                                </a>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         <?php endforeach; ?>

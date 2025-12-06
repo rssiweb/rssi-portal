@@ -611,8 +611,8 @@ if ($export) {
                                                         <i class="bi bi-check-circle me-2"></i>Go to Approval
                                                     </a>
                                                 <?php endif; ?>
-                                                <a href="job-approval.php" class="btn btn-outline-primary">
-                                                    <i class="bi bi-arrow-left me-2"></i>Back to Job List
+                                                <a href="#" onclick="history.back();" class="btn btn-outline-primary">
+                                                    <i class="bi bi-arrow-left me-2"></i>Back
                                                 </a>
                                                 <?php if (!empty($job['status']) && $job['status'] !== 'pending'): ?>
                                                     <button type="button" class="btn btn-outline-info" onclick="window.print()">

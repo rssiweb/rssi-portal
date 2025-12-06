@@ -280,7 +280,7 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
                         </p>
                     </div>
                     <div>
-                        <a href="job-details.php?id=<?php echo $jobId; ?>" class="btn btn-light">
+                        <a href="job_view.php?id=<?php echo $jobId; ?>" class="btn btn-light">
                             <i class="bi bi-eye me-1"></i> View Job
                         </a>
                         <a href="job-admin.php" class="btn btn-outline-light">
@@ -588,7 +588,7 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
                                     <!-- Form Actions -->
                                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                                         <div>
-                                            <a href="job-details.php?id=<?php echo $jobId; ?>" class="btn btn-outline-secondary">
+                                            <a href="job_view.php?id=<?php echo $jobId; ?>" class="btn btn-outline-secondary">
                                                 <i class="bi bi-x-circle me-1"></i> Cancel
                                             </a>
                                             <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $jobId; ?>)">
@@ -651,7 +651,7 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
 
                                     <?php if (($stats['total_applications'] ?? 0) > 0): ?>
                                         <div class="text-center mt-3">
-                                            <a href="job-applications.php?job_id=<?php echo $jobId; ?>" class="btn btn-sm btn-outline-primary">
+                                            <a href="job_view.php?id=<?php echo $jobId; ?>" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-people me-1"></i> View Applications
                                             </a>
                                         </div>
@@ -728,10 +728,10 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="job-details.php?id=<?php echo $jobId; ?>" class="btn btn-outline-primary">
+                                        <a href="https://www.rssi.in/job_details?id=<?php echo $jobId; ?>" class="btn btn-outline-primary" target="_blank">
                                             <i class="bi bi-eye me-2"></i> View Public Page
                                         </a>
-                                        <a href="job-applications.php?job_id=<?php echo $jobId; ?>" class="btn btn-outline-success">
+                                        <a href="job_view.php?id=<?php echo $jobId; ?>" class="btn btn-outline-success">
                                             <i class="bi bi-people me-2"></i> Manage Applications
                                         </a>
                                         <a href="recruiter-details.php?id=<?php echo $job['recruiter_id']; ?>" class="btn btn-outline-info">
