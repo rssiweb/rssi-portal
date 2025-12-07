@@ -142,7 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
             // Always treat registration as successful
             $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
 
-            // Redirect to prevent form resubmission
+            // Store in session and redirect to prevent resubmission
+            $_SESSION['registration_success'] = $registration_success;
             header("Location: index.php?tab=register&success=1");
             exit;
         } else {
@@ -216,9 +217,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     }
 }
 
-// Check for success parameter from redirect
+// Check for success parameter from redirect OR session
 if (isset($_GET['success']) && $_GET['success'] == '1') {
-    $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+    if (isset($_SESSION['registration_success'])) {
+        $registration_success = $_SESSION['registration_success'];
+        unset($_SESSION['registration_success']);
+    } else {
+        $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+    }
 }
 ?>
 
@@ -283,6 +289,17 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
         /* Hide success alert when empty */
         .alert:empty {
             display: none !important;
+        }
+
+        /* Button styling */
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+
+        .spinner-border {
+            margin-left: 8px;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -376,30 +393,30 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                         </div>
 
                                         <?php if (!empty($registration_success)): ?>
-                                            <div class="alert alert-success">
+                                            <div class="alert alert-success alert-dismissible fade show" role="alert">
                                                 <?php echo $registration_success; ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                             </div>
                                         <?php endif; ?>
 
                                         <?php if (!empty($registration_error)): ?>
-                                            <div class="alert alert-danger">
+                                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                                 <?php echo $registration_error; ?>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                             </div>
                                         <?php endif; ?>
 
-                                        <form class="row g-3 needs-validation" role="form" method="post" name="register" action="index.php?tab=register" novalidate>
+                                        <form class="row g-3" role="form" method="post" name="register" action="index.php?tab=register" id="register-form">
                                             <input type="hidden" name="form_type" value="register">
 
                                             <div class="col-md-6">
                                                 <label for="full_name" class="form-label required-field">Full Name</label>
                                                 <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Enter your full name" required>
-                                                <div class="invalid-feedback">Please enter your full name.</div>
                                             </div>
 
                                             <div class="col-md-6">
                                                 <label for="company_name" class="form-label required-field">Company Name</label>
                                                 <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter your company name" required>
-                                                <div class="invalid-feedback">Please enter your company name.</div>
                                             </div>
 
                                             <div class="col-md-6">
@@ -408,7 +425,6 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                                     <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
                                                 </div>
-                                                <div class="invalid-feedback">Please enter a valid email address.</div>
                                             </div>
 
                                             <div class="col-md-6">
@@ -417,13 +433,11 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                                     <span class="input-group-text"><i class="bi bi-phone"></i></span>
                                                     <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" placeholder="Enter 10-digit phone number" required>
                                                 </div>
-                                                <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
                                             </div>
 
                                             <div class="col-12">
                                                 <label for="company_address" class="form-label required-field">Company Address</label>
                                                 <textarea class="form-control" id="company_address" name="company_address" rows="3" placeholder="Enter complete company address" required></textarea>
-                                                <div class="invalid-feedback">Please enter your company address.</div>
                                             </div>
 
                                             <div class="col-12">
@@ -432,12 +446,14 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                                     <label class="form-check-label" for="terms">
                                                         I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
                                                     </label>
-                                                    <div class="invalid-feedback">You must agree to the terms and conditions.</div>
                                                 </div>
                                             </div>
 
                                             <div class="col-12">
-                                                <button class="btn btn-success w-100" type="submit">Register Now</button>
+                                                <button class="btn btn-success w-100" type="submit" id="register-button">
+                                                    <span id="register-text">Register Now</span>
+                                                    <span id="register-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                                                </button>
                                             </div>
 
                                             <div class="col-12">
@@ -495,7 +511,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="forgot-password-form" action="#" method="POST" onsubmit="showSpinner()">
+                    <form id="forgot-password-form">
                         <div class="mb-3">
                             <label for="reset_username" class="form-label">Email Address</label>
                             <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your email address" required>
@@ -508,7 +524,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="send-email-button" form="forgot-password-form">
+                    <button type="button" class="btn btn-primary" id="send-email-button">
                         <span id="button-text">Send Email</span>
                         <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
                     </button>
@@ -544,13 +560,13 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             return false;
         }
 
-        // Show/hide password
+        // Show/hide password - KEEP EXISTING LOGIN FUNCTIONALITY
         document.getElementById('show-password').addEventListener('change', function() {
             var passwordField = document.getElementById('pass');
             passwordField.type = this.checked ? 'text' : 'password';
         });
 
-        // Form validation
+        // EXISTING FORM VALIDATION FOR LOGIN - KEEP AS IS
         (function() {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
@@ -566,25 +582,106 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 })
         })()
 
-        // Show spinner on forgot password
-        function showSpinner() {
-            const submitButton = document.getElementById('send-email-button');
-            submitButton.disabled = true;
-            const spinner = document.getElementById('spinner');
-            spinner.style.display = 'inline-block';
-            const buttonText = document.getElementById('button-text');
-            buttonText.textContent = 'Sending...';
-        }
+        // NEW: Register form handler - BROWSER DEFAULT VALIDATION ONLY
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            // Let browser handle validation - if form is valid, proceed
+            if (this.checkValidity()) {
+                const registerButton = document.getElementById('register-button');
+                const registerText = document.getElementById('register-text');
+                const registerSpinner = document.getElementById('register-spinner');
 
-        // Clear form validation when switching tabs
+                // Disable button and show spinner
+                registerButton.disabled = true;
+                registerText.textContent = 'Registering...';
+                registerSpinner.style.display = 'inline-block';
+
+                return true;
+            }
+            // If form is invalid, browser will show its own validation messages
+            // Don't prevent default - let browser show validation
+        });
+
+        // NEW: Forgot password handler
+        document.getElementById('send-email-button').addEventListener('click', function() {
+            const form = document.getElementById('forgot-password-form');
+            const emailInput = document.getElementById('reset_username');
+            const sendButton = this;
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+
+            // Check browser validation
+            if (!emailInput.checkValidity()) {
+                emailInput.reportValidity();
+                return;
+            }
+
+            // Disable button and show spinner
+            sendButton.disabled = true;
+            buttonText.textContent = 'Sending...';
+            spinner.style.display = 'inline-block';
+
+            // Create form data
+            const formData = new FormData(form);
+
+            // Submit via fetch
+            fetch('', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'text/html',
+                    }
+                })
+                .then(response => response.text())
+                .then(data => {
+                    // Reset button
+                    sendButton.disabled = false;
+                    buttonText.textContent = 'Send Email';
+                    spinner.style.display = 'none';
+
+                    // Extract and show alert
+                    const alertMatch = data.match(/alert\('([^']+)'\)/);
+                    if (alertMatch) {
+                        alert(alertMatch[1]);
+
+                        // Close modal on success
+                        if (alertMatch[1].includes('password reset link has been sent')) {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('popup'));
+                            if (modal) {
+                                modal.hide();
+                                form.reset();
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    sendButton.disabled = false;
+                    buttonText.textContent = 'Send Email';
+                    spinner.style.display = 'none';
+                    alert('An error occurred. Please try again.');
+                });
+        });
+
+        // Clear form validation when switching tabs - KEEP EXISTING
         document.getElementById('authTabs').addEventListener('shown.bs.tab', function(event) {
             var forms = document.querySelectorAll('.needs-validation');
             forms.forEach(function(form) {
                 form.classList.remove('was-validated');
             });
+
+            // Reset register button when switching tabs
+            const registerButton = document.getElementById('register-button');
+            const registerText = document.getElementById('register-text');
+            const registerSpinner = document.getElementById('register-spinner');
+
+            if (registerButton) {
+                registerButton.disabled = false;
+                registerText.textContent = 'Register Now';
+                registerSpinner.style.display = 'none';
+            }
         });
 
-        // Initialize based on URL parameter
+        // Initialize based on URL parameter - KEEP EXISTING
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
@@ -592,6 +689,11 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             if (tab === 'register') {
                 var registerTab = new bootstrap.Tab(document.getElementById('register-tab'));
                 registerTab.show();
+
+                // Reset form on successful registration
+                if (urlParams.has('success')) {
+                    document.getElementById('register-form').reset();
+                }
             } else {
                 var loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
                 loginTab.show();
@@ -605,11 +707,16 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
 
             // Clear form data on successful registration to prevent resubmission
             <?php if (!empty($registration_success)): ?>
-                document.querySelector('form[name="register"]').reset();
+                document.getElementById('register-form').reset();
             <?php endif; ?>
+
+            // Prevent form resubmission warning
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
         });
 
-        // Update URL when tab is clicked
+        // Update URL when tab is clicked - KEEP EXISTING
         document.querySelectorAll('#authTabs button[data-bs-toggle="tab"]').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 const tabId = this.id === 'login-tab' ? 'login' : 'register';
