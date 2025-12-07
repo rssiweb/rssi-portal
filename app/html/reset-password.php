@@ -33,7 +33,8 @@ $reset_code = $_GET['c'];
 $tables = [
     'rssimyaccount_members' => ['associate_id' => 'associatenumber', 'name_column' => 'fullname', 'redirect' => 'rssi-member/index.php'],
     'signup' => ['associate_id' => 'application_number', 'name_column' => 'applicant_name', 'redirect' => 'tap/index.php'],
-    'test_users' => ['associate_id' => 'id', 'name_column' => 'name', 'redirect' => 'iexplore/home.php']
+    'test_users' => ['associate_id' => 'id', 'name_column' => 'name', 'redirect' => 'iexplore/home.php'],
+    'recruiters' => ['associate_id' => 'id', 'name_column' => 'full_name', 'redirect' => 'recruiters/home.php']
 ];
 
 $found = false;
