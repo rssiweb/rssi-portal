@@ -57,7 +57,7 @@ $jobsQuery = "SELECT
                 created_at,
                 apply_by
               FROM job_posts 
-              WHERE recruiter_id = $1 
+              WHERE recruiter_id = $1 AND status != 'deleted'
               ORDER BY created_at DESC
               LIMIT 10";
 

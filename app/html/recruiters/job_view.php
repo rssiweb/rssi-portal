@@ -50,35 +50,52 @@ if (!$result || pg_num_rows($result) == 0) {
 
 $job = pg_fetch_assoc($result);
 
-// Fetch application count and list of applicants
-$applications_query = "SELECT COUNT(*) as total_applications FROM job_applications WHERE job_id = $1";
-$applications_result = pg_query_params($con, $applications_query, [$job_id]);
-$applications_data = pg_fetch_assoc($applications_result);
-$total_applications = $applications_data['total_applications'];
+if ($job['status'] === 'deleted') {
+    // Log unauthorized access attempt
+    error_log("Access attempt on deleted job. Job ID: $job_id, Recruiter ID: $recruiter_id");
 
-// Fetch applicants data
-$applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.dob, jsd.education, 
-                            jsd.skills, jsd.preferences, jsd.address1, jsd.resume, jsd.status as applicant_status,
-                            el.name as education_name
-                     FROM job_applications ja
-                     JOIN job_seeker_data jsd ON ja.job_seeker_id = jsd.id
-                     LEFT JOIN education_levels el ON jsd.education = el.id
-                     WHERE ja.job_id = $1
-                     ORDER BY ja.application_date DESC";
+    // Show error and redirect
+    echo "<script>
+            alert('Access denied: This job has been deleted and is no longer available.');
+            window.location.href = 'recruiter-jobs.php';
+        </script>";
+    exit;
+}
 
-$applicants_result = pg_query_params($con, $applicants_query, [$job_id]);
-$applicants = pg_fetch_all($applicants_result) ?: [];
+// Check permission after fetching job data
+$can_view_applications = $job['can_view_applications'] === 't' || $job['can_view_applications'] === true;
 
-// Format dates
-$created_date = date('d/m/Y g:i a', strtotime($job['created_at']));
-$updated_date = !empty($job['updated_at'])
-    ? date('d/m/Y g:i a', strtotime($job['updated_at']))
-    : 'Not specified';
-$apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
-
-// Check if export requested
+// Check if export requested - THIS MUST BE CHECKED AFTER PERMISSION CHECK
 $export = isset($_GET['export']) && $_GET['export'] == 'csv';
+
 if ($export) {
+    // Double-check permission for export
+    if (!$can_view_applications) {
+        // Log unauthorized export attempt
+        error_log("Unauthorized export attempt for job ID: $job_id by recruiter ID: $recruiter_id");
+
+        // Show error and redirect
+        echo "<script>
+            alert('Access denied: You do not have permission to export applicant data for this job.');
+            window.location.href = 'job_view.php?id=" . $job_id . "';
+        </script>";
+        exit;
+    }
+
+    // Fetch applications data for export
+    $applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.dob, jsd.education, 
+                                jsd.skills, jsd.preferences, jsd.address1, jsd.resume, jsd.status as applicant_status,
+                                el.name as education_name
+                         FROM job_applications ja
+                         JOIN job_seeker_data jsd ON ja.job_seeker_id = jsd.id
+                         LEFT JOIN education_levels el ON jsd.education = el.id
+                         WHERE ja.job_id = $1
+                         ORDER BY ja.application_date DESC";
+
+    $applicants_result = pg_query_params($con, $applicants_query, [$job_id]);
+    $applicants = pg_fetch_all($applicants_result) ?: [];
+
+    // Start export
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="applicants_job_' . $job_id . '_' . date('Y-m-d') . '.csv"');
 
@@ -115,7 +132,7 @@ if ($export) {
             $applicant['name'],
             $applicant['contact'],
             $applicant['email'],
-            $age,  // Changed from $applicant['age'] to calculated $age
+            $age,
             $applicant['education_name'] ?? $applicant['education'],
             $applicant['skills'],
             $applicant['preferences'],
@@ -129,6 +146,36 @@ if ($export) {
     fclose($output);
     exit;
 }
+
+// Fetch application count (always fetch count for statistics)
+$applications_query = "SELECT COUNT(*) as total_applications FROM job_applications WHERE job_id = $1";
+$applications_result = pg_query_params($con, $applications_query, [$job_id]);
+$applications_data = pg_fetch_assoc($applications_result);
+$total_applications = $applications_data['total_applications'];
+
+// Fetch applicants data only if permission is granted
+if ($can_view_applications) {
+    $applicants_query = "SELECT ja.*, jsd.name, jsd.contact, jsd.email, jsd.dob, jsd.education, 
+                                jsd.skills, jsd.preferences, jsd.address1, jsd.resume, jsd.status as applicant_status,
+                                el.name as education_name
+                         FROM job_applications ja
+                         JOIN job_seeker_data jsd ON ja.job_seeker_id = jsd.id
+                         LEFT JOIN education_levels el ON jsd.education = el.id
+                         WHERE ja.job_id = $1
+                         ORDER BY ja.application_date DESC";
+
+    $applicants_result = pg_query_params($con, $applicants_query, [$job_id]);
+    $applicants = pg_fetch_all($applicants_result) ?: [];
+} else {
+    $applicants = []; // Empty array since can't view details
+}
+
+// Format dates
+$created_date = date('d/m/Y g:i a', strtotime($job['created_at']));
+$updated_date = !empty($job['updated_at'])
+    ? date('d/m/Y g:i a', strtotime($job['updated_at']))
+    : 'Not specified';
+$apply_by_date = date('d/m/Y', strtotime($job['apply_by']));
 ?>
 
 <!doctype html>
@@ -356,8 +403,8 @@ if ($export) {
                                 </div>
 
                                 <!-- Applications Section -->
-                                <a id="applications"></a> <!-- Add this line -->
-                                <?php if ($total_applications > 0): ?>
+                                <a id="applications"></a>
+                                <?php if ($total_applications > 0 && $can_view_applications): ?>
                                     <div class="detail-card">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h6><i class="bi bi-people me-2"></i>Job Applications (<?php echo $total_applications; ?>)</h6>
@@ -370,6 +417,7 @@ if ($export) {
 
                                         <div class="table-responsive">
                                             <table class="table table-hover applicant-table" id="applicantsTable">
+                                                <!-- Table content remains the same -->
                                                 <thead>
                                                     <tr>
                                                         <th>#</th>
@@ -387,6 +435,7 @@ if ($export) {
                                                 </thead>
                                                 <tbody>
                                                     <?php foreach ($applicants as $index => $applicant): ?>
+                                                        <!-- Table rows remain the same -->
                                                         <tr>
                                                             <td><?php echo $index + 1; ?></td>
                                                             <td><?php echo htmlspecialchars($applicant['name']); ?></td>
@@ -455,6 +504,28 @@ if ($export) {
                                                     <?php endforeach; ?>
                                                 </tbody>
                                             </table>
+                                        </div>
+                                    </div>
+                                <?php elseif ($total_applications > 0 && !$can_view_applications): ?>
+                                    <!-- Locked Applications Section -->
+                                    <div class="detail-card">
+                                        <div class="text-center py-5">
+                                            <div class="mb-4">
+                                                <i class="bi bi-lock-fill" style="font-size: 4rem; color: #dc3545;"></i>
+                                            </div>
+                                            <h4 class="mb-3">Applications Locked</h4>
+                                            <p class="text-muted mb-4" style="max-width: 500px; margin: 0 auto;">
+                                                You currently don't have permission to view applicant details for this job posting.
+                                                <br>
+                                                To unlock this feature, please contact our support team.
+                                            </p>
+                                            <div class="alert alert-info d-inline-flex align-items-center" role="alert">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                <div>
+                                                    This job has <strong><?php echo $total_applications; ?> application(s)</strong>
+                                                    but viewing is restricted.
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
