@@ -293,7 +293,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
                 <div class="container">
                     <div class="row justify-content-center">
-                        <div class="col-lg-8 col-md-10 d-flex flex-column align-items-center justify-content-center">
+                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
                             <div class="container text-center py-4">
                                 <div class="logo">
                                     <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
@@ -301,7 +301,10 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                     <p class="text-muted">Find and hire the best talent for your organization</p>
                                 </div>
                             </div>
-
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8 col-md-10 d-flex flex-column align-items-center justify-content-center">
                             <div class="form-container">
                                 <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
