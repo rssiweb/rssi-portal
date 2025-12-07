@@ -64,6 +64,7 @@
             <option value="" disabled selected>Select your association type</option>
             <option value="rssi-member/index.php">Associate</option>
             <option value="tap/index.php">Applicant</option>
+            <option value="recruiters/index.php">Recruiter</option>
             <option value="iexplore/home.php">iExplore</option>
             <option value="rssi-student/index.php">Student</option>
         </select>

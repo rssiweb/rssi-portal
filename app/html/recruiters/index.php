@@ -5,6 +5,8 @@ include("../../util/email.php");
 
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
+$registration_success = "";
+$registration_error = "";
 
 function afterlogin($con, $date)
 {
@@ -84,12 +86,78 @@ function checkLogin($con, $date)
     }
 }
 
+// Handle Registration
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'register') {
+    // Basic validation
+    $full_name = pg_escape_string($con, $_POST['full_name']);
+    $company_name = pg_escape_string($con, $_POST['company_name']);
+    $email = pg_escape_string($con, $_POST['email']);
+    $phone = pg_escape_string($con, $_POST['phone']);
+    $company_address = pg_escape_string($con, $_POST['company_address']);
+
+    // Check if email already exists
+    $check_email = pg_query($con, "SELECT email FROM recruiters WHERE email='$email'");
+    if (pg_num_rows($check_email) > 0) {
+        $registration_error = "Email already registered. Please login or use another email.";
+    } else {
+        // Generate temporary password
+        $temp_password = bin2hex(random_bytes(8)); // 16 character password
+        $hashed_password = password_hash($temp_password, PASSWORD_DEFAULT);
+
+        // Insert new recruiter with pending status
+        $query = "INSERT INTO recruiters (
+            full_name, 
+            company_name, 
+            email, 
+            phone, 
+            company_address, 
+            password, 
+            is_verified, 
+            created_at
+        ) VALUES (
+            '$full_name',
+            '$company_name',
+            '$email',
+            '$phone',
+            '$company_address',
+            '$hashed_password',
+            false,
+            '$date'
+        )";
+
+        $result = pg_query($con, $query);
+
+        if ($result) {
+            // Send email with login credentials
+            $email_data = [
+                "name" => $full_name,
+                "email" => $email,
+                "temp_password" => $temp_password,
+                "now" => date("d/m/Y g:i a")
+            ];
+
+            if (sendEmail("recruiter_registration", $email_data, $email, false)) {
+                $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+
+                // Redirect to prevent form resubmission on refresh
+                header("Location: index.php?tab=register&success=1");
+                exit;
+            } else {
+                $registration_error = "Registration successful but email notification failed. Please contact support.";
+            }
+        } else {
+            $registration_error = "Registration failed. Please try again.";
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['login'])) {
         checkLogin($con, $date);
     }
 }
 ?>
+
 <?php
 // Check if the form is submitted with the correct identifier
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) && $_POST['form_identifier'] === 'forgot_password_form') {
@@ -147,6 +215,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
         echo "<script>alert('Database error: " . addslashes($e->getMessage()) . "');</script>";
     }
 }
+
+// Check for success parameter from redirect
+if (isset($_GET['success']) && $_GET['success'] == '1') {
+    $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+}
 ?>
 
 <!doctype html>
@@ -155,19 +228,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RSSI-My Account</title>
+    <title>RSSI - Recruiter Portal</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         @media (max-width: 767px) {
-
-            /* Styles for mobile devices */
             .logo {
                 display: flex;
                 flex-direction: column;
@@ -187,6 +257,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
             color: white !important;
             margin-left: 10%;
         }
+
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        /* Hide success alert when empty */
+        .alert:empty {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -196,58 +293,161 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
             <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
                 <div class="container">
                     <div class="row justify-content-center">
-                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+                        <div class="col-lg-8 col-md-10 d-flex flex-column align-items-center justify-content-center">
                             <div class="container text-center py-4">
                                 <div class="logo">
                                     <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
+                                    <h4 class="mt-3">Recruiter Portal</h4>
+                                    <p class="text-muted">Find and hire the best talent for your organization</p>
                                 </div>
                             </div>
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <div class="pt-4 pb-2">
-                                        <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
-                                        <p class="text-center small">Enter your username & password to login</p>
+
+                            <div class="form-container">
+                                <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'active' : ''; ?>"
+                                            id="login-tab"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#login"
+                                            type="button"
+                                            role="tab"
+                                            onclick="updateURL('login')">Login</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'active' : ''; ?>"
+                                            id="register-tab"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#register"
+                                            type="button"
+                                            role="tab"
+                                            onclick="updateURL('register')">Register</button>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content" id="authTabsContent">
+                                    <!-- Login Tab -->
+                                    <div class="tab-pane fade <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'show active' : ''; ?>" id="login" role="tabpanel">
+                                        <div class="pt-2 pb-2">
+                                            <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
+                                            <p class="text-center small">Enter your username & password to login</p>
+                                        </div>
+                                        <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php?tab=login">
+                                            <div class="col-12">
+                                                <label for="yourUsername" class="form-label">Email Address</label>
+                                                <div class="input-group has-validation">
+                                                    <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
+                                                    <input type="email" name="rid" class="form-control" id="tid" placeholder="Enter your email address" required>
+                                                    <div class="invalid-feedback">Please enter your email address.</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label for="pass" class="form-label">Password</label>
+                                                <input type="password" name="pass" class="form-control" id="pass" placeholder="Enter your password" required>
+                                                <div class="invalid-feedback">Please enter your password!</div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <label for="show-password" class="form-label">
+                                                        <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;"> Show password
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php">
 
-                                        <div class="col-12">
-                                            <label for="yourUsername" class="form-label">Username</label>
-                                            <div class="input-group has-validation">
-                                                <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
-                                                <input type="email" name="rid" class="form-control" id="tid" placeholder="Username" required>
-                                                <div class="invalid-feedback">Please enter your username.</div>
+                                    <!-- Register Tab -->
+                                    <div class="tab-pane fade <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'show active' : ''; ?>" id="register" role="tabpanel">
+                                        <div class="pt-2 pb-2">
+                                            <h5 class="card-title text-center pb-0 fs-4">Create New Account</h5>
+                                            <p class="text-center small">Register as a recruiter to post jobs</p>
+                                        </div>
+
+                                        <?php if (!empty($registration_success)): ?>
+                                            <div class="alert alert-success">
+                                                <?php echo $registration_success; ?>
                                             </div>
-                                        </div>
+                                        <?php endif; ?>
 
-                                        <div class="col-12">
-                                            <label for="pass" class="form-label">Password</label>
-                                            <input type="password" name="pass" class="form-control" id="pass" required>
-                                            <div class="invalid-feedback">Please enter your password!</div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="form-check">
-                                                <label for="show-password" class="form-label">
-                                                    <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;"> Show password
-                                                </label>
+                                        <?php if (!empty($registration_error)): ?>
+                                            <div class="alert alert-danger">
+                                                <?php echo $registration_error; ?>
                                             </div>
-                                        </div>
+                                        <?php endif; ?>
 
-                                        <div class="col-12">
-                                            <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
-                                        </div>
+                                        <form class="row g-3 needs-validation" role="form" method="post" name="register" action="index.php?tab=register" novalidate>
+                                            <input type="hidden" name="form_type" value="register">
 
-                                        <div class="col-12">
-                                            <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
-                                        </div>
-                                    </form>
+                                            <div class="col-md-6">
+                                                <label for="full_name" class="form-label required-field">Full Name</label>
+                                                <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Enter your full name" required>
+                                                <div class="invalid-feedback">Please enter your full name.</div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="company_name" class="form-label required-field">Company Name</label>
+                                                <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter your company name" required>
+                                                <div class="invalid-feedback">Please enter your company name.</div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="email" class="form-label required-field">Email Address</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
+                                                </div>
+                                                <div class="invalid-feedback">Please enter a valid email address.</div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="phone" class="form-label required-field">Phone Number</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                                    <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" placeholder="Enter 10-digit phone number" required>
+                                                </div>
+                                                <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label for="company_address" class="form-label required-field">Company Address</label>
+                                                <textarea class="form-control" id="company_address" name="company_address" rows="3" placeholder="Enter complete company address" required></textarea>
+                                                <div class="invalid-feedback">Please enter your company address.</div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                                    <label class="form-check-label" for="terms">
+                                                        I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
+                                                    </label>
+                                                    <div class="invalid-feedback">You must agree to the terms and conditions.</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <button class="btn btn-success w-100" type="submit">Register Now</button>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <p class="small mb-0 text-center">Already have an account? <a href="#" onclick="switchToLogin(); return false;">Login here</a></p>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="credits">
+                            <div class="credits mt-4">
                                 Designed by <a href="https://www.rssi.in/">rssi.in</a>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -255,27 +455,167 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
         </div>
     </main>
 
+    <!-- Terms and Conditions Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Recruiter Agreement</h6>
+                    <p>By registering as a recruiter, you agree to:</p>
+                    <ul>
+                        <li>Post only legitimate job openings</li>
+                        <li>Provide accurate company information</li>
+                        <li>Maintain confidentiality of candidate information</li>
+                        <li>Not discriminate against any candidate</li>
+                        <li>Follow all applicable labor laws</li>
+                        <li>Respond to applicants in a timely manner</li>
+                    </ul>
+                    <p>Your account requires approval before you can post jobs. You will receive an email notification once your account is approved.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="popupLabel">Forgot password?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgot-password-form" action="#" method="POST" onsubmit="showSpinner()">
+                        <div class="mb-3">
+                            <label for="reset_username" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your email address" required>
+                            <div class="form-text help-text">
+                                Please enter the email address associated with your account. We will send you a link to reset your password.
+                            </div>
+                        </div>
+                        <input type="hidden" name="form_identifier" value="forgot_password_form">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="send-email-button" form="forgot-password-form">
+                        <span id="button-text">Send Email</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-        var password = document.querySelector("#pass");
-        var toggle = document.querySelector("#show-password");
-        // I'm using the "(click)" event to make this works cross-browser.
-        toggle.addEventListener("click", handleToggleClick, false);
-        // I handle the toggle click, changing the TYPE of password input.
-        function handleToggleClick(event) {
-            if (this.checked) {
-                console.warn("Change input 'type' to: text");
-                password.type = "text";
-            } else {
-                console.warn("Change input 'type' to: password");
-                password.type = "password";
+        // Function to update URL parameter
+        function updateURL(tab) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tab);
+
+            // Remove success parameter if present
+            if (url.searchParams.has('success')) {
+                url.searchParams.delete('success');
             }
+
+            window.history.replaceState({}, '', url);
         }
+
+        // Function to switch to login tab
+        function switchToLogin() {
+            var loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
+            loginTab.show();
+            updateURL('login');
+            return false;
+        }
+
+        // Show/hide password
+        document.getElementById('show-password').addEventListener('change', function() {
+            var passwordField = document.getElementById('pass');
+            passwordField.type = this.checked ? 'text' : 'password';
+        });
+
+        // Form validation
+        (function() {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+
+        // Show spinner on forgot password
+        function showSpinner() {
+            const submitButton = document.getElementById('send-email-button');
+            submitButton.disabled = true;
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'inline-block';
+            const buttonText = document.getElementById('button-text');
+            buttonText.textContent = 'Sending...';
+        }
+
+        // Clear form validation when switching tabs
+        document.getElementById('authTabs').addEventListener('shown.bs.tab', function(event) {
+            var forms = document.querySelectorAll('.needs-validation');
+            forms.forEach(function(form) {
+                form.classList.remove('was-validated');
+            });
+        });
+
+        // Initialize based on URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+
+            if (tab === 'register') {
+                var registerTab = new bootstrap.Tab(document.getElementById('register-tab'));
+                registerTab.show();
+            } else {
+                var loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
+                loginTab.show();
+            }
+
+            <?php if (!empty($login_failed_dialog)): ?>
+                // Show login error modal
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            <?php endif; ?>
+
+            // Clear form data on successful registration to prevent resubmission
+            <?php if (!empty($registration_success)): ?>
+                document.querySelector('form[name="register"]').reset();
+            <?php endif; ?>
+        });
+
+        // Update URL when tab is clicked
+        document.querySelectorAll('#authTabs button[data-bs-toggle="tab"]').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const tabId = this.id === 'login-tab' ? 'login' : 'register';
+                updateURL(tabId);
+            });
+        });
     </script>
 
-    <?php if ($login_failed_dialog) { ?>
+    <?php if (!empty($login_failed_dialog)) { ?>
         <div class="modal" tabindex="-1" role="dialog" id="errorModal">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -289,77 +629,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
                 </div>
             </div>
         </div>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var myModal = new bootstrap.Modal(document.getElementById('errorModal'));
-                myModal.show();
-            });
-        </script>
     <?php } ?>
-
-    <!-- Popup -->
-    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <!-- Modal Header -->
-                <div class="modal-header">
-                    <h5 class="modal-title" id="popupLabel">Forgot password?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="modal-body">
-                    <!-- Form with ID and correct action -->
-                    <form id="forgot-password-form" action="#" method="POST" onsubmit="showSpinner()">
-                        <!-- Email Input -->
-                        <div class="mb-3">
-                            <label for="reset_username" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your email address" required>
-                            <div class="form-text help-text">
-                                Please enter the email address associated with your account. We will send you a link to reset your password.
-                            </div>
-                        </div>
-
-                        <!-- Hidden Form Identifier -->
-                        <input type="hidden" name="form_identifier" value="forgot_password_form">
-                    </form>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="modal-footer">
-                    <!-- Close Button -->
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <!-- Send Email Button with Spinner -->
-                    <button type="submit" class="btn btn-primary" id="send-email-button" form="forgot-password-form">
-                        <span id="button-text">Send Email</span>
-                        <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-    <script>
-        function showSpinner() {
-            // Disable the submit button to prevent multiple submissions
-            const submitButton = document.getElementById('send-email-button');
-            submitButton.disabled = true;
-
-            // Show the spinner
-            const spinner = document.getElementById('spinner');
-            spinner.style.display = 'inline-block';
-
-            // Change the button text (optional)
-            const buttonText = document.getElementById('button-text');
-            buttonText.textContent = 'Sending...';
-        }
-    </script>
-
 </body>
 
 </html>

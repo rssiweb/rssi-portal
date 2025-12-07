@@ -143,8 +143,8 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
-        <span>Document Verification</span>
+      <a class="nav-link collapsed" id="documentVerification" href="identity_verification.php">
+        <span>Identity Verification</span>
       </a>
     </li>
 
@@ -221,6 +221,5 @@
   toggleCollapsedClass('job-add.php', 'job-add');
   toggleCollapsedClass('job_view.php', 'recruiter-jobs');
   toggleCollapsedClass('recruiter-jobs.php', 'recruiter-jobs');
-  toggleCollapsedClass('document_verification.php', 'documentVerification');
-  toggleCollapsedClass('assessment.php', 'assessment');
+  toggleCollapsedClass('identity_verification.php', 'identity_verification');
 </script>
