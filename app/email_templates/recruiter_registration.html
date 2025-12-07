@@ -1,47 +1,17 @@
 Welcome to RSSI Recruitment Portal
-<!-- Recruiter Registration Confirmation -->
-<!DOCTYPE html>
 <html>
 
 <head>
-    <title>Welcome to RSSI Recruitment Portal</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        .header {
-            text-align: center;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-
-        .credentials-box {
+        .info-box {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .important-note {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .login-instructions {
-            background-color: #e8f5e8;
-            border: 1px solid #c3e6cb;
             border-radius: 5px;
             padding: 15px;
             margin: 15px 0;
@@ -55,13 +25,9 @@ Welcome to RSSI Recruitment Portal
             margin-top: 20px;
         }
 
-        strong {
-            color: #2c3e50;
-        }
-
         .highlight {
             background-color: #fffacd;
-            padding: 2px 5px;
+            padding: 3px 6px;
             border-radius: 3px;
             font-family: monospace;
         }
@@ -69,57 +35,35 @@ Welcome to RSSI Recruitment Portal
 </head>
 
 <body>
-    <div class="header">
-        <h2>Welcome to RSSI Recruitment Portal</h2>
-    </div>
 
-    <p>Dear <strong>{{user_name}}</strong>,</p>
+    <p>Dear {{name}},</p>
 
-    <p>Welcome to RSSI Recruitment Portal! Your registration as a recruiter has been successfully completed.</p>
+    <p>Your recruiter account has been successfully created. Below are your login details:</p>
 
-    <div class="credentials-box">
-        <h4>Your Registration Details:</h4>
-        <ul>
-            <li><strong>Name:</strong> {{user_name}}</li>
-            <li><strong>Company:</strong> {{company_name}}</li>
-            <li><strong>Email:</strong> {{user_email}}</li>
-            <li><strong>Registration Date:</strong> {{registration_date}}</li>
-            <li><strong>Recruiter ID:</strong> {{recruiter_id}}</li>
-        </ul>
-    </div>
-
-    <div class="important-note">
-        <h4>Your Login Credentials:</h4>
-        <p><strong>Email:</strong> <span class="highlight">{{user_email}}</span></p>
+    <div class="info-box">
+        <p><strong>Email:</strong> <span class="highlight">{{email}}</span></p>
         <p><strong>Temporary Password:</strong> <span class="highlight">{{temp_password}}</span></p>
-        <p><em>Please save this password securely. You will need it for your first login.</em></p>
+        <p><strong>Registration Date:</strong> <span class="highlight">{{now}}</span></p>
     </div>
 
-    <div class="login-instructions">
-        <h4>Next Steps to Get Started:</h4>
-        <ol>
-            <li><strong>Login to your account</strong> using the credentials above</li>
-            <li><strong>Change your password</strong> immediately after first login for security</li>
-            <li><strong>Post your first job</strong> by filling out the job details form</li>
-            <li><strong>Manage applications</strong> from qualified candidates</li>
-        </ol>
+    <p>Please log in using the URL below and change your password after your first login:</p>
 
-        <p><strong>Login URL:</strong> <a href="https://rssi.in/post-job">https://rssi.in/post-job</a></p>
-    </div>
+    <p>
+        <strong>Login URL:</strong><br>
+        <a href="https://login.rssi.in/recruiters/index.php">https://login.rssi.in/recruiters/index.php</a>
+    </p>
 
-    <p>You can now post jobs, manage applications, and access our pool of talented candidates.</p>
+    <p>If you need any help, you can contact our support team.</p>
 
-    <p>Need help? Our support team is here to assist you.</p>
-
-    <p>Best regards,<br>
+    <p>
+        Best regards,<br>
         <strong>RSSI Recruitment Team</strong><br>
         Email: <a href="mailto:info@rssi.in">info@rssi.in</a><br>
         Phone: +91-7980168159
     </p>
 
     <div class="footer">
-        <p>This is an automated system-generated email. Please do not reply to this message.</p>
-        <p>If you did not register for RSSI Recruitment Portal, please ignore this email or contact support.</p>
+        <p>This is an automated email. Please do not reply.</p>
     </div>
 </body>
 

@@ -13,7 +13,7 @@ if (!isLoggedIn("rid")) {
 validation();
 
 // SQL query to fetch current data
-$sql = "SELECT id, email, full_name, is_verified,aadhar_number,aadhar_file_path  FROM recruiters WHERE id='$recruiter_id'";
+$sql = "SELECT id, email, full_name, is_verified, identifier, aadhar_number, aadhar_file_path  FROM recruiters WHERE id='$recruiter_id'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
 // Check if there are any results
@@ -34,7 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     $identifier = !empty($_POST['identifier']) ? pg_escape_string($con, $_POST['identifier']) : null;
     $identifier_number = !empty($_POST['identifierNumber']) ? pg_escape_string($con, $_POST['identifierNumber']) : null;
     $uploadedFile_identifier = $_FILES['supportingDocument'];
-    $application_status = 'Identity verification document submitted';
 
     // Check current identity verification status
     $status_query = "SELECT is_verified FROM recruiters WHERE id = '$recruiter_id'";
@@ -73,11 +72,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     if ($identifier) $update_fields[] = "identifier = '$identifier'";
     if ($identifier_number) $update_fields[] = "aadhar_number = '$identifier_number'";
     if ($doclink_identifier) $update_fields[] = "aadhar_file_path = '$doclink_identifier'";
-    if ($application_status) $update_fields[] = "status = '$application_status'";
 
     // If there are fields to update, execute the update query
     if (count($update_fields) > 0) {
-        $update_query = "UPDATE recruiters SET " . implode(", ", $update_fields) . " WHERE id = '$aadhar_number'";
+        $update_query = "UPDATE recruiters SET " . implode(", ", $update_fields) . " WHERE id = '$recruiter_id'";
         $result = pg_query($con, $update_query);
         $cmdtuples = pg_affected_rows($result);
     }
@@ -239,25 +237,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
                                                             <td><label for="identifier">Choose any National Identifier from the below list.</label></td>
                                                             <td>
                                                                 <select class="form-select" id="identifier" name="identifier" required>
-                                                                    <option disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
+                                                                    <option value="" disabled <?php echo empty($array['identifier'] ?? '') ? 'selected' : ''; ?>>
+                                                                        -- Select an Identifier --
+                                                                    </option>
                                                                     <?php
                                                                     $options = [
-                                                                        "Aadhaar" => "Aadhaar",
-                                                                        // "PAN (Permanent Account Number)" => "PAN (Permanent Account Number)",
-                                                                        // "Voter ID" => "Voter ID",
-                                                                        // "Passport" => "Passport",
-                                                                        // "Ration Card" => "Ration Card",
-                                                                        // "Driving License" => "Driving License",
-                                                                        // "National Population Register (NPR) Number" => "National Population Register (NPR) Number",
-                                                                        // "PR Card (Person of Indian Origin)" => "PR Card (Person of Indian Origin)"
+                                                                        "Aadhaar" => "Aadhaar"
                                                                     ];
+
                                                                     foreach ($options as $value => $label) {
-                                                                        $selected = ($array['identifier'] ?? '') === $value ? 'selected' : '';
-                                                                        echo "<option value=\"" . htmlspecialchars($value) . "\" $selected>" . htmlspecialchars($label) . "</option>";
+                                                                        $selected = (($array['identifier'] ?? '') === $value) ? 'selected' : '';
+                                                                        echo '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . htmlspecialchars($label) . '</option>';
                                                                     }
                                                                     ?>
                                                                 </select>
-
                                                             </td>
                                                         </tr>
                                                         <tr>

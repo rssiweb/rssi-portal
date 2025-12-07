@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
         $registration_error = "Email already registered. Please login or use another email.";
     } else {
         // Generate temporary password
-        $temp_password = bin2hex(random_bytes(8)); // 16 character password
+        $temp_password = bin2hex(random_bytes(3)); // Generates 6-character hex string
         $hashed_password = password_hash($temp_password, PASSWORD_DEFAULT);
 
         // Insert new recruiter with pending status
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
         $result = pg_query($con, $query);
 
         if ($result) {
-            // Send email with login credentials
+            // Prepare email data
             $email_data = [
                 "name" => $full_name,
                 "email" => $email,
@@ -136,15 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
                 "now" => date("d/m/Y g:i a")
             ];
 
-            if (sendEmail("recruiter_registration", $email_data, $email, false)) {
-                $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+            // Send email (do not depend on return value)
+            sendEmail("recruiter_registration", $email_data, $email, false);
 
-                // Redirect to prevent form resubmission on refresh
-                header("Location: index.php?tab=register&success=1");
-                exit;
-            } else {
-                $registration_error = "Registration successful but email notification failed. Please contact support.";
-            }
+            // Always treat registration as successful
+            $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+
+            // Redirect to prevent form resubmission
+            header("Location: index.php?tab=register&success=1");
+            exit;
         } else {
             $registration_error = "Registration failed. Please try again.";
         }
