@@ -213,7 +213,7 @@
 
   // Call the function for 'home.php' and 'profile.php'
   toggleCollapsedClass('home.php', 'homeLink');
-  toggleCollapsedClass('dashboard.php', 'dashBoardLink');
+  toggleCollapsedClass('job-add.php', 'job-add');
   toggleCollapsedClass('application_form.php', 'applicationForm');
   toggleCollapsedClass('identity_verification.php', 'indentityVerification');
   toggleCollapsedClass('document_verification.php', 'documentVerification');

@@ -104,7 +104,7 @@ try {
     }
 
     // Get recruiter ID
-    $query = "SELECT id, full_name, company_name FROM recruiters WHERE email = $1 AND is_verified = true";
+    $query = "SELECT id, full_name, company_name, is_active FROM recruiters WHERE email = $1 AND is_verified = true";
     error_log("Checking recruiter with email: $email");
 
     $result = pg_query_params($con, $query, [$email]);
@@ -126,6 +126,13 @@ try {
     $company_name = $recruiter['company_name'];
 
     error_log("Recruiter found - ID: $recruiter_id, Name: $recruiter_name, Company: $company_name");
+
+    if (!$recruiter['is_active'] || $recruiter['is_active'] !== 't') {  // PostgreSQL boolean true = 't'
+        error_log("Inactive recruiter: $email");
+        throw new Exception(
+            'Your profile is currently inactive. Please contact support at info@rssi.in or call 7980168159 to activate your account before posting jobs.'
+        );
+    }
 
     // Handle job file upload to Google Drive (optional)
     $job_drive_link = null;

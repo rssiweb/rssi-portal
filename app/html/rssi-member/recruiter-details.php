@@ -546,7 +546,7 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
 
                                         <!-- Right Column: Stats & Timeline -->
                                         <div class="col-lg-4">
-                                            <div class="sticky-top" style="top: 100px;">
+                                            <div style="position: relative;">
                                                 <!-- Statistics Card -->
                                                 <div class="card info-card mb-4">
                                                     <div class="card-body">

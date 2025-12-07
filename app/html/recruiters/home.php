@@ -294,8 +294,6 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
                     <nav>
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                            <li class="breadcrumb-item"><a href="job-admin.php">Job Admin</a></li>
-                            <li class="breadcrumb-item"><a href="recruiter-management.php">Recruiter Management</a></li>
                             <li class="breadcrumb-item active">Recruiter Details</li>
                         </ol>
                     </nav>
@@ -532,7 +530,7 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
 
                                         <!-- Right Column: Stats & Timeline -->
                                         <div class="col-lg-4">
-                                            <div class="sticky-top" style="top: 100px;">
+                                            <div style="position: relative;">
                                                 <!-- Statistics Card -->
                                                 <div class="card info-card mb-4">
                                                     <div class="card-body">
@@ -640,18 +638,19 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
                                                             <i class="bi bi-lightning text-warning me-2"></i>Quick Actions
                                                         </h5>
                                                         <div class="d-grid gap-2">
-                                                            <a href="mailto:<?php echo htmlspecialchars($recruiter['email']); ?>" class="btn btn-outline-primary">
-                                                                <i class="bi bi-envelope me-2"></i>Send Email
+                                                            <a href="mailto:info@rssi.in" class="btn btn-outline-primary">
+                                                                <i class="bi bi-envelope me-2"></i>Email Support
                                                             </a>
-                                                            <a href="tel:<?php echo htmlspecialchars($recruiter['phone']); ?>" class="btn btn-outline-success">
-                                                                <i class="bi bi-telephone me-2"></i>Call Recruiter
+
+                                                            <a href="tel:7980168159" class="btn btn-outline-success">
+                                                                <i class="bi bi-telephone me-2"></i>Call Support
                                                             </a>
                                                             <a href="job-add.php?recruiter_id=<?php echo $recruiterId; ?>" class="btn btn-outline-info">
                                                                 <i class="bi bi-plus-circle me-2"></i>Post New Job
                                                             </a>
-                                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $recruiterId; ?>)">
+                                                            <!-- <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $recruiterId; ?>)">
                                                                 <i class="bi bi-trash me-2"></i>Delete Recruiter
-                                                            </button>
+                                                            </button> -->
                                                         </div>
                                                     </div>
                                                 </div>

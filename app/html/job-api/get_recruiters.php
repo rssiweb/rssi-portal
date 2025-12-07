@@ -16,12 +16,11 @@ try {
 
     // Build query
     $query = "SELECT id, full_name, company_name, email 
-              FROM recruiters 
-              WHERE is_active = true";
+              FROM recruiters";
 
     $params = [];
     if (!empty($search)) {
-        $query .= " AND (company_name ILIKE $1 OR full_name ILIKE $1 OR email ILIKE $1)";
+        $query .= " WHERE (company_name ILIKE $1 OR full_name ILIKE $1 OR email ILIKE $1)";
         $params[] = '%' . $search . '%';
     }
 

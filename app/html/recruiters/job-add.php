@@ -109,13 +109,6 @@ validation();
             left: 50%;
             transform: translate(-50%, -50%);
         }
-
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 99999;
-        }
     </style>
 </head>
 
@@ -156,19 +149,6 @@ validation();
                                                         </div>
                                                         <h5 id="loadingText">Processing...</h5>
                                                         <p class="text-muted mt-2" id="loadingSubtext">Please wait</p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Toast Notification -->
-                                                <div class="toast-container">
-                                                    <div class="toast align-items-center text-white bg-success border-0" id="successToast" role="alert" aria-live="assertive" aria-atomic="true">
-                                                        <div class="d-flex">
-                                                            <div class="toast-body">
-                                                                <i class="bi bi-check-circle me-2"></i>
-                                                                <span id="toastMessage">Job posted successfully!</span>
-                                                            </div>
-                                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -283,17 +263,6 @@ validation();
                                                         </button>
                                                     </div>
                                                 </form>
-
-                                                <!-- Success Message -->
-                                                <div id="successMessage" style="display: none;">
-                                                    <div class="alert alert-success text-center">
-                                                        <h4>Job Posted Successfully!</h4>
-                                                        <p>The recruiter has been notified about the submitted job request. The job has been submitted for approval and will be visible to job seekers once approved.</p>
-                                                        <div class="mt-3">
-                                                            <a href="job-add.php" class="btn btn-primary me-2">Post Another Job</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -356,6 +325,7 @@ validation();
                 jobDropArea.removeClass('dragover');
             });
 
+            // Also update the drag and drop file validation
             jobDropArea.on('drop', function(e) {
                 e.preventDefault();
                 jobDropArea.removeClass('dragover');
@@ -367,22 +337,23 @@ validation();
                         jobFileInput[0].files = e.originalEvent.dataTransfer.files;
                         displayJobFilePreview(file);
                     } else {
-                        showToast('Please upload PDF, DOC, or DOCX files only.', 'error');
+                        alert('Please upload PDF, DOC, or DOCX files only.');
                     }
                 }
             });
 
+            // Update file upload validation to use alerts
             function displayJobFilePreview(file) {
                 // Check file type
                 const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
                 if (!allowedTypes.includes(file.type)) {
-                    showToast('Please upload PDF, DOC, or DOCX files only.', 'error');
+                    alert('Please upload PDF, DOC, or DOCX files only.');
                     return;
                 }
 
                 // Check file size (5MB limit)
                 if (file.size > 5 * 1024 * 1024) {
-                    showToast('File size should be less than 5MB.', 'error');
+                    alert('File size should be less than 5MB.');
                     return;
                 }
 
@@ -443,24 +414,40 @@ validation();
                         showLoading(false);
 
                         if (response.success) {
-                            // Show success message
+                            // Show success message with alert
+                            alert('Job posted successfully! The job has been submitted for approval and will be visible to job seekers once approved.');
                             $('#jobPostForm').hide();
-                            $('#successMessage').show();
-                            showToast('Job posted successfully!', 'success');
+                            // Reload page without resubmitting form
+                            window.location.replace(window.location.href);
                         } else {
-                            showToast(response.message || 'Job posting failed. Please try again.', 'error');
+                            // Show error alert from API response
+                            let errorMsg = response.message || 'Job posting failed. Please try again.';
+                            if (response.alert_message) {
+                                errorMsg = response.alert_message;
+                            }
+                            alert('Error: ' + errorMsg);
                         }
                     },
                     error: function(xhr, status, error) {
                         showLoading(false);
                         let errorMsg = 'Error submitting job. Please try again.';
+
+                        // Try to get error message from response
                         if (xhr.responseText) {
                             try {
                                 const errorResponse = JSON.parse(xhr.responseText);
-                                if (errorResponse.message) errorMsg = errorResponse.message;
-                            } catch (e) {}
+                                if (errorResponse.alert_message) {
+                                    errorMsg = errorResponse.alert_message;
+                                } else if (errorResponse.message) {
+                                    errorMsg = errorResponse.message;
+                                }
+                            } catch (e) {
+                                // If response is not JSON, show generic error
+                                errorMsg = 'Server error. Please try again.';
+                            }
                         }
-                        showToast(errorMsg, 'error');
+
+                        alert('Error: ' + errorMsg);
                     }
                 });
             });
