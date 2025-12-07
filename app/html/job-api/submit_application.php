@@ -163,7 +163,7 @@ try {
     $email_message = '';
 
     if (!empty($email)) {
-        include_once(__DIR__ . "/../util/email.php");
+        include("../../util/email.php");
 
         $emailData = [
             "applicant_name" => $name,

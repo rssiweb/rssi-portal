@@ -138,6 +138,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link collapsed" id="recruiter-jobs" href="recruiter-jobs.php">
+        <span>View Job Applications</span>
+      </a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
         <span>Document Verification</span>
       </a>
@@ -214,8 +219,8 @@
   // Call the function for 'home.php' and 'profile.php'
   toggleCollapsedClass('home.php', 'homeLink');
   toggleCollapsedClass('job-add.php', 'job-add');
-  toggleCollapsedClass('application_form.php', 'applicationForm');
-  toggleCollapsedClass('identity_verification.php', 'indentityVerification');
+  toggleCollapsedClass('job_view.php', 'recruiter-jobs');
+  toggleCollapsedClass('recruiter-jobs.php', 'recruiter-jobs');
   toggleCollapsedClass('document_verification.php', 'documentVerification');
   toggleCollapsedClass('assessment.php', 'assessment');
 </script>

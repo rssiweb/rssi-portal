@@ -14,25 +14,37 @@ validation();
 $job_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if (!$job_id) {
-    header("Location: job-approval.php");
+    echo "<script>
+        alert('Invalid job ID.');
+        window.location.href = 'recruiter-jobs.php';
+    </script>";
     exit;
 }
 
-// Fetch job details with recruiter information AND education level
-$query = "SELECT jp.*, r.full_name as recruiter_name, r.company_name, 
-                 r.email as recruiter_email, r.phone as recruiter_phone,
+// Logged-in recruiter ID (from session or your user data)
+$recruiter_id = $recruiter_id;
+
+// Fetch job only if it belongs to the logged-in recruiter
+$query = "SELECT jp.*, 
+                 r.full_name as recruiter_name, 
+                 r.company_name, 
+                 r.email as recruiter_email, 
+                 r.phone as recruiter_phone,
                  r.company_address as recruiter_address,
                  el.name as education_level_name
           FROM job_posts jp 
           JOIN recruiters r ON jp.recruiter_id = r.id 
           LEFT JOIN education_levels el ON jp.education_levels = el.id 
-          WHERE jp.id = $1";
+          WHERE jp.id = $1 
+            AND jp.recruiter_id = $2";
 
-$result = pg_query_params($con, $query, [$job_id]);
+$result = pg_query_params($con, $query, [$job_id, $recruiter_id]);
 
 if (!$result || pg_num_rows($result) == 0) {
-    $_SESSION['error_message'] = "Job not found.";
-    header("Location: job-approval.php");
+    echo "<script>
+        alert('You are not authorized to view this job.');
+        window.location.href = 'recruiter-jobs.php';
+    </script>";
     exit;
 }
 
@@ -265,9 +277,7 @@ if ($export) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Job Assistance</a></li>
-                    <li class="breadcrumb-item"><a href="job-admin.php">Job Admin Panel</a></li>
-                    <li class="breadcrumb-item"><a href="job-approval.php">Job Approval</a></li>
+                    <li class="breadcrumb-item"><a href="recruiter-jobs.php">View Job Applications</a></li>
                     <li class="breadcrumb-item active">Job Details</li>
                 </ol>
             </nav>
@@ -604,11 +614,6 @@ if ($export) {
                                                 <?php if ($total_applications > 0): ?>
                                                     <a href="#applications" class="btn btn-info">
                                                         <i class="bi bi-people me-2"></i>View Applicants (<?php echo $total_applications; ?>)
-                                                    </a>
-                                                <?php endif; ?>
-                                                <?php if ($job['status'] === 'pending'): ?>
-                                                    <a href="job-approval.php" class="btn btn-success">
-                                                        <i class="bi bi-check-circle me-2"></i>Go to Approval
                                                     </a>
                                                 <?php endif; ?>
                                                 <a href="#" onclick="history.back();" class="btn btn-outline-primary">
