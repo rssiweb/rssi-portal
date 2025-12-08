@@ -1474,3 +1474,31 @@
         });
     });
   </script>
+  <script>
+    document.addEventListener("click", function(e) {
+      const link = e.target.closest("a");
+      if (!link) return;
+
+      const currentDomain = window.location.hostname;
+
+      try {
+        const linkUrl = new URL(link.href, window.location.origin);
+
+        // Ignore javascript links
+        if (link.href.startsWith("javascript:")) return;
+
+        // Only external links
+        if (linkUrl.hostname && linkUrl.hostname !== currentDomain) {
+          e.preventDefault();
+
+          const confirmLeave = confirm(
+            "You are being redirected to an external website. Do you want to continue?"
+          );
+
+          if (confirmLeave) {
+            window.open(link.href, "_blank");
+          }
+        }
+      } catch (err) {}
+    });
+  </script>
