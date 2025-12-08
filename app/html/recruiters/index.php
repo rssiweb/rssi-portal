@@ -493,7 +493,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                         <li>Follow all applicable labor laws</li>
                         <li>Respond to applicants in a timely manner</li>
                     </ul>
-                    <p>Your account requires approval before you can post jobs. You will receive an email notification once your account is approved.</p>
+                    <p>Upon registration, login credentials will be sent to the registered email. Recruiters must then log in to complete identity verification. Jobs posted before verification will not be visible to candidates until the account is verified.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
