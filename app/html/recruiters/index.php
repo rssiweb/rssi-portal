@@ -243,234 +243,547 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
-        @media (max-width: 767px) {
-            .logo {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .logo span {
-                margin: 5px 0;
-            }
+        :root {
+            /* DeepSeek Color Palette */
+            --deepseek-primary: #0d6efd;
+            --deepseek-secondary: #6c757d;
+            --deepseek-success: #198754;
+            --deepseek-info: #0dcaf0;
+            --deepseek-warning: #ffc107;
+            --deepseek-danger: #dc3545;
+            --deepseek-dark: #212529;
+            --deepseek-light: #f8f9fa;
+            --deepseek-bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --deepseek-card-bg: rgba(255, 255, 255, 0.95);
+            --deepseek-border: rgba(13, 110, 253, 0.1);
+            --deepseek-shadow: 0 8px 30px rgba(13, 110, 253, 0.08);
         }
 
-        .by-line {
-            background-color: #CE1212;
-            padding: 1px 5px;
-            border-radius: 0px;
-            font-size: small !important;
-            color: white !important;
-            margin-left: 10%;
+        body {
+            background: var(--deepseek-bg-gradient);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
         }
 
-        .nav-tabs .nav-link {
-            color: #495057;
-            font-weight: 500;
+        .hero-section {
+            background: linear-gradient(135deg, var(--deepseek-primary) 0%, #0b5ed7 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--deepseek-shadow);
         }
 
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            border-color: #0d6efd;
+        .hero-section h2 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero-section p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .benefit-icon {
+            font-size: 2rem;
+            color: var(--deepseek-primary);
+            margin-bottom: 1rem;
+        }
+
+        .benefit-card {
+            background: var(--deepseek-card-bg);
+            border: 1px solid var(--deepseek-border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--deepseek-shadow);
         }
 
         .form-container {
+            background: var(--deepseek-card-bg);
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: var(--deepseek-shadow);
+            border: 1px solid var(--deepseek-border);
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid var(--deepseek-border);
+            margin-bottom: 2rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--deepseek-secondary);
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--deepseek-primary);
+            background: rgba(13, 110, 253, 0.05);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--deepseek-primary);
+            background: none;
+            border-bottom: 3px solid var(--deepseek-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--deepseek-primary) 0%, #0b5ed7 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--deepseek-success) 0%, #157347 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+        }
+
+        .form-control {
+            border: 2px solid var(--deepseek-border);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--deepseek-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+        .input-group-text {
+            background: linear-gradient(135deg, var(--deepseek-primary) 0%, #0b5ed7 100%);
+            color: white;
+            border: none;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%);
+            border-left: 4px solid var(--deepseek-success);
+            color: var(--deepseek-success);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+            border-left: 4px solid var(--deepseek-danger);
+            color: var(--deepseek-danger);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .logo-container h4 {
+            color: var(--deepseek-dark);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-container .tagline {
+            color: var(--deepseek-primary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .ecosystem-stats {
             background: white;
             border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid var(--deepseek-border);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--deepseek-primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--deepseek-secondary);
         }
 
         .required-field::after {
             content: " *";
-            color: #dc3545;
+            color: var(--deepseek-danger);
         }
 
-        /* Hide success alert when empty */
-        .alert:empty {
-            display: none !important;
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: var(--deepseek-shadow);
         }
 
-        /* Button styling */
-        .btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.65;
+        .credits {
+            color: var(--deepseek-secondary);
+            font-size: 0.9rem;
+            margin-top: 2rem;
         }
 
-        .spinner-border {
-            margin-left: 8px;
-            vertical-align: middle;
+        .credits a {
+            color: var(--deepseek-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .section-title {
+            color: var(--deepseek-dark);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(135deg, var(--deepseek-primary) 0%, #0b5ed7 100%);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 1.5rem;
+                text-align: center;
+            }
+
+            .nav-tabs .nav-link {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 
 <body>
     <main>
-        <div class="container">
-            <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
-                            <div class="container text-center py-4">
-                                <div class="logo">
-                                    <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
-                                    <h4 class="mt-3">Recruiter Portal</h4>
-                                    <p class="text-muted">Find and hire the best talent for your organization</p>
+        <div class="container py-4">
+            <div class="row justify-content-center align-items-center">
+                <!-- Left Column - Benefits & Info -->
+                <!-- <div class="col-lg-5 d-none d-lg-block">
+                    <div class="logo-container mb-4">
+                        <img src="../img/phoenix.png" alt="RSSI Logo" class="img-fluid">
+                        <h4>Recruiter Portal</h4>
+                        <p class="tagline">Build Your Talent Ecosystem</p>
+                    </div>
+
+                    <div class="hero-section">
+                        <h2>Be Part of the Change</h2>
+                        <p class="lead">Join our ecosystem connecting talented job seekers with innovative companies. Together, we create opportunities that transform lives.</p>
+                        <div class="mt-4">
+                            <h5><i class="bi bi-check-circle me-2"></i>Why Join Our Ecosystem?</h5>
+                            <ul class="mt-3">
+                                <li>Access to pre-vetted, quality candidates</li>
+                                <li>Streamlined hiring process</li>
+                                <li>Make a real social impact</li>
+                                <li>Community of change-makers</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <h6>Access Talent Pool</h6>
+                                <p class="small mb-0">Connect with qualified candidates actively seeking opportunities</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <h6>Growth Opportunities</h6>
+                                <p class="small mb-0">Scale your organization with the right talent at the right time</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <h6>Verified Profiles</h6>
+                                <p class="small mb-0">All candidates go through rigorous verification processes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-hand-thumbs-up"></i>
+                                </div>
+                                <h6>Social Impact</h6>
+                                <p class="small mb-0">Create meaningful employment opportunities in the community</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-stats">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <span class="stat-number">500+</span>
+                                    <span class="stat-label">Companies</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <span class="stat-number">10K+</span>
+                                    <span class="stat-label">Candidates</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <span class="stat-number">95%</span>
+                                    <span class="stat-label">Success Rate</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row justify-content-center">
-                        <div class="col-lg-8 col-md-10 d-flex flex-column align-items-center justify-content-center">
-                            <div class="form-container">
-                                <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'active' : ''; ?>"
-                                            id="login-tab"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#login"
-                                            type="button"
-                                            role="tab"
-                                            onclick="updateURL('login')">Login</button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'active' : ''; ?>"
-                                            id="register-tab"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#register"
-                                            type="button"
-                                            role="tab"
-                                            onclick="updateURL('register')">Register</button>
-                                    </li>
-                                </ul>
+                </div> -->
 
-                                <div class="tab-content" id="authTabsContent">
-                                    <!-- Login Tab -->
-                                    <div class="tab-pane fade <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'show active' : ''; ?>" id="login" role="tabpanel">
-                                        <div class="pt-2 pb-2">
-                                            <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
-                                            <p class="text-center small">Enter your username & password to login</p>
-                                        </div>
-                                        <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php?tab=login">
-                                            <div class="col-12">
-                                                <label for="yourUsername" class="form-label">Email Address</label>
-                                                <div class="input-group has-validation">
-                                                    <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
-                                                    <input type="email" name="rid" class="form-control" id="tid" placeholder="Enter your email address" required>
-                                                    <div class="invalid-feedback">Please enter your email address.</div>
-                                                </div>
-                                            </div>
+                <!-- Right Column - Login/Register -->
+                <div class="col-lg-7 col-md-10">
+                    <div class="form-container">
+                        <!-- Mobile Logo -->
+                        <div class="logo-container d-block d-lg-none mb-4">
+                            <img src="../img/phoenix.png" alt="RSSI Logo" class="img-fluid" style="max-width: 120px;">
+                            <h4>Recruiter Portal</h4>
+                            <p class="tagline">Build Your Talent Ecosystem</p>
+                        </div>
 
-                                            <div class="col-12">
-                                                <label for="pass" class="form-label">Password</label>
-                                                <input type="password" name="pass" class="form-control" id="pass" placeholder="Enter your password" required>
-                                                <div class="invalid-feedback">Please enter your password!</div>
-                                            </div>
+                        <h5 class="section-title">Welcome to Our Talent Ecosystem</h5>
+                        <p class="text-muted mb-4">Join other change-makers in creating employment opportunities. Login or register to start making a difference.</p>
 
-                                            <div class="col-12">
-                                                <div class="form-check">
-                                                    <label for="show-password" class="form-label">
-                                                        <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;"> Show password
-                                                    </label>
-                                                </div>
-                                            </div>
+                        <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'active' : ''; ?>"
+                                    id="login-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#login"
+                                    type="button"
+                                    role="tab"
+                                    onclick="updateURL('login')">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'active' : ''; ?>"
+                                    id="register-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#register"
+                                    type="button"
+                                    role="tab"
+                                    onclick="updateURL('register')">
+                                    <i class="bi bi-person-plus me-2"></i>Register
+                                </button>
+                            </li>
+                        </ul>
 
-                                            <div class="col-12">
-                                                <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                    <!-- Register Tab -->
-                                    <div class="tab-pane fade <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'show active' : ''; ?>" id="register" role="tabpanel">
-                                        <div class="pt-2 pb-2">
-                                            <h5 class="card-title text-center pb-0 fs-4">Create New Account</h5>
-                                            <p class="text-center small">Register as a recruiter to post jobs</p>
-                                        </div>
-
-                                        <?php if (!empty($registration_success)): ?>
-                                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                                <?php echo $registration_success; ?>
-                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($registration_error)): ?>
-                                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                                <?php echo $registration_error; ?>
-                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <form class="row g-3" role="form" method="post" name="register" action="index.php?tab=register" id="register-form">
-                                            <input type="hidden" name="form_type" value="register">
-
-                                            <div class="col-md-6">
-                                                <label for="full_name" class="form-label required-field">Full Name</label>
-                                                <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Enter your full name" required>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label for="company_name" class="form-label required-field">Company Name</label>
-                                                <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter your company name" required>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label for="email" class="form-label required-field">Email Address</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label for="phone" class="form-label required-field">Phone Number</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
-                                                    <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" placeholder="Enter 10-digit phone number" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <label for="company_address" class="form-label required-field">Company Address</label>
-                                                <textarea class="form-control" id="company_address" name="company_address" rows="3" placeholder="Enter complete company address" required></textarea>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="terms" required>
-                                                    <label class="form-check-label" for="terms">
-                                                        I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <button class="btn btn-success w-100" type="submit" id="register-button">
-                                                    <span id="register-text">Register Now</span>
-                                                    <span id="register-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                                                </button>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <p class="small mb-0 text-center">Already have an account? <a href="#" onclick="switchToLogin(); return false;">Login here</a></p>
-                                            </div>
-                                        </form>
-                                    </div>
+                        <div class="tab-content" id="authTabsContent">
+                            <!-- Login Tab -->
+                            <div class="tab-pane fade <?php echo (!isset($_GET['tab']) || $_GET['tab'] === 'login') ? 'show active' : ''; ?>" id="login" role="tabpanel">
+                                <div class="pt-2 pb-2">
+                                    <h5 class="card-title pb-0 fs-5">Login to Your Account</h5>
+                                    <p class="small text-muted">Enter your credentials to access your recruiter dashboard</p>
                                 </div>
+                                <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php?tab=login">
+                                    <div class="col-12">
+                                        <label for="yourUsername" class="form-label">Email Address</label>
+                                        <div class="input-group has-validation">
+                                            <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-envelope"></i></span>
+                                            <input type="email" name="rid" class="form-control" id="tid" placeholder="Enter your email address" required>
+                                            <div class="invalid-feedback">Please enter your email address.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="pass" class="form-label">Password</label>
+                                        <div class="input-group">
+                                            <input type="password" name="pass" class="form-control" id="pass" placeholder="Enter your password" required>
+                                            <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="invalid-feedback">Please enter your password!</div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="remember-me">
+                                            <label class="form-check-label" for="remember-me">
+                                                Remember me
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <button class="btn btn-primary w-100" type="submit" name="login">
+                                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                                        </button>
+                                    </div>
+
+                                    <div class="col-12 text-center">
+                                        <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup" class="text-decoration-none">Click here to reset</a></p>
+                                    </div>
+                                </form>
                             </div>
 
-                            <div class="credits mt-4">
-                                Designed by <a href="https://www.rssi.in/">rssi.in</a>
+                            <!-- Register Tab -->
+                            <div class="tab-pane fade <?php echo (isset($_GET['tab']) && $_GET['tab'] === 'register') ? 'show active' : ''; ?>" id="register" role="tabpanel">
+                                <div class="pt-2 pb-2">
+                                    <h5 class="card-title pb-0 fs-5">Join Our Ecosystem</h5>
+                                    <p class="small text-muted">Register as a recruiter to post jobs and find talent</p>
+                                </div>
+
+                                <?php if (!empty($registration_success)): ?>
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <?php echo $registration_success; ?>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($registration_error)): ?>
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        <?php echo $registration_error; ?>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                <?php endif; ?>
+
+                                <form class="row g-3" role="form" method="post" name="register" action="index.php?tab=register" id="register-form">
+                                    <input type="hidden" name="form_type" value="register">
+
+                                    <div class="col-md-6">
+                                        <label for="full_name" class="form-label required-field">Full Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                            <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Enter your full name" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="company_name" class="form-label required-field">Company Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter your company name" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label required-field">Email Address</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="phone" class="form-label required-field">Phone Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                            <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" placeholder="Enter 10-digit phone number" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="company_address" class="form-label required-field">Company Address</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <textarea class="form-control" id="company_address" name="company_address" rows="3" placeholder="Enter complete company address" required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="terms" required>
+                                            <label class="form-check-label" for="terms">
+                                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-decoration-none">Terms and Conditions</a> and want to join the talent ecosystem
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <button class="btn btn-success w-100" type="submit" id="register-button">
+                                            <i class="bi bi-person-plus me-2"></i>
+                                            <span id="register-text">Join Ecosystem</span>
+                                            <span id="register-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                                        </button>
+                                    </div>
+
+                                    <div class="col-12 text-center">
+                                        <p class="small mb-0">Already part of our ecosystem? <a href="#" onclick="switchToLogin(); return false;" class="text-decoration-none">Login here</a></p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top text-center">
+                            <p class="small text-muted mb-2">By joining, you become part of a community creating employment opportunities</p>
+                            <div class="credits">
+                                Powered by <a href="https://www.rssi.in/">RSSI Talent Ecosystem</a>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
     </main>
 
@@ -479,24 +792,34 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                    <h5 class="modal-title" id="termsModalLabel">
+                        <i class="bi bi-file-text me-2"></i>Ecosystem Agreement
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h6>Recruiter Agreement</h6>
-                    <p>By registering as a recruiter, you agree to:</p>
+                    <h6>Welcome to Our Talent Ecosystem</h6>
+                    <p>By joining our ecosystem, you're becoming part of a community dedicated to creating meaningful employment opportunities. Together, we're building bridges between talent and opportunity.</p>
+
+                    <h6 class="mt-4">Recruiter Commitment</h6>
+                    <p>As a member of our ecosystem, you agree to:</p>
                     <ul>
-                        <li>Post only legitimate job openings</li>
-                        <li>Provide accurate company information</li>
-                        <li>Maintain confidentiality of candidate information</li>
-                        <li>Not discriminate against any candidate</li>
-                        <li>Follow all applicable labor laws</li>
-                        <li>Respond to applicants in a timely manner</li>
+                        <li>Post legitimate job openings that contribute to community development</li>
+                        <li>Provide accurate and transparent company information</li>
+                        <li>Maintain strict confidentiality of candidate information</li>
+                        <li>Promote equal opportunity and non-discrimination</li>
+                        <li>Follow all applicable labor laws and regulations</li>
+                        <li>Respond to applicants in a timely and professional manner</li>
+                        <li>Contribute to our shared goal of reducing unemployment</li>
                     </ul>
-                    <p>Upon registration, login credentials will be sent to the registered email. Recruiters must then log in to complete identity verification. Jobs posted before verification will not be visible to candidates until the account is verified.</p>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Ecosystem Benefits:</strong> Upon verification, you'll gain access to our talent pool, community events, and networking opportunities with other change-makers.
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
                 </div>
             </div>
         </div>
@@ -507,25 +830,32 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="popupLabel">Forgot password?</h5>
+                    <h5 class="modal-title" id="popupLabel">
+                        <i class="bi bi-key me-2"></i>Reset Password
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="forgot-password-form">
                         <div class="mb-3">
                             <label for="reset_username" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your email address" required>
-                            <div class="form-text help-text">
-                                Please enter the email address associated with your account. We will send you a link to reset your password.
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your registered email" required>
+                            </div>
+                            <div class="form-text mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Enter the email address associated with your ecosystem account. We'll send you a secure reset link.
                             </div>
                         </div>
                         <input type="hidden" name="form_identifier" value="forgot_password_form">
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="send-email-button">
-                        <span id="button-text">Send Email</span>
+                        <i class="bi bi-send me-2"></i>
+                        <span id="button-text">Send Reset Link</span>
                         <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
                     </button>
                 </div>
@@ -560,13 +890,23 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             return false;
         }
 
-        // Show/hide password - KEEP EXISTING LOGIN FUNCTIONALITY
-        document.getElementById('show-password').addEventListener('change', function() {
-            var passwordField = document.getElementById('pass');
-            passwordField.type = this.checked ? 'text' : 'password';
+        // Toggle password visibility
+        document.getElementById('toggle-password')?.addEventListener('click', function() {
+            const passwordField = document.getElementById('pass');
+            const icon = this.querySelector('i');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
         });
 
-        // EXISTING FORM VALIDATION FOR LOGIN - KEEP AS IS
+        // Form validation for login
         (function() {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
@@ -582,9 +922,8 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 })
         })()
 
-        // NEW: Register form handler - BROWSER DEFAULT VALIDATION ONLY
-        document.getElementById('register-form').addEventListener('submit', function(e) {
-            // Let browser handle validation - if form is valid, proceed
+        // Register form handler
+        document.getElementById('register-form')?.addEventListener('submit', function(e) {
             if (this.checkValidity()) {
                 const registerButton = document.getElementById('register-button');
                 const registerText = document.getElementById('register-text');
@@ -592,24 +931,21 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
 
                 // Disable button and show spinner
                 registerButton.disabled = true;
-                registerText.textContent = 'Registering...';
+                registerText.textContent = 'Joining Ecosystem...';
                 registerSpinner.style.display = 'inline-block';
 
                 return true;
             }
-            // If form is invalid, browser will show its own validation messages
-            // Don't prevent default - let browser show validation
         });
 
-        // NEW: Forgot password handler
-        document.getElementById('send-email-button').addEventListener('click', function() {
+        // Forgot password handler
+        document.getElementById('send-email-button')?.addEventListener('click', function() {
             const form = document.getElementById('forgot-password-form');
             const emailInput = document.getElementById('reset_username');
             const sendButton = this;
             const buttonText = document.getElementById('button-text');
             const spinner = document.getElementById('spinner');
 
-            // Check browser validation
             if (!emailInput.checkValidity()) {
                 emailInput.reportValidity();
                 return;
@@ -620,10 +956,8 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             buttonText.textContent = 'Sending...';
             spinner.style.display = 'inline-block';
 
-            // Create form data
             const formData = new FormData(form);
 
-            // Submit via fetch
             fetch('', {
                     method: 'POST',
                     body: formData,
@@ -635,15 +969,13 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 .then(data => {
                     // Reset button
                     sendButton.disabled = false;
-                    buttonText.textContent = 'Send Email';
+                    buttonText.textContent = 'Send Reset Link';
                     spinner.style.display = 'none';
 
-                    // Extract and show alert
                     const alertMatch = data.match(/alert\('([^']+)'\)/);
                     if (alertMatch) {
                         alert(alertMatch[1]);
 
-                        // Close modal on success
                         if (alertMatch[1].includes('password reset link has been sent')) {
                             const modal = bootstrap.Modal.getInstance(document.getElementById('popup'));
                             if (modal) {
@@ -656,14 +988,14 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 .catch(error => {
                     console.error('Error:', error);
                     sendButton.disabled = false;
-                    buttonText.textContent = 'Send Email';
+                    buttonText.textContent = 'Send Reset Link';
                     spinner.style.display = 'none';
                     alert('An error occurred. Please try again.');
                 });
         });
 
-        // Clear form validation when switching tabs - KEEP EXISTING
-        document.getElementById('authTabs').addEventListener('shown.bs.tab', function(event) {
+        // Clear form validation when switching tabs
+        document.getElementById('authTabs')?.addEventListener('shown.bs.tab', function(event) {
             var forms = document.querySelectorAll('.needs-validation');
             forms.forEach(function(form) {
                 form.classList.remove('was-validated');
@@ -676,12 +1008,12 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
 
             if (registerButton) {
                 registerButton.disabled = false;
-                registerText.textContent = 'Register Now';
+                registerText.textContent = 'Join Ecosystem';
                 registerSpinner.style.display = 'none';
             }
         });
 
-        // Initialize based on URL parameter - KEEP EXISTING
+        // Initialize based on URL parameter
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
@@ -690,9 +1022,8 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 var registerTab = new bootstrap.Tab(document.getElementById('register-tab'));
                 registerTab.show();
 
-                // Reset form on successful registration
                 if (urlParams.has('success')) {
-                    document.getElementById('register-form').reset();
+                    document.getElementById('register-form')?.reset();
                 }
             } else {
                 var loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
@@ -705,9 +1036,8 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                 errorModal.show();
             <?php endif; ?>
 
-            // Clear form data on successful registration to prevent resubmission
             <?php if (!empty($registration_success)): ?>
-                document.getElementById('register-form').reset();
+                document.getElementById('register-form')?.reset();
             <?php endif; ?>
 
             // Prevent form resubmission warning
@@ -716,8 +1046,8 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             }
         });
 
-        // Update URL when tab is clicked - KEEP EXISTING
-        document.querySelectorAll('#authTabs button[data-bs-toggle="tab"]').forEach(function(tab) {
+        // Update URL when tab is clicked
+        document.querySelectorAll('#authTabs button[data-bs-toggle="tab"]')?.forEach(function(tab) {
             tab.addEventListener('click', function() {
                 const tabId = this.id === 'login-tab' ? 'login' : 'register';
                 updateURL(tabId);
@@ -730,11 +1060,16 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Error: Login Failed</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Login Failed
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <?php echo $login_failed_dialog ?>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Try Again</button>
                     </div>
                 </div>
             </div>
