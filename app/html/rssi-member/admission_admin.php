@@ -51,7 +51,11 @@ $fieldNames = [
     'aadhar_card_upload' => 'Aadhar Card Upload',
     'caste_document' => 'Caste Document',
     'effective_from_date' => 'Effective From Date',
-    'supporting_doc' => 'Supporting Document'
+    'supporting_doc' => 'Supporting Document',
+    'alternate_number' => 'Alternate Contact Number',
+    'emergency_contact_name' => 'Emergency Contact Name',
+    'emergency_contact_number' => 'Emergency Contact Number',
+    'emergency_contact_relation' => 'Emergency Contact Relation'
 ];
 
 // Retrieve student ID from form input
@@ -107,6 +111,10 @@ if (@$_POST['form-type'] == "admission_admin") {
     checkAndAddUpdate($updates, $changedFields, 'postaladdress', htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8'), $currentStudentData['postaladdress']);
     checkAndAddUpdate($updates, $changedFields, 'permanentaddress', htmlspecialchars($_POST['permanent-address'], ENT_QUOTES, 'UTF-8'), $currentStudentData['permanentaddress']);
     checkAndAddUpdate($updates, $changedFields, 'contact', $_POST['telephone'], $currentStudentData['contact']);
+    checkAndAddUpdate($updates, $changedFields, 'alternate_number', $_POST['alternate_number'], $currentStudentData['alternate_number']);
+    checkAndAddUpdate($updates, $changedFields, 'emergency_contact_name', $_POST['emergency_contact_name'], $currentStudentData['emergency_contact_name']);
+    checkAndAddUpdate($updates, $changedFields, 'emergency_contact_number', $_POST['emergency_contact_number'], $currentStudentData['emergency_contact_number']);
+    checkAndAddUpdate($updates, $changedFields, 'emergency_contact_relation', $_POST['emergency_contact_relation'], $currentStudentData['emergency_contact_relation']);
     checkAndAddUpdate($updates, $changedFields, 'emailaddress', $_POST['email'], $currentStudentData['emailaddress']);
     checkAndAddUpdate($updates, $changedFields, 'preferredbranch', $_POST['branch'], $currentStudentData['preferredbranch']);
     checkAndAddUpdate($updates, $changedFields, 'class', $_POST['class'], $currentStudentData['class']);
@@ -1008,6 +1016,63 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                         number.</small>
                                                                 </td>
                                                             </tr>
+                                                            <!-- Alternate Number -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="alternate_number">Alternate Number:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="tel" class="form-control" id="alternate_number"
+                                                                        name="alternate_number" placeholder="Enter alternate number"
+                                                                        value="<?php echo $array['alternate_number']; ?>">
+                                                                    <small class="form-text text-muted">Please enter another reachable number (optional).</small>
+                                                                </td>
+                                                            </tr>
+                                                            <!-- Emergency Contact Name -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="emergency_contact_name">Emergency Contact Name:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" id="emergency_contact_name"
+                                                                        name="emergency_contact_name" placeholder="Enter contact name"
+                                                                        value="<?php echo $array['emergency_contact_name']; ?>">
+                                                                    <small class="form-text text-muted">Please enter the full name of the emergency contact.</small>
+                                                                </td>
+                                                            </tr>
+
+                                                            <!-- Relation with Emergency Contact -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="emergency_contact_relation">Relation:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select" id="emergency_contact_relation"
+                                                                        name="emergency_contact_relation">
+                                                                        <option value="">Select relation</option>
+                                                                        <option value="Father" <?php if ($array['emergency_contact_relation'] == 'Father') echo 'selected'; ?>>Father</option>
+                                                                        <option value="Mother" <?php if ($array['emergency_contact_relation'] == 'Mother') echo 'selected'; ?>>Mother</option>
+                                                                        <option value="Guardian" <?php if ($array['emergency_contact_relation'] == 'Guardian') echo 'selected'; ?>>Guardian</option>
+                                                                        <option value="Brother" <?php if ($array['emergency_contact_relation'] == 'Brother') echo 'selected'; ?>>Brother</option>
+                                                                        <option value="Sister" <?php if ($array['emergency_contact_relation'] == 'Sister') echo 'selected'; ?>>Sister</option>
+                                                                        <option value="Other" <?php if ($array['emergency_contact_relation'] == 'Other') echo 'selected'; ?>>Other</option>
+                                                                    </select>
+                                                                    <small class="form-text text-muted">Please select the relationship with the emergency contact.</small>
+                                                                </td>
+                                                            </tr>
+                                                            <!-- Emergency Contact Number -->
+                                                            <tr>
+                                                                <td>
+                                                                    <label for="emergency_contact_number">Emergency Contact Number:</label>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="tel" class="form-control" id="emergency_contact_number"
+                                                                        name="emergency_contact_number" placeholder="Enter emergency contact number"
+                                                                        value="<?php echo $array['emergency_contact_number']; ?>">
+                                                                    <small class="form-text text-muted">Please enter a valid emergency contact number.</small>
+                                                                </td>
+                                                            </tr>
+
                                                             <tr>
                                                                 <td>
                                                                     <label for="email">Email Address:</label>
