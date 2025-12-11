@@ -1010,8 +1010,9 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                     <label for="telephone">Telephone Number:</label>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>">
-                                                                    <small id="telephone-help" class="form-text text-muted">Please enter a valid
+                                                                    <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>"
+                                                                        pattern="\d{10}" maxlength="10">
+                                                                    <small id="telephone-help" class="form-text text-muted">Please enter a valid 10-digit
                                                                         telephone
                                                                         number.</small>
                                                                 </td>
@@ -1024,8 +1025,9 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                 <td>
                                                                     <input type="tel" class="form-control" id="alternate_number"
                                                                         name="alternate_number" placeholder="Enter alternate number"
-                                                                        value="<?php echo $array['alternate_number']; ?>">
-                                                                    <small class="form-text text-muted">Please enter another reachable number (optional).</small>
+                                                                        value="<?php echo $array['alternate_number']; ?>"
+                                                                        pattern="\d{10}" maxlength="10">
+                                                                    <small class="form-text text-muted">Please enter a valid 10-digit alternate reachable number (optional).</small>
                                                                 </td>
                                                             </tr>
                                                             <!-- Emergency Contact Name -->
@@ -1068,8 +1070,9 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                                 <td>
                                                                     <input type="tel" class="form-control" id="emergency_contact_number"
                                                                         name="emergency_contact_number" placeholder="Enter emergency contact number"
-                                                                        value="<?php echo $array['emergency_contact_number']; ?>">
-                                                                    <small class="form-text text-muted">Please enter a valid emergency contact number.</small>
+                                                                        value="<?php echo $array['emergency_contact_number']; ?>"
+                                                                        pattern="\d{10}" maxlength="10">
+                                                                    <small class="form-text text-muted">Please enter a valid 10-digit emergency contact number.</small>
                                                                 </td>
                                                             </tr>
 

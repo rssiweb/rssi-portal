@@ -610,6 +610,7 @@ function formatContact($role, $contact)
                       <th>Contact</th>
                       <th>Status</th>
                       <th>Pay type</th>
+                      <th>Emergency</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -635,6 +636,7 @@ function formatContact($role, $contact)
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
+                          <td style="white-space: unset;"><?php echo $array['emergency_contact_number']; ?></td> 
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;
                             <a href="javascript:void(0)"
                               onclick="showDetails('<?php echo $array['student_id']; ?>')"
