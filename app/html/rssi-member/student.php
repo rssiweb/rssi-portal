@@ -636,7 +636,14 @@ function formatContact($role, $contact)
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
-                          <td style="white-space: unset;"><?php echo $array['emergency_contact_number']; ?></td> 
+                          <td style="white-space: unset;">
+                            <?php
+                            echo $array['emergency_contact_number'];
+                            if (!empty($array['alternate_number'])) {
+                              echo ", " . $array['alternate_number'];
+                            }
+                            ?>
+                          </td>
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;
                             <a href="javascript:void(0)"
                               onclick="showDetails('<?php echo $array['student_id']; ?>')"
@@ -649,19 +656,19 @@ function formatContact($role, $contact)
                     elseif ($module == "" && $stid == "") :
                       ?>
                       <tr>
-                        <td colspan="13">Please select a Module and Status from the dropdown menus to view the results.</td>
+                        <td colspan="15">Please select a Module and Status from the dropdown menus to view the results.</td>
                       </tr>
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid == "") :
                     ?>
                       <tr>
-                        <td colspan="13">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
+                        <td colspan="15">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
                       </tr>
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid != "") :
                     ?>
                       <tr>
-                        <td colspan="13">No record found for <?php echo $stid; ?></td>
+                        <td colspan="15">No record found for <?php echo $stid; ?></td>
                       </tr>
                     <?php endif; ?>
                   </tbody>
