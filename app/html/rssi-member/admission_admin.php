@@ -705,7 +705,7 @@ foreach ($card_access_levels as $card => $required_level) {
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         /* Reuse HRMS portal styles */
         .header_two {
@@ -856,11 +856,43 @@ foreach ($card_access_levels as $card => $required_level) {
         .form-check {
             margin-bottom: 10px;
         }
+
+        /* Fix for Select2 within input-group */
+        .input-group .select2-container {
+            flex: 1 1 auto;
+            width: 1% !important;
+            /* Override Select2 width */
+        }
+
+        .input-group .select2-container .select2-selection {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            height: calc(2.25rem + 2px);
+            border-color: #ced4da;
+        }
+
+        /* Fix border when focused */
+        .input-group .select2-container--focus .select2-selection {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Remove default Bootstrap border radius from the button */
+        .input-group .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Make sure Select2 dropdown appears above everything */
+        .select2-container {
+            z-index: 1055;
+        }
     </style>
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <body>
@@ -885,17 +917,29 @@ foreach ($card_access_levels as $card => $required_level) {
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <?php if (!$search_id): ?>
-                                <div class="container mt-5">
-                                    <h4 class="mb-3">Enter Student ID</h4>
-                                    <form method="GET" action="">
-                                        <div class="input-group mb-3">
-                                            <input type="text" class="form-control" name="student_id" placeholder="Enter Student ID" required>
-                                            <button class="btn btn-primary" type="submit">Submit</button>
+                            <!-- Compact Top Right Search Form -->
+                            <div class="card shadow-sm">
+                                <div class="card-body p-3">
+                                    <form method="GET" action="" class="mb-0">
+                                        <div class="input-group">
+                                            <select class="form-select select2-hidden-accessible"
+                                                id="student_id"
+                                                name="student_id"
+                                                required
+                                                style="width: 100%;">
+                                                <?php if (!empty($_GET['student_id'])): ?>
+                                                    <option value="<?= htmlspecialchars($_GET['student_id']) ?>" selected>
+                                                        <?= htmlspecialchars($_GET['student_id']) ?>
+                                                    </option>
+                                                <?php endif; ?>
+                                            </select>
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="bi bi-search"></i>
+                                            </button>
                                         </div>
                                     </form>
                                 </div>
-                            <?php endif; ?>
+                            </div>
 
                             <?php if ($search_id && !$resultArr): ?>
                                 <div class="alert alert-warning">
@@ -905,6 +949,7 @@ foreach ($card_access_levels as $card => $required_level) {
 
                             <?php foreach ($resultArr as $array): ?>
                                 <div class="container-fluid">
+
                                     <!-- Header -->
                                     <div class="header_two">
                                         <div class="profile-img">
@@ -1972,8 +2017,6 @@ foreach ($card_access_levels as $card => $required_level) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         // Mobile menu setup (similar to HRMS)
@@ -2766,6 +2809,84 @@ foreach ($card_access_levels as $card => $required_level) {
                 return map[m];
             });
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for student IDs
+            $('#student_id').select2({
+                ajax: {
+                    url: 'fetch_students.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Search by Student ID or Name',
+                allowClear: true,
+                width: '100%', // Ensure proper width
+                dropdownParent: $('body') // Ensure dropdown appears above everything
+            });
+
+            // Pre-select if URL has student_id parameter
+            <?php if (!empty($_GET['student_id'])): ?>
+                var currentStudentId = '<?php echo $_GET['student_id']; ?>';
+
+                // If it's already in the dropdown, select it
+                var $studentSelect = $('#student_id');
+                if ($studentSelect.find('option[value="' + currentStudentId + '"]').length === 0) {
+                    // Fetch student name and add to dropdown
+                    $.ajax({
+                        url: 'fetch_students.php',
+                        data: {
+                            q: currentStudentId,
+                            exact: true
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.results && data.results.length > 0) {
+                                var student = data.results[0];
+                                var option = new Option(
+                                    student.text,
+                                    student.id,
+                                    true,
+                                    true
+                                );
+                                $studentSelect.append(option).trigger('change');
+                            } else {
+                                // Just show the ID if we can't find details
+                                var option = new Option(
+                                    currentStudentId,
+                                    currentStudentId,
+                                    true,
+                                    true
+                                );
+                                $studentSelect.append(option).trigger('change');
+                            }
+                        }
+                    });
+                }
+            <?php endif; ?>
+
+            // Fix for form submission - ensure select is valid
+            $('form').on('submit', function(e) {
+                var $select = $('#student_id');
+                if (!$select.val()) {
+                    e.preventDefault();
+                    alert('Please select a student');
+                    $select.focus();
+                }
+            });
+        });
     </script>
 </body>
 
