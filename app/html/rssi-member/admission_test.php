@@ -9,6 +9,13 @@ function handlePlanUpdateError($error_message, $updated_fields)
 {
     global $field_names_mapping;
 
+    // Escape the error message for JavaScript - fix for newlines
+    $escaped_error = str_replace(
+        ["'", "\n"],
+        ["\\'", "\\n"],
+        $error_message
+    );
+
     if (!empty($updated_fields)) {
         // Convert field names to readable format
         $changedFieldsList = implode(", ", array_map(function ($field) use ($field_names_mapping) {
@@ -16,7 +23,7 @@ function handlePlanUpdateError($error_message, $updated_fields)
         }, $updated_fields));
 
         echo "<script>
-            alert('Student details updated successfully. Changed fields: $changedFieldsList\nPlan update failed: $error_message');
+            alert('Student details updated successfully. Changed fields: $changedFieldsList\\nPlan update failed: $escaped_error');
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
@@ -24,7 +31,7 @@ function handlePlanUpdateError($error_message, $updated_fields)
         </script>";
     } else {
         echo "<script>
-            alert('Plan update failed: $error_message');
+            alert('Plan update failed: $escaped_error');
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
@@ -375,7 +382,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // 3. Check if user has access to update these fields
+            // 3. NEW: Check if SAME plan is already active (no effective_until = still active)
+            $checkActivePlanQuery = "SELECT 1 FROM student_category_history 
+                        WHERE student_id = '$search_id' 
+                        AND is_valid = true
+                        AND category_type = '$type_of_admission'
+                        AND class = '$class'
+                        AND effective_until IS NULL
+                        LIMIT 1";
+
+            if (pg_num_rows(pg_query($con, $checkActivePlanQuery)) > 0) {
+                $error_msg = "This plan ($type_of_admission for $class) is already active and has no end date. " .
+                    "If you want to change the plan, please end the current plan first or select a different plan type.";
+                handlePlanUpdateError($error_msg, $updated_fields);
+                exit;
+            }
+
+            // 4. Also check if same plan exists with future effective_from date
+            $checkFuturePlanQuery = "SELECT effective_from FROM student_category_history 
+                        WHERE student_id = '$search_id' 
+                        AND is_valid = true
+                        AND category_type = '$type_of_admission'
+                        AND class = '$class'
+                        AND effective_from > '$effective_from_date'
+                        ORDER BY effective_from ASC
+                        LIMIT 1";
+
+            $futurePlanResult = pg_query($con, $checkFuturePlanQuery);
+            if (pg_num_rows($futurePlanResult) > 0) {
+                $futurePlan = pg_fetch_assoc($futurePlanResult);
+                $futureDate = date('F Y', strtotime($futurePlan['effective_from']));
+                $error_msg = "This plan ($type_of_admission for $class) is already scheduled to start from $futureDate. " .
+                    "You cannot add the same plan type for an earlier date.";
+                handlePlanUpdateError($error_msg, $updated_fields);
+                exit;
+            }
+
+            // 5. Check if user has access to update these fields
             $plan_fields_to_update = [];
 
             if (in_array('type_of_admission', $user_accessible_fields)) {
@@ -398,18 +441,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Step 1: End any existing plan that overlaps with new date
                 // Find plans that are active on or after the new effective date
-                $findOverlappingQuery = "SELECT id, effective_from, effective_until 
-                                        FROM student_category_history 
-                                        WHERE student_id = '$search_id'
-                                        AND is_valid = true
-                                        AND (
-                                            (effective_until IS NULL AND effective_from <= '$effective_from_date')
-                                            OR
-                                            (effective_from <= '$effective_from_date' AND effective_until >= '$effective_from_date')
-                                            OR
-                                            (effective_from >= '$effective_from_date')
-                                        )
-                                        ORDER BY effective_from";
+                $findOverlappingQuery = "SELECT id, effective_from, effective_until, category_type, class
+                        FROM student_category_history 
+                        WHERE student_id = '$search_id'
+                        AND is_valid = true
+                        AND (
+                            (effective_until IS NULL AND effective_from <= '$effective_from_date')
+                            OR
+                            (effective_from <= '$effective_from_date' AND effective_until >= '$effective_from_date')
+                            OR
+                            (effective_from >= '$effective_from_date')
+                        )
+                        ORDER BY effective_from";
 
                 $overlappingResult = pg_query($con, $findOverlappingQuery);
                 $overlappingPlans = pg_fetch_all($overlappingResult) ?: [];
@@ -417,6 +460,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($overlappingPlans as $plan) {
                     $plan_id = $plan['id'];
                     $plan_from = $plan['effective_from'];
+                    $plan_category = $plan['category_type'];
+                    $plan_class = $plan['class'];
+
+                    // If this is the SAME plan type that's already active, we shouldn't reach here due to validation above
+                    // But keep as safety check
+                    if ($plan_category === $type_of_admission && $plan_class === $class) {
+                        // This should have been caught by validation above
+                        throw new Exception("Cannot add same plan type that's already active or scheduled.");
+                    }
 
                     // If plan starts BEFORE new date, end it one day before new plan starts
                     if (strtotime($plan_from) < strtotime($effective_from_date)) {
