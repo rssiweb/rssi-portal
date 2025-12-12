@@ -36,6 +36,7 @@ $field_definitions = [
     // Level 2: Admin only fields
     'admin_fields' => [
         'photourl',
+        'doa',
     ],
 
     // Level 1: Manager and above fields
@@ -124,8 +125,73 @@ if ($resultArr && count($resultArr) > 0) {
     $currentStudent = $resultArr[0];
 }
 
-// Close result
-pg_free_result($result);
+// Add this mapping array BEFORE form processing
+$field_names_mapping = [
+    // Basic Details
+    'student_id' => 'Student ID',
+    'studentname' => 'Student Name',
+    'dateofbirth' => 'Date of Birth',
+    'gender' => 'Gender',
+    'photourl' => 'Photo URL',
+    'filterstatus' => 'Status',
+
+    // Identification
+    'aadhar_available' => 'Aadhar Card Available',
+    'studentaadhar' => 'Aadhar Number',
+    'student_photo_raw' => 'Student Photo',
+    'upload_aadhar_card' => 'Aadhar Card Upload',
+
+    // Plan & Enrollment
+    'type_of_admission' => 'Access Category',
+    'category' => 'Category',
+    'module' => 'Module',
+    'effectivefrom' => 'Effective From',
+    'supporting_doc' => 'Supporting Document',
+    'remarks' => 'Remarks',
+    'scode' => 'Scode',
+    'payment_type' => 'Payment Type',
+    'division' => 'Division',
+    'class' => 'Class',
+
+    // Guardian Info
+    'guardiansname' => 'Guardian Name',
+    'relationwithstudent' => 'Relation with Student',
+    'guardianaadhar' => 'Guardian Aadhar',
+    'emergency_contact_name' => 'Emergency Contact Name',
+    'emergency_contact_relation' => 'Emergency Contact Relation',
+    'emergency_contact_number' => 'Emergency Contact Number',
+
+    // Address Details
+    'stateofdomicile' => 'State of Domicile',
+    'postaladdress' => 'Current Address',
+    'permanentaddress' => 'Permanent Address',
+
+    // Contact Info
+    'contact' => 'Telephone Number',
+    'alternate_number' => 'Alternate Number',
+    'emailaddress' => 'Email Address',
+
+    // Social & Caste
+    'caste' => 'Caste',
+    'caste_document' => 'Caste Certificate',
+
+    // Education Info
+    'schooladmissionrequired' => 'School Admission Required',
+    'nameoftheschool' => 'School Name',
+    'nameoftheboard' => 'Board Name',
+    'medium' => 'Medium',
+    'preferredbranch' => 'Preferred Branch',
+    'nameofthesubjects' => 'Subjects',
+    'class' => 'Class',
+
+    // Family Info
+    'familymonthlyincome' => 'Family Monthly Income',
+    'totalnumberoffamilymembers' => 'Total Family Members',
+
+    // System fields
+    'updated_by' => 'Updated By',
+    'updated_on' => 'Updated On',
+];
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -215,6 +281,167 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // ==============================================
+        // PROCESS PLAN UPDATES FROM MODAL
+        // ==============================================
+        $plan_update_fields = ['plan_update_type_of_admission', 'plan_update_class', 'plan_update_division', 'plan_update_effective_from_date'];
+        $has_plan_update = false;
+
+        foreach ($plan_update_fields as $field) {
+            if (isset($_POST[$field]) && !empty($_POST[$field])) {
+                $has_plan_update = true;
+                break;
+            }
+        }
+
+        if ($has_plan_update) {
+            // Process plan update fields
+            $type_of_admission = $_POST['plan_update_type_of_admission'] ?? $current_data['type_of_admission'];
+            $class = $_POST['plan_update_class'] ?? $current_data['class'];
+            $division = $_POST['plan_update_division'] ?? $current_data['division'] ?? '';
+            $effective_from_date = isset($_POST['plan_update_effective_from_date']) ?
+                date('Y-m-d', strtotime($_POST['plan_update_effective_from_date'])) : ($current_data['effectivefrom'] ?? null);
+
+            // Check if these fields are accessible to the user
+            $plan_fields_to_update = [];
+
+            if (
+                in_array('type_of_admission', $user_accessible_fields) &&
+                $type_of_admission != ($current_data['type_of_admission'] ?? '')
+            ) {
+                $update_fields[] = "type_of_admission = '$type_of_admission'";
+                $updated_fields[] = 'type_of_admission';
+                $plan_fields_to_update['type_of_admission'] = $type_of_admission;
+            }
+
+            if (
+                in_array('class', $user_accessible_fields) &&
+                $class != ($current_data['class'] ?? '')
+            ) {
+                $update_fields[] = "class = '$class'";
+                $updated_fields[] = 'class';
+                $plan_fields_to_update['class'] = $class;
+            }
+
+            if (!empty($division) && $division != ($current_data['division'] ?? '')) {
+                $update_fields[] = "division = '$division'";
+                $updated_fields[] = 'division';
+                $plan_fields_to_update['division'] = $division;
+            }
+
+            if (
+                in_array('effectivefrom', $user_accessible_fields) &&
+                $effective_from_date != ($current_data['effectivefrom'] ?? '')
+            ) {
+                $update_fields[] = "effectivefrom = '$effective_from_date'";
+                $updated_fields[] = 'effectivefrom';
+                $plan_fields_to_update['effectivefrom'] = $effective_from_date;
+            }
+
+            // Update student_category_history if plan fields changed
+            if (!empty($plan_fields_to_update) && isset($_POST['plan_update_effective_from_date'])) {
+                $original_doa = $current_data['doa'] ?? date('Y-m-d');
+                $updated_by = $associatenumber;
+
+                // Get current effective date
+                $currentPlanQuery = "SELECT effective_from FROM student_category_history 
+                                   WHERE student_id = '$search_id'
+                                   AND is_valid = true
+                                   AND (effective_until >= CURRENT_DATE OR effective_until IS NULL)
+                                   ORDER BY effective_from DESC, created_at DESC 
+                                   LIMIT 1";
+                $currentResult = pg_query($con, $currentPlanQuery);
+                $currentRow = pg_fetch_assoc($currentResult);
+                $current_effective_from_date = $currentRow['effective_from'] ?? $original_doa;
+
+                // Check for existing plans
+                $checkExistingPlan = "SELECT 1 FROM student_category_history 
+                                    WHERE student_id = '$search_id'
+                                    AND category_type = '$type_of_admission'
+                                    AND class = '$class'
+                                    AND effective_from = DATE '$effective_from_date'";
+                $planExists = pg_num_rows(pg_query($con, $checkExistingPlan)) > 0;
+
+                $checkCoveredPlan = "SELECT 1 FROM student_category_history 
+                                   WHERE student_id = '$search_id'
+                                   AND category_type = '$type_of_admission'
+                                   AND class = '$class'
+                                   AND effective_from <= DATE '$effective_from_date'
+                                   AND (effective_until >= DATE '$effective_from_date' OR effective_until IS NULL)";
+                $planCovered = pg_num_rows(pg_query($con, $checkCoveredPlan)) > 0;
+
+                if (!$planExists && !$planCovered) {
+                    // 1. For new admissions, ensure complete history from admission date
+                    $checkInitialRecord = "SELECT 1 FROM student_category_history 
+                        WHERE student_id = '$search_id' 
+                        AND effective_from = DATE '$original_doa'";
+                    $initialRecordExists = pg_num_rows(pg_query($con, $checkInitialRecord)) > 0;
+
+                    if (!$initialRecordExists) {
+                        $insertInitialHistory = "INSERT INTO student_category_history (
+                              student_id, 
+                              category_type, 
+                              effective_from, 
+                              effective_until,
+                              created_by,
+                              class
+                            ) VALUES (
+                              '$search_id', 
+                              '" . $current_data['type_of_admission'] . "', 
+                              DATE '$original_doa', 
+                              DATE '$effective_from_date' - INTERVAL '1 day',
+                              '$updated_by',
+                              '" . $current_data['class'] . "'
+                            )";
+                        pg_query($con, $insertInitialHistory);
+                    }
+
+                    // 2. First close ALL existing active records (where effective_until is NULL)
+                    $closeAllActiveRecords = "UPDATE student_category_history 
+                                        SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
+                                        WHERE student_id = '$search_id'
+                                        AND effective_until IS NULL";
+                    pg_query($con, $closeAllActiveRecords);
+
+                    // 3. Close any records that overlap with the new effective date
+                    $closeHistoryQuery = "UPDATE student_category_history 
+                                    SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
+                                    WHERE student_id = '$search_id' 
+                                    AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
+                                    AND effective_from < DATE '$effective_from_date'";
+                    pg_query($con, $closeHistoryQuery);
+
+                    // 4. Adjust any future-dated records
+                    $adjustFutureRecords = "UPDATE student_category_history 
+                                SET is_valid = false
+                                WHERE student_id = '$search_id' 
+                                AND effective_from >= DATE '$effective_from_date'";
+                    pg_query($con, $adjustFutureRecords);
+
+                    // 5. Insert the new record
+                    $insertHistoryQuery = "INSERT INTO student_category_history (
+                                        student_id, 
+                                        category_type, 
+                                        effective_from, 
+                                        created_by,
+                                        class
+                                      ) VALUES (
+                                        '$search_id', 
+                                        '$type_of_admission', 
+                                        DATE '$effective_from_date', 
+                                        '$updated_by',
+                                        '$class'
+                                      )";
+                    pg_query($con, $insertHistoryQuery);
+
+                    $updated_fields[] = 'plan_history_updated';
+                }
+            }
+        }
+        // ==============================================
+        // END PLAN UPDATE PROCESSING
+        // ==============================================
+
         // Handle unauthorized updates
         if (!empty($unauthorized_updates)) {
             $unauthorized_list = implode(", ", $unauthorized_updates);
@@ -247,7 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Show success message
         if (isset($cmdtuples) && $cmdtuples > 0) {
-            // Use mapping array (defined later)
+            // Use mapping array
             $updated_fields_readable = [];
             foreach ($updated_fields as $field) {
                 $updated_fields_readable[] = isset($field_names_mapping[$field])
@@ -257,8 +484,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $updated_list = implode(", ", $updated_fields_readable);
 
+            // Check if plan was updated
+            $has_plan_update_msg = in_array('plan_history_updated', $updated_fields) ?
+                "\n\n✓ Plan change has been recorded in history." : "";
+
             echo "<script>
-                alert('The following fields were updated: " . addslashes($updated_list) . "');
+                alert('The following fields were updated: " . addslashes($updated_list) . "{$has_plan_update_msg}');
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
@@ -290,6 +521,7 @@ $card_access_levels = [
     'family_info' => 1,
     'plan_enrollment' => 1,
     'student_status' => 1,
+    'misc' => 1,
     'admin_console' => 2,        // Admin only
 ];
 
@@ -300,72 +532,6 @@ foreach ($card_access_levels as $card => $required_level) {
         $accessible_cards[] = $card;
     }
 }
-
-// Add this mapping array
-$field_names_mapping = [
-    // Basic Details
-    'student_id' => 'Student ID',
-    'studentname' => 'Student Name',
-    'dateofbirth' => 'Date of Birth',
-    'gender' => 'Gender',
-    'photourl' => 'Photo URL',
-    'filterstatus' => 'Status',
-
-    // Identification
-    'aadhar_available' => 'Aadhar Card Available',
-    'studentaadhar' => 'Aadhar Number',
-    'student_photo_raw' => 'Student Photo',
-    'upload_aadhar_card' => 'Aadhar Card Upload',
-
-    // Plan & Enrollment
-    'type_of_admission' => 'Access Category',
-    'category' => 'Category',
-    'module' => 'Module',
-    'effectivefrom' => 'Effective From',
-    'supporting_doc' => 'Supporting Document',
-    'remarks' => 'Remarks',
-    'scode' => 'Scode',
-    'payment_type' => 'Payment Type',
-
-    // Guardian Info
-    'guardiansname' => 'Guardian Name',
-    'relationwithstudent' => 'Relation with Student',
-    'guardianaadhar' => 'Guardian Aadhar',
-    'emergency_contact_name' => 'Emergency Contact Name',
-    'emergency_contact_relation' => 'Emergency Contact Relation',
-    'emergency_contact_number' => 'Emergency Contact Number',
-
-    // Address Details
-    'stateofdomicile' => 'State of Domicile',
-    'postaladdress' => 'Current Address',
-    'permanentaddress' => 'Permanent Address',
-
-    // Contact Info
-    'contact' => 'Telephone Number',
-    'alternate_number' => 'Alternate Number',
-    'emailaddress' => 'Email Address',
-
-    // Social & Caste
-    'caste' => 'Caste',
-    'caste_document' => 'Caste Certificate',
-
-    // Education Info
-    'schooladmissionrequired' => 'School Admission Required',
-    'nameoftheschool' => 'School Name',
-    'nameoftheboard' => 'Board Name',
-    'medium' => 'Medium',
-    'preferredbranch' => 'Preferred Branch',
-    'nameofthesubjects' => 'Subjects',
-    'class' => 'Class',
-
-    // Family Info
-    'familymonthlyincome' => 'Family Monthly Income',
-    'totalnumberoffamilymembers' => 'Total Family Members',
-
-    // System fields
-    'updated_by' => 'Updated By',
-    'updated_on' => 'Updated On',
-];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -379,6 +545,7 @@ $field_names_mapping = [
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reuse HRMS portal styles */
         .header_two {
@@ -685,6 +852,11 @@ $field_names_mapping = [
                                                         <a class="nav-link" href="#student_status" data-bs-toggle="tab">Student Status</a>
                                                     </li>
                                                 <?php endif; ?>
+                                                <?php if (in_array('misc', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#misc" data-bs-toggle="tab">Miscellaneous Information</a>
+                                                    </li>
+                                                <?php endif; ?>
 
                                                 <?php if (in_array('admin_console', $accessible_cards)): ?>
                                                     <li class="nav-item">
@@ -775,44 +947,6 @@ $field_names_mapping = [
                                                                                         <option value="Female" <?php echo $array['gender'] == 'Female' ? 'selected' : ''; ?>>Female</option>
                                                                                         <option value="Binary" <?php echo $array['gender'] == 'Binary' ? 'selected' : ''; ?>>Binary</option>
                                                                                     </select>
-                                                                                <?php endif; ?>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td><label for="filterstatus">Status:</label></td>
-                                                                            <td>
-                                                                                <span id="filterstatusText">
-                                                                                    <?php echo $array['filterstatus']; ?>
-                                                                                </span>
-                                                                                <?php if (in_array('filterstatus', $user_accessible_fields)): ?>
-                                                                                    <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;"
-                                                                                        onchange="handleStatusChange(this)">
-                                                                                        <option value="Active" <?php echo $array['filterstatus'] == 'Active' ? 'selected' : ''; ?>>Active</option>
-                                                                                        <option value="Inactive" <?php echo $array['filterstatus'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                                                                    </select>
-                                                                                <?php endif; ?>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td><label for="effectivefrom">Effective From:</label></td>
-                                                                            <td>
-                                                                                <span id="effectivefromText">
-                                                                                    <?php echo !empty($array['effectivefrom']) ? date('d/m/Y', strtotime($array['effectivefrom'])) : ''; ?>
-                                                                                </span>
-                                                                                <?php if (in_array('effectivefrom', $user_accessible_fields)): ?>
-                                                                                    <input type="date" name="effectivefrom" id="effectivefrom"
-                                                                                        value="<?php echo $array['effectivefrom']; ?>"
-                                                                                        class="form-control" disabled style="display:none;">
-                                                                                <?php endif; ?>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td><label for="remarks">Remarks:</label></td>
-                                                                            <td>
-                                                                                <span id="remarksText"><?php echo $array['remarks']; ?></span>
-                                                                                <?php if (in_array('remarks', $user_accessible_fields)): ?>
-                                                                                    <textarea name="remarks" id="remarks" class="form-control"
-                                                                                        rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
                                                                                 <?php endif; ?>
                                                                             </td>
                                                                         </tr>
@@ -919,54 +1053,74 @@ $field_names_mapping = [
                                                                             <tr>
                                                                                 <td><label>Current Plan:</label></td>
                                                                                 <td>
-                                                                                    <?php
-                                                                                    $currentCategory = !empty($array['class']) ? $array['class'] . '/' . $array['type_of_admission'] : 'Not selected';
-                                                                                    echo $currentCategory;
-                                                                                    ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="type_of_admission">Access Category:</label></td>
-                                                                                <td>
-                                                                                    <span id="type_of_admissionText"><?php echo $array['type_of_admission']; ?></span>
-                                                                                    <?php if (in_array('type_of_admission', $user_accessible_fields)): ?>
-                                                                                        <select name="type_of_admission" id="type_of_admission" class="form-select" disabled style="display:none;">
-                                                                                            <option value="">Select Category</option>
-                                                                                            <option value="Basic" <?php echo $array['type_of_admission'] == 'Basic' ? 'selected' : ''; ?>>Basic</option>
-                                                                                            <option value="Regular" <?php echo $array['type_of_admission'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
-                                                                                            <option value="Premium" <?php echo $array['type_of_admission'] == 'Premium' ? 'selected' : ''; ?>>Premium</option>
-                                                                                        </select>
-                                                                                    <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="category">Category:</label></td>
-                                                                                <td>
-                                                                                    <span id="categoryText"><?php echo $array['category']; ?></span>
-                                                                                    <?php if (in_array('category', $user_accessible_fields)): ?>
-                                                                                        <select name="category" id="category" class="form-select" disabled style="display:none;">
-                                                                                            <option value="">Select Category</option>
-                                                                                            <option value="LG1" <?php echo $array['category'] == 'LG1' ? 'selected' : ''; ?>>LG1</option>
-                                                                                            <option value="LG2-A" <?php echo $array['category'] == 'LG2-A' ? 'selected' : ''; ?>>LG2-A</option>
-                                                                                            <option value="LG2-B" <?php echo $array['category'] == 'LG2-B' ? 'selected' : ''; ?>>LG2-B</option>
-                                                                                            <option value="LG2-C" <?php echo $array['category'] == 'LG2-C' ? 'selected' : ''; ?>>LG2-C</option>
-                                                                                            <option value="LG3" <?php echo $array['category'] == 'LG3' ? 'selected' : ''; ?>>LG3</option>
-                                                                                            <option value="LG4" <?php echo $array['category'] == 'LG4' ? 'selected' : ''; ?>>LG4</option>
-                                                                                        </select>
-                                                                                    <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="module">Module:</label></td>
-                                                                                <td>
-                                                                                    <span id="moduleText"><?php echo $array['module']; ?></span>
-                                                                                    <?php if (in_array('module', $user_accessible_fields)): ?>
-                                                                                        <select name="module" id="module" class="form-select" disabled style="display:none;">
-                                                                                            <option value="">Select Module</option>
-                                                                                            <option value="National" <?php echo $array['module'] == 'National' ? 'selected' : ''; ?>>National</option>
-                                                                                            <option value="State" <?php echo $array['module'] == 'State' ? 'selected' : ''; ?>>State</option>
-                                                                                        </select>
-                                                                                    <?php endif; ?>
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        <div class="flex-grow-1">
+                                                                                            <?php
+                                                                                            // Default values
+                                                                                            $currentCategory = !empty($array['class']) ? $array['class'] . '/' . $array['type_of_admission'] : 'Not selected';
+                                                                                            $effectiveDateFormatted = !empty($array['doa']) ? date('F Y', strtotime($array['doa'])) : 'Not set';
+                                                                                            $hasFuturePlan = false;
+
+                                                                                            if (!empty($array['student_id'])) {
+                                                                                                $currentDate = date('Y-m-d');
+
+                                                                                                // Query to get current active plan (latest by created_at if same effective_from)
+                                                                                                $currentPlanQuery = "SELECT category_type, class, effective_from 
+                                        FROM student_category_history 
+                                        WHERE student_id = '" . $array['student_id'] . "'
+                                        AND is_valid = true
+                                        AND effective_from <= '$currentDate'
+                                        AND (effective_until >= '$currentDate' OR effective_until IS NULL)
+                                        ORDER BY effective_from DESC, created_at DESC LIMIT 1";
+
+                                                                                                // Query to check for future plans
+                                                                                                $futurePlanQuery = "SELECT 1 FROM student_category_history
+                                      WHERE student_id = '" . $array['student_id'] . "'
+                                      AND is_valid = true
+                                      AND effective_from > '$currentDate'
+                                      LIMIT 1";
+
+                                                                                                // Get current active plan
+                                                                                                $currentResult = pg_query($con, $currentPlanQuery);
+                                                                                                if ($currentRow = pg_fetch_assoc($currentResult)) {
+                                                                                                    $currentCategory = ($currentRow['class'] ?? $array['class']) . '/' . $currentRow['category_type'];
+                                                                                                    $effectiveDateFormatted = date('F Y', strtotime($currentRow['effective_from']));
+                                                                                                }
+
+                                                                                                // Check for future plans
+                                                                                                $futureResult = pg_query($con, $futurePlanQuery);
+                                                                                                $hasFuturePlan = (pg_num_rows($futureResult) > 0);
+                                                                                            }
+                                                                                            ?>
+
+                                                                                            <p class="mb-1">
+                                                                                                <strong>Access Category:</strong>
+                                                                                                <span id="current-admission-display"><?php echo $currentCategory; ?></span>
+                                                                                            </p>
+                                                                                            <p class="mb-1">
+                                                                                                <strong>Effective From:</strong>
+                                                                                                <span id="current-effective-date-display">
+                                                                                                    <?php echo $effectiveDateFormatted; ?>
+                                                                                                    <?php if ($hasFuturePlan): ?>
+                                                                                                        <span class="badge bg-warning text-dark ms-2" title="Future plan exists">
+                                                                                                            <i class="fas fa-clock"></i> Pending Change
+                                                                                                        </span>
+                                                                                                    <?php endif; ?>
+                                                                                                </span>
+                                                                                                <small class="text-muted">(Plan will be applied to <?php echo $effectiveDateFormatted; ?> month's feesheet)</small>
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <div class="ms-3">
+                                                                                            <?php if (in_array('plan_enrollment', $accessible_cards)): ?>
+                                                                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updatePlanModal-<?php echo $array['student_id']; ?>">
+                                                                                                    Update Plan
+                                                                                                </button>
+                                                                                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal-<?php echo $array['student_id']; ?>">
+                                                                                                    View History
+                                                                                                </button>
+                                                                                            <?php endif; ?>
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -980,23 +1134,6 @@ $field_names_mapping = [
                                                                                     <?php if (!empty($array['supporting_doc'])): ?>
                                                                                         <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
                                                                                     <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="scode">Scode:</label></td>
-                                                                                <td>
-                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
-                                                                                    <?php if (in_array('scode', $user_accessible_fields)): ?>
-                                                                                        <input type="text" name="scode" id="scode"
-                                                                                            value="<?php echo $array['scode']; ?>"
-                                                                                            class="form-control" disabled style="display:none;">
-                                                                                    <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="updated_by">Updated By:</label></td>
-                                                                                <td>
-                                                                                    <?php echo $array['updated_by']; ?> on <?php echo $array['updated_on']; ?>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -1465,6 +1602,36 @@ $field_names_mapping = [
                                                                     <table class="table table-borderless">
                                                                         <tbody>
                                                                             <tr>
+                                                                                <td><label for="module">Module:</label></td>
+                                                                                <td>
+                                                                                    <span id="moduleText"><?php echo $array['module']; ?></span>
+                                                                                    <?php if (in_array('module', $user_accessible_fields)): ?>
+                                                                                        <select name="module" id="module" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Module</option>
+                                                                                            <option value="National" <?php echo $array['module'] == 'National' ? 'selected' : ''; ?>>National</option>
+                                                                                            <option value="State" <?php echo $array['module'] == 'State' ? 'selected' : ''; ?>>State</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="category">Category:</label></td>
+                                                                                <td>
+                                                                                    <span id="categoryText"><?php echo $array['category']; ?></span>
+                                                                                    <?php if (in_array('category', $user_accessible_fields)): ?>
+                                                                                        <select name="category" id="category" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Category</option>
+                                                                                            <option value="LG1" <?php echo $array['category'] == 'LG1' ? 'selected' : ''; ?>>LG1</option>
+                                                                                            <option value="LG2-A" <?php echo $array['category'] == 'LG2-A' ? 'selected' : ''; ?>>LG2-A</option>
+                                                                                            <option value="LG2-B" <?php echo $array['category'] == 'LG2-B' ? 'selected' : ''; ?>>LG2-B</option>
+                                                                                            <option value="LG2-C" <?php echo $array['category'] == 'LG2-C' ? 'selected' : ''; ?>>LG2-C</option>
+                                                                                            <option value="LG3" <?php echo $array['category'] == 'LG3' ? 'selected' : ''; ?>>LG3</option>
+                                                                                            <option value="LG4" <?php echo $array['category'] == 'LG4' ? 'selected' : ''; ?>>LG4</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
                                                                                 <td><label for="payment_type">Payment Type:</label></td>
                                                                                 <td>
                                                                                     <span id="payment_typeText"><?php echo $array['payment_type']; ?></span>
@@ -1483,6 +1650,44 @@ $field_names_mapping = [
                                                                                     <?php echo date('d/m/Y', strtotime($array['doa'])); ?>
                                                                                 </td>
                                                                             </tr>
+                                                                            <tr>
+                                                                                <td><label for="filterstatus">Status:</label></td>
+                                                                                <td>
+                                                                                    <span id="filterstatusText">
+                                                                                        <?php echo $array['filterstatus']; ?>
+                                                                                    </span>
+                                                                                    <?php if (in_array('filterstatus', $user_accessible_fields)): ?>
+                                                                                        <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;"
+                                                                                            onchange="handleStatusChange(this)">
+                                                                                            <option value="Active" <?php echo $array['filterstatus'] == 'Active' ? 'selected' : ''; ?>>Active</option>
+                                                                                            <option value="Inactive" <?php echo $array['filterstatus'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="effectivefrom">Effective From:</label></td>
+                                                                                <td>
+                                                                                    <span id="effectivefromText">
+                                                                                        <?php echo !empty($array['effectivefrom']) ? date('d/m/Y', strtotime($array['effectivefrom'])) : ''; ?>
+                                                                                    </span>
+                                                                                    <?php if (in_array('effectivefrom', $user_accessible_fields)): ?>
+                                                                                        <input type="date" name="effectivefrom" id="effectivefrom"
+                                                                                            value="<?php echo $array['effectivefrom']; ?>"
+                                                                                            class="form-control" disabled style="display:none;">
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="remarks">Remarks:</label></td>
+                                                                                <td>
+                                                                                    <span id="remarksText"><?php echo $array['remarks']; ?></span>
+                                                                                    <?php if (in_array('remarks', $user_accessible_fields)): ?>
+                                                                                        <textarea name="remarks" id="remarks" class="form-control"
+                                                                                            rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1491,12 +1696,12 @@ $field_names_mapping = [
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <!-- Admin Documents Tab -->
-                                                <?php if (in_array('admin_console', $accessible_cards)): ?>
-                                                    <div id="admin_console" class="tab-pane" role="tabpanel">
+                                                <!-- Misc Tab -->
+                                                <?php if (in_array('misc', $accessible_cards)): ?>
+                                                    <div id="misc" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="admin_console_card">
                                                             <div class="card-header">
-                                                                Admin console
+                                                                Miscellaneous Information
                                                                 <span class="edit-icon" onclick="toggleEdit('admin_console_card')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
@@ -1525,6 +1730,31 @@ $field_names_mapping = [
                                                                                     </ul>
                                                                                 </td>
                                                                             </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <!-- Admin Documents Tab -->
+                                                <?php if (in_array('admin_console', $accessible_cards)): ?>
+                                                    <div id="admin_console" class="tab-pane" role="tabpanel">
+                                                        <div class="card" id="admin_console_card">
+                                                            <div class="card-header">
+                                                                Admin console
+                                                                <span class="edit-icon" onclick="toggleEdit('admin_console_card')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('admin_console_card')">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
                                                                             <tr>
                                                                                 <td><label for="photourl">Photo URL:</label></td>
                                                                                 <td>
@@ -1541,6 +1771,23 @@ $field_names_mapping = [
                                                                                             class="form-control" disabled style="display:none;"
                                                                                             placeholder="Enter photo URL">
                                                                                     <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="scode">Scode:</label></td>
+                                                                                <td>
+                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
+                                                                                    <?php if (in_array('scode', $user_accessible_fields)): ?>
+                                                                                        <input type="text" name="scode" id="scode"
+                                                                                            value="<?php echo $array['scode']; ?>"
+                                                                                            class="form-control" disabled style="display:none;">
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="updated_by">Updated By:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array['updated_by']; ?> on <?php echo $array['updated_on']; ?>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -1561,7 +1808,6 @@ $field_names_mapping = [
             </div>
         </section>
     </main>
-
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
@@ -1790,6 +2036,432 @@ $field_names_mapping = [
                 remarksTextarea.value = currentRemarks + newRemarkLine;
             }
         }
+    </script>
+    <!-- Update Plan Modal -->
+    <div class="modal fade" id="updatePlanModal-<?php echo $array['student_id']; ?>" tabindex="-1" aria-labelledby="updatePlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePlanModalLabel">Update Student Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="planUpdateForm-<?php echo $array['student_id']; ?>">
+                        <div class="mb-3">
+                            <label for="modal-division-select-<?php echo $array['student_id']; ?>" class="form-label">Division:</label>
+                            <select class="form-select" id="modal-division-select-<?php echo $array['student_id']; ?>" name="plan_update_division" required>
+                                <option value="">--Select Division--</option>
+                                <option value="kalpana" <?php echo (!empty($array['division']) && $array['division'] == 'kalpana') ? 'selected' : '' ?>>Kalpana Buds School</option>
+                                <option value="rssi" <?php echo (!empty($array['division']) && $array['division'] == 'rssi') ? 'selected' : '' ?>>RSSI NGO</option>
+                                <option value="coaching" <?php echo (!empty($array['division']) && $array['division'] == 'coaching') ? 'selected' : '' ?>>Coaching</option>
+                            </select>
+                            <small class="form-text text-muted">Please select the division you're applying for.</small>
+                        </div>
+
+                        <!-- Class Dropdown -->
+                        <div class="mb-3">
+                            <label for="modal-class-select-<?php echo $array['student_id']; ?>" class="form-label">Class:</label>
+                            <select class="form-select" id="modal-class-select-<?php echo $array['student_id']; ?>" name="plan_update_class" required>
+                                <?php if (empty($array['class'])) { ?>
+                                    <option value="" selected>--Select Class--</option>
+                                <?php } else { ?>
+                                    <option value="">--Select Class--</option>
+                                    <option value="<?php echo $array['class']; ?>" selected><?php echo $array['class']; ?></option>
+                                <?php } ?>
+                            </select>
+                            <small class="form-text text-muted" id="modal-class-help-<?php echo $array['student_id']; ?>">Please select the class the student wants to join.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="modal-type-of-admission-<?php echo $array['student_id']; ?>" class="form-label">Access Category:</label>
+                            <select class="form-select" id="modal-type-of-admission-<?php echo $array['student_id']; ?>" name="plan_update_type_of_admission" required>
+                                <?php if (empty($array['type_of_admission'])) { ?>
+                                    <option value="" selected>--Select Access Category--</option>
+                                <?php } else { ?>
+                                    <option value="">--Select Access Category--</option>
+                                    <option value="<?php echo $array['type_of_admission']; ?>" selected><?php echo $array['type_of_admission']; ?></option>
+                                <?php } ?>
+                            </select>
+                            <small id="modal-type-of-admission-help-<?php echo $array['student_id']; ?>" class="form-text text-muted">
+                                Please select the type of access you are applying for.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="modal-effective-from-date-<?php echo $array['student_id']; ?>" class="form-label">Effective From Month:</label>
+                            <input type="month" class="form-control" id="modal-effective-from-date-<?php echo $array['student_id']; ?>" name="plan_update_effective_from_date" required>
+                            <small class="form-text text-muted">
+                                The selected plan will be applied to the feesheet starting from the first day of the selected month.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-plan-changes-<?php echo $array['student_id']; ?>">Update Plan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan History Modal -->
+    <div class="modal fade" id="planHistoryModal-<?php echo $array['student_id']; ?>" tabindex="-1" aria-labelledby="planHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planHistoryModalLabel">Plan Change History for <?php echo htmlspecialchars($array['studentname']) ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Plan Type</th>
+                                    <th>Class</th>
+                                    <th>Effective From</th>
+                                    <th>Effective Until</th>
+                                    <th>Changed On</th>
+                                    <th>Changed By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $historyQuery = "SELECT category_type, class, effective_from, effective_until, created_at, created_by 
+                                       FROM student_category_history 
+                                       WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
+                                       AND (is_valid = true OR is_valid IS NULL)
+                                       ORDER BY created_at DESC";
+                                $historyResult = pg_query($con, $historyQuery);
+                                $today = date('Y-m-d');
+
+                                if (pg_num_rows($historyResult) > 0) {
+                                    while ($row = pg_fetch_assoc($historyResult)) {
+                                        $effectiveFrom = $row['effective_from'];
+                                        $effectiveUntil = $row['effective_until'];
+
+                                        // Determine if this is the current active plan
+                                        $isCurrent = false;
+                                        if ($effectiveUntil === null) {
+                                            $isCurrent = ($today >= $effectiveFrom);
+                                        } else {
+                                            $isCurrent = ($today >= $effectiveFrom && $today <= $effectiveUntil);
+                                        }
+                                        if ($today < $effectiveFrom) {
+                                            $isCurrent = false;
+                                        }
+                                ?>
+                                        <tr class="<?php echo $isCurrent ? 'table-primary' : '' ?>">
+                                            <td><?php echo htmlspecialchars($row['category_type']) ?></td>
+                                            <td><?php echo htmlspecialchars($row['class'] ?? $array['class']) ?></td>
+                                            <td><?php echo date('d M Y', strtotime($effectiveFrom)) ?></td>
+                                            <td>
+                                                <?php echo $effectiveUntil === null ? '' : date('d M Y', strtotime($effectiveUntil)) ?>
+                                            </td>
+                                            <td><?php echo date('d M Y H:i', strtotime($row['created_at'])) ?></td>
+                                            <td><?php echo htmlspecialchars($row['created_by']) ?></td>
+                                        </tr>
+                                <?php
+                                    }
+                                } else {
+                                    echo '<tr><td colspan="6" class="text-center py-4">No plan history found</td></tr>';
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // When update modal opens, populate fields with current values
+            $('#updatePlanModal-<?php echo $array["student_id"]; ?>').on('show.bs.modal', function() {
+                const studentId = '<?php echo $array["student_id"]; ?>';
+                $('#modal-division-select-' + studentId).val('<?php echo $array["division"] ?? ""; ?>');
+                $('#modal-class-select-' + studentId).val('<?php echo $array["class"] ?? ""; ?>');
+                $('#modal-type-of-admission-' + studentId).val('<?php echo $array["type_of_admission"] ?? ""; ?>');
+
+                // Format date for month input
+                const effectiveFrom = '<?php echo $array["effectivefrom"] ?? ""; ?>';
+                if (effectiveFrom) {
+                    const date = new Date(effectiveFrom);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    $('#modal-effective-from-date-' + studentId).val(year + '-' + month);
+                } else {
+                    // Set default to next month
+                    const today = new Date();
+                    const nextMonth = today.getMonth() === 11 ?
+                        `${today.getFullYear() + 1}-01` :
+                        `${today.getFullYear()}-${String(today.getMonth() + 2).padStart(2, '0')}`;
+                    $('#modal-effective-from-date-' + studentId).val(nextMonth);
+                }
+
+                // If division is already selected, load its classes and plans
+                if ($('#modal-division-select-' + studentId).val()) {
+                    loadClassesForDivision(studentId, $('#modal-division-select-' + studentId).val());
+                    loadPlansForDivision(studentId, $('#modal-division-select-' + studentId).val());
+                }
+            });
+
+            // When division changes, load corresponding classes and plans
+            $(document).on('change', '[id^="modal-division-select-"]', function() {
+                const idParts = this.id.split('-');
+                const studentId = idParts[idParts.length - 1];
+                const division = $(this).val();
+                loadClassesForDivision(studentId, division);
+                loadPlansForDivision(studentId, division);
+            });
+
+            function loadClassesForDivision(studentId, division) {
+                const classSelect = $('#modal-class-select-' + studentId)[0];
+                const helpText = $('#modal-class-help-' + studentId)[0];
+
+                // Reset and disable the select initially
+                classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+                classSelect.disabled = !division;
+
+                if (!division) {
+                    helpText.textContent = 'Please select a division first.';
+                    return;
+                }
+
+                // Create and show loading spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                helpText.innerHTML = 'Loading classes... ';
+                helpText.appendChild(spinner);
+
+                // Determine API URL based on host
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ?
+                    'http://localhost:8082/get_classes.php' :
+                    'https://login.rssi.in/get_classes.php';
+
+                // Fetch classes via AJAX
+                fetch(`${apiUrl}?division=${encodeURIComponent(division)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.error || 'Failed to load classes');
+                        }
+
+                        // Create new select with placeholder selected by default
+                        classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+
+                        if (data.data.length === 0) {
+                            const noOption = document.createElement('option');
+                            noOption.textContent = 'No classes available';
+                            noOption.disabled = true;
+                            classSelect.appendChild(noOption);
+                            helpText.textContent = 'No classes available for this division.';
+                            return;
+                        }
+
+                        data.data.forEach(classItem => {
+                            const option = document.createElement('option');
+                            option.value = classItem.value;
+                            option.textContent = classItem.class_name;
+                            classSelect.appendChild(option);
+                        });
+
+                        // If there was a previous selection, try to preserve it
+                        const previousSelection = '<?php echo $array["class"] ?? ""; ?>';
+                        if (previousSelection) {
+                            // Check if the previous selection exists in the new options
+                            const optionExists = Array.from(classSelect.options).some(
+                                option => option.value === previousSelection
+                            );
+                            if (optionExists) {
+                                $(classSelect).val(previousSelection);
+                            }
+                        }
+
+                        classSelect.disabled = false;
+                        helpText.textContent = 'Please select the class the student wants to join.';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching classes:', error);
+                        classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
+                        const errorOption = document.createElement('option');
+                        errorOption.textContent = 'Error loading classes';
+                        errorOption.disabled = true;
+                        classSelect.appendChild(errorOption);
+                        helpText.textContent = 'Failed to load classes. Please try again.';
+                    })
+                    .finally(() => {
+                        classSelect.disabled = false;
+                        // Remove spinner if it still exists
+                        if (spinner.parentNode === helpText) {
+                            helpText.removeChild(spinner);
+                        }
+                    });
+            }
+
+            function loadPlansForDivision(studentId, division) {
+                const admissionSelect = $('#modal-type-of-admission-' + studentId)[0];
+                const helpText = $('#modal-type-of-admission-help-' + studentId)[0];
+
+                // Reset and disable the select initially
+                admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+                admissionSelect.disabled = !division;
+
+                if (!division) {
+                    helpText.textContent = 'Please select the type of access you are applying for.';
+                    return;
+                }
+
+                // Create and show loading spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                helpText.innerHTML = 'Loading plans... ';
+                helpText.appendChild(spinner);
+
+                // Determine API URL based on host
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ?
+                    'http://localhost:8082/get_plans.php' :
+                    'https://login.rssi.in/get_plans.php';
+
+                // Fetch plans via AJAX
+                fetch(`${apiUrl}?division=${division}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(plans => {
+                        // Create new select with placeholder selected by default
+                        admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+
+                        if (plans.length === 0) {
+                            const noOption = document.createElement('option');
+                            noOption.textContent = 'No plans available';
+                            noOption.disabled = true;
+                            admissionSelect.appendChild(noOption);
+                            helpText.textContent = 'No plans available for this division.';
+                            return;
+                        }
+
+                        plans.forEach(plan => {
+                            const option = document.createElement('option');
+                            option.value = plan.name;
+                            option.textContent = plan.name;
+                            admissionSelect.appendChild(option);
+                        });
+
+                        // If there was a previous selection, try to preserve it
+                        const previousSelection = '<?php echo $array["type_of_admission"] ?? ""; ?>';
+                        if (previousSelection) {
+                            // Check if the previous selection exists in the new options
+                            const optionExists = Array.from(admissionSelect.options).some(
+                                option => option.value === previousSelection
+                            );
+                            if (optionExists) {
+                                $(admissionSelect).val(previousSelection);
+                            }
+                        }
+
+                        admissionSelect.disabled = false;
+                        helpText.textContent = 'Please select the type of access you are applying for.';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching plans:', error);
+                        admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
+                        const errorOption = document.createElement('option');
+                        errorOption.textContent = 'Error loading plans';
+                        errorOption.disabled = true;
+                        admissionSelect.appendChild(errorOption);
+                        helpText.textContent = 'Failed to load plans. Please try again.';
+                    })
+                    .finally(() => {
+                        admissionSelect.disabled = false;
+                        // Remove spinner if it still exists
+                        if (spinner.parentNode === helpText) {
+                            helpText.removeChild(spinner);
+                        }
+                    });
+            }
+
+            // Save plan changes - show confirmation alert
+            $(document).on('click', '[id^="save-plan-changes-"]', function() {
+                const studentId = this.id.split('-').pop();
+                const division = $('#modal-division-select-' + studentId).val();
+                const classVal = $('#modal-class-select-' + studentId).val();
+                const admissionType = $('#modal-type-of-admission-' + studentId).val();
+                const effectiveMonth = $('#modal-effective-from-date-' + studentId).val();
+
+                if (!division || !classVal || !admissionType || !effectiveMonth) {
+                    alert('Please fill all fields');
+                    return;
+                }
+
+                // Format the effective date for display
+                const [year, month] = effectiveMonth.split('-');
+                const dateObj = new Date(year, month - 1);
+                const monthName = dateObj.toLocaleString('default', {
+                    month: 'long'
+                });
+                const effectiveDateDisplay = monthName + ' ' + year;
+
+                // Show confirmation alert with plan details
+                const confirmationMessage =
+                    `Please confirm the plan update:\n\n` +
+                    `Division: ${division}\n` +
+                    `Class: ${classVal}\n` +
+                    `Plan: ${admissionType}\n` +
+                    `Effective From: ${effectiveDateDisplay}\n\n` +
+                    `Click OK to save or Cancel to go back.`;
+
+                if (confirm(confirmationMessage)) {
+                    // User clicked OK - submit the form
+                    submitPlanUpdate(studentId, classVal, admissionType, effectiveMonth + '-01');
+                }
+                // If user clicks Cancel, do nothing
+            });
+
+            function submitPlanUpdate(studentId, classVal, admissionType, effectiveFromDate) {
+                // Get the main form
+                const mainForm = document.getElementById('studentProfileForm');
+
+                // Remove any existing plan update fields
+                mainForm.querySelectorAll('input[name^="plan_update_"]').forEach(el => el.remove());
+
+                // Add hidden inputs with plan update data
+                const addHiddenInput = (name, value) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    mainForm.appendChild(input);
+                };
+                addHiddenInput('plan_update_class', classVal);
+                addHiddenInput('plan_update_type_of_admission', admissionType);
+                addHiddenInput('plan_update_effective_from_date', effectiveFromDate);
+
+                // Close the modal
+                $('#updatePlanModal-' + studentId).modal('hide');
+
+                // Submit the form
+                mainForm.submit();
+            }
+        });
     </script>
 </body>
 
