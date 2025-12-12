@@ -888,6 +888,113 @@ foreach ($card_access_levels as $card => $required_level) {
             z-index: 1055;
         }
     </style>
+    <style>
+        /* Status Badge next to name */
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50rem;
+            vertical-align: middle;
+        }
+
+        .status-badge[data-status="Active"] {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .status-badge[data-status="Inactive"] {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        /* Status Flag in top-right corner */
+        .status-flag-container {
+            text-align: right;
+        }
+
+        .status-flag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .status-flag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-flag[data-status="Active"] {
+            background: linear-gradient(135deg, #d1e7dd 0%, #a3cfbb 100%);
+            color: #0a3622;
+            border-left: 4px solid #198754;
+        }
+
+        .status-flag[data-status="Inactive"] {
+            background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+            color: #58151c;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status-flag[data-status="Pending"] {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+            color: #664d03;
+            border-left: 4px solid #ffc107;
+        }
+
+        .flag-icon {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .status-flag[data-status="Active"] .flag-icon {
+            color: #198754;
+        }
+
+        .status-flag[data-status="Inactive"] .flag-icon {
+            color: #dc3545;
+        }
+
+        .status-flag[data-status="Pending"] .flag-icon {
+            color: #ffc107;
+        }
+
+        .flag-text {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+        }
+
+        .effective-date {
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .status-flag-container {
+                text-align: left;
+                margin-bottom: 1rem;
+            }
+
+            .status-flag {
+                display: inline-flex;
+            }
+
+            .contact-info p {
+                text-align: left;
+                margin-bottom: 0.25rem;
+            }
+        }
+    </style>
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- JavaScript Library Files -->
@@ -966,12 +1073,44 @@ foreach ($card_access_levels as $card => $required_level) {
                                         </div>
 
                                         <div class="primary-details">
-                                            <p style="font-size: large;"><?php echo $array["studentname"] ?></p>
+                                            <p style="font-size: large;">
+                                                <?php echo $array["studentname"] ?>
+                                                <?php if (in_array('student_status', $accessible_cards)): ?>
+                                                    <!-- Status badge next to name -->
+                                                    <span class="status-badge ms-2" data-status="<?php echo $array['filterstatus']; ?>">
+                                                        <?php echo $array['filterstatus']; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </p>
                                             <p><?php echo $array["student_id"] ?><br>
                                                 <?php echo $array["class"] ?? 'Class not specified' ?><br>
                                                 <?php echo $array["type_of_admission"] ?? 'Admission type not specified' ?></p>
                                         </div>
+
                                         <div class="contact-info">
+                                            <!-- Status flag in top-right corner -->
+                                            <?php if (in_array('student_status', $accessible_cards)): ?>
+                                                <div class="status-flag-container position-relative mb-2">
+                                                    <div class="status-flag" data-status="<?php echo $array['filterstatus']; ?>">
+                                                        <span class="flag-icon">
+                                                            <?php if ($array['filterstatus'] == 'Active'): ?>
+                                                                <i class="bi bi-check-circle-fill"></i>
+                                                            <?php elseif ($array['filterstatus'] == 'Inactive'): ?>
+                                                                <i class="bi bi-x-circle-fill"></i>
+                                                            <?php else: ?>
+                                                                <i class="bi bi-question-circle-fill"></i>
+                                                            <?php endif; ?>
+                                                        </span>
+                                                        <span class="flag-text"><?php echo $array['filterstatus']; ?></span>
+                                                    </div>
+                                                    <?php if (!empty($array['effectivefrom'])): ?>
+                                                        <div class="effective-date small text-muted mt-1">
+                                                            Since: <?php echo date('d/m/Y', strtotime($array['effectivefrom'])); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+
                                             <p><?php echo $array["contact"] ?? 'No contact' ?></p>
                                             <p><?php echo $array["preferredbranch"] ?? 'Branch not specified' ?></p>
                                             <p><?php echo $array["emailaddress"] ?? 'No email' ?></p>
@@ -2834,7 +2973,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 placeholder: 'Search by Student ID or Name',
                 allowClear: true,
                 width: '100%', // Ensure proper width
-                dropdownParent: $('body') // Ensure dropdown appears above everything
             });
 
             // Pre-select if URL has student_id parameter
@@ -2885,6 +3023,39 @@ foreach ($card_access_levels as $card => $required_level) {
                     alert('Please select a student');
                     $select.focus();
                 }
+            });
+        });
+    </script>
+    <!-- Add tooltip functionality if needed -->
+    <script>
+        $(document).ready(function() {
+            // Add tooltip to status flag
+            $('.status-flag').each(function() {
+                var status = $(this).data('status');
+                var tooltipText = 'Student Status: ' + status;
+
+                $(this).attr('title', tooltipText);
+                $(this).attr('data-bs-toggle', 'tooltip');
+                $(this).attr('data-bs-placement', 'top');
+            });
+
+            // Initialize Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Optional: Add click to copy status
+            $('.status-flag').on('click', function() {
+                var status = $(this).data('status');
+                navigator.clipboard.writeText(status).then(function() {
+                    var originalText = $(this).find('.flag-text').text();
+                    $(this).find('.flag-text').text('Copied!');
+
+                    setTimeout(function() {
+                        $('.status-flag .flag-text').text(originalText);
+                    }, 1000);
+                }.bind(this));
             });
         });
     </script>
