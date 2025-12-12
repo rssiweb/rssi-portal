@@ -15,24 +15,105 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-// Add isAdmin function if not exists
-function isAdmin()
+
+// Define permission levels (higher number = higher permission)
+$permission_levels = [
+    'Admin' => 2,            // Highest level  
+    'Offline Manager' => 1,  // Basic level
+];
+
+// Get current user's permission level
+$current_user_level = isset($permission_levels[$role]) ? $permission_levels[$role] : 0;
+
+// Define field access with minimum required level
+$field_access_levels = [
+    'admin_fields' => 2,        // Admin only
+    'manager_fields' => 1,      // Offline Manager and above
+];
+
+// Define fields for each level
+$field_definitions = [
+    // Level 2: Admin only fields
+    'admin_fields' => [
+        'photourl',
+    ],
+
+    // Level 1: Manager and above fields
+    'manager_fields' => [
+        'studentname',
+        'dateofbirth',
+        'gender',
+        'aadhar_available',
+        'studentaadhar',
+        'guardiansname',
+        'relationwithstudent',
+        'guardianaadhar',
+        'stateofdomicile',
+        'postaladdress',
+        'permanentaddress',
+        'contact',
+        'alternate_number',
+        'emergency_contact_name',
+        'emergency_contact_number',
+        'emergency_contact_relation',
+        'emailaddress',
+        'supporting_doc',
+        'student_photo_raw',
+        'upload_aadhar_card',
+        'caste_document',
+        'type_of_admission',
+        'category',
+        'module',
+        'filterstatus',
+        'remarks',
+        'scode',
+        'payment_type',
+        'effectivefrom',
+        'preferredbranch',
+        'class',
+        'schooladmissionrequired',
+        'nameoftheschool',
+        'nameoftheboard',
+        'medium',
+        'familymonthlyincome',
+        'totalnumberoffamilymembers',
+        'nameofthesubjects',
+        'caste',
+    ],
+];
+
+// Function to get field's required permission level
+function getFieldLevel($field_name, $field_definitions, $field_access_levels)
 {
-    global $role;
-    return isset($role) && $role === 'Admin';
+    foreach ($field_definitions as $level_name => $fields) {
+        if (in_array($field_name, $fields)) {
+            return $field_access_levels[$level_name];
+        }
+    }
+    return 0; // Default to user level
 }
+
+// Function to get all fields user can access
+function getUserAccessibleFields($user_level, $field_definitions, $field_access_levels)
+{
+    $accessible_fields = [];
+
+    foreach ($field_definitions as $level_name => $fields) {
+        $required_level = $field_access_levels[$level_name];
+        if ($user_level >= $required_level) {
+            $accessible_fields = array_merge($accessible_fields, $fields);
+        }
+    }
+
+    return array_unique($accessible_fields);
+}
+
+// Get user's accessible fields
+$user_accessible_fields = getUserAccessibleFields($current_user_level, $field_definitions, $field_access_levels);
+
 ?>
 <?php
 $search_id = isset($_GET['student_id']) ? $_GET['student_id'] : null;
-
-// Check permissions - Admin can view all, others only their own data
-if (!isAdmin()) {
-    echo "<script>
-    alert('You are not authorized to view this data.');
-    window.location.href = 'student.php';
-    </script>";
-    exit;
-}
 
 // Fetch current student data
 $sql = "SELECT * FROM rssimyprofile_student WHERE student_id = '$search_id'";
@@ -62,61 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $unauthorized_updates = [];
         $pending_approval_fields = [];
 
-        // Define field groups based on student grouping
-        $admin_only_fields = [
-            'type_of_admission',
-            'category',
-            'module',
-            'filterstatus',
-            'remarks',
-            'scode',
-            'payment_type',
-            'effectivefrom',
-            'photourl',
-            'supporting_doc',
-            'studentname',
-            'dateofbirth',
-            'gender',
-            'aadhar_available',
-            'studentaadhar',
-            'guardiansname',
-            'relationwithstudent',
-            'guardianaadhar',
-            'stateofdomicile',
-            'postaladdress',
-            'permanentaddress',
-            'contact',
-            'alternate_number',
-            'emergency_contact_name',
-            'emergency_contact_number',
-            'emergency_contact_relation',
-            'emailaddress',
-            'preferredbranch',
-            'class',
-            'schooladmissionrequired',
-            'nameoftheschool',
-            'nameoftheboard',
-            'medium',
-            'familymonthlyincome',
-            'totalnumberoffamilymembers',
-            'nameofthesubjects',
-            'caste',
-            'student_photo_raw',
-            'upload_aadhar_card',
-            'caste_document'
-        ];
-
-        $user_editable_fields = [
-            // Add fields that users can edit here
-        ];
-
-        $fields_requiring_approval = [
-            // Add fields that require approval here
-        ];
-
-        // Process each field INCLUDING file fields
-        foreach (array_merge($admin_only_fields, $user_editable_fields) as $field) {
-            // Check if this is a file field
+        // Process each accessible field
+        foreach ($user_accessible_fields as $field) {
             $is_file_field = in_array($field, ['student_photo_raw', 'upload_aadhar_card', 'caste_document', 'supporting_doc']);
 
             if ($is_file_field) {
@@ -137,8 +165,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $doclink = uploadeToDrive($_FILES[$form_field_name], $parent, $filename);
 
                     if ($doclink) {
-                        $update_fields[] = "$field = '$doclink'";
-                        $updated_fields[] = $field;
+                        $new_value = $doclink;
+                        $current_value = $current_data[$field] ?? null;
+
+                        // Skip if no change
+                        if ($new_value === $current_value) {
+                            continue;
+                        }
+
+                        $field_level = getFieldLevel($field, $field_definitions, $field_access_levels);
+
+                        if ($current_user_level >= $field_level) {
+                            // Direct update allowed
+                            $update_fields[] = "$field = '$new_value'";
+                            $updated_fields[] = $field;
+                        } elseif ($current_user_level >= 1) { // At least manager level
+                            // Needs approval
+                            $pending_approval_fields[] = $field;
+                        } else {
+                            $unauthorized_updates[] = $field;
+                        }
                     }
                 }
                 continue; // Skip to next field
@@ -154,17 +200,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
-                // Check permissions
-                if (isAdmin() && in_array($field, $admin_only_fields)) {
+                $field_level = getFieldLevel($field, $field_definitions, $field_access_levels);
+
+                if ($current_user_level >= $field_level) {
+                    // Direct update allowed
                     $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
                     $updated_fields[] = $field;
-                } elseif (in_array($field, $user_editable_fields)) {
-                    if (in_array($field, $fields_requiring_approval)) {
-                        $pending_approval_fields[] = $field;
-                    } else {
-                        $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                        $updated_fields[] = $field;
-                    }
+                } elseif ($current_user_level >= 1) { // At least manager level
+                    // Needs approval
+                    $pending_approval_fields[] = $field;
                 } else {
                     $unauthorized_updates[] = $field;
                 }
@@ -193,17 +237,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle pending approval fields
         if (!empty($pending_approval_fields)) {
-            // You can implement workflow approval system similar to HRMS here
             $pending_fields_list = implode(", ", $pending_approval_fields);
             echo "<script>
                 alert('Change request has been submitted for review: $pending_fields_list');
                 window.location.reload();
             </script>";
+            exit;
         }
 
         // Show success message
         if (isset($cmdtuples) && $cmdtuples > 0) {
-            // Use your mapping array
+            // Use mapping array (defined later)
             $updated_fields_readable = [];
             foreach ($updated_fields as $field) {
                 $updated_fields_readable[] = isset($field_names_mapping[$field])
@@ -220,7 +264,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 window.location.reload();
             </script>";
+            exit;
         }
+
         if (empty($update_fields) && empty($pending_approval_fields)) {
             echo "<script>
                 alert('No changes were made to the profile.');
@@ -228,53 +274,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </script>";
             exit;
         }
-        if (!empty($pending_approval_fields)) {
-            $pending_fields_readable = [];
-            foreach ($pending_approval_fields as $field) {
-                $pending_fields_readable[] = isset($field_names_mapping[$field])
-                    ? $field_names_mapping[$field]
-                    : $field;
-            }
-
-            $pending_list = implode(", ", $pending_fields_readable);
-
-            echo "<script>
-                alert('Change request has been successfully submitted for the following fields: " . addslashes($pending_list) . ". These fields are under review for approval.');
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
-                }
-                window.location.reload();
-            </script>";
-            exit;
-        }
     }
 }
 ?>
 <?php
-// Define card access based on role
-$is_admin = isAdmin();
-$accessible_cards = [];
+// Define card access levels
+$card_access_levels = [
+    'basic_details' => 1,          // Manager and above
+    'identification' => 1,
+    'guardian_info' => 1,
+    'address_details' => 1,
+    'contact_info' => 1,
+    'social_caste' => 1,
+    'education_info' => 1,
+    'family_info' => 1,
+    'plan_enrollment' => 1,
+    'student_status' => 1,
+    'admin_documents' => 2,        // Admin only
+];
 
-if ($is_admin) {
-    $accessible_cards = [
-        'plan_enrollment',
-        'student_status',
-        'admin_documents',
-        'basic_details',
-        'identification',
-        'guardian_info',
-        'address_details',
-        'contact_info',
-        'social_caste',
-        'education_info',
-        'family_info'
-    ];
-} else {
-    $accessible_cards = [
-        // Add card IDs that non-admin users can access here
-    ];
+// Get accessible cards for current user
+$accessible_cards = [];
+foreach ($card_access_levels as $card => $required_level) {
+    if ($current_user_level >= $required_level) {
+        $accessible_cards[] = $card;
+    }
 }
-// Add this mapping array near the top of your form submission handling section
+
+// Check if user is admin (for UI display)
+$is_admin = $current_user_level >= 2;
+
+// Add this mapping array
 $field_names_mapping = [
     // Basic Details
     'student_id' => 'Student ID',
@@ -599,39 +629,67 @@ $field_names_mapping = [
                                         <!-- Sidebar -->
                                         <div class="sidebar_two d-none d-md-block" id="sidebar_two">
                                             <ul class="nav flex-column" id="sidebar-menu">
-                                                <li class="nav-item">
-                                                    <a class="nav-link active" href="#basic_details" data-bs-toggle="tab">Basic Details</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#identification" data-bs-toggle="tab">Identification</a>
-                                                </li>
-                                                <?php if ($is_admin): ?>
+                                                <?php if (in_array('basic_details', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link active" href="#basic_details" data-bs-toggle="tab">Basic Details</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('identification', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#identification" data-bs-toggle="tab">Identification</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('plan_enrollment', $accessible_cards)): ?>
                                                     <li class="nav-item">
                                                         <a class="nav-link" href="#plan_enrollment" data-bs-toggle="tab">Plan & Enrollment</a>
                                                     </li>
                                                 <?php endif; ?>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#guardian_info" data-bs-toggle="tab">Guardian Info</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#address_details" data-bs-toggle="tab">Address Details</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#contact_info" data-bs-toggle="tab">Contact Info</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#social_caste" data-bs-toggle="tab">Social & Caste</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#education_info" data-bs-toggle="tab">Education Info</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#family_info" data-bs-toggle="tab">Family Info</a>
-                                                </li>
-                                                <?php if ($is_admin): ?>
+
+                                                <?php if (in_array('guardian_info', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#guardian_info" data-bs-toggle="tab">Guardian Info</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('address_details', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#address_details" data-bs-toggle="tab">Address Details</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('contact_info', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#contact_info" data-bs-toggle="tab">Contact Info</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('social_caste', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#social_caste" data-bs-toggle="tab">Social & Caste</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('education_info', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#education_info" data-bs-toggle="tab">Education Info</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('family_info', $accessible_cards)): ?>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="#family_info" data-bs-toggle="tab">Family Info</a>
+                                                    </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('student_status', $accessible_cards)): ?>
                                                     <li class="nav-item">
                                                         <a class="nav-link" href="#student_status" data-bs-toggle="tab">Student Status</a>
                                                     </li>
+                                                <?php endif; ?>
+
+                                                <?php if (in_array('admin_documents', $accessible_cards)): ?>
                                                     <li class="nav-item">
                                                         <a class="nav-link" href="#admin_documents" data-bs-toggle="tab">Admin Documents</a>
                                                     </li>
