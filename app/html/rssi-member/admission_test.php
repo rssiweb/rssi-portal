@@ -322,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // ==============================================
-        // PROCESS PLAN UPDATES FROM MODAL - CORRECTED VERSION
+        // SIMPLIFIED PLAN UPDATE LOGIC
         // ==============================================
         $plan_update_fields = ['plan_update_type_of_admission', 'plan_update_class', 'plan_update_division', 'plan_update_effective_from_date'];
         $has_plan_update = false;
@@ -335,400 +335,174 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($has_plan_update) {
-            // Process plan update fields
-            $type_of_admission = $_POST['plan_update_type_of_admission'] ?? $current_data['type_of_admission'];
-            $class = $_POST['plan_update_class'] ?? $current_data['class'];
+            // Get new plan values
+            $type_of_admission = $_POST['plan_update_type_of_admission'];
+            $class = $_POST['plan_update_class'];
             $division = $_POST['plan_update_division'] ?? $current_data['division'] ?? '';
-            $effective_from_date = !empty($_POST['plan_update_effective_from_date'])
-                ? getFirstDayOfMonth($_POST['plan_update_effective_from_date']) // Always 1st of month
-                : getFirstDayOfMonth(date('Y-m-d'));
+            $effective_from_date = getFirstDayOfMonth($_POST['plan_update_effective_from_date']);
 
-            // Check if these fields are accessible to the user
+            $updated_by = $associatenumber;
+
+            // Get current month (1st day)
+            $current_month_first = getFirstDayOfMonth(date('Y-m-d'));
+
+            // ==============================================
+            // SIMPLE VALIDATION CHECKS
+            // ==============================================
+
+            // 1. Only allow current or future months
+            if (strtotime($effective_from_date) < strtotime($current_month_first)) {
+                $formatted_plan_date = date('F Y', strtotime($effective_from_date));
+                $formatted_current = date('F Y', strtotime($current_month_first));
+                $error_msg = "Plan effective date ($formatted_plan_date) must be current month ($formatted_current) or later. Cannot backdate plans.";
+                handlePlanUpdateError($error_msg, $updated_fields);
+                exit;
+            }
+
+            // 2. Check if identical plan already exists from this date
+            $checkExistingQuery = "SELECT 1 FROM student_category_history 
+                                  WHERE student_id = '$search_id' 
+                                  AND is_valid = true
+                                  AND category_type = '$type_of_admission'
+                                  AND class = '$class'
+                                  AND effective_from = '$effective_from_date'
+                                  LIMIT 1";
+
+            if (pg_num_rows(pg_query($con, $checkExistingQuery)) > 0) {
+                $formatted_date = date('F Y', strtotime($effective_from_date));
+                $error_msg = "This plan ($type_of_admission for $class) is already active from $formatted_date.";
+                handlePlanUpdateError($error_msg, $updated_fields);
+                exit;
+            }
+
+            // 3. Check if user has access to update these fields
             $plan_fields_to_update = [];
 
-            if (
-                in_array('type_of_admission', $user_accessible_fields) &&
-                $type_of_admission != ($current_data['type_of_admission'] ?? '')
-            ) {
+            if (in_array('type_of_admission', $user_accessible_fields)) {
                 $plan_fields_to_update['type_of_admission'] = $type_of_admission;
             }
 
-            if (
-                in_array('class', $user_accessible_fields) &&
-                $class != ($current_data['class'] ?? '')
-            ) {
+            if (in_array('class', $user_accessible_fields)) {
                 $plan_fields_to_update['class'] = $class;
             }
 
-            // Update student_category_history if plan fields changed or effective date is specified
-            if ((!empty($plan_fields_to_update) || isset($_POST['plan_update_effective_from_date'])) && !empty($effective_from_date)) {
-                $original_doa = $current_data['doa'] ?? date('Y-m-d');
-                $updated_by = $associatenumber;
+            // ==============================================
+            // SIMPLE UPDATE LOGIC - ONE ACTIVE PLAN AT A TIME
+            // ==============================================
 
-                // Convert admission date to 1st of month
-                $admission_month = getFirstDayOfMonth($original_doa);
+            // Start transaction
+            pg_query($con, "BEGIN");
 
-                // ==============================================
-                // COMPREHENSIVE VALIDATION (INCLUDES CURRENT STUDENT DATA)
-                // ==============================================
-
-                // 1. Check if we're trying to add the SAME plan that student already has (from rssimyprofile_student)
-                if (
-                    $type_of_admission == $current_data['type_of_admission'] &&
-                    $class == $current_data['class'] &&
-                    strtotime($effective_from_date) <= strtotime($admission_month)
-                ) {
-
-                    // Student already has this plan from admission, and we're trying to add same plan on/before admission month
-                    $formatted_doa = date('F Y', strtotime($admission_month));
-                    $formatted_plan = date('F Y', strtotime($effective_from_date));
-                    $error_msg = "Student already has $type_of_admission plan for $class class since admission ($formatted_doa). Cannot add same plan for $formatted_plan.";
-                    handlePlanUpdateError($error_msg, $updated_fields);
-                    exit;
-                }
-
-                // 2. Check if effective date is BEFORE student's admission
-                if (strtotime($effective_from_date) < strtotime($admission_month)) {
-                    $formatted_doa = date('F Y', strtotime($admission_month));
-                    $formatted_plan_date = date('F Y', strtotime($effective_from_date));
-                    $error_msg = "Plan effective date ($formatted_plan_date) cannot be before admission month ($formatted_doa).";
-                    handlePlanUpdateError($error_msg, $updated_fields);
-                    exit;
-                }
-
-                // ==============================================
-                // NEW LOGIC: ONLY ONE ACTIVE PLAN AT A TIME, LATEST OVERRIDES
-                // ==============================================
-
-                // Get all existing valid plans for this student (to adjust overlaps)
-                $getExistingPlans = "SELECT id, category_type, class, effective_from, effective_until, created_at 
-                     FROM student_category_history 
-                     WHERE student_id = '$search_id'
-                     AND is_valid = true
-                     ORDER BY effective_from, created_at";
-
-                $existingPlansResult = pg_query($con, $getExistingPlans);
-                $existingPlans = pg_fetch_all($existingPlansResult) ?: [];
-
+            try {
                 $plan_history_updated = false;
 
-                // Start transaction for atomic operations
-                pg_query($con, "BEGIN");
+                // Step 1: End any existing plan that overlaps with new date
+                // Find plans that are active on or after the new effective date
+                $findOverlappingQuery = "SELECT id, effective_from, effective_until 
+                                        FROM student_category_history 
+                                        WHERE student_id = '$search_id'
+                                        AND is_valid = true
+                                        AND (
+                                            (effective_until IS NULL AND effective_from <= '$effective_from_date')
+                                            OR
+                                            (effective_from <= '$effective_from_date' AND effective_until >= '$effective_from_date')
+                                            OR
+                                            (effective_from >= '$effective_from_date')
+                                        )
+                                        ORDER BY effective_from";
 
-                try {
-                    // ==============================================
-                    // STEP 1: Check if exact continuation of same type plan
-                    // ==============================================
-                    $isContinuation = false;
-                    $existingPlanToExtend = null;
+                $overlappingResult = pg_query($con, $findOverlappingQuery);
+                $overlappingPlans = pg_fetch_all($overlappingResult) ?: [];
 
-                    foreach ($existingPlans as $existingPlan) {
-                        $existingCategory = $existingPlan['category_type'];
-                        $existingClass = $existingPlan['class'];
-                        $existingUntil = $existingPlan['effective_until'];
+                foreach ($overlappingPlans as $plan) {
+                    $plan_id = $plan['id'];
+                    $plan_from = $plan['effective_from'];
 
-                        // Check if this new plan continues an existing same-type plan
-                        if (
-                            $existingCategory === $type_of_admission &&
-                            $existingClass === $class &&
-                            $existingUntil !== null &&
-                            strtotime($effective_from_date) === strtotime(date('Y-m-d', strtotime($existingUntil . ' +1 day')))
-                        ) {
+                    // If plan starts BEFORE new date, end it one day before new plan starts
+                    if (strtotime($plan_from) < strtotime($effective_from_date)) {
+                        $new_until_date = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
 
-                            $isContinuation = true;
-                            $existingPlanToExtend = $existingPlan;
-                            break;
-                        }
-                    }
-
-                    // ==============================================
-                    // STEP 2: Check if overlaps with existing SAME TYPE plan
-                    // ==============================================
-                    $wouldOverlapSameType = false;
-                    $overlappingPlanInfo = null;
-
-                    if (!$isContinuation) {
-                        foreach ($existingPlans as $existingPlan) {
-                            $existingCategory = $existingPlan['category_type'];
-                            $existingClass = $existingPlan['class'];
-                            $existingFrom = $existingPlan['effective_from'];
-                            $existingUntil = $existingPlan['effective_until'];
-
-                            if ($existingCategory === $type_of_admission && $existingClass === $class) {
-                                // Check for overlap
-                                if ($existingUntil === null) {
-                                    // Existing plan is indefinite - ANY future date overlaps
-                                    if (strtotime($effective_from_date) >= strtotime($existingFrom)) {
-                                        $wouldOverlapSameType = true;
-                                        $overlappingPlanInfo = $existingPlan;
-                                        break;
-                                    }
-                                } else {
-                                    // Existing plan has end date
-                                    if (
-                                        strtotime($effective_from_date) <= strtotime($existingUntil) &&
-                                        strtotime($effective_from_date) >= strtotime($existingFrom)
-                                    ) {
-                                        $wouldOverlapSameType = true;
-                                        $overlappingPlanInfo = $existingPlan;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // If it would overlap same type (and not an exact continuation), show error
-                    if ($wouldOverlapSameType && !$isContinuation) {
-                        pg_query($con, "ROLLBACK"); // Rollback transaction
-
-                        $formattedExisting = date('F Y', strtotime($overlappingPlanInfo['effective_from']));
-                        $formattedExistingUntil = $overlappingPlanInfo['effective_until'] ?
-                            date('F Y', strtotime($overlappingPlanInfo['effective_until'])) : 'indefinite';
-                        $formattedNew = date('F Y', strtotime($effective_from_date));
-
-                        $error_msg = "A $type_of_admission plan for $class class already exists from $formattedExisting to $formattedExistingUntil. Cannot add overlapping same plan for $formattedNew.";
-                        handlePlanUpdateError($error_msg, $updated_fields);
-                        exit;
-                    }
-
-                    // ==============================================
-                    // STEP 3: Process based on continuation status
-                    // ==============================================
-                    if ($isContinuation && $existingPlanToExtend) {
-                        // EXTEND EXISTING PLAN: This is a continuation of the same plan type
-                        $extendPlanSql = "UPDATE student_category_history 
-                          SET effective_until = NULL,
-                              updated_by = '$updated_by',
-                              updated_on = NOW()
-                          WHERE id = " . $existingPlanToExtend['id'];
-                        $extendResult = pg_query($con, $extendPlanSql);
-                        if ($extendResult) {
-                            $plan_history_updated = true;
-                        }
-
-                        // ==============================================
-                        // LATEST PLAN OVERRIDES ALL OVERLAPPING PLANS
-                        // Only one active plan at a time
-                        // ==============================================
-
-                        // 1. End any plans that START BEFORE the extended plan but continue into it
-                        $endOverlappingBefore = "UPDATE student_category_history 
-                            SET effective_until = DATE '" . $existingPlanToExtend['effective_from'] . "' - INTERVAL '1 day',
-                                updated_by = 'System',
-                                updated_on = NOW()
-                            WHERE student_id = '$search_id' 
-                            AND is_valid = true
-                            AND id != " . $existingPlanToExtend['id'] . "
-                            AND (
-                                (effective_until IS NULL AND effective_from < DATE '" . $existingPlanToExtend['effective_from'] . "')
-                                OR
-                                (effective_until >= DATE '" . $existingPlanToExtend['effective_from'] . "' AND effective_from < DATE '" . $existingPlanToExtend['effective_from'] . "')
-                            )";
-                        pg_query($con, $endOverlappingBefore);
-
-                        // 2. Invalidate any plans that START AFTER the extended plan begins
-                        $invalidateOverlappingAfter = "UPDATE student_category_history 
-                                  SET is_valid = false,
-                                      updated_by = 'System',
-                                      updated_on = NOW()
-                                  WHERE student_id = '$search_id' 
-                                  AND is_valid = true
-                                  AND id != " . $existingPlanToExtend['id'] . "
-                                  AND effective_from >= DATE '" . $existingPlanToExtend['effective_from'] . "'";
-                        pg_query($con, $invalidateOverlappingAfter);
-
-                        // 3. Also handle any plans that START AT THE SAME TIME as extended plan
-                        $invalidateSameStart = "UPDATE student_category_history 
-                           SET is_valid = false,
-                               updated_by = 'System',
-                               updated_on = NOW()
-                           WHERE student_id = '$search_id' 
-                           AND is_valid = true
-                           AND id != " . $existingPlanToExtend['id'] . "
-                           AND effective_from = DATE '" . $existingPlanToExtend['effective_from'] . "'";
-                        pg_query($con, $invalidateSameStart);
-                    } else {
-                        // NEW PLAN - ADJUST ALL OVERLAPPING PLANS (ANY TYPE)
-                        // 1. First, adjust ALL existing overlapping plans
-                        foreach ($existingPlans as $existingPlan) {
-                            $existingId = $existingPlan['id'];
-                            $existingCategory = $existingPlan['category_type'];
-                            $existingClass = $existingPlan['class'];
-                            $existingFrom = $existingPlan['effective_from'];
-                            $existingUntil = $existingPlan['effective_until'];
-
-                            // Check if new plan overlaps with this existing plan (ANY TYPE)
-                            $overlaps = false;
-                            $overlapType = '';
-
-                            if ($existingUntil === null) {
-                                // Existing plan is indefinite
-                                if (strtotime($effective_from_date) >= strtotime($existingFrom)) {
-                                    $overlaps = true;
-                                    $overlapType = 'overlap_indefinite';
-                                }
-                            } else {
-                                // Existing plan has end date
-                                if (
-                                    strtotime($effective_from_date) <= strtotime($existingUntil) &&
-                                    strtotime($effective_from_date) >= strtotime($existingFrom)
-                                ) {
-                                    $overlaps = true;
-                                    $overlapType = 'overlap_finite';
-                                }
-                            }
-
-                            if ($overlaps) {
-                                // Adjust the existing plan based on overlap type
-                                if ($overlapType === 'overlap_indefinite') {
-                                    // If overlapping indefinite plan, shorten it to end before new plan starts
-                                    $newUntilDate = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
-
-                                    $updateSql = "UPDATE student_category_history 
-                                      SET effective_until = DATE '$newUntilDate',
+                        $updateSql = "UPDATE student_category_history 
+                                      SET effective_until = DATE '$new_until_date',
                                           updated_by = 'System',
                                           updated_on = NOW()
-                                      WHERE id = $existingId";
-                                    $updateResult = pg_query($con, $updateSql);
-                                    if ($updateResult) {
-                                        $plan_history_updated = true;
-                                    }
-                                } elseif ($overlapType === 'overlap_finite') {
-                                    // If overlapping finite plan, check if it splits the plan
-                                    $existingFromTs = strtotime($existingFrom);
-                                    $newFromTs = strtotime($effective_from_date);
-                                    $existingUntilTs = strtotime($existingUntil);
-
-                                    if ($newFromTs == $existingFromTs) {
-                                        // New plan starts at same date as existing plan
-                                        // Mark existing plan as invalid (LATEST OVERRIDES)
-                                        $updateSql = "UPDATE student_category_history 
-                                          SET is_valid = false,
-                                              updated_by = 'System',
-                                              updated_on = NOW()
-                                          WHERE id = $existingId";
-                                        $updateResult = pg_query($con, $updateSql);
-                                        if ($updateResult) {
-                                            $plan_history_updated = true;
-                                        }
-                                    } elseif ($newFromTs > $existingFromTs && $newFromTs <= $existingUntilTs) {
-                                        // New plan starts in the middle of existing plan
-                                        // Split existing plan into two parts
-
-                                        // 1. End first part before new plan starts
-                                        $firstPartUntil = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
-                                        $updateSql = "UPDATE student_category_history 
-                                          SET effective_until = DATE '$firstPartUntil',
-                                              updated_by = 'System',
-                                              updated_on = NOW()
-                                          WHERE id = $existingId";
-                                        $updateResult = pg_query($con, $updateSql);
-                                        if ($updateResult) {
-                                            $plan_history_updated = true;
-                                        }
-
-                                        // 2. Create second part after new plan (if needed)
-                                        if (strtotime($effective_from_date) < $existingUntilTs) {
-                                            $secondPartFrom = date('Y-m-d', strtotime($effective_from_date . ' +1 day'));
-                                            $secondPartUntil = $existingUntil;
-
-                                            // Validate date range before inserting
-                                            if ($secondPartUntil === null || strtotime($secondPartFrom) <= strtotime($secondPartUntil)) {
-                                                $insertSecondPart = "INSERT INTO student_category_history (
-                                                    student_id, category_type, effective_from, effective_until,
-                                                    created_by, class, is_valid
-                                                ) VALUES (
-                                                    '$search_id', 
-                                                    '" . pg_escape_string($con, $existingPlan['category_type']) . "', 
-                                                    DATE '$secondPartFrom', 
-                                                    " . ($secondPartUntil ? "DATE '$secondPartUntil'" : "NULL") . ",
-                                                    'System',
-                                                    '" . pg_escape_string($con, $existingPlan['class']) . "',
-                                                    true
-                                                )";
-                                                $insertResult = pg_query($con, $insertSecondPart);
-                                                if ($insertResult) {
-                                                    $plan_history_updated = true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // 2. Invalidate any future SAME TYPE plans that would create duplicate coverage
-                        $invalidateFuturePlansResult = pg_query($con, "UPDATE student_category_history 
+                                      WHERE id = $plan_id";
+                        pg_query($con, $updateSql);
+                        $plan_history_updated = true;
+                    }
+                    // If plan starts ON or AFTER new date, mark as invalid (replaced by new plan)
+                    else {
+                        $updateSql = "UPDATE student_category_history 
                                       SET is_valid = false,
-                                          updated_by = '$updated_by',
+                                          updated_by = 'System',
                                           updated_on = NOW()
-                                      WHERE student_id = '$search_id' 
-                                      AND is_valid = true
-                                      AND effective_from >= DATE '$effective_from_date'
-                                      AND (category_type = '$type_of_admission' AND class = '$class')");
-                        if ($invalidateFuturePlansResult) {
-                            $plan_history_updated = true;
-                        }
-
-                        // 3. Insert the new plan
-                        $insertHistoryQuery = "INSERT INTO student_category_history (
-                            student_id, 
-                            category_type, 
-                            effective_from, 
-                            created_by,
-                            class,
-                            is_valid
-                        ) VALUES (
-                            '$search_id', 
-                            '$type_of_admission', 
-                            DATE '$effective_from_date', 
-                            '$updated_by',
-                            '$class',
-                            true
-                        )";
-                        $insertResult = pg_query($con, $insertHistoryQuery);
-                        if ($insertResult) {
-                            $plan_history_updated = true;
-                        }
+                                      WHERE id = $plan_id";
+                        pg_query($con, $updateSql);
+                        $plan_history_updated = true;
                     }
-
-                    // 4. Update main student table with latest plan
-                    if ($plan_history_updated) {
-                        $updateMainTableResult = pg_query($con, "UPDATE rssimyprofile_student 
-                               SET type_of_admission = '$type_of_admission',
-                                   class = '$class',
-                                   updated_by = '$associatenumber',
-                                   updated_on = NOW()
-                               WHERE student_id = '$search_id'");
-                        if ($updateMainTableResult) {
-                            $plan_history_updated = true;
-                        }
-                    }
-
-                    // Commit transaction
-                    $commitResult = pg_query($con, "COMMIT");
-                    if (!$commitResult) {
-                        throw new Exception("Failed to commit transaction");
-                    }
-                } catch (Exception $e) {
-                    // Rollback on error
-                    pg_query($con, "ROLLBACK");
-                    $error_msg = "Database error: " . $e->getMessage();
-                    handlePlanUpdateError($error_msg, $updated_fields);
-                    exit;
                 }
 
-                // 5. Also update the regular update fields if needed
-                foreach ($plan_fields_to_update as $field => $value) {
-                    $update_fields[] = "$field = '$value'";
-                    $updated_fields[] = $field;
+                // Step 2: Insert the new plan
+                $insertNewPlanQuery = "INSERT INTO student_category_history (
+                    student_id, 
+                    category_type, 
+                    class,
+                    effective_from, 
+                    created_by,
+                    is_valid
+                ) VALUES (
+                    '$search_id', 
+                    '$type_of_admission', 
+                    '$class',
+                    DATE '$effective_from_date', 
+                    '$updated_by',
+                    true
+                )";
+
+                $insertResult = pg_query($con, $insertNewPlanQuery);
+                if (!$insertResult) {
+                    throw new Exception("Failed to insert new plan");
                 }
+
+                $plan_history_updated = true;
+
+                // Step 3: Update main student table with new plan info
+                // Only update immediately if new plan is effective from current month or earlier
+                if (strtotime($effective_from_date) <= strtotime($current_month_first)) {
+                    $updateMainTableQuery = "UPDATE rssimyprofile_student 
+                                             SET type_of_admission = '$type_of_admission',
+                                                 class = '$class',
+                                                 updated_by = '$updated_by',
+                                                 updated_on = NOW()
+                                             WHERE student_id = '$search_id'";
+
+                    pg_query($con, $updateMainTableQuery);
+
+                    // Also add to regular update fields for display
+                    if (in_array('type_of_admission', $user_accessible_fields)) {
+                        $update_fields[] = "type_of_admission = '$type_of_admission'";
+                        $updated_fields[] = 'type_of_admission';
+                    }
+
+                    if (in_array('class', $user_accessible_fields)) {
+                        $update_fields[] = "class = '$class'";
+                        $updated_fields[] = 'class';
+                    }
+                }
+
+                // Commit transaction
+                pg_query($con, "COMMIT");
 
                 // Track plan history update
                 if ($plan_history_updated) {
                     $updated_fields[] = 'plan_history_updated';
                 }
+            } catch (Exception $e) {
+                // Rollback on error
+                pg_query($con, "ROLLBACK");
+                $error_msg = "Error updating plan: " . $e->getMessage();
+                handlePlanUpdateError($error_msg, $updated_fields);
+                exit;
             }
         }
         // ==============================================
@@ -765,7 +539,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Show success message - FIXED: Check for any updates, not just $cmdtuples
+        // Show success message
         $has_any_updates = !empty($update_fields) || in_array('plan_history_updated', $updated_fields);
 
         if ($has_any_updates) {
@@ -2696,7 +2470,7 @@ foreach ($card_access_levels as $card => $required_level) {
                     });
             }
 
-            // Save plan changes - show confirmation alert
+            // Save plan changes - SIMPLIFIED
             $(document).on('click', '[id^="save-plan-changes-"]', function() {
                 const studentId = this.id.split('-').pop();
                 const division = $('#modal-division-select-' + studentId).val();
@@ -2704,12 +2478,31 @@ foreach ($card_access_levels as $card => $required_level) {
                 const admissionType = $('#modal-type-of-admission-' + studentId).val();
                 const effectiveMonth = $('#modal-effective-from-date-' + studentId).val();
 
+                // Basic validation
                 if (!division || !classVal || !admissionType || !effectiveMonth) {
                     alert('Please fill all fields');
                     return;
                 }
 
-                // Format the effective date for display
+                // Check if date is in past
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth() + 1;
+
+                const [selectedYear, selectedMonth] = effectiveMonth.split('-').map(Number);
+
+                if (selectedYear < currentYear ||
+                    (selectedYear === currentYear && selectedMonth < currentMonth)) {
+                    const dateObj = new Date(selectedYear, selectedMonth - 1);
+                    const monthName = dateObj.toLocaleString('default', {
+                        month: 'long'
+                    });
+                    alert(`Past month (${monthName} ${selectedYear}) not allowed.\nPlease select current or future month.`);
+                    $('#modal-effective-from-date-' + studentId).val('');
+                    return;
+                }
+
+                // Format for display
                 const [year, month] = effectiveMonth.split('-');
                 const dateObj = new Date(year, month - 1);
                 const monthName = dateObj.toLocaleString('default', {
@@ -2717,31 +2510,44 @@ foreach ($card_access_levels as $card => $required_level) {
                 });
                 const effectiveDateDisplay = monthName + ' ' + year;
 
-                // Show confirmation alert with plan details
+                // Simple confirmation
                 const confirmationMessage =
-                    `Please confirm the plan update:\n\n` +
-                    `Division: ${division}\n` +
-                    `Class: ${classVal}\n` +
+                    `Update Student Plan:\n\n` +
                     `Plan: ${admissionType}\n` +
+                    `Class: ${classVal}\n` +
                     `Effective From: ${effectiveDateDisplay}\n\n` +
-                    `Click OK to save or Cancel to go back.`;
+                    `Click OK to proceed or Cancel to go back.`;
 
                 if (confirm(confirmationMessage)) {
-                    // User clicked OK - submit the form
                     submitPlanUpdate(studentId, classVal, admissionType, effectiveMonth + '-01');
                 }
-                // If user clicks Cancel, do nothing
             });
 
+            // Set minimum date to current month when modal opens
+            $('[id^="updatePlanModal-"]').on('show.bs.modal', function() {
+                const modalId = this.id;
+                const studentId = modalId.split('-').pop();
+
+                // Set minimum to current month (disables past months in date picker)
+                const today = new Date();
+                const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+                $('#modal-effective-from-date-' + studentId).attr('min', currentMonth);
+
+                // Set default to current month if empty
+                if (!$('#modal-effective-from-date-' + studentId).val()) {
+                    $('#modal-effective-from-date-' + studentId).val(currentMonth);
+                }
+            });
+
+            // Simple submit function
             function submitPlanUpdate(studentId, classVal, admissionType, effectiveFromDate) {
-                // Get the main form
                 const mainForm = document.getElementById('studentProfileForm');
 
-                // Remove any existing plan update fields
-                mainForm.querySelectorAll('input[name^="plan_update_"]').forEach(el => el.remove());
-
-                // Add hidden inputs with plan update data
+                // Add hidden inputs
                 const addHiddenInput = (name, value) => {
+                    const existing = mainForm.querySelector(`input[name="${name}"]`);
+                    if (existing) existing.remove();
+
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = name;
@@ -2749,29 +2555,13 @@ foreach ($card_access_levels as $card => $required_level) {
                     mainForm.appendChild(input);
                 };
 
-                // Get current values from the form
-                const currentClass = $('#modal-class-select-' + studentId).val() ||
-                    document.querySelector('input[name="class"]')?.value ||
-                    '<?php echo $array["class"] ?? ""; ?>';
-
-                const currentAdmissionType = $('#modal-type-of-admission-' + studentId).val() ||
-                    document.querySelector('input[name="type_of_admission"]')?.value ||
-                    '<?php echo $array["type_of_admission"] ?? ""; ?>';
-
-                const currentDivision = $('#modal-division-select-' + studentId).val() ||
-                    document.querySelector('input[name="division"]')?.value ||
-                    '<?php echo $array["division"] ?? ""; ?>';
-
-                // Always add all plan update fields
-                addHiddenInput('plan_update_class', classVal || currentClass);
-                addHiddenInput('plan_update_type_of_admission', admissionType || currentAdmissionType);
+                addHiddenInput('plan_update_class', classVal);
+                addHiddenInput('plan_update_type_of_admission', admissionType);
                 addHiddenInput('plan_update_effective_from_date', effectiveFromDate);
 
-                // Close the modal
+                // Close modal and submit
                 $('#updatePlanModal-' + studentId).modal('hide');
-
-                // Submit the form
-                mainForm.submit();
+                setTimeout(() => mainForm.submit(), 300);
             }
         });
     </script>
