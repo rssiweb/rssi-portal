@@ -114,8 +114,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Add fields that require approval here
         ];
 
-        // Process each field
+        // Process each field INCLUDING file fields
         foreach (array_merge($admin_only_fields, $user_editable_fields) as $field) {
+            // Check if this is a file field
+            $is_file_field = in_array($field, ['student_photo_raw', 'upload_aadhar_card', 'caste_document', 'supporting_doc']);
+
+            if ($is_file_field) {
+                // Handle file upload
+                $form_field_name = str_replace('_raw', '', $field); // student_photo_raw → student_photo
+                if (!empty($_FILES[$form_field_name]['name'])) {
+                    $timestamp = date('Y-m-d H:i:s');
+                    $filename = $form_field_name . "_" . $search_id . "_" . $timestamp;
+
+                    $parent_folders = [
+                        'student_photo' => '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9',
+                        'upload_aadhar_card' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E',
+                        'caste_document' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E',
+                        'supporting_doc' => '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC'
+                    ];
+
+                    $parent = $parent_folders[$form_field_name];
+                    $doclink = uploadeToDrive($_FILES[$form_field_name], $parent, $filename);
+
+                    if ($doclink) {
+                        $update_fields[] = "$field = '$doclink'";
+                        $updated_fields[] = $field;
+                    }
+                }
+                continue; // Skip to next field
+            }
+
+            // Regular field processing
             if (isset($_POST[$field])) {
                 $new_value = trim($_POST[$field]) === "" ? null : pg_escape_string($con, trim($_POST[$field]));
                 $current_value = $current_data[$field] ?? null;
@@ -123,29 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Skip if no change
                 if ($new_value === $current_value) {
                     continue;
-                }
-
-                // Handle file uploads
-                if (in_array($field, ['student_photo_raw', 'upload_aadhar_card', 'caste_document'])) {
-                    // Handle file upload logic here
-                    $file_field_name = str_replace('_raw', '', $field);
-                    if (!empty($_FILES[$file_field_name]['name'])) {
-                        $timestamp = date('Y-m-d H:i:s');
-                        $filename = $file_field_name . "_" . $search_id . "_" . $timestamp;
-
-                        // Set parent folder IDs based on document type
-                        $parent_folders = [
-                            'student_photo' => '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9',
-                            'upload_aadhar_card' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E',
-                            'caste_document' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E'
-                        ];
-
-                        $parent = $parent_folders[$file_field_name] ?? '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9';
-                        $doclink = uploadeToDrive($_FILES[$file_field_name], $parent, $filename);
-                        $new_value = $doclink;
-                    } else {
-                        continue; // No file uploaded
-                    }
                 }
 
                 // Check permissions
@@ -717,11 +723,6 @@ $field_names_mapping = [
                                                                             <td>
                                                                                 <span id="filterstatusText">
                                                                                     <?php echo $array['filterstatus']; ?>
-                                                                                    <?php if ($array['filterstatus'] == 'Active'): ?>
-                                                                                        <span class="badge bg-success ms-2">Active</span>
-                                                                                    <?php else: ?>
-                                                                                        <span class="badge bg-danger ms-2">Inactive</span>
-                                                                                    <?php endif; ?>
                                                                                 </span>
                                                                                 <?php if ($is_admin): ?>
                                                                                     <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;">
@@ -798,23 +799,23 @@ $field_names_mapping = [
                                                                         <tr>
                                                                             <td><label>Upload Student Photo:</label></td>
                                                                             <td>
-                                                                                <?php if (!empty($array['student_photo_raw'])): ?>
-                                                                                    <a href="<?php echo $array['student_photo_raw']; ?>" target="_blank">View Current Photo</a><br>
-                                                                                <?php endif; ?>
                                                                                 <input type="file" name="student_photo" id="student_photo"
                                                                                     class="form-control" disabled style="display:none;"
                                                                                     accept="image/*">
+                                                                                <?php if (!empty($array['student_photo_raw'])): ?>
+                                                                                    <a href="<?php echo $array['student_photo_raw']; ?>" target="_blank">View Current Photo</a><br>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label>Upload Aadhar Card:</label></td>
                                                                             <td>
-                                                                                <?php if (!empty($array['upload_aadhar_card'])): ?>
-                                                                                    <a href="<?php echo $array['upload_aadhar_card']; ?>" target="_blank">View Aadhar Card</a><br>
-                                                                                <?php endif; ?>
                                                                                 <input type="file" name="upload_aadhar_card" id="upload_aadhar_card"
                                                                                     class="form-control" disabled style="display:none;"
                                                                                     accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php if (!empty($array['upload_aadhar_card'])): ?>
+                                                                                    <a href="<?php echo $array['upload_aadhar_card']; ?>" target="_blank">View Aadhar Card</a><br>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -902,12 +903,12 @@ $field_names_mapping = [
                                                                             <tr>
                                                                                 <td><label for="supporting_doc">Supporting Document:</label></td>
                                                                                 <td>
-                                                                                    <?php if (!empty($array['supporting_doc'])): ?>
-                                                                                        <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
-                                                                                    <?php endif; ?>
                                                                                     <input type="file" name="supporting_doc" id="supporting_doc"
                                                                                         class="form-control" disabled style="display:none;"
                                                                                         accept=".pdf,.jpg,.jpeg,.png">
+                                                                                    <?php if (!empty($array['supporting_doc'])): ?>
+                                                                                        <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1185,12 +1186,12 @@ $field_names_mapping = [
                                                                         <tr>
                                                                             <td><label>Caste Certificate:</label></td>
                                                                             <td>
-                                                                                <?php if (!empty($array['caste_document'])): ?>
-                                                                                    <a href="<?php echo $array['caste_document']; ?>" target="_blank">View Certificate</a><br>
-                                                                                <?php endif; ?>
                                                                                 <input type="file" name="caste_document" id="caste_document"
                                                                                     class="form-control" disabled style="display:none;"
                                                                                     accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php if (!empty($array['caste_document'])): ?>
+                                                                                    <a href="<?php echo $array['caste_document']; ?>" target="_blank">View Certificate</a><br>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1486,39 +1487,42 @@ $field_names_mapping = [
                 card.classList.remove('editing');
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = true;
-                    element.style.display = 'none';
+                    // For file inputs, hide them completely
+                    if (element.type === 'file') {
+                        element.style.display = 'none';
+                    } else {
+                        element.style.display = 'none';
+                    }
                 });
+                // Show all text spans
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
                     span.style.display = 'inline';
                 });
+                // Show edit icon, hide save
                 card.querySelector('.edit-icon').style.display = 'inline';
                 card.querySelector('.save-icon').style.display = 'none';
 
-                // Show same address checkbox only in edit mode
-                const sameAddressCheckbox = document.getElementById('sameAddressCheckbox');
-                if (sameAddressCheckbox) {
-                    sameAddressCheckbox.style.display = 'none';
-                }
             } else {
                 // Switch to edit mode
                 card.classList.add('editing');
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = false;
-                    if (element.type !== 'file') {
+                    // For file inputs, show them as block
+                    if (element.type === 'file') {
+                        element.style.display = 'block';
+                    } else if (element.type !== 'hidden') {
                         element.style.display = 'inline-block';
                     }
                 });
+                // Hide text spans (except for read-only fields)
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
-                    // Only hide spans that have corresponding input fields
                     const fieldName = span.id.replace('Text', '');
-                    const hasInput = card.querySelector(`[name="${fieldName}"]`) &&
-                        !card.querySelector(`[name="${fieldName}"][type="hidden"]`);
-
-                    if (hasInput) {
+                    const hasEditableField = card.querySelector(`[name="${fieldName}"]:not([type="hidden"])`);
+                    if (hasEditableField) {
                         span.style.display = 'none';
                     }
-                    // Keep read-only spans (without input fields) visible
                 });
+                // Hide edit icon, show save
                 card.querySelector('.edit-icon').style.display = 'none';
                 card.querySelector('.save-icon').style.display = 'inline';
 
