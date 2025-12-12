@@ -369,8 +369,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $admission_month = getFirstDayOfMonth($original_doa);
 
                 // ==============================================
-                // VALIDATION 1: Check if date is before admission month
+                // COMPREHENSIVE VALIDATION (INCLUDES CURRENT STUDENT DATA)
                 // ==============================================
+
+                // 1. Check if we're trying to add the SAME plan that student already has (from rssimyprofile_student)
+                if (
+                    $type_of_admission == $current_data['type_of_admission'] &&
+                    $class == $current_data['class'] &&
+                    strtotime($effective_from_date) <= strtotime($admission_month)
+                ) {
+
+                    // Student already has this plan from admission, and we're trying to add same plan on/before admission month
+                    $formatted_doa = date('F Y', strtotime($admission_month));
+                    $formatted_plan = date('F Y', strtotime($effective_from_date));
+                    $error_msg = "Student already has $type_of_admission plan for $class class since admission ($formatted_doa). Cannot add same plan for $formatted_plan.";
+                    handlePlanUpdateError($error_msg, $updated_fields);
+                    exit;
+                }
+
+                // 2. Check if effective date is BEFORE student's admission
                 if (strtotime($effective_from_date) < strtotime($admission_month)) {
                     $formatted_doa = date('F Y', strtotime($admission_month));
                     $formatted_plan_date = date('F Y', strtotime($effective_from_date));
