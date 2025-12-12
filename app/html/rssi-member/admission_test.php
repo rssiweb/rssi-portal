@@ -331,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ==============================================
         // SIMPLIFIED PLAN UPDATE LOGIC
         // ==============================================
-        $plan_update_fields = ['plan_update_type_of_admission', 'plan_update_class', 'plan_update_division', 'plan_update_effective_from_date'];
+        $plan_update_fields = ['plan_update_type_of_admission', 'plan_update_class', 'plan_update_division', 'plan_update_effective_from_date', 'plan_update_remarks'];
         $has_plan_update = false;
 
         foreach ($plan_update_fields as $field) {
@@ -347,6 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $class = $_POST['plan_update_class'];
             $division = $_POST['plan_update_division'] ?? $current_data['division'] ?? '';
             $effective_from_date = getFirstDayOfMonth($_POST['plan_update_effective_from_date']);
+            $remarks = $_POST['plan_update_remarks'];
 
             $updated_by = $associatenumber;
 
@@ -501,14 +502,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class,
                     effective_from, 
                     created_by,
-                    is_valid
+                    is_valid,
+                    remarks
                 ) VALUES (
                     '$search_id', 
                     '$type_of_admission', 
                     '$class',
                     DATE '$effective_from_date', 
                     '$updated_by',
-                    true
+                    true,
+                    '$remarks'
                 )";
 
                 $insertResult = pg_query($con, $insertNewPlanQuery);
@@ -2173,8 +2176,8 @@ foreach ($card_access_levels as $card => $required_level) {
         }
     </script>
     <!-- Update Plan Modal -->
-    <div class="modal fade" id="updatePlanModal-<?php echo $array['student_id']; ?>" tabindex="-1" aria-labelledby="updatePlanModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="updatePlanModal-<?php echo $array['student_id']; ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="updatePlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="updatePlanModalLabel">Update Student Plan</h5>
@@ -2229,6 +2232,19 @@ foreach ($card_access_levels as $card => $required_level) {
                                 The selected plan will be applied to the feesheet starting from the first day of the selected month.
                             </small>
                         </div>
+                        <div class="mb-3">
+                            <label for="modal-remarks-<?php echo $array['student_id']; ?>" class="form-label">
+                                Remarks:
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="modal-remarks-<?php echo $array['student_id']; ?>"
+                                name="plan_update_remarks"
+                                rows="3"
+                                required
+                                placeholder="Enter reason or remarks for plan update"></textarea>
+                            <small class="form-text text-muted">Remarks are mandatory for tracking plan update reasons.</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -2240,8 +2256,8 @@ foreach ($card_access_levels as $card => $required_level) {
     </div>
 
     <!-- Plan History Modal -->
-    <div class="modal fade" id="planHistoryModal-<?php echo $array['student_id']; ?>" tabindex="-1" aria-labelledby="planHistoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="planHistoryModal-<?php echo $array['student_id']; ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="planHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="planHistoryModalLabel">Plan Change History for <?php echo htmlspecialchars($array['studentname']) ?></h5>
@@ -2262,6 +2278,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                     <th>Class</th>
                                     <th>Effective From</th>
                                     <th>Effective Until</th>
+                                    <th>Remarks</th>
                                     <th>Changed On</th>
                                     <th>Changed By</th>
                                 </tr>
@@ -2284,7 +2301,6 @@ foreach ($card_access_levels as $card => $required_level) {
             </div>
         </div>
     </div>
-
     <script>
         $(document).ready(function() {
             // When update modal opens, populate fields with current values
@@ -2501,9 +2517,10 @@ foreach ($card_access_levels as $card => $required_level) {
                 const classVal = $('#modal-class-select-' + studentId).val();
                 const admissionType = $('#modal-type-of-admission-' + studentId).val();
                 const effectiveMonth = $('#modal-effective-from-date-' + studentId).val();
+                const remarks = $('#modal-remarks-' + studentId).val();
 
                 // Basic validation
-                if (!division || !classVal || !admissionType || !effectiveMonth) {
+                if (!division || !classVal || !admissionType || !effectiveMonth || !remarks) {
                     alert('Please fill all fields');
                     return;
                 }
@@ -2543,7 +2560,7 @@ foreach ($card_access_levels as $card => $required_level) {
                     `Click OK to proceed or Cancel to go back.`;
 
                 if (confirm(confirmationMessage)) {
-                    submitPlanUpdate(studentId, classVal, admissionType, effectiveMonth + '-01');
+                    submitPlanUpdate(studentId, classVal, admissionType, effectiveMonth + '-01', remarks);
                 }
             });
 
@@ -2564,7 +2581,7 @@ foreach ($card_access_levels as $card => $required_level) {
             });
 
             // Simple submit function
-            function submitPlanUpdate(studentId, classVal, admissionType, effectiveFromDate) {
+            function submitPlanUpdate(studentId, classVal, admissionType, effectiveFromDate, remarks) {
                 const mainForm = document.getElementById('studentProfileForm');
 
                 // Add hidden inputs
@@ -2582,6 +2599,7 @@ foreach ($card_access_levels as $card => $required_level) {
                 addHiddenInput('plan_update_class', classVal);
                 addHiddenInput('plan_update_type_of_admission', admissionType);
                 addHiddenInput('plan_update_effective_from_date', effectiveFromDate);
+                addHiddenInput('plan_update_remarks', remarks)
 
                 // Close modal and submit
                 $('#updatePlanModal-' + studentId).modal('hide');
@@ -2675,6 +2693,7 @@ foreach ($card_access_levels as $card => $required_level) {
                         <td>${escapeHtml(plan.class || '')}</td>
                         <td>${fromFormatted}</td>
                         <td>${untilFormatted}</td>
+                        <td>${escapeHtml(plan.remarks)}</td>
                         <td>${createdFormatted}</td>
                         <td>${escapeHtml(creatorDisplay)}</td>
                     </tr>`;

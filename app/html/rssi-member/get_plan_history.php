@@ -27,6 +27,7 @@ $historyQuery = "SELECT
                     sch.effective_until, 
                     sch.created_at, 
                     sch.created_by,
+                    sch.remarks,
                     COALESCE(ram.fullname, sch.created_by) as created_by_name
                  FROM student_category_history sch
                  LEFT JOIN rssimyaccount_members ram ON sch.created_by = ram.associatenumber
@@ -50,7 +51,8 @@ while ($row = pg_fetch_assoc($historyResult)) {
         'effective_until' => $row['effective_until'],
         'created_at' => $row['created_at'],
         'created_by_id' => $row['created_by'], // Original associatenumber
-        'created_by_name' => $row['created_by_name'] // Full name from rssimyaccount_member
+        'created_by_name' => $row['created_by_name'], // Full name from rssimyaccount_member
+        'remarks' => $row['remarks']
     ];
 }
 
@@ -58,4 +60,3 @@ echo json_encode([
     'success' => true,
     'data' => $plans
 ]);
-?>
