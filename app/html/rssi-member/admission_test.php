@@ -290,7 +290,7 @@ $card_access_levels = [
     'family_info' => 1,
     'plan_enrollment' => 1,
     'student_status' => 1,
-    'admin_documents' => 2,        // Admin only
+    'admin_console' => 2,        // Admin only
 ];
 
 // Get accessible cards for current user
@@ -686,9 +686,9 @@ $field_names_mapping = [
                                                     </li>
                                                 <?php endif; ?>
 
-                                                <?php if (in_array('admin_documents', $accessible_cards)): ?>
+                                                <?php if (in_array('admin_console', $accessible_cards)): ?>
                                                     <li class="nav-item">
-                                                        <a class="nav-link" href="#admin_documents" data-bs-toggle="tab">Admin Documents</a>
+                                                        <a class="nav-link" href="#admin_console" data-bs-toggle="tab">Admin console</a>
                                                     </li>
                                                 <?php endif; ?>
                                             </ul>
@@ -785,7 +785,8 @@ $field_names_mapping = [
                                                                                     <?php echo $array['filterstatus']; ?>
                                                                                 </span>
                                                                                 <?php if (in_array('filterstatus', $user_accessible_fields)): ?>
-                                                                                    <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;">
+                                                                                    <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;"
+                                                                                        onchange="handleStatusChange(this)">
                                                                                         <option value="Active" <?php echo $array['filterstatus'] == 'Active' ? 'selected' : ''; ?>>Active</option>
                                                                                         <option value="Inactive" <?php echo $array['filterstatus'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
                                                                                     </select>
@@ -793,20 +794,25 @@ $field_names_mapping = [
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td><label for="photourl">Photo URL:</label></td>
+                                                                            <td><label for="effectivefrom">Effective From:</label></td>
                                                                             <td>
-                                                                                <span id="photourlText">
-                                                                                    <?php if (!empty($array['photourl'])): ?>
-                                                                                        <a href="<?php echo $array['photourl']; ?>" target="_blank">View Photo</a>
-                                                                                    <?php else: ?>
-                                                                                        No photo URL
-                                                                                    <?php endif; ?>
+                                                                                <span id="effectivefromText">
+                                                                                    <?php echo !empty($array['effectivefrom']) ? date('d/m/Y', strtotime($array['effectivefrom'])) : ''; ?>
                                                                                 </span>
-                                                                                <?php if (in_array('photourl', $user_accessible_fields)): ?>
-                                                                                    <input type="url" name="photourl" id="photourl"
-                                                                                        value="<?php echo $array['photourl']; ?>"
-                                                                                        class="form-control" disabled style="display:none;"
-                                                                                        placeholder="Enter photo URL">
+                                                                                <?php if (in_array('effectivefrom', $user_accessible_fields)): ?>
+                                                                                    <input type="date" name="effectivefrom" id="effectivefrom"
+                                                                                        value="<?php echo $array['effectivefrom']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><label for="remarks">Remarks:</label></td>
+                                                                            <td>
+                                                                                <span id="remarksText"><?php echo $array['remarks']; ?></span>
+                                                                                <?php if (in_array('remarks', $user_accessible_fields)): ?>
+                                                                                    <textarea name="remarks" id="remarks" class="form-control"
+                                                                                        rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
                                                                                 <?php endif; ?>
                                                                             </td>
                                                                         </tr>
@@ -964,19 +970,6 @@ $field_names_mapping = [
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
-                                                                                <td><label for="effectivefrom">Effective From (Plan):</label></td>
-                                                                                <td>
-                                                                                    <span id="effectivefromText">
-                                                                                        <?php echo !empty($array['effectivefrom']) ? date('d/m/Y', strtotime($array['effectivefrom'])) : ''; ?>
-                                                                                    </span>
-                                                                                    <?php if (in_array('effectivefrom', $user_accessible_fields)): ?>
-                                                                                        <input type="date" name="effectivefrom" id="effectivefrom"
-                                                                                            value="<?php echo $array['effectivefrom']; ?>"
-                                                                                            class="form-control" disabled style="display:none;">
-                                                                                    <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
                                                                                 <td><label for="supporting_doc">Supporting Document:</label></td>
                                                                                 <td>
                                                                                     <?php if (in_array('supporting_doc', $user_accessible_fields)): ?>
@@ -986,16 +979,6 @@ $field_names_mapping = [
                                                                                     <?php endif; ?>
                                                                                     <?php if (!empty($array['supporting_doc'])): ?>
                                                                                         <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
-                                                                                    <?php endif; ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td><label for="remarks">Remarks:</label></td>
-                                                                                <td>
-                                                                                    <span id="remarksText"><?php echo $array['remarks']; ?></span>
-                                                                                    <?php if (in_array('remarks', $user_accessible_fields)): ?>
-                                                                                        <textarea name="remarks" id="remarks" class="form-control"
-                                                                                            rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
                                                                                     <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
@@ -1509,15 +1492,15 @@ $field_names_mapping = [
                                                 <?php endif; ?>
 
                                                 <!-- Admin Documents Tab -->
-                                                <?php if (in_array('admin_documents', $accessible_cards)): ?>
-                                                    <div id="admin_documents" class="tab-pane" role="tabpanel">
-                                                        <div class="card" id="admin_documents_card">
+                                                <?php if (in_array('admin_console', $accessible_cards)): ?>
+                                                    <div id="admin_console" class="tab-pane" role="tabpanel">
+                                                        <div class="card" id="admin_console_card">
                                                             <div class="card-header">
-                                                                Admin Documents
-                                                                <span class="edit-icon" onclick="toggleEdit('admin_documents_card')">
+                                                                Admin console
+                                                                <span class="edit-icon" onclick="toggleEdit('admin_console_card')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
-                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('admin_documents_card')">
+                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('admin_console_card')">
                                                                     <i class="bi bi-save"></i>
                                                                 </span>
                                                             </div>
@@ -1540,6 +1523,24 @@ $field_names_mapping = [
                                                                                             </a>
                                                                                         </li>
                                                                                     </ul>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="photourl">Photo URL:</label></td>
+                                                                                <td>
+                                                                                    <span id="photourlText">
+                                                                                        <?php if (!empty($array['photourl'])): ?>
+                                                                                            <a href="<?php echo $array['photourl']; ?>" target="_blank">View Photo</a>
+                                                                                        <?php else: ?>
+                                                                                            No photo URL
+                                                                                        <?php endif; ?>
+                                                                                    </span>
+                                                                                    <?php if (in_array('photourl', $user_accessible_fields)): ?>
+                                                                                        <input type="url" name="photourl" id="photourl"
+                                                                                            value="<?php echo $array['photourl']; ?>"
+                                                                                            class="form-control" disabled style="display:none;"
+                                                                                            placeholder="Enter photo URL">
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -1727,6 +1728,68 @@ $field_names_mapping = [
                 }
             });
         });
+    </script>
+    <script>
+        function handleStatusChange(selectElement) {
+            const newStatus = selectElement.value;
+
+            // Get the inputs - they might be hidden if not in edit mode
+            const effectiveFromInput = document.getElementById('effectivefrom');
+            const remarksTextarea = document.getElementById('remarks');
+
+            // Check if we're in edit mode (inputs are visible)
+            const isEditMode = selectElement.style.display !== 'none';
+
+            if (!isEditMode) {
+                // If not in edit mode, show a simple alert
+                alert('Please click the edit pencil icon first to enable editing before changing status.');
+                // Reset to original value
+                selectElement.value = selectElement.getAttribute('data-original-value') || '<?php echo $array["filterstatus"]; ?>';
+                return;
+            }
+
+            // Store original value when first clicked (optional enhancement)
+            if (!selectElement.hasAttribute('data-original-value')) {
+                selectElement.setAttribute('data-original-value', selectElement.value);
+            }
+
+            // Check if user has access to these fields (they exist and are visible)
+            const hasEffectiveFromAccess = effectiveFromInput && effectiveFromInput.style.display !== 'none';
+            const hasRemarksAccess = remarksTextarea && remarksTextarea.style.display !== 'none';
+
+            // Only proceed if user has access to at least one of the related fields
+            if (!hasEffectiveFromAccess && !hasRemarksAccess) {
+                console.log('User does not have access to related fields');
+                return;
+            }
+
+            // Get current values
+            const currentEffectiveFrom = hasEffectiveFromAccess ? effectiveFromInput.value : '';
+            const currentRemarks = hasRemarksAccess ? remarksTextarea.value : '';
+
+            // Prepare the new remark line
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            let newRemarkLine = `\n${today} - Status has been changed to ${newStatus}.`;
+
+            // If changing to Active, reset effective from date but mention previous date in remarks
+            if (newStatus === 'Active') {
+                if (hasEffectiveFromAccess && currentEffectiveFrom) {
+                    newRemarkLine = `\nPrevious Effective From: ${currentEffectiveFrom}${newRemarkLine}`;
+                    effectiveFromInput.value = ''; // Reset effective from date
+                }
+            }
+            // If changing to Inactive, set effective from date to today if empty
+            else if (newStatus === 'Inactive') {
+                if (hasEffectiveFromAccess && !currentEffectiveFrom) {
+                    effectiveFromInput.value = today;
+                }
+            }
+
+            // Update remarks if user has access
+            if (hasRemarksAccess) {
+                remarksTextarea.value = currentRemarks + newRemarkLine;
+            }
+        }
     </script>
 </body>
 
