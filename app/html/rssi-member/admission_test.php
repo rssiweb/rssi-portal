@@ -301,9 +301,6 @@ foreach ($card_access_levels as $card => $required_level) {
     }
 }
 
-// Check if user is admin (for UI display)
-$is_admin = $current_user_level >= 2;
-
 // Add this mapping array
 $field_names_mapping = [
     // Basic Details
@@ -724,7 +721,6 @@ $field_names_mapping = [
                                                                             <td><label for="student_id">Student ID:</label></td>
                                                                             <td>
                                                                                 <span id="student_idText"><?php echo $array['student_id']; ?></span>
-                                                                                <!-- No input field - this field is read-only -->
                                                                                 <input type="hidden" name="student_id" id="student_id"
                                                                                     value="<?php echo $array['student_id']; ?>">
                                                                             </td>
@@ -733,9 +729,11 @@ $field_names_mapping = [
                                                                             <td><label for="studentname">Student Name:</label></td>
                                                                             <td>
                                                                                 <span id="studentnameText"><?php echo $array['studentname']; ?></span>
-                                                                                <input type="text" name="studentname" id="studentname"
-                                                                                    value="<?php echo $array['studentname']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('studentname', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="studentname" id="studentname"
+                                                                                        value="<?php echo $array['studentname']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
@@ -744,9 +742,11 @@ $field_names_mapping = [
                                                                                 <span id="dateofbirthText">
                                                                                     <?php echo !empty($array['dateofbirth']) ? date('d/m/Y', strtotime($array['dateofbirth'])) : ''; ?>
                                                                                 </span>
-                                                                                <input type="date" name="dateofbirth" id="dateofbirth"
-                                                                                    value="<?php echo $array['dateofbirth']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('dateofbirth', $user_accessible_fields)): ?>
+                                                                                    <input type="date" name="dateofbirth" id="dateofbirth"
+                                                                                        value="<?php echo $array['dateofbirth']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
@@ -768,12 +768,14 @@ $field_names_mapping = [
                                                                             <td><label for="gender">Gender:</label></td>
                                                                             <td>
                                                                                 <span id="genderText"><?php echo $array['gender']; ?></span>
-                                                                                <select name="gender" id="gender" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Gender</option>
-                                                                                    <option value="Male" <?php echo $array['gender'] == 'Male' ? 'selected' : ''; ?>>Male</option>
-                                                                                    <option value="Female" <?php echo $array['gender'] == 'Female' ? 'selected' : ''; ?>>Female</option>
-                                                                                    <option value="Binary" <?php echo $array['gender'] == 'Binary' ? 'selected' : ''; ?>>Binary</option>
-                                                                                </select>
+                                                                                <?php if (in_array('gender', $user_accessible_fields)): ?>
+                                                                                    <select name="gender" id="gender" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Gender</option>
+                                                                                        <option value="Male" <?php echo $array['gender'] == 'Male' ? 'selected' : ''; ?>>Male</option>
+                                                                                        <option value="Female" <?php echo $array['gender'] == 'Female' ? 'selected' : ''; ?>>Female</option>
+                                                                                        <option value="Binary" <?php echo $array['gender'] == 'Binary' ? 'selected' : ''; ?>>Binary</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
@@ -782,7 +784,7 @@ $field_names_mapping = [
                                                                                 <span id="filterstatusText">
                                                                                     <?php echo $array['filterstatus']; ?>
                                                                                 </span>
-                                                                                <?php if ($is_admin): ?>
+                                                                                <?php if (in_array('filterstatus', $user_accessible_fields)): ?>
                                                                                     <select name="filterstatus" id="filterstatus" class="form-select" disabled style="display:none;">
                                                                                         <option value="Active" <?php echo $array['filterstatus'] == 'Active' ? 'selected' : ''; ?>>Active</option>
                                                                                         <option value="Inactive" <?php echo $array['filterstatus'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
@@ -800,7 +802,7 @@ $field_names_mapping = [
                                                                                         No photo URL
                                                                                     <?php endif; ?>
                                                                                 </span>
-                                                                                <?php if ($is_admin): ?>
+                                                                                <?php if (in_array('photourl', $user_accessible_fields)): ?>
                                                                                     <input type="url" name="photourl" id="photourl"
                                                                                         value="<?php echo $array['photourl']; ?>"
                                                                                         class="form-control" disabled style="display:none;"
@@ -837,29 +839,35 @@ $field_names_mapping = [
                                                                             <td><label for="aadhar_available">Aadhar Card Available:</label></td>
                                                                             <td>
                                                                                 <span id="aadhar_availableText"><?php echo $array['aadhar_available']; ?></span>
-                                                                                <select name="aadhar_available" id="aadhar_available" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select</option>
-                                                                                    <option value="Yes" <?php echo $array['aadhar_available'] == 'Yes' ? 'selected' : ''; ?>>Yes</option>
-                                                                                    <option value="No" <?php echo $array['aadhar_available'] == 'No' ? 'selected' : ''; ?>>No</option>
-                                                                                </select>
+                                                                                <?php if (in_array('aadhar_available', $user_accessible_fields)): ?>
+                                                                                    <select name="aadhar_available" id="aadhar_available" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select</option>
+                                                                                        <option value="Yes" <?php echo $array['aadhar_available'] == 'Yes' ? 'selected' : ''; ?>>Yes</option>
+                                                                                        <option value="No" <?php echo $array['aadhar_available'] == 'No' ? 'selected' : ''; ?>>No</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="studentaadhar">Aadhar of Student:</label></td>
                                                                             <td>
                                                                                 <span id="studentaadharText"><?php echo $array['studentaadhar']; ?></span>
-                                                                                <input type="text" name="studentaadhar" id="studentaadhar"
-                                                                                    value="<?php echo $array['studentaadhar']; ?>"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    pattern="\d{12}" title="12-digit Aadhar number">
+                                                                                <?php if (in_array('studentaadhar', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="studentaadhar" id="studentaadhar"
+                                                                                        value="<?php echo $array['studentaadhar']; ?>"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        pattern="\d{12}" title="12-digit Aadhar number">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label>Upload Student Photo:</label></td>
                                                                             <td>
-                                                                                <input type="file" name="student_photo" id="student_photo"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    accept="image/*">
+                                                                                <?php if (in_array('student_photo_raw', $user_accessible_fields) && in_array('identification', $accessible_cards)): ?>
+                                                                                    <input type="file" name="student_photo" id="student_photo"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        accept="image/*">
+                                                                                <?php endif; ?>
                                                                                 <?php if (!empty($array['student_photo_raw'])): ?>
                                                                                     <a href="<?php echo $array['student_photo_raw']; ?>" target="_blank">View Current Photo</a><br>
                                                                                 <?php endif; ?>
@@ -868,9 +876,11 @@ $field_names_mapping = [
                                                                         <tr>
                                                                             <td><label>Upload Aadhar Card:</label></td>
                                                                             <td>
-                                                                                <input type="file" name="upload_aadhar_card" id="upload_aadhar_card"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php if (in_array('upload_aadhar_card', $user_accessible_fields) && in_array('identification', $accessible_cards)): ?>
+                                                                                    <input type="file" name="upload_aadhar_card" id="upload_aadhar_card"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php endif; ?>
                                                                                 <?php if (!empty($array['upload_aadhar_card'])): ?>
                                                                                     <a href="<?php echo $array['upload_aadhar_card']; ?>" target="_blank">View Aadhar Card</a><br>
                                                                                 <?php endif; ?>
@@ -883,8 +893,8 @@ $field_names_mapping = [
                                                     </div>
                                                 </div>
 
-                                                <!-- Plan & Enrollment Tab (Admin only) -->
-                                                <?php if ($is_admin): ?>
+                                                <!-- Plan & Enrollment Tab -->
+                                                <?php if (in_array('plan_enrollment', $accessible_cards)): ?>
                                                     <div id="plan_enrollment" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="plan_enrollment_card">
                                                             <div class="card-header">
@@ -913,38 +923,44 @@ $field_names_mapping = [
                                                                                 <td><label for="type_of_admission">Access Category:</label></td>
                                                                                 <td>
                                                                                     <span id="type_of_admissionText"><?php echo $array['type_of_admission']; ?></span>
-                                                                                    <select name="type_of_admission" id="type_of_admission" class="form-select" disabled style="display:none;">
-                                                                                        <option value="">Select Category</option>
-                                                                                        <option value="Basic" <?php echo $array['type_of_admission'] == 'Basic' ? 'selected' : ''; ?>>Basic</option>
-                                                                                        <option value="Regular" <?php echo $array['type_of_admission'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
-                                                                                        <option value="Premium" <?php echo $array['type_of_admission'] == 'Premium' ? 'selected' : ''; ?>>Premium</option>
-                                                                                    </select>
+                                                                                    <?php if (in_array('type_of_admission', $user_accessible_fields)): ?>
+                                                                                        <select name="type_of_admission" id="type_of_admission" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Category</option>
+                                                                                            <option value="Basic" <?php echo $array['type_of_admission'] == 'Basic' ? 'selected' : ''; ?>>Basic</option>
+                                                                                            <option value="Regular" <?php echo $array['type_of_admission'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
+                                                                                            <option value="Premium" <?php echo $array['type_of_admission'] == 'Premium' ? 'selected' : ''; ?>>Premium</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="category">Category:</label></td>
                                                                                 <td>
                                                                                     <span id="categoryText"><?php echo $array['category']; ?></span>
-                                                                                    <select name="category" id="category" class="form-select" disabled style="display:none;">
-                                                                                        <option value="">Select Category</option>
-                                                                                        <option value="LG1" <?php echo $array['category'] == 'LG1' ? 'selected' : ''; ?>>LG1</option>
-                                                                                        <option value="LG2-A" <?php echo $array['category'] == 'LG2-A' ? 'selected' : ''; ?>>LG2-A</option>
-                                                                                        <option value="LG2-B" <?php echo $array['category'] == 'LG2-B' ? 'selected' : ''; ?>>LG2-B</option>
-                                                                                        <option value="LG2-C" <?php echo $array['category'] == 'LG2-C' ? 'selected' : ''; ?>>LG2-C</option>
-                                                                                        <option value="LG3" <?php echo $array['category'] == 'LG3' ? 'selected' : ''; ?>>LG3</option>
-                                                                                        <option value="LG4" <?php echo $array['category'] == 'LG4' ? 'selected' : ''; ?>>LG4</option>
-                                                                                    </select>
+                                                                                    <?php if (in_array('category', $user_accessible_fields)): ?>
+                                                                                        <select name="category" id="category" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Category</option>
+                                                                                            <option value="LG1" <?php echo $array['category'] == 'LG1' ? 'selected' : ''; ?>>LG1</option>
+                                                                                            <option value="LG2-A" <?php echo $array['category'] == 'LG2-A' ? 'selected' : ''; ?>>LG2-A</option>
+                                                                                            <option value="LG2-B" <?php echo $array['category'] == 'LG2-B' ? 'selected' : ''; ?>>LG2-B</option>
+                                                                                            <option value="LG2-C" <?php echo $array['category'] == 'LG2-C' ? 'selected' : ''; ?>>LG2-C</option>
+                                                                                            <option value="LG3" <?php echo $array['category'] == 'LG3' ? 'selected' : ''; ?>>LG3</option>
+                                                                                            <option value="LG4" <?php echo $array['category'] == 'LG4' ? 'selected' : ''; ?>>LG4</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="module">Module:</label></td>
                                                                                 <td>
                                                                                     <span id="moduleText"><?php echo $array['module']; ?></span>
-                                                                                    <select name="module" id="module" class="form-select" disabled style="display:none;">
-                                                                                        <option value="">Select Module</option>
-                                                                                        <option value="National" <?php echo $array['module'] == 'National' ? 'selected' : ''; ?>>National</option>
-                                                                                        <option value="State" <?php echo $array['module'] == 'State' ? 'selected' : ''; ?>>State</option>
-                                                                                    </select>
+                                                                                    <?php if (in_array('module', $user_accessible_fields)): ?>
+                                                                                        <select name="module" id="module" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Module</option>
+                                                                                            <option value="National" <?php echo $array['module'] == 'National' ? 'selected' : ''; ?>>National</option>
+                                                                                            <option value="State" <?php echo $array['module'] == 'State' ? 'selected' : ''; ?>>State</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -953,17 +969,21 @@ $field_names_mapping = [
                                                                                     <span id="effectivefromText">
                                                                                         <?php echo !empty($array['effectivefrom']) ? date('d/m/Y', strtotime($array['effectivefrom'])) : ''; ?>
                                                                                     </span>
-                                                                                    <input type="date" name="effectivefrom" id="effectivefrom"
-                                                                                        value="<?php echo $array['effectivefrom']; ?>"
-                                                                                        class="form-control" disabled style="display:none;">
+                                                                                    <?php if (in_array('effectivefrom', $user_accessible_fields)): ?>
+                                                                                        <input type="date" name="effectivefrom" id="effectivefrom"
+                                                                                            value="<?php echo $array['effectivefrom']; ?>"
+                                                                                            class="form-control" disabled style="display:none;">
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="supporting_doc">Supporting Document:</label></td>
                                                                                 <td>
-                                                                                    <input type="file" name="supporting_doc" id="supporting_doc"
-                                                                                        class="form-control" disabled style="display:none;"
-                                                                                        accept=".pdf,.jpg,.jpeg,.png">
+                                                                                    <?php if (in_array('supporting_doc', $user_accessible_fields)): ?>
+                                                                                        <input type="file" name="supporting_doc" id="supporting_doc"
+                                                                                            class="form-control" disabled style="display:none;"
+                                                                                            accept=".pdf,.jpg,.jpeg,.png">
+                                                                                    <?php endif; ?>
                                                                                     <?php if (!empty($array['supporting_doc'])): ?>
                                                                                         <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
                                                                                     <?php endif; ?>
@@ -973,17 +993,21 @@ $field_names_mapping = [
                                                                                 <td><label for="remarks">Remarks:</label></td>
                                                                                 <td>
                                                                                     <span id="remarksText"><?php echo $array['remarks']; ?></span>
-                                                                                    <textarea name="remarks" id="remarks" class="form-control"
-                                                                                        rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
+                                                                                    <?php if (in_array('remarks', $user_accessible_fields)): ?>
+                                                                                        <textarea name="remarks" id="remarks" class="form-control"
+                                                                                            rows="3" disabled style="display:none;"><?php echo $array['remarks']; ?></textarea>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="scode">Scode:</label></td>
                                                                                 <td>
                                                                                     <span id="scodeText"><?php echo $array['scode']; ?></span>
-                                                                                    <input type="text" name="scode" id="scode"
-                                                                                        value="<?php echo $array['scode']; ?>"
-                                                                                        class="form-control" disabled style="display:none;">
+                                                                                    <?php if (in_array('scode', $user_accessible_fields)): ?>
+                                                                                        <input type="text" name="scode" id="scode"
+                                                                                            value="<?php echo $array['scode']; ?>"
+                                                                                            class="form-control" disabled style="display:none;">
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1022,66 +1046,78 @@ $field_names_mapping = [
                                                                             <td><label for="guardiansname">Guardian's Name:</label></td>
                                                                             <td>
                                                                                 <span id="guardiansnameText"><?php echo $array['guardiansname']; ?></span>
-                                                                                <input type="text" name="guardiansname" id="guardiansname"
-                                                                                    value="<?php echo $array['guardiansname']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('guardiansname', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="guardiansname" id="guardiansname"
+                                                                                        value="<?php echo $array['guardiansname']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="relationwithstudent">Relation with Student:</label></td>
                                                                             <td>
                                                                                 <span id="relationwithstudentText"><?php echo $array['relationwithstudent']; ?></span>
-                                                                                <select name="relationwithstudent" id="relationwithstudent" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Relation</option>
-                                                                                    <option value="Mother" <?php echo $array['relationwithstudent'] == 'Mother' ? 'selected' : ''; ?>>Mother</option>
-                                                                                    <option value="Father" <?php echo $array['relationwithstudent'] == 'Father' ? 'selected' : ''; ?>>Father</option>
-                                                                                    <option value="Spouse" <?php echo $array['relationwithstudent'] == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
-                                                                                    <option value="Other" <?php echo $array['relationwithstudent'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                                                                                </select>
+                                                                                <?php if (in_array('relationwithstudent', $user_accessible_fields)): ?>
+                                                                                    <select name="relationwithstudent" id="relationwithstudent" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Relation</option>
+                                                                                        <option value="Mother" <?php echo $array['relationwithstudent'] == 'Mother' ? 'selected' : ''; ?>>Mother</option>
+                                                                                        <option value="Father" <?php echo $array['relationwithstudent'] == 'Father' ? 'selected' : ''; ?>>Father</option>
+                                                                                        <option value="Spouse" <?php echo $array['relationwithstudent'] == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
+                                                                                        <option value="Other" <?php echo $array['relationwithstudent'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="guardianaadhar">Aadhar of Guardian:</label></td>
                                                                             <td>
                                                                                 <span id="guardianaadharText"><?php echo $array['guardianaadhar']; ?></span>
-                                                                                <input type="text" name="guardianaadhar" id="guardianaadhar"
-                                                                                    value="<?php echo $array['guardianaadhar']; ?>"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    pattern="\d{12}" title="12-digit Aadhar number">
+                                                                                <?php if (in_array('guardianaadhar', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="guardianaadhar" id="guardianaadhar"
+                                                                                        value="<?php echo $array['guardianaadhar']; ?>"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        pattern="\d{12}" title="12-digit Aadhar number">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="emergency_contact_name">Emergency Contact Name:</label></td>
                                                                             <td>
                                                                                 <span id="emergency_contact_nameText"><?php echo $array['emergency_contact_name']; ?></span>
-                                                                                <input type="text" name="emergency_contact_name" id="emergency_contact_name"
-                                                                                    value="<?php echo $array['emergency_contact_name']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('emergency_contact_name', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="emergency_contact_name" id="emergency_contact_name"
+                                                                                        value="<?php echo $array['emergency_contact_name']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="emergency_contact_relation">Relation:</label></td>
                                                                             <td>
                                                                                 <span id="emergency_contact_relationText"><?php echo $array['emergency_contact_relation']; ?></span>
-                                                                                <select name="emergency_contact_relation" id="emergency_contact_relation" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Relation</option>
-                                                                                    <option value="Father" <?php echo $array['emergency_contact_relation'] == 'Father' ? 'selected' : ''; ?>>Father</option>
-                                                                                    <option value="Mother" <?php echo $array['emergency_contact_relation'] == 'Mother' ? 'selected' : ''; ?>>Mother</option>
-                                                                                    <option value="Guardian" <?php echo $array['emergency_contact_relation'] == 'Guardian' ? 'selected' : ''; ?>>Guardian</option>
-                                                                                    <option value="Brother" <?php echo $array['emergency_contact_relation'] == 'Brother' ? 'selected' : ''; ?>>Brother</option>
-                                                                                    <option value="Sister" <?php echo $array['emergency_contact_relation'] == 'Sister' ? 'selected' : ''; ?>>Sister</option>
-                                                                                    <option value="Other" <?php echo $array['emergency_contact_relation'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                                                                                </select>
+                                                                                <?php if (in_array('emergency_contact_relation', $user_accessible_fields)): ?>
+                                                                                    <select name="emergency_contact_relation" id="emergency_contact_relation" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Relation</option>
+                                                                                        <option value="Father" <?php echo $array['emergency_contact_relation'] == 'Father' ? 'selected' : ''; ?>>Father</option>
+                                                                                        <option value="Mother" <?php echo $array['emergency_contact_relation'] == 'Mother' ? 'selected' : ''; ?>>Mother</option>
+                                                                                        <option value="Guardian" <?php echo $array['emergency_contact_relation'] == 'Guardian' ? 'selected' : ''; ?>>Guardian</option>
+                                                                                        <option value="Brother" <?php echo $array['emergency_contact_relation'] == 'Brother' ? 'selected' : ''; ?>>Brother</option>
+                                                                                        <option value="Sister" <?php echo $array['emergency_contact_relation'] == 'Sister' ? 'selected' : ''; ?>>Sister</option>
+                                                                                        <option value="Other" <?php echo $array['emergency_contact_relation'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="emergency_contact_number">Emergency Contact Number:</label></td>
                                                                             <td>
                                                                                 <span id="emergency_contact_numberText"><?php echo $array['emergency_contact_number']; ?></span>
-                                                                                <input type="tel" name="emergency_contact_number" id="emergency_contact_number"
-                                                                                    value="<?php echo $array['emergency_contact_number']; ?>"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    pattern="\d{10}" maxlength="10">
+                                                                                <?php if (in_array('emergency_contact_number', $user_accessible_fields)): ?>
+                                                                                    <input type="tel" name="emergency_contact_number" id="emergency_contact_number"
+                                                                                        value="<?php echo $array['emergency_contact_number']; ?>"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        pattern="\d{10}" maxlength="10">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1113,39 +1149,47 @@ $field_names_mapping = [
                                                                             <td><label for="stateofdomicile">State of Domicile:</label></td>
                                                                             <td>
                                                                                 <span id="stateofdomicileText"><?php echo $array['stateofdomicile']; ?></span>
-                                                                                <select name="stateofdomicile" id="stateofdomicile" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select State</option>
-                                                                                    <option value="Uttar Pradesh" <?php echo $array['stateofdomicile'] == 'Uttar Pradesh' ? 'selected' : ''; ?>>Uttar Pradesh</option>
-                                                                                    <option value="West Bengal" <?php echo $array['stateofdomicile'] == 'West Bengal' ? 'selected' : ''; ?>>West Bengal</option>
-                                                                                    <!-- Add more states as needed -->
-                                                                                </select>
+                                                                                <?php if (in_array('stateofdomicile', $user_accessible_fields)): ?>
+                                                                                    <select name="stateofdomicile" id="stateofdomicile" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select State</option>
+                                                                                        <option value="Uttar Pradesh" <?php echo $array['stateofdomicile'] == 'Uttar Pradesh' ? 'selected' : ''; ?>>Uttar Pradesh</option>
+                                                                                        <option value="West Bengal" <?php echo $array['stateofdomicile'] == 'West Bengal' ? 'selected' : ''; ?>>West Bengal</option>
+                                                                                        <!-- Add more states as needed -->
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="postaladdress">Current Address:</label></td>
                                                                             <td>
                                                                                 <span id="postaladdressText"><?php echo $array['postaladdress']; ?></span>
-                                                                                <textarea name="postaladdress" id="postaladdress" class="form-control"
-                                                                                    rows="3" disabled style="display:none;"><?php echo $array['postaladdress']; ?></textarea>
+                                                                                <?php if (in_array('postaladdress', $user_accessible_fields)): ?>
+                                                                                    <textarea name="postaladdress" id="postaladdress" class="form-control"
+                                                                                        rows="3" disabled style="display:none;"><?php echo $array['postaladdress']; ?></textarea>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="permanentaddress">Permanent Address:</label></td>
                                                                             <td>
                                                                                 <span id="permanentaddressText"><?php echo $array['permanentaddress']; ?></span>
-                                                                                <textarea name="permanentaddress" id="permanentaddress" class="form-control"
-                                                                                    rows="3" disabled style="display:none;"><?php echo $array['permanentaddress']; ?></textarea>
+                                                                                <?php if (in_array('permanentaddress', $user_accessible_fields)): ?>
+                                                                                    <textarea name="permanentaddress" id="permanentaddress" class="form-control"
+                                                                                        rows="3" disabled style="display:none;"><?php echo $array['permanentaddress']; ?></textarea>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td colspan="2">
-                                                                                <div class="form-check" style="display:none;" id="sameAddressCheckbox">
-                                                                                    <input class="form-check-input" type="checkbox" id="same_address"
-                                                                                        onclick="copyAddress()">
-                                                                                    <label class="form-check-label" for="same_address">
-                                                                                        Same as current address
-                                                                                    </label>
-                                                                                </div>
+                                                                                <?php if (in_array('address_details', $accessible_cards) && in_array('postaladdress', $user_accessible_fields) && in_array('permanentaddress', $user_accessible_fields)): ?>
+                                                                                    <div class="form-check" style="display:none;" id="sameAddressCheckbox">
+                                                                                        <input class="form-check-input" type="checkbox" id="same_address"
+                                                                                            onclick="copyAddress()">
+                                                                                        <label class="form-check-label" for="same_address">
+                                                                                            Same as current address
+                                                                                        </label>
+                                                                                    </div>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1177,29 +1221,35 @@ $field_names_mapping = [
                                                                             <td><label for="contact">Telephone Number:</label></td>
                                                                             <td>
                                                                                 <span id="contactText"><?php echo $array['contact']; ?></span>
-                                                                                <input type="tel" name="contact" id="contact"
-                                                                                    value="<?php echo $array['contact']; ?>"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    pattern="\d{10}" maxlength="10">
+                                                                                <?php if (in_array('contact', $user_accessible_fields)): ?>
+                                                                                    <input type="tel" name="contact" id="contact"
+                                                                                        value="<?php echo $array['contact']; ?>"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        pattern="\d{10}" maxlength="10">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="alternate_number">Alternate Number:</label></td>
                                                                             <td>
                                                                                 <span id="alternate_numberText"><?php echo $array['alternate_number']; ?></span>
-                                                                                <input type="tel" name="alternate_number" id="alternate_number"
-                                                                                    value="<?php echo $array['alternate_number']; ?>"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    pattern="\d{10}" maxlength="10">
+                                                                                <?php if (in_array('alternate_number', $user_accessible_fields)): ?>
+                                                                                    <input type="tel" name="alternate_number" id="alternate_number"
+                                                                                        value="<?php echo $array['alternate_number']; ?>"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        pattern="\d{10}" maxlength="10">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="emailaddress">Email Address:</label></td>
                                                                             <td>
                                                                                 <span id="emailaddressText"><?php echo $array['emailaddress']; ?></span>
-                                                                                <input type="email" name="emailaddress" id="emailaddress"
-                                                                                    value="<?php echo $array['emailaddress']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('emailaddress', $user_accessible_fields)): ?>
+                                                                                    <input type="email" name="emailaddress" id="emailaddress"
+                                                                                        value="<?php echo $array['emailaddress']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1231,22 +1281,26 @@ $field_names_mapping = [
                                                                             <td><label for="caste">Caste:</label></td>
                                                                             <td>
                                                                                 <span id="casteText"><?php echo $array['caste']; ?></span>
-                                                                                <select name="caste" id="caste" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Caste</option>
-                                                                                    <option value="General" <?php echo $array['caste'] == 'General' ? 'selected' : ''; ?>>General</option>
-                                                                                    <option value="SC" <?php echo $array['caste'] == 'SC' ? 'selected' : ''; ?>>Scheduled Caste (SC)</option>
-                                                                                    <option value="ST" <?php echo $array['caste'] == 'ST' ? 'selected' : ''; ?>>Scheduled Tribe (ST)</option>
-                                                                                    <option value="OBC" <?php echo $array['caste'] == 'OBC' ? 'selected' : ''; ?>>Other Backward Class (OBC)</option>
-                                                                                    <option value="EWS" <?php echo $array['caste'] == 'EWS' ? 'selected' : ''; ?>>Economically Weaker Section (EWS)</option>
-                                                                                </select>
+                                                                                <?php if (in_array('caste', $user_accessible_fields)): ?>
+                                                                                    <select name="caste" id="caste" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Caste</option>
+                                                                                        <option value="General" <?php echo $array['caste'] == 'General' ? 'selected' : ''; ?>>General</option>
+                                                                                        <option value="SC" <?php echo $array['caste'] == 'SC' ? 'selected' : ''; ?>>Scheduled Caste (SC)</option>
+                                                                                        <option value="ST" <?php echo $array['caste'] == 'ST' ? 'selected' : ''; ?>>Scheduled Tribe (ST)</option>
+                                                                                        <option value="OBC" <?php echo $array['caste'] == 'OBC' ? 'selected' : ''; ?>>Other Backward Class (OBC)</option>
+                                                                                        <option value="EWS" <?php echo $array['caste'] == 'EWS' ? 'selected' : ''; ?>>Economically Weaker Section (EWS)</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label>Caste Certificate:</label></td>
                                                                             <td>
-                                                                                <input type="file" name="caste_document" id="caste_document"
-                                                                                    class="form-control" disabled style="display:none;"
-                                                                                    accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php if (in_array('caste_document', $user_accessible_fields)): ?>
+                                                                                    <input type="file" name="caste_document" id="caste_document"
+                                                                                        class="form-control" disabled style="display:none;"
+                                                                                        accept=".pdf,.jpg,.jpeg,.png">
+                                                                                <?php endif; ?>
                                                                                 <?php if (!empty($array['caste_document'])): ?>
                                                                                     <a href="<?php echo $array['caste_document']; ?>" target="_blank">View Certificate</a><br>
                                                                                 <?php endif; ?>
@@ -1281,67 +1335,79 @@ $field_names_mapping = [
                                                                             <td><label for="schooladmissionrequired">School Admission Required:</label></td>
                                                                             <td>
                                                                                 <span id="schooladmissionrequiredText"><?php echo $array['schooladmissionrequired']; ?></span>
-                                                                                <select name="schooladmissionrequired" id="schooladmissionrequired" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select</option>
-                                                                                    <option value="Yes" <?php echo $array['schooladmissionrequired'] == 'Yes' ? 'selected' : ''; ?>>Yes</option>
-                                                                                    <option value="No" <?php echo $array['schooladmissionrequired'] == 'No' ? 'selected' : ''; ?>>No</option>
-                                                                                </select>
+                                                                                <?php if (in_array('schooladmissionrequired', $user_accessible_fields)): ?>
+                                                                                    <select name="schooladmissionrequired" id="schooladmissionrequired" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select</option>
+                                                                                        <option value="Yes" <?php echo $array['schooladmissionrequired'] == 'Yes' ? 'selected' : ''; ?>>Yes</option>
+                                                                                        <option value="No" <?php echo $array['schooladmissionrequired'] == 'No' ? 'selected' : ''; ?>>No</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="nameoftheschool">Name of the School:</label></td>
                                                                             <td>
                                                                                 <span id="nameoftheschoolText"><?php echo $array['nameoftheschool']; ?></span>
-                                                                                <input type="text" name="nameoftheschool" id="nameoftheschool"
-                                                                                    value="<?php echo $array['nameoftheschool']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('nameoftheschool', $user_accessible_fields)): ?>
+                                                                                    <input type="text" name="nameoftheschool" id="nameoftheschool"
+                                                                                        value="<?php echo $array['nameoftheschool']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="nameoftheboard">Name of the Board:</label></td>
                                                                             <td>
                                                                                 <span id="nameoftheboardText"><?php echo $array['nameoftheboard']; ?></span>
-                                                                                <select name="nameoftheboard" id="nameoftheboard" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Board</option>
-                                                                                    <option value="CBSE" <?php echo $array['nameoftheboard'] == 'CBSE' ? 'selected' : ''; ?>>CBSE</option>
-                                                                                    <option value="ICSE" <?php echo $array['nameoftheboard'] == 'ICSE' ? 'selected' : ''; ?>>ICSE</option>
-                                                                                    <option value="State Board" <?php echo $array['nameoftheboard'] == 'State Board' ? 'selected' : ''; ?>>State Board</option>
-                                                                                </select>
+                                                                                <?php if (in_array('nameoftheboard', $user_accessible_fields)): ?>
+                                                                                    <select name="nameoftheboard" id="nameoftheboard" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Board</option>
+                                                                                        <option value="CBSE" <?php echo $array['nameoftheboard'] == 'CBSE' ? 'selected' : ''; ?>>CBSE</option>
+                                                                                        <option value="ICSE" <?php echo $array['nameoftheboard'] == 'ICSE' ? 'selected' : ''; ?>>ICSE</option>
+                                                                                        <option value="State Board" <?php echo $array['nameoftheboard'] == 'State Board' ? 'selected' : ''; ?>>State Board</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="medium">Medium:</label></td>
                                                                             <td>
                                                                                 <span id="mediumText"><?php echo $array['medium']; ?></span>
-                                                                                <select name="medium" id="medium" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Medium</option>
-                                                                                    <option value="English" <?php echo $array['medium'] == 'English' ? 'selected' : ''; ?>>English</option>
-                                                                                    <option value="Hindi" <?php echo $array['medium'] == 'Hindi' ? 'selected' : ''; ?>>Hindi</option>
-                                                                                    <option value="Other" <?php echo $array['medium'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                                                                                </select>
+                                                                                <?php if (in_array('medium', $user_accessible_fields)): ?>
+                                                                                    <select name="medium" id="medium" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Medium</option>
+                                                                                        <option value="English" <?php echo $array['medium'] == 'English' ? 'selected' : ''; ?>>English</option>
+                                                                                        <option value="Hindi" <?php echo $array['medium'] == 'Hindi' ? 'selected' : ''; ?>>Hindi</option>
+                                                                                        <option value="Other" <?php echo $array['medium'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="preferredbranch">Preferred Branch:</label></td>
                                                                             <td>
                                                                                 <span id="preferredbranchText"><?php echo $array['preferredbranch']; ?></span>
-                                                                                <select name="preferredbranch" id="preferredbranch" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Branch</option>
-                                                                                    <option value="Lucknow" <?php echo $array['preferredbranch'] == 'Lucknow' ? 'selected' : ''; ?>>Lucknow</option>
-                                                                                    <option value="West Bengal" <?php echo $array['preferredbranch'] == 'West Bengal' ? 'selected' : ''; ?>>West Bengal</option>
-                                                                                </select>
+                                                                                <?php if (in_array('preferredbranch', $user_accessible_fields)): ?>
+                                                                                    <select name="preferredbranch" id="preferredbranch" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Branch</option>
+                                                                                        <option value="Lucknow" <?php echo $array['preferredbranch'] == 'Lucknow' ? 'selected' : ''; ?>>Lucknow</option>
+                                                                                        <option value="West Bengal" <?php echo $array['preferredbranch'] == 'West Bengal' ? 'selected' : ''; ?>>West Bengal</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="nameofthesubjects">Select Subjects:</label></td>
                                                                             <td>
                                                                                 <span id="nameofthesubjectsText"><?php echo $array['nameofthesubjects']; ?></span>
-                                                                                <select name="nameofthesubjects" id="nameofthesubjects" class="form-select" disabled style="display:none;">
-                                                                                    <option value="">Select Subject</option>
-                                                                                    <option value="ALL Subjects" <?php echo $array['nameofthesubjects'] == 'ALL Subjects' ? 'selected' : ''; ?>>ALL Subjects</option>
-                                                                                    <option value="English" <?php echo $array['nameofthesubjects'] == 'English' ? 'selected' : ''; ?>>English</option>
-                                                                                    <option value="Embroidery" <?php echo $array['nameofthesubjects'] == 'Embroidery' ? 'selected' : ''; ?>>Embroidery</option>
-                                                                                </select>
+                                                                                <?php if (in_array('nameofthesubjects', $user_accessible_fields)): ?>
+                                                                                    <select name="nameofthesubjects" id="nameofthesubjects" class="form-select" disabled style="display:none;">
+                                                                                        <option value="">Select Subject</option>
+                                                                                        <option value="ALL Subjects" <?php echo $array['nameofthesubjects'] == 'ALL Subjects' ? 'selected' : ''; ?>>ALL Subjects</option>
+                                                                                        <option value="English" <?php echo $array['nameofthesubjects'] == 'English' ? 'selected' : ''; ?>>English</option>
+                                                                                        <option value="Embroidery" <?php echo $array['nameofthesubjects'] == 'Embroidery' ? 'selected' : ''; ?>>Embroidery</option>
+                                                                                    </select>
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1373,18 +1439,22 @@ $field_names_mapping = [
                                                                             <td><label for="familymonthlyincome">Family Monthly Income:</label></td>
                                                                             <td>
                                                                                 <span id="familymonthlyincomeText"><?php echo $array['familymonthlyincome']; ?></span>
-                                                                                <input type="number" name="familymonthlyincome" id="familymonthlyincome"
-                                                                                    value="<?php echo $array['familymonthlyincome']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('familymonthlyincome', $user_accessible_fields)): ?>
+                                                                                    <input type="number" name="familymonthlyincome" id="familymonthlyincome"
+                                                                                        value="<?php echo $array['familymonthlyincome']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td><label for="totalnumberoffamilymembers">Total Family Members:</label></td>
                                                                             <td>
                                                                                 <span id="totalnumberoffamilymembersText"><?php echo $array['totalnumberoffamilymembers']; ?></span>
-                                                                                <input type="number" name="totalnumberoffamilymembers" id="totalnumberoffamilymembers"
-                                                                                    value="<?php echo $array['totalnumberoffamilymembers']; ?>"
-                                                                                    class="form-control" disabled style="display:none;">
+                                                                                <?php if (in_array('totalnumberoffamilymembers', $user_accessible_fields)): ?>
+                                                                                    <input type="number" name="totalnumberoffamilymembers" id="totalnumberoffamilymembers"
+                                                                                        value="<?php echo $array['totalnumberoffamilymembers']; ?>"
+                                                                                        class="form-control" disabled style="display:none;">
+                                                                                <?php endif; ?>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
@@ -1394,8 +1464,8 @@ $field_names_mapping = [
                                                     </div>
                                                 </div>
 
-                                                <!-- Student Status Tab (Admin only) -->
-                                                <?php if ($is_admin): ?>
+                                                <!-- Student Status Tab -->
+                                                <?php if (in_array('student_status', $accessible_cards)): ?>
                                                     <div id="student_status" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="student_status_card">
                                                             <div class="card-header">
@@ -1415,11 +1485,13 @@ $field_names_mapping = [
                                                                                 <td><label for="payment_type">Payment Type:</label></td>
                                                                                 <td>
                                                                                     <span id="payment_typeText"><?php echo $array['payment_type']; ?></span>
-                                                                                    <select name="payment_type" id="payment_type" class="form-select" disabled style="display:none;">
-                                                                                        <option value="">Select Type</option>
-                                                                                        <option value="Advance" <?php echo $array['payment_type'] == 'Advance' ? 'selected' : ''; ?>>Advance</option>
-                                                                                        <option value="Regular" <?php echo $array['payment_type'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
-                                                                                    </select>
+                                                                                    <?php if (in_array('payment_type', $user_accessible_fields)): ?>
+                                                                                        <select name="payment_type" id="payment_type" class="form-select" disabled style="display:none;">
+                                                                                            <option value="">Select Type</option>
+                                                                                            <option value="Advance" <?php echo $array['payment_type'] == 'Advance' ? 'selected' : ''; ?>>Advance</option>
+                                                                                            <option value="Regular" <?php echo $array['payment_type'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
+                                                                                        </select>
+                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1436,8 +1508,8 @@ $field_names_mapping = [
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <!-- Admin Documents Tab (Admin only) -->
-                                                <?php if ($is_admin): ?>
+                                                <!-- Admin Documents Tab -->
+                                                <?php if (in_array('admin_documents', $accessible_cards)): ?>
                                                     <div id="admin_documents" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="admin_documents_card">
                                                             <div class="card-header">
