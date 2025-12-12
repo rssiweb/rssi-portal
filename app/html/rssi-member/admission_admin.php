@@ -2036,13 +2036,13 @@ foreach ($card_access_levels as $card => $required_level) {
                                                 <!-- Misc Tab -->
                                                 <?php if (in_array('misc', $accessible_cards)): ?>
                                                     <div id="misc" class="tab-pane" role="tabpanel">
-                                                        <div class="card" id="admin_console_card">
+                                                        <div class="card" id="misc_card">
                                                             <div class="card-header">
                                                                 Miscellaneous Information
-                                                                <span class="edit-icon" onclick="toggleEdit('admin_console_card')">
+                                                                <span class="edit-icon" onclick="toggleEdit('misc_card')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
-                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('admin_console_card')">
+                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('misc_card')">
                                                                     <i class="bi bi-save"></i>
                                                                 </span>
                                                             </div>
@@ -2095,6 +2095,12 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                             <tr>
                                                                                 <td><label for="photourl">Photo URL:</label></td>
                                                                                 <td>
+                                                                                    <?php if (in_array('photourl', $user_accessible_fields)): ?>
+                                                                                        <input type="url" name="photourl" id="photourl"
+                                                                                            value="<?php echo $array['photourl']; ?>"
+                                                                                            class="form-control" disabled style="display:none;"
+                                                                                            placeholder="Enter photo URL">
+                                                                                    <?php endif; ?>
                                                                                     <span id="photourlText">
                                                                                         <?php if (!empty($array['photourl'])): ?>
                                                                                             <a href="<?php echo $array['photourl']; ?>" target="_blank">View Photo</a>
@@ -2102,22 +2108,33 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                             No photo URL
                                                                                         <?php endif; ?>
                                                                                     </span>
-                                                                                    <?php if (in_array('photourl', $user_accessible_fields)): ?>
-                                                                                        <input type="url" name="photourl" id="photourl"
-                                                                                            value="<?php echo $array['photourl']; ?>"
-                                                                                            class="form-control" disabled style="display:none;"
-                                                                                            placeholder="Enter photo URL">
-                                                                                    <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td><label for="scode">Scode:</label></td>
                                                                                 <td>
-                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
+                                                                                    <!-- View mode -->
+                                                                                    <span id="scodeText">
+                                                                                        <?php
+                                                                                        if (!empty($array['scode'])) {
+                                                                                            echo htmlspecialchars($array['scode']);
+                                                                                        } else {
+                                                                                            echo '<span class="text-muted">Not generated</span>';
+                                                                                        }
+                                                                                        ?>
+                                                                                    </span>
+
+                                                                                    <!-- Edit mode (hidden by default) -->
                                                                                     <?php if (in_array('scode', $user_accessible_fields)): ?>
-                                                                                        <input type="text" name="scode" id="scode"
-                                                                                            value="<?php echo $array['scode']; ?>"
-                                                                                            class="form-control" disabled style="display:none;">
+                                                                                        <div class="input-group" id="scodeInputGroup" style="display:none; width: 300px;">
+                                                                                            <input type="text" name="scode" id="scodeInput"
+                                                                                                value="<?php echo htmlspecialchars($array['scode']); ?>"
+                                                                                                class="form-control"
+                                                                                                placeholder="Enter Scode manually">
+                                                                                            <button class="btn btn-outline-secondary" type="button" id="generateScodeBtn">
+                                                                                                <i class="bi bi-arrow-repeat"></i> Generate
+                                                                                            </button>
+                                                                                        </div>
                                                                                     <?php endif; ?>
                                                                                 </td>
                                                                             </tr>
@@ -2189,56 +2206,153 @@ foreach ($card_access_levels as $card => $required_level) {
             }
         });
 
-        // Edit/Save toggle function
+        // Generate scode in format: 693ca50c910501faf5 (16-char hex)
+        function generateScode() {
+            // Create array for 8 random bytes (16 hex chars)
+            const bytes = new Uint8Array(8);
+
+            // Use crypto.getRandomValues for secure random numbers
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(bytes);
+            } else {
+                // Fallback for older browsers
+                for (let i = 0; i < 8; i++) {
+                    bytes[i] = Math.floor(Math.random() * 256);
+                }
+            }
+
+            // Convert bytes to hex string
+            let hex = '';
+            for (let i = 0; i < bytes.length; i++) {
+                // Convert byte to two-digit hex
+                const hexByte = bytes[i].toString(16).padStart(2, '0');
+                hex += hexByte;
+            }
+
+            return hex; // Returns format: 693ca50c910501faf5
+        }
+
+        // Handle Generate Scode button click
+        $(document).ready(function() {
+            // Generate scode when button is clicked
+            $(document).on('click', '#generateScodeBtn', function() {
+                const scodeInput = document.getElementById('scodeInput');
+                if (scodeInput) {
+                    const newScode = generateScode();
+                    scodeInput.value = newScode;
+
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                    toast.style.zIndex = '9999';
+                    toast.innerHTML = `
+                <strong>Scode Generated!</strong> ${newScode}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+                    document.body.appendChild(toast);
+
+                    // Auto-remove after 3 seconds
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 3000);
+                }
+            });
+        });
+
+        // Update the toggleEdit function to handle scode
         function toggleEdit(cardId) {
             const card = document.getElementById(cardId);
+            if (!card) {
+                console.error('Card not found:', cardId);
+                return;
+            }
+
             const isEditing = card.classList.contains('editing');
+            console.log('Toggling edit for:', cardId, 'isEditing:', isEditing);
 
             if (isEditing) {
                 // Switch to view mode
                 card.classList.remove('editing');
+
+                // Hide all inputs
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = true;
-                    // For file inputs, hide them completely
-                    if (element.type === 'file') {
-                        element.style.display = 'none';
-                    } else {
-                        element.style.display = 'none';
-                    }
+                    element.style.display = 'none';
                 });
+
+                // Hide input groups
+                const scodeInputGroup = document.getElementById('scodeInputGroup');
+                if (scodeInputGroup) {
+                    scodeInputGroup.style.display = 'none';
+                }
+
+                // Update scode text from input
+                const scodeText = document.getElementById('scodeText');
+                const scodeInput = document.getElementById('scodeInput');
+                if (scodeText && scodeInput) {
+                    const value = scodeInput.value.trim();
+                    if (value) {
+                        scodeText.innerHTML = value;
+                        scodeText.className = '';
+                    } else {
+                        scodeText.innerHTML = '<span class="text-muted">Not generated</span>';
+                    }
+                    scodeText.style.display = 'inline';
+                }
+
                 // Show all text spans
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
                     span.style.display = 'inline';
                 });
+
                 // Show edit icon, hide save
-                card.querySelector('.edit-icon').style.display = 'inline';
-                card.querySelector('.save-icon').style.display = 'none';
+                const editIcon = card.querySelector('.edit-icon');
+                const saveIcon = card.querySelector('.save-icon');
+                if (editIcon) editIcon.style.display = 'inline';
+                if (saveIcon) saveIcon.style.display = 'none';
 
             } else {
                 // Switch to edit mode
                 card.classList.add('editing');
+
+                // Show and enable all inputs
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = false;
-                    // For file inputs, show them as block
                     if (element.type === 'file') {
                         element.style.display = 'block';
                     } else if (element.type !== 'hidden') {
                         element.style.display = 'inline-block';
                     }
                 });
-                // Hide text spans (except for read-only fields)
+
+                // Show scode input group
+                const scodeInputGroup = document.getElementById('scodeInputGroup');
+                if (scodeInputGroup) {
+                    scodeInputGroup.style.display = 'flex';
+                }
+
+                // Hide scode text
+                const scodeText = document.getElementById('scodeText');
+                if (scodeText) {
+                    scodeText.style.display = 'none';
+                }
+
+                // Hide other text spans
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
                     const fieldName = span.id.replace('Text', '');
-                    const hasEditableField = card.querySelector(`[name="${fieldName}"]:not([type="hidden"])`);
-                    if (hasEditableField) {
+                    // Keep photourl text visible if it's a link
+                    if (fieldName !== 'photourl') {
                         span.style.display = 'none';
                     }
                 });
-                // Hide edit icon, show save
-                card.querySelector('.edit-icon').style.display = 'none';
-                card.querySelector('.save-icon').style.display = 'inline';
 
-                // Show same address checkbox in edit mode for address section
+                // Hide edit icon, show save
+                const editIcon = card.querySelector('.edit-icon');
+                const saveIcon = card.querySelector('.save-icon');
+                if (editIcon) editIcon.style.display = 'none';
+                if (saveIcon) saveIcon.style.display = 'inline';
+
+                // Show same address checkbox if applicable
                 const sameAddressCheckbox = document.getElementById('sameAddressCheckbox');
                 if (sameAddressCheckbox && cardId === 'address_details_card') {
                     sameAddressCheckbox.style.display = 'block';
