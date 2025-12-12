@@ -2930,8 +2930,16 @@ foreach ($card_access_levels as $card => $required_level) {
             });
         });
 
-        // Helper function to escape HTML
+        // Helper function to escape HTML - FIXED VERSION
         function escapeHtml(text) {
+            // Handle null, undefined, or empty values
+            if (text === null || text === undefined || text === '') {
+                return '';
+            }
+
+            // Convert to string
+            const stringText = String(text);
+
             const map = {
                 '&': '&amp;',
                 '<': '&lt;',
@@ -2939,7 +2947,7 @@ foreach ($card_access_levels as $card => $required_level) {
                 '"': '&quot;',
                 "'": '&#039;'
             };
-            return text.toString().replace(/[&<>"']/g, function(m) {
+            return stringText.replace(/[&<>"']/g, function(m) {
                 return map[m];
             });
         }
