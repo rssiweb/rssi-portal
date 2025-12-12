@@ -882,11 +882,6 @@ foreach ($card_access_levels as $card => $required_level) {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
-
-        /* Make sure Select2 dropdown appears above everything */
-        .select2-container {
-            z-index: 1055;
-        }
     </style>
     <style>
         /* Status Badge next to name */
