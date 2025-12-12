@@ -2248,7 +2248,13 @@ foreach ($card_access_levels as $card => $required_level) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-responsive">
+                    <div id="planHistoryLoading-<?php echo $array['student_id']; ?>" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading history...</span>
+                        </div>
+                        <p class="mt-2">Loading plan history...</p>
+                    </div>
+                    <div id="planHistoryContent-<?php echo $array['student_id']; ?>" class="table-responsive" style="display: none;">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -2260,50 +2266,16 @@ foreach ($card_access_levels as $card => $required_level) {
                                     <th>Changed By</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php
-                                $historyQuery = "SELECT category_type, class, effective_from, effective_until, created_at, created_by 
-                                       FROM student_category_history 
-                                       WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "' 
-                                       AND (is_valid = true OR is_valid IS NULL)
-                                       ORDER BY effective_from DESC, created_at DESC";
-                                $historyResult = pg_query($con, $historyQuery);
-                                $today = date('Y-m-d');
-
-                                if (pg_num_rows($historyResult) > 0) {
-                                    while ($row = pg_fetch_assoc($historyResult)) {
-                                        $effectiveFrom = $row['effective_from'];
-                                        $effectiveUntil = $row['effective_until'];
-
-                                        // Determine if this is the current active plan
-                                        $isCurrent = false;
-                                        if ($effectiveUntil === null) {
-                                            $isCurrent = ($today >= $effectiveFrom);
-                                        } else {
-                                            $isCurrent = ($today >= $effectiveFrom && $today <= $effectiveUntil);
-                                        }
-                                        if ($today < $effectiveFrom) {
-                                            $isCurrent = false;
-                                        }
-                                ?>
-                                        <tr class="<?php echo $isCurrent ? 'table-primary' : '' ?>">
-                                            <td><?php echo htmlspecialchars($row['category_type']) ?></td>
-                                            <td><?php echo htmlspecialchars($row['class'] ?? $array['class']) ?></td>
-                                            <td><?php echo date('d M Y', strtotime($effectiveFrom)) ?></td>
-                                            <td>
-                                                <?php echo $effectiveUntil === null ? '' : date('d M Y', strtotime($effectiveUntil)) ?>
-                                            </td>
-                                            <td><?php echo date('d M Y H:i', strtotime($row['created_at'])) ?></td>
-                                            <td><?php echo htmlspecialchars($row['created_by']) ?></td>
-                                        </tr>
-                                <?php
-                                    }
-                                } else {
-                                    echo '<tr><td colspan="6" class="text-center py-4">No plan history found</td></tr>';
-                                }
-                                ?>
+                            <tbody id="planHistoryBody-<?php echo $array['student_id']; ?>">
+                                <!-- History data will be loaded here via AJAX -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="planHistoryEmpty-<?php echo $array['student_id']; ?>" class="text-center py-4" style="display: none;">
+                        <p class="text-muted">No plan history found</p>
+                    </div>
+                    <div id="planHistoryError-<?php echo $array['student_id']; ?>" class="text-center py-4" style="display: none;">
+                        <p class="text-danger">Failed to load plan history</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2616,6 +2588,124 @@ foreach ($card_access_levels as $card => $required_level) {
                 setTimeout(() => mainForm.submit(), 300);
             }
         });
+        // Load plan history when modal opens
+        $('[id^="planHistoryModal-"]').on('show.bs.modal', function() {
+            const modalId = $(this).attr('id');
+            const studentId = modalId.split('-').pop();
+
+            // Get references to elements
+            const loadingEl = $('#planHistoryLoading-' + studentId);
+            const contentEl = $('#planHistoryContent-' + studentId);
+            const emptyEl = $('#planHistoryEmpty-' + studentId);
+            const errorEl = $('#planHistoryError-' + studentId);
+            const bodyEl = $('#planHistoryBody-' + studentId);
+
+            // Reset UI states
+            loadingEl.show();
+            contentEl.hide();
+            emptyEl.hide();
+            errorEl.hide();
+            bodyEl.empty();
+
+            // Load history via AJAX
+            $.ajax({
+                url: 'get_plan_history.php',
+                type: 'GET',
+                data: {
+                    student_id: studentId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    loadingEl.hide();
+
+                    if (response.success && response.data.length > 0) {
+                        let html = '';
+                        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+                        response.data.forEach(function(plan) {
+                            const effectiveFrom = plan.effective_from;
+                            const effectiveUntil = plan.effective_until;
+
+                            // Determine if this is the current active plan
+                            let isCurrent = false;
+                            if (effectiveUntil === null) {
+                                isCurrent = (today >= effectiveFrom);
+                            } else {
+                                isCurrent = (today >= effectiveFrom && today <= effectiveUntil);
+                            }
+                            if (today < effectiveFrom) {
+                                isCurrent = false;
+                            }
+
+                            const rowClass = isCurrent ? 'table-primary' : '';
+                            const fromDate = new Date(effectiveFrom);
+                            const fromFormatted = fromDate.toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            });
+
+                            let untilFormatted = '';
+                            if (effectiveUntil) {
+                                const untilDate = new Date(effectiveUntil);
+                                untilFormatted = untilDate.toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                });
+                            }
+
+                            const createdDate = new Date(plan.created_at);
+                            const createdFormatted = createdDate.toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+
+                            // Show name with ID in parentheses
+                            const creatorDisplay = plan.created_by_name === plan.created_by_id ?
+                                plan.created_by_id :
+                                `${plan.created_by_name} (${plan.created_by_id})`;
+
+                            html += `<tr class="${rowClass}">
+                        <td>${escapeHtml(plan.category_type)}</td>
+                        <td>${escapeHtml(plan.class || '')}</td>
+                        <td>${fromFormatted}</td>
+                        <td>${untilFormatted}</td>
+                        <td>${createdFormatted}</td>
+                        <td>${escapeHtml(creatorDisplay)}</td>
+                    </tr>`;
+                        });
+
+                        bodyEl.html(html);
+                        contentEl.show();
+                    } else {
+                        emptyEl.show();
+                    }
+                },
+                error: function() {
+                    loadingEl.hide();
+                    errorEl.show();
+                }
+            });
+        });
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.toString().replace(/[&<>"']/g, function(m) {
+                return map[m];
+            });
+        }
     </script>
 </body>
 
