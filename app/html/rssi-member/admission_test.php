@@ -16,7 +16,7 @@ function handlePlanUpdateError($error_message, $updated_fields)
         }, $updated_fields));
 
         echo "<script>
-            alert('Student details updated successfully. Changed fields: $changedFieldsList\\nPlan update failed: $error_message');
+            alert('Student details updated successfully. Changed fields: $changedFieldsList\nPlan update failed: $error_message');
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
@@ -604,17 +604,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Construct message
             if (!empty($updated_list) && !empty($has_plan_update_msg)) {
-                $message = "The following fields were updated: " . addslashes($updated_list) . $has_plan_update_msg;
+                $message = "The following fields were updated: " . $updated_list . "\n" . $has_plan_update_msg;
             } elseif (!empty($updated_list)) {
-                $message = "The following fields were updated: " . addslashes($updated_list);
+                $message = "The following fields were updated: " . $updated_list;
             } elseif (!empty($has_plan_update_msg)) {
                 $message = "Plan change has been recorded in history.";
             } else {
                 $message = "Changes have been saved.";
             }
 
+            // Escape single quotes and newlines for JavaScript
+            $js_message = str_replace(["'", "\n"], ["\\'", "\\n"], $message);
+
             echo "<script>
-                alert('" . addslashes($message) . "');
+                alert('$js_message');
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
