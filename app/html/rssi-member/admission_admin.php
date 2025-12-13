@@ -885,7 +885,7 @@ foreach ($card_access_levels as $card => $required_level) {
     </style>
     <style>
         /* Status Badge next to name */
-        .status-badge {
+        /* .status-badge {
             font-size: 0.75rem;
             font-weight: 600;
             padding: 0.25rem 0.75rem;
@@ -903,7 +903,7 @@ foreach ($card_access_levels as $card => $required_level) {
             background-color: #f8d7da;
             color: #842029;
             border: 1px solid #f5c2c7;
-        }
+        } */
 
         /* Status Flag in top-right corner */
         .status-flag-container {
@@ -1070,16 +1070,17 @@ foreach ($card_access_levels as $card => $required_level) {
                                         <div class="primary-details">
                                             <p style="font-size: large;">
                                                 <?php echo $array["studentname"] ?>
-                                                <?php if (in_array('student_status', $accessible_cards)): ?>
-                                                    <!-- Status badge next to name -->
+                                                <!-- <?php if (in_array('student_status', $accessible_cards)): ?>
+                                                    Status badge next to name
                                                     <span class="status-badge ms-2" data-status="<?php echo $array['filterstatus']; ?>">
                                                         <?php echo $array['filterstatus']; ?>
                                                     </span>
-                                                <?php endif; ?>
+                                                <?php endif; ?> -->
                                             </p>
                                             <p><?php echo $array["student_id"] ?><br>
-                                                <?php echo $array["class"] ?? 'Class not specified' ?><br>
-                                                <?php echo $array["type_of_admission"] ?? 'Admission type not specified' ?></p>
+                                                <?php echo $array["category"] ?><br>
+                                                <?php echo $array["class"] ?? 'Class not specified' ?>/<?php echo $array["type_of_admission"] ?? 'Admission type not specified' ?></p><br>
+
                                         </div>
 
                                         <div class="contact-info">
