@@ -63,9 +63,9 @@ if ($resultArr > 0) {
 
 $query_admission = "SELECT studentname, emailaddress, contact, preferredbranch, student_id, doa, module,
     'admission' AS process_type,
-    (SELECT COUNT(*) FROM rssimyprofile_student WHERE filterstatus IS NULL) AS row_count
+    (SELECT COUNT(*) FROM rssimyprofile_student WHERE photourl IS NULL AND (filterstatus IS NULL OR filterstatus='Active')) AS row_count
 FROM rssimyprofile_student
-WHERE filterstatus IS NULL";
+WHERE photourl IS NULL AND (filterstatus IS NULL OR filterstatus='Active')";
 
 $result_admission = pg_query($con, $query_admission);
 $resultArr_admission = pg_fetch_all($result_admission);
@@ -120,7 +120,7 @@ if ($resultArr_admission > 0) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">

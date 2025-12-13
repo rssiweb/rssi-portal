@@ -2128,7 +2128,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                     <?php if (in_array('scode', $user_accessible_fields)): ?>
                                                                                         <div class="input-group" id="scodeInputGroup" style="display:none; width: 300px;">
                                                                                             <input type="text" name="scode" id="scodeInput"
-                                                                                                value="<?php echo htmlspecialchars($array['scode']); ?>"
+                                                                                                value="<?= htmlspecialchars($array['scode'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                                                                                 class="form-control"
                                                                                                 placeholder="Enter Scode manually">
                                                                                             <button class="btn btn-outline-secondary" type="button" id="generateScodeBtn">
