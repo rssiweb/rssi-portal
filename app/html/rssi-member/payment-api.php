@@ -1219,12 +1219,14 @@ if (@$_POST['form-type'] == "admission") {
     $insertHistoryQuery = "INSERT INTO student_category_history (
       student_id, 
       category_type, 
-      effective_from, 
+      effective_from,
+      class, 
       created_by
     ) VALUES (
       '$student_id', 
       '$type_of_admission', 
-      DATE '$timestamp', 
+      DATE '$timestamp',
+      $class, 
       'System'
     )";
     pg_query($con, $insertHistoryQuery);
