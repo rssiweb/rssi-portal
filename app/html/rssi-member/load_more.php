@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
-require_once __DIR__ . '/../image_functions.php';
+include(__DIR__ . "/../image_functions.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
