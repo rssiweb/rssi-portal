@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/image_functions.php';
 
 // Assume current logged-in user ID is available
 $current_user_id = isset($_GET['user_id']) ? $_GET['user_id'] : null;
@@ -41,21 +42,6 @@ function hasUserLiked($event_id, $user_id, $con)
     $query = "SELECT 1 FROM likes WHERE event_id = $1 AND user_id = $2";
     $result = pg_query_params($con, $query, array($event_id, $user_id));
     return pg_num_rows($result) > 0;
-}
-
-function processImageUrl($imageUrl)
-{
-    $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
-    if (preg_match($pattern, $imageUrl, $matches)) {
-        $photoID = $matches[1];
-
-        // ALWAYS use localhost:8082 for local dev
-        $proxyDomain = "http://localhost:8082";
-        // For production: $proxyDomain = "https://login.rssi.in";
-
-        return "{$proxyDomain}/proxy_image.php?id={$photoID}&w=800&h=600";
-    }
-    return $imageUrl;
 }
 
 // Get offset and limit from query parameters

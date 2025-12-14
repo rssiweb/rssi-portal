@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+require_once __DIR__ . '/../image_functions.php';
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -10,11 +11,12 @@ if (!isLoggedIn("aid")) {
 
 validation();
 ?>
+
 <?php
-// Fetch dynamically loaded events based on the offset
+// Fetch dynamically loaded events
 $offset = $_GET['offset'];
-$limit = 3; // Number of events per batch
-$current_user_id = $associatenumber; // Assume $associatenumber holds the logged-in user's ID
+$limit = 3;
+$current_user_id = $associatenumber;
 
 $query = "
     SELECT 
@@ -45,9 +47,12 @@ $result = pg_query_params($con, $query, array($current_user_id, $offset, $limit)
 
 $events = [];
 while ($row = pg_fetch_assoc($result)) {
+    // Process the image URL using shared function
+    $row['event_image_url'] = processImageUrl($row['event_image_url']);
+
     $row['liked_users'] = $row['liked_users']
         ? array_map(function ($user) {
-            return trim($user, '"'); // Remove double quotes from each username 
+            return trim($user, '"');
         }, explode(',', trim($row['liked_users'], '{}')))
         : [];
     $events[] = $row;

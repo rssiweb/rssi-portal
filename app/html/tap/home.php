@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util_tap.php");
+require_once __DIR__ . '/../image_functions.php';
 
 if (!isLoggedIn("tid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -277,15 +278,14 @@ if (!function_exists('makeClickableLinks')) {
 
                                                                     <?php if (!empty($event['event_image_url'])): ?>
                                                                         <?php
-                                                                        $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
-                                                                        if (preg_match($pattern, $event['event_image_url'], $matches)):
-                                                                            $photoID = $matches[1];
-                                                                            $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                                                        // Process the Google Drive URL to proxy URL
+                                                                        $processedUrl = processImageUrl($event['event_image_url']);
                                                                         ?>
-                                                                            <iframe src="<?= $previewUrl ?>" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>
-                                                                        <?php else: ?>
-                                                                            <p>Invalid Google Drive photo URL.</p>
-                                                                        <?php endif; ?>
+                                                                        <img src="<?= $processedUrl ?>"
+                                                                            class="img-fluid rounded mb-3"
+                                                                            alt="Event image"
+                                                                            style="max-height: 500px; object-fit: contain;"
+                                                                            loading="lazy">
                                                                     <?php endif; ?>
 
                                                                     <?php
@@ -510,9 +510,7 @@ if (!function_exists('makeClickableLinks')) {
 
                                 <p class="text-muted">${event.event_description || ''}</p>
 
-                                ${event.event_image_url ? 
-                                    `<iframe src="${event.event_image_url}" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>` : 
-                                    ''}
+                                ${event.event_image_url ? `<img src="${event.event_image_url}" class="img-fluid rounded mb-3" alt="Event image" style="max-height: 500px; object-fit: contain;" loading="lazy">` : ''}
 
                                 <div class="d-flex align-items-center mt-3 text-muted" id="like-button-${event.event_id}" data-user-id="<?php echo $application_number; ?>">
                                     <div class="pointer" onclick="toggleLike(${event.event_id})">
