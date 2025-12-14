@@ -1128,6 +1128,7 @@ if (@$_POST['form-type'] == "admission") {
   $c_auth_session_id = isset($_POST['c_auth_session_id']) ? $_POST['c_auth_session_id'] : null;
   $is_verified = false; // default
   $sup_document = $_FILES['supporting-document'];
+  $admissionMonthStart = date('Y-m-01', strtotime($_POST['admission-date']));
 
   if ($c_auth_session_id) {
     $query = "SELECT is_verified FROM cash_verification_codes WHERE session_id = $1 LIMIT 1";
@@ -1225,7 +1226,7 @@ if (@$_POST['form-type'] == "admission") {
     ) VALUES (
       '$student_id', 
       '$type_of_admission', 
-      DATE '$timestamp',
+      DATE '$admissionMonthStart',
       $class, 
       'System'
     )";
