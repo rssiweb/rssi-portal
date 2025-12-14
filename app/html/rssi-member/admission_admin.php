@@ -378,7 +378,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ----------------------------------------------
             // VALIDATION 1: DOA BOUNDARY
             // ----------------------------------------------
-            if (strtotime($effective_from_date) < strtotime($doa)) {
+            $admissionMonthStart = date('Y-m-01', strtotime($doa));
+            if (strtotime($effective_from_date) < strtotime($admissionMonthStart)) {
                 handlePlanUpdateError(
                     "Plan effective date cannot be earlier than the student's date of admission.",
                     $updated_fields
@@ -506,7 +507,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $prevPlan['class'] === $class
                     ) {
                         handlePlanUpdateError(
-                            "This plan is already applied for the selected period. No plan change is required. Please adjust fees using a valid concession if needed.",
+                            "This plan is already applied for the selected period. No plan change is required.",
                             $updated_fields
                         );
                         exit;
