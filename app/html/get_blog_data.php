@@ -48,7 +48,8 @@ function processImageUrl($imageUrl)
     $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
     if (preg_match($pattern, $imageUrl, $matches)) {
         $photoID = $matches[1];
-        return "https://drive.google.com/file/d/{$photoID}/preview";
+        // Use your proxy
+        return "proxy_image.php?id={$photoID}&w=800&h=600";
     }
     return $imageUrl;
 }
