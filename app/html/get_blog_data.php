@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/image_functions.php';
+include($_SERVER['DOCUMENT_ROOT'] . '/image_functions.php');
 
 // Assume current logged-in user ID is available
 $current_user_id = isset($_GET['user_id']) ? $_GET['user_id'] : null;
