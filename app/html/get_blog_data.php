@@ -48,8 +48,12 @@ function processImageUrl($imageUrl)
     $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
     if (preg_match($pattern, $imageUrl, $matches)) {
         $photoID = $matches[1];
-        // Use your proxy
-        return "proxy_image.php?id={$photoID}&w=800&h=600";
+
+        // ALWAYS use localhost:8082 for local dev
+        $proxyDomain = "http://localhost:8082";
+        // For production: $proxyDomain = "https://login.rssi.in";
+
+        return "{$proxyDomain}/proxy_image.php?id={$photoID}&w=800&h=600";
     }
     return $imageUrl;
 }
