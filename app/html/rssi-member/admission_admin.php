@@ -1223,9 +1223,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                         <tr>
                                                                             <td><label for="student_id">Student ID:</label></td>
                                                                             <td>
-                                                                                <span id="student_idText"><?php echo $array['student_id']; ?></span>
-                                                                                <input type="hidden" name="student_id" id="student_id"
-                                                                                    value="<?php echo $array['student_id']; ?>">
+                                                                                <?php echo $array['student_id']; ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
