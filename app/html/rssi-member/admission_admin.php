@@ -457,6 +457,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($existingCount == 0) {
                     // Check if we have default values from student profile
                     if ($default_category && $default_class) {
+                        // ============================================
+                        // CHECK IF NEW PLAN IS SAME AS DEFAULT
+                        // ============================================
+                        if ($type_of_admission == $default_category && $class == $default_class) {
+
+                            // Check if effective date is same as OR AFTER admission month
+                            $doaMonthStart = date('Y-m-01', strtotime($doa));
+
+                            if (strtotime($effective_from_date) >= strtotime($doaMonthStart)) {
+                                // User is trying to apply same plan starting from admission month or later
+                                handlePlanUpdateError(
+                                    "Student is already on this plan from admission. No plan change required.",
+                                    $updated_fields
+                                );
+                                pg_query($con, "ROLLBACK");
+                                exit;
+                            }
+                        }
                         // Calculate the day before new plan starts
                         $previousDay = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
 
@@ -477,7 +495,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             '$search_id',
                             '$default_category',
                             '$default_class',
-                            DATE '$doa',
+                            DATE '$admissionMonthStart',
                             DATE '$previousDay',
                             'System',
                             true,
