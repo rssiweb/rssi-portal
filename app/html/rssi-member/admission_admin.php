@@ -240,20 +240,6 @@ $field_names_mapping = [
     'updated_on' => 'Updated On',
 ];
 
-$required_fields = [
-    'studentname',
-    'dateofbirth',
-    'gender',
-    'contact',
-    'guardiansname',
-    'emergency_contact_number',
-    'emailaddress',
-    'caste',
-    'category',
-    'class',
-    'type_of_admission'
-];
-
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Fetch existing student data
@@ -317,36 +303,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue; // Skip to next field
             }
 
-
-
             // Regular field processing
             if (isset($_POST[$field])) {
                 $new_value = trim($_POST[$field]) === "" ? null : pg_escape_string($con, trim($_POST[$field]));
                 $current_value = $current_data[$field] ?? null;
 
-                $normalized_new = $new_value === null ? null : trim($new_value);
-                $normalized_current = $current_value === null ? null : trim($current_value);
-
-                if ($normalized_new === $normalized_current) {
+                // Skip if no change
+                if ($new_value === $current_value) {
                     continue;
-                }
-
-                $missing_required_fields = [];
-
-                foreach ($required_fields as $field) {
-                    if (isset($_POST[$field]) && trim($_POST[$field]) === '') {
-                        $missing_required_fields[] = $field_names_mapping[$field] ?? $field;
-                    }
-                }
-
-                if (!empty($missing_required_fields)) {
-                    $field_list = implode(", ", $missing_required_fields);
-
-                    echo "<script>
-        alert('Please fill the following required fields before submitting:\\n\\n{$field_list}');
-        window.history.back();
-    </script>";
-                    exit;
                 }
 
                 $field_level = getFieldLevel($field, $field_definitions, $field_access_levels);
