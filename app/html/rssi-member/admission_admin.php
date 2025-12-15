@@ -240,8 +240,88 @@ $field_names_mapping = [
     'updated_on' => 'Updated On',
 ];
 
+$required_fields = [
+    'studentname',
+    'dateofbirth',
+    'gender',
+    'guardiansname',
+    'relationwithstudent',
+    'emergency_contact_number',
+    'stateofdomicile',
+    'postaladdress',
+    'permanentaddress',
+    'contact',
+    'caste',
+    'schooladmissionrequired',
+    'category',
+    'module',
+    'filterstatus',
+    'preferredbranch',
+];
+
+// Create the mapped array
+$required_fields_with_names = [];
+foreach ($required_fields as $field) {
+    // Check if the field exists in your mapping
+    if (isset($field_names_mapping[$field])) {
+        $required_fields_with_names[$field] = $field_names_mapping[$field];
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ==============================================
+    // SERVER-SIDE VALIDATION - ONLY CHECK SUBMITTED FIELDS
+    // ==============================================
+    $missingFields = [];
+
+    // Check each required field only if it exists in POST
+    foreach ($required_fields_with_names as $field => $displayName) {
+        // Only validate if this field was submitted in POST
+        if (array_key_exists($field, $_POST)) {
+            $value = $_POST[$field] ?? '';
+
+            // For select fields
+            if (is_array($value)) {
+                if (empty($value)) {
+                    $missingFields[] = $displayName;
+                }
+            }
+            // For regular inputs
+            elseif (trim($value) === '') {
+                $missingFields[] = $displayName;
+            }
+        }
+        // If field not in POST at all, don't validate it
+        // (user didn't edit/change this field)
+    }
+
+    // Also check file uploads if needed
+    $file_fields = ['student_photo', 'upload_aadhar_card', 'caste_document', 'supporting_doc'];
+    foreach ($file_fields as $file_field) {
+        if (isset($_FILES[$file_field]['name']) && empty($_FILES[$file_field]['name'])) {
+            // File field was submitted but empty
+            if (isset($required_fields_with_names[$file_field])) {
+                $missingFields[] = $required_fields_with_names[$file_field];
+            }
+        }
+    }
+
+    if (!empty($missingFields)) {
+        $js_message = "Please fill all required fields: " . implode(', ', $missingFields);
+        $js_message = str_replace("'", "\\'", $js_message);
+
+        echo "<script>
+            alert('$js_message');
+            window.history.back();
+        </script>";
+        exit;
+    }
+
+    // ==============================================
+    // CONTINUE WITH YOUR EXISTING CODE BELOW
+    // ==============================================
+
     // Fetch existing student data
     $query = "SELECT * FROM rssimyprofile_student WHERE student_id = $1";
     $result = pg_query_params($con, $query, [$search_id]);
@@ -2470,9 +2550,49 @@ foreach ($card_access_levels as $card => $required_level) {
             }
         }
 
-        // Save changes function
+        // Use the PHP array you just created
+        const requiredFields = <?php echo json_encode($required_fields_with_names); ?>;
+
+        // Modified saveChanges function that validates ALL visible fields in ALL cards
         function saveChanges(cardId) {
+            // Get ALL cards, not just the current one
+            const allCards = document.querySelectorAll('.card[id$="_card"]');
+            let missingFields = [];
+
+            // Check ALL visible inputs in ALL cards
+            allCards.forEach(card => {
+                const visibleInputs = card.querySelectorAll('input:not([type="hidden"]), select, textarea');
+
+                visibleInputs.forEach(input => {
+                    if (input.style.display !== 'none' && !input.disabled) {
+                        const fieldName = input.name;
+
+                        // Check if this field is in required fields
+                        if (requiredFields[fieldName]) {
+                            const value = input.value ? input.value.trim() : '';
+
+                            // For select elements, check if a valid option is selected
+                            if (input.tagName === 'SELECT' && (!value || value === '')) {
+                                missingFields.push(requiredFields[fieldName]);
+                            }
+                            // For other inputs, check if empty
+                            else if (!value) {
+                                missingFields.push(requiredFields[fieldName]);
+                            }
+                        }
+                    }
+                });
+            });
+
+            // If there are missing fields, show alert and prevent submission
+            if (missingFields.length > 0) {
+                alert(`Please fill ${missingFields.length} required field(s): ${missingFields.join(', ')}`);
+                return false;
+            }
+
+            // If validation passes, submit the form
             document.getElementById('studentProfileForm').submit();
+            return true;
         }
 
         // Copy address function
