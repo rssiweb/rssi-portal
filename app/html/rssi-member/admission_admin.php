@@ -1368,13 +1368,27 @@ foreach ($card_access_levels as $card => $required_level) {
                                                 <?php if (in_array('plan_enrollment', $accessible_cards)): ?>
                                                     <div id="plan_enrollment" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="plan_enrollment_card">
-                                                            <div class="card-header">
-                                                                Plan & Enrollment Information
-                                                                <span class="edit-icon" onclick="toggleEdit('plan_enrollment_card')">
+                                                            <div class="card-header d-flex align-items-center gap-2">
+                                                                <span class="me-auto">Plan & Enrollment Information</span>
+
+                                                                <span class="edit-icon" role="button"
+                                                                    onclick="toggleEdit('plan_enrollment_card')"
+                                                                    title="Edit">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
-                                                                <span class="save-icon" style="display:none;" onclick="saveChanges('plan_enrollment_card')">
+
+                                                                <span class="save-icon" role="button"
+                                                                    style="display:none;"
+                                                                    onclick="saveChanges('plan_enrollment_card')"
+                                                                    title="Save">
                                                                     <i class="bi bi-save"></i>
+                                                                </span>
+
+                                                                <span class="info-icon" role="button"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#planUpdateGuideModal"
+                                                                    title="View Plan Update Guide">
+                                                                    <i class="bi bi-info-circle"></i>
                                                                 </span>
                                                             </div>
                                                             <div class="card-body">
@@ -1449,8 +1463,6 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                                 <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal-<?php echo $array['student_id']; ?>">
                                                                                                     View History
                                                                                                 </button>
-                                                                                                <!-- Link to open the modal -->
-                                                                                                <a href="#" data-bs-toggle="modal" data-bs-target="#planUpdateGuideModal">View Plan Update Guide</a>
                                                                                             <?php endif; ?>
                                                                                         </div>
                                                                                     </div>
