@@ -15,7 +15,6 @@ validation();
 $students = [];
 $action_result = '';
 
-// Handle form submission for syncing
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['sync_selected'])) {
         $selected_students = $_POST['selected_students'] ?? [];
@@ -25,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $success_count = 0;
             $failed_count = 0;
+            $no_change_count = 0;
             $errors = [];
 
             // Start transaction
@@ -50,38 +50,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_category_type = $active_plan['category_type'];
                     $new_class = $active_plan['class'];
 
-                    // Update rssimyprofile_student
-                    $update_query = "
-                        UPDATE rssimyprofile_student 
-                        SET type_of_admission = '$new_category_type', 
-                            class = '$new_class',
-                            updated_by = '$associatenumber',
-                            updated_on = NOW()
-                        WHERE student_id = '$student_id'
-                    ";
+                    // Get current values from rssimyprofile_student
+                    $current_query = "SELECT type_of_admission, class FROM rssimyprofile_student WHERE student_id = '$student_id'";
+                    $current_result = pg_query($con, $current_query);
+                    $current_data = pg_fetch_assoc($current_result);
 
-                    if (pg_query($con, $update_query)) {
-                        $success_count++;
+                    // Determine which fields need updating
+                    $update_fields = [];
+                    if ($current_data['type_of_admission'] != $new_category_type) {
+                        $update_fields[] = "type_of_admission = '$new_category_type'";
+                    }
+                    if ($current_data['class'] != $new_class) {
+                        $update_fields[] = "class = '$new_class'";
+                    }
 
-                        // Log the sync action
-                        $log_query = "
-                            INSERT INTO student_sync_log 
-                            (student_id, old_category_type, new_category_type, old_class, new_class, synced_by, synced_at)
-                            SELECT 
-                                '$student_id',
-                                s.type_of_admission,
-                                '$new_category_type',
-                                s.class,
-                                '$new_class',
-                                '$associatenumber',
-                                NOW()
-                            FROM rssimyprofile_student s
-                            WHERE s.student_id = '$student_id'
+                    // Only update if there are changes
+                    if (!empty($update_fields)) {
+                        $update_fields[] = "updated_by = '$associatenumber'";
+                        $update_fields[] = "updated_on = NOW()";
+
+                        $update_query = "
+                            UPDATE rssimyprofile_student 
+                            SET " . implode(', ', $update_fields) . "
+                            WHERE student_id = '$student_id'
                         ";
-                        pg_query($con, $log_query);
+
+                        if (pg_query($con, $update_query)) {
+                            $success_count++;
+
+                            // Log the sync action
+                            $log_query = "
+                                INSERT INTO student_sync_log 
+                                (student_id, old_category_type, new_category_type, old_class, new_class, synced_by, synced_at)
+                                VALUES (
+                                    '$student_id',
+                                    '{$current_data['type_of_admission']}',
+                                    '$new_category_type',
+                                    '{$current_data['class']}',
+                                    '$new_class',
+                                    '$associatenumber',
+                                    NOW()
+                                )
+                            ";
+                            pg_query($con, $log_query);
+                        } else {
+                            $failed_count++;
+                            $errors[] = "Failed to update student ID: $student_id";
+                        }
                     } else {
-                        $failed_count++;
-                        $errors[] = "Failed to update student ID: $student_id";
+                        $no_change_count++;
+                        // No changes needed, this student is already in sync
                     }
                 } else {
                     $failed_count++;
@@ -93,10 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (pg_query($con, "COMMIT")) {
                 $action_result = '<div class="alert alert-success">';
                 $action_result .= "Successfully synced $success_count student(s).";
+                if ($no_change_count > 0) {
+                    $action_result .= "<br>$no_change_count student(s) were already in sync.";
+                }
                 if ($failed_count > 0) {
                     $action_result .= "<br>$failed_count student(s) failed to sync.";
                     if (!empty($errors)) {
-                        $action_result .= "<br>Errors: " . implode(', ', $errors);
+                        $action_result .= "<br>Errors: " . implode(', ', array_slice($errors, 0, 5));
+                        if (count($errors) > 5) {
+                            $action_result .= "... and " . (count($errors) - 5) . " more";
+                        }
                     }
                 }
                 $action_result .= '</div>';
@@ -200,16 +224,6 @@ if ($result && pg_num_rows($result) > 0) {
             color: #842029;
         }
 
-        .btn-sync {
-            background-color: #198754;
-            border-color: #198754;
-        }
-
-        .btn-sync:hover {
-            background-color: #157347;
-            border-color: #146c43;
-        }
-
         #selectAll {
             margin-right: 10px;
         }
@@ -250,151 +264,150 @@ if ($result && pg_num_rows($result) > 0) {
 
                         <div class="card-body">
                             <br>
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <?php echo $action_result; ?>
+                            <div class="row">
+                                <div class="col-12">
+                                    <?php echo $action_result; ?>
 
-                                        <div class="alert alert-info mt-3">
-                                            <h5><i class="bi bi-info-circle"></i> About This Page</h5>
-                                            <p>This page shows students whose current profile data (class and access category) differs from their active plan in the plan history. You can select students and sync their profile to match the active plan.</p>
-                                            <p><strong>Total mismatched students found:</strong> <?php echo count($students); ?></p>
-                                        </div>
+                                    <div class="alert alert-info mt-3">
+                                        <h5><i class="bi bi-info-circle"></i> About This Page</h5>
+                                        <p>This page shows students whose current profile data (class and access category) differs from their active plan in the plan history. You can select students and sync their profile to match the active plan.</p>
+                                        <p><strong>Total mismatched students found:</strong> <?php echo count($students); ?></p>
+                                    </div>
 
-                                        <?php if (count($students) > 0): ?>
-                                            <form method="POST" action="" id="syncForm">
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <div>
-                                                        <input type="checkbox" id="selectAll" class="form-check-input">
-                                                        <label for="selectAll" class="form-check-label">Select All</label>
-                                                    </div>
-                                                    <div>
-                                                        <button type="submit" name="sync_selected" class="btn btn-sync" onclick="return confirmSync()">
-                                                            <i class="bi bi-arrow-repeat"></i> Sync Selected Students
-                                                        </button>
-                                                        <a href="student.php" class="btn btn-secondary">
-                                                            <i class="bi bi-arrow-left"></i> Back to Student Database
-                                                        </a>
-                                                    </div>
+                                    <?php if (count($students) > 0): ?>
+                                        <form method="POST" action="" id="syncForm">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                                    <label for="selectAll" class="form-check-label">Select All</label>
                                                 </div>
-
-                                                <div class="table-responsive">
-                                                    <table class="table table-hover" id="studentsTable">
-                                                        <thead>
-                                                            <tr>
-                                                                <th width="50">Select</th>
-                                                                <th>Student ID</th>
-                                                                <th>Student Name</th>
-                                                                <th>Status</th>
-                                                                <th>Current Profile</th>
-                                                                <th>Active Plan History</th>
-                                                                <th>Effective Dates</th>
-                                                                <th>Mismatch</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($students as $student): ?>
-                                                                <?php
-                                                                $mismatch_category = $student['current_category_type'] != $student['history_category_type'];
-                                                                $mismatch_class = $student['current_class'] != $student['history_class'];
-                                                                $has_mismatch = $mismatch_category || $mismatch_class;
-
-                                                                $status_class = $student['filterstatus'] == 'Active' ? 'status-active' : 'status-inactive';
-                                                                ?>
-                                                                <tr class="<?php echo $has_mismatch ? 'mismatch' : ''; ?>">
-                                                                    <td>
-                                                                        <input type="checkbox" name="selected_students[]" value="<?php echo $student['student_id']; ?>" class="form-check-input student-checkbox">
-                                                                    </td>
-                                                                    <td>
-                                                                        <strong><?php echo htmlspecialchars($student['student_id']); ?></strong><br>
-                                                                        <small class="text-muted"><?php echo htmlspecialchars($student['scode'] ?? 'No Scode'); ?></small>
-                                                                    </td>
-                                                                    <td><?php echo htmlspecialchars($student['studentname']); ?></td>
-                                                                    <td>
-                                                                        <span class="status-badge <?php echo $status_class; ?>">
-                                                                            <?php echo htmlspecialchars($student['filterstatus']); ?>
-                                                                        </span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="current-values">
-                                                                            <strong>Access Category:</strong><br>
-                                                                            <span class="<?php echo $mismatch_category ? 'text-danger' : 'text-success'; ?>">
-                                                                                <i class="bi bi-<?php echo $mismatch_category ? 'x-circle' : 'check-circle'; ?>"></i>
-                                                                                <?php echo htmlspecialchars($student['current_category_type']); ?>
-                                                                            </span><br>
-                                                                            <strong>Class:</strong><br>
-                                                                            <span class="<?php echo $mismatch_class ? 'text-danger' : 'text-success'; ?>">
-                                                                                <i class="bi bi-<?php echo $mismatch_class ? 'x-circle' : 'check-circle'; ?>"></i>
-                                                                                <?php echo htmlspecialchars($student['current_class']); ?>
-                                                                            </span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="history-values">
-                                                                            <strong>Access Category:</strong><br>
-                                                                            <span class="text-primary">
-                                                                                <?php echo htmlspecialchars($student['history_category_type']); ?>
-                                                                            </span><br>
-                                                                            <strong>Class:</strong><br>
-                                                                            <span class="text-primary">
-                                                                                <?php echo htmlspecialchars($student['history_class']); ?>
-                                                                            </span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <small>
-                                                                            <strong>From:</strong> <?php echo date('d/m/Y', strtotime($student['effective_from'])); ?><br>
-                                                                            <strong>Until:</strong>
-                                                                            <?php
-                                                                            echo $student['effective_until']
-                                                                                ? date('d/m/Y', strtotime($student['effective_until']))
-                                                                                : '<span class="text-success">Ongoing</span>';
-                                                                            ?>
-                                                                        </small>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if ($has_mismatch): ?>
-                                                                            <span class="badge bg-warning text-dark">
-                                                                                <i class="bi bi-exclamation-triangle"></i>
-                                                                                <?php
-                                                                                $mismatches = [];
-                                                                                if ($mismatch_category) $mismatches[] = "Category";
-                                                                                if ($mismatch_class) $mismatches[] = "Class";
-                                                                                echo implode(", ", $mismatches);
-                                                                                ?>
-                                                                            </span>
-                                                                        <?php else: ?>
-                                                                            <span class="badge bg-success">
-                                                                                <i class="bi bi-check-circle"></i> In Sync
-                                                                            </span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
+                                                <div>
+                                                    <button type="submit" name="sync_selected" class="btn btn-success" onclick="return confirmSync()">
+                                                        <i class="bi bi-arrow-repeat"></i> Sync Selected Students
+                                                    </button>
+                                                    <a href="student.php" class="btn btn-secondary">
+                                                        <i class="bi bi-arrow-left"></i> Back to Student Database
+                                                    </a>
                                                 </div>
-                                            </form>
-                                        <?php else: ?>
-                                            <div class="text-center py-5">
-                                                <i class="bi bi-check-circle-fill text-success" style="font-size: 48px;"></i>
-                                                <h3 class="mt-3">All Students Are In Sync!</h3>
-                                                <p class="text-muted">No mismatches found between student profiles and active plans.</p>
-                                                <a href="student.php" class="btn btn-primary">
-                                                    <i class="bi bi-arrow-left"></i> Back to Student Database
-                                                </a>
                                             </div>
-                                        <?php endif; ?>
 
-                                        <?php if (count($students) > 0): ?>
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h5><i class="bi bi-clock-history"></i> Recent Sync History</h5>
-                                                </div>
-                                                <div class="card-body">
-                                                    <?php
-                                                    // Fetch recent sync history
-                                                    $history_query = "
+                                            <div class="table-responsive">
+                                                <table class="table table-hover" id="studentsTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="50">Select</th>
+                                                            <th>Student ID</th>
+                                                            <th>Student Name</th>
+                                                            <th>Status</th>
+                                                            <th>Current Profile</th>
+                                                            <th>Active Plan History</th>
+                                                            <th>Effective Dates</th>
+                                                            <th>Mismatch</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($students as $student): ?>
+                                                            <?php
+                                                            $mismatch_category = $student['current_category_type'] != $student['history_category_type'];
+                                                            $mismatch_class = $student['current_class'] != $student['history_class'];
+                                                            $has_mismatch = $mismatch_category || $mismatch_class;
+
+                                                            $status_class = $student['filterstatus'] == 'Active' ? 'status-active' : 'status-inactive';
+                                                            ?>
+                                                            <tr class="<?php echo $has_mismatch ? 'mismatch' : ''; ?>">
+                                                                <td>
+                                                                    <input type="checkbox" name="selected_students[]" value="<?php echo $student['student_id']; ?>" class="form-check-input student-checkbox">
+                                                                </td>
+                                                                <td>
+                                                                    <strong><?php echo htmlspecialchars($student['student_id']); ?></strong><br>
+                                                                    <small class="text-muted"><?php echo htmlspecialchars($student['scode'] ?? 'No Scode'); ?></small>
+                                                                </td>
+                                                                <td><?php echo htmlspecialchars($student['studentname']); ?></td>
+                                                                <td>
+                                                                    <span class="status-badge <?php echo $status_class; ?>">
+                                                                        <?php echo htmlspecialchars($student['filterstatus']); ?>
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="current-values">
+                                                                        <strong>Access Category:</strong><br>
+                                                                        <span class="<?php echo $mismatch_category ? 'text-danger' : 'text-success'; ?>">
+                                                                            <i class="bi bi-<?php echo $mismatch_category ? 'x-circle' : 'check-circle'; ?>"></i>
+                                                                            <?php echo htmlspecialchars($student['current_category_type']); ?>
+                                                                        </span><br>
+                                                                        <strong>Class:</strong><br>
+                                                                        <span class="<?php echo $mismatch_class ? 'text-danger' : 'text-success'; ?>">
+                                                                            <i class="bi bi-<?php echo $mismatch_class ? 'x-circle' : 'check-circle'; ?>"></i>
+                                                                            <?php echo htmlspecialchars($student['current_class']); ?>
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="history-values">
+                                                                        <strong>Access Category:</strong><br>
+                                                                        <span class="text-primary">
+                                                                            <?php echo htmlspecialchars($student['history_category_type']); ?>
+                                                                        </span><br>
+                                                                        <strong>Class:</strong><br>
+                                                                        <span class="text-primary">
+                                                                            <?php echo htmlspecialchars($student['history_class']); ?>
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <small>
+                                                                        <strong>From:</strong> <?php echo date('d/m/Y', strtotime($student['effective_from'])); ?><br>
+                                                                        <strong>Until:</strong>
+                                                                        <?php
+                                                                        echo $student['effective_until']
+                                                                            ? date('d/m/Y', strtotime($student['effective_until']))
+                                                                            : '<span class="text-success">Ongoing</span>';
+                                                                        ?>
+                                                                    </small>
+                                                                </td>
+                                                                <td>
+                                                                    <?php if ($has_mismatch): ?>
+                                                                        <span class="badge bg-warning text-dark">
+                                                                            <i class="bi bi-exclamation-triangle"></i>
+                                                                            <?php
+                                                                            $mismatches = [];
+                                                                            if ($mismatch_category) $mismatches[] = "Category";
+                                                                            if ($mismatch_class) $mismatches[] = "Class";
+                                                                            echo implode(", ", $mismatches);
+                                                                            ?>
+                                                                        </span>
+                                                                    <?php else: ?>
+                                                                        <span class="badge bg-success">
+                                                                            <i class="bi bi-check-circle"></i> In Sync
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </form>
+                                    <?php else: ?>
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-check-circle-fill text-success" style="font-size: 48px;"></i>
+                                            <h3 class="mt-3">All Students Are In Sync!</h3>
+                                            <p class="text-muted">No mismatches found between student profiles and active plans.</p>
+                                            <a href="student.php" class="btn btn-primary">
+                                                <i class="bi bi-arrow-left"></i> Back to Student Database
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (count($students) > 0): ?>
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5><i class="bi bi-clock-history"></i> Recent Sync History</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <?php
+                                                // Fetch recent sync history
+                                                $history_query = "
                                                         SELECT 
                                                             sl.*,
                                                             s.studentname
@@ -404,53 +417,52 @@ if ($result && pg_num_rows($result) > 0) {
                                                         LIMIT 10
                                                     ";
 
-                                                    $history_result = pg_query($con, $history_query);
+                                                $history_result = pg_query($con, $history_query);
 
-                                                    if ($history_result && pg_num_rows($history_result) > 0):
-                                                    ?>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm">
-                                                                <thead>
+                                                if ($history_result && pg_num_rows($history_result) > 0):
+                                                ?>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Date</th>
+                                                                    <th>Student</th>
+                                                                    <th>Changes Made</th>
+                                                                    <th>Synced By</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php while ($history = pg_fetch_assoc($history_result)): ?>
                                                                     <tr>
-                                                                        <th>Date</th>
-                                                                        <th>Student</th>
-                                                                        <th>Changes Made</th>
-                                                                        <th>Synced By</th>
+                                                                        <td><?php echo date('d/m/Y H:i', strtotime($history['synced_at'])); ?></td>
+                                                                        <td>
+                                                                            <?php echo htmlspecialchars($history['studentname']); ?><br>
+                                                                            <small class="text-muted"><?php echo $history['student_id']; ?></small>
+                                                                        </td>
+                                                                        <td>
+                                                                            <?php
+                                                                            $changes = [];
+                                                                            if ($history['old_category_type'] != $history['new_category_type']) {
+                                                                                $changes[] = "Category: " . $history['old_category_type'] . " → " . $history['new_category_type'];
+                                                                            }
+                                                                            if ($history['old_class'] != $history['new_class']) {
+                                                                                $changes[] = "Class: " . $history['old_class'] . " → " . $history['new_class'];
+                                                                            }
+                                                                            echo implode('<br>', $changes);
+                                                                            ?>
+                                                                        </td>
+                                                                        <td><?php echo htmlspecialchars($history['synced_by']); ?></td>
                                                                     </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <?php while ($history = pg_fetch_assoc($history_result)): ?>
-                                                                        <tr>
-                                                                            <td><?php echo date('d/m/Y H:i', strtotime($history['synced_at'])); ?></td>
-                                                                            <td>
-                                                                                <?php echo htmlspecialchars($history['studentname']); ?><br>
-                                                                                <small class="text-muted"><?php echo $history['student_id']; ?></small>
-                                                                            </td>
-                                                                            <td>
-                                                                                <?php
-                                                                                $changes = [];
-                                                                                if ($history['old_category_type'] != $history['new_category_type']) {
-                                                                                    $changes[] = "Category: " . $history['old_category_type'] . " → " . $history['new_category_type'];
-                                                                                }
-                                                                                if ($history['old_class'] != $history['new_class']) {
-                                                                                    $changes[] = "Class: " . $history['old_class'] . " → " . $history['new_class'];
-                                                                                }
-                                                                                echo implode('<br>', $changes);
-                                                                                ?>
-                                                                            </td>
-                                                                            <td><?php echo htmlspecialchars($history['synced_by']); ?></td>
-                                                                        </tr>
-                                                                    <?php endwhile; ?>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <p class="text-muted text-center">No sync history found.</p>
-                                                    <?php endif; ?>
-                                                </div>
+                                                                <?php endwhile; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <p class="text-muted text-center">No sync history found.</p>
+                                                <?php endif; ?>
                                             </div>
-                                        <?php endif; ?>
-                                    </div>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
