@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // ==============================================
-        // PLAN UPDATE LOGIC (STRICT MODE – DOA CORRECT)
+        // PLAN UPDATE LOGIC (STRICT MODE – DOA SAFE + OVERLAP)
         // ==============================================
 
         $plan_update_fields = [
@@ -345,10 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             }
         }
-
-        if (!$has_plan_update) {
-            return;
-        }
+        if (!$has_plan_update) return;
 
         // ----------------------------------------------
         // INPUT
@@ -363,10 +360,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ----------------------------------------------
         $studentRow = pg_fetch_assoc(pg_query(
             $con,
-            "SELECT
-        doa,
-        type_of_admission AS default_category,
-        class AS default_class
+            "SELECT doa,
+            type_of_admission AS default_category,
+            class AS default_class
      FROM rssimyprofile_student
      WHERE student_id = '$search_id'"
         ));
@@ -380,12 +376,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $default_category = $studentRow['default_category'];
         $default_class    = $studentRow['default_class'];
 
-        $doaMonthStart    = date('Y-m-01', strtotime($doa));
-        $selectedMonth    = getFirstDayOfMonth($_POST['plan_update_effective_from_date']);
-        $effective_from   = $selectedMonth;
+        $doaMonthStart   = date('Y-m-01', strtotime($doa));
+        $selectedMonth   = getFirstDayOfMonth($_POST['plan_update_effective_from_date']);
+        $effective_from  = $selectedMonth;
 
         // ----------------------------------------------
-        // VALIDATION 1: DOA BOUNDARY
+        // VALIDATION: DOA BOUNDARY
         // ----------------------------------------------
         if (strtotime($effective_from) < strtotime($doaMonthStart)) {
             handlePlanUpdateError(
@@ -408,10 +404,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $historyCount = (int) pg_fetch_result(
                 pg_query(
                     $con,
-                    "SELECT COUNT(*)
-             FROM student_category_history
-             WHERE student_id = '$search_id'
-               AND is_valid = true"
+                    "SELECT COUNT(*) FROM student_category_history
+             WHERE student_id = '$search_id' AND is_valid = true"
                 ),
                 0,
                 0
@@ -436,39 +430,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ----------------------------------------------
             // FIRST PLAN + SAME ADMISSION MONTH → USE DOA
             // ----------------------------------------------
-            if (
-                $historyCount === 0 &&
-                strtotime($selectedMonth) === strtotime($doaMonthStart)
-            ) {
-                // First ever plan must start from actual DOA
+            if ($historyCount === 0 && strtotime($selectedMonth) === strtotime($doaMonthStart)) {
                 $effective_from = date('Y-m-d', strtotime($doa));
-            }
-
-            // ----------------------------------------------
-            // VALIDATION: SAME PLAN ALREADY ACTIVE
-            // ----------------------------------------------
-            $samePlanCheck = pg_query($con, "
-        SELECT 1
-        FROM student_category_history
-        WHERE student_id = '$search_id'
-          AND is_valid = true
-          AND category_type = '$type_of_admission'
-          AND class = '$class'
-          AND (
-                effective_until IS NULL
-                OR DATE '$effective_from'
-                   BETWEEN effective_from AND effective_until
-              )
-        LIMIT 1
-    ");
-
-            if (pg_num_rows($samePlanCheck) > 0) {
-                handlePlanUpdateError(
-                    "The same plan is already active for the selected period.",
-                    $updated_fields
-                );
-                pg_query($con, "ROLLBACK");
-                exit;
             }
 
             // ----------------------------------------------
@@ -480,11 +443,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         WHERE student_id = '$search_id'
           AND is_valid = true
           AND effective_until IS NOT NULL
-          AND DATE '$effective_from'
-              BETWEEN effective_from AND effective_until
+          AND DATE '$effective_from' BETWEEN effective_from AND effective_until
         LIMIT 1
     ");
-
             if (pg_num_rows($closedOverlap) > 0) {
                 handlePlanUpdateError(
                     "This period is already covered by a finalized plan.",
@@ -497,10 +458,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ----------------------------------------------
             // CREATE DEFAULT PLAN (ONLY WHEN REQUIRED)
             // ----------------------------------------------
-            if (
-                $historyCount === 0 &&
-                strtotime($selectedMonth) > strtotime($doaMonthStart)
-            ) {
+            if ($historyCount === 0 && strtotime($selectedMonth) > strtotime($doaMonthStart)) {
                 $doaDate = date('Y-m-d', strtotime($doa));
                 $prevDay = date('Y-m-d', strtotime($selectedMonth . ' -1 day'));
 
@@ -528,17 +486,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // ----------------------------------------------
-            // CLOSE CURRENT ACTIVE PLAN (ONLY IF DIFFERENT)
+            // HANDLE OVERLAPS / INVALIDATE / CLOSE OPEN PLANS
             // ----------------------------------------------
-            pg_query($con, "
-        UPDATE student_category_history
-        SET effective_until = DATE '" . date('Y-m-d', strtotime($effective_from . ' -1 day')) . "',
-            updated_by = '$updated_by',
-            updated_on = NOW()
+            $overlapPlansQuery = "
+        SELECT *
+        FROM student_category_history
         WHERE student_id = '$search_id'
           AND is_valid = true
-          AND effective_until IS NULL
-    ");
+          AND (
+                (effective_until IS NULL AND effective_from < DATE '$effective_from')
+                OR effective_from = DATE '$effective_from'
+          )
+        ORDER BY effective_from ASC
+    ";
+            $overlapPlansResult = pg_query($con, $overlapPlansQuery);
+
+            while ($plan = pg_fetch_assoc($overlapPlansResult)) {
+                if (strtotime($plan['effective_from']) === strtotime($effective_from)) {
+                    // Same start date → invalidate old plan
+                    pg_query($con, "
+                UPDATE student_category_history
+                SET is_valid = false,
+                    updated_by = '$updated_by',
+                    updated_on = NOW()
+                WHERE id = {$plan['id']}
+            ");
+                } elseif ($plan['effective_until'] === null) {
+                    // Open-ended plan → close one day before new plan
+                    $prevDay = date('Y-m-d', strtotime($effective_from . ' -1 day'));
+                    pg_query($con, "
+                UPDATE student_category_history
+                SET effective_until = DATE '$prevDay',
+                    updated_by = '$updated_by',
+                    updated_on = NOW()
+                WHERE id = {$plan['id']}
+            ");
+                }
+            }
 
             // ----------------------------------------------
             // INSERT NEW PLAN (OPEN ENDED)
