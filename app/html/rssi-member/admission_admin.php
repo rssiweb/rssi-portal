@@ -420,7 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 strtotime($effective_from) >= strtotime($doaMonthStart)
             ) {
                 handlePlanUpdateError(
-                    "Student is already on this plan from admission. No plan change required.",
+                    "Student is already on this plan. No plan change required.",
                     $updated_fields
                 );
                 pg_query($con, "ROLLBACK");
@@ -1449,6 +1449,8 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                                 <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#planHistoryModal-<?php echo $array['student_id']; ?>">
                                                                                                     View History
                                                                                                 </button>
+                                                                                                <!-- Link to open the modal -->
+                                                                                                <a href="#" data-bs-toggle="modal" data-bs-target="#planUpdateGuideModal">View Plan Update Guide</a>
                                                                                             <?php endif; ?>
                                                                                         </div>
                                                                                     </div>
@@ -2155,6 +2157,110 @@ foreach ($card_access_levels as $card => $required_level) {
                 </div>
             </div>
         </section>
+
+        <!-- Bootstrap Modal -->
+        <div class="modal fade" id="planUpdateGuideModal" tabindex="-1" aria-labelledby="planUpdateGuideModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="planUpdateGuideModalLabel">Student Plan Update – User Guide</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6><strong>Purpose</strong></h6>
+                        <p>This document explains the rules, conditions, and outcomes when applying a new plan (category/class) for a student. It helps end users understand <strong>when a plan update will succeed, fail, or adjust automatically</strong>.</p>
+
+                        <h6><strong>1. When to Apply a Plan Update</strong></h6>
+                        <ul>
+                            <li>Type of Admission</li>
+                            <li>Class</li>
+                            <li>Effective From Date</li>
+                        </ul>
+                        <p>If none of these fields are provided, <strong>no plan update will occur</strong>.</p>
+
+                        <h6><strong>2. Effective Date Rules</strong></h6>
+                        <ul>
+                            <li>The plan cannot start before the student's month of admission.</li>
+                            <li>If the first plan is applied in the admission month, the system automatically uses the Date of Admission (DOA).</li>
+                            <li>If applying a plan in a later month, the system may create a default plan from admission to the month before the new plan automatically.</li>
+                        </ul>
+
+                        <h6><strong>3. Validation & Restrictions</strong></h6>
+                        <ul>
+                            <li><strong>No Duplicate Plan:</strong> If the student is already on the selected plan, the update is not allowed.</li>
+                            <li><strong>No Overlap with Finalized Plans:</strong> If a finalized plan already covers the effective date, the update is blocked.</li>
+                            <li><strong>Handling Open Plans:</strong> Any existing open-ended plans that overlap the new plan will be closed one day before the new plan starts.</li>
+                        </ul>
+
+                        <h6><strong>4. Automatic System Actions</strong></h6>
+                        <ul>
+                            <li><strong>Default Plan Creation:</strong> If this is the first plan update and effective month is after admission month, a default plan is created automatically.</li>
+                            <li><strong>Student Master Update:</strong> If the new plan starts in the current month or earlier, the student’s master record is updated.</li>
+                        </ul>
+
+                        <h6><strong>5. Remarks and Audit</strong></h6>
+                        <ul>
+                            <li>Optional remarks can be added while applying a plan.</li>
+                            <li>All changes are tracked with updated by and timestamp.</li>
+                            <li>Invalidated or closed plans are kept for historical records.</li>
+                        </ul>
+
+                        <h6><strong>6. Key Notes for Users</strong></h6>
+                        <ul>
+                            <li>Check the admission month before setting effective date.</li>
+                            <li>Avoid applying the same plan as current; system will block it.</li>
+                            <li>Changing plan mid-month will adjust overlaps automatically.</li>
+                            <li>Remarks help in audit and tracking.</li>
+                            <li>The update is transactional; either everything is updated or nothing is changed if validation fails.</li>
+                        </ul>
+
+                        <h6><strong>7. Examples</strong></h6>
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Scenario</th>
+                                    <th>Effective Date</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Plan same as admission plan</td>
+                                    <td>Any</td>
+                                    <td>Error: Plan already exists from admission</td>
+                                </tr>
+                                <tr>
+                                    <td>First plan update in admission month</td>
+                                    <td>DOA</td>
+                                    <td>Effective date set to DOA</td>
+                                </tr>
+                                <tr>
+                                    <td>Plan update in future month</td>
+                                    <td>Month after DOA</td>
+                                    <td>Default plan created from DOA to previous day</td>
+                                </tr>
+                                <tr>
+                                    <td>Overlapping finalized plan exists</td>
+                                    <td>Any</td>
+                                    <td>Error: Period already covered</td>
+                                </tr>
+                                <tr>
+                                    <td>Open-ended overlapping plan exists</td>
+                                    <td>Any</td>
+                                    <td>Previous plan closed one day before new plan</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p><strong>Summary:</strong> Ensure correct admission month, effective date, and existing plans before submitting a new plan update.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

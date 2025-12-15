@@ -361,12 +361,12 @@ if ($result && pg_num_rows($result) > 0) {
                                 <div class="col-12">
                                     <?php echo $action_result; ?>
 
-                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <!-- <div class="alert alert-info alert-dismissible fade show" role="alert">
                                         <h5><i class="bi bi-info-circle"></i> About This Page</h5>
                                         <p>This page shows students whose current profile data (class and access category) differs from their active plan in the plan history. You can select students and sync their profile to match the active plan.</p>
                                         <p><strong>Total mismatched students found:</strong> <?php echo count($students); ?></p>
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
+                                    </div> -->
 
                                     <?php if (count($students) > 0): ?>
                                         <form method="POST" action="" id="syncForm">
@@ -376,12 +376,9 @@ if ($result && pg_num_rows($result) > 0) {
                                                     <label for="selectAll" class="form-check-label">Select All</label>
                                                 </div>
                                                 <div>
-                                                    <button type="submit" name="sync_selected" class="btn btn-success" onclick="return confirmSync()">
+                                                    <button type="submit" name="sync_selected" class="btn btn-primary" onclick="return confirmSync()">
                                                         <i class="bi bi-arrow-repeat"></i> Sync Selected Students
                                                     </button>
-                                                    <a href="student.php" class="btn btn-secondary">
-                                                        <i class="bi bi-arrow-left"></i> Back to Student Database
-                                                    </a>
                                                 </div>
                                             </div>
 
@@ -414,12 +411,14 @@ if ($result && pg_num_rows($result) > 0) {
                                                                 </td>
                                                                 <td>
                                                                     <strong><?php echo htmlspecialchars($student['student_id']); ?></strong><br>
-                                                                    <small class="text-muted"><?php echo htmlspecialchars($student['scode'] ?? 'No Scode'); ?></small>
+                                                                    <small class="text-muted"><?php echo htmlspecialchars($student['category'] ?? 'No category'); ?></small>
                                                                 </td>
                                                                 <td><?php echo htmlspecialchars($student['studentname']); ?></td>
                                                                 <td>
-                                                                    <span class="status-badge <?php echo $status_class; ?>">
-                                                                        <?php echo htmlspecialchars($student['filterstatus']); ?>
+                                                                    <span class="status-badge <?= $status_class ?? 'badge-secondary'; ?>">
+                                                                        <?= !empty($student['filterstatus'])
+                                                                            ? htmlspecialchars($student['filterstatus'])
+                                                                            : 'N/A'; ?>
                                                                     </span>
                                                                 </td>
                                                                 <td>
