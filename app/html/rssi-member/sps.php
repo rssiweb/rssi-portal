@@ -15,17 +15,22 @@ validation();
 $students = [];
 $action_result = '';
 
+// Use POST-REDIRECT-GET pattern to prevent form resubmission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['sync_selected'])) {
         $selected_students = $_POST['selected_students'] ?? [];
 
         if (empty($selected_students)) {
-            $action_result = '<div class="alert alert-warning">No students selected for syncing.</div>';
+            $_SESSION['sync_result'] = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>No students selected for syncing.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>';
         } else {
             $success_count = 0;
             $failed_count = 0;
             $no_change_count = 0;
             $errors = [];
+            $detailed_results = []; // Store detailed sync results
 
             // Start transaction
             pg_query($con, "BEGIN");
@@ -56,12 +61,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $current_data = pg_fetch_assoc($current_result);
 
                     // Determine which fields need updating
+                    $category_changed = false;
+                    $class_changed = false;
                     $update_fields = [];
+
                     if ($current_data['type_of_admission'] != $new_category_type) {
                         $update_fields[] = "type_of_admission = '$new_category_type'";
+                        $category_changed = true;
                     }
                     if ($current_data['class'] != $new_class) {
                         $update_fields[] = "class = '$new_class'";
+                        $class_changed = true;
                     }
 
                     // Only update if there are changes
@@ -77,6 +87,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         if (pg_query($con, $update_query)) {
                             $success_count++;
+
+                            // Store detailed sync result
+                            $detailed_results[] = [
+                                'student_id' => $student_id,
+                                'category_changed' => $category_changed,
+                                'old_category' => $current_data['type_of_admission'],
+                                'new_category' => $new_category_type,
+                                'class_changed' => $class_changed,
+                                'old_class' => $current_data['class'],
+                                'new_class' => $new_class
+                            ];
 
                             // Log the sync action
                             $log_query = "
@@ -99,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     } else {
                         $no_change_count++;
-                        // No changes needed, this student is already in sync
                     }
                 } else {
                     $failed_count++;
@@ -109,27 +129,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Commit transaction
             if (pg_query($con, "COMMIT")) {
-                $action_result = '<div class="alert alert-success">';
-                $action_result .= "Successfully synced $success_count student(s).";
+                // Build detailed result message
+                $result_message = '<div class="alert alert-success alert-dismissible fade show" role="alert">';
+                $result_message .= '<i class="bi bi-check-circle me-2"></i>';
+                $result_message .= "<strong>Sync Summary:</strong><br>";
+                $result_message .= "✓ Successfully synced $success_count student(s).<br>";
+
                 if ($no_change_count > 0) {
-                    $action_result .= "<br>$no_change_count student(s) were already in sync.";
+                    $result_message .= "ℹ $no_change_count student(s) were already in sync.<br>";
                 }
+
                 if ($failed_count > 0) {
-                    $action_result .= "<br>$failed_count student(s) failed to sync.";
+                    $result_message .= "✗ $failed_count student(s) failed to sync.";
                     if (!empty($errors)) {
-                        $action_result .= "<br>Errors: " . implode(', ', array_slice($errors, 0, 5));
-                        if (count($errors) > 5) {
-                            $action_result .= "... and " . (count($errors) - 5) . " more";
+                        $result_message .= "<br>Errors: " . implode(', ', array_slice($errors, 0, 3));
+                        if (count($errors) > 3) {
+                            $result_message .= "... and " . (count($errors) - 3) . " more";
                         }
                     }
                 }
-                $action_result .= '</div>';
+
+                // Add detailed changes if any
+                if (!empty($detailed_results)) {
+                    $result_message .= '<hr class="my-2">';
+                    $result_message .= '<strong>Detailed Changes:</strong><br>';
+
+                    $category_changes = 0;
+                    $class_changes = 0;
+                    $both_changes = 0;
+
+                    foreach ($detailed_results as $result) {
+                        if ($result['category_changed'] && $result['class_changed']) {
+                            $both_changes++;
+                        } elseif ($result['category_changed']) {
+                            $category_changes++;
+                        } elseif ($result['class_changed']) {
+                            $class_changes++;
+                        }
+                    }
+
+                    if ($both_changes > 0) {
+                        $result_message .= "• Both category and class updated: $both_changes student(s)<br>";
+                    }
+                    if ($category_changes > 0) {
+                        $result_message .= "• Only category updated: $category_changes student(s)<br>";
+                    }
+                    if ($class_changes > 0) {
+                        $result_message .= "• Only class updated: $class_changes student(s)<br>";
+                    }
+                }
+
+                $result_message .= '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                $result_message .= '</div>';
+
+                $_SESSION['sync_result'] = $result_message;
             } else {
                 pg_query($con, "ROLLBACK");
-                $action_result = '<div class="alert alert-danger">Transaction failed. No changes were made.</div>';
+                $_SESSION['sync_result'] = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-x-circle me-2"></i>Transaction failed. No changes were made.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>';
             }
         }
+
+        // Redirect to prevent form resubmission
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
+}
+
+// Check for stored result message from redirect
+if (isset($_SESSION['sync_result'])) {
+    $action_result = $_SESSION['sync_result'];
+    unset($_SESSION['sync_result']); // Clear after displaying
 }
 
 // Fetch students with mismatched data
@@ -227,6 +299,27 @@ if ($result && pg_num_rows($result) > 0) {
         #selectAll {
             margin-right: 10px;
         }
+
+        .alert hr {
+            margin: 0.5rem 0;
+        }
+
+        /* Sticky header for sync history */
+        .sync-history-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sync-history-container table {
+            margin-bottom: 0;
+        }
+
+        .sync-history-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -268,10 +361,11 @@ if ($result && pg_num_rows($result) > 0) {
                                 <div class="col-12">
                                     <?php echo $action_result; ?>
 
-                                    <div class="alert alert-info mt-3">
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
                                         <h5><i class="bi bi-info-circle"></i> About This Page</h5>
                                         <p>This page shows students whose current profile data (class and access category) differs from their active plan in the plan history. You can select students and sync their profile to match the active plan.</p>
                                         <p><strong>Total mismatched students found:</strong> <?php echo count($students); ?></p>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
 
                                     <?php if (count($students) > 0): ?>
@@ -400,29 +494,39 @@ if ($result && pg_num_rows($result) > 0) {
                                     <?php endif; ?>
 
                                     <?php if (count($students) > 0): ?>
-                                        <div class="card">
+                                        <div class="card mt-4">
                                             <div class="card-header">
-                                                <h5><i class="bi bi-clock-history"></i> Recent Sync History</h5>
+                                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Sync History</h5>
                                             </div>
-                                            <div class="card-body">
+                                            <div class="card-body p-0">
                                                 <?php
-                                                // Fetch recent sync history
+                                                // Fetch recent sync history with pagination
+                                                $limit = 50; // Limit to 50 records for performance
+                                                $page = isset($_GET['history_page']) ? max(1, intval($_GET['history_page'])) : 1;
+                                                $offset = ($page - 1) * $limit;
+
+                                                // Get total count for pagination
+                                                $count_query = "SELECT COUNT(*) as total FROM student_sync_log";
+                                                $count_result = pg_query($con, $count_query);
+                                                $total_records = pg_fetch_assoc($count_result)['total'];
+                                                $total_pages = ceil($total_records / $limit);
+
                                                 $history_query = "
-                                                        SELECT 
-                                                            sl.*,
-                                                            s.studentname
-                                                        FROM student_sync_log sl
-                                                        JOIN rssimyprofile_student s ON sl.student_id = s.student_id
-                                                        ORDER BY sl.synced_at DESC
-                                                        LIMIT 10
-                                                    ";
+                                                    SELECT 
+                                                        sl.*,
+                                                        s.studentname
+                                                    FROM student_sync_log sl
+                                                    JOIN rssimyprofile_student s ON sl.student_id = s.student_id
+                                                    ORDER BY sl.synced_at DESC
+                                                    LIMIT $limit OFFSET $offset
+                                                ";
 
                                                 $history_result = pg_query($con, $history_query);
 
                                                 if ($history_result && pg_num_rows($history_result) > 0):
                                                 ?>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm">
+                                                    <div class="sync-history-container">
+                                                        <table class="table table-sm table-hover mb-0">
                                                             <thead>
                                                                 <tr>
                                                                     <th>Date</th>
@@ -434,31 +538,76 @@ if ($result && pg_num_rows($result) > 0) {
                                                             <tbody>
                                                                 <?php while ($history = pg_fetch_assoc($history_result)): ?>
                                                                     <tr>
-                                                                        <td><?php echo date('d/m/Y H:i', strtotime($history['synced_at'])); ?></td>
+                                                                        <td>
+                                                                            <small><?php echo date('d/m/Y H:i', strtotime($history['synced_at'])); ?></small>
+                                                                        </td>
                                                                         <td>
                                                                             <?php echo htmlspecialchars($history['studentname']); ?><br>
                                                                             <small class="text-muted"><?php echo $history['student_id']; ?></small>
                                                                         </td>
                                                                         <td>
-                                                                            <?php
-                                                                            $changes = [];
-                                                                            if ($history['old_category_type'] != $history['new_category_type']) {
-                                                                                $changes[] = "Category: " . $history['old_category_type'] . " → " . $history['new_category_type'];
-                                                                            }
-                                                                            if ($history['old_class'] != $history['new_class']) {
-                                                                                $changes[] = "Class: " . $history['old_class'] . " → " . $history['new_class'];
-                                                                            }
-                                                                            echo implode('<br>', $changes);
-                                                                            ?>
+                                                                            <small>
+                                                                                <?php
+                                                                                $changes = [];
+                                                                                if ($history['old_category_type'] != $history['new_category_type']) {
+                                                                                    $changes[] = "<strong>Category:</strong> " .
+                                                                                        htmlspecialchars($history['old_category_type'] ?: 'Empty') .
+                                                                                        " → " .
+                                                                                        htmlspecialchars($history['new_category_type']);
+                                                                                }
+                                                                                if ($history['old_class'] != $history['new_class']) {
+                                                                                    $changes[] = "<strong>Class:</strong> " .
+                                                                                        htmlspecialchars($history['old_class'] ?: 'Empty') .
+                                                                                        " → " .
+                                                                                        htmlspecialchars($history['new_class']);
+                                                                                }
+                                                                                echo implode('<br>', $changes);
+                                                                                ?>
+                                                                            </small>
                                                                         </td>
-                                                                        <td><?php echo htmlspecialchars($history['synced_by']); ?></td>
+                                                                        <td>
+                                                                            <small><?php echo htmlspecialchars($history['synced_by']); ?></small>
+                                                                        </td>
                                                                     </tr>
                                                                 <?php endwhile; ?>
                                                             </tbody>
                                                         </table>
                                                     </div>
+
+                                                    <!-- Pagination -->
+                                                    <?php if ($total_pages > 1): ?>
+                                                        <div class="card-footer">
+                                                            <nav aria-label="Sync history navigation">
+                                                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                                                    <?php if ($page > 1): ?>
+                                                                        <li class="page-item">
+                                                                            <a class="page-link" href="?history_page=<?php echo $page - 1; ?>#sync-history" title="Previous">
+                                                                                <i class="bi bi-chevron-left"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    <?php endif; ?>
+
+                                                                    <li class="page-item disabled">
+                                                                        <span class="page-link">
+                                                                            Page <?php echo $page; ?> of <?php echo $total_pages; ?>
+                                                                        </span>
+                                                                    </li>
+
+                                                                    <?php if ($page < $total_pages): ?>
+                                                                        <li class="page-item">
+                                                                            <a class="page-link" href="?history_page=<?php echo $page + 1; ?>#sync-history" title="Next">
+                                                                                <i class="bi bi-chevron-right"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    <?php endif; ?>
+                                                                </ul>
+                                                            </nav>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 <?php else: ?>
-                                                    <p class="text-muted text-center">No sync history found.</p>
+                                                    <div class="text-center py-4">
+                                                        <p class="text-muted mb-0">No sync history found.</p>
+                                                    </div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -512,6 +661,11 @@ if ($result && pg_num_rows($result) > 0) {
                     $('#selectAll').prop('checked', false);
                 }
             });
+
+            // Auto-dismiss success alerts after 10 seconds
+            setTimeout(function() {
+                $('.alert-success').alert('close');
+            }, 10000);
         });
 
         function confirmSync() {
@@ -525,10 +679,10 @@ if ($result && pg_num_rows($result) > 0) {
             return confirm(`Are you sure you want to sync ${selectedCount} student(s)?\n\nThis will update their class and access category in the main student profile to match the active plan history.`);
         }
 
-        // Refresh page after 5 minutes to check for new mismatches
-        setTimeout(function() {
-            location.reload();
-        }, 300000); // 5 minutes
+        // Disable form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
     </script>
 </body>
 

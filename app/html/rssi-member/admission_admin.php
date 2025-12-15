@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // ==============================================
-        // UPDATED PLAN UPDATE LOGIC (FINAL)
+        // UPDATED PLAN UPDATE LOGIC (FINAL) - WITH EMPTY HISTORY HANDLING
         // ==============================================
 
         $plan_update_fields = [
@@ -365,10 +365,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ----------------------------------------------
             $studentResult = pg_query(
                 $con,
-                "SELECT doa FROM rssimyprofile_student WHERE student_id = '$search_id'"
+                "SELECT doa, type_of_admission as default_category, class as default_class FROM rssimyprofile_student WHERE student_id = '$search_id'"
             );
             $studentData = pg_fetch_assoc($studentResult);
             $doa = $studentData['doa'] ?? null;
+            $default_category = $studentData['default_category'] ?? null;
+            $default_class = $studentData['default_class'] ?? null;
 
             if (!$doa) {
                 handlePlanUpdateError("Date of admission not found for the student.", $updated_fields);
@@ -435,14 +437,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             pg_query($con, "BEGIN");
 
             try {
-
                 $plan_history_updated = false;
+
+                // ----------------------------------------------
+                // CHECK IF STUDENT HAS ANY EXISTING PLAN HISTORY
+                // ----------------------------------------------
+                $checkExistingHistory = "
+            SELECT COUNT(*) as count 
+            FROM student_category_history 
+            WHERE student_id = '$search_id'
+            AND is_valid = true
+        ";
+                $existingResult = pg_query($con, $checkExistingHistory);
+                $existingCount = pg_fetch_assoc($existingResult)['count'];
+
+                // ----------------------------------------------
+                // IF NO EXISTING PLAN HISTORY, CREATE DEFAULT PLAN
+                // ----------------------------------------------
+                if ($existingCount == 0) {
+                    // Check if we have default values from student profile
+                    if ($default_category && $default_class) {
+                        // Calculate the day before new plan starts
+                        $previousDay = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
+
+                        // Check if DOA is before the new plan's effective date
+                        if (strtotime($admissionMonthStart) < strtotime($effective_from_date)) {
+                            // Insert default plan from DOA to day before new plan
+                            $insertDefaultPlanQuery = "
+                        INSERT INTO student_category_history (
+                            student_id,
+                            category_type,
+                            class,
+                            effective_from,
+                            effective_until,
+                            created_by,
+                            is_valid,
+                            remarks
+                        ) VALUES (
+                            '$search_id',
+                            '$default_category',
+                            '$default_class',
+                            DATE '$doa',
+                            DATE '$previousDay',
+                            'System',
+                            true,
+                            'Default plan created from student profile (DOA: $doa)'
+                        )
+                    ";
+
+                            if (!pg_query($con, $insertDefaultPlanQuery)) {
+                                throw new Exception("Failed to create default plan from student profile.");
+                            }
+
+                            $plan_history_updated = true;
+                            $default_plan_created = true;
+
+                            // Update the student_current query to use the default plan we just created
+                            $activePlanQuery = "
+                        SELECT id, effective_from, category_type, class
+                        FROM student_category_history
+                        WHERE student_id = '$search_id'
+                          AND is_valid = true
+                          AND effective_until = '$previousDay'
+                        LIMIT 1
+                    ";
+
+                            $activePlanResult = pg_query($con, $activePlanQuery);
+                        } else {
+                            // If DOA is same month as new plan, skip creating default plan
+                            // The new plan will be the first and only plan
+                        }
+                    } else {
+                        // No default values in student profile - we can still proceed with new plan
+                        // This will be the first plan for the student
+                    }
+                }
 
                 // ------------------------------------------
                 // HANDLE EXISTING ACTIVE PLAN (effective_until IS NULL)
                 // ------------------------------------------
                 $activePlanQuery = "
-            SELECT id, effective_from
+            SELECT id, effective_from, category_type, class
             FROM student_category_history
             WHERE student_id = '$search_id'
               AND is_valid = true
@@ -456,6 +531,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $activePlan = pg_fetch_assoc($activePlanResult);
                     $active_plan_id   = $activePlan['id'];
                     $active_plan_from = $activePlan['effective_from'];
+                    $active_plan_category = $activePlan['category_type'];
+                    $active_plan_class = $activePlan['class'];
+
+                    // Check if the new plan is different from current active plan
+                    if ($active_plan_category === $type_of_admission && $active_plan_class === $class) {
+                        // Same plan, no need to create a new one
+                        handlePlanUpdateError(
+                            "The student is already on this plan. No changes needed.",
+                            $updated_fields
+                        );
+                        pg_query($con, "ROLLBACK");
+                        exit;
+                    }
 
                     if (strtotime($effective_from_date) <= strtotime($active_plan_from)) {
                         // New plan fully replaces old active plan
@@ -482,36 +570,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $plan_history_updated = true;
+                } else {
+                    // No active plan found (all plans have effective_until set)
+                    // Check if we need to close the most recent ended plan
+                    $recentEndedPlanQuery = "
+                SELECT id, effective_until
+                FROM student_category_history
+                WHERE student_id = '$search_id'
+                  AND is_valid = true
+                  AND effective_until IS NOT NULL
+                ORDER BY effective_until DESC
+                LIMIT 1
+            ";
+
+                    $recentEndedResult = pg_query($con, $recentEndedPlanQuery);
+
+                    if (pg_num_rows($recentEndedResult) > 0) {
+                        $recentPlan = pg_fetch_assoc($recentEndedResult);
+                        $last_end_date = $recentPlan['effective_until'];
+
+                        // Check if there's a gap between last plan end and new plan start
+                        $gap_days = (strtotime($effective_from_date) - strtotime($last_end_date)) / (60 * 60 * 24);
+
+                        if ($gap_days > 1) {
+                            // There's a gap - create a default plan for the gap period
+                            $gap_start_date = date('Y-m-d', strtotime($last_end_date . ' +1 day'));
+                            $gap_end_date = date('Y-m-d', strtotime($effective_from_date . ' -1 day'));
+
+                            if ($default_category && $default_class) {
+                                $insertGapPlanQuery = "
+                            INSERT INTO student_category_history (
+                                student_id,
+                                category_type,
+                                class,
+                                effective_from,
+                                effective_until,
+                                created_by,
+                                is_valid,
+                                remarks
+                            ) VALUES (
+                                '$search_id',
+                                '$default_category',
+                                '$default_class',
+                                DATE '$gap_start_date',
+                                DATE '$gap_end_date',
+                                'System',
+                                true,
+                                'Default plan created to fill gap in history'
+                            )
+                        ";
+
+                                if (!pg_query($con, $insertGapPlanQuery)) {
+                                    throw new Exception("Failed to create gap-filling default plan.");
+                                }
+
+                                $plan_history_updated = true;
+                            }
+                        }
+                    }
                 }
 
                 // ----------------------------------------------
-                // VALIDATION: BLOCK DUPLICATE CONSECUTIVE PLAN
+                // VALIDATION: CHECK FOR CONFLICTING EXISTING PLANS
                 // ----------------------------------------------
-                $previousPlanQuery = "
-                    SELECT category_type, class, effective_until
-                    FROM student_category_history
-                    WHERE student_id = '$search_id'
-                    AND is_valid = true
-                    AND effective_from < DATE '$effective_from_date'
-                    ORDER BY effective_from DESC
-                    LIMIT 1
-                ";
+                $conflictingPlanQuery = "
+    SELECT category_type, class, effective_from, effective_until
+    FROM student_category_history
+    WHERE student_id = '$search_id'
+    AND is_valid = true
+    AND (
+        -- Check 1: Same plan currently active (open-ended)
+        (effective_until IS NULL AND category_type = '$type_of_admission' AND class = '$class')
+        OR
+        -- Check 2: Same plan covering the new effective date
+        ('$effective_from_date' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31'))
+        OR
+        -- Check 3: Same plan starts on the same date
+        (effective_from = '$effective_from_date' AND category_type = '$type_of_admission' AND class = '$class')
+    )
+    LIMIT 1
+";
 
-                $previousPlanResult = pg_query($con, $previousPlanQuery);
+                $conflictingPlanResult = pg_query($con, $conflictingPlanQuery);
 
-                if (pg_num_rows($previousPlanResult) > 0) {
-                    $prevPlan = pg_fetch_assoc($previousPlanResult);
+                if (pg_num_rows($conflictingPlanResult) > 0) {
+                    $conflictPlan = pg_fetch_assoc($conflictingPlanResult);
 
-                    if (
-                        $prevPlan['category_type'] === $type_of_admission &&
-                        $prevPlan['class'] === $class
-                    ) {
-                        handlePlanUpdateError(
-                            "This plan is already applied for the selected period. No plan change is required.",
-                            $updated_fields
-                        );
-                        exit;
+                    if ($conflictPlan['effective_until'] === null) {
+                        $message = "This plan is currently active (from " . date('d/m/Y', strtotime($conflictPlan['effective_from'])) . "). No plan change is required.";
+                    } elseif ($conflictPlan['effective_from'] == $effective_from_date) {
+                        $message = "The same plan already starts from this date.";
+                    } else {
+                        $message = "This plan already covers the period starting " . date('d/m/Y', strtotime($effective_from_date)) . ".";
                     }
+
+                    handlePlanUpdateError($message, $updated_fields);
+                    exit;
                 }
 
                 // ------------------------------------------
@@ -597,6 +751,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($plan_history_updated) {
                     $updated_fields[] = 'plan_history_updated';
+
+                    // Add a message about default plan creation if applicable
+                    if (isset($default_plan_created) && $default_plan_created) {
+                        $_SESSION['plan_update_message'] = "Created default plan from student profile (DOA to day before new plan) and added new plan.";
+                    }
                 }
             } catch (Exception $e) {
                 pg_query($con, "ROLLBACK");
