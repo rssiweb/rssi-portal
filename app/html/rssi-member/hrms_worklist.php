@@ -16,121 +16,12 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     // Handle bulk approval/rejection
-//     if (isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
-//         $selected_ids = explode(',', $_POST['selected_ids']);
-//         $bulk_action = $_POST['bulk_action'];
-//         $bulk_remarks = trim($_POST['bulk_remarks']);
-//         $reviewer_id = $associatenumber;
+// Check for active tab
+$active_tab = isset($_GET['tab']) && in_array($_GET['tab'], ['hrms', 'student']) ? $_GET['tab'] : 'hrms';
 
-//         if (!empty($selected_ids) && !empty($bulk_action)) {
-//             // Begin transaction
-//             pg_query($con, "BEGIN");
-
-//             try {
-//                 // Process each selected ID
-//                 foreach ($selected_ids as $workflow_id) {
-//                     $workflow_id = pg_escape_string($con, trim($workflow_id));
-
-//                     // First get the basic workflow details
-//                     $details_query = "SELECT 
-//                         w.associatenumber, 
-//                         w.fieldname, 
-//                         w.submitted_value, 
-//                         m.fullname, 
-//                         m.email
-//                     FROM hrms_workflow w
-//                     JOIN rssimyaccount_members m ON w.associatenumber = m.associatenumber
-//                     WHERE w.workflow_id = '$workflow_id'";
-
-//                     $details_result = pg_query($con, $details_query);
-//                     $details_row = pg_fetch_assoc($details_result);
-
-//                     if ($details_row) {
-//                         $associatenumber = $details_row['associatenumber'];
-//                         $fieldname = $details_row['fieldname'];
-//                         $submitted_value = $details_row['submitted_value'];
-//                         $requestedby_name = $details_row['fullname'];
-//                         $requestedby_email = $details_row['email'];
-//                         $requested_on = date('d/m/Y h:i A');
-
-//                         // Now get the current value using the proper fieldname
-//                         $currentValueQuery = "SELECT $fieldname AS current_value 
-//                                             FROM rssimyaccount_members 
-//                                             WHERE associatenumber = '$associatenumber'";
-//                         $currentValueResult = pg_query($con, $currentValueQuery);
-//                         $currentValueRow = pg_fetch_assoc($currentValueResult);
-//                         $current_value = $currentValueRow['current_value'] ?? null;
-
-//                         // Update workflow status
-//                         $update_query = "UPDATE hrms_workflow
-//                             SET reviewer_status = '$bulk_action', 
-//                                 reviewer_id = '$reviewer_id', 
-//                                 reviewed_on = NOW(),
-//                                 remarks = '$bulk_remarks'
-//                             WHERE workflow_id = '$workflow_id'";
-
-//                         $update_result = pg_query($con, $update_query);
-
-//                         if ($bulk_action === 'Approved' && $update_result) {
-//                             // Update member record if approved
-//                             $fieldname_escaped = pg_escape_string($con, $fieldname);
-//                             $member_update = "UPDATE rssimyaccount_members 
-//                                 SET $fieldname_escaped = '$submitted_value' 
-//                                 WHERE associatenumber = '$associatenumber'";
-//                             pg_query($con, $member_update);
-//                         }
-
-//                         // Send email notification
-//                         if (!empty($requestedby_email)) {
-//                             sendEmail("hrms_review", [
-//                                 "requested_by_name" => $requestedby_name,
-//                                 "requested_on" => $requested_on,
-//                                 "reviewer_status" => $bulk_action,
-//                                 "fieldname" => $fieldname,
-//                                 "oldvalue" => $current_value,
-//                                 "newvalue" => $submitted_value,
-//                                 "hide_approve" => 'style="display: none;"',
-//                                 "remarks" => $bulk_remarks
-//                             ], $requestedby_email, false);
-//                         }
-//                     }
-//                 }
-
-//                 // Commit transaction
-//                 pg_query($con, "COMMIT");
-
-//                 // Store success message in session
-//                 $_SESSION['bulk_action_status'] = [
-//                     'status' => 'success',
-//                     'message' => 'Bulk action completed successfully'
-//                 ];
-
-//                 // Redirect to avoid form resubmission
-//                 header("Location: " . $_SERVER['PHP_SELF']);
-//                 exit;
-//             } catch (Exception $e) {
-//                 // Rollback on error
-//                 pg_query($con, "ROLLBACK");
-
-//                 // Store error message in session
-//                 $_SESSION['bulk_action_status'] = [
-//                     'status' => 'error',
-//                     'message' => 'Error processing bulk action: ' . $e->getMessage()
-//                 ];
-
-//                 // Redirect to avoid form resubmission
-//                 header("Location: " . $_SERVER['PHP_SELF']);
-//                 exit;
-//             }
-//         }
-//     }
-// }
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle bulk approval/rejection
-    if (isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
+// Handle bulk actions for HRMS
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action_type'])) {
+    if ($_POST['bulk_action_type'] === 'hrms' && isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
         $selected_ids = explode(',', $_POST['selected_ids']);
         $bulk_action = $_POST['bulk_action'];
         $bulk_remarks = trim($_POST['bulk_remarks']);
@@ -268,11 +159,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Store success message in session
                 $_SESSION['bulk_action_status'] = [
                     'status' => 'success',
-                    'message' => 'Bulk action completed successfully'
+                    'message' => 'Bulk action completed successfully',
+                    'tab' => 'hrms'
                 ];
 
                 // Redirect to avoid form resubmission
-                header("Location: " . $_SERVER['PHP_SELF']);
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=hrms");
                 exit;
             } catch (Exception $e) {
                 // Rollback on error
@@ -281,19 +173,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Store error message in session
                 $_SESSION['bulk_action_status'] = [
                     'status' => 'error',
-                    'message' => 'Error processing bulk action: ' . $e->getMessage()
+                    'message' => 'Error processing bulk action: ' . $e->getMessage(),
+                    'tab' => 'hrms'
                 ];
 
                 // Redirect to avoid form resubmission
-                header("Location: " . $_SERVER['PHP_SELF']);
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=hrms");
+                exit;
+            }
+        }
+    }
+    // Handle bulk actions for Student
+    elseif ($_POST['bulk_action_type'] === 'student' && isset($_POST['bulk_action'], $_POST['selected_ids'], $_POST['bulk_remarks'])) {
+        $selected_ids = explode(',', $_POST['selected_ids']);
+        $bulk_action = $_POST['bulk_action'];
+        $bulk_remarks = trim($_POST['bulk_remarks']);
+        $reviewer_id = $associatenumber;
+
+        if (!empty($selected_ids) && !empty($bulk_action)) {
+            // Begin transaction
+            pg_query($con, "BEGIN");
+
+            try {
+                // Group requests by student/email if needed
+                $emailGroups = [];
+
+                // Process each selected ID
+                foreach ($selected_ids as $workflow_id) {
+                    $workflow_id = pg_escape_string($con, trim($workflow_id));
+
+                    // Get the student workflow details
+                    $details_query = "SELECT 
+                        w.*, 
+                        s.studentname,
+                        s.emailaddress as student_email,
+                        a.fullname as submitter_name,
+                        a.email as submitter_email
+                    FROM student_profile_update_workflow w
+                    JOIN rssimyprofile_student s ON w.student_id = s.student_id
+                    LEFT JOIN rssimyaccount_members a ON w.submitted_by = a.associatenumber
+                    WHERE w.workflow_id = '$workflow_id'";
+
+                    $details_result = pg_query($con, $details_query);
+                    $details_row = pg_fetch_assoc($details_result);
+
+                    if ($details_row) {
+                        $student_id = $details_row['student_id'];
+                        $field_name = $details_row['field_name'];
+                        $submitted_value = $details_row['submitted_value'];
+                        $student_name = $details_row['studentname'];
+                        $student_email = $details_row['student_email'];
+                        $submitter_name = $details_row['submitter_name'];
+                        $submitter_email = $details_row['submitter_email'];
+                        $requested_on = date('d/m/Y h:i A');
+
+                        // Update workflow status
+                        $update_query = "UPDATE student_profile_update_workflow
+                            SET reviewer_status = '$bulk_action', 
+                                reviewer_id = '$reviewer_id', 
+                                reviewed_on = NOW(),
+                                remarks = '$bulk_remarks'
+                            WHERE workflow_id = '$workflow_id'";
+
+                        $update_result = pg_query($con, $update_query);
+
+                        if ($bulk_action === 'Approved' && $update_result) {
+                            // Update student record if approved
+                            if (strpos($field_name, 'photo') !== false || strpos($field_name, 'document') !== false) {
+                                // For file fields, we need to handle differently
+                                $student_update = "UPDATE rssimyprofile_student 
+                                    SET $field_name = '$submitted_value' 
+                                    WHERE student_id = '$student_id'";
+                            } else {
+                                $field_name_escaped = pg_escape_string($con, $field_name);
+                                $submitted_value_escaped = pg_escape_string($con, $submitted_value);
+                                $student_update = "UPDATE rssimyprofile_student 
+                                    SET $field_name_escaped = '$submitted_value_escaped' 
+                                    WHERE student_id = '$student_id'";
+                            }
+                            pg_query($con, $student_update);
+                        }
+
+                        // Group by submitter email for notification
+                        $email_to = $submitter_email ?: $student_email;
+                        if (!empty($email_to)) {
+                            if (!isset($emailGroups[$email_to])) {
+                                $emailGroups[$email_to] = [
+                                    'name' => $submitter_name ?: $student_name,
+                                    'requests' => []
+                                ];
+                            }
+
+                            $emailGroups[$email_to]['requests'][] = [
+                                'student_name' => $student_name,
+                                'field_name' => $field_name,
+                                'old_value' => $details_row['current_value'],
+                                'new_value' => $submitted_value,
+                                'requested_on' => $requested_on
+                            ];
+                        }
+                    }
+                }
+
+                // Commit transaction
+                pg_query($con, "COMMIT");
+
+                // Send notifications (you can implement email sending similar to HRMS)
+                foreach ($emailGroups as $email => $group) {
+                    // Build notification content
+                    $notification = "Dear " . $group['name'] . ",\n\n";
+                    $notification .= "Your student profile update requests have been " . strtolower($bulk_action) . ".\n\n";
+
+                    foreach ($group['requests'] as $request) {
+                        $notification .= "Student: " . $request['student_name'] . "\n";
+                        $notification .= "Field: " . $request['field_name'] . "\n";
+                        $notification .= "Status: " . $bulk_action . "\n";
+                        if ($bulk_remarks) {
+                            $notification .= "Remarks: " . $bulk_remarks . "\n";
+                        }
+                        $notification .= "---\n";
+                    }
+
+                    // You can implement email sending here using your existing email function
+                    // sendEmail($email, "Student Profile Updates " . ucfirst($bulk_action), $notification);
+                }
+
+                // Store success message in session
+                $_SESSION['bulk_action_status'] = [
+                    'status' => 'success',
+                    'message' => 'Student bulk action completed successfully',
+                    'tab' => 'student'
+                ];
+
+                // Redirect to avoid form resubmission
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=student");
+                exit;
+            } catch (Exception $e) {
+                // Rollback on error
+                pg_query($con, "ROLLBACK");
+
+                // Store error message in session
+                $_SESSION['bulk_action_status'] = [
+                    'status' => 'error',
+                    'message' => 'Error processing student bulk action: ' . $e->getMessage(),
+                    'tab' => 'student'
+                ];
+
+                // Redirect to avoid form resubmission
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=student");
                 exit;
             }
         }
     }
 }
 
-// Query to get only the latest pending workflow record for each associate and field
-$query = "
+// Fetch HRMS data
+$hrms_query = "
     WITH latest_submissions AS (
         SELECT 
             w.associatenumber,
@@ -323,17 +358,44 @@ $query = "
     ORDER BY w.submission_timestamp DESC
 ";
 
-$result = pg_query($con, $query);
-$data = [];
+$hrms_result = pg_query($con, $hrms_query);
+$hrms_data = [];
 
-if ($result) {
-    while ($row = pg_fetch_assoc($result)) {
+if ($hrms_result) {
+    while ($row = pg_fetch_assoc($hrms_result)) {
         $fieldname = pg_escape_string($con, $row['fieldname']);
         $currentValueQuery = "SELECT $fieldname AS current_value FROM rssimyaccount_members WHERE associatenumber = '{$row['associatenumber']}'";
         $currentValueResult = pg_query($con, $currentValueQuery);
         $currentValueRow = pg_fetch_assoc($currentValueResult);
         $row['current_value'] = $currentValueRow['current_value'] ?? '<em>Not Available</em>';
-        $data[] = $row;
+        $hrms_data[] = $row;
+    }
+}
+
+// Fetch Student data
+$student_query = "SELECT w.*, s.studentname, a.fullname as submitter_name
+                FROM student_profile_update_workflow w
+                JOIN rssimyprofile_student s ON w.student_id = s.student_id
+                LEFT JOIN rssimyaccount_members a ON w.submitted_by = a.associatenumber
+                WHERE w.reviewer_status = 'Pending'
+                ORDER BY w.submission_timestamp ASC";
+$student_result = pg_query($con, $student_query);
+$student_data = [];
+
+// Field name mapping for display
+$field_names_mapping = [
+    'studentname' => 'Student Name',
+    'fathername' => 'Father Name',
+    'mothername' => 'Mother Name',
+    'email' => 'Email',
+    'phone' => 'Phone',
+    // Add more mappings as needed
+];
+
+if ($student_result) {
+    while ($row = pg_fetch_assoc($student_result)) {
+        $row['field_display'] = $field_names_mapping[$row['field_name']] ?? $row['field_name'];
+        $student_data[] = $row;
     }
 }
 ?>
@@ -357,7 +419,7 @@ if ($result) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>HRMS Worklist</title>
+    <title>Worklist Management</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -382,6 +444,24 @@ if ($result) {
             .left {
                 margin-left: 2%;
             }
+        }
+
+        .nav-tabs .nav-link {
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+        }
+
+        .tab-content {
+            padding-top: 20px;
+        }
+
+        .badge-count {
+            font-size: 0.7em;
+            vertical-align: top;
+            margin-left: 5px;
         }
     </style>
     <!-- CSS Library Files -->
@@ -409,6 +489,15 @@ if ($result) {
             font-weight: 700;
             border-radius: 0.25rem;
         }
+
+        .file-link {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+
+        .file-link:hover {
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -418,12 +507,12 @@ if ($result) {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>HRMS Worklist</h1>
+            <h1>Worklist Management</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Worklist</a></li>
-                    <li class="breadcrumb-item active">HRMS Worklist</li>
+                    <li class="breadcrumb-item active">Worklist Management</li>
                 </ol>
             </nav>
         </div>
@@ -434,51 +523,177 @@ if ($result) {
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') : ?>
-                                <div class="row mb-3">
-                                    <div class="col-md-12 text-end">
-                                        <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
 
-                            <div class="table-responsive">
-                                <table class="table" id="worklist-table">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Workflow ID</th>
-                                            <th>Submitted on</th>
-                                            <th>Associate</th>
-                                            <th>Full Name</th>
-                                            <th>Field Name</th>
-                                            <th>Current Value</th>
-                                            <th>Submitted Value</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($data as $row) : ?>
-                                            <tr>
-                                                <td>
-                                                    <input type="checkbox"
-                                                        class="form-check-input"
-                                                        name="selected_ids[]"
-                                                        value="<?= htmlspecialchars($row['workflow_id']) ?>"
-                                                        <?= ($row['reviewer_status'] === 'Approved' || $row['reviewer_status'] === 'Rejected') ? 'disabled' : ''; ?>>
-                                                </td>
-                                                <td><?= htmlspecialchars($row['workflow_id']) ?></td>
-                                                <td><?= date('d/m/Y h:i a', strtotime($row['submission_timestamp'])) ?></td>
-                                                <td><?= htmlspecialchars($row['associatenumber']) ?></td>
-                                                <td><?= htmlspecialchars($row['fullname']) ?></td>
-                                                <td><?= htmlspecialchars($row['fieldname']) ?></td>
-                                                <td><?= htmlspecialchars($row['current_value']) ?></td>
-                                                <td><?= htmlspecialchars($row['submitted_value']) ?></td>
-                                                <td><?= htmlspecialchars($row['reviewer_status']) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                            <!-- Tab Navigation -->
+                            <ul class="nav nav-tabs" id="worklistTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link <?= $active_tab === 'hrms' ? 'active' : '' ?>"
+                                        id="hrms-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#hrms-tab-pane"
+                                        type="button"
+                                        role="tab">
+                                        HRMS Worklist
+                                        <?php if (!empty($hrms_data)): ?>
+                                            <span class="badge bg-danger badge-count"><?= count($hrms_data) ?></span>
+                                        <?php endif; ?>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link <?= $active_tab === 'student' ? 'active' : '' ?>"
+                                        id="student-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#student-tab-pane"
+                                        type="button"
+                                        role="tab">
+                                        Student Data Worklist
+                                        <?php if (!empty($student_data)): ?>
+                                            <span class="badge bg-danger badge-count"><?= count($student_data) ?></span>
+                                        <?php endif; ?>
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="worklistTabsContent">
+
+                                <!-- HRMS Tab -->
+                                <div class="tab-pane fade <?= $active_tab === 'hrms' ? 'show active' : '' ?>"
+                                    id="hrms-tab-pane"
+                                    role="tabpanel"
+                                    tabindex="0">
+
+                                    <?php if ($role == 'Admin'): ?>
+                                        <div class="row mb-3">
+                                            <div class="col-md-12 text-end">
+                                                <button id="bulk-review-button-hrms" class="btn btn-primary" disabled>Bulk Review (0)</button>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (empty($hrms_data)): ?>
+                                        <div class="alert alert-info mt-3">
+                                            No pending HRMS approval requests.
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="table-responsive">
+                                            <table class="table" id="worklist-table-hrms">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th>Workflow ID</th>
+                                                        <th>Submitted on</th>
+                                                        <th>Associate</th>
+                                                        <th>Full Name</th>
+                                                        <th>Field Name</th>
+                                                        <th>Current Value</th>
+                                                        <th>Submitted Value</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($hrms_data as $row): ?>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox"
+                                                                    class="form-check-input hrms-checkbox"
+                                                                    name="selected_ids[]"
+                                                                    value="<?= htmlspecialchars($row['workflow_id']) ?>"
+                                                                    <?= ($row['reviewer_status'] === 'Approved' || $row['reviewer_status'] === 'Rejected') ? 'disabled' : ''; ?>>
+                                                            </td>
+                                                            <td><?= htmlspecialchars($row['workflow_id']) ?></td>
+                                                            <td><?= date('d/m/Y h:i a', strtotime($row['submission_timestamp'])) ?></td>
+                                                            <td><?= htmlspecialchars($row['associatenumber']) ?></td>
+                                                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                                                            <td><?= htmlspecialchars($row['fieldname']) ?></td>
+                                                            <td><?= htmlspecialchars($row['current_value']) ?></td>
+                                                            <td><?= htmlspecialchars($row['submitted_value']) ?></td>
+                                                            <td><?= htmlspecialchars($row['reviewer_status']) ?></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Student Tab -->
+                                <div class="tab-pane fade <?= $active_tab === 'student' ? 'show active' : '' ?>"
+                                    id="student-tab-pane"
+                                    role="tabpanel"
+                                    tabindex="0">
+
+                                    <?php if ($role == 'Admin'): ?>
+                                        <div class="row mb-3">
+                                            <div class="col-md-12 text-end">
+                                                <button id="bulk-review-button-student" class="btn btn-primary" disabled>Bulk Review (0)</button>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (empty($student_data)): ?>
+                                        <div class="alert alert-info mt-3">
+                                            No pending student profile update requests.
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="table-responsive">
+                                            <table class="table" id="worklist-table-student">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th>Student</th>
+                                                        <th>Field</th>
+                                                        <th>Current Value</th>
+                                                        <th>Requested Value</th>
+                                                        <th>Submitted By</th>
+                                                        <th>Submitted On</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($student_data as $row): ?>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox"
+                                                                    class="form-check-input student-checkbox"
+                                                                    name="selected_ids[]"
+                                                                    value="<?= htmlspecialchars($row['workflow_id']) ?>">
+                                                            </td>
+                                                            <td>
+                                                                <?= htmlspecialchars($row['studentname']) ?><br>
+                                                                <small class="text-muted">ID: <?= $row['student_id'] ?></small>
+                                                            </td>
+                                                            <td><?= htmlspecialchars($row['field_display']) ?></td>
+                                                            <td>
+                                                                <?php if (strpos($row['field_name'], 'photo') !== false || strpos($row['field_name'], 'document') !== false): ?>
+                                                                    <?php if ($row['current_value']): ?>
+                                                                        <a href="<?= $row['current_value'] ?>" target="_blank" class="file-link">View Current</a>
+                                                                    <?php else: ?>
+                                                                        <span class="text-muted">None</span>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <?= htmlspecialchars($row['current_value'] ?? 'Not set') ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php if (strpos($row['field_name'], 'photo') !== false || strpos($row['field_name'], 'document') !== false): ?>
+                                                                    <?php if ($row['submitted_value']): ?>
+                                                                        <a href="<?= $row['submitted_value'] ?>" target="_blank" class="file-link">View New</a>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <?= htmlspecialchars($row['submitted_value'] ?? '') ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?= htmlspecialchars($row['submitter_name'] ?? $row['submitted_by']) ?>
+                                                            </td>
+                                                            <td><?= date('d/m/Y H:i', strtotime($row['submission_timestamp'])) ?></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -487,28 +702,63 @@ if ($result) {
         </section>
     </main>
 
-    <!-- Bulk Review Modal -->
-    <div class="modal fade" id="bulkReviewModal" tabindex="-1" aria-labelledby="bulkReviewModalLabel" aria-hidden="true">
+    <!-- Bulk Review Modal for HRMS -->
+    <div class="modal fade" id="bulkReviewModalHrms" tabindex="-1" aria-labelledby="bulkReviewModalHrmsLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bulkReviewModalLabel">Bulk Review</h5>
+                    <h5 class="modal-title" id="bulkReviewModalHrmsLabel">Bulk Review - HRMS</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="bulk-review-form" method="POST" action="#">
+                <form id="bulk-review-form-hrms" method="POST" action="#">
+                    <input type="hidden" name="bulk_action_type" value="hrms">
                     <div class="modal-body">
-                        <input type="hidden" name="selected_ids" id="selected-ids">
+                        <input type="hidden" name="selected_ids" id="selected-ids-hrms">
                         <div class="mb-3">
-                            <label for="bulk-action" class="form-label">Action</label>
-                            <select name="bulk_action" id="bulk-action" class="form-select" required>
+                            <label for="bulk-action-hrms" class="form-label">Action</label>
+                            <select name="bulk_action" id="bulk-action-hrms" class="form-select" required>
                                 <option value="">Select Action</option>
                                 <option value="Approved">Approve</option>
                                 <option value="Rejected">Reject</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="bulk-remarks" class="form-label">Remarks</label>
-                            <textarea name="bulk_remarks" id="bulk-remarks" class="form-control" placeholder="Enter remarks..." required></textarea>
+                            <label for="bulk-remarks-hrms" class="form-label">Remarks</label>
+                            <textarea name="bulk_remarks" id="bulk-remarks-hrms" class="form-control" placeholder="Enter remarks..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Review Modal for Student -->
+    <div class="modal fade" id="bulkReviewModalStudent" tabindex="-1" aria-labelledby="bulkReviewModalStudentLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkReviewModalStudentLabel">Bulk Review - Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulk-review-form-student" method="POST" action="#">
+                    <input type="hidden" name="bulk_action_type" value="student">
+                    <div class="modal-body">
+                        <input type="hidden" name="selected_ids" id="selected-ids-student">
+                        <div class="mb-3">
+                            <label for="bulk-action-student" class="form-label">Action</label>
+                            <select name="bulk_action" id="bulk-action-student" class="form-select" required>
+                                <option value="">Select Action</option>
+                                <option value="Approved">Approve</option>
+                                <option value="Rejected">Reject</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bulk-remarks-student" class="form-label">Remarks</label>
+                            <textarea name="bulk_remarks" id="bulk-remarks-student" class="form-control" placeholder="Enter remarks..." required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -529,62 +779,123 @@ if ($result) {
 
     <script>
         $(document).ready(function() {
-            // Initialize DataTable
-            $('#worklist-table').DataTable({
+            // Initialize DataTables
+            $('#worklist-table-hrms').DataTable({
                 "order": [],
                 "columnDefs": [{
                     "orderable": false,
-                    //"targets": [0, 9]
+                    "targets": 0
                 }]
             });
 
-            // Make rows clickable (except for checkboxes and links)
-            $('#worklist-table tbody').on('click', 'tr', function(e) {
+            $('#worklist-table-student').DataTable({
+                "order": [],
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": 0
+                }]
+            });
+
+            // Make rows clickable for HRMS table
+            $('#worklist-table-hrms tbody').on('click', 'tr', function(e) {
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'I') {
                     const checkbox = $(this).find('td:first-child .form-check-input');
                     if (checkbox.length && !checkbox.prop('disabled')) {
                         checkbox.prop('checked', !checkbox.prop('checked'));
-                        updateBulkReviewButton();
+                        updateHrmsBulkReviewButton();
                     }
                 }
             });
 
-            // Update bulk review button
-            function updateBulkReviewButton() {
-                const selectedCount = $('#worklist-table tbody .form-check-input:checked').length;
-                const bulkReviewButton = $('#bulk-review-button');
+            // Make rows clickable for Student table
+            $('#worklist-table-student tbody').on('click', 'tr', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'I') {
+                    const checkbox = $(this).find('td:first-child .form-check-input');
+                    if (checkbox.length) {
+                        checkbox.prop('checked', !checkbox.prop('checked'));
+                        updateStudentBulkReviewButton();
+                    }
+                }
+            });
+
+            // Update HRMS bulk review button
+            function updateHrmsBulkReviewButton() {
+                const selectedCount = $('#worklist-table-hrms tbody .hrms-checkbox:checked').length;
+                const bulkReviewButton = $('#bulk-review-button-hrms');
                 bulkReviewButton.text(`Bulk Review (${selectedCount})`);
                 bulkReviewButton.prop('disabled', selectedCount === 0);
             }
 
-            // Initialize bulk review modal
-            $('#bulk-review-button').click(function() {
+            // Update Student bulk review button
+            function updateStudentBulkReviewButton() {
+                const selectedCount = $('#worklist-table-student tbody .student-checkbox:checked').length;
+                const bulkReviewButton = $('#bulk-review-button-student');
+                bulkReviewButton.text(`Bulk Review (${selectedCount})`);
+                bulkReviewButton.prop('disabled', selectedCount === 0);
+            }
+
+            // Initialize HRMS bulk review modal
+            $('#bulk-review-button-hrms').click(function() {
                 const selectedIds = [];
-                $('#worklist-table tbody .form-check-input:checked').each(function() {
+                $('#worklist-table-hrms tbody .hrms-checkbox:checked').each(function() {
                     selectedIds.push($(this).val());
                 });
 
                 if (selectedIds.length > 0) {
-                    $('#selected-ids').val(selectedIds.join(','));
-                    const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModal'));
+                    $('#selected-ids-hrms').val(selectedIds.join(','));
+                    const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModalHrms'));
                     bulkReviewModal.show();
                 } else {
                     alert('Please select at least one request to proceed.');
                 }
             });
+
+            // Initialize Student bulk review modal
+            $('#bulk-review-button-student').click(function() {
+                const selectedIds = [];
+                $('#worklist-table-student tbody .student-checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    $('#selected-ids-student').val(selectedIds.join(','));
+                    const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModalStudent'));
+                    bulkReviewModal.show();
+                } else {
+                    alert('Please select at least one request to proceed.');
+                }
+            });
+
+            // Checkbox change handlers
+            $('#worklist-table-hrms tbody .hrms-checkbox').change(function() {
+                updateHrmsBulkReviewButton();
+            });
+
+            $('#worklist-table-student tbody .student-checkbox').change(function() {
+                updateStudentBulkReviewButton();
+            });
+
+            // Initialize button states
+            updateHrmsBulkReviewButton();
+            updateStudentBulkReviewButton();
+
+            // Handle tab changes to update URLs
+            $('#worklistTabs button').on('shown.bs.tab', function(e) {
+                const target = $(e.target).attr('id');
+                const tabName = target.replace('-tab', '');
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tabName);
+                window.history.replaceState({}, '', url);
+            });
         });
     </script>
-    <?php if (isset($_SESSION['bulk_action_status'])): ?>
+    <?php if (isset($_SESSION['bulk_action_status']) && $_SESSION['bulk_action_status']['tab'] === $active_tab): ?>
         <script>
             $(document).ready(function() {
                 alert('<?php echo addslashes($_SESSION['bulk_action_status']['message']); ?>');
-
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
-                }
+                <?php unset($_SESSION['bulk_action_status']); ?>
             });
         </script>
-        <?php unset($_SESSION['bulk_action_status']); ?>
     <?php endif; ?>
 </body>
 
