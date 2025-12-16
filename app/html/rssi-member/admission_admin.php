@@ -5,9 +5,15 @@ include("../../util/email.php");
 include("../../util/drive.php");
 
 // Helper function to handle plan update errors
-function handlePlanUpdateError($error_message, $updated_fields)
+function handlePlanUpdateError($error_message, $updated_fields, $redirect_url = null)
 {
     global $field_names_mapping;
+
+    // If no redirect URL provided, create one
+    if ($redirect_url === null) {
+        $redirect_params = $_GET;
+        $redirect_url = $_SERVER['PHP_SELF'] . '?' . http_build_query($redirect_params);
+    }
 
     // Escape the error message for JavaScript - fix for newlines
     $escaped_error = str_replace(
@@ -24,18 +30,30 @@ function handlePlanUpdateError($error_message, $updated_fields)
 
         echo "<script>
             alert('Student details updated successfully. Changed fields: $changedFieldsList\\nPlan update failed: $escaped_error');
+            
+            // Clear form data in history
             if (window.history.replaceState) {
-                window.history.replaceState(null, null, window.location.href);
+                window.history.replaceState(null, null, '$redirect_url');
             }
-            window.location.reload();
+            
+            // Redirect preserving all parameters
+            setTimeout(function() {
+                window.location.href = '$redirect_url';
+            }, 100);
         </script>";
     } else {
         echo "<script>
             alert('Plan update failed: $escaped_error');
+            
+            // Clear form data in history
             if (window.history.replaceState) {
-                window.history.replaceState(null, null, window.location.href);
+                window.history.replaceState(null, null, '$redirect_url');
             }
-            window.location.reload();
+            
+            // Redirect preserving all parameters
+            setTimeout(function() {
+                window.location.href = '$redirect_url';
+            }, 100);
         </script>";
     }
 }
@@ -268,8 +286,22 @@ foreach ($required_fields as $field) {
     }
 }
 
+$fields_requiring_approval = [
+    'studentname',
+    'dateofbirth',
+    'contact',
+];
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ==============================================
+    // DECLARE REDIRECT URL ONCE - REUSE EVERYWHERE
+    // ==============================================
+    $redirect_params = $_GET;
+    if (!empty($search_id)) {
+        $redirect_params['student_id'] = $search_id;
+    }
+    $redirect_url = $_SERVER['PHP_SELF'] . '?' . http_build_query($redirect_params);
     // ==============================================
     // SERVER-SIDE VALIDATION - ONLY CHECK SUBMITTED FIELDS
     // ==============================================
@@ -312,12 +344,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $js_message = str_replace("'", "\\'", $js_message);
 
         echo "<script>
-            alert('$js_message');
-            window.history.back();
-        </script>";
+        alert('$js_message');
+        
+        // Clear form data in history
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, '$redirect_url');
+        }
+        
+        // Redirect back preserving all parameters
+        setTimeout(function() {
+            window.location.href = '$redirect_url';
+        }, 100);
+    </script>";
         exit;
     }
-
     // ==============================================
     // CONTINUE WITH YOUR EXISTING CODE BELOW
     // ==============================================
@@ -367,14 +407,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
 
                         $field_level = getFieldLevel($field, $field_definitions, $field_access_levels);
+                        $requires_approval = in_array($field, $fields_requiring_approval);
 
                         if ($current_user_level >= $field_level) {
-                            // Direct update allowed
-                            $update_fields[] = "$field = '$new_value'";
-                            $updated_fields[] = $field;
-                        } elseif ($current_user_level >= 1) { // At least manager level
-                            // Needs approval
-                            $pending_approval_fields[] = $field;
+                            if ($requires_approval && $current_user_level < 2) {
+                                // Field requires approval AND user is not Admin
+                                $pending_approval_fields[] = $field;
+                            } else {
+                                // Direct update allowed
+                                $update_fields[] = "$field = '$new_value'";
+                                $updated_fields[] = $field;
+                            }
                         } else {
                             $unauthorized_updates[] = $field;
                         }
@@ -394,13 +437,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $field_level = getFieldLevel($field, $field_definitions, $field_access_levels);
+                $requires_approval = in_array($field, $fields_requiring_approval);
 
                 if ($current_user_level >= $field_level) {
-                    // Direct update allowed
-                    $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                    $updated_fields[] = $field;
+                    if ($requires_approval && $current_user_level < 2) {
+                        // Field requires approval AND user is not Admin
+                        $pending_approval_fields[] = $field;
+                    } else {
+                        // Direct update allowed
+                        $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                        $updated_fields[] = $field;
+                    }
                 } elseif ($current_user_level >= 1) { // At least manager level
-                    // Needs approval
+                    // User doesn't have field-level permission
                     $pending_approval_fields[] = $field;
                 } else {
                     $unauthorized_updates[] = $field;
@@ -679,11 +728,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle pending approval fields
         if (!empty($pending_approval_fields)) {
-            $pending_fields_list = implode(", ", $pending_approval_fields);
+            foreach ($pending_approval_fields as $field) {
+                $submitted_value = null;
+
+                if (in_array($field, ['student_photo_raw', 'upload_aadhar_card', 'caste_document', 'supporting_doc'])) {
+                    // Handle file upload for workflow
+                    $form_field_name = str_replace('_raw', '', $field);
+                    if (!empty($_FILES[$form_field_name]['name'])) {
+                        $timestamp = date('Y-m-d H:i:s');
+                        $filename = $form_field_name . "_" . $search_id . "_" . $timestamp;
+
+                        $parent_folders = [
+                            'student_photo' => '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9',
+                            'upload_aadhar_card' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E',
+                            'caste_document' => '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E',
+                            'supporting_doc' => '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC'
+                        ];
+
+                        $parent = $parent_folders[$form_field_name];
+                        $doclink = uploadeToDrive($_FILES[$form_field_name], $parent, $filename);
+
+                        if ($doclink) {
+                            $submitted_value = $doclink;
+                        }
+                    }
+                } else {
+                    // Handle regular fields
+                    $submitted_value = isset($_POST[$field]) ? trim($_POST[$field]) : null;
+                    if ($submitted_value === "") {
+                        $submitted_value = null;
+                    }
+                }
+
+                if ($submitted_value !== null) {
+                    // Check if there's already a pending request for this field
+                    $check_sql = "SELECT workflow_id FROM student_profile_update_workflow 
+                          WHERE student_id = $1 
+                          AND field_name = $2 
+                          AND reviewer_status = 'Pending'";
+                    $check_result = pg_query_params($con, $check_sql, [$search_id, $field]);
+
+                    if (pg_num_rows($check_result) > 0) {
+                        // Update existing pending request
+                        $update_sql = "UPDATE student_profile_update_workflow 
+                              SET submitted_value = $1,
+                                  submitted_by = $2,
+                                  submission_timestamp = NOW()
+                              WHERE student_id = $3 
+                              AND field_name = $4 
+                              AND reviewer_status = 'Pending'";
+                        pg_query_params($con, $update_sql, [
+                            $submitted_value,
+                            $associatenumber,
+                            $search_id,
+                            $field
+                        ]);
+                    } else {
+                        // Insert new workflow request
+                        $current_value = $current_data[$field] ?? null;
+
+                        $insert_sql = "INSERT INTO student_profile_update_workflow 
+                              (student_id, field_name, current_value, submitted_value, 
+                               submitted_by, submission_timestamp, reviewer_status)
+                              VALUES ($1, $2, $3, $4, $5, NOW(), 'Pending')";
+                        pg_query_params($con, $insert_sql, [
+                            $search_id,
+                            $field,
+                            $current_value,
+                            $submitted_value,
+                            $associatenumber
+                        ]);
+                    }
+                }
+            }
+
+            $pending_fields_list = implode(", ", array_map(function ($field) use ($field_names_mapping) {
+                return $field_names_mapping[$field] ?? $field;
+            }, $pending_approval_fields));
+
             echo "<script>
-                alert('Change request has been submitted for review: $pending_fields_list');
-                window.location.reload();
-            </script>";
+        alert('Change request has been submitted for review: $pending_fields_list. An administrator will review and approve/reject these changes.');
+        
+        // Clear form data in history
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, '$redirect_url');
+        }
+        
+        // Redirect preserving all parameters
+        setTimeout(function() {
+            window.location.href = '$redirect_url';
+        }, 100);
+    </script>";
             exit;
         }
 
@@ -722,20 +857,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $js_message = str_replace(["'", "\n"], ["\\'", "\\n"], $message);
 
             echo "<script>
-                alert('$js_message');
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
-                }
-                window.location.reload();
-            </script>";
+        alert('$js_message');
+        
+        // Clear form data in history
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, '$redirect_url');
+        }
+        
+        // Redirect preserving all parameters
+        setTimeout(function() {
+            window.location.href = '$redirect_url';
+        }, 100);
+    </script>";
             exit;
         }
 
         if (empty($update_fields) && empty($pending_approval_fields)) {
             echo "<script>
-                alert('No changes were made to the profile.');
-                window.history.back();
-            </script>";
+        alert('No changes were made to the profile.');
+        
+        // Clear form data in history
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, '$redirect_url');
+        }
+        
+        // Redirect back preserving all parameters
+        setTimeout(function() {
+            window.location.href = '$redirect_url';
+        }, 100);
+    </script>";
             exit;
         }
     }
