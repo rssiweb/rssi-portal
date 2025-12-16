@@ -1506,3 +1506,95 @@
       } catch (err) {}
     });
   </script>
+
+  <script>
+    // Add this script after your existing header scripts
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchForm = document.querySelector('.search-form');
+      const searchInput = searchForm.querySelector('input[name="query"]');
+
+      if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          performSearch(searchInput.value.trim());
+        });
+
+        // Optional: Add real-time search as user types
+        searchInput.addEventListener('input', function() {
+          if (this.value.length >= 2) {
+            highlightMenuItems(this.value);
+          } else {
+            clearHighlights();
+          }
+        });
+      }
+
+      // Function to highlight menu items matching search
+      function highlightMenuItems(searchTerm) {
+        clearHighlights();
+
+        if (!searchTerm) return;
+
+        const searchLower = searchTerm.toLowerCase();
+        const navItems = document.querySelectorAll('#sidebar-nav a.nav-link, #sidebar-nav .nav-content a');
+
+        navItems.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          const parentLi = item.closest('li.nav-item');
+
+          if (text.includes(searchLower)) {
+            // Highlight the item
+            item.style.backgroundColor = '#fff3cd';
+            item.style.fontWeight = 'bold';
+
+            // Expand parent collapse if collapsed
+            const parentCollapse = item.closest('.collapse');
+            if (parentCollapse && !parentCollapse.classList.contains('show')) {
+              parentCollapse.classList.add('show');
+            }
+
+            // Scroll to item
+            if (parentLi) {
+              parentLi.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+              });
+            }
+          }
+        });
+      }
+
+      function clearHighlights() {
+        const navItems = document.querySelectorAll('#sidebar-nav a.nav-link, #sidebar-nav .nav-content a');
+        navItems.forEach(item => {
+          item.style.backgroundColor = '';
+          item.style.fontWeight = '';
+        });
+      }
+
+      // Function to navigate to first matching page
+      function performSearch(searchTerm) {
+        if (!searchTerm) return;
+
+        const searchLower = searchTerm.toLowerCase();
+        const navLinks = document.querySelectorAll('#sidebar-nav a[href]:not([href="#"])');
+
+        let firstMatch = null;
+
+        navLinks.forEach(link => {
+          const text = link.textContent.toLowerCase();
+          const href = link.getAttribute('href');
+
+          if (text.includes(searchLower) && href) {
+            if (!firstMatch) firstMatch = link;
+          }
+        });
+
+        if (firstMatch) {
+          window.location.href = firstMatch.getAttribute('href');
+        } else {
+          alert('No matching menu items found.');
+        }
+      }
+    });
+  </script>
