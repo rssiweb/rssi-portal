@@ -519,11 +519,6 @@
               <span>Fee Collection Lock Management</span>
             </a>
           </li>
-          <li>
-            <a id="sps" href="sps.php">
-              <span>Student Profile Sync (SPS)</span>
-            </a>
-          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -1323,8 +1318,8 @@
         linkId: 'fee_lock_management',
         url: 'fee_lock_management.php'
       }, {
-        id: 'feePortal',
-        linkId: 'sps',
+        id: 'work',
+        linkId: 'studentLink',
         url: 'sps.php'
       },
       {

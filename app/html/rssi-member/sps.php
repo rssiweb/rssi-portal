@@ -342,7 +342,8 @@ if ($result && pg_num_rows($result) > 0) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item"><a href="student.php">Student Database</a></li>
                     <li class="breadcrumb-item active">SPS</li>
                 </ol>
             </nav>
@@ -361,12 +362,14 @@ if ($result && pg_num_rows($result) > 0) {
                                 <div class="col-12">
                                     <?php echo $action_result; ?>
 
-                                    <!-- <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <h5><i class="bi bi-info-circle"></i> About This Page</h5>
-                                        <p>This page shows students whose current profile data (class and access category) differs from their active plan in the plan history. You can select students and sync their profile to match the active plan.</p>
-                                        <p><strong>Total mismatched students found:</strong> <?php echo count($students); ?></p>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div> -->
+                                    <span class="float-end">
+                                        <i class="bi bi-info-circle text-secondary"
+                                            style="cursor:pointer; font-size:1.2rem;"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#spsInfoModal"
+                                            title="About this page">
+                                        </i>
+                                    </span>
 
                                     <?php if (count($students) > 0): ?>
                                         <form method="POST" action="" id="syncForm">
@@ -620,6 +623,40 @@ if ($result && pg_num_rows($result) > 0) {
         </section>
 
     </main><!-- End #main -->
+
+    <div class="modal fade" id="spsInfoModal" tabindex="-1" aria-labelledby="spsInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="spsInfoModalLabel">
+                        <i class="bi bi-info-circle"></i> About This Page
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>
+                        This page shows students whose current profile data
+                        (class and access category)
+                        differs from their active plan.
+                    </p>
+
+                    <p>
+                        You can select students and
+                        sync their profile to match the active plan.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- JavaScript Libraries -->

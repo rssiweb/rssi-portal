@@ -377,27 +377,44 @@ function formatContact($role, $contact)
             <div class="card-body">
               <br>
               <div class="row">
-                <div class="col" style="display: inline-block; width:50%;">
-                  Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                </div>
-                <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
-                  <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <form method="POST" action="export_function.php" target="_blank">
-                      <input type="hidden" value="student" name="export_type" />
-                      <!-- Include all search parameters as hidden fields -->
-                      <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
-                      <input type="hidden" name="get_id" value="<?= htmlspecialchars($id ?? '') ?>">
-                      <input type="hidden" name="get_category" value="<?= htmlspecialchars($category ?? '') ?>">
-                      <input type="hidden" name="get_class" value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
-                      <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
-                      <input type="hidden" name="search_by_id_only" value="<?= $searchByIdOnly ? '1' : '0' ?>">
-
-                      <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                      padding: 0px;
-                      border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
-                    </form>
+                <div class="row">
+                  <div class="col" style="display:inline-block; width:50%;">
+                    Record count:&nbsp;<?php echo count($resultArr); ?>
                   </div>
-                <?php } ?>
+
+                  <?php if ($role === 'Admin' || $role === 'Offline Manager') { ?>
+                    <div class="col" style="display:inline-block; width:47%; text-align:right;">
+
+                      <form method="POST" action="export_function.php" target="_blank" style="display:inline-block;">
+                        <input type="hidden" name="export_type" value="student">
+
+                        <!-- Preserve search parameters -->
+                        <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
+                        <input type="hidden" name="get_id" value="<?= htmlspecialchars($id ?? '') ?>">
+                        <input type="hidden" name="get_category" value="<?= htmlspecialchars($category ?? '') ?>">
+                        <input type="hidden" name="get_class"
+                          value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
+                        <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
+                        <input type="hidden" name="search_by_id_only" value="<?= $searchByIdOnly ? '1' : '0' ?>">
+
+                        <button type="submit"
+                          id="export"
+                          name="export"
+                          title="Export CSV"
+                          style="background:none;border:none;padding:0;outline:none;">
+                          <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
+                        </button>
+                      </form>
+
+                      <span style="margin: 0 6px;">|</span>
+
+                      <a href="sps.php" title="Sync class and plan with active plan">
+                        Sync Profile with Active Plan
+                      </a>
+
+                    </div>
+                  <?php } ?>
+                </div>
 
                 <div class="accordion mt-3 mb-3" id="accordionExample">
                   <div class="accordion-item">
