@@ -315,20 +315,6 @@ if (!$result) {
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <script>
-                                                        var currentYear = new Date().getFullYear();
-                                                        for (var i = 0; i < 5; i++) {
-                                                            var nextYear = currentYear + 1;
-                                                            var yearRange = currentYear.toString() + '-' + nextYear.toString();
-                                                            var option = document.createElement('option');
-                                                            option.value = yearRange;
-                                                            option.text = yearRange;
-                                                            document.getElementById('appraisal_year').appendChild(option);
-                                                            // currentYear = nextYear;
-                                                            currentYear--;
-                                                        }
-                                                    </script>
-
 
                                                     <h2>Goals</h2>
                                                     <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
@@ -848,31 +834,13 @@ if (!$result) {
                                                     </table>
 
                                                     <button type="submit" id="submit1" class="btn btn-success">Save</button>
-                                                    <script>
-                                                        var form = document.getElementById('m_response');
-                                                        var submit1Button = document.getElementById('submit1');
-                                                        // Add event listeners to the submit buttons
-                                                        submit1Button.addEventListener('click', function() {
-                                                            form.action = 'mresponse_save.php'; // Set the form action to submit1.php
-                                                        });
-                                                    </script>
+                                                    <!-- Inside your PHP loop -->
                                                     <?php if ($array['manager1_associatenumber'] == $associatenumber) : ?>
                                                         <button type="submit" id="submit4" class="btn btn-primary">Submit</button>
-                                                        <script>
-                                                            var submit4Button = document.getElementById('submit4');
-                                                            submit4Button.addEventListener('click', function() {
-                                                                form.action = 'm1response_submit.php'; // Set the form action to submit4.php
-                                                            });
-                                                        </script>
                                                     <?php endif; ?>
+
                                                     <?php if ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') : ?>
                                                         <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
-                                                        <script>
-                                                            var submit2Button = document.getElementById('submit2');
-                                                            submit2Button.addEventListener('click', function() {
-                                                                form.action = 'mresponse_submit.php'; // Set the form action to submit2.php
-                                                            });
-                                                        </script>
                                                     <?php endif; ?>
 
                                                     <br><br>
@@ -947,7 +915,21 @@ if (!$result) {
         </section>
 
     </main><!-- End #main -->
-
+    <!-- Bootstrap Modal for Submission Progress -->
+    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3" id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -1105,6 +1087,77 @@ if (!$result) {
                         remarksTextarea.disabled = true;
                     }
                 }
+            }
+        });
+    </script>
+    <!-- Place this script at the VERY END, after Bootstrap JS -->
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create modal instance
+            const submissionModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            // Prevent Escape key from closing modal
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && document.getElementById('submissionModal').classList.contains('show')) {
+                    event.preventDefault();
+                }
+            });
+
+            // Get the form and submit button elements
+            var form = document.getElementById('m_response');
+            var submit1Button = document.getElementById('submit1');
+
+            // Add event listener for submit1 button
+            if (submit1Button) {
+                submit1Button.addEventListener('click', function() {
+                    form.action = 'mresponse_save.php';
+                });
+            }
+
+            // Add event listener for submit4 button (if it exists)
+            var submit4Button = document.getElementById('submit4');
+            if (submit4Button) {
+                submit4Button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent immediate form submission
+
+                    // Disable the submit button
+                    submit4Button.disabled = true;
+                    submit4Button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+
+                    // Show the submission progress modal
+                    submissionModal.show();
+
+                    // Set form action and submit after a short delay to show modal
+                    setTimeout(function() {
+                        form.action = 'm1response_submit.php';
+                        form.submit();
+                    }, 500);
+                });
+            }
+
+            // Add event listener for submit2 button (if it exists)
+            var submit2Button = document.getElementById('submit2');
+            if (submit2Button) {
+                submit2Button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent immediate form submission
+
+                    // Disable the submit button
+                    submit2Button.disabled = true;
+                    submit2Button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+
+                    // Show the submission progress modal
+                    submissionModal.show();
+
+                    // Set form action and submit after a short delay to show modal
+                    setTimeout(function() {
+                        form.action = 'mresponse_submit.php';
+                        form.submit();
+                    }, 500);
+                });
             }
         });
     </script>

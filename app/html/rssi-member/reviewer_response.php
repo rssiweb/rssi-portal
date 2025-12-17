@@ -285,20 +285,6 @@ if (!$result) {
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <script>
-                                                        var currentYear = new Date().getFullYear();
-                                                        for (var i = 0; i < 5; i++) {
-                                                            var nextYear = currentYear + 1;
-                                                            var yearRange = currentYear.toString() + '-' + nextYear.toString();
-                                                            var option = document.createElement('option');
-                                                            option.value = yearRange;
-                                                            option.text = yearRange;
-                                                            document.getElementById('appraisal_year').appendChild(option);
-                                                            // currentYear = nextYear;
-                                                            currentYear--;
-                                                        }
-                                                    </script>
-
 
                                                     <h2>Goals</h2>
                                                     <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
@@ -915,6 +901,21 @@ if (!$result) {
         </section>
 
     </main><!-- End #main -->
+    <!-- Bootstrap Modal for Submission Progress -->
+    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3" id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Bootstrap JS -->
 
@@ -941,20 +942,6 @@ if (!$result) {
         });
     </script>
 
-    <script>
-        var form = document.getElementById('r_response');
-        var submit1Button = document.getElementById('submit1');
-        var submit2Button = document.getElementById('submit2');
-
-        // Add event listeners to the submit buttons
-        submit1Button.addEventListener('click', function() {
-            form.action = 'rresponse_save.php'; // Set the form action to submit1.php
-        });
-
-        submit2Button.addEventListener('click', function() {
-            form.action = 'rresponse_submit.php'; // Set the form action to submit2.php
-        });
-    </script>
     <script>
         $(document).ready(function() {
             $('input[required], select[required], textarea[required]').each(function() {
@@ -1005,6 +992,51 @@ if (!$result) {
                 thArray.forEach((th, index) => {
                     th.style.width = colWidths[index] + 'px';
                 });
+            }
+        });
+    </script>
+    <script>
+        // Create modal instance
+        const submissionModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        // Prevent Escape key from closing modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && document.getElementById('submissionModal').classList.contains('show')) {
+                event.preventDefault();
+            }
+        });
+        // Get the form and submit button elements
+        var form = document.getElementById('r_response');
+        var submit1Button = document.getElementById('submit1');
+        var submit2Button = document.getElementById('submit2');
+
+        // Add event listeners to the submit buttons
+        submit1Button.addEventListener('click', function() {
+            form.action = 'rresponse_save.php'; // Set the form action to submit1.php
+        });
+
+        submit2Button.addEventListener('click', function(e) {
+            e.preventDefault(); // Add this
+
+            // Optional: Add confirmation
+            var confirmSubmit = confirm("Are you sure you want to approve this goal sheet?");
+
+            if (confirmSubmit) {
+                // Disable the submit button
+                submit2Button.disabled = true;
+                submit2Button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Approving...';
+
+                // Show the submission progress modal
+                submissionModal.show();
+
+                // Small delay to ensure modal shows
+                setTimeout(function() {
+                    form.action = 'rresponse_submit.php';
+                    form.submit();
+                }, 500);
             }
         });
     </script>
