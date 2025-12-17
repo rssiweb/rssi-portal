@@ -887,8 +887,6 @@ if (!$result) {
             select.classList.add('form-select');
         });
     </script>
-    <!-- Add this script at the end of the HTML body -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- Bootstrap Modal for Submission Progress -->
     <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
