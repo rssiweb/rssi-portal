@@ -791,19 +791,6 @@ if (!$result) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        var currentYear = new Date().getFullYear();
-        for (var i = 0; i < 5; i++) {
-            var nextYear = currentYear + 1;
-            var yearRange = currentYear.toString() + '-' + nextYear.toString();
-            var option = document.createElement('option');
-            option.value = yearRange;
-            option.text = yearRange;
-            document.getElementById('appraisal_year').appendChild(option);
-            // currentYear = nextYear;
-            currentYear--;
-        }
-    </script>
     <!-- Add this script in your HTML file -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -900,8 +887,37 @@ if (!$result) {
             select.classList.add('form-select');
         });
     </script>
-
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal for Submission Progress -->
+    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3" id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
+        // Create modal instance
+        const submissionModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        // Prevent Escape key from closing modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && document.getElementById('submissionModal').classList.contains('show')) {
+                event.preventDefault();
+            }
+        });
+        // Get the form and submit button elements
         var form = document.getElementById('a_response');
         var submit1Button = document.getElementById('submit1');
         var submit2Button = document.getElementById('submit2');
@@ -919,6 +935,14 @@ if (!$result) {
             var confirmSubmit = confirm("Are you sure you want to submit the Goalsheet?\n\nPlease note:\n- Once submitted, you will not be able to modify it again.\n- If you wish to save your data without submitting, click 'Save'.\n\nClick 'OK' to submit or 'Cancel' to go back.");
 
             if (confirmSubmit) {
+                // Disable the submit button
+                submit2Button.disabled = true;
+                submit2Button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+
+                // Show the submission progress modal
+                submissionModal.show();
+
+                // Set form action and submit
                 form.action = 'aresponse_submit.php';
                 form.submit(); // manually submit if user confirms
             }
