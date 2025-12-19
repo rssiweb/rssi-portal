@@ -577,6 +577,7 @@ $resultArr = pg_fetch_all($result);
                                             <?php if ($role == 'Admin'): ?>
                                                 <th scope="col">Asset type</th>
                                                 <th scope="col">Asset category</th>
+                                                <th scope="col">Unit price</th>
                                                 <th scope="col" id="cw1">Remarks</th>
                                             <?php endif; ?>
                                             <th scope="col">Issued by</th>
@@ -610,6 +611,12 @@ $resultArr = pg_fetch_all($result);
                                                     <?php if ($role == 'Admin'): ?>
                                                         <td><?= $array['itemtype'] ?></td>
                                                         <td><?= $array['asset_category'] ?></td>
+                                                        <td>
+                                                            <?php if ($array['unit_cost'] != null): ?>
+                                                                ₹&nbsp;<?= number_format((float)$array['unit_cost'], 2, '.', ',') ?>
+                                                            <?php else: ?>
+                                                                <span>N/A</span>
+                                                            <?php endif; ?>
                                                         <td>
                                                             <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 90): ?>
                                                                 <?= htmlspecialchars($array['remarks']) ?>
@@ -686,14 +693,54 @@ $resultArr = pg_fetch_all($result);
                                                                             </span>
                                                                         <?php endif; ?>
                                                                     </li>
-                                                                    <li>
-                                                                        <!-- Asset History link styled like a button -->
-                                                                        <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
-                                                                            class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
-                                                                            <i class="bi bi-clock-history"></i> Asset History
-                                                                        </a>
-                                                                    </li>
                                                                 <?php endif; ?>
+                                                                <li>
+                                                                    <!-- Asset History link styled like a button -->
+                                                                    <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
+                                                                        class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
+                                                                        <i class="bi bi-clock-history"></i> Asset History
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <?php if (!empty($array['purchese_bill'])): ?>
+                                                                        <a href="<?= htmlspecialchars($array['purchese_bill']) ?>"
+                                                                            target="_blank"
+                                                                            title="View Invoice"
+                                                                            class="btn btn-link dropdown-item text-start w-100"
+                                                                            style="padding-left: 1rem;">
+                                                                            <i class="bi bi-receipt"></i> View Invoice
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
+                                                                            <i class="bi bi-receipt"></i> View Invoice
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </li>
+                                                                <li>
+                                                                    <?php if (!empty($array['asset_photo'])): ?>
+                                                                        <a href="<?= htmlspecialchars($array['asset_photo']) ?>"
+                                                                            target="_blank"
+                                                                            title="View Asset Photo"
+                                                                            class="btn btn-link dropdown-item text-start w-100"
+                                                                            style="padding-left: 1rem;">
+                                                                            <i class="bi bi-image"></i> View Photo
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
+                                                                            <i class="bi bi-image"></i> View Photo
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </li>
+                                                                <li>
+                                                                    <a href="#"
+                                                                        onclick="openAssetUploadModal('<?= htmlspecialchars($array['itemid']) ?>')"
+                                                                        title="Update Asset Photo & Bill"
+                                                                        class="btn btn-link dropdown-item text-start w-100"
+                                                                        style="padding-left: 1rem;">
+                                                                        <i class="bi bi-upload"></i> Update Photo & Bill
+                                                                    </a>
+                                                                </li>
+
                                                             </ul>
                                                         </div>
                                                     </td>
