@@ -526,6 +526,7 @@ $resultArr = pg_fetch_all($result);
                                             <th scope="col">Quantity</th>
                                             <?php if ($role == 'Admin'): ?>
                                                 <th scope="col">Asset type</th>
+                                                <th scope="col">Asset category</th>
                                                 <th scope="col" id="cw1">Remarks</th>
                                             <?php endif; ?>
                                             <th scope="col">Issued by</th>
@@ -558,6 +559,7 @@ $resultArr = pg_fetch_all($result);
                                                     <td><?= $array['quantity'] ?></td>
                                                     <?php if ($role == 'Admin'): ?>
                                                         <td><?= $array['itemtype'] ?></td>
+                                                        <td><?= $array['asset_category'] ?></td>
                                                         <td>
                                                             <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 90): ?>
                                                                 <?= htmlspecialchars($array['remarks']) ?>
@@ -857,6 +859,8 @@ $resultArr = pg_fetch_all($result);
             document.getElementById('quantity').value = item.quantity || "";
             document.getElementById('asset_status').value = item.asset_status || "";
             document.getElementById('remarks').value = item.remarks || "";
+            document.getElementById('unit_cost').value = item.unit_cost || "";
+            document.getElementById('asset_category').value = item.asset_category || "";
 
             // Handle Select2 field for collectedby
             var collectedbyValue = item.collectedby || "";

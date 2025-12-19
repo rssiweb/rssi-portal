@@ -236,10 +236,13 @@ if ($formtype == "gpsedit") {
   $asset_status = isset($_POST['asset_status']) ? pg_escape_string($con, $_POST['asset_status']) : '';
   $collectedby = isset($_POST['collectedby']) ? strtoupper(pg_escape_string($con, $_POST['collectedby'])) : '';
   $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
+  $asset_category = isset($_POST['asset_category']) ? pg_escape_string($con, $_POST['asset_category']) : '';
+  $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
+
   $now = date('Y-m-d H:i:s');
 
   // Fetch current data
-  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status FROM gps WHERE itemid = '$itemid'";
+  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status, asset_category, unit_cost FROM gps WHERE itemid = '$itemid'";
   $current_result = pg_query($con, $current_query);
   if (!$current_result || pg_num_rows($current_result) == 0) {
     echo "invalid";
@@ -270,6 +273,12 @@ if ($formtype == "gpsedit") {
   }
   if ($current_data['asset_status'] !== $asset_status) {
     $changes['status'] = $asset_status; // Store only new value with key "status"
+  }
+  if ($current_data['asset_category'] !== $asset_category) {
+    $changes['asset_category'] = $asset_category;
+  }
+  if ($current_data['unit_cost'] !== $unit_cost) {
+    $changes['unit_cost'] = $unit_cost;
   }
 
   if (!empty($changes)) {
