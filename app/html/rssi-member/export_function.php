@@ -260,11 +260,11 @@ function gps_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status' . "\n";
+  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status,Unit price,Purchase bill, Asset Recorded Date' . "\n";
 
   foreach ($resultArr as $array) {
 
-    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . "\n";
+    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . ',' . $array['unit_cost'] . ',' . $array['purchase_bill'] . ',' . $array['date'] . "\n";
   }
 }
 
