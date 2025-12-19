@@ -238,11 +238,30 @@ if ($formtype == "gpsedit") {
   $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
   $asset_category = isset($_POST['asset_category']) ? pg_escape_string($con, $_POST['asset_category']) : '';
   $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
+  $photo_path = $_FILES['asset_photo'] ?? null;
+  $bill_path = $_FILES['purchase_bill'] ?? null;
 
   $now = date('Y-m-d H:i:s');
 
+  // Initialize file links to null
+  $doclink_photo_path = null;
+  $doclink_bill_path = null;
+
+  // Handle photo upload
+  if (!empty($photo_path['name'])) {
+    $filename_photo_path = "photo_path_" . "$title" . "_" . time();
+    $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR'; // GPS Photos folder ID
+    $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
+  }
+  // Handle bill upload
+  if (!empty($bill_path['name'])) {
+    $filename_bill_path = "bill_path_" . "$title" . "_" . time();
+    $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os'; // GPS Bills folder ID
+    $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
+  }
+
   // Fetch current data
-  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status, asset_category, unit_cost FROM gps WHERE itemid = '$itemid'";
+  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status, asset_category, unit_cost, asset_photo, purchase_bill FROM gps WHERE itemid = '$itemid'";
   $current_result = pg_query($con, $current_query);
   if (!$current_result || pg_num_rows($current_result) == 0) {
     echo "invalid";
@@ -279,6 +298,12 @@ if ($formtype == "gpsedit") {
   }
   if ($current_data['unit_cost'] !== $unit_cost) {
     $changes['unit_cost'] = $unit_cost;
+  }
+  if ($doclink_photo_path !== null && $current_data['asset_photo'] !== $doclink_photo_path) {
+    $changes['asset_photo'] = $doclink_photo_path;
+  }
+  if ($doclink_bill_path !== null && $current_data['purchase_bill'] !== $doclink_bill_path) {
+    $changes['purchase_bill'] = $doclink_bill_path;
   }
 
   if (!empty($changes)) {

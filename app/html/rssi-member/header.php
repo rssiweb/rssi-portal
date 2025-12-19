@@ -704,11 +704,6 @@
             </a>
           </li>
           <li>
-            <a id="my_bookLink" href="my_book.php">
-              <span>Libary Status</span>
-            </a>
-          </li>
-          <li>
             <a id="medistatusLink" href="#">
               <span>Medimate Approval</span>
             </a>
@@ -1059,11 +1054,6 @@
         id: 'work',
         linkId: 'monthly_timesheet',
         url: 'monthly_timesheet.php'
-      },
-      {
-        id: 'work',
-        linkId: 'my_bookLink',
-        url: 'my_book.php'
       },
       {
         id: 'work',

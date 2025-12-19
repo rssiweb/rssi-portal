@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -23,15 +24,34 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $quantity = isset($_POST['quantity']) ? $_POST['quantity'] : '';
         $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : '';
-        $collectedby = isset($_POST['collectedby']) ? strtoupper($_POST['collectedby']) : '';
         $now = date('Y-m-d H:i:s');
-        $updated_by = $collectedby; // Or whichever user is adding the asset
+        $collectedby = $associatenumber; // Or whichever user is adding the asset
         $asset_category = isset($_POST['asset_category']) ? $_POST['asset_category'] : '';
+        $unit_cost = isset($_POST['unit_cost']) ? $_POST['unit_cost'] : '';
+        $photo_path = $_FILES['asset_photo'] ?? null;
+        $bill_path = $_FILES['purchase_bill'] ?? null;
+
+        // Initialize file links to null
+        $doclink_photo_path = null;
+        $doclink_bill_path = null;
+
+        // Handle photo upload
+        if (!empty($photo_path['name'])) {
+            $filename_photo_path = "photo_path_" . "$itemid" . "_" . time();
+            $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR'; // GPS Photos folder ID
+            $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
+        }
+        // Handle bill upload
+        if (!empty($bill_path['name'])) {
+            $filename_bill_path = "bill_path_" . "$itemid" . "_" . time();
+            $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os'; // GPS Bills folder ID
+            $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
+        }
 
         if ($itemtype != "") {
             // Insert into gps table
-            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category) 
-                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category')";
+            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill) 
+                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path')";
             pg_query($con, $gps_query);
 
             // Prepare the changes array (only what’s relevant)
@@ -42,13 +62,14 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                 'asset_status' => $asset_status,
                 'collectedby' => $collectedby,
                 'remarks' => $remarks,
-                'asset_category' => $asset_category
+                'asset_category' => $asset_category,
+                'unit_cost' => $unit_cost
             ];
             $changes_json = json_encode($changes);
 
             // Insert into gps_history table with only required columns
             $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
-                          VALUES ('$itemid', 'add_asset', '$updated_by', '$now', '$changes_json')";
+                          VALUES ('$itemid', 'add_asset', '$collectedby', '$now', '$changes_json')";
             pg_query($con, $history_query);
             $cmdtuples = pg_affected_rows(pg_query($con, $gps_query));
         }
