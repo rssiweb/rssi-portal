@@ -18,7 +18,10 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 <?php if ($role == 'Admin') {
 
     if (isset($_POST['form-type']) && $_POST['form-type'] == "addasset") {
-        $itemid = "A" . time();
+        // Generate a unique itemid with microseconds to avoid duplicates
+        $microtime = microtime(true);
+        $itemid = "A" . str_replace('.', '', sprintf('%.4f', $microtime));
+
         $itemtype = isset($_POST['itemtype']) ? $_POST['itemtype'] : '';
         $itemname = isset($_POST['itemname']) ? $_POST['itemname'] : '';
         $quantity = isset($_POST['quantity']) ? $_POST['quantity'] : '';
@@ -52,26 +55,41 @@ date_default_timezone_set('Asia/Kolkata'); ?>
             // Insert into gps table
             $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill) 
                       VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path')";
-            pg_query($con, $gps_query);
 
-            // Prepare the changes array (only what’s relevant)
-            $changes = [
-                'itemtype' => $itemtype,
-                'itemname' => $itemname,
-                'quantity' => $quantity,
-                'asset_status' => $asset_status,
-                'collectedby' => $collectedby,
-                'remarks' => $remarks,
-                'asset_category' => $asset_category,
-                'unit_cost' => $unit_cost
-            ];
-            $changes_json = json_encode($changes);
+            $gps_result = pg_query($con, $gps_query);
 
-            // Insert into gps_history table with only required columns
-            $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
-                          VALUES ('$itemid', 'add_asset', '$collectedby', '$now', '$changes_json')";
-            pg_query($con, $history_query);
-            $cmdtuples = pg_affected_rows(pg_query($con, $gps_query));
+            if ($gps_result) {
+                // Prepare the changes array (only what's relevant)
+                $changes = [
+                    'itemtype' => $itemtype,
+                    'itemname' => $itemname,
+                    'quantity' => $quantity,
+                    'asset_status' => $asset_status,
+                    'collectedby' => $collectedby,
+                    'remarks' => $remarks,
+                    'asset_category' => $asset_category,
+                    'unit_cost' => $unit_cost
+                ];
+                $changes_json = json_encode($changes);
+
+                // Insert into gps_history table with only required columns
+                $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
+                              VALUES ('$itemid', 'add_asset', '$collectedby', '$now', '$changes_json')";
+                $history_result = pg_query($con, $history_query);
+
+                $cmdtuples = pg_affected_rows($gps_result);
+
+                // Set success message
+                $_SESSION['success_message'] = "Asset $itemid has been added successfully!";
+            } else {
+                // Handle SQL error
+                $error_message = pg_last_error($con);
+                $_SESSION['error_message'] = "Error adding asset: $error_message";
+                $cmdtuples = 0;
+            }
+        } else {
+            $_SESSION['error_message'] = "Please select an asset type!";
+            $cmdtuples = 0;
         }
     }
 
@@ -81,6 +99,17 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
     $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
     $assetcategory = isset($_GET['assetcategory']) ? $_GET['assetcategory'] : '';
+
+    // Check for session messages
+    if (isset($_SESSION['success_message'])) {
+        $success_message = $_SESSION['success_message'];
+        unset($_SESSION['success_message']);
+    }
+
+    if (isset($_SESSION['error_message'])) {
+        $error_message = $_SESSION['error_message'];
+        unset($_SESSION['error_message']);
+    }
 
     $conditions = [];
 
@@ -1258,6 +1287,59 @@ $resultArr = pg_fetch_all($result);
                     validateBulkUpdateForm();
                 }
             });
+        });
+    </script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#submissionModal').modal('show');
+        }
+
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#submissionModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('gps').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
         });
     </script>
 </body>
