@@ -59,15 +59,15 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $assetid = isset($_GET['assetid']) ? $_GET['assetid'] : '';
     $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
     $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
-    $asset_category = isset($_GET['asset_category']) ? $_GET['asset_category'] : '';
+    $assetcategory = isset($_GET['assetcategory']) ? $_GET['assetcategory'] : '';
 
     $conditions = [];
 
     if ($item_type != "ALL" && $item_type != "") {
         $conditions[] = "itemtype = '$item_type'";
     }
-    if ($asset_category != "ALL" && $asset_category != "") {
-        $conditions[] = "asset_category = '$asset_category'";
+    if ($assetcategory != "ALL" && $assetcategory != "") {
+        $conditions[] = "asset_category = '$assetcategory'";
     }
 
     if ($taggedto != "") {
@@ -348,12 +348,12 @@ $resultArr = pg_fetch_all($result);
                                                     </div>
 
                                                     <div class="col-md-3">
-                                                        <label for="asset_category" class="form-label">Asset Category</label>
-                                                        <select name="asset_category" class="form-select">
-                                                            <?php if ($asset_category == null) { ?>
+                                                        <label for="assetcategory" class="form-label">Asset Category</label>
+                                                        <select name="assetcategory" class="form-select">
+                                                            <?php if ($assetcategory == null) { ?>
                                                                 <option disabled selected hidden>Select asset category</option>
                                                             <?php } else { ?>
-                                                                <option hidden selected><?php echo htmlspecialchars($asset_category) ?></option>
+                                                                <option hidden selected><?php echo htmlspecialchars($assetcategory) ?></option>
                                                             <?php } ?>
                                                             <option value="fixed">Fixed Asset</option>
                                                             <option value="consumable">Consumable</option>
@@ -411,7 +411,7 @@ $resultArr = pg_fetch_all($result);
                                         const itemTypeInput = document.getElementsByName('item_type')[0];
                                         const taggedToInput = document.getElementsByName('taggedto')[0];
                                         const itemStatusInput = document.getElementsByName('assetstatus')[0];
-                                        const assetCategoryInput = document.getElementsByName('asset_category')[0];
+                                        const assetCategoryInput = document.getElementsByName('assetcategory')[0];
 
                                         function updateFormState() {
                                             if (checkbox.checked) {
