@@ -249,13 +249,13 @@ if ($formtype == "gpsedit") {
 
   // Handle photo upload
   if (!empty($photo_path['name'])) {
-    $filename_photo_path = "photo_path_" . "$title" . "_" . time();
+    $filename_photo_path = "photo_path_" . "$itemid" . "_" . time();
     $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR'; // GPS Photos folder ID
     $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
   }
   // Handle bill upload
   if (!empty($bill_path['name'])) {
-    $filename_bill_path = "bill_path_" . "$title" . "_" . time();
+    $filename_bill_path = "bill_path_" . "$itemid" . "_" . time();
     $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os'; // GPS Bills folder ID
     $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
   }
