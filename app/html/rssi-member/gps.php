@@ -770,7 +770,7 @@ $resultArr = pg_fetch_all($result);
                                                 <div class="text-end mb-3">
                                                     <p class="badge bg-info"><span class="itemid"></span></p>
                                                 </div>
-
+                                                <p><span class="itemname"></span></p>
                                                 <input type="hidden" name="itemid1" id="itemid1">
                                                 <input type="hidden" name="form-type" value="gpsedit">
                                                 <input type="hidden" name="updatedby" value="<?= $associatenumber ?>">
@@ -958,6 +958,7 @@ $resultArr = pg_fetch_all($result);
 
             // Populate item ID
             document.querySelector('#myModal .itemid').textContent = item.itemid;
+            document.querySelector('#myModal .itemname').textContent = item.itemname;
             document.getElementById('itemid1').value = item.itemid;
 
             // Fill form with current data for context
@@ -1016,6 +1017,7 @@ $resultArr = pg_fetch_all($result);
 
             // Populate form fields
             document.querySelector('#myModal .itemid').textContent = item.itemid;
+            document.querySelector('#myModal .itemname').textContent = item.itemname;
             document.getElementById('itemid1').value = item.itemid;
 
             <?php if ($role == 'Admin'): ?>
