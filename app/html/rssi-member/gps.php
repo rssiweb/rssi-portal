@@ -26,11 +26,12 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $collectedby = isset($_POST['collectedby']) ? strtoupper($_POST['collectedby']) : '';
         $now = date('Y-m-d H:i:s');
         $updated_by = $collectedby; // Or whichever user is adding the asset
+        $asset_category = isset($_POST['asset_category']) ? $_POST['asset_category'] : '';
 
         if ($itemtype != "") {
             // Insert into gps table
-            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status) 
-                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status')";
+            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category) 
+                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category')";
             pg_query($con, $gps_query);
 
             // Prepare the changes array (only what’s relevant)
@@ -40,7 +41,8 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                 'quantity' => $quantity,
                 'asset_status' => $asset_status,
                 'collectedby' => $collectedby,
-                'remarks' => $remarks
+                'remarks' => $remarks,
+                'asset_category' => $asset_category
             ];
             $changes_json = json_encode($changes);
 
@@ -57,11 +59,15 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $assetid = isset($_GET['assetid']) ? $_GET['assetid'] : '';
     $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
     $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
+    $asset_category = isset($_GET['asset_category']) ? $_GET['asset_category'] : '';
 
     $conditions = [];
 
     if ($item_type != "ALL" && $item_type != "") {
         $conditions[] = "itemtype = '$item_type'";
+    }
+    if ($asset_category != "ALL" && $asset_category != "") {
+        $conditions[] = "asset_category = '$asset_category'";
     }
 
     if ($taggedto != "") {
@@ -160,15 +166,6 @@ $resultArr = pg_fetch_all($result);
             outline: none;
         }
 
-        #passwordHelpBlock {
-            display: block;
-        }
-
-        .input-help {
-            vertical-align: top;
-            display: inline-block;
-        }
-
         /* Add this to your style section */
         .table tbody tr {
             cursor: pointer;
@@ -245,155 +242,214 @@ $resultArr = pg_fetch_all($result);
                             } ?>
 
                             <?php if ($role == 'Admin') { ?>
-                                <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Add New Asset</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST" enctype="multipart/form-data" class="row g-3">
+                                                    <input type="hidden" name="form-type" value="addasset">
 
-                                            <input type="hidden" name="form-type" type="text" value="addasset">
+                                                    <div class="col-md-4">
+                                                        <label for="itemtype" class="form-label">Asset Type</label>
+                                                        <select name="itemtype" class="form-select" required>
+                                                            <?php if ($itemtype == null) { ?>
+                                                                <option value="" disabled selected hidden>Select asset type</option>
+                                                            <?php } else { ?>
+                                                                <option hidden selected><?php echo htmlspecialchars($itemtype) ?></option>
+                                                            <?php } ?>
+                                                            <option value="Purchased">Purchased</option>
+                                                            <option value="Donation">Donation</option>
+                                                        </select>
+                                                    </div>
 
-                                            <span class="input-help">
-                                                <select name="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
-                                                    <?php if ($itemtype == null) { ?>
-                                                        <option disabled selected hidden>Asset type</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $itemtype ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <option>Purchased</option>
-                                                    <option>Donation</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset type</small>
-                                            </span>
+                                                    <div class="col-md-4">
+                                                        <label for="asset_category" class="form-label">Asset Category</label>
+                                                        <select name="asset_category" class="form-select" required>
+                                                            <option value="" disabled selected hidden>Select category</option>
+                                                            <option value="fixed">Fixed Asset</option>
+                                                            <option value="consumable">Consumable</option>
+                                                        </select>
+                                                    </div>
 
-                                            <span class="input-help">
-                                                <input type="text" name="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset name</small>
-                                            </span>
+                                                    <div class="col-md-4">
+                                                        <label for="itemname" class="form-label">Asset Name</label>
+                                                        <input type="text" name="itemname" class="form-control" placeholder="Enter asset name" required>
+                                                    </div>
 
-                                            <span class="input-help">
-                                                <input type="number" name="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" min="1" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Quantity</small>
-                                            </span>
-                                            <span class="input-help">
-                                                <select name="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
-                                                    <?php if ($asset_status == null) { ?>
-                                                        <option disabled selected hidden>Asset status</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $asset_status ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <option>Active</option>
-                                                    <option>Inactive</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
-                                            </span>
+                                                    <div class="col-md-3">
+                                                        <label for="quantity" class="form-label">Quantity</label>
+                                                        <input type="number" name="quantity" class="form-control" placeholder="Enter quantity" min="1" required>
+                                                    </div>
 
-                                            <span class="input-help">
-                                                <textarea type="text" name="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
-                                            </span>
+                                                    <div class="col-md-3">
+                                                        <label for="unit_cost" class="form-label">Unit Cost (Optional)</label>
+                                                        <input type="number" name="unit_cost" class="form-control" placeholder="0.00" min="0" step="0.01">
+                                                    </div>
 
-                                            <input type="hidden" name="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Collected by" value="<?php echo $associatenumber ?>" required readonly>
+                                                    <div class="col-md-3">
+                                                        <label for="asset_status" class="form-label">Asset Status</label>
+                                                        <select name="asset_status" class="form-select" required>
+                                                            <option value="" disabled selected hidden>Select status</option>
+                                                            <option value="Active">Active</option>
+                                                            <option value="Inactive">Inactive</option>
+                                                        </select>
+                                                    </div>
 
-                                        </div>
+                                                    <div class="col-md-3">
+                                                        <label for="asset_photo" class="form-label">Asset Photo</label>
+                                                        <input type="file" name="asset_photo" class="form-control" accept="image/*">
+                                                        <div class="form-text">JPG/PNG format</div>
+                                                    </div>
 
-                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="purchase_bill" class="form-label">Purchase Bill / Invoice</label>
+                                                        <input type="file" name="purchase_bill" class="form-control" accept=".pdf,image/*">
+                                                    </div>
 
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                            <i class="bi bi-plus-circle"></i> Add Asset</button>
-                                    </div>
-                                </form>
+                                                    <div class="col-md-6">
+                                                        <label for="remarks" class="form-label">Remarks (Optional)</label>
+                                                        <textarea name="remarks" class="form-control" placeholder="Enter any remarks" rows="1"></textarea>
+                                                    </div>
 
-                                <form name="gpsdetails" id="gpsdetails" action="" method="GET">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-
-                                            <select name="item_type" class="form-select" style="width:max-content; display:inline-block">
-                                                <?php if ($item_type == null) { ?>
-                                                    <option disabled selected hidden>Asset type</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option hidden selected><?php echo $item_type ?></option>
-                                                <?php }
-                                                ?>
-                                                <option>Purchased</option>
-                                                <option>Donation</option>
-                                                <option>ALL</option>
-                                            </select>&nbsp;
-                                            <span class="input-help">
-                                                <select name="assetstatus" class="form-select" style="width:max-content; display:inline-block" required>
-                                                    <?php if ($assetstatus == null) { ?>
-                                                        <option disabled selected hidden>Asset status</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $assetstatus ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <option>Active</option>
-                                                    <option>Inactive</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
-                                            </span>
-                                            &nbsp;
-                                            <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
-                                            &nbsp;
-                                            <span class="input-help">
-                                                <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset Id or name" value="<?php echo $assetid ?>" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset Id or name</small>
-                                            </span>
+                                                    <div class="col-12">
+                                                        <button type="submit" name="search_by_id" class="btn btn-primary">
+                                                            <i class="bi bi-plus-circle"></i> Add Asset
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id2" class="btn btn-primary btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Search Assets</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <form name="gpsdetails" id="gpsdetails" action="" method="GET" class="row g-3">
+                                                    <div class="col-md-3">
+                                                        <label for="item_type" class="form-label">Asset Type</label>
+                                                        <select name="item_type" class="form-select">
+                                                            <?php if ($item_type == null) { ?>
+                                                                <option disabled selected hidden>Select asset type</option>
+                                                            <?php } else { ?>
+                                                                <option hidden selected><?php echo htmlspecialchars($item_type) ?></option>
+                                                            <?php } ?>
+                                                            <option>Purchased</option>
+                                                            <option>Donation</option>
+                                                            <option>ALL</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label for="asset_category" class="form-label">Asset Category</label>
+                                                        <select name="asset_category" class="form-select">
+                                                            <?php if ($asset_category == null) { ?>
+                                                                <option disabled selected hidden>Select asset category</option>
+                                                            <?php } else { ?>
+                                                                <option hidden selected><?php echo htmlspecialchars($asset_category) ?></option>
+                                                            <?php } ?>
+                                                            <option value="fixed">Fixed Asset</option>
+                                                            <option value="consumable">Consumable</option>
+                                                            <option>ALL</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label for="assetstatus" class="form-label">Asset Status</label>
+                                                        <select name="assetstatus" class="form-select">
+                                                            <?php if ($assetstatus == null) { ?>
+                                                                <option disabled selected hidden>Select status</option>
+                                                            <?php } else { ?>
+                                                                <option hidden selected><?php echo htmlspecialchars($assetstatus) ?></option>
+                                                            <?php } ?>
+                                                            <option>Active</option>
+                                                            <option>Inactive</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label for="taggedto" class="form-label">Tagged To</label>
+                                                        <input type="text" name="taggedto" class="form-control" placeholder="Enter person name" value="<?php echo htmlspecialchars($taggedto) ?>">
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label for="assetid" class="form-label">Asset ID or Name</label>
+                                                        <input type="text" name="assetid" class="form-control" placeholder="Enter asset ID or name" value="<?php echo htmlspecialchars($assetid) ?>">
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked"; ?>>
+                                                            <label class="form-check-label" for="is_user">
+                                                                Search by Asset ID or name only
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <button type="submit" name="search_by_id2" class="btn btn-primary">
+                                                            <i class="bi bi-search"></i> Search
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="filter-checks">
-                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                        <label for="is_user" style="font-weight: 400;">Search by Asset Id or name</label>
-                                    </div>
-                                </form>
+                                </div>
+
                                 <script>
-                                    const checkbox = document.getElementById('is_user');
-                                    const assetIdInput = document.getElementsByName('assetid')[0];
-                                    const itemTypeInput = document.getElementsByName('item_type')[0];
-                                    const taggedToInput = document.getElementsByName('taggedto')[0];
-                                    const itemStatusInput = document.getElementsByName('assetstatus')[0];
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const checkbox = document.getElementById('is_user');
+                                        const assetIdInput = document.getElementsByName('assetid')[0];
+                                        const itemTypeInput = document.getElementsByName('item_type')[0];
+                                        const taggedToInput = document.getElementsByName('taggedto')[0];
+                                        const itemStatusInput = document.getElementsByName('assetstatus')[0];
+                                        const assetCategoryInput = document.getElementsByName('asset_category')[0];
 
-                                    if ($('#is_user').not(':checked').length > 0) {
+                                        function updateFormState() {
+                                            if (checkbox.checked) {
+                                                assetIdInput.disabled = false;
+                                                itemTypeInput.disabled = true;
+                                                itemStatusInput.disabled = true;
+                                                taggedToInput.disabled = true;
+                                                assetCategoryInput.disabled = true;
 
-                                        assetIdInput.disabled = true;
-                                        itemTypeInput.disabled = false;
-                                        itemStatusInput.disabled = false;
-                                        taggedToInput.disabled = false;
+                                                // Change labels to indicate disabled state
+                                                itemTypeInput.closest('.col-md-3').classList.add('text-muted');
+                                                itemStatusInput.closest('.col-md-3').classList.add('text-muted');
+                                                taggedToInput.closest('.col-md-3').classList.add('text-muted');
+                                                assetIdInput.closest('.col-md-3').classList.remove('text-muted');
+                                                assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
+                                            } else {
+                                                assetIdInput.disabled = true;
+                                                itemTypeInput.disabled = false;
+                                                itemStatusInput.disabled = false;
+                                                taggedToInput.disabled = false;
+                                                assetCategoryInput.disabled = false;
 
-                                    } else {
-
-                                        assetIdInput.disabled = false;
-                                        itemTypeInput.disabled = true;
-                                        itemStatusInput.disabled = true;
-                                        taggedToInput.disabled = true;
-
-                                    }
-                                    checkbox.addEventListener('change', (event) => {
-                                        if (event.target.checked) {
-                                            assetIdInput.disabled = false;
-                                            itemTypeInput.disabled = true;
-                                            itemStatusInput.disabled = true;
-                                            taggedToInput.disabled = true;
-
-                                        } else {
-                                            assetIdInput.disabled = true;
-                                            itemTypeInput.disabled = false;
-                                            itemStatusInput.disabled = false;
-                                            taggedToInput.disabled = false;
-
+                                                // Remove muted state
+                                                itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
+                                                itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
+                                                taggedToInput.closest('.col-md-3').classList.remove('text-muted');
+                                                assetIdInput.closest('.col-md-3').classList.add('text-muted');
+                                                assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
+                                            }
                                         }
+
+                                        // Initial state
+                                        updateFormState();
+
+                                        // Add event listener
+                                        checkbox.addEventListener('change', updateFormState);
                                     });
                                 </script>
-
                             <?php } ?>
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
@@ -612,7 +668,7 @@ $resultArr = pg_fetch_all($result);
                                             <h1 class="modal-title fs-5" id="myModalLabel">GPS Details</h1>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <form id="gpsform" action="#" method="POST">
+                                        <form id="gpsform" action="#" method="POST" enctype="multipart/form-data">
                                             <div class="modal-body">
                                                 <div class="text-end mb-3">
                                                     <p class="badge bg-info"><span class="itemid"></span></p>
@@ -623,6 +679,8 @@ $resultArr = pg_fetch_all($result);
                                                 <input type="hidden" name="updatedby" value="<?= $associatenumber ?>">
 
                                                 <div class="row g-3">
+
+                                                    <!-- Item Type -->
                                                     <div class="col-md-6">
                                                         <select name="itemtype" id="itemtype" class="form-select" required>
                                                             <option disabled selected hidden>Item type</option>
@@ -631,14 +689,36 @@ $resultArr = pg_fetch_all($result);
                                                         </select>
                                                         <small class="text-muted">Item type*</small>
                                                     </div>
+
+                                                    <!-- Asset Category -->
+                                                    <div class="col-md-6">
+                                                        <select name="asset_category" id="asset_category" class="form-select" required>
+                                                            <option disabled selected hidden>Asset category</option>
+                                                            <option value="fixed">Fixed Asset</option>
+                                                            <option value="consumable">Consumable</option>
+                                                        </select>
+                                                        <small class="text-muted">Asset category*</small>
+                                                    </div>
+
+                                                    <!-- Item Name -->
                                                     <div class="col-md-6">
                                                         <input type="text" name="itemname" id="itemname" class="form-control" placeholder="Item name" required>
                                                         <small class="text-muted">Item name*</small>
                                                     </div>
+
+                                                    <!-- Quantity -->
                                                     <div class="col-md-6">
                                                         <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Quantity" min="1" required>
                                                         <small class="text-muted">Quantity*</small>
                                                     </div>
+
+                                                    <!-- Unit Cost -->
+                                                    <div class="col-md-6">
+                                                        <input type="number" name="unit_cost" id="unit_cost" class="form-control" placeholder="Unit cost" min="0" step="0.01">
+                                                        <small class="text-muted">Unit cost</small>
+                                                    </div>
+
+                                                    <!-- Asset Status -->
                                                     <div class="col-md-6">
                                                         <select name="asset_status" id="asset_status" class="form-select" required>
                                                             <option disabled selected hidden>Asset status</option>
@@ -647,26 +727,44 @@ $resultArr = pg_fetch_all($result);
                                                         </select>
                                                         <small class="text-muted">Asset status*</small>
                                                     </div>
+
+                                                    <!-- Asset Photo (Replace) -->
+                                                    <div class="col-md-6">
+                                                        <input type="file" name="asset_photo" id="asset_photo" class="form-control" accept="image/*">
+                                                        <small class="text-muted">Replace asset photo (optional)</small>
+                                                    </div>
+
+                                                    <!-- Purchase Bill (Replace) -->
+                                                    <div class="col-md-6">
+                                                        <input type="file" name="purchase_bill" id="purchase_bill" class="form-control" accept=".pdf,image/*">
+                                                        <small class="text-muted">Replace purchase bill (optional)</small>
+                                                    </div>
+
+                                                    <!-- Remarks -->
                                                     <div class="col-md-6">
                                                         <textarea name="remarks" id="remarks" class="form-control" placeholder="Remarks"></textarea>
                                                         <small class="text-muted">Remarks (Optional)</small>
                                                     </div>
+
+                                                    <!-- Issued By -->
                                                     <div class="col-md-6">
-                                                        <select name="collectedby" id="collectedby" class="form-select select2">
+                                                        <select name="collectedby" id="collectedby" class="form-select select2" required>
                                                             <option value="">Select associate</option>
-                                                            <!-- Options will be loaded via AJAX -->
                                                         </select>
                                                         <small class="text-muted">Issued by*</small>
                                                     </div>
+
+                                                    <!-- Tagged To -->
                                                     <div class="col-md-6">
                                                         <select name="taggedto" id="taggedto" class="form-select select2">
                                                             <option value="">Select associate</option>
-                                                            <!-- Options will be loaded via AJAX -->
                                                         </select>
                                                         <small class="text-muted">Tagged to</small>
                                                     </div>
+
                                                 </div>
                                             </div>
+
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                 <button type="submit" name="search_by_id3" class="btn btn-primary" id="update-button">
