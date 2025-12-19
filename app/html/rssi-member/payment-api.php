@@ -228,40 +228,16 @@ if ($formtype == "gemsdelete") {
 
 if ($formtype == "gpsedit") {
   $itemid = isset($_POST['itemid1']) ? pg_escape_string($con, $_POST['itemid1']) : '';
-  $itemname = isset($_POST['itemname']) ? pg_escape_string($con, $_POST['itemname']) : '';
-  $itemtype = isset($_POST['itemtype']) ? pg_escape_string($con, $_POST['itemtype']) : '';
-  $quantity = isset($_POST['quantity']) ? pg_escape_string($con, $_POST['quantity']) : '';
-  $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
   $updatedby = isset($_POST['updatedby']) ? pg_escape_string($con, $_POST['updatedby']) : '';
-  $asset_status = isset($_POST['asset_status']) ? pg_escape_string($con, $_POST['asset_status']) : '';
-  $collectedby = isset($_POST['collectedby']) ? strtoupper(pg_escape_string($con, $_POST['collectedby'])) : '';
-  $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
-  $asset_category = isset($_POST['asset_category']) ? pg_escape_string($con, $_POST['asset_category']) : '';
-  $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
+  $mode = isset($_POST['mode']) ? $_POST['mode'] : 'details'; // Default to 'details'
+
   $photo_path = $_FILES['asset_photo'] ?? null;
   $bill_path = $_FILES['purchase_bill'] ?? null;
 
   $now = date('Y-m-d H:i:s');
 
-  // Initialize file links to null
-  $doclink_photo_path = null;
-  $doclink_bill_path = null;
-
-  // Handle photo upload
-  if (!empty($photo_path['name'])) {
-    $filename_photo_path = "photo_path_" . "$itemid" . "_" . time();
-    $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR'; // GPS Photos folder ID
-    $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
-  }
-  // Handle bill upload
-  if (!empty($bill_path['name'])) {
-    $filename_bill_path = "bill_path_" . "$itemid" . "_" . time();
-    $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os'; // GPS Bills folder ID
-    $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
-  }
-
   // Fetch current data
-  $current_query = "SELECT itemtype, itemname, quantity, remarks, collectedby, taggedto, asset_status, asset_category, unit_cost, asset_photo, purchase_bill FROM gps WHERE itemid = '$itemid'";
+  $current_query = "SELECT * FROM gps WHERE itemid = '$itemid'";
   $current_result = pg_query($con, $current_query);
   if (!$current_result || pg_num_rows($current_result) == 0) {
     echo "invalid";
@@ -269,62 +245,82 @@ if ($formtype == "gpsedit") {
   }
   $current_data = pg_fetch_assoc($current_result);
 
-  // Prepare changes array with only new values
+  // Prepare changes array
   $changes = [];
+  $update_fields = [];
 
-  if ($current_data['itemtype'] !== $itemtype) {
-    $changes['itemtype'] = $itemtype;
-  }
-  if ($current_data['itemname'] !== $itemname) {
-    $changes['itemname'] = $itemname;
-  }
-  if ($current_data['quantity'] !== $quantity) {
-    $changes['quantity'] = $quantity;
-  }
-  if ($current_data['remarks'] !== $remarks) {
-    $changes['remarks'] = $remarks;
-  }
-  if ($current_data['collectedby'] !== $collectedby) {
-    $changes['collectedby'] = $collectedby;
-  }
-  if ($current_data['taggedto'] !== $taggedto) {
-    $changes['taggedto'] = $taggedto;
-  }
-  if ($current_data['asset_status'] !== $asset_status) {
-    $changes['status'] = $asset_status; // Store only new value with key "status"
-  }
-  if ($current_data['asset_category'] !== $asset_category) {
-    $changes['asset_category'] = $asset_category;
-  }
-  if ($current_data['unit_cost'] !== $unit_cost) {
-    $changes['unit_cost'] = $unit_cost;
-  }
-  if ($doclink_photo_path !== null && $current_data['asset_photo'] !== $doclink_photo_path) {
-    $changes['asset_photo'] = $doclink_photo_path;
-  }
-  if ($doclink_bill_path !== null && $current_data['purchase_bill'] !== $doclink_bill_path) {
-    $changes['purchase_bill'] = $doclink_bill_path;
-  }
+  if ($mode == 'details') {
+    // Full edit mode - process all fields
+    $itemname = isset($_POST['itemname']) ? pg_escape_string($con, $_POST['itemname']) : '';
+    $itemtype = isset($_POST['itemtype']) ? pg_escape_string($con, $_POST['itemtype']) : '';
+    $quantity = isset($_POST['quantity']) ? pg_escape_string($con, $_POST['quantity']) : '';
+    $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
+    $asset_status = isset($_POST['asset_status']) ? pg_escape_string($con, $_POST['asset_status']) : '';
+    $collectedby = isset($_POST['collectedby']) ? strtoupper(pg_escape_string($con, $_POST['collectedby'])) : '';
+    $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
+    $asset_category = isset($_POST['asset_category']) ? pg_escape_string($con, $_POST['asset_category']) : '';
+    $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
 
-  if (!empty($changes)) {
-    // Build update query dynamically
-    $update_fields = [];
-    foreach ($changes as $field => $new_value) {
-      // For "status", map to correct column name if needed
-      $column = ($field === 'status') ? 'asset_status' : $field;
-      $update_fields[] = "$column = '" . pg_escape_string($con, $new_value) . "'";
+    // Check each field for changes
+    $fields_to_check = [
+      'itemtype' => $itemtype,
+      'itemname' => $itemname,
+      'quantity' => $quantity,
+      'remarks' => $remarks,
+      'collectedby' => $collectedby,
+      'taggedto' => $taggedto,
+      'asset_status' => $asset_status,
+      'asset_category' => $asset_category,
+      'unit_cost' => $unit_cost
+    ];
+
+    foreach ($fields_to_check as $field => $new_value) {
+      if ($current_data[$field] !== $new_value) {
+        $changes[$field] = $new_value;
+        $update_fields[] = "$field = '" . pg_escape_string($con, $new_value) . "'";
+      }
     }
+  }
+
+  // Handle file uploads (for both modes)
+  $doclink_photo_path = null;
+  $doclink_bill_path = null;
+
+  if (!empty($photo_path['name'])) {
+    $filename_photo_path = "photo_path_" . "$itemid" . "_" . time();
+    $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR';
+    $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
+
+    if ($current_data['asset_photo'] !== $doclink_photo_path) {
+      $changes['asset_photo'] = $doclink_photo_path;
+      $update_fields[] = "asset_photo = '" . pg_escape_string($con, $doclink_photo_path) . "'";
+    }
+  }
+
+  if (!empty($bill_path['name'])) {
+    $filename_bill_path = "bill_path_" . "$itemid" . "_" . time();
+    $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os';
+    $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
+
+    if ($current_data['purchase_bill'] !== $doclink_bill_path) {
+      $changes['purchase_bill'] = $doclink_bill_path;
+      $update_fields[] = "purchase_bill = '" . pg_escape_string($con, $doclink_bill_path) . "'";
+    }
+  }
+
+  // If there are changes, update the database
+  if (!empty($update_fields)) {
     $update_fields[] = "lastupdatedon = '$now'";
     $update_fields[] = "lastupdatedby = '$updatedby'";
-    $update_query = "UPDATE gps SET " . implode(", ", $update_fields) . " WHERE itemid = '$itemid'";
 
+    $update_query = "UPDATE gps SET " . implode(", ", $update_fields) . " WHERE itemid = '$itemid'";
     $update_result = pg_query($con, $update_query);
 
     if ($update_result) {
-      // Insert into history with simplified changes
+      // Insert into history
       $changes_json = json_encode($changes);
       $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
-                              VALUES ('$itemid', 'edit', '$updatedby', '$now', '" . pg_escape_string($con, $changes_json) . "')";
+                        VALUES ('$itemid', '" . ($mode == 'upload' ? 'file_upload' : 'edit') . "', '$updatedby', '$now', '" . pg_escape_string($con, $changes_json) . "')";
       pg_query($con, $history_query);
 
       echo "success";
@@ -332,7 +328,12 @@ if ($formtype == "gpsedit") {
       echo "failed";
     }
   } else {
-    echo "nochange";
+    // Special handling for upload mode when no files were selected
+    if ($mode == 'upload' && empty($photo_path['name']) && empty($bill_path['name'])) {
+      echo "nofiles"; // You could add this as a new response type
+    } else {
+      echo "nochange";
+    }
   }
 }
 

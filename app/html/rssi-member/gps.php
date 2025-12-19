@@ -732,15 +732,13 @@ $resultArr = pg_fetch_all($result);
                                                                     <?php endif; ?>
                                                                 </li>
                                                                 <li>
-                                                                    <a href="#"
-                                                                        onclick="openAssetUploadModal('<?= htmlspecialchars($array['itemid']) ?>')"
+                                                                    <a href="javascript:void(0)"
+                                                                        onclick="showUploadFiles('<?= htmlspecialchars($array['itemid']) ?>')"
                                                                         title="Update Asset Photo & Bill"
-                                                                        class="btn btn-link dropdown-item text-start w-100"
-                                                                        style="padding-left: 1rem;">
+                                                                        class="dropdown-item">
                                                                         <i class="bi bi-upload"></i> Update Photo & Bill
                                                                     </a>
                                                                 </li>
-
                                                             </ul>
                                                         </div>
                                                     </td>
@@ -778,55 +776,78 @@ $resultArr = pg_fetch_all($result);
                                                 <input type="hidden" name="updatedby" value="<?= $associatenumber ?>">
 
                                                 <div class="row g-3">
+                                                    <?php if ($role == "Admin"): ?>
+                                                        <!-- Item Type -->
+                                                        <div class="col-md-6">
+                                                            <select name="itemtype" id="itemtype" class="form-select" required>
+                                                                <option disabled selected hidden>Item type</option>
+                                                                <option>Purchased</option>
+                                                                <option>Donation</option>
+                                                            </select>
+                                                            <small class="text-muted">Item type*</small>
+                                                        </div>
 
-                                                    <!-- Item Type -->
-                                                    <div class="col-md-6">
-                                                        <select name="itemtype" id="itemtype" class="form-select" required>
-                                                            <option disabled selected hidden>Item type</option>
-                                                            <option>Purchased</option>
-                                                            <option>Donation</option>
-                                                        </select>
-                                                        <small class="text-muted">Item type*</small>
-                                                    </div>
+                                                        <!-- Asset Category -->
+                                                        <div class="col-md-6">
+                                                            <select name="asset_category" id="asset_category" class="form-select" required>
+                                                                <option disabled selected hidden>Asset category</option>
+                                                                <option value="fixed">Fixed Asset</option>
+                                                                <option value="consumable">Consumable</option>
+                                                            </select>
+                                                            <small class="text-muted">Asset category*</small>
+                                                        </div>
 
-                                                    <!-- Asset Category -->
-                                                    <div class="col-md-6">
-                                                        <select name="asset_category" id="asset_category" class="form-select" required>
-                                                            <option disabled selected hidden>Asset category</option>
-                                                            <option value="fixed">Fixed Asset</option>
-                                                            <option value="consumable">Consumable</option>
-                                                        </select>
-                                                        <small class="text-muted">Asset category*</small>
-                                                    </div>
+                                                        <!-- Item Name -->
+                                                        <div class="col-md-6">
+                                                            <input type="text" name="itemname" id="itemname" class="form-control" placeholder="Item name" required>
+                                                            <small class="text-muted">Item name*</small>
+                                                        </div>
 
-                                                    <!-- Item Name -->
-                                                    <div class="col-md-6">
-                                                        <input type="text" name="itemname" id="itemname" class="form-control" placeholder="Item name" required>
-                                                        <small class="text-muted">Item name*</small>
-                                                    </div>
+                                                        <!-- Quantity -->
+                                                        <div class="col-md-6">
+                                                            <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Quantity" min="1" required>
+                                                            <small class="text-muted">Quantity*</small>
+                                                        </div>
 
-                                                    <!-- Quantity -->
-                                                    <div class="col-md-6">
-                                                        <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Quantity" min="1" required>
-                                                        <small class="text-muted">Quantity*</small>
-                                                    </div>
+                                                        <!-- Unit Cost -->
+                                                        <div class="col-md-6">
+                                                            <input type="number" name="unit_cost" id="unit_cost" class="form-control" placeholder="Unit cost" min="0" step="0.01">
+                                                            <small class="text-muted">Unit cost</small>
+                                                        </div>
 
-                                                    <!-- Unit Cost -->
-                                                    <div class="col-md-6">
-                                                        <input type="number" name="unit_cost" id="unit_cost" class="form-control" placeholder="Unit cost" min="0" step="0.01">
-                                                        <small class="text-muted">Unit cost</small>
-                                                    </div>
+                                                        <!-- Asset Status -->
+                                                        <div class="col-md-6">
+                                                            <select name="asset_status" id="asset_status" class="form-select" required>
+                                                                <option disabled selected hidden>Asset status</option>
+                                                                <option>Active</option>
+                                                                <option>Inactive</option>
+                                                            </select>
+                                                            <small class="text-muted">Asset status*</small>
+                                                        </div>
 
-                                                    <!-- Asset Status -->
-                                                    <div class="col-md-6">
-                                                        <select name="asset_status" id="asset_status" class="form-select" required>
-                                                            <option disabled selected hidden>Asset status</option>
-                                                            <option>Active</option>
-                                                            <option>Inactive</option>
-                                                        </select>
-                                                        <small class="text-muted">Asset status*</small>
-                                                    </div>
 
+                                                        <!-- Remarks -->
+                                                        <div class="col-md-6">
+                                                            <textarea name="remarks" id="remarks" class="form-control" placeholder="Remarks"></textarea>
+                                                            <small class="text-muted">Remarks (Optional)</small>
+                                                        </div>
+
+                                                        <!-- Issued By -->
+                                                        <div class="col-md-6">
+                                                            <select name="collectedby" id="collectedby" class="form-select select2" required>
+                                                                <option value="">Select associate</option>
+                                                            </select>
+                                                            <small class="text-muted">Issued by*</small>
+                                                        </div>
+
+                                                        <!-- Tagged To -->
+                                                        <div class="col-md-6">
+                                                            <select name="taggedto" id="taggedto" class="form-select select2">
+                                                                <option value="">Select associate</option>
+                                                            </select>
+                                                            <small class="text-muted">Tagged to</small>
+                                                        </div>
+                                                    <?php endif; ?>
                                                     <!-- Asset Photo (Replace) -->
                                                     <div class="col-md-6">
                                                         <input type="file" name="asset_photo" id="asset_photo" class="form-control" accept="image/*">
@@ -838,29 +859,6 @@ $resultArr = pg_fetch_all($result);
                                                         <input type="file" name="purchase_bill" id="purchase_bill" class="form-control" accept=".pdf,image/*">
                                                         <small class="text-muted">Replace purchase bill (optional)</small>
                                                     </div>
-
-                                                    <!-- Remarks -->
-                                                    <div class="col-md-6">
-                                                        <textarea name="remarks" id="remarks" class="form-control" placeholder="Remarks"></textarea>
-                                                        <small class="text-muted">Remarks (Optional)</small>
-                                                    </div>
-
-                                                    <!-- Issued By -->
-                                                    <div class="col-md-6">
-                                                        <select name="collectedby" id="collectedby" class="form-select select2" required>
-                                                            <option value="">Select associate</option>
-                                                        </select>
-                                                        <small class="text-muted">Issued by*</small>
-                                                    </div>
-
-                                                    <!-- Tagged To -->
-                                                    <div class="col-md-6">
-                                                        <select name="taggedto" id="taggedto" class="form-select select2">
-                                                            <option value="">Select associate</option>
-                                                        </select>
-                                                        <small class="text-muted">Tagged to</small>
-                                                    </div>
-
                                                 </div>
                                             </div>
 
@@ -941,45 +939,116 @@ $resultArr = pg_fetch_all($result);
         var modal1 = new bootstrap.Modal(document.getElementById('myModal1'));
         var modal2 = new bootstrap.Modal(document.getElementById('myModal2'));
 
+        // Make currentMode a global variable
+        window.currentMode = 'details'; // 'details' or 'upload'
+
         function findItem(id) {
             return data.find(item => item.itemid == id);
+        }
+
+        function showUploadFiles(id) {
+            var item = findItem(id);
+            if (!item) return;
+
+            // Set global mode
+            window.currentMode = 'upload';
+
+            // Set modal title for upload
+            document.getElementById('myModalLabel').textContent = 'Update Asset Files';
+
+            // Populate item ID
+            document.querySelector('#myModal .itemid').textContent = item.itemid;
+            document.getElementById('itemid1').value = item.itemid;
+
+            // Fill form with current data for context
+            <?php if ($role == 'Admin'): ?>
+                document.getElementById('itemtype').value = item.itemtype || "";
+                document.getElementById('itemname').value = item.itemname || "";
+                document.getElementById('quantity').value = item.quantity || "";
+                document.getElementById('asset_status').value = item.asset_status || "";
+                document.getElementById('remarks').value = item.remarks || "";
+                document.getElementById('unit_cost').value = item.unit_cost || "";
+                document.getElementById('asset_category').value = item.asset_category || "";
+
+                // Handle Select2 fields
+                var collectedbyValue = item.collectedby || "";
+                if (collectedbyValue) {
+                    var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
+                    $('#collectedby').append(newOption).trigger('change');
+                } else {
+                    $('#collectedby').val(null).trigger('change');
+                }
+
+                var taggedtoValue = item.taggedto || "";
+                if (taggedtoValue) {
+                    var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
+                    $('#taggedto').append(newOption).trigger('change');
+                } else {
+                    $('#taggedto').val(null).trigger('change');
+                }
+            <?php endif; ?>
+
+            // Hide fields that shouldn't be changed during upload
+            hideNonFileFields();
+
+            // Change button text
+            document.querySelector('.button-text').textContent = 'Upload Files';
+
+            // Clear file inputs (optional)
+            document.getElementById('asset_photo').value = '';
+            document.getElementById('purchase_bill').value = '';
+
+            modal.show();
         }
 
         function showDetails(id) {
             var item = findItem(id);
             if (!item) return;
 
+            // Set global mode
+            window.currentMode = 'details';
+
+            // Reset to default state
+            resetModalToDefault();
+
+            // Set modal title
+            document.getElementById('myModalLabel').textContent = 'GPS Details';
+
+            // Populate form fields
             document.querySelector('#myModal .itemid').textContent = item.itemid;
             document.getElementById('itemid1').value = item.itemid;
-            document.getElementById('itemtype').value = item.itemtype || "";
-            document.getElementById('itemname').value = item.itemname || "";
-            document.getElementById('quantity').value = item.quantity || "";
-            document.getElementById('asset_status').value = item.asset_status || "";
-            document.getElementById('remarks').value = item.remarks || "";
-            document.getElementById('unit_cost').value = item.unit_cost || "";
-            document.getElementById('asset_category').value = item.asset_category || "";
 
-            // Handle Select2 field for collectedby
-            var collectedbyValue = item.collectedby || "";
-            if (collectedbyValue) {
-                // Create a new option and append it to the select
-                var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
-                $('#collectedby').append(newOption).trigger('change');
-            } else {
-                // Clear if no value
-                $('#collectedby').val(null).trigger('change');
-            }
+            <?php if ($role == 'Admin'): ?>
+                document.getElementById('itemtype').value = item.itemtype || "";
+                document.getElementById('itemname').value = item.itemname || "";
+                document.getElementById('quantity').value = item.quantity || "";
+                document.getElementById('asset_status').value = item.asset_status || "";
+                document.getElementById('remarks').value = item.remarks || "";
+                document.getElementById('unit_cost').value = item.unit_cost || "";
+                document.getElementById('asset_category').value = item.asset_category || "";
 
-            // Handle Select2 field for taggedto
-            var taggedtoValue = item.taggedto || "";
-            if (taggedtoValue) {
-                // Create a new option and append it to the select
-                var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
-                $('#taggedto').append(newOption).trigger('change');
-            } else {
-                // Clear if no value
-                $('#taggedto').val(null).trigger('change');
-            }
+                // Handle Select2 field for collectedby
+                var collectedbyValue = item.collectedby || "";
+                if (collectedbyValue) {
+                    // Create a new option and append it to the select
+                    var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
+                    $('#collectedby').append(newOption).trigger('change');
+                } else {
+                    // Clear if no value
+                    $('#collectedby').val(null).trigger('change');
+                }
+
+                // Handle Select2 field for taggedto
+                var taggedtoValue = item.taggedto || "";
+                if (taggedtoValue) {
+                    // Create a new option and append it to the select
+                    var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
+                    $('#taggedto').append(newOption).trigger('change');
+                } else {
+                    // Clear if no value
+                    $('#taggedto').val(null).trigger('change');
+                }
+            <?php endif; ?>
 
             modal.show();
         }
@@ -1003,85 +1072,170 @@ $resultArr = pg_fetch_all($result);
 
             modal2.show();
         }
+
+        // Helper function to hide non-file fields
+        function hideNonFileFields() {
+            // List of field IDs to hide (all except file uploads)
+            var fieldsToHide = [];
+            <?php if ($role == 'Admin'): ?>
+                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category'];
+            <?php endif; ?>
+
+            fieldsToHide.forEach(function(fieldId) {
+                var field = document.getElementById(fieldId);
+                if (field) {
+                    // Hide the parent column
+                    var parentCol = field.closest('.col-md-6');
+                    if (parentCol) {
+                        parentCol.style.display = 'none';
+                    }
+                    // Disable the field
+                    field.disabled = true;
+                }
+            });
+
+            // Ensure file upload fields are visible
+            var assetPhotoField = document.getElementById('asset_photo');
+            var purchaseBillField = document.getElementById('purchase_bill');
+
+            if (assetPhotoField) {
+                assetPhotoField.closest('.col-md-6').style.display = 'block';
+                assetPhotoField.disabled = false;
+            }
+            if (purchaseBillField) {
+                purchaseBillField.closest('.col-md-6').style.display = 'block';
+                purchaseBillField.disabled = false;
+            }
+        }
+
+        // Helper function to reset modal to default state
+        function resetModalToDefault() {
+            // Show all fields
+            var allCols = document.querySelectorAll('#myModal .col-md-6');
+            allCols.forEach(function(col) {
+                col.style.display = 'block';
+            });
+
+            // Enable all fields
+            var allFields = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
+            allFields.forEach(function(field) {
+                field.disabled = false;
+            });
+
+            // Reset button text
+            document.querySelector('.button-text').textContent = 'Save changes';
+        }
+
+        // Reset modal when it's closed
+        document.getElementById('myModal').addEventListener('hidden.bs.modal', function() {
+            resetModalToDefault();
+            // Reset modal title
+            document.getElementById('myModalLabel').textContent = 'GPS Details';
+            // Reset mode
+            window.currentMode = 'details';
+        });
     </script>
 
     <script>
         const scriptURL = 'payment-api.php';
         const form = document.getElementById('gpsform');
-        const updateButton = document.getElementById('update-button');
-        const buttonText = updateButton.querySelector('.button-text');
-        const spinner = updateButton.querySelector('.spinner-border');
 
-        form.addEventListener('submit', e => {
-            e.preventDefault();
+        // Use the global currentMode variable (don't redeclare it)
+        // window.currentMode is already defined in the first script block
 
-            // Show spinner and disable button
-            buttonText.textContent = 'Updating...';
-            spinner.classList.remove('d-none');
-            updateButton.disabled = true;
+        if (form) {
+            const updateButton = document.getElementById('update-button');
+            const buttonText = updateButton.querySelector('.button-text');
+            const spinner = updateButton.querySelector('.spinner-border');
 
-            const formData = new FormData(form);
+            form.addEventListener('submit', e => {
+                e.preventDefault();
 
-            fetch(scriptURL, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(result => {
-                    // Reset button state
-                    resetButton();
+                // Show spinner and disable button - use window.currentMode
+                buttonText.textContent = window.currentMode === 'upload' ? 'Uploading...' : 'Updating...';
+                spinner.classList.remove('d-none');
+                updateButton.disabled = true;
 
-                    if (result === 'success') {
-                        alert("Record has been successfully updated.");
-                        location.reload();
-                    } else if (result === 'nochange') {
-                        alert("No changes detected.");
-                    } else if (result === 'invalid') {
-                        alert("Invalid asset ID.");
-                    } else if (result === 'unauthorized') {
-                        alert("You are not authorized to perform this action.");
-                    } else {
-                        alert("Error updating record. Please try again or contact support.");
-                    }
-                })
-                .catch(error => {
-                    // Reset button state
-                    resetButton();
+                const formData = new FormData(form);
 
-                    console.error('Error!', error.message);
-                    alert("Network error or server issue occurred.");
-                });
-        });
+                // Add the current mode to the form data
+                formData.append('mode', window.currentMode);
 
-        // Function to reset button to original state
-        function resetButton() {
-            if (buttonText && spinner && updateButton) {
-                buttonText.textContent = 'Save changes';
-                spinner.classList.add('d-none');
-                updateButton.disabled = false;
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        // Reset button state
+                        resetButton();
+
+                        if (result === 'success') {
+                            let message = window.currentMode === 'upload' ?
+                                "Files have been uploaded successfully." :
+                                "Record has been successfully updated.";
+                            alert(message);
+                            location.reload();
+                        } else if (result === 'nochange') {
+                            alert("No changes detected.");
+                        } else if (result === 'invalid') {
+                            alert("Invalid asset ID.");
+                        } else if (result === 'unauthorized') {
+                            alert("You are not authorized to perform this action.");
+                        } else {
+                            let errorMsg = window.currentMode === 'upload' ?
+                                "Error uploading files. Please try again." :
+                                "Error updating record. Please try again or contact support.";
+                            alert(errorMsg);
+                        }
+                    })
+                    .catch(error => {
+                        // Reset button state
+                        resetButton();
+
+                        console.error('Error!', error.message);
+                        alert("Network error or server issue occurred.");
+                    });
+            });
+
+            // Function to reset button to original state
+            function resetButton() {
+                if (buttonText && spinner && updateButton) {
+                    buttonText.textContent = window.currentMode === 'upload' ? 'Upload Files' : 'Save changes';
+                    spinner.classList.add('d-none');
+                    updateButton.disabled = false;
+                }
             }
+
+            // Reset button state and mode when modal is closed
+            $('#myModal').on('hidden.bs.modal', function() {
+                window.currentMode = 'details'; // Reset to default mode
+                resetButton();
+            });
         }
 
-        // Reset button state if modal is closed without submitting
-        $('#myModal').on('hidden.bs.modal', function() {
-            resetButton();
-        });
+        // Email form event listeners - check if data exists
+        if (typeof data !== 'undefined') {
+            data.forEach(item => {
+                const formId = 'email-form-' + item.itemid;
+                const form = document.forms[formId];
 
-        data.forEach(item => {
-            const formId = 'email-form-' + item.itemid
-            const form = document.forms[formId]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch('mailer.php', {
-                        method: 'POST',
-                        body: new FormData(document.forms[formId])
-                    })
-                    .then(response =>
-                        alert("Email has been sent.")
-                    )
-                    .catch(error => console.error('Error!', error.message))
-            })
-        })
+                // Check if form exists before adding event listener
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        fetch('mailer.php', {
+                                method: 'POST',
+                                body: new FormData(form)
+                            })
+                            .then(response => {
+                                alert("Email has been sent.");
+                            })
+                            .catch(error => console.error('Error!', error.message));
+                    });
+                }
+            });
+        }
     </script>
     <script>
         $(document).ready(function() {
@@ -1377,11 +1531,13 @@ $resultArr = pg_fetch_all($result);
             $('#submissionModal').modal('hide');
         }
 
-        // Add event listener to form submission
-        document.getElementById('gps').addEventListener('submit', function(event) {
-            // Show loading modal when form is submitted
-            showLoadingModal();
-        });
+        const gpsForm = document.getElementById('gps');
+        if (gpsForm) {
+            gpsForm.addEventListener('submit', function(event) {
+                // Show loading modal when form is submitted
+                showLoadingModal();
+            });
+        }
 
         // Optional: Close loading modal when the page is fully loaded
         window.addEventListener('load', function() {
