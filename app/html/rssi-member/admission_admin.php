@@ -1565,7 +1565,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                 <?php if (in_array('student_photo_raw', $user_accessible_fields) && in_array('identification', $accessible_cards)): ?>
                                                                                     <input type="file" name="student_photo" id="student_photo"
                                                                                         class="form-control" disabled style="display:none;"
-                                                                                        accept="image/*">
+                                                                                        accept="image/*" onchange="compressImageBeforeUpload(this)">
                                                                                 <?php endif; ?>
                                                                                 <?php if (!empty($array['student_photo_raw'])): ?>
                                                                                     <a href="<?php echo $array['student_photo_raw']; ?>" target="_blank">View Current Photo</a><br>
@@ -1578,7 +1578,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                 <?php if (in_array('upload_aadhar_card', $user_accessible_fields) && in_array('identification', $accessible_cards)): ?>
                                                                                     <input type="file" name="upload_aadhar_card" id="upload_aadhar_card"
                                                                                         class="form-control" disabled style="display:none;"
-                                                                                        accept=".pdf,.jpg,.jpeg,.png">
+                                                                                        accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)">
                                                                                 <?php endif; ?>
                                                                                 <?php if (!empty($array['upload_aadhar_card'])): ?>
                                                                                     <a href="<?php echo $array['upload_aadhar_card']; ?>" target="_blank">View Aadhar Card</a><br>
@@ -1702,7 +1702,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                     <?php if (in_array('supporting_doc', $user_accessible_fields)): ?>
                                                                                         <input type="file" name="supporting_doc" id="supporting_doc"
                                                                                             class="form-control" disabled style="display:none;"
-                                                                                            accept=".pdf,.jpg,.jpeg,.png">
+                                                                                            accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)">
                                                                                     <?php endif; ?>
                                                                                     <?php if (!empty($array['supporting_doc'])): ?>
                                                                                         <a href="<?php echo $array['supporting_doc']; ?>" target="_blank">View Document</a><br>
@@ -1992,7 +1992,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                 <?php if (in_array('caste_document', $user_accessible_fields)): ?>
                                                                                     <input type="file" name="caste_document" id="caste_document"
                                                                                         class="form-control" disabled style="display:none;"
-                                                                                        accept=".pdf,.jpg,.jpeg,.png">
+                                                                                        accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)">
                                                                                 <?php endif; ?>
                                                                                 <?php if (!empty($array['caste_document'])): ?>
                                                                                     <a href="<?php echo $array['caste_document']; ?>" target="_blank">View Certificate</a><br>
@@ -2506,6 +2506,7 @@ foreach ($card_access_levels as $card => $required_level) {
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="../assets_new/js/image-compressor-200kb.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 

@@ -759,7 +759,7 @@ $stats = [
                                                                         </div> -->
                                                                         <div class="mb-3">
                                                                             <label for="edit_cover_image_<?= $book['book_id'] ?>" class="form-label">Upload New Cover Image</label>
-                                                                            <input type="file" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" accept="image/*">
+                                                                            <input type="file" class="form-control" id="edit_cover_image_<?= $book['book_id'] ?>" name="cover_image" accept="image/*" onchange="compressImageBeforeUpload(this)">
 
                                                                             <?php if (!empty($book['cover_image'])): ?>
                                                                                 <div class="mt-2">
@@ -877,7 +877,7 @@ $stats = [
                                 </div> -->
                                 <div class="col-md-6 mb-3">
                                     <label for="cover_image" class="form-label">Upload Cover Image</label>
-                                    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*">
+                                    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*" onchange="compressImageBeforeUpload(this)">
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -897,6 +897,7 @@ $stats = [
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
