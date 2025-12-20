@@ -710,8 +710,8 @@ $resultArr = pg_fetch_all($result);
                                                                     </a>
                                                                 </li>
                                                                 <li>
-                                                                    <?php if (!empty($array['purchese_bill'])): ?>
-                                                                        <a href="<?= htmlspecialchars($array['purchese_bill']) ?>"
+                                                                    <?php if (!empty($array['purchase_bill'])): ?>
+                                                                        <a href="<?= htmlspecialchars($array['purchase_bill']) ?>"
                                                                             target="_blank"
                                                                             title="View Invoice"
                                                                             class="btn btn-link dropdown-item text-start w-100"
