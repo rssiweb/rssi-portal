@@ -656,7 +656,7 @@ $categories = [
             <?php endif; ?>
         });
     </script>
-    <script type="module" src="/js/fees_import_app.js"></script>
+    <script type="module" src="../assets_new/js/fees_import_app.js"></script>
 </body>
 
 </html>
