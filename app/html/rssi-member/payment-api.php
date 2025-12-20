@@ -260,6 +260,7 @@ if ($formtype == "gpsedit") {
     $taggedto = isset($_POST['taggedto']) ? strtoupper(pg_escape_string($con, $_POST['taggedto'])) : '';
     $asset_category = isset($_POST['asset_category']) ? pg_escape_string($con, $_POST['asset_category']) : '';
     $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
+    $purchase_date = isset($_POST['purchasedate']) ? pg_escape_string($con, $_POST['purchasedate']) : '';
 
     // Check each field for changes
     $fields_to_check = [
@@ -271,7 +272,8 @@ if ($formtype == "gpsedit") {
       'taggedto' => $taggedto,
       'asset_status' => $asset_status,
       'asset_category' => $asset_category,
-      'unit_cost' => $unit_cost
+      'unit_cost' => $unit_cost,
+      'purchase_date' => $purchase_date
     ];
 
     foreach ($fields_to_check as $field => $new_value) {

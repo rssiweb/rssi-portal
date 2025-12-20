@@ -31,6 +31,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $collectedby = $associatenumber; // Or whichever user is adding the asset
         $asset_category = isset($_POST['asset_category']) ? $_POST['asset_category'] : '';
         $unit_cost = isset($_POST['unit_cost']) ? $_POST['unit_cost'] : '';
+        $purchasedate = isset($_POST['purchase_date']) ? $_POST['purchase_date'] : '';
         $photo_path = $_FILES['asset_photo'] ?? null;
         $bill_path = $_FILES['purchase_bill'] ?? null;
 
@@ -53,8 +54,8 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
         if ($itemtype != "") {
             // Insert into gps table
-            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill) 
-                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path')";
+            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill, purchase_date) 
+                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path', '$purchasedate')";
 
             $gps_result = pg_query($con, $gps_query);
 
@@ -68,7 +69,10 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                     'collectedby' => $collectedby,
                     'remarks' => $remarks,
                     'asset_category' => $asset_category,
-                    'unit_cost' => $unit_cost
+                    'unit_cost' => $unit_cost,
+                    'asset_photo' => $doclink_photo_path,
+                    'purchase_bill' => $doclink_bill_path,
+                    'purchase_date' => $purchasedate
                 ];
                 $changes_json = json_encode($changes);
 
@@ -336,7 +340,7 @@ $resultArr = pg_fetch_all($result);
 
                                                     <div class="col-md-3">
                                                         <label for="unit_cost" class="form-label">Unit Cost (Optional)</label>
-                                                        <input type="number" name="unit_cost" class="form-control" placeholder="0.00" min="0" step="0.01">
+                                                        <input type="number" name="unit_cost" class="form-control" placeholder="0.00" min="0" step="0.01" required>
                                                     </div>
 
                                                     <div class="col-md-3">
@@ -357,6 +361,10 @@ $resultArr = pg_fetch_all($result);
                                                     <div class="col-md-6">
                                                         <label for="purchase_bill" class="form-label">Purchase Bill / Invoice</label>
                                                         <input type="file" name="purchase_bill" class="form-control" accept=".pdf,image/*">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="purchase_date" class="form-label">Purchase Date</label>
+                                                        <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
                                                     </div>
 
                                                     <div class="col-md-6">
@@ -780,7 +788,7 @@ $resultArr = pg_fetch_all($result);
                                                         <!-- Item Type -->
                                                         <div class="col-md-6">
                                                             <select name="itemtype" id="itemtype" class="form-select" required>
-                                                                <option disabled selected hidden>Item type</option>
+                                                                <option value="" disabled selected>Select item type</option>
                                                                 <option>Purchased</option>
                                                                 <option>Donation</option>
                                                             </select>
@@ -790,7 +798,7 @@ $resultArr = pg_fetch_all($result);
                                                         <!-- Asset Category -->
                                                         <div class="col-md-6">
                                                             <select name="asset_category" id="asset_category" class="form-select" required>
-                                                                <option disabled selected hidden>Asset category</option>
+                                                                <option value="" disabled selected>Select asset category</option>
                                                                 <option value="fixed">Fixed Asset</option>
                                                                 <option value="consumable">Consumable</option>
                                                             </select>
@@ -811,20 +819,26 @@ $resultArr = pg_fetch_all($result);
 
                                                         <!-- Unit Cost -->
                                                         <div class="col-md-6">
-                                                            <input type="number" name="unit_cost" id="unit_cost" class="form-control" placeholder="Unit cost" min="0" step="0.01">
+                                                            <input type="number" name="unit_cost" id="unit_cost" class="form-control" placeholder="Unit cost" min="0" step="0.01" required>
                                                             <small class="text-muted">Unit cost</small>
                                                         </div>
 
                                                         <!-- Asset Status -->
                                                         <div class="col-md-6">
                                                             <select name="asset_status" id="asset_status" class="form-select" required>
-                                                                <option disabled selected hidden>Asset status</option>
+                                                                <option value="" disabled selected>Select asset status</option>
                                                                 <option>Active</option>
                                                                 <option>Inactive</option>
                                                             </select>
                                                             <small class="text-muted">Asset status*</small>
                                                         </div>
 
+                                                        <!-- Purchase Date -->
+                                                        <div class="col-md-6">
+                                                            <label for="purchasedate" class="form-label">Purchase Date</label>
+                                                            <input type="date" name="purchasedate" id="purchasedate" class="form-control" required>
+                                                            <small class="text-muted">Purchase date*</small>
+                                                        </div>
 
                                                         <!-- Remarks -->
                                                         <div class="col-md-6">
@@ -970,6 +984,7 @@ $resultArr = pg_fetch_all($result);
                 document.getElementById('remarks').value = item.remarks || "";
                 document.getElementById('unit_cost').value = item.unit_cost || "";
                 document.getElementById('asset_category').value = item.asset_category || "";
+                document.getElementById('purchasedate').value = item.purchase_date || "";
 
                 // Handle Select2 fields
                 var collectedbyValue = item.collectedby || "";
@@ -1028,6 +1043,7 @@ $resultArr = pg_fetch_all($result);
                 document.getElementById('remarks').value = item.remarks || "";
                 document.getElementById('unit_cost').value = item.unit_cost || "";
                 document.getElementById('asset_category').value = item.asset_category || "";
+                document.getElementById('purchasedate').value = item.purchase_date || "";
 
                 // Handle Select2 field for collectedby
                 var collectedbyValue = item.collectedby || "";
@@ -1080,7 +1096,7 @@ $resultArr = pg_fetch_all($result);
             // List of field IDs to hide (all except file uploads)
             var fieldsToHide = [];
             <?php if ($role == 'Admin'): ?>
-                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category'];
+                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category', 'purchasedate'];
             <?php endif; ?>
 
             fieldsToHide.forEach(function(fieldId) {
