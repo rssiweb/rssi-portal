@@ -364,7 +364,7 @@ $resultArr = pg_fetch_all($result);
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label for="purchase_date" class="form-label">Purchase Date</label>
-                                                        <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
+                                                        <input type="date" name="purchase_date" class="form-control" required>
                                                     </div>
 
                                                     <div class="col-md-6">
@@ -976,8 +976,9 @@ $resultArr = pg_fetch_all($result);
             document.querySelector('#myModal .itemname').textContent = item.itemname;
             document.getElementById('itemid1').value = item.itemid;
 
-            // Fill form with current data for context
+            // Fill form with current data for context (BUT DON'T SHOW THESE FIELDS)
             <?php if ($role == 'Admin'): ?>
+                // Store values but fields will be hidden
                 document.getElementById('itemtype').value = item.itemtype || "";
                 document.getElementById('itemname').value = item.itemname || "";
                 document.getElementById('quantity').value = item.quantity || "";
@@ -1005,8 +1006,26 @@ $resultArr = pg_fetch_all($result);
                 }
             <?php endif; ?>
 
-            // Hide fields that shouldn't be changed during upload
+            // Hide ALL non-file fields
             hideNonFileFields();
+
+            // NEW: Check if files exist and disable fields
+            var assetPhotoField = document.getElementById('asset_photo');
+            var purchaseBillField = document.getElementById('purchase_bill');
+
+            if (item.asset_photo) {
+                if (assetPhotoField) {
+                    assetPhotoField.disabled = true;
+                    assetPhotoField.placeholder = "Photo already uploaded (leave blank to keep)";
+                }
+            }
+
+            if (item.purchase_bill) {
+                if (purchaseBillField) {
+                    purchaseBillField.disabled = true;
+                    purchaseBillField.placeholder = "Bill already uploaded (leave blank to keep)";
+                }
+            }
 
             // Change button text
             document.querySelector('.button-text').textContent = 'Upload Files';
@@ -1069,6 +1088,20 @@ $resultArr = pg_fetch_all($result);
                 }
             <?php endif; ?>
 
+            // NEW: Check existing files and disable fields if files exist
+            var assetPhotoField = document.getElementById('asset_photo');
+            var purchaseBillField = document.getElementById('purchase_bill');
+
+            if (item.asset_photo && assetPhotoField) {
+                assetPhotoField.disabled = true;
+                assetPhotoField.placeholder = "Photo already uploaded";
+            }
+
+            if (item.purchase_bill && purchaseBillField) {
+                purchaseBillField.disabled = true;
+                purchaseBillField.placeholder = "Bill already uploaded";
+            }
+
             modal.show();
         }
 
@@ -1092,47 +1125,46 @@ $resultArr = pg_fetch_all($result);
             modal2.show();
         }
 
-        // Helper function to hide non-file fields
+        // Helper function to hide non-file fields - FIXED VERSION
         function hideNonFileFields() {
-            // List of field IDs to hide (all except file uploads)
-            var fieldsToHide = [];
-            <?php if ($role == 'Admin'): ?>
-                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category', 'purchase_date'];
-            <?php endif; ?>
+            // Hide ALL form groups except file uploads
+            var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
 
-            fieldsToHide.forEach(function(fieldId) {
-                var field = document.getElementById(fieldId);
-                if (field) {
-                    // Hide the parent column
-                    var parentCol = field.closest('.col-md-6');
-                    if (parentCol) {
-                        parentCol.style.display = 'none';
-                    }
-                    // Disable the field
-                    field.disabled = true;
+            allFormGroups.forEach(function(formGroup) {
+                // Check if this form group contains file inputs
+                var fileInput = formGroup.querySelector('input[type="file"]');
+
+                if (fileInput) {
+                    // This is a file upload field - show it
+                    formGroup.style.display = 'block';
+                    fileInput.disabled = false;
+                } else {
+                    // This is NOT a file upload field - hide it
+                    formGroup.style.display = 'none';
+
+                    // Disable all inputs/selects/textarea inside
+                    var formElements = formGroup.querySelectorAll('input, select, textarea');
+                    formElements.forEach(function(element) {
+                        element.disabled = true;
+                    });
                 }
             });
 
-            // Ensure file upload fields are visible
-            var assetPhotoField = document.getElementById('asset_photo');
-            var purchaseBillField = document.getElementById('purchase_bill');
-
-            if (assetPhotoField) {
-                assetPhotoField.closest('.col-md-6').style.display = 'block';
-                assetPhotoField.disabled = false;
-            }
-            if (purchaseBillField) {
-                purchaseBillField.closest('.col-md-6').style.display = 'block';
-                purchaseBillField.disabled = false;
-            }
+            // Also make sure any form elements not in .col-md-6 are hidden/disabled
+            var allFormElements = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
+            allFormElements.forEach(function(element) {
+                if (element.type !== 'file' && !element.closest('.col-md-6[style*="block"]')) {
+                    element.disabled = true;
+                }
+            });
         }
 
         // Helper function to reset modal to default state
         function resetModalToDefault() {
-            // Show all fields
-            var allCols = document.querySelectorAll('#myModal .col-md-6');
-            allCols.forEach(function(col) {
-                col.style.display = 'block';
+            // Show all form groups
+            var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
+            allFormGroups.forEach(function(formGroup) {
+                formGroup.style.display = 'block';
             });
 
             // Enable all fields
@@ -1152,6 +1184,12 @@ $resultArr = pg_fetch_all($result);
             document.getElementById('myModalLabel').textContent = 'GPS Details';
             // Reset mode
             window.currentMode = 'details';
+
+            // Clear any Select2 appended options
+            <?php if ($role == 'Admin'): ?>
+                $('#collectedby').val(null).trigger('change');
+                $('#taggedto').val(null).trigger('change');
+            <?php endif; ?>
         });
     </script>
 
