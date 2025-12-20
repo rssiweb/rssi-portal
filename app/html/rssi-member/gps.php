@@ -864,7 +864,7 @@ $resultArr = pg_fetch_all($result);
                                                     <?php endif; ?>
                                                     <!-- Asset Photo (Replace) -->
                                                     <div class="col-md-6">
-                                                        <input type="file" name="asset_photo" id="asset_photo" class="form-control" accept="image/*">
+                                                        <input type="file" name="asset_photo" id="asset_photo" class="form-control" accept="image/*" onchange="compressImageBeforeUpload(this)">
                                                         <small class="text-muted">Replace asset photo (optional)</small>
                                                     </div>
 
@@ -941,7 +941,6 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
@@ -1562,6 +1561,82 @@ $resultArr = pg_fetch_all($result);
             // Hide loading modal
             hideLoadingModal();
         });
+    </script>
+    <script>
+        function compressImageBeforeUpload(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const maxSizeMB = 2; // Maximum file size in MB
+            const maxWidth = 1200;
+            const maxHeight = 1200;
+            const quality = 0.7; // 70% quality
+
+            // Check if it's an image
+            if (!file.type.match('image.*')) return;
+
+            // If image is already small enough, don't compress
+            if (file.size <= maxSizeMB * 1024 * 1024) {
+                return; // Keep original
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Create canvas
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Calculate new dimensions
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Resize if larger than max dimensions
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width = Math.floor(width * ratio);
+                        height = Math.floor(height * ratio);
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw and compress
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to blob
+                    canvas.toBlob(function(blob) {
+                        // Create a new file from the blob
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+
+                        // Replace the original file with compressed one
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(compressedFile);
+                        input.files = dataTransfer.files;
+
+                        console.log('Image compressed:',
+                            'Original:', formatBytes(file.size),
+                            'Compressed:', formatBytes(blob.size));
+
+                    }, 'image/jpeg', quality);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
     </script>
 </body>
 
