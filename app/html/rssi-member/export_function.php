@@ -222,6 +222,7 @@ function gps_export()
   @$item_type = $_POST['item_type'];
   @$assetid = $_POST['assetid'];
   @$asset_status = $_POST['asset_status'];
+  @$assetcategory = $_POST['asset_category'];
 
   $conditions = [];
 
@@ -239,6 +240,9 @@ function gps_export()
 
   if ($asset_status != "") {
     $conditions[] = "asset_status = '$asset_status'";
+  }
+  if ($assetcategory != "ALL" && $assetcategory != "") {
+    $conditions[] = "asset_category = '$assetcategory'";
   }
 
   $query = "SELECT * FROM gps";

@@ -31,7 +31,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $collectedby = $associatenumber; // Or whichever user is adding the asset
         $asset_category = isset($_POST['asset_category']) ? $_POST['asset_category'] : '';
         $unit_cost = isset($_POST['unit_cost']) ? $_POST['unit_cost'] : '';
-        $purchasedate = isset($_POST['purchase_date']) ? $_POST['purchase_date'] : '';
+        $purchase_date = isset($_POST['purchase_date']) ? $_POST['purchase_date'] : '';
         $photo_path = $_FILES['asset_photo'] ?? null;
         $bill_path = $_FILES['purchase_bill'] ?? null;
 
@@ -55,7 +55,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         if ($itemtype != "") {
             // Insert into gps table
             $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill, purchase_date) 
-                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path', '$purchasedate')";
+                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path', '$purchase_date')";
 
             $gps_result = pg_query($con, $gps_query);
 
@@ -72,7 +72,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                     'unit_cost' => $unit_cost,
                     'asset_photo' => $doclink_photo_path,
                     'purchase_bill' => $doclink_bill_path,
-                    'purchase_date' => $purchasedate
+                    'purchase_date' => $purchase_date
                 ];
                 $changes_json = json_encode($changes);
 
@@ -354,7 +354,7 @@ $resultArr = pg_fetch_all($result);
 
                                                     <div class="col-md-3">
                                                         <label for="asset_photo" class="form-label">Asset Photo</label>
-                                                        <input type="file" name="asset_photo" class="form-control" accept="image/*">
+                                                        <input type="file" name="asset_photo" class="form-control" accept="image/*" onchange="compressImageBeforeUpload(this)">
                                                         <div class="form-text">JPG/PNG format</div>
                                                     </div>
 
@@ -517,6 +517,7 @@ $resultArr = pg_fetch_all($result);
                                     <input type="hidden" value="<?php echo ($role !== 'Admin') ? $associatenumber : $taggedto; ?>" name="taggedto" />
                                     <input type="hidden" value="<?php echo @$assetid ?>" name="assetid" />
                                     <input type="hidden" value="<?php echo ($role !== 'Admin') ? 'Active' : $assetstatus; ?>" name="asset_status" />
+                                    <input type="hidden" value="<?php echo @$assetcategory ?>" name="asset_category" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -835,8 +836,8 @@ $resultArr = pg_fetch_all($result);
 
                                                         <!-- Purchase Date -->
                                                         <div class="col-md-6">
-                                                            <label for="purchasedate" class="form-label">Purchase Date</label>
-                                                            <input type="date" name="purchasedate" id="purchasedate" class="form-control" required>
+                                                            <label for="purchase_date" class="form-label">Purchase Date</label>
+                                                            <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
                                                             <small class="text-muted">Purchase date*</small>
                                                         </div>
 
@@ -983,7 +984,7 @@ $resultArr = pg_fetch_all($result);
                 document.getElementById('remarks').value = item.remarks || "";
                 document.getElementById('unit_cost').value = item.unit_cost || "";
                 document.getElementById('asset_category').value = item.asset_category || "";
-                document.getElementById('purchasedate').value = item.purchase_date || "";
+                document.getElementById('purchase_date').value = item.purchase_date || "";
 
                 // Handle Select2 fields
                 var collectedbyValue = item.collectedby || "";
@@ -1042,7 +1043,7 @@ $resultArr = pg_fetch_all($result);
                 document.getElementById('remarks').value = item.remarks || "";
                 document.getElementById('unit_cost').value = item.unit_cost || "";
                 document.getElementById('asset_category').value = item.asset_category || "";
-                document.getElementById('purchasedate').value = item.purchase_date || "";
+                document.getElementById('purchase_date').value = item.purchase_date || "";
 
                 // Handle Select2 field for collectedby
                 var collectedbyValue = item.collectedby || "";
@@ -1095,7 +1096,7 @@ $resultArr = pg_fetch_all($result);
             // List of field IDs to hide (all except file uploads)
             var fieldsToHide = [];
             <?php if ($role == 'Admin'): ?>
-                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category', 'purchasedate'];
+                fieldsToHide = ['itemtype', 'itemname', 'quantity', 'unit_cost', 'asset_status', 'remarks', 'collectedby', 'taggedto', 'asset_category', 'purchase_date'];
             <?php endif; ?>
 
             fieldsToHide.forEach(function(fieldId) {
