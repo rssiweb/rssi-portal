@@ -129,7 +129,21 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     }
 
     if ($assetid != "") {
-        $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
+        // Check if it's comma-separated IDs
+        if (strpos($assetid, ',') !== false) {
+            $assetIds = array_map('trim', explode(',', $assetid));
+            $sanitizedIds = array_map(function ($id) use ($con) {
+                return pg_escape_string($con, $id);
+            }, $assetIds);
+
+            if (!empty($sanitizedIds)) {
+                $idList = "'" . implode("','", $sanitizedIds) . "'";
+                $conditions[] = "itemid IN ($idList)";
+            }
+        } else {
+            // Single ID or name search
+            $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
+        }
     }
 
     if ($assetstatus != "") {
@@ -454,6 +468,9 @@ $resultArr = pg_fetch_all($result);
                                                     <div class="col-12">
                                                         <button type="submit" name="search_by_id2" class="btn btn-primary">
                                                             <i class="bi bi-search"></i> Search
+                                                        </button>
+                                                        <button type="button" id="clear-selection" class="btn btn-secondary">
+                                                            <i class="bi bi-x-circle"></i> Clear Selection
                                                         </button>
                                                     </div>
                                                 </form>
@@ -1375,8 +1392,75 @@ $resultArr = pg_fetch_all($result);
                     const checkbox = $(this).find('.asset-checkbox');
                     checkbox.prop('checked', !checkbox.prop('checked'));
                     checkbox.trigger('change');
+
+                    // NEW: Populate Asset ID search field with selected IDs
+                    updateAssetIdSearchField();
                 }
             });
+
+            // NEW: Function to update Asset ID search field with selected IDs
+            function updateAssetIdSearchField() {
+                const selectedCheckboxes = $('.asset-checkbox:checked');
+                const assetIds = [];
+
+                selectedCheckboxes.each(function() {
+                    // Get the itemid from the second column of the same row
+                    const itemid = $(this).closest('tr').find('td:nth-child(2)').text().trim();
+                    if (itemid) {
+                        assetIds.push(itemid);
+                    }
+                });
+
+                // Update the search field with comma-separated IDs
+                if (assetIds.length > 0) {
+                    // Enable the "Search by Asset ID or name only" checkbox
+                    $('#is_user').prop('checked', true);
+
+                    // Trigger the updateFormState function to enable the assetid field
+                    updateFormState();
+
+                    // Set the assetid field value
+                    $('input[name="assetid"]').val(assetIds.join(', '));
+                }
+            }
+
+            // Function to update form state based on checkbox
+            function updateFormState() {
+                const checkbox = document.getElementById('is_user');
+                const assetIdInput = document.getElementsByName('assetid')[0];
+                const itemTypeInput = document.getElementsByName('item_type')[0];
+                const taggedToInput = document.getElementsByName('taggedto')[0];
+                const itemStatusInput = document.getElementsByName('assetstatus')[0];
+                const assetCategoryInput = document.getElementsByName('assetcategory')[0];
+
+                if (checkbox.checked) {
+                    assetIdInput.disabled = false;
+                    itemTypeInput.disabled = true;
+                    itemStatusInput.disabled = true;
+                    taggedToInput.disabled = true;
+                    assetCategoryInput.disabled = true;
+
+                    // Change labels to indicate disabled state
+                    itemTypeInput.closest('.col-md-3').classList.add('text-muted');
+                    itemStatusInput.closest('.col-md-3').classList.add('text-muted');
+                    taggedToInput.closest('.col-md-3').classList.add('text-muted');
+                    assetIdInput.closest('.col-md-3').classList.remove('text-muted');
+                    assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
+                } else {
+                    assetIdInput.disabled = true;
+                    itemTypeInput.disabled = false;
+                    itemStatusInput.disabled = false;
+                    taggedToInput.disabled = false;
+                    assetCategoryInput.disabled = false;
+
+                    // Remove muted state
+                    itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
+                    itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
+                    taggedToInput.closest('.col-md-3').classList.remove('text-muted');
+                    assetIdInput.closest('.col-md-3').classList.add('text-muted');
+                    assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
+                }
+            }
 
             // Update row selection styling
             function updateRowSelection() {
@@ -1458,7 +1542,32 @@ $resultArr = pg_fetch_all($result);
                     }
                 });
             <?php endif; ?>
+            // Add a "Clear Selection" button
+            $('#clear-selection').click(function(e) {
+                e.preventDefault();
 
+                // Clear the search field
+                $('input[name="assetid"]').val('');
+
+                // Uncheck the checkbox
+                $('#is_user').prop('checked', false);
+
+                // Update form state
+                updateFormState();
+
+                // Remove highlighting from all rows
+                $('#table-id tbody tr').removeClass('table-primary');
+
+                // Get current URL
+                const url = new URL(window.location.href);
+
+                // Remove assetid and is_user parameters
+                url.searchParams.delete('assetid');
+                url.searchParams.delete('is_user');
+
+                // Redirect to the updated URL (reloads the page)
+                //window.location.href = url.toString();
+            });
             // Update search placeholder to indicate both ID and name search
             $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
         });
