@@ -469,7 +469,7 @@ $resultArr = pg_fetch_all($result);
                                                         <button type="submit" name="search_by_id2" class="btn btn-primary">
                                                             <i class="bi bi-search"></i> Search
                                                         </button>
-                                                        <button type="button" id="clear-selection" class="btn btn-secondary">
+                                                        <button type="button" id="clear-selection" class="btn btn-secondary" style="display: none;">
                                                             <i class="bi bi-x-circle"></i> Clear Selection
                                                         </button>
                                                     </div>
@@ -1359,6 +1359,19 @@ $resultArr = pg_fetch_all($result);
     </script>
     <script>
         $(document).ready(function() {
+            // Function to check if Asset ID field has value and update button visibility
+            function updateClearButtonVisibility() {
+                const assetIdValue = $('input[name="assetid"]').val().trim();
+                if (assetIdValue) {
+                    $('#clear-selection').show();
+                } else {
+                    $('#clear-selection').hide();
+                }
+            }
+
+            // Initial check on page load
+            updateClearButtonVisibility();
+
             // Select all checkbox functionality
             $('#select-all-checkbox').change(function() {
                 $('.asset-checkbox').prop('checked', this.checked);
@@ -1421,6 +1434,15 @@ $resultArr = pg_fetch_all($result);
 
                     // Set the assetid field value
                     $('input[name="assetid"]').val(assetIds.join(', '));
+
+                    // Show the clear button
+                    updateClearButtonVisibility();
+                } else {
+                    // If no checkboxes are selected, clear the field and hide button
+                    $('input[name="assetid"]').val('');
+                    $('#is_user').prop('checked', false);
+                    updateFormState();
+                    updateClearButtonVisibility();
                 }
             }
 
@@ -1520,6 +1542,61 @@ $resultArr = pg_fetch_all($result);
 
                 // Reset the count badge
                 $('#selected-count-badge').text('0 selected');
+
+                // Also clear the Asset ID search field
+                $('input[name="assetid"]').val('');
+                $('#is_user').prop('checked', false);
+                updateFormState();
+                updateClearButtonVisibility();
+            });
+
+            // Clear selection button functionality
+            $('#clear-selection').click(function(e) {
+                e.preventDefault();
+
+                // Clear the search field
+                $('input[name="assetid"]').val('');
+
+                // Uncheck the checkbox
+                $('#is_user').prop('checked', false);
+
+                // Update form state
+                updateFormState();
+
+                // Remove highlighting from all rows
+                $('#table-id tbody tr').removeClass('table-primary');
+
+                // Uncheck all checkboxes
+                $('.asset-checkbox').prop('checked', false);
+                $('#select-all-checkbox').prop('checked', false);
+                updateRowSelection();
+
+                // Hide the clear button
+                updateClearButtonVisibility();
+
+                // Get current URL
+                const url = new URL(window.location.href);
+
+                // Remove assetid and is_user parameters
+                url.searchParams.delete('assetid');
+                url.searchParams.delete('is_user');
+
+                // Redirect to the updated URL (reloads the page)
+                //window.location.href = url.toString();
+            });
+
+            // Also listen for manual input in the Asset ID field
+            $('input[name="assetid"]').on('input', function() {
+                updateClearButtonVisibility();
+
+                // If user types something, check the checkbox automatically
+                if ($(this).val().trim()) {
+                    $('#is_user').prop('checked', true);
+                    updateFormState();
+                } else {
+                    $('#is_user').prop('checked', false);
+                    updateFormState();
+                }
             });
 
             // Initialize DataTable with proper configuration
@@ -1539,35 +1616,13 @@ $resultArr = pg_fetch_all($result);
 
                         // Reset the count badge
                         $('#selected-count-badge').text('0 selected');
+
+                        // Check if Asset ID field has value from URL
+                        updateClearButtonVisibility();
                     }
                 });
             <?php endif; ?>
-            // Add a "Clear Selection" button
-            $('#clear-selection').click(function(e) {
-                e.preventDefault();
 
-                // Clear the search field
-                $('input[name="assetid"]').val('');
-
-                // Uncheck the checkbox
-                $('#is_user').prop('checked', false);
-
-                // Update form state
-                updateFormState();
-
-                // Remove highlighting from all rows
-                $('#table-id tbody tr').removeClass('table-primary');
-
-                // Get current URL
-                const url = new URL(window.location.href);
-
-                // Remove assetid and is_user parameters
-                url.searchParams.delete('assetid');
-                url.searchParams.delete('is_user');
-
-                // Redirect to the updated URL (reloads the page)
-                //window.location.href = url.toString();
-            });
             // Update search placeholder to indicate both ID and name search
             $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
         });
