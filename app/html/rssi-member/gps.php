@@ -587,6 +587,9 @@ $resultArr = pg_fetch_all($result);
                                                 <th scope="col">Asset type</th>
                                                 <th scope="col">Asset category</th>
                                                 <th scope="col">Unit price</th>
+                                                <th scope="col">Purchase Date</th>
+                                                <th scope="col">Photo</th>
+                                                <th scope="col">Bill</th>
                                                 <th scope="col" id="cw1">Remarks</th>
                                             <?php endif; ?>
                                             <th scope="col">Issued by</th>
@@ -626,6 +629,27 @@ $resultArr = pg_fetch_all($result);
                                                             <?php else: ?>
                                                                 <span>N/A</span>
                                                             <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if ($array['purchase_date'] != null): ?>
+                                                                <?= date("d/m/Y", strtotime($array['purchase_date'])) ?>
+                                                            <?php else: ?>
+                                                                <span>N/A</span>
+                                                            <?php endif; ?>
+                                                        <td>
+                                                            <?php if (!empty($array['asset_photo'])): ?>
+                                                                <span>Y</span>
+                                                            <?php else: ?>
+                                                                <span>N/A</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($array['purchase_bill'])): ?>
+                                                                <span>Y</span>
+                                                            <?php else: ?>
+                                                                <span>N/A</span>
+                                                            <?php endif; ?>
+                                                        </td>
                                                         <td>
                                                             <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 90): ?>
                                                                 <?= htmlspecialchars($array['remarks']) ?>
@@ -639,8 +663,8 @@ $resultArr = pg_fetch_all($result);
                                                             <?php endif; ?>
                                                         </td>
                                                     <?php endif; ?>
-                                                    <td><?= $array['collectedby'] ?><br><?= $array['ifullname'] ?></td>
-                                                    <td><?= $array['taggedto'] ?><br><?= $array['tfullname'] ?></td>
+                                                    <td><?= $array['ifullname'] ?></td>
+                                                    <td><?= $array['tfullname'] ?></td>
                                                     <td><?= $array['asset_status'] ?></td>
                                                     <td>
                                                         <?php if ($array['lastupdatedon'] != null): ?>
@@ -944,7 +968,7 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script src="../assets_new/js/image-compressor.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
     <script>
         // Assuming data is provided from PHP
         var data = <?= json_encode($resultArr) ?>;
@@ -1138,23 +1162,31 @@ $resultArr = pg_fetch_all($result);
                     // This is a file upload field - show it
                     formGroup.style.display = 'block';
                     fileInput.disabled = false;
+                    // Ensure file inputs are NOT required when in upload mode
+                    fileInput.required = window.currentMode === 'upload' ? false : true;
                 } else {
                     // This is NOT a file upload field - hide it
                     formGroup.style.display = 'none';
 
-                    // Disable all inputs/selects/textarea inside
+                    // Remove required attribute from all inputs in hidden groups
                     var formElements = formGroup.querySelectorAll('input, select, textarea');
                     formElements.forEach(function(element) {
-                        element.disabled = true;
+                        element.disabled = false; // Keep enabled
+                        element.removeAttribute('required'); // Remove required attribute
+                        element.setAttribute('data-hidden', 'true');
+                        element.setAttribute('data-was-required', element.hasAttribute('required')); // Store if it was required
                     });
                 }
             });
 
-            // Also make sure any form elements not in .col-md-6 are hidden/disabled
+            // Also handle form elements not in .col-md-6
             var allFormElements = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
             allFormElements.forEach(function(element) {
-                if (element.type !== 'file' && !element.closest('.col-md-6[style*="block"]')) {
-                    element.disabled = true;
+                if (element.type !== 'file') {
+                    // For non-file fields, remove required if they're in upload mode
+                    if (window.currentMode === 'upload') {
+                        element.removeAttribute('required');
+                    }
                 }
             });
         }
@@ -1167,10 +1199,18 @@ $resultArr = pg_fetch_all($result);
                 formGroup.style.display = 'block';
             });
 
-            // Enable all fields
+            // Enable all fields and restore required attributes
             var allFields = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
             allFields.forEach(function(field) {
                 field.disabled = false;
+
+                // Restore required attribute if it was originally required
+                if (field.getAttribute('data-was-required') === 'true') {
+                    field.setAttribute('required', 'required');
+                }
+                // Remove the data attributes
+                field.removeAttribute('data-hidden');
+                field.removeAttribute('data-was-required');
             });
 
             // Reset button text
@@ -1208,12 +1248,18 @@ $resultArr = pg_fetch_all($result);
             form.addEventListener('submit', e => {
                 e.preventDefault();
 
+                // Add novalidate to form in upload mode to bypass HTML5 validation
+                if (window.currentMode === 'upload') {
+                    form.setAttribute('novalidate', 'novalidate');
+                }
+
                 // Show spinner and disable button - use window.currentMode
                 buttonText.textContent = window.currentMode === 'upload' ? 'Uploading...' : 'Updating...';
                 spinner.classList.remove('d-none');
                 updateButton.disabled = true;
 
                 const formData = new FormData(form);
+                formData.append('form-type', 'gpsedit');
 
                 // Add the current mode to the form data
                 formData.append('mode', window.currentMode);
