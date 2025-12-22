@@ -720,33 +720,14 @@ if (!function_exists('makeClickableLinks')) {
 
                     <!-- Bootstrap Modal for Date Information -->
                     <div class="modal fade" id="dateInfoModal" tabindex="-1" aria-labelledby="dateInfoModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
                           <div class="modal-header">
                             <h5 class="modal-title" id="dateInfoModalLabel">Date Information</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body">
-                            <h6 id="modalDate" class="mb-3"></h6>
-                            <div id="holidayInfo" class="mb-2" style="display: none;">
-                              <div class="alert alert-danger py-2">
-                                <i class="bi bi-calendar-event me-2"></i>
-                                <strong id="holidayName"></strong>
-                              </div>
-                            </div>
-                            <div id="eventInfo" class="mb-2" style="display: none;">
-                              <div class="alert alert-success py-2">
-                                <i class="bi bi-calendar-check me-2"></i>
-                                <strong id="eventName"></strong>
-                                <small id="eventType" class="d-block mt-1"></small>
-                              </div>
-                            </div>
-                            <div id="noEventsInfo" style="display: none;">
-                              <div class="alert alert-light py-2">
-                                <i class="bi bi-calendar-x me-2"></i>
-                                No holidays or events scheduled
-                              </div>
-                            </div>
+                            <!-- Content will be dynamically loaded here -->
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1197,9 +1178,9 @@ if (!function_exists('makeClickableLinks')) {
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'calendar-loading';
       loadingDiv.innerHTML = `
-    <div class="spinner"></div>
-    <div class="loading-text">Loading Calendar...</div>
-  `;
+        <div class="spinner"></div>
+        <div class="loading-text">Loading Calendar...</div>
+      `;
       calendarContainer.appendChild(loadingDiv);
 
       // Get Bootstrap modal instance
@@ -1207,9 +1188,9 @@ if (!function_exists('makeClickableLinks')) {
 
       // Track if we're currently loading
       let isLoadingMonth = false;
-      let currentData = {
-        holidays: [],
-        events: []
+      let currentDates = {
+        holiday_dates: [],
+        event_dates: []
       };
 
       // Function to show month loading spinner
@@ -1228,7 +1209,7 @@ if (!function_exists('makeClickableLinks')) {
         }
       }
 
-      // Initialize calendar with enhanced features
+      // Initialize calendar
       const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         headerToolbar: {
@@ -1250,41 +1231,33 @@ if (!function_exists('makeClickableLinks')) {
         // Set initial date to current
         initialDate: new Date(),
 
-        // When calendar renders
-        viewDidMount: function() {
-          // Add month/year selector to toolbar
-          addMonthYearSelector();
-        },
-
         // When dates change (month navigation)
         datesSet: async function(info) {
-          // Show loading spinner when changing months
           showMonthLoading();
 
           try {
-            await loadData(info.start, info.end);
+            await loadCalendarDates(info.start, info.end);
           } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('Error loading calendar dates:', error);
           } finally {
-            // Hide loading spinner
             hideMonthLoading();
           }
         },
 
-        // Customize day cells - MAKE ENTIRE CELL CLICKABLE
+        // Customize day cells
         dayCellDidMount: function(info) {
           const date = info.date;
           const dayCell = info.el;
 
-          // Set data-date attribute for easy lookup
+          // Set data-date attribute
           const dateStr = formatDate(date);
           dayCell.setAttribute('data-date', dateStr);
 
           // Make entire cell clickable
           dayCell.style.cursor = 'pointer';
-          dayCell.addEventListener('click', function(e) {
+          dayCell.addEventListener('click', async function(e) {
             e.stopPropagation();
-            showDateInfo(dateStr, date);
+            await showDateDetails(dateStr, date);
           });
 
           // Color Sunday text red
@@ -1295,7 +1268,6 @@ if (!function_exists('makeClickableLinks')) {
 
         // Clean up when day cells are destroyed
         dayCellWillUnmount: function(info) {
-          // Remove all custom classes when cell is removed
           info.el.classList.remove('holiday-date', 'event-date', 'fc-day-sun');
         }
       });
@@ -1308,140 +1280,74 @@ if (!function_exists('makeClickableLinks')) {
         calendar.updateSize();
       }
 
-      // Add Month/Year selector to toolbar
-      function addMonthYearSelector() {
-        const template = document.getElementById('monthYearTemplate');
-        const clone = template.content.cloneNode(true);
-        const monthYearDiv = clone.querySelector('.month-year-selector');
-
-        // Insert after title
-        const titleEl = document.querySelector('.fc-toolbar-title');
-        titleEl.parentNode.insertBefore(monthYearDiv, titleEl.nextSibling);
-
-        const monthSelect = monthYearDiv.querySelector('.month-select');
-        const yearSelect = monthYearDiv.querySelector('.year-select');
-
-        // Set current month/year
-        const currentDate = calendar.getDate();
-        monthSelect.value = currentDate.getMonth();
-
-        // Populate years (10 years back and forward)
-        const currentYear = currentDate.getFullYear();
-        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
-          const option = document.createElement('option');
-          option.value = year;
-          option.textContent = year;
-          yearSelect.appendChild(option);
-        }
-        yearSelect.value = currentYear;
-
-        // Add change event listeners
-        monthSelect.addEventListener('change', function() {
-          const year = parseInt(yearSelect.value);
-          const month = parseInt(monthSelect.value);
-          calendar.gotoDate(new Date(year, month, 1));
-        });
-
-        yearSelect.addEventListener('change', function() {
-          const year = parseInt(yearSelect.value);
-          const month = parseInt(monthSelect.value);
-          calendar.gotoDate(new Date(year, month, 1));
-        });
-
-        // Update selectors when calendar changes
-        calendar.on('datesSet', function(info) {
-          const currentDate = info.view.currentStart;
-          monthSelect.value = currentDate.getMonth();
-          yearSelect.value = currentDate.getFullYear();
-        });
-      }
-
-      // Load data from single API
-      async function loadData(startDate, endDate) {
+      // Load calendar dates (for highlighting)
+      async function loadCalendarDates(startDate, endDate) {
         try {
           const start = formatDate(startDate);
           const end = formatDate(endDate);
 
           // Clear previous data
-          currentData = {
-            holidays: [],
-            events: []
+          currentDates = {
+            holiday_dates: [],
+            event_dates: []
           };
 
-          // Clear previous classes from ALL cells
+          // Clear previous classes
           document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
             cell.classList.remove('holiday-date', 'event-date');
           });
 
-          // Load all data from single API
-          const apiData = await fetchAllData(start, end);
+          // Load dates from API
+          const apiData = await fetchCalendarDates(start, end);
 
-          // Store data for later use (in modal)
-          currentData.holidays = apiData.holidays || [];
-          currentData.events = apiData.events || [];
+          // Store data
+          currentDates.holiday_dates = apiData.holiday_dates || [];
+          currentDates.event_dates = apiData.event_dates || [];
 
           // Mark dates on calendar
-          markHolidayDates(currentData.holidays);
-          markEventDates(currentData.events);
+          markHolidayDates(currentDates.holiday_dates);
+          markEventDates(currentDates.event_dates);
 
-          console.log(`Loaded ${currentData.holidays.length} holidays and ${currentData.events.length} events`);
+          console.log(`Found ${currentDates.holiday_dates.length} holiday dates and ${currentDates.event_dates.length} event dates`);
 
         } catch (error) {
-          console.error('Error loading data:', error);
+          console.error('Error loading calendar dates:', error);
           throw error;
         }
       }
 
-      // Fetch all data from single API
-      async function fetchAllData(start, end) {
-        const response = await fetch(`/../calendar_events_api.php?start=${start}&end=${end}`);
+      // Fetch calendar dates from API
+      async function fetchCalendarDates(start, end) {
+        const response = await fetch(`/../calendar_dates_api.php?start=${start}&end=${end}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-
-        // Your API returns {holidays: [...], events: [...]}
-        // If it returns a different structure, adjust here
-        return {
-          holidays: Array.isArray(data.holidays) ? data.holidays : [],
-          events: Array.isArray(data.events) ? data.events : []
-        };
+        return await response.json();
       }
 
       // Mark holiday dates on calendar
-      function markHolidayDates(holidays) {
-        holidays.forEach(function(holiday) {
-          if (holiday.date) {
-            const dateStr = holiday.date;
-            const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
-
-            if (dateCell) {
-              dateCell.classList.add('holiday-date');
-              dateCell.setAttribute('data-holiday-name', holiday.name || 'Holiday');
-            }
+      function markHolidayDates(holidayDates) {
+        holidayDates.forEach(function(dateStr) {
+          const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+          if (dateCell) {
+            dateCell.classList.add('holiday-date');
           }
         });
       }
 
       // Mark event dates on calendar
-      function markEventDates(events) {
-        events.forEach(function(event) {
-          if (event.date) {
-            const dateStr = event.date;
-            const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
-
-            if (dateCell) {
-              dateCell.classList.add('event-date');
-              dateCell.setAttribute('data-event-name', event.name || 'Event');
-              dateCell.setAttribute('data-event-type', event.type || 'event');
-            }
+      function markEventDates(eventDates) {
+        eventDates.forEach(function(dateStr) {
+          const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+          if (dateCell) {
+            dateCell.classList.add('event-date');
           }
         });
       }
 
-      // Show date information in modal
-      function showDateInfo(dateStr, dateObj) {
+      // Show date details with loading spinner
+      async function showDateDetails(dateStr, dateObj) {
         const formattedDate = dateObj.toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
@@ -1449,42 +1355,154 @@ if (!function_exists('makeClickableLinks')) {
           day: 'numeric'
         });
 
-        // Update modal title with date
-        document.getElementById('modalDate').textContent = formattedDate;
+        // Show loading state in modal
+        showModalLoading(formattedDate);
 
-        // Find holiday and event for this date
-        const holiday = currentData.holidays.find(h => h.date === dateStr);
-        const event = currentData.events.find(e => e.date === dateStr);
-
-        // Show/hide sections based on data
-        const holidayInfo = document.getElementById('holidayInfo');
-        const eventInfo = document.getElementById('eventInfo');
-        const noEventsInfo = document.getElementById('noEventsInfo');
-
-        if (holiday) {
-          document.getElementById('holidayName').textContent = holiday.name;
-          holidayInfo.style.display = 'block';
-        } else {
-          holidayInfo.style.display = 'none';
-        }
-
-        if (event) {
-          document.getElementById('eventName').textContent = event.name;
-          document.getElementById('eventType').textContent = event.type ? `Type: ${event.type}` : '';
-          eventInfo.style.display = 'block';
-        } else {
-          eventInfo.style.display = 'none';
-        }
-
-        // Show no events message if neither holiday nor event
-        if (!holiday && !event) {
-          noEventsInfo.style.display = 'block';
-        } else {
-          noEventsInfo.style.display = 'none';
-        }
-
-        // Show Bootstrap modal
+        // Show modal immediately
         dateInfoModal.show();
+
+        try {
+          // Fetch detailed data for this date
+          const dateData = await fetchDateDetails(dateStr);
+
+          // Update modal with data
+          updateModalContent(dateData, formattedDate);
+        } catch (error) {
+          console.error('Error loading date details:', error);
+          showModalError('Failed to load date information', formattedDate);
+        }
+      }
+
+      // Show loading state in modal
+      function showModalLoading(formattedDate) {
+        const modalBody = document.querySelector('#dateInfoModal .modal-body');
+        modalBody.innerHTML = `
+      <h6 class="mb-3 text-primary">${formattedDate}</h6>
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading date information...</p>
+      </div>
+    `;
+      }
+
+      // Show error in modal
+      function showModalError(message, formattedDate) {
+        const modalBody = document.querySelector('#dateInfoModal .modal-body');
+        modalBody.innerHTML = `
+      <h6 class="mb-3 text-primary">${formattedDate}</h6>
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        ${message}
+      </div>
+    `;
+      }
+
+      // Fetch detailed date information
+      async function fetchDateDetails(dateStr) {
+        const response = await fetch(`/../date_details_api.php?date=${dateStr}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      }
+
+      // Update modal content with fetched data
+      function updateModalContent(dateData, formattedDate) {
+        const modalBody = document.querySelector('#dateInfoModal .modal-body');
+        let content = `<h6 class="mb-3 text-primary">${formattedDate}</h6>`;
+
+        // Check if there's any data
+        if (!dateData.holidays?.length && !dateData.events?.length) {
+          content += `
+        <div class="alert alert-light">
+          <i class="bi bi-calendar-x me-2"></i>
+          <strong>No holidays or events scheduled for this date</strong>
+        </div>
+      `;
+        } else {
+          // Show holidays if any
+          if (dateData.holidays?.length > 0) {
+            content += `<h6 class="mt-3 mb-2"><i class="bi bi-calendar-event me-2"></i>Holidays</h6>`;
+            dateData.holidays.forEach(holiday => {
+              content += `
+            <div class="card mb-2 border-danger">
+              <div class="card-body p-3">
+                <h6 class="card-title text-danger mb-1">
+                  <i class="bi bi-flag me-2"></i>${holiday.name}
+                </h6>
+                <p class="card-text mb-0 small">
+                  <i class="bi bi-calendar-date me-1"></i> ${holiday.date}
+                </p>
+              </div>
+            </div>
+          `;
+            });
+          }
+
+          // Show events if any
+          if (dateData.events?.length > 0) {
+            content += `<h6 class="mt-4 mb-2"><i class="bi bi-calendar-check me-2"></i>Events</h6>`;
+            dateData.events.forEach(event => {
+              content += `
+            <div class="card mb-3 border-success">
+              <div class="card-body p-3">
+                <h6 class="card-title text-success mb-1">
+                  <i class="bi bi-calendar3 me-2"></i>${event.name}
+                  <span class="badge bg-secondary text-white ms-2">${event.type}</span>
+                </h6>
+                
+                ${event.description ? `<p class="card-text mb-2">${event.description}</p>` : ''}
+                
+                <div class="row small text-muted">
+                  ${event.location ? `
+                    <div class="col-12 mb-1">
+                      <i class="bi bi-geo-alt me-1"></i> ${event.location}
+                    </div>
+                  ` : ''}
+                  
+                  ${event.is_full_day ? `
+                    <div class="col-12 mb-1">
+                      <i class="bi bi-clock me-1"></i> Full Day Event
+                    </div>
+                  ` : `
+                    ${event.start_time ? `
+                      <div class="col-12 mb-1">
+                        <i class="bi bi-play-circle me-1"></i> Start: ${event.start_time}
+                      </div>
+                    ` : ''}
+                    ${event.end_time ? `
+                      <div class="col-12 mb-1">
+                        <i class="bi bi-stop-circle me-1"></i> End: ${event.end_time}
+                      </div>
+                    ` : ''}
+                    ${event.reporting_time ? `
+                      <div class="col-12 mb-1">
+                        <i class="bi bi-person-check me-1"></i> Reporting: ${event.reporting_time}
+                      </div>
+                    ` : ''}
+                  `}
+                  
+                  <div class="col-12 mb-1">
+                    <i class="bi bi-person-plus me-1"></i> Created by: ${event.created_by_name || event.created_by}
+                  </div>
+                  
+                  ${event.updated_by_name ? `
+                    <div class="col-12">
+                      <i class="bi bi-person-check me-1"></i> Last updated by: ${event.updated_by_name}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+            });
+          }
+        }
+
+        modalBody.innerHTML = content;
       }
 
       // Format date as YYYY-MM-DD
@@ -1496,43 +1514,127 @@ if (!function_exists('makeClickableLinks')) {
         return `${year}-${month}-${day}`;
       }
 
-      // Initialize calendar properly
+      // Initialize calendar
       function initializeCalendar() {
-        // Render calendar first
         calendar.render();
-
-        // Set initial view to current month
         calendar.gotoDate(new Date());
 
-        // Show loading while fetching initial data
         showMonthLoading();
 
-        // Load initial data
         const currentDate = new Date();
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-        loadData(firstDay, lastDay).then(() => {
-          // Hide both loaders and show calendar
+        loadCalendarDates(firstDay, lastDay).then(() => {
           hideMonthLoading();
           setTimeout(showCalendar, 100);
         }).catch(error => {
-          console.error('Failed to load data:', error);
-          // Still show calendar even if data fails
+          console.error('Failed to load calendar dates:', error);
           hideMonthLoading();
           setTimeout(showCalendar, 100);
         });
 
-        // Update calendar size after a brief delay
         setTimeout(() => {
           calendar.updateSize();
+          // Add month/year selector after calendar is rendered
+          addMonthYearSelector();
         }, 200);
+      }
+
+      // Replace the addMonthYearSelector function with this:
+      function addMonthYearSelector() {
+        // Check if template exists
+        const template = document.getElementById('monthYearTemplate');
+        if (!template) return;
+
+        const clone = template.content.cloneNode(true);
+        const monthYearDiv = clone.querySelector('.month-year-selector');
+
+        // Find the calendar title element
+        const titleElement = document.querySelector('.fc-toolbar-title');
+        if (titleElement && monthYearDiv) {
+          // Replace the title with our month/year selector
+          titleElement.style.display = 'none';
+
+          // Create a container for our custom title
+          const customTitleContainer = document.createElement('div');
+          customTitleContainer.className = 'fc-custom-title';
+
+          // Style the selectors
+          const monthSelect = monthYearDiv.querySelector('.month-select');
+          const yearSelect = monthYearDiv.querySelector('.year-select');
+
+          monthSelect.style.cssText = `
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 1rem;
+            margin-right: 10px;
+        `;
+
+          yearSelect.style.cssText = `
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 1rem;
+        `;
+
+          // Add selectors to container
+          customTitleContainer.appendChild(monthSelect);
+          customTitleContainer.appendChild(yearSelect);
+
+          // Insert after the hidden title
+          titleElement.parentNode.insertBefore(customTitleContainer, titleElement.nextSibling);
+
+          // Set current month/year
+          const currentDate = calendar.getDate();
+          if (monthSelect) monthSelect.value = currentDate.getMonth();
+
+          // Populate years (current year ± 5 years)
+          const currentYear = currentDate.getFullYear();
+          if (yearSelect) {
+            // Clear existing options
+            yearSelect.innerHTML = '';
+
+            for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+              const option = document.createElement('option');
+              option.value = year;
+              option.textContent = year;
+              option.selected = year === currentYear;
+              yearSelect.appendChild(option);
+            }
+          }
+
+          // Add change event listeners
+          if (monthSelect && yearSelect) {
+            monthSelect.addEventListener('change', function() {
+              const year = parseInt(yearSelect.value);
+              const month = parseInt(monthSelect.value);
+              calendar.gotoDate(new Date(year, month, 1));
+            });
+
+            yearSelect.addEventListener('change', function() {
+              const year = parseInt(yearSelect.value);
+              const month = parseInt(monthSelect.value);
+              calendar.gotoDate(new Date(year, month, 1));
+            });
+
+            // Update selectors when calendar changes
+            calendar.on('datesSet', function(info) {
+              const currentDate = info.view.currentStart;
+              if (monthSelect) monthSelect.value = currentDate.getMonth();
+              if (yearSelect) yearSelect.value = currentDate.getFullYear();
+            });
+          }
+        }
       }
 
       // Start initialization
       initializeCalendar();
 
-      // Also update size on window resize
+      // Update size on window resize
       window.addEventListener('resize', function() {
         if (calendar) {
           setTimeout(() => calendar.updateSize(), 100);
