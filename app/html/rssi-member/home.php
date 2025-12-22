@@ -208,6 +208,349 @@ if (!function_exists('makeClickableLinks')) {
       color: #007bff !important;
     }
   </style>
+  <!-- Add these in your <head> section -->
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+  <style>
+    /* Professional Compact Calendar */
+    .calendar-container {
+      position: relative;
+      min-height: 320px;
+    }
+
+    #calendar {
+      font-size: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Very compact cells */
+    .fc .fc-daygrid-day-frame {
+      min-height: 40px !important;
+      padding: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fc .fc-daygrid-day-top {
+      padding: 0;
+      justify-content: center;
+    }
+
+    .fc .fc-daygrid-day-number {
+      padding: 2px !important;
+      font-size: 11px;
+      font-weight: 400;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none !important;
+      color: #333 !important;
+      border-radius: 3px;
+      position: relative;
+    }
+
+    /* Make entire date cell clickable */
+    .fc-daygrid-day {
+      cursor: pointer;
+    }
+
+    .fc-daygrid-day:hover {
+      background-color: #f8f9fa !important;
+    }
+
+    /* Today's date - blue circle */
+    .fc-day-today {
+      background-color: transparent !important;
+    }
+
+    .fc-day-today .fc-daygrid-day-number {
+      background-color: #007bff !important;
+      color: white !important;
+      border-radius: 50%;
+      font-weight: 500;
+    }
+
+    /* Sunday styling - red text */
+    .fc-day-sun .fc-daygrid-day-number {
+      color: #e74c3c !important;
+      font-weight: 500;
+    }
+
+    /* Holiday highlight - LIGHT RED BACKGROUND */
+    .fc-daygrid-day.holiday-date {
+      background-color: #ffeaea !important;
+    }
+
+    .fc-daygrid-day.holiday-date .fc-daygrid-day-number {
+      color: #d32f2f !important;
+      font-weight: 400;
+    }
+
+    /* Holiday indicator - Red dot */
+    .fc-daygrid-day.holiday-date .fc-daygrid-day-number::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      right: 2px;
+      width: 4px;
+      height: 4px;
+      background-color: #e74c3c;
+      border-radius: 50%;
+    }
+
+    /* Event highlight - LIGHT GREEN BACKGROUND */
+    .fc-daygrid-day.event-date {
+      background-color: #e8f5e9 !important;
+    }
+
+    .fc-daygrid-day.event-date .fc-daygrid-day-number {
+      color: #2e7d32 !important;
+      font-weight: 400;
+    }
+
+    /* Event indicator - Green dot */
+    .fc-daygrid-day.event-date .fc-daygrid-day-number::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      right: 2px;
+      width: 4px;
+      height: 4px;
+      background-color: #4caf50;
+      border-radius: 50%;
+    }
+
+    /* Both holiday and event on same day */
+    .fc-daygrid-day.holiday-date.event-date {
+      background: linear-gradient(135deg, #ffeaea 50%, #e8f5e9 50%) !important;
+    }
+
+    .fc-daygrid-day.holiday-date.event-date .fc-daygrid-day-number::after {
+      background: linear-gradient(135deg, #e74c3c 50%, #4caf50 50%);
+    }
+
+    /* Month/Year Selector */
+    .month-year-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 15px;
+    }
+
+    .month-select,
+    .year-select {
+      padding: 0.25em 0.5em;
+      font-size: 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .month-select:hover,
+    .year-select:hover {
+      border-color: #adb5bd;
+    }
+
+    /* Compact toolbar with enhanced controls */
+    .fc-toolbar {
+      padding: 0 0 10px 0 !important;
+      margin-bottom: 10px !important;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .fc-toolbar-title {
+      font-size: 16px !important;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0 15px !important;
+      flex-grow: 1;
+    }
+
+    .fc-button {
+      padding: 0.3em 0.6em !important;
+      font-size: 12px !important;
+      height: 26px !important;
+      background-color: transparent !important;
+      border: 1px solid #dee2e6 !important;
+      color: #495057 !important;
+      border-radius: 4px !important;
+    }
+
+    .fc-button:hover {
+      background-color: #f8f9fa !important;
+    }
+
+    .fc-button:focus {
+      box-shadow: none !important;
+    }
+
+    .fc-button-primary:not(:disabled).fc-button-active {
+      background-color: #007bff !important;
+      border-color: #007bff !important;
+      color: white !important;
+    }
+
+    /* Header */
+    .fc-col-header {
+      background-color: #f8f9fa;
+    }
+
+    .fc-col-header-cell {
+      padding: 8px 0 !important;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+    }
+
+    .fc-col-header-cell-cushion {
+      padding: 4px 0 !important;
+      text-decoration: none !important;
+    }
+
+    /* Clean borders */
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+      border: 1px solid #eaeaea !important;
+    }
+
+    .fc .fc-scrollgrid {
+      border: none !important;
+    }
+
+    /* Loading spinner */
+    .calendar-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      border-radius: 4px;
+    }
+
+    .calendar-loading-overlay {
+      position: absolute;
+      top: 40px;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 40px);
+      background: rgba(255, 255, 255, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+
+    .loading-text {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Hide calendar while loading */
+    #calendar.hidden {
+      visibility: hidden;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    #calendar.visible {
+      visibility: visible;
+      opacity: 1;
+      height: auto;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Compact calendar height */
+    .fc .fc-view-harness {
+      min-height: 280px !important;
+    }
+
+    /* Gray out days from other months */
+    .fc-day-other .fc-daygrid-day-number {
+      color: #adb5bd !important;
+      opacity: 0.7;
+    }
+
+    .fc-day-other.holiday-date {
+      background-color: #fff0f0 !important;
+    }
+
+    .fc-day-other.event-date {
+      background-color: #f0f8f0 !important;
+    }
+
+    /* Calendar legend */
+    .calendar-legend {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #dee2e6;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    .legend-holiday {
+      background-color: #ffeaea;
+    }
+
+    .legend-event {
+      background-color: #e8f5e9;
+    }
+
+    .legend-today {
+      width: 12px;
+      height: 12px;
+      background-color: #007bff;
+      border-radius: 50%;
+    }
+  </style>
 </head>
 
 <body>
@@ -345,6 +688,93 @@ if (!function_exists('makeClickableLinks')) {
 
                   <!-- Right Sidebar (Poll, Wall of Fame, etc.) -->
                   <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm mb-4">
+                      <div class="card-body p-3">
+                        <h5 class="card-title mb-3">Calendar</h5>
+                        <div class="calendar-container">
+                          <div id="calendar" class="hidden"></div>
+                          <div class="calendar-loading-overlay" id="monthLoadingOverlay">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Loading...</div>
+                          </div>
+                        </div>
+
+                        <!-- Calendar Legend -->
+                        <div class="calendar-legend">
+                          <div class="legend-item">
+                            <div class="legend-color legend-today"></div>
+                            <span>Today</span>
+                          </div>
+                          <div class="legend-item">
+                            <div class="legend-color legend-holiday"></div>
+                            <span>Holidays</span>
+                          </div>
+                          <div class="legend-item">
+                            <div class="legend-color legend-event"></div>
+                            <span>Events</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Bootstrap Modal for Date Information -->
+                    <div class="modal fade" id="dateInfoModal" tabindex="-1" aria-labelledby="dateInfoModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="dateInfoModalLabel">Date Information</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <h6 id="modalDate" class="mb-3"></h6>
+                            <div id="holidayInfo" class="mb-2" style="display: none;">
+                              <div class="alert alert-danger py-2">
+                                <i class="fas fa-umbrella-beach me-2"></i>
+                                <strong id="holidayName"></strong>
+                              </div>
+                            </div>
+                            <div id="eventInfo" class="mb-2" style="display: none;">
+                              <div class="alert alert-success py-2">
+                                <i class="bi bi-calendar-check me-2"></i>
+                                <strong id="eventName"></strong>
+                                <small id="eventType" class="d-block mt-1"></small>
+                              </div>
+                            </div>
+                            <div id="noEventsInfo" style="display: none;">
+                              <div class="alert alert-light py-2">
+                                <i class="fas fa-calendar-day me-2"></i>
+                                No holidays or events scheduled
+                              </div>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Month/Year Selector Template (will be added via JS) -->
+                    <template id="monthYearTemplate">
+                      <div class="month-year-selector">
+                        <select class="month-select">
+                          <option value="0">January</option>
+                          <option value="1">February</option>
+                          <option value="2">March</option>
+                          <option value="3">April</option>
+                          <option value="4">May</option>
+                          <option value="5">June</option>
+                          <option value="6">July</option>
+                          <option value="7">August</option>
+                          <option value="8">September</option>
+                          <option value="9">October</option>
+                          <option value="10">November</option>
+                          <option value="11">December</option>
+                        </select>
+                        <select class="year-select"></select>
+                      </div>
+                    </template>
+
                     <div class="card shadow-sm mb-4">
                       <div class="card-body">
                         <h5 class="card-title">Quick Links</h5>
@@ -754,6 +1184,359 @@ if (!function_exists('makeClickableLinks')) {
           loadMoreBtn.disabled = false;
           loadMoreBtn.textContent = 'Load More';
         });
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarContainer = document.querySelector('.calendar-container');
+      const calendarEl = document.getElementById('calendar');
+      const monthLoadingOverlay = document.getElementById('monthLoadingOverlay');
+
+      // Create initial loading spinner
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'calendar-loading';
+      loadingDiv.innerHTML = `
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Calendar...</div>
+  `;
+      calendarContainer.appendChild(loadingDiv);
+
+      // Get Bootstrap modal instance
+      const dateInfoModal = new bootstrap.Modal(document.getElementById('dateInfoModal'));
+
+      // Track if we're currently loading
+      let isLoadingMonth = false;
+      let currentData = {
+        holidays: [],
+        events: []
+      };
+
+      // Function to show month loading spinner
+      function showMonthLoading() {
+        if (!isLoadingMonth) {
+          monthLoadingOverlay.style.display = 'flex';
+          isLoadingMonth = true;
+        }
+      }
+
+      // Function to hide month loading spinner
+      function hideMonthLoading() {
+        if (isLoadingMonth) {
+          monthLoadingOverlay.style.display = 'none';
+          isLoadingMonth = false;
+        }
+      }
+
+      // Initialize calendar with enhanced features
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev',
+          center: 'title',
+          right: 'next today'
+        },
+        height: 'auto',
+        firstDay: 1,
+        navLinks: false,
+        editable: false,
+        selectable: false,
+        weekNumbers: false,
+        dayMaxEvents: false,
+        handleWindowResize: true,
+        showNonCurrentDates: true,
+        fixedWeekCount: false,
+
+        // Set initial date to current
+        initialDate: new Date(),
+
+        // When calendar renders
+        viewDidMount: function() {
+          // Add month/year selector to toolbar
+          addMonthYearSelector();
+        },
+
+        // When dates change (month navigation)
+        datesSet: async function(info) {
+          // Show loading spinner when changing months
+          showMonthLoading();
+
+          try {
+            await loadData(info.start, info.end);
+          } catch (error) {
+            console.error('Error loading data:', error);
+          } finally {
+            // Hide loading spinner
+            hideMonthLoading();
+          }
+        },
+
+        // Customize day cells - MAKE ENTIRE CELL CLICKABLE
+        dayCellDidMount: function(info) {
+          const date = info.date;
+          const dayCell = info.el;
+
+          // Set data-date attribute for easy lookup
+          const dateStr = formatDate(date);
+          dayCell.setAttribute('data-date', dateStr);
+
+          // Make entire cell clickable
+          dayCell.style.cursor = 'pointer';
+          dayCell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showDateInfo(dateStr, date);
+          });
+
+          // Color Sunday text red
+          if (date.getDay() === 0) {
+            dayCell.classList.add('fc-day-sun');
+          }
+        },
+
+        // Clean up when day cells are destroyed
+        dayCellWillUnmount: function(info) {
+          // Remove all custom classes when cell is removed
+          info.el.classList.remove('holiday-date', 'event-date', 'fc-day-sun');
+        }
+      });
+
+      // Function to show calendar after initial loading
+      function showCalendar() {
+        loadingDiv.style.display = 'none';
+        calendarEl.classList.remove('hidden');
+        calendarEl.classList.add('visible');
+        calendar.updateSize();
+      }
+
+      // Add Month/Year selector to toolbar
+      function addMonthYearSelector() {
+        const template = document.getElementById('monthYearTemplate');
+        const clone = template.content.cloneNode(true);
+        const monthYearDiv = clone.querySelector('.month-year-selector');
+
+        // Insert after title
+        const titleEl = document.querySelector('.fc-toolbar-title');
+        titleEl.parentNode.insertBefore(monthYearDiv, titleEl.nextSibling);
+
+        const monthSelect = monthYearDiv.querySelector('.month-select');
+        const yearSelect = monthYearDiv.querySelector('.year-select');
+
+        // Set current month/year
+        const currentDate = calendar.getDate();
+        monthSelect.value = currentDate.getMonth();
+
+        // Populate years (10 years back and forward)
+        const currentYear = currentDate.getFullYear();
+        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+          const option = document.createElement('option');
+          option.value = year;
+          option.textContent = year;
+          yearSelect.appendChild(option);
+        }
+        yearSelect.value = currentYear;
+
+        // Add change event listeners
+        monthSelect.addEventListener('change', function() {
+          const year = parseInt(yearSelect.value);
+          const month = parseInt(monthSelect.value);
+          calendar.gotoDate(new Date(year, month, 1));
+        });
+
+        yearSelect.addEventListener('change', function() {
+          const year = parseInt(yearSelect.value);
+          const month = parseInt(monthSelect.value);
+          calendar.gotoDate(new Date(year, month, 1));
+        });
+
+        // Update selectors when calendar changes
+        calendar.on('datesSet', function(info) {
+          const currentDate = info.view.currentStart;
+          monthSelect.value = currentDate.getMonth();
+          yearSelect.value = currentDate.getFullYear();
+        });
+      }
+
+      // Load data from single API
+      async function loadData(startDate, endDate) {
+        try {
+          const start = formatDate(startDate);
+          const end = formatDate(endDate);
+
+          // Clear previous data
+          currentData = {
+            holidays: [],
+            events: []
+          };
+
+          // Clear previous classes from ALL cells
+          document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
+            cell.classList.remove('holiday-date', 'event-date');
+          });
+
+          // Load all data from single API
+          const apiData = await fetchAllData(start, end);
+
+          // Store data for later use (in modal)
+          currentData.holidays = apiData.holidays || [];
+          currentData.events = apiData.events || [];
+
+          // Mark dates on calendar
+          markHolidayDates(currentData.holidays);
+          markEventDates(currentData.events);
+
+          console.log(`Loaded ${currentData.holidays.length} holidays and ${currentData.events.length} events`);
+
+        } catch (error) {
+          console.error('Error loading data:', error);
+          throw error;
+        }
+      }
+
+      // Fetch all data from single API
+      async function fetchAllData(start, end) {
+        const response = await fetch(`/../holidays_api.php?start=${start}&end=${end}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Your API returns {holidays: [...], events: [...]}
+        // If it returns a different structure, adjust here
+        return {
+          holidays: Array.isArray(data.holidays) ? data.holidays : [],
+          events: Array.isArray(data.events) ? data.events : []
+        };
+      }
+
+      // Mark holiday dates on calendar
+      function markHolidayDates(holidays) {
+        holidays.forEach(function(holiday) {
+          if (holiday.date) {
+            const dateStr = holiday.date;
+            const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+
+            if (dateCell) {
+              dateCell.classList.add('holiday-date');
+              dateCell.setAttribute('data-holiday-name', holiday.name || 'Holiday');
+            }
+          }
+        });
+      }
+
+      // Mark event dates on calendar
+      function markEventDates(events) {
+        events.forEach(function(event) {
+          if (event.date) {
+            const dateStr = event.date;
+            const dateCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+
+            if (dateCell) {
+              dateCell.classList.add('event-date');
+              dateCell.setAttribute('data-event-name', event.name || 'Event');
+              dateCell.setAttribute('data-event-type', event.type || 'event');
+            }
+          }
+        });
+      }
+
+      // Show date information in modal
+      function showDateInfo(dateStr, dateObj) {
+        const formattedDate = dateObj.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        // Update modal title with date
+        document.getElementById('modalDate').textContent = formattedDate;
+
+        // Find holiday and event for this date
+        const holiday = currentData.holidays.find(h => h.date === dateStr);
+        const event = currentData.events.find(e => e.date === dateStr);
+
+        // Show/hide sections based on data
+        const holidayInfo = document.getElementById('holidayInfo');
+        const eventInfo = document.getElementById('eventInfo');
+        const noEventsInfo = document.getElementById('noEventsInfo');
+
+        if (holiday) {
+          document.getElementById('holidayName').textContent = holiday.name;
+          holidayInfo.style.display = 'block';
+        } else {
+          holidayInfo.style.display = 'none';
+        }
+
+        if (event) {
+          document.getElementById('eventName').textContent = event.name;
+          document.getElementById('eventType').textContent = event.type ? `Type: ${event.type}` : '';
+          eventInfo.style.display = 'block';
+        } else {
+          eventInfo.style.display = 'none';
+        }
+
+        // Show no events message if neither holiday nor event
+        if (!holiday && !event) {
+          noEventsInfo.style.display = 'block';
+        } else {
+          noEventsInfo.style.display = 'none';
+        }
+
+        // Show Bootstrap modal
+        dateInfoModal.show();
+      }
+
+      // Format date as YYYY-MM-DD
+      function formatDate(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // Initialize calendar properly
+      function initializeCalendar() {
+        // Render calendar first
+        calendar.render();
+
+        // Set initial view to current month
+        calendar.gotoDate(new Date());
+
+        // Show loading while fetching initial data
+        showMonthLoading();
+
+        // Load initial data
+        const currentDate = new Date();
+        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+        loadData(firstDay, lastDay).then(() => {
+          // Hide both loaders and show calendar
+          hideMonthLoading();
+          setTimeout(showCalendar, 100);
+        }).catch(error => {
+          console.error('Failed to load data:', error);
+          // Still show calendar even if data fails
+          hideMonthLoading();
+          setTimeout(showCalendar, 100);
+        });
+
+        // Update calendar size after a brief delay
+        setTimeout(() => {
+          calendar.updateSize();
+        }, 200);
+      }
+
+      // Start initialization
+      initializeCalendar();
+
+      // Also update size on window resize
+      window.addEventListener('resize', function() {
+        if (calendar) {
+          setTimeout(() => calendar.updateSize(), 100);
+        }
+      });
     });
   </script>
 </body>
