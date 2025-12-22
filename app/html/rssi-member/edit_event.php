@@ -14,7 +14,7 @@ validation();
 function isAdmin()
 {
     global $role;
-    return $role === 'admin' || $role === 'superadmin';
+    return $role === 'Admin';
 }
 
 $event_id = $_GET['id'] ?? 0;
@@ -188,7 +188,7 @@ if ($event['reporting_time']) {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Edit Internal Event</title>
+    <title>Edit Event</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -265,11 +265,11 @@ if ($event['reporting_time']) {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Edit Internal Event</h1>
+            <h1>Edit Event</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="create_event.php">Calendar Events</a></li>
+                    <li class="breadcrumb-item"><a href="create_event.php">Create Event</a></li>
                     <li class="breadcrumb-item active">Edit Event</li>
                 </ol>
             </nav>
@@ -291,11 +291,13 @@ if ($event['reporting_time']) {
                                         <p class="mb-0"><strong>Last Updated:</strong> <?php echo date('d M Y, h:i A', strtotime($event['updated_at'])); ?></p>
                                     <?php endif; ?>
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <button class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                        <i class="bi bi-trash"></i> Delete Event
-                                    </button>
-                                </div>
+                                <?php if ($role == 'Admin'): ?>
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                            <i class="bi bi-trash"></i> Delete Event
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

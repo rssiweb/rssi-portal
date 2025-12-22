@@ -631,7 +631,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
                         <div class="mb-3">
                             <label for="remarkText" class="form-label">Add New Remark</label>
-                            <textarea class="form-control" id="remarkText" name="remark" rows="3" placeholder="Enter your remarks here..."></textarea>
+                            <textarea class="form-control" id="remarkText" name="remark" rows="3" placeholder="Enter your remarks here..." required></textarea>
                             <div class="form-text">This remark will be added to the remarks history with timestamp.</div>
                         </div>
 

@@ -691,7 +691,12 @@ if (!function_exists('makeClickableLinks')) {
                   <div class="col-md-4 mb-4">
                     <div class="card shadow-sm mb-4">
                       <div class="card-body p-3">
-                        <h5 class="card-title mb-3">Calendar</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <h5 class="card-title mb-0">Calendar</h5>
+                          <a href="create_event.php" class="btn btn-primary btn-sm" id="createEventBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Create Event
+                          </a>
+                        </div>
                         <div class="calendar-container">
                           <div id="calendar" class="hidden"></div>
                           <div class="calendar-loading-overlay" id="monthLoadingOverlay">

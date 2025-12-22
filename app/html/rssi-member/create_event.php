@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Internal Event</title>
+    <title>Create Event</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -172,12 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Create Internal Event</h1>
+            <h1>Create Event</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Calendar</a></li>
-                    <li class="breadcrumb-item active">Create Internal Event</li>
+                    <li class="breadcrumb-item active">Create Event</li>
                 </ol>
             </nav>
         </div>
