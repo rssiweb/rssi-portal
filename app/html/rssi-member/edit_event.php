@@ -10,7 +10,48 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// Handle form submission
+// Function to check if user is admin
+function isAdmin()
+{
+    global $role;
+    return $role === 'admin' || $role === 'superadmin';
+}
+
+$event_id = $_GET['id'] ?? 0;
+
+// Fetch event details
+$event = null;
+if ($event_id) {
+    $sql = "SELECT e.*, u.fullname as creator_name 
+            FROM internal_events e 
+            LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
+            WHERE e.id = $1";
+    $result = pg_query_params($con, $sql, [$event_id]);
+    $event = pg_fetch_assoc($result);
+}
+
+// Redirect if event not found
+if (!$event) {
+    $_SESSION['message'] = 'Event not found!';
+    $_SESSION['message_type'] = 'danger';
+    header("Location: create_event.php");
+    exit;
+}
+
+// Check permission (only creator or admin can edit)
+$canEdit = false;
+if ($event['created_by'] == $associatenumber || isAdmin()) {
+    $canEdit = true;
+}
+
+if (!$canEdit) {
+    $_SESSION['message'] = 'You don\'t have permission to edit this event!';
+    $_SESSION['message_type'] = 'danger';
+    header("Location: create_event.php");
+    exit;
+}
+
+// Handle form submission for update
 $message = '';
 $message_type = '';
 
@@ -47,49 +88,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $location = pg_escape_string($con, $_POST['location']);
     $description = pg_escape_string($con, $_POST['description']);
-    $created_by = $associatenumber;
+    $updated_by = $associatenumber;
 
-    // Check if event already exists on this date
-    $check_sql = "SELECT COUNT(*) as count FROM internal_events WHERE event_date = $1 AND event_name = $2";
-    $check_result = pg_query_params($con, $check_sql, [$event_date, $event_name]);
-    $check_data = pg_fetch_assoc($check_result);
+    // Check if event already exists on this date (excluding current event)
+    // FIXED: Removed single quotes around placeholders
+    $check_sql = "SELECT COUNT(*) as count FROM internal_events 
+                  WHERE event_date = $1 AND event_name = $2 AND id != $3";
+    $check_result = pg_query_params($con, $check_sql, [$event_date, $event_name, $event_id]);
 
-    if ($check_data['count'] > 0) {
-        $message = 'An event with the same name already exists on this date!';
+    if (!$check_result) {
+        $message = 'Database error: ' . pg_last_error($con);
         $message_type = 'danger';
     } else {
-        // Insert the event
-        $insert_sql = "INSERT INTO internal_events (
-            event_name, event_date, event_type, is_full_day, 
-            event_start_time, event_end_time, reporting_time, 
-            location, description, created_by, updated_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
+        $check_data = pg_fetch_assoc($check_result);
 
-        $params = [
-            $event_name,
-            $event_date,
-            $event_type,
-            $is_full_day,
-            $event_start_time,
-            $event_end_time,
-            $reporting_time,
-            $location,
-            $description,
-            $created_by,
-            $created_by
-        ];
-
-        $result = pg_query_params($con, $insert_sql, $params);
-
-        if ($result) {
-            $message = 'Event created successfully!';
-            $message_type = 'success';
-            $_POST = []; // Clear form
-        } else {
-            $message = 'Error creating event: ' . pg_last_error($con);
+        if ($check_data['count'] > 0) {
+            $message = 'Another event with the same name already exists on this date!';
             $message_type = 'danger';
+        } else {
+            // Update the event
+            $update_sql = "UPDATE internal_events SET
+                event_name = $1, 
+                event_date = $2, 
+                event_type = $3, 
+                is_full_day = $4,
+                event_start_time = $5, 
+                event_end_time = $6, 
+                reporting_time = $7,
+                location = $8, 
+                description = $9, 
+                updated_by = $10, 
+                updated_at = CURRENT_TIMESTAMP
+                WHERE id = $11";
+
+            $params = [
+                $event_name,
+                $event_date,
+                $event_type,
+                $is_full_day,
+                $event_start_time,
+                $event_end_time,
+                $reporting_time,
+                $location,
+                $description,
+                $updated_by,
+                $event_id
+            ];
+
+            $result = pg_query_params($con, $update_sql, $params);
+
+            if ($result) {
+                $_SESSION['message'] = 'Event updated successfully!';
+                $_SESSION['message_type'] = 'success';
+                header("Location: create_event.php");
+                exit;
+            } else {
+                $message = 'Error updating event: ' . pg_last_error($con);
+                $message_type = 'danger';
+            }
         }
     }
+}
+
+// Format time for display (convert from 24h to 12h)
+if ($event['event_start_time']) {
+    // Convert 24h to 12h format
+    $event['event_start_time_display'] = date("h:i A", strtotime($event['event_start_time']));
+} else {
+    $event['event_start_time_display'] = '';
+}
+
+if ($event['event_end_time']) {
+    $event['event_end_time_display'] = date("h:i A", strtotime($event['event_end_time']));
+} else {
+    $event['event_end_time_display'] = '';
+}
+
+if ($event['reporting_time']) {
+    $event['reporting_time_display'] = date("h:i A", strtotime($event['reporting_time']));
+} else {
+    $event['reporting_time_display'] = '';
 }
 ?>
 
@@ -110,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Internal Event</title>
+    <title>Edit Internal Event</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -137,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .time-fields-container {
-            display: none;
+            display: <?php echo $event['is_full_day'] == 't' ? 'none' : 'block'; ?>;
         }
 
         .card {
@@ -145,15 +223,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
-        .btn-submit {
-            background: #667eea;
+        .btn-update {
+            background: #4facfe;
             border: none;
             padding: 10px 30px;
             font-weight: 600;
         }
 
-        .btn-submit:hover {
-            background: #5a67d8;
+        .btn-update:hover {
+            background: #3d94e8;
+        }
+
+        .event-info-card {
+            background: #f5f7fa;
+            border-left: 4px solid #4facfe;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            border: none;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
         }
 
         .time-input-group .input-group-text {
@@ -172,12 +265,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Create Internal Event</h1>
+            <h1>Edit Internal Event</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Calendar</a></li>
-                    <li class="breadcrumb-item active">Create Internal Event</li>
+                    <li class="breadcrumb-item"><a href="create_event.php">Calendar Events</a></li>
+                    <li class="breadcrumb-item active">Edit Event</li>
                 </ol>
             </nav>
         </div>
@@ -185,9 +278,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <section class="section dashboard">
             <div class="row">
                 <div class="col-12">
+                    <!-- Event Information Card -->
+                    <div class="card event-info-card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title">Event Information</h5>
+                                    <p class="mb-1"><strong>Event ID:</strong> #<?php echo $event['id']; ?></p>
+                                    <p class="mb-1"><strong>Created By:</strong> <?php echo htmlspecialchars($event['creator_name'] ?: 'User ' . $event['created_by']); ?></p>
+                                    <p class="mb-1"><strong>Created On:</strong> <?php echo date('d M Y, h:i A', strtotime($event['created_at'])); ?></p>
+                                    <?php if ($event['updated_at'] && $event['updated_at'] != $event['created_at']): ?>
+                                        <p class="mb-0"><strong>Last Updated:</strong> <?php echo date('d M Y, h:i A', strtotime($event['updated_at'])); ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i> Delete Event
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Event Details</h5>
+                            <h5 class="card-title">Edit Event Details</h5>
 
                             <?php if ($message): ?>
                                 <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show">
@@ -202,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="col-md-6">
                                         <label for="event_name" class="form-label required-field">Event Name</label>
                                         <input type="text" class="form-control" id="event_name" name="event_name"
-                                            value="<?php echo htmlspecialchars($_POST['event_name'] ?? ''); ?>"
+                                            value="<?php echo htmlspecialchars($_POST['event_name'] ?? $event['event_name']); ?>"
                                             required maxlength="255">
                                         <div class="invalid-feedback">Please enter event name.</div>
                                     </div>
@@ -211,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="col-md-6">
                                         <label for="event_date" class="form-label required-field">Event Date</label>
                                         <input type="text" class="form-control flatpickr-date" id="event_date" name="event_date"
-                                            value="<?php echo htmlspecialchars($_POST['event_date'] ?? ''); ?>"
+                                            value="<?php echo htmlspecialchars($_POST['event_date'] ?? $event['event_date']); ?>"
                                             required>
                                         <div class="invalid-feedback">Please select event date.</div>
                                     </div>
@@ -221,16 +336,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="event_type" class="form-label required-field">Event Type</label>
                                         <select class="form-select" id="event_type" name="event_type" required>
                                             <option value="">Select Type</option>
-                                            <option value="sports" <?php echo ($_POST['event_type'] ?? '') == 'sports' ? 'selected' : ''; ?>>Sports</option>
-                                            <option value="meeting" <?php echo ($_POST['event_type'] ?? '') == 'meeting' ? 'selected' : ''; ?>>Meeting</option>
-                                            <option value="celebration" <?php echo ($_POST['event_type'] ?? '') == 'celebration' ? 'selected' : ''; ?>>Celebration</option>
-                                            <option value="cultural" <?php echo ($_POST['event_type'] ?? '') == 'cultural' ? 'selected' : ''; ?>>Cultural</option>
-                                            <option value="festival" <?php echo ($_POST['event_type'] ?? '') == 'festival' ? 'selected' : ''; ?>>Festival</option>
-                                            <option value="exhibition" <?php echo ($_POST['event_type'] ?? '') == 'exhibition' ? 'selected' : ''; ?>>Exhibition</option>
-                                            <option value="national" <?php echo ($_POST['event_type'] ?? '') == 'national' ? 'selected' : ''; ?>>National</option>
-                                            <option value="training" <?php echo ($_POST['event_type'] ?? '') == 'training' ? 'selected' : ''; ?>>Training</option>
-                                            <option value="workshop" <?php echo ($_POST['event_type'] ?? '') == 'workshop' ? 'selected' : ''; ?>>Workshop</option>
-                                            <option value="other" <?php echo ($_POST['event_type'] ?? '') == 'other' ? 'selected' : ''; ?>>Other</option>
+                                            <option value="sports" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'sports' ? 'selected' : ''; ?>>Sports</option>
+                                            <option value="meeting" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'meeting' ? 'selected' : ''; ?>>Meeting</option>
+                                            <option value="celebration" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'celebration' ? 'selected' : ''; ?>>Celebration</option>
+                                            <option value="cultural" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'cultural' ? 'selected' : ''; ?>>Cultural</option>
+                                            <option value="festival" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'festival' ? 'selected' : ''; ?>>Festival</option>
+                                            <option value="exhibition" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'exhibition' ? 'selected' : ''; ?>>Exhibition</option>
+                                            <option value="national" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'national' ? 'selected' : ''; ?>>National</option>
+                                            <option value="training" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'training' ? 'selected' : ''; ?>>Training</option>
+                                            <option value="workshop" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'workshop' ? 'selected' : ''; ?>>Workshop</option>
+                                            <option value="other" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'other' ? 'selected' : ''; ?>>Other</option>
                                         </select>
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
@@ -239,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="col-md-6">
                                         <label for="location" class="form-label">Location</label>
                                         <input type="text" class="form-control" id="location" name="location"
-                                            value="<?php echo htmlspecialchars($_POST['location'] ?? ''); ?>"
+                                            value="<?php echo htmlspecialchars($_POST['location'] ?? $event['location']); ?>"
                                             maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground">
                                     </div>
 
@@ -247,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="col-12">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="is_full_day" name="is_full_day"
-                                                value="1" <?php echo isset($_POST['is_full_day']) ? 'checked' : 'checked'; ?>>
+                                                value="1" <?php echo (($_POST['is_full_day'] ?? $event['is_full_day']) == 't') ? 'checked' : ''; ?>>
                                             <label class="form-check-label" for="is_full_day">
                                                 This is a full day event
                                             </label>
@@ -263,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="event_start_time" name="event_start_time"
-                                                        value="<?php echo htmlspecialchars($_POST['event_start_time'] ?? ''); ?>"
+                                                        value="<?php echo htmlspecialchars($_POST['event_start_time'] ?? $event['event_start_time_display']); ?>"
                                                         placeholder="09:00 AM">
                                                 </div>
                                                 <small class="form-text text-muted">When the event begins</small>
@@ -275,7 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="event_end_time" name="event_end_time"
-                                                        value="<?php echo htmlspecialchars($_POST['event_end_time'] ?? ''); ?>"
+                                                        value="<?php echo htmlspecialchars($_POST['event_end_time'] ?? $event['event_end_time_display']); ?>"
                                                         placeholder="05:00 PM">
                                                 </div>
                                                 <small class="form-text text-muted">When the event ends</small>
@@ -287,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-person-check"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="reporting_time" name="reporting_time"
-                                                        value="<?php echo htmlspecialchars($_POST['reporting_time'] ?? ''); ?>"
+                                                        value="<?php echo htmlspecialchars($_POST['reporting_time'] ?? $event['reporting_time_display']); ?>"
                                                         placeholder="08:30 AM">
                                                 </div>
                                                 <small class="form-text text-muted">When to arrive</small>
@@ -300,111 +415,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="description" class="form-label">Description</label>
                                         <textarea class="form-control" id="description" name="description"
                                             rows="4" maxlength="1000"
-                                            placeholder="Enter event details, agenda, instructions..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                                            placeholder="Enter event details, agenda, instructions..."><?php echo htmlspecialchars($_POST['description'] ?? $event['description']); ?></textarea>
                                         <small class="form-text">Maximum 1000 characters</small>
                                     </div>
 
                                     <!-- Submit Button -->
                                     <div class="col-12 text-center mt-4">
-                                        <button type="submit" class="btn btn-primary btn-submit">
-                                            <i class="bi bi-calendar-plus"></i> Create Event
+                                        <button type="submit" class="btn btn-primary btn-update">
+                                            <i class="bi bi-check-circle"></i> Update Event
                                         </button>
-                                        <a href="home.php" class="btn btn-outline-secondary ms-2">
-                                            <i class="bi bi-calendar-week"></i> View Calendar
+                                        <a href="create_event.php" class="btn btn-outline-secondary ms-2">
+                                            <i class="bi bi-x-circle"></i> Cancel
                                         </a>
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </div>
-
-                    <!-- Recent Events Section -->
-                    <div class="card mt-4">
-                        <div class="card-body">
-                            <h5 class="card-title">Recent Events</h5>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Event Name</th>
-                                            <th>Date</th>
-                                            <th>Type</th>
-                                            <th>Location</th>
-                                            <th>Created By</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $recent_events_sql = "SELECT e.*, u.fullname 
-                                                             FROM internal_events e 
-                                                             LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
-                                                             ORDER BY e.event_date DESC, e.created_at DESC 
-                                                             LIMIT 10";
-                                        $recent_events_result = pg_query($con, $recent_events_sql);
-
-                                        if ($recent_events_result && pg_num_rows($recent_events_result) > 0) {
-                                            while ($event = pg_fetch_assoc($recent_events_result)) {
-                                                $event_type_badge = '';
-                                                switch ($event['event_type']) {
-                                                    case 'sports':
-                                                        $event_type_badge = '<span class="badge bg-success">Sports</span>';
-                                                        break;
-                                                    case 'meeting':
-                                                        $event_type_badge = '<span class="badge bg-primary">Meeting</span>';
-                                                        break;
-                                                    case 'celebration':
-                                                        $event_type_badge = '<span class="badge bg-warning">Celebration</span>';
-                                                        break;
-                                                    default:
-                                                        $event_type_badge = '<span class="badge bg-secondary">' . ucfirst($event['event_type']) . '</span>';
-                                                }
-
-                                                $time_info = '';
-                                                if ($event['is_full_day'] == 't') {
-                                                    $time_info = '<small class="text-muted">Full Day</small>';
-                                                } else if ($event['event_start_time']) {
-                                                    $start_time = date('h:i A', strtotime($event['event_start_time']));
-                                                    $end_time = $event['event_end_time'] ? date('h:i A', strtotime($event['event_end_time'])) : '';
-                                                    $time_info = '<small class="text-muted">' . $start_time . ($end_time ? ' - ' . $end_time : '') . '</small>';
-                                                }
-                                        ?>
-                                                <tr>
-                                                    <td>
-                                                        <strong><?php echo htmlspecialchars($event['event_name']); ?></strong>
-                                                        <?php if ($event['description']): ?>
-                                                            <br><small class="text-muted"><?php echo substr(htmlspecialchars($event['description']), 0, 50) . '...'; ?></small>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php echo date('d M Y', strtotime($event['event_date'])); ?>
-                                                        <br><?php echo $time_info; ?>
-                                                    </td>
-                                                    <td><?php echo $event_type_badge; ?></td>
-                                                    <td><?php echo htmlspecialchars($event['location'] ?: 'N/A'); ?></td>
-                                                    <td><?php echo htmlspecialchars($event['fullname'] ?: 'User ' . $event['created_by']); ?></td>
-                                                    <td>
-                                                        <a href="edit_event.php?id=<?php echo $event['id']; ?>"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                        <?php
-                                            }
-                                        } else {
-                                            echo '<tr><td colspan="6" class="text-center">No events found. Create your first event!</td></tr>';
-                                        }
-                                        ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="bi bi-exclamation-triangle text-warning display-4 mb-3"></i>
+                        <h5>Are you sure you want to delete this event?</h5>
+                        <p class="text-muted">
+                            <strong>"<?php echo htmlspecialchars($event['event_name']); ?>"</strong><br>
+                            Scheduled for <?php echo date('d M Y', strtotime($event['event_date'])); ?>
+                        </p>
+                        <p class="text-danger"><small>This action cannot be undone.</small></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="delete_event.php" style="display: inline;">
+                        <input type="hidden" name="event_id" value="<?php echo $event['id']; ?>">
+                        <button type="submit" class="btn btn-danger">Delete Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -429,7 +490,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 noCalendar: true,
                 dateFormat: "h:i K", // 12-hour with AM/PM
                 time_24hr: false, // Important: false for 12-hour
-                minuteIncrement: 5
+                minuteIncrement: 15
             });
 
             // Toggle time fields
@@ -439,15 +500,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             function toggleTimeFields() {
                 if (fullDayCheckbox.checked) {
                     timeFieldsContainer.style.display = 'none';
-                    // DON'T clear time values - just hide them
-                    // This way they still get submitted
+                    // DO NOT clear time values - let them be submitted
                 } else {
                     timeFieldsContainer.style.display = 'block';
                 }
             }
 
             fullDayCheckbox.addEventListener('change', toggleTimeFields);
-            toggleTimeFields(); // Initial call
 
             // Form validation
             (function() {
@@ -464,6 +523,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }, false)
                     })
             })();
+
+            // Confirm before leaving page if form has changes
+            let formChanged = false;
+            const formInputs = document.querySelectorAll('form input, form select, form textarea');
+            const originalFormData = new FormData(document.querySelector('form'));
+
+            // Function to check if form has changes
+            function checkFormChanges() {
+                const currentFormData = new FormData(document.querySelector('form'));
+
+                // Compare original and current form data
+                for (let [key, originalValue] of originalFormData.entries()) {
+                    const currentValue = currentFormData.get(key) || '';
+                    if (originalValue.toString().trim() !== currentValue.toString().trim()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Track form changes
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    formChanged = checkFormChanges();
+                });
+                input.addEventListener('change', () => {
+                    formChanged = checkFormChanges();
+                });
+            });
+
+            // Beforeunload event - only warn if there are unsaved changes AND form is not being submitted
+            window.addEventListener('beforeunload', function(e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return 'You have unsaved changes. Are you sure you want to leave?';
+                }
+            });
+
+            // Reset formChanged when form is submitted
+            document.querySelector('form').addEventListener('submit', function() {
+                formChanged = false;
+                // Allow the form to submit normally
+            });
         });
     </script>
 </body>

@@ -152,6 +152,7 @@ if (!function_exists('makeClickableLinks')) {
   <!-- Vendor CSS Files -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
   <!-- Template Main CSS File -->
   <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -729,7 +730,7 @@ if (!function_exists('makeClickableLinks')) {
                             <h6 id="modalDate" class="mb-3"></h6>
                             <div id="holidayInfo" class="mb-2" style="display: none;">
                               <div class="alert alert-danger py-2">
-                                <i class="fas fa-umbrella-beach me-2"></i>
+                                <i class="bi bi-calendar-event me-2"></i>
                                 <strong id="holidayName"></strong>
                               </div>
                             </div>
@@ -742,7 +743,7 @@ if (!function_exists('makeClickableLinks')) {
                             </div>
                             <div id="noEventsInfo" style="display: none;">
                               <div class="alert alert-light py-2">
-                                <i class="fas fa-calendar-day me-2"></i>
+                                <i class="bi bi-calendar-x me-2"></i>
                                 No holidays or events scheduled
                               </div>
                             </div>
@@ -953,7 +954,7 @@ if (!function_exists('makeClickableLinks')) {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" action="create_event.php" enctype="multipart/form-data">
+          <form method="POST" action="create_post.php" enctype="multipart/form-data">
             <div class="mb-3">
               <label for="event_name" class="form-label required-field">Event Name</label>
               <input type="text" class="form-control" id="event_name" name="event_name" required>
@@ -1393,7 +1394,7 @@ if (!function_exists('makeClickableLinks')) {
 
       // Fetch all data from single API
       async function fetchAllData(start, end) {
-        const response = await fetch(`/../holidays_api.php?start=${start}&end=${end}`);
+        const response = await fetch(`/../calendar_events_api.php?start=${start}&end=${end}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

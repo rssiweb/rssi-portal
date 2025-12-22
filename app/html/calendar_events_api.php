@@ -32,9 +32,19 @@ if ($holidayResult) {
 }
 
 // Fetch internal events
+// In the events query section, update to:
 $eventResult = pg_query_params(
     $con,
-    "SELECT event_name as name, event_date::date as date, event_type as type 
+    "SELECT 
+        event_name as name, 
+        event_date::date as date, 
+        event_type as type,
+        is_full_day,
+        event_start_time,
+        event_end_time,
+        reporting_time,
+        location,
+        description
      FROM internal_events 
      WHERE event_date BETWEEN $1 AND $2 
      ORDER BY event_date",
@@ -43,11 +53,23 @@ $eventResult = pg_query_params(
 
 if ($eventResult) {
     while ($row = pg_fetch_assoc($eventResult)) {
-        $response['events'][] = [
+        $eventData = [
             'name' => $row['name'],
             'date' => $row['date'],
-            'type' => $row['type']
+            'type' => $row['type'] ?? 'event',
+            'is_full_day' => $row['is_full_day'] == 't',
+            'location' => $row['location'],
+            'description' => $row['description']
         ];
+        
+        // Add time fields if not full day
+        if ($row['is_full_day'] == 'f') {
+            $eventData['start_time'] = $row['event_start_time'];
+            $eventData['end_time'] = $row['event_end_time'];
+            $eventData['reporting_time'] = $row['reporting_time'];
+        }
+        
+        $response['events'][] = $eventData;
     }
 }
 
