@@ -14,6 +14,33 @@ if (!isLoggedIn("aid")) {
 validation();
 
 date_default_timezone_set('Asia/Kolkata');
+
+// Get current date for academic year calculation
+$current_date = date('Y-m-d');
+$current_year = date('Y');
+$current_month = date('m');
+
+// Calculate academic year
+if ($current_month >= 4) {
+    // April or later - current academic year is current year to next year
+    $current_academic_year_start = $current_year;
+    $current_academic_year_end = $current_year + 1;
+    $current_academic_year = $current_academic_year_start . '-' . $current_academic_year_end;
+} else {
+    // January-March - current academic year is previous year to current year
+    $current_academic_year_start = $current_year - 1;
+    $current_academic_year_end = $current_year;
+    $current_academic_year = $current_academic_year_start . '-' . $current_academic_year_end;
+}
+
+// Generate academic year options for filter (current + last 3)
+$academic_year_options = [];
+for ($i = 0; $i < 4; $i++) {
+    $year = $current_academic_year_start - $i;
+    $academic_year_options[] = $year . '-' . ($year + 1);
+}
+
+// Handle form submission for Admin
 if ($role == 'Admin') {
     if ($_POST) {
         $noticeid = uniqid();
@@ -22,23 +49,76 @@ if ($role == 'Admin') {
         $noticesub = $_POST['noticesub'];
         $noticebody = htmlspecialchars($_POST['noticebody'], ENT_QUOTES, 'UTF-8');
         $now = date('Y-m-d H:i:s');
-        // Upload and insert passbook page if provided
-        if (!empty($_FILES['notice']['name'])) {
+
+        // Check if using URL instead of file upload
+        $doclink = null;
+
+        if (isset($_POST['use_url']) && !empty($_POST['notice_url'])) {
+            // Use URL provided
+            $doclink = $_POST['notice_url'];
+        } elseif (!empty($_FILES['notice']['name']) && $_FILES['notice']['error'] === UPLOAD_ERR_OK) {
+            // Upload file
             $notice = $_FILES['notice'];
             $filename = $noticeid . "_notice_" . time();
             $parent = '1LPHtex89XQK_HPmMsbthQyQXlLmyQuJ0';
             $doclink = uploadeToDrive($notice, $parent, $filename);
         }
+
         if ($doclink !== null) {
-            // Insert passbook page into bankdetails table
+            // Insert with URL/doclink
             $notice = "INSERT INTO notice (noticeid, refnumber, date, subject, url, issuedby, category, noticebody) VALUES ('$noticeid','$refnumber','$now','$noticesub','$doclink','$associatenumber','$category','$noticebody')";
         } else {
+            // Insert without URL
             $notice = "INSERT INTO notice (noticeid, refnumber, date, subject, issuedby, category, noticebody) VALUES ('$noticeid','$refnumber','$now','$noticesub','$associatenumber','$category','$noticebody')";
         }
         $result = pg_query($con, $notice);
         $cmdtuples = pg_affected_rows($result);
     }
 }
+
+// Handle search/filter
+$search_filter = '';
+$academic_year_filter = '';
+
+// Get filter parameters
+$search_term = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
+$selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : $current_academic_year;
+
+// Build academic year filter
+if ($selected_academic_year) {
+    // Parse academic year (e.g., "2023-2024")
+    $years = explode('-', $selected_academic_year);
+    if (count($years) == 2) {
+        $start_year = $years[0];
+        $end_year = $years[1];
+        // Academic year runs from April 1 to March 31
+        $start_date = $start_year . '-04-01 00:00:00';
+        $end_date = $end_year . '-03-31 23:59:59';
+        $academic_year_filter = "AND date >= '$start_date' AND date <= '$end_date'";
+    }
+}
+
+// Build search filter
+if ($search_term) {
+    $search_filter = "AND (
+        noticeid ILIKE '%$search_term%' 
+        OR refnumber ILIKE '%$search_term%' 
+        OR category ILIKE '%$search_term%'
+        OR subject ILIKE '%$search_term%'
+        OR noticebody ILIKE '%$search_term%'
+    )";
+}
+
+// Build the query
+$query = "SELECT * FROM notice WHERE 1=1 $academic_year_filter $search_filter ORDER BY date DESC";
+$result = pg_query($con, $query);
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
 ?>
 
 <!doctype html>
@@ -96,6 +176,40 @@ if ($role == 'Admin') {
             vertical-align: top;
             display: inline-block;
         }
+
+        .file-url-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-field,
+        .url-field {
+            position: relative;
+            width: 100%;
+        }
+
+        .url-field {
+            display: none;
+        }
+
+        .filter-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -132,13 +246,13 @@ if ($role == 'Admin') {
 
                         <div class="card-body">
                             <br>
-                            <?php if (@$noticeid != null && @$cmdtuples == 0) { ?>
+                            <?php if (isset($noticeid) && isset($cmdtuples) && $cmdtuples == 0) { ?>
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     <i class="bi bi-exclamation-triangle"></i>
                                     <span>ERROR: Oops, something wasn't right.</span>
                                 </div>
-                            <?php } else if (@$cmdtuples == 1) { ?>
+                            <?php } else if (isset($cmdtuples) && $cmdtuples == 1) { ?>
                                 <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     <i class="bi bi-check2-circle"></i>
@@ -162,13 +276,7 @@ if ($role == 'Admin') {
 
                                             <span class="input-help">
                                                 <select name="category" class="form-select" style="width:max-content; display:inline-block" required>
-                                                    <?php if ($category == null) { ?>
-                                                        <option disabled selected hidden>Category</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $category ?></option>
-                                                    <?php }
-                                                    ?>
+                                                    <option value="" selected hidden>Category</option>
                                                     <option>Internal</option>
                                                     <option>Public</option>
                                                     <option>News & Press Releases</option>
@@ -177,22 +285,31 @@ if ($role == 'Admin') {
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="text" name="noticesub" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Subject" value=""></input>
+                                                <input type="text" name="noticesub" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Subject" required></input>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Subject</small>
                                             </span>
 
                                             <span class="input-help">
-                                                <textarea type="text" name="noticebody" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Body" value=""></textarea>
+                                                <textarea type="text" name="noticebody" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Body"></textarea>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Details</small>
                                             </span>
 
-                                            <span class="input-help">
-                                                <input class="form-control" type="file" id="notice" name="notice" required>
-                                                <div class="form-text">Upload File</div>
+                                            <!-- File/URL Container -->
+                                            <span class="input-help file-url-container" style="display: inline-block; width: max-content;">
+                                                <!-- File Upload Field (initially visible) -->
+                                                <span class="file-field">
+                                                    <input class="form-control" type="file" id="notice" name="notice" style="width: max-content;" required>
+                                                    <div class="form-text">Upload File</div>
+                                                </span>
+
+                                                <!-- URL Field (initially hidden) -->
+                                                <span class="url-field">
+                                                    <input type="url" name="notice_url" class="form-control" style="width: max-content;" placeholder="Enter URL (e.g., https://example.com/file.pdf)">
+                                                    <div class="form-text">Enter URL</div>
+                                                </span>
                                             </span>
 
                                         </div>
-
                                     </div>
 
                                     <div class="col2 left" style="display: inline-block;">
@@ -200,17 +317,106 @@ if ($role == 'Admin') {
                                             <i class="bi bi-plus-lg"></i>&nbsp;&nbsp;Add</button>
                                     </div>
                                 </form>
+                                <!-- Toggle checkbox placed after the Add button but inside the form -->
+                                <div class="form-check mb-3" style="display: inline-block; margin-left: 10px; vertical-align: middle;">
+                                    <input class="form-check-input" type="checkbox" id="useUrlToggle" name="use_url">
+                                    <label class="form-check-label" for="useUrlToggle" style="font-size: 0.9em;">
+                                        Use URL instead of file upload
+                                    </label>
+                                </div>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const useUrlToggle = document.getElementById('useUrlToggle');
+                                        const fileField = document.querySelector('.file-field');
+                                        const urlField = document.querySelector('.url-field');
+                                        const fileInput = document.querySelector('input[name="notice"]');
+                                        const urlInput = document.querySelector('input[name="notice_url"]');
+
+                                        // Set file input as required initially since it's visible by default
+                                        if (fileInput) {
+                                            fileInput.setAttribute('required', 'required');
+                                        }
+                                        // Remove required from URL input initially since it's hidden
+                                        if (urlInput) {
+                                            urlInput.removeAttribute('required');
+                                        }
+
+                                        // Toggle between file upload and URL fields
+                                        if (useUrlToggle) {
+                                            useUrlToggle.addEventListener('change', function() {
+                                                if (this.checked) {
+                                                    fileField.style.display = 'none';
+                                                    urlField.style.display = 'block';
+                                                    // Make URL required, remove required from file
+                                                    if (urlInput) {
+                                                        urlInput.setAttribute('required', 'required');
+                                                    }
+                                                    if (fileInput) {
+                                                        fileInput.removeAttribute('required');
+                                                    }
+                                                } else {
+                                                    fileField.style.display = 'block';
+                                                    urlField.style.display = 'none';
+                                                    // Make file required, remove required from URL
+                                                    if (fileInput) {
+                                                        fileInput.setAttribute('required', 'required');
+                                                    }
+                                                    if (urlInput) {
+                                                        urlInput.removeAttribute('required');
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        // Also add a small script to handle form submission to remove required validation
+                                        const form = document.getElementById('ams');
+                                        if (form) {
+                                            form.addEventListener('submit', function() {
+                                                // If URL is being used, clear the file input
+                                                if (useUrlToggle && useUrlToggle.checked) {
+                                                    fileInput.value = '';
+                                                }
+                                                // If file is being used, clear the URL input
+                                                else if (urlInput) {
+                                                    urlInput.value = '';
+                                                }
+                                            });
+                                        }
+                                    });
+                                </script>
                             <?php } ?>
-                            <?php
 
-                            $result = pg_query($con, "SELECT * FROM notice order by date desc");
-                            if (!$result) {
-                                echo "An error occurred.\n";
-                                exit;
-                            }
+                            <!-- Filters -->
+                            <form method="GET" action="" class="filter-form">
+                                <div class="filter-row">
+                                    <div class="filter-group">
+                                        <label for="academic_year" class="form-label">Academic Year</label>
+                                        <select name="academic_year" id="academic_year" class="form-select" onchange="this.form.submit()">
+                                            <?php foreach ($academic_year_options as $year_option): ?>
+                                                <option value="<?php echo $year_option; ?>" <?php echo ($selected_academic_year == $year_option) ? 'selected' : ''; ?>>
+                                                    <?php echo $year_option; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
 
-                            $resultArr = pg_fetch_all($result);
-                            ?>
+                                    <div class="filter-group">
+                                        <label for="search" class="form-label">Search (Category/Notice ID/Ref No/Subject)</label>
+                                        <div class="input-group">
+                                            <input type="text" name="search" id="search" class="form-control" placeholder="Search..." value="<?php echo htmlspecialchars($search_term); ?>">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                            <?php if ($search_term || $selected_academic_year != $current_academic_year): ?>
+                                                <a href="ams.php" class="btn btn-secondary">
+                                                    <i class="bi bi-x-circle"></i> Clear
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
 
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
@@ -226,73 +432,83 @@ if ($role == 'Admin') {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($resultArr as $array) { ?>
-                                            <tr>
-                                                <td><?php echo $array['noticeid']; ?></td>
-                                                <td><?php echo $array['refnumber']; ?></td>
-                                                <td><?php echo $array['category']; ?></td>
-                                                <td><?php echo @date("d/m/Y g:i a", strtotime($array['date'])); ?></td>
-                                                <td><?php echo $array['subject']; ?></td>
-                                                <td>
-                                                    <form name="noticebody_<?php echo $array['noticeid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                        <input type="hidden" name="form-type" value="noticebodyedit">
-                                                        <input type="hidden" name="noticeid" value="<?php echo $array['noticeid']; ?>">
-                                                        <textarea id="inp_<?php echo $array['noticeid']; ?>" name="noticebody" disabled><?php echo $array['noticebody']; ?></textarea>
+                                        <?php
+                                        if ($resultArr) {
+                                            foreach ($resultArr as $array) {
+                                        ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($array['noticeid']); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['refnumber']); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['category']); ?></td>
+                                                    <td><?php echo @date("d/m/Y g:i a", strtotime($array['date'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['subject']); ?></td>
+                                                    <td>
+                                                        <form name="noticebody_<?php echo $array['noticeid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                            <input type="hidden" name="form-type" value="noticebodyedit">
+                                                            <input type="hidden" name="noticeid" value="<?php echo $array['noticeid']; ?>">
+                                                            <textarea id="inp_<?php echo $array['noticeid']; ?>" name="noticebody" disabled><?php echo htmlspecialchars($array['noticebody']); ?></textarea>
 
-                                                        <?php if ($role == 'Admin') { ?>
-                                                            &nbsp;
-                                                            <button type="button" id="edit_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
-                                                                <i class="bi bi-pencil-square"></i>
-                                                            </button>&nbsp;
-                                                            <button type="submit" id="save_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
-                                                                <i class="bi bi-save"></i>
-                                                            </button>
-                                                        <?php } ?>
-                                                    </form>
-                                                </td>
-                                                <?php if ($array['url'] == null) { ?>
-                                                    <td></td>
-                                                <?php } else { ?>
-                                                    <td><a href="<?php echo $array['url']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px; color:#777777" title="<?php echo $array['noticeid']; ?>"></i></a></td>
-                                                <?php } ?>
-                                                </td>
+                                                            <?php if ($role == 'Admin') { ?>
+                                                                &nbsp;
+                                                                <button type="button" id="edit_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                </button>&nbsp;
+                                                                <button type="submit" id="save_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
+                                                                    <i class="bi bi-save"></i>
+                                                                </button>
+                                                            <?php } ?>
+                                                        </form>
+                                                    </td>
+                                                    <?php if ($array['url'] == null) { ?>
+                                                        <td></td>
+                                                    <?php } else { ?>
+                                                        <td><a href="<?php echo htmlspecialchars($array['url']); ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px; color:#777777" title="<?php echo htmlspecialchars($array['noticeid']); ?>"></i></a></td>
+                                                    <?php } ?>
+                                                    </td>
+                                                </tr>
+                                            <?php }
+                                        } else { ?>
+                                            <tr>
+                                                <td colspan="7" class="text-center">No notices found for the selected filters.</td>
                                             </tr>
                                         <?php } ?>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>;
+                            <?php if ($resultArr) { ?>
+                                <script>
+                                    var data = <?php echo json_encode($resultArr) ?>;
 
-                                data.forEach(item => {
-
-                                    const form = document.getElementById('edit_' + item.noticeid);
-
-                                    form.addEventListener('click', function() {
-                                        document.getElementById('inp_' + item.noticeid).disabled = false;
-                                    });
-                                })
-
-                                //For form submission - to update Remarks
-                                const scriptURL = 'payment-api.php'
-
-                                data.forEach(item => {
-                                    const form = document.forms['noticebody_' + item.noticeid]
-                                    form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch(scriptURL, {
-                                                method: 'POST',
-                                                body: new FormData(document.forms['noticebody_' + item.noticeid])
-                                            })
-                                            .then(response => alert("Notice body has been updated.") +
-                                                location.reload())
-                                            .catch(error => console.error('Error!', error.message))
+                                    data.forEach(item => {
+                                        const editButton = document.getElementById('edit_' + item.noticeid);
+                                        if (editButton) {
+                                            editButton.addEventListener('click', function() {
+                                                document.getElementById('inp_' + item.noticeid).disabled = false;
+                                            });
+                                        }
                                     })
 
-                                    console.log(item)
-                                })
-                            </script>
+                                    //For form submission - to update Remarks
+                                    const scriptURL = 'payment-api.php'
+
+                                    data.forEach(item => {
+                                        const form = document.forms['noticebody_' + item.noticeid]
+                                        if (form) {
+                                            form.addEventListener('submit', e => {
+                                                e.preventDefault()
+                                                fetch(scriptURL, {
+                                                        method: 'POST',
+                                                        body: new FormData(document.forms['noticebody_' + item.noticeid])
+                                                    })
+                                                    .then(response => alert("Notice body has been updated.") +
+                                                        location.reload())
+                                                    .catch(error => console.error('Error!', error.message))
+                                            })
+                                        }
+                                    })
+                                </script>
+                            <?php } ?>
 
                         </div>
                     </div>
