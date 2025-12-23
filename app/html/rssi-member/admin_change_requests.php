@@ -10,13 +10,9 @@ if (!isLoggedIn("aid") || $role != 'Admin') {
 // Fetch pending change requests
 $query = "SELECT v.*, 
           g.itemname, g.itemtype,
-          tm.fullname as old_tagged_name,
-          nm.fullname as new_tagged_name,
           verified_by_user.fullname as verified_by_name
           FROM gps_verifications v
           JOIN gps g ON v.asset_id = g.itemid
-          LEFT JOIN rssimyaccount_members tm ON v.old_tagged_to = tm.associatenumber
-          LEFT JOIN rssimyaccount_members nm ON v.new_tagged_to = nm.associatenumber
           LEFT JOIN rssimyaccount_members verified_by_user ON v.verified_by = verified_by_user.associatenumber
           WHERE v.admin_review_status = 'pending' AND (v.verification_status = 'pending_update' OR v.verification_status LIKE 'discrepancy_%')
           ORDER BY v.verification_date DESC";
@@ -249,10 +245,6 @@ $resultArr = pg_fetch_all($result);
                                                                     <span class="text-decoration-line-through"><?= $row['old_quantity'] ?></span>
                                                                     → <span class="text-success fw-bold"><?= $row['new_quantity'] ?></span>
                                                                 </div>
-                                                                <div><strong>Tagged To:</strong>
-                                                                    <span class="text-decoration-line-through"><?= htmlspecialchars($row['old_tagged_name'] ?: 'Not assigned') ?></span>
-                                                                    → <span class="text-success fw-bold"><?= htmlspecialchars($row['new_tagged_name'] ?: 'Not assigned') ?></span>
-                                                                </div>
                                                             </div>
                                                         <?php elseif (strpos($row['verification_status'], 'discrepancy') !== false): ?>
                                                             <div class="change-details">
@@ -473,94 +465,6 @@ $resultArr = pg_fetch_all($result);
         function viewDetails(requestId) {
             // Open the details page in a new tab
             window.open(`get_request_details.php?id=${requestId}`, '_self');
-
-            // Or use AJAX version if you prefer modal:
-            /*
-            fetch(`get_request_details_ajax.php?id=${requestId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const details = data.data;
-                        let content = '';
-                        
-                        if (details.verification_status === 'pending_update') {
-                            content = `
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">Current Asset Details</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <p><strong>Asset Name:</strong> ${details.itemname}</p>
-                                                <p><strong>Asset ID:</strong> ${details.asset_id}</p>
-                                                <p><strong>Current Quantity:</strong> ${details.old_quantity}</p>
-                                                <p><strong>Currently Tagged To:</strong> ${details.old_tagged_name || 'Not assigned'}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">Requested Changes</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <p><strong>New Quantity:</strong> ${details.new_quantity}</p>
-                                                <p><strong>New Tagged To:</strong> ${details.new_tagged_name || 'Not assigned'}</p>
-                                                <p><strong>Reason for Change:</strong></p>
-                                                <div class="alert alert-light">${details.update_reason || details.remarks || 'No reason provided'}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <p><strong>Requested By:</strong> ${details.verified_by_name} (${details.verified_by})</p>
-                                    <p><strong>Request Date:</strong> ${new Date(details.verification_date).toLocaleString()}</p>
-                                </div>
-                            `;
-                        } else if (details.verification_status.includes('discrepancy')) {
-                            content = `
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Discrepancy Report Details</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p><strong>Asset:</strong> ${details.itemname} (${details.asset_id})</p>
-                                                <p><strong>Issue Type:</strong> ${details.issue_type ? details.issue_type.replace('discrepancy_', '') : 'Unknown'}</p>
-                                                <p><strong>Reported By:</strong> ${details.verified_by_name} (${details.verified_by})</p>
-                                                <p><strong>Report Date:</strong> ${new Date(details.verification_date).toLocaleString()}</p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <p><strong>Current Status:</strong> ${details.asset_status}</p>
-                                                <p><strong>Current Quantity:</strong> ${details.old_quantity}</p>
-                                                <p><strong>Currently Tagged To:</strong> ${details.old_tagged_name || 'Not assigned'}</p>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <p><strong>Issue Description:</strong></p>
-                                            <div class="alert alert-light p-3">
-                                                ${details.issue_description || details.remarks || 'No description provided'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
-                        document.getElementById('detailsContent').innerHTML = content;
-                        const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-                        modal.show();
-                    } else {
-                        alert('Error loading details: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to load details. Please try again.');
-                });
-            */
         }
 
         // Handle review form submission

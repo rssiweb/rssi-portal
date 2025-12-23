@@ -59,11 +59,6 @@ $query = "SELECT
             g.quantity as current_quantity,
             g.taggedto as current_tagged_to,
             g.asset_status,
-            g.last_verified_on as asset_last_verified,
-            g.verified_by as asset_verified_by,
-            g.verified_count,
-            tm.fullname as old_tagged_name,
-            nm.fullname as new_tagged_name,
             verified_by_user.fullname as verified_by_name,
             reviewed_by_user.fullname as reviewed_by_name,
             CASE 
@@ -74,8 +69,6 @@ $query = "SELECT
             END as status_display
           FROM gps_verifications v
           JOIN gps g ON v.asset_id = g.itemid
-          LEFT JOIN rssimyaccount_members tm ON v.old_tagged_to = tm.associatenumber
-          LEFT JOIN rssimyaccount_members nm ON v.new_tagged_to = nm.associatenumber
           LEFT JOIN rssimyaccount_members verified_by_user ON v.verified_by = verified_by_user.associatenumber
           LEFT JOIN rssimyaccount_members reviewed_by_user ON v.reviewed_by = reviewed_by_user.associatenumber";
 
@@ -499,7 +492,6 @@ $stats = pg_fetch_assoc($statsResult);
                                                         <?php if ($row['verification_status'] === 'pending_update'): ?>
                                                             <div class="small">
                                                                 <div>Quantity: <?= $row['old_quantity'] ?> → <?= $row['new_quantity'] ?></div>
-                                                                <div>Tagged To: <?= htmlspecialchars($row['old_tagged_name'] ?: 'N/A') ?> → <?= htmlspecialchars($row['new_tagged_name'] ?: 'N/A') ?></div>
                                                             </div>
                                                         <?php elseif (strpos($row['verification_status'], 'discrepancy') !== false): ?>
                                                             <div class="small">
@@ -570,11 +562,6 @@ $stats = pg_fetch_assoc($statsResult);
                                                                     </li>
                                                                 <?php endif; ?>
                                                                 <li>
-                                                                    <a class="dropdown-item" href="gps_history.php?assetid=<?= urlencode($row['asset_id']) ?>" target="_blank">
-                                                                        <i class="bi bi-clock-history me-2"></i> Asset History
-                                                                    </a>
-                                                                </li>
-                                                                <li>
                                                                     <a class="dropdown-item" href="gps.php?assetid=<?= urlencode($row['asset_id']) ?>" target="_blank">
                                                                         <i class="bi bi-box-arrow-up-right me-2"></i> View Asset
                                                                     </a>
@@ -612,15 +599,61 @@ $stats = pg_fetch_assoc($statsResult);
 
                                 <?php
                                 // Get asset details
-                                $assetQuery = "SELECT g.*, 
-                                         tm.fullname as tagged_to_name,
-                                         im.fullname as issued_by_name,
-                                         vm.fullname as verified_by_name
-                                         FROM gps g
-                                         LEFT JOIN rssimyaccount_members tm ON g.taggedto = tm.associatenumber
-                                         LEFT JOIN rssimyaccount_members im ON g.collectedby = im.associatenumber
-                                         LEFT JOIN rssimyaccount_members vm ON g.verified_by = vm.associatenumber
-                                         WHERE g.itemid = $1";
+                                $assetQuery = "SELECT 
+                                    g.*, 
+                                    tm.fullname as tagged_to_name,
+                                    im.fullname as issued_by_name,
+                                    -- Get last verification info
+                                    latest_verification.verified_by,
+                                    latest_verification.verified_by_name,
+                                    latest_verification.verification_date as last_verified_on,
+                                    latest_verification.reviewed_by,
+                                    latest_verification.reviewed_by_name,
+                                    latest_verification.review_date,
+                                    latest_verification.verification_status,
+                                    latest_verification.admin_review_status,
+                                    -- Get verification count
+                                    COALESCE(verification_stats.verified_count, 0) as verified_count
+                                FROM gps g
+                                LEFT JOIN rssimyaccount_members tm ON g.taggedto = tm.associatenumber
+                                LEFT JOIN rssimyaccount_members im ON g.collectedby = im.associatenumber
+                                -- Get the latest verification record
+                                LEFT JOIN LATERAL (
+                                    SELECT 
+                                        v.verification_date,
+                                        v.verified_by,
+                                        verified_user.fullname as verified_by_name,
+                                        v.reviewed_by,
+                                        reviewed_user.fullname as reviewed_by_name,
+                                        v.review_date,
+                                        v.verification_status,
+                                        v.admin_review_status
+                                    FROM gps_verifications v
+                                    LEFT JOIN rssimyaccount_members verified_user ON v.verified_by = verified_user.associatenumber
+                                    LEFT JOIN rssimyaccount_members reviewed_user ON v.reviewed_by = reviewed_user.associatenumber
+                                    WHERE v.asset_id = g.itemid
+                                    AND (v.verification_status = 'verified' 
+                                            OR v.admin_review_status = 'approved'
+                                            OR v.verification_status = 'file_uploaded')
+                                    ORDER BY 
+                                        CASE 
+                                            WHEN v.verification_status = 'verified' THEN 1
+                                            WHEN v.admin_review_status = 'approved' THEN 2
+                                            ELSE 3
+                                        END,
+                                        v.verification_date DESC
+                                    LIMIT 1
+                                ) latest_verification ON true
+                                -- Get verification statistics
+                                LEFT JOIN (
+                                    SELECT 
+                                        asset_id,
+                                        COUNT(*) as verified_count
+                                    FROM gps_verifications
+                                    WHERE verification_status = 'verified'
+                                    GROUP BY asset_id
+                                ) verification_stats ON verification_stats.asset_id = g.itemid
+                                WHERE g.itemid = $1";
                                 $assetResult = pg_query_params($con, $assetQuery, [$asset_id]);
                                 $assetDetails = pg_fetch_assoc($assetResult);
 
@@ -641,7 +674,10 @@ $stats = pg_fetch_assoc($statsResult);
                                                     </tr>
                                                     <tr>
                                                         <td><strong>Category:</strong></td>
-                                                        <td><?= htmlspecialchars($assetDetails['asset_category']) ?></td>
+                                                        <td><?= !empty($assetDetails['asset_category'])
+                                                                ? htmlspecialchars($assetDetails['asset_category'])
+                                                                : '<span class="text-muted">N/A</span>' ?>
+                                                        </td>
                                                     </tr>
                                                     <tr>
                                                         <td><strong>Quantity:</strong></td>
@@ -703,38 +739,78 @@ $stats = pg_fetch_assoc($statsResult);
                                         <h6>Verification Timeline</h6>
                                         <div class="timeline">
                                             <?php
-                                            $timelineQuery = "SELECT * FROM gps_verifications 
-                                                     WHERE asset_id = $1 
-                                                     ORDER BY verification_date DESC 
-                                                     LIMIT 5";
+                                            $timelineQuery = "SELECT 
+                            v.*,
+                            verified_user.fullname as verified_by_name,
+                            reviewed_user.fullname as reviewed_by_name
+                          FROM gps_verifications v
+                          LEFT JOIN rssimyaccount_members verified_user ON v.verified_by = verified_user.associatenumber
+                          LEFT JOIN rssimyaccount_members reviewed_user ON v.reviewed_by = reviewed_user.associatenumber
+                          WHERE v.asset_id = $1 
+                          ORDER BY v.verification_date DESC 
+                          LIMIT 5";
                                             $timelineResult = pg_query_params($con, $timelineQuery, [$asset_id]);
 
                                             if ($timelineResult && pg_num_rows($timelineResult) > 0):
                                                 while ($timeline = pg_fetch_assoc($timelineResult)):
                                                     $timelineClass = '';
+                                                    $displayStatus = '';
+                                                    $displayReviewStatus = '';
+                                                    $reviewStatusBadge = '';
+
+                                                    // Determine timeline class and display status
                                                     if ($timeline['verification_status'] === 'verified') {
                                                         $timelineClass = 'verified';
+                                                        $displayStatus = 'Verified';
+                                                        // For verified status, it's auto-approved by system
+                                                        $displayReviewStatus = 'approved';
+                                                        $reviewStatusBadge = 'success';
                                                     } elseif ($timeline['verification_status'] === 'pending_update') {
                                                         $timelineClass = 'pending';
+                                                        $displayStatus = 'Update Pending Approval';
+                                                        $displayReviewStatus = $timeline['admin_review_status'] ?? 'pending';
+                                                        $reviewStatusBadge = $displayReviewStatus === 'approved' ? 'success' : ($displayReviewStatus === 'rejected' ? 'danger' : 'warning');
+                                                    } elseif ($timeline['verification_status'] === 'file_uploaded') {
+                                                        $timelineClass = 'updated';
+                                                        $displayStatus = 'Files Updated';
+                                                        $displayReviewStatus = 'approved'; // File uploads are auto-approved
+                                                        $reviewStatusBadge = 'success';
                                                     } elseif (strpos($timeline['verification_status'], 'discrepancy') !== false) {
                                                         $timelineClass = 'discrepancy';
+                                                        $displayStatus = 'Discrepancy Reported';
+                                                        $displayReviewStatus = $timeline['admin_review_status'] ?? 'pending';
+                                                        $reviewStatusBadge = $displayReviewStatus === 'approved' ? 'success' : ($displayReviewStatus === 'rejected' ? 'danger' : 'warning');
+                                                    } else {
+                                                        $timelineClass = 'info';
+                                                        $displayStatus = ucfirst(str_replace('_', ' ', $timeline['verification_status']));
+                                                        $displayReviewStatus = $timeline['admin_review_status'] ?? '';
+                                                        $reviewStatusBadge = $displayReviewStatus === 'approved' ? 'success' : ($displayReviewStatus === 'rejected' ? 'danger' : ($displayReviewStatus === 'pending' ? 'warning' : 'secondary'));
+                                                    }
+
+                                                    // Determine who to show as the actor
+                                                    $actorName = '';
+                                                    if ($displayReviewStatus === 'approved' && $displayStatus !== 'Verified') {
+                                                        // For approved items (except verified), show who reviewed it
+                                                        $actorName = $timeline['reviewed_by_name'] ?? $timeline['verified_by_name'] ?? 'Unknown';
+                                                        $actorPrefix = 'Reviewed by: ';
+                                                    } else {
+                                                        // For everything else, show who verified/reported it
+                                                        $actorName = $timeline['verified_by_name'] ?? 'Unknown';
+                                                        $actorPrefix = 'By: ';
                                                     }
                                             ?>
                                                     <div class="timeline-item <?= $timelineClass ?>">
                                                         <div class="d-flex justify-content-between">
-                                                            <strong>
-                                                                <?= $timeline['verification_status'] === 'verified' ? 'Verified' : ($timeline['verification_status'] === 'pending_update' ? 'Update Requested' :
-                                                                    'Discrepancy Reported') ?>
-                                                            </strong>
+                                                            <strong><?= htmlspecialchars($displayStatus) ?></strong>
                                                             <small class="text-muted">
                                                                 <?= date("d/m/Y g:i a", strtotime($timeline['verification_date'])) ?>
                                                             </small>
                                                         </div>
                                                         <div class="small">
-                                                            By: <?= htmlspecialchars($row['verified_by_name'] ?? 'Unknown') ?>
-                                                            <?php if ($timeline['admin_review_status']): ?>
-                                                                <span class="badge bg-<?= $timeline['admin_review_status'] === 'approved' ? 'success' : ($timeline['admin_review_status'] === 'rejected' ? 'danger' : 'warning') ?> ms-2">
-                                                                    <?= ucfirst($timeline['admin_review_status']) ?>
+                                                            <?= $actorPrefix ?><?= htmlspecialchars($actorName) ?>
+                                                            <?php if ($displayReviewStatus): ?>
+                                                                <span class="badge bg-<?= $reviewStatusBadge ?> ms-2">
+                                                                    <?= ucfirst($displayReviewStatus) ?>
                                                                 </span>
                                                             <?php endif; ?>
                                                         </div>
@@ -742,6 +818,18 @@ $stats = pg_fetch_assoc($statsResult);
                                                             <div class="text-muted small mt-1">
                                                                 <?= htmlspecialchars(substr($timeline['remarks'], 0, 100)) ?>
                                                                 <?php if (strlen($timeline['remarks']) > 100): ?>...<?php endif; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <?php if ($timeline['update_reason'] && $timeline['verification_status'] === 'pending_update'): ?>
+                                                            <div class="text-muted small mt-1">
+                                                                <strong>Reason:</strong> <?= htmlspecialchars(substr($timeline['update_reason'], 0, 100)) ?>
+                                                                <?php if (strlen($timeline['update_reason']) > 100): ?>...<?php endif; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <?php if ($timeline['issue_description'] && strpos($timeline['verification_status'], 'discrepancy') !== false): ?>
+                                                            <div class="text-muted small mt-1">
+                                                                <strong>Issue:</strong> <?= htmlspecialchars(substr($timeline['issue_description'], 0, 100)) ?>
+                                                                <?php if (strlen($timeline['issue_description']) > 100): ?>...<?php endif; ?>
                                                             </div>
                                                         <?php endif; ?>
                                                     </div>

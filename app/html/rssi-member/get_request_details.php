@@ -19,14 +19,10 @@ $query = "SELECT
             g.itemname,
             g.itemid as asset_id,
             g.asset_status,
-            tm.fullname as old_tagged_name,
-            nm.fullname as new_tagged_name,
             verified_by_user.fullname as verified_by_name,
             reviewed_by_user.fullname as reviewed_by_name
           FROM gps_verifications v
           JOIN gps g ON v.asset_id = g.itemid
-          LEFT JOIN rssimyaccount_members tm ON v.old_tagged_to = tm.associatenumber
-          LEFT JOIN rssimyaccount_members nm ON v.new_tagged_to = nm.associatenumber
           LEFT JOIN rssimyaccount_members verified_by_user ON v.verified_by = verified_by_user.associatenumber
           LEFT JOIN rssimyaccount_members reviewed_by_user ON v.reviewed_by = reviewed_by_user.associatenumber
           WHERE v.id = $request_id";
@@ -209,15 +205,6 @@ $request = pg_fetch_assoc($result);
 
                                                         <div class="detail-label">Requested Quantity</div>
                                                         <div class="detail-value text-success fw-bold"><?= $request['new_quantity'] ?></div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="change-highlight">
-                                                        <div class="detail-label">Currently Tagged To</div>
-                                                        <div class="detail-value text-decoration-line-through"><?= htmlspecialchars($request['old_tagged_name'] ?: 'Not assigned') ?></div>
-
-                                                        <div class="detail-label">Requested Tagged To</div>
-                                                        <div class="detail-value text-success fw-bold"><?= htmlspecialchars($request['new_tagged_name'] ?: 'Not assigned') ?></div>
                                                     </div>
                                                 </div>
                                             </div>

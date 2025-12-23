@@ -635,9 +635,9 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                                     ${hasPhoto ? 
                                         `<div class="form-control bg-light">
                                             <span class="text-muted"><i class="bi bi-check-circle"></i> Photo already available</span>
-                                            <input type="hidden" name="verification_photo">
+                                            <input type="hidden" name="asset_photo">
                                         </div>` : 
-                                        `<input type="file" name="verification_photo" class="form-control" accept="image/*" id="photoInput">`
+                                        `<input type="file" name="asset_photo" class="form-control" accept="image/*" id="photoInput">`
                                     }
                                     ${!hasPhoto ? '<div class="form-text">Upload missing asset photo</div>' : ''}
                                 </div>
@@ -659,7 +659,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                     
                     <div class="col-12">
                         <label class="form-label">Remarks <span class="text-danger">*</span></label>
-                        <textarea name="remarks" class="form-control" rows="3" 
+                        <textarea name="update_reason" class="form-control" rows="3" 
                                   placeholder="Explain the updates..." required></textarea>
                         <div class="form-text">Please describe why you're making these updates</div>
                     </div>
@@ -693,7 +693,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 
                 <div class="mb-3">
                     <label class="form-label">Detailed Description <span class="text-danger">*</span></label>
-                    <textarea name="remarks" class="form-control" rows="4" 
+                    <textarea name="issue_description" class="form-control" rows="4" 
                               placeholder="Describe the issue in detail..." required></textarea>
                     <div class="form-text">Include location, condition, and any relevant information</div>
                 </div>
