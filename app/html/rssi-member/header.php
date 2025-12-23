@@ -647,6 +647,28 @@
           </li>
         </ul>
       </li>
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#gps" data-bs-toggle="collapse" href="#">
+          <span>GPS</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="gps" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="gps" href="gps.php">
+              <span>Asset Details</span>
+            </a>
+          </li>
+          <li>
+            <a id="scan-asset" href="scan-asset.php">
+              <span>Asset Verification</span>
+            </a>
+          </li>
+          <li>
+            <a id="asset_verification_report" href="asset_verification_report.php">
+              <span>Asset Verification Status</span>
+            </a>
+          </li>
+        </ul>
+      </li>
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -686,11 +708,6 @@
           <li>
             <a id="process-hubLink" href="process-hub.php">
               <span>Process Hub</span>
-            </a>
-          </li>
-          <li>
-            <a id="gpsLink" href="gps.php">
-              <span>GPS</span>
             </a>
           </li>
           <li>
@@ -1005,13 +1022,29 @@
         url: 'exit.php'
       },
       {
-        id: 'work',
-        linkId: 'gpsLink',
+        id: 'gps',
+        linkId: 'gps',
         url: 'gps.php'
+      },{
+        id: 'gps',
+        linkId: 'scan-asset',
+        url: 'scan-asset.php'
+      },{
+        id: 'gps',
+        linkId: 'admin_change_requests',
+        url: 'admin_change_requests.php'
+      },{
+        id: 'gps',
+        linkId: 'get_request_details',
+        url: 'get_request_details.php'
       }, {
-        id: 'work',
-        linkId: 'gpsLink',
+        id: 'gps',
+        linkId: 'gps',
         url: 'gps_history.php'
+      }, {
+        id: 'gps',
+        linkId: 'asset_verification_report',
+        url: 'asset_verification_report.php'
       },
       {
         id: 'work',

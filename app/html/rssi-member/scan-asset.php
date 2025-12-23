@@ -3,9 +3,12 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
 }
+
+validation();
 
 // Get asset ID from URL or start fresh
 $asset_id = $_GET['asset_id'] ?? '';
@@ -19,11 +22,14 @@ $scan_mode = isset($_GET['scan']) ? true : false;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Asset Verification Scanner</title>
-
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- HTML5 QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -35,11 +41,11 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             --danger: #dc3545;
         }
 
-        body {
+        /* body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        }
+        } */
 
         .scanner-container {
             background: white;
@@ -163,78 +169,111 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 </head>
 
 <body>
-    <div class="container-fluid p-0">
-        <div class="row justify-content-center align-items-center min-vh-100 m-0">
-            <div class="col-12 col-md-8 col-lg-6">
-                <!-- Main Scanner Container -->
-                <div class="scanner-container">
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-                    <!-- Scanner Header -->
-                    <div class="scanner-header">
-                        <h2 class="mb-3">
-                            <i class="bi bi-qr-code-scan"></i> Asset Verification
-                        </h2>
-                        <p class="mb-0">Scan QR code on asset or enter manually</p>
-                    </div>
+    <main id="main" class="main">
 
-                    <!-- QR Code Scanner -->
-                    <div id="reader" class="<?php echo $scan_mode ? '' : 'd-none'; ?>"></div>
+        <div class="pagetitle">
+            <h1>Asset Verification</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">GPS</a></li>
+                    <li class="breadcrumb-item active">Asset Verification</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                    <?php if ($scan_mode): ?>
-                        <div class="scan-animation"></div>
-                    <?php endif; ?>
+        <section class="section dashboard">
+            <div class="row">
 
-                    <!-- Manual Input -->
-                    <div class="manual-input <?php echo $scan_mode ? 'd-none' : ''; ?>">
-                        <div class="mb-3">
-                            <label for="asset_id_input" class="form-label">
-                                <i class="bi bi-upc-scan"></i> Enter Asset ID
-                            </label>
-                            <input type="text"
-                                class="form-control form-control-lg"
-                                id="asset_id_input"
-                                placeholder="A123456789"
-                                value="<?php echo htmlspecialchars($asset_id); ?>">
-                            <div class="form-text">Enter the Asset ID printed on the label</div>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container-fluid p-0">
+                                <div class="row justify-content-center align-items-center m-0">
+                                    <div class="col-12 col-md-8 col-lg-6">
+                                        <!-- Main Scanner Container -->
+                                        <div class="scanner-container">
+
+                                            <!-- Scanner Header -->
+                                            <div class="scanner-header">
+                                                <h2 class="mb-3">
+                                                    <i class="bi bi-qr-code-scan"></i> Asset Verification
+                                                </h2>
+                                                <p class="mb-0">Scan QR code on asset or enter manually</p>
+                                            </div>
+
+                                            <!-- QR Code Scanner -->
+                                            <div id="reader" class="<?php echo $scan_mode ? '' : 'd-none'; ?>"></div>
+
+                                            <?php if ($scan_mode): ?>
+                                                <div class="scan-animation"></div>
+                                            <?php endif; ?>
+
+                                            <!-- Manual Input -->
+                                            <div class="manual-input <?php echo $scan_mode ? 'd-none' : ''; ?>">
+                                                <div class="mb-3">
+                                                    <label for="asset_id_input" class="form-label">
+                                                        <i class="bi bi-upc-scan"></i> Enter Asset ID
+                                                    </label>
+                                                    <input type="text"
+                                                        class="form-control form-control-lg"
+                                                        id="asset_id_input"
+                                                        placeholder="A123456789"
+                                                        value="<?php echo htmlspecialchars($asset_id); ?>">
+                                                    <div class="form-text">Enter the Asset ID printed on the label</div>
+                                                </div>
+
+                                                <div class="d-grid gap-2">
+                                                    <button class="btn btn-scan" onclick="verifyAsset()">
+                                                        <i class="bi bi-search"></i> Verify Asset
+                                                    </button>
+
+                                                    <button class="btn btn-outline-primary" onclick="toggleScanner()">
+                                                        <i class="bi bi-camera"></i> Switch to Scanner
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Loading Spinner -->
+                                            <div class="loading-spinner" id="loadingSpinner">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2">Fetching asset details...</p>
+                                            </div>
+
+                                            <!-- Verification Results (Hidden Initially) -->
+                                            <div class="verification-card p-4" id="verificationCard">
+                                                <!-- Will be populated by JavaScript -->
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Quick Stats -->
+                                        <!-- <div class="text-center text-white mt-3">
+                                            <small>
+                                                <i class="bi bi-person-circle"></i>
+                                                Logged in as: <?php echo htmlspecialchars($fullname); ?>
+                                            </small>
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-scan" onclick="verifyAsset()">
-                                <i class="bi bi-search"></i> Verify Asset
-                            </button>
-
-                            <button class="btn btn-outline-primary" onclick="toggleScanner()">
-                                <i class="bi bi-camera"></i> Switch to Scanner
-                            </button>
-                        </div>
                     </div>
-
-                    <!-- Loading Spinner -->
-                    <div class="loading-spinner" id="loadingSpinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Fetching asset details...</p>
-                    </div>
-
-                    <!-- Verification Results (Hidden Initially) -->
-                    <div class="verification-card p-4" id="verificationCard">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="text-center text-white mt-3">
-                    <small>
-                        <i class="bi bi-person-circle"></i>
-                        Logged in as: <?php echo htmlspecialchars($fullname); ?>
-                    </small>
-                </div>
+                </div><!-- End Reports -->
             </div>
-        </div>
-    </div>
+        </section>
 
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Verification Form Modal -->
     <div class="modal fade" id="verificationModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -299,6 +338,8 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         let currentAsset = null;
@@ -515,6 +556,20 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             </div>
         `;
             } else if (actionType === 'update') {
+                // Get current tagged person details
+                const currentTaggedId = currentAsset.taggedto || '';
+                const currentTaggedName = currentAsset.tagged_to_name || '';
+
+                // Create display text in "Name - ID" format
+                let currentDisplayText = 'Not assigned';
+                if (currentTaggedId && currentTaggedName) {
+                    currentDisplayText = `${currentTaggedName} - ${currentTaggedId}`;
+                } else if (currentTaggedName) {
+                    currentDisplayText = currentTaggedName;
+                } else if (currentTaggedId) {
+                    currentDisplayText = `Unknown - ${currentTaggedId}`;
+                }
+
                 formContent += `
             <div class="alert alert-warning">
                 <h6><i class="bi bi-pencil-square"></i> Request Changes</h6>
@@ -527,7 +582,8 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                         <div class="card-body">
                             <h6 class="card-title">Current Values</h6>
                             <p><strong>Quantity:</strong> ${currentAsset.quantity}</p>
-                            <p><strong>Tagged To:</strong> ${currentAsset.tagged_to_name || 'Not assigned'}</p>
+                            <p><strong>Tagged To:</strong> ${currentTaggedName || 'Not assigned'}</p>
+                            ${currentTaggedId ? `<small class="text-muted">ID: ${currentTaggedId}</small>` : ''}
                         </div>
                     </div>
                 </div>
@@ -545,9 +601,10 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                                 <label class="form-label">New Tagged To</label>
                                 <select name="new_tagged_to" class="form-select" required>
                                     <option value="">Select Associate...</option>
-                                    <option value="${currentAsset.taggedto}" selected>
-                                        ${currentAsset.tagged_to_name || 'Keep current'}
-                                    </option>
+                                    ${currentTaggedId ? 
+                                        `<option value="${currentTaggedId}" selected>${currentDisplayText}</option>` : 
+                                        ''
+                                    }
                                 </select>
                             </div>
                         </div>
@@ -612,38 +669,63 @@ $scan_mode = isset($_GET['scan']) ? true : false;
         }
 
         function fetchAssociates() {
-            // Save the current value before clearing
             const select = document.querySelector('select[name="new_tagged_to"]');
-            const currentValue = select.value;
-            const currentText = select.options[select.selectedIndex]?.text || '';
 
-            // Clear but keep current option
+            // Get the current asset's tagged person details
+            const currentTaggedId = currentAsset.taggedto || '';
+            const currentTaggedName = currentAsset.tagged_to_name || '';
+
+            // Create the display text in "Name - ID" format
+            let currentDisplayText = '';
+            if (currentTaggedId && currentTaggedName) {
+                currentDisplayText = `${currentTaggedName} - ${currentTaggedId}`;
+            }
+
+            // Keep the current option if it exists
+            const currentOption = select.querySelector('option[selected]');
+            let currentOptionHTML = '';
+
+            if (currentOption && currentOption.value) {
+                // If there's already a selected option, keep it
+                currentOptionHTML = `<option value="${currentOption.value}" selected>${currentOption.text}</option>`;
+            } else if (currentTaggedId) {
+                // Otherwise, create one from the current asset data
+                currentOptionHTML = `<option value="${currentTaggedId}" selected>${currentDisplayText}</option>`;
+            }
+
+            // Clear but keep current option (if exists)
             select.innerHTML = `
         <option value="">Select Associate...</option>
-        <option value="${currentValue}" selected>${currentText}</option>
+        ${currentOptionHTML}
     `;
 
             fetch('fetch_associates.php?isActive=true')
                 .then(response => response.json())
                 .then(data => {
                     // Add new options, but don't duplicate current one
-                    data.results.forEach(associate => {
-                        // Skip if this is already the current option
-                        if (associate.id === currentValue) return;
+                    if (data.results && Array.isArray(data.results)) {
+                        data.results.forEach(associate => {
+                            // Skip if this is already the current option
+                            if (currentTaggedId && associate.id === currentTaggedId) return;
 
-                        const option = document.createElement('option');
-                        option.value = associate.id;
-                        option.textContent = associate.text;
-                        select.appendChild(option);
-                    });
+                            const option = document.createElement('option');
+                            option.value = associate.id;
+                            option.textContent = associate.text;
+                            select.appendChild(option);
+                        });
+                    }
 
-                    // If current value is empty (no tagged person), select the placeholder
-                    if (!currentValue) {
+                    // If no current value was set, select the placeholder
+                    if (!currentTaggedId) {
                         select.selectedIndex = 0;
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching associates:', error);
+                    // On error, at least keep the current option if it exists
+                    if (!currentOptionHTML) {
+                        select.innerHTML = '<option value="">Error loading associates</option>';
+                    }
                 });
         }
 
