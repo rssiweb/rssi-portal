@@ -202,73 +202,73 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                             <br>
                             <div class="container-fluid p-0">
                                 <div class="row justify-content-center align-items-center m-0">
-                                    <div class="col-12 col-md-8 col-lg-6">
-                                        <!-- Main Scanner Container -->
-                                        <div class="scanner-container">
+                                    <!-- <div class="col-12 col-md-8 col-lg-6"> -->
+                                    <!-- Main Scanner Container -->
+                                    <div class="scanner-container">
 
-                                            <!-- Scanner Header -->
-                                            <div class="scanner-header">
-                                                <h2 class="mb-3">
-                                                    <i class="bi bi-qr-code-scan"></i> Asset Verification
-                                                </h2>
-                                                <p class="mb-0">Scan QR code on asset or enter manually</p>
-                                            </div>
-
-                                            <!-- QR Code Scanner -->
-                                            <div id="reader" class="<?php echo $scan_mode ? '' : 'd-none'; ?>"></div>
-
-                                            <?php if ($scan_mode): ?>
-                                                <div class="scan-animation"></div>
-                                            <?php endif; ?>
-
-                                            <!-- Manual Input -->
-                                            <div class="manual-input <?php echo $scan_mode ? 'd-none' : ''; ?>">
-                                                <div class="mb-3">
-                                                    <label for="asset_id_input" class="form-label">
-                                                        <i class="bi bi-upc-scan"></i> Enter Asset ID
-                                                    </label>
-                                                    <input type="text"
-                                                        class="form-control form-control-lg"
-                                                        id="asset_id_input"
-                                                        placeholder="A123456789"
-                                                        value="<?php echo htmlspecialchars($asset_id); ?>">
-                                                    <div class="form-text">Enter the Asset ID printed on the label</div>
-                                                </div>
-
-                                                <div class="d-grid gap-2">
-                                                    <button class="btn btn-scan" onclick="verifyAsset()">
-                                                        <i class="bi bi-search"></i> Verify Asset
-                                                    </button>
-
-                                                    <button class="btn btn-outline-primary" onclick="toggleScanner()">
-                                                        <i class="bi bi-camera"></i> Switch to Scanner
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <!-- Loading Spinner -->
-                                            <div class="loading-spinner" id="loadingSpinner">
-                                                <div class="spinner-border text-primary" role="status">
-                                                    <span class="visually-hidden">Loading...</span>
-                                                </div>
-                                                <p class="mt-2">Fetching asset details...</p>
-                                            </div>
-
-                                            <!-- Verification Results (Hidden Initially) -->
-                                            <div class="verification-card p-4" id="verificationCard">
-                                                <!-- Will be populated by JavaScript -->
-                                            </div>
-
+                                        <!-- Scanner Header -->
+                                        <div class="scanner-header">
+                                            <h2 class="mb-3">
+                                                <i class="bi bi-qr-code-scan"></i> Asset Verification
+                                            </h2>
+                                            <p class="mb-0">Scan QR code on asset or enter manually</p>
                                         </div>
 
-                                        <!-- Quick Stats -->
-                                        <!-- <div class="text-center text-white mt-3">
+                                        <!-- QR Code Scanner -->
+                                        <div id="reader" class="<?php echo $scan_mode ? '' : 'd-none'; ?>"></div>
+
+                                        <?php if ($scan_mode): ?>
+                                            <div class="scan-animation"></div>
+                                        <?php endif; ?>
+
+                                        <!-- Manual Input -->
+                                        <div class="manual-input <?php echo $scan_mode ? 'd-none' : ''; ?>">
+                                            <div class="mb-3">
+                                                <label for="asset_id_input" class="form-label">
+                                                    <i class="bi bi-upc-scan"></i> Enter Asset ID
+                                                </label>
+                                                <input type="text"
+                                                    class="form-control form-control-lg"
+                                                    id="asset_id_input"
+                                                    placeholder="A123456789"
+                                                    value="<?php echo htmlspecialchars($asset_id); ?>">
+                                                <div class="form-text">Enter the Asset ID printed on the label</div>
+                                            </div>
+
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-scan" onclick="verifyAsset()">
+                                                    <i class="bi bi-search"></i> Verify Asset
+                                                </button>
+
+                                                <button class="btn btn-outline-primary" onclick="toggleScanner()">
+                                                    <i class="bi bi-camera"></i> Switch to Scanner
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Loading Spinner -->
+                                        <div class="loading-spinner" id="loadingSpinner">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Fetching asset details...</p>
+                                        </div>
+
+                                        <!-- Verification Results (Hidden Initially) -->
+                                        <div class="verification-card p-4" id="verificationCard">
+                                            <!-- Will be populated by JavaScript -->
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Quick Stats -->
+                                    <!-- <div class="text-center text-white mt-3">
                                             <small>
                                                 <i class="bi bi-person-circle"></i>
                                                 Logged in as: <?php echo htmlspecialchars($fullname); ?>
                                             </small>
                                         </div> -->
-                                    </div>
+                                    <!-- </div> -->
                                 </div>
                             </div>
                         </div>
@@ -443,92 +443,127 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             const statusIcon = asset.asset_status === 'Active' ? 'check-circle' : 'x-circle';
 
             card.innerHTML = `
-                <div class="alert alert-${statusColor}">
-                    <h4 class="alert-heading">
-                        <i class="bi bi-${statusIcon}"></i> ${asset.asset_status}
-                    </h4>
-                    Asset Found: <strong>${asset.itemname}</strong>
-                </div>
+    <div class="alert alert-${statusColor}">
+        <h4 class="alert-heading">
+            <i class="bi bi-${statusIcon}"></i> ${asset.asset_status}
+        </h4>
+        Asset Found: <strong>${asset.itemname}</strong>
+    </div>
+    
+    <div class="row g-3">
+    <!-- Left Column - Asset Information -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Asset Information</h6>
                 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="card-title text-muted">Asset Information</h6>
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Asset ID:</strong></td>
-                                        <td>${asset.itemid}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Name:</strong></td>
-                                        <td>${asset.itemname}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Type:</strong></td>
-                                        <td>${asset.itemtype}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Category:</strong></td>
-                                        <td>${asset.asset_category}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Quantity:</strong></td>
-                                        <td id="currentQuantity">${asset.quantity}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
+                <!-- This will stack on mobile, side-by-side on desktop -->
+                <div class="row">
+                    <!-- Info column - full width on mobile, 7/12 on desktop -->
+                    <div class="col-12 col-lg-7">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Asset ID:</strong></td>
+                                <td class="text-break">${asset.itemid}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td>${asset.itemname}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td>${asset.itemtype}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Category:</strong></td>
+                                <td>${asset.asset_category}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Quantity:</strong></td>
+                                <td id="currentQuantity">${asset.quantity}</td>
+                            </tr>
+                        </table>
                     </div>
                     
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="card-title text-muted">Assignment</h6>
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Tagged To:</strong></td>
-                                        <td id="currentTaggedTo">${asset.tagged_to_name || 'Not Assigned'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Associate ID:</strong></td>
-                                        <td>${asset.taggedto || 'N/A'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Issued By:</strong></td>
-                                        <td>${asset.issued_by_name || 'N/A'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Last Verified:</strong></td>
-                                        <td>${asset.last_verified_on || 'Never'}</td>
-                                    </tr>
-                                </table>
+                    <!-- Photo column - full width on mobile, 5/12 on desktop -->
+                    <div class="col-12 col-lg-5 mt-3 mt-lg-0">
+                        <div class="asset-photo-preview">
+                            <div class="card border">
+                                <div class="card-body text-center p-2">
+                                    <h6 class="card-title text-muted mb-2">Asset Photo</h6>
+                                    ${asset.processed_photo_url ? 
+                                        `<a href="${asset.asset_photo || asset.processed_photo_url}" target="_blank" title="View full size">
+                                            <img src="${asset.processed_photo_url}" 
+                                                 class="img-fluid rounded" 
+                                                 style="max-height: 120px; width: auto;"
+                                                 alt="Asset Photo"
+                                                 onerror="this.src='https://via.placeholder.com/150x120?text=Photo+Not+Found'">
+                                         </a>
+                                         <small class="d-block mt-1 text-muted">Click to view</small>` 
+                                        : 
+                                        `<div class="text-muted py-3">
+                                            <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                            <p class="mt-2 mb-0 small">No photo available</p>
+                                         </div>`
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-4">
-                    <h6>Verification Actions</h6>
-                    <div class="d-grid gap-2 d-md-flex">
-                        <button class="btn btn-success btn-lg flex-fill" onclick="prepareVerification('verified')">
-                            <i class="bi bi-check-circle"></i> Verified Correct
-                        </button>
-                        <button class="btn btn-warning btn-lg flex-fill" onclick="prepareVerification('update')">
-                            <i class="bi bi-pencil-square"></i> Update Details
-                        </button>
-                        <button class="btn btn-danger btn-lg flex-fill" onclick="prepareVerification('discrepancy')">
-                            <i class="bi bi-exclamation-triangle"></i> Report Issue
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="mt-3 text-center">
-                    <button class="btn btn-outline-secondary" onclick="location.reload()">
-                        <i class="bi bi-arrow-repeat"></i> Scan Another
-                    </button>
-                </div>
-            `;
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column - Assignment -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Assignment</h6>
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Tagged To:</strong></td>
+                        <td id="currentTaggedTo">${asset.tagged_to_name || 'Not Assigned'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Associate ID:</strong></td>
+                        <td>${asset.taggedto || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Issued By:</strong></td>
+                        <td>${asset.issued_by_name || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last Verified:</strong></td>
+                        <td>${asset.last_verified_on || 'Never'}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <div class="mt-4">
+        <h6>Verification Actions</h6>
+        <div class="d-grid gap-2 d-md-flex">
+            <button class="btn btn-success btn-lg flex-fill" onclick="prepareVerification('verified')">
+                <i class="bi bi-check-circle"></i> Verified Correct
+            </button>
+            <button class="btn btn-warning btn-lg flex-fill" onclick="prepareVerification('update')">
+                <i class="bi bi-pencil-square"></i> Update Details
+            </button>
+            <button class="btn btn-danger btn-lg flex-fill" onclick="prepareVerification('discrepancy')">
+                <i class="bi bi-exclamation-triangle"></i> Report Issue
+            </button>
+        </div>
+    </div>
+    
+    <div class="mt-3 text-center">
+        <button class="btn btn-outline-secondary" onclick="location.reload()">
+            <i class="bi bi-arrow-repeat"></i> Scan Another
+        </button>
+    </div>
+`;
 
             card.style.display = 'block';
         }
@@ -555,6 +590,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                     </label>
                 </div>
             </div>
+            
             <div class="mb-3">
                 <label class="form-label">Additional Remarks (Optional)</label>
                 <textarea name="remarks" class="form-control" rows="2" 
@@ -562,24 +598,10 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             </div>
         `;
             } else if (actionType === 'update') {
-                // Get current tagged person details
-                const currentTaggedId = currentAsset.taggedto || '';
-                const currentTaggedName = currentAsset.tagged_to_name || '';
-
-                // Create display text in "Name - ID" format
-                let currentDisplayText = '';
-                if (currentTaggedId && currentTaggedName) {
-                    currentDisplayText = `${currentTaggedName} - ${currentTaggedId}`;
-                } else if (currentTaggedName) {
-                    currentDisplayText = currentTaggedName;
-                } else if (currentTaggedId) {
-                    currentDisplayText = `Unknown - ${currentTaggedId}`;
-                }
-
                 formContent += `
             <div class="alert alert-warning">
-                <h6><i class="bi bi-pencil-square"></i> Request Changes</h6>
-                <p>These changes will be reviewed by admin before updating the main database.</p>
+                <h6><i class="bi bi-pencil-square"></i> Update Asset Details</h6>
+                <p>Update quantity and upload files if needed.</p>
             </div>
             
             <div class="row g-3">
@@ -588,8 +610,8 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                         <div class="card-body">
                             <h6 class="card-title">Current Values</h6>
                             <p><strong>Quantity:</strong> ${currentAsset.quantity}</p>
-                            <p><strong>Tagged To:</strong> ${currentTaggedName || 'Not assigned'}</p>
-                            ${currentTaggedId ? `<small class="text-muted">ID: ${currentTaggedId}</small>` : ''}
+                            <p><strong>Photo:</strong> ${currentAsset.asset_photo ? 'Available' : 'Not available'}</p>
+                            <p><strong>Bill:</strong> ${currentAsset.purchase_bill ? 'Available' : 'Not available'}</p>
                         </div>
                     </div>
                 </div>
@@ -597,31 +619,31 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 <div class="col-md-6">
                     <div class="card border-primary">
                         <div class="card-body">
-                            <h6 class="card-title">Proposed Changes</h6>
+                            <h6 class="card-title">Update Details</h6>
                             <div class="mb-3">
                                 <label class="form-label">New Quantity</label>
                                 <input type="number" name="new_quantity" class="form-control" 
                                        value="${currentAsset.quantity}" min="1" required>
-                            </div>
+                            </div>                       
+
                             <div class="mb-3">
-                                <label class="form-label">New Tagged To</label>
-                                <select name="new_tagged_to" id="new_tagged_to_select" class="form-control select2-ajax" required>
-                                    ${currentTaggedId ? 
-                                        `<option value="${currentTaggedId}" selected>${currentDisplayText}</option>` : 
-                                        '<option value="">Select Associate...</option>'
-                                    }
-                                </select>
-                                <div class="form-text">Start typing to search for an associate</div>
+                                <label class="form-label">Update Asset Photo</label>
+                                <input type="file" name="verification_photo" class="form-control" accept="image/*">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Update Purchase Bill</label>
+                                <input type="file" name="verification_bill" class="form-control" accept=".pdf,image/*">
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-12">
-                    <label class="form-label">Reason for Change Request <span class="text-danger">*</span></label>
+                    <label class="form-label">Remarks <span class="text-danger">*</span></label>
                     <textarea name="remarks" class="form-control" rows="3" 
-                              placeholder="Explain why you're requesting these changes..." required></textarea>
-                    <div class="form-text">This request will be reviewed by admin</div>
+                              placeholder="Explain the updates..." required></textarea>
+                    <div class="form-text">Please describe why you're making these updates</div>
                 </div>
             </div>
         `;
@@ -629,7 +651,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 formContent += `
             <div class="alert alert-danger">
                 <h6><i class="bi bi-exclamation-triangle"></i> Report Discrepancy</h6>
-                <p>This report will be reviewed by admin. No changes will be made to the asset immediately.</p>
+                <p>This report will be reviewed by admin.</p>
             </div>
             
             <div class="mb-3">
@@ -645,11 +667,18 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 </select>
             </div>
             
+            <!-- Photo Upload for Evidence -->
+            <div class="mb-3">
+                <label class="form-label">Upload Evidence Photo (Optional)</label>
+                <input type="file" name="verification_photo" class="form-control" accept="image/*">
+                <div class="form-text">Upload photo evidence of the issue</div>
+            </div>
+            
             <div class="mb-3">
                 <label class="form-label">Detailed Description <span class="text-danger">*</span></label>
                 <textarea name="remarks" class="form-control" rows="4" 
                           placeholder="Describe the issue in detail..." required></textarea>
-                <div class="form-text">Include location, photos (if available), and any other relevant information</div>
+                <div class="form-text">Include location, condition, and any relevant information</div>
             </div>
             
             <div class="form-check">
@@ -663,103 +692,8 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 
             modalContent.innerHTML = formContent;
 
-            // Initialize Select2 if in update mode
-            if (actionType === 'update') {
-                // Small delay to ensure DOM is ready
-                setTimeout(() => {
-                    initializeSelect2();
-                }, 100);
-            }
-
             const modal = new bootstrap.Modal(document.getElementById('verificationModal'));
             modal.show();
-        }
-
-        function initializeSelect2() {
-            const selectElement = $('#new_tagged_to_select');
-
-            if (selectElement.length) {
-                // Get current value
-                const currentValue = selectElement.val();
-                const currentText = selectElement.find('option:selected').text();
-
-                console.log('Current value:', currentValue, 'Current text:', currentText);
-
-                // First, preload all associates (for initial display)
-                $.ajax({
-                    url: 'fetch_associates.php?isActive=true',
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log('Preloaded data:', data);
-
-                        // Initialize Select2 with preloaded data
-                        selectElement.select2({
-                            theme: 'bootstrap-5',
-                            width: '100%',
-                            placeholder: 'Type to search...',
-                            allowClear: true,
-                            data: data.results || [],
-                            dropdownParent: $('#verificationModal'),
-                            minimumInputLength: 2,
-
-                            // Enable AJAX search for better performance with many records
-                            ajax: {
-                                url: 'fetch_associates.php?isActive=true',
-                                dataType: 'json',
-                                delay: 300,
-                                data: function(params) {
-                                    console.log('AJAX search for:', params.term);
-                                    return {
-                                        q: params.term,
-                                        page: params.page || 1
-                                    };
-                                },
-                                processResults: function(data) {
-                                    console.log('AJAX results:', data);
-                                    return {
-                                        results: data.results || []
-                                    };
-                                },
-                                cache: true
-                            }
-                        });
-
-                        // Ensure current value is selected
-                        if (currentValue) {
-                            // Check if current value exists in options
-                            const optionExists = selectElement.find(`option[value="${currentValue}"]`).length > 0;
-
-                            if (!optionExists && currentText) {
-                                // Add current value as a new option
-                                const newOption = new Option(currentText, currentValue, true, true);
-                                selectElement.append(newOption);
-                            }
-
-                            selectElement.val(currentValue).trigger('change');
-                            console.log('Set current value to:', currentValue);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error loading associates:', error);
-                        // Initialize without data
-                        selectElement.select2({
-                            theme: 'bootstrap-5',
-                            width: '100%',
-                            placeholder: 'Select Associate...',
-                            dropdownParent: $('#verificationModal')
-                        });
-                    }
-                });
-
-                // Add event listeners for debugging
-                selectElement.on('select2:open', function() {
-                    console.log('Select2 opened');
-                });
-
-                selectElement.on('select2:select', function(e) {
-                    console.log('Selected:', e.params.data);
-                });
-            }
         }
         // Handle form submission with progress modal
         document.getElementById('verificationForm').addEventListener('submit', function(e) {

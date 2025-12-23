@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+include(__DIR__ . "/../image_functions.php");
 
 header('Content-Type: application/json');
 
@@ -37,10 +38,34 @@ if (!$result || pg_num_rows($result) === 0) {
 
 $asset = pg_fetch_assoc($result);
 
+// Process the photo URL and extract photo ID
+if (!empty($asset['asset_photo'])) {
+    // Get processed photo URL
+    $asset['processed_photo_url'] = processImageUrl($asset['asset_photo']);
+    
+    // Extract file ID for proxy
+    if (preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $asset['asset_photo'], $matches)) {
+        $asset['photo_id'] = $matches[1];
+    } else {
+        $asset['photo_id'] = null;
+    }
+} else {
+    $asset['processed_photo_url'] = null;
+    $asset['photo_id'] = null;
+}
+
+// Format dates for better display
+if (!empty($asset['purchase_date'])) {
+    $asset['purchase_date_formatted'] = date("d/m/Y", strtotime($asset['purchase_date']));
+}
+
+if (!empty($asset['last_verified_on'])) {
+    $asset['last_verified_on_formatted'] = date("d/m/Y g:i a", strtotime($asset['last_verified_on']));
+}
+
 // Format dates
 if ($asset['last_verified_on']) {
     $asset['last_verified_on'] = date('d/m/Y H:i', strtotime($asset['last_verified_on']));
 }
 
 echo json_encode($asset);
-?>
