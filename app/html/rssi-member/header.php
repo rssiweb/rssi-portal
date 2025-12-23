@@ -653,8 +653,8 @@
         </a>
         <ul id="gps" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="gps" href="gps.php">
-              <span>Asset Details</span>
+            <a id="my-asset" href="gps.php">
+              <span>My Asset</span>
             </a>
           </li>
           <li>
@@ -1023,17 +1023,17 @@
       },
       {
         id: 'gps',
-        linkId: 'gps',
+        linkId: 'my-asset',
         url: 'gps.php'
-      },{
+      }, {
         id: 'gps',
         linkId: 'scan-asset',
         url: 'scan-asset.php'
-      },{
+      }, {
         id: 'gps',
         linkId: 'admin_change_requests',
         url: 'admin_change_requests.php'
-      },{
+      }, {
         id: 'gps',
         linkId: 'get_request_details',
         url: 'get_request_details.php'

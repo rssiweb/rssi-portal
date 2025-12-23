@@ -206,7 +206,13 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>GPS (Global Procurement System)</title>
+    <title>
+        <?php
+        echo ($role === 'Admin')
+            ? 'GPS (Global Procurement System)'
+            : 'My Asset';
+        ?>
+    </title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -271,12 +277,18 @@ $resultArr = pg_fetch_all($result);
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>GPS</h1>
+            <h1>
+                <?php
+                echo ($role === 'Admin')
+                    ? 'GPS Admin'
+                    : 'My Asset';
+                ?>
+            </h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">GPS</li>
+                    <li class="breadcrumb-item"><a href="#">GPS</a></li>
+                    <li class="breadcrumb-item active">My Asset</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -743,29 +755,29 @@ $resultArr = pg_fetch_all($result);
                                                                             </span>
                                                                         <?php endif; ?>
                                                                     </li>
-                                                                <?php endif; ?>
-                                                                <li>
-                                                                    <!-- Asset History link styled like a button -->
-                                                                    <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
-                                                                        class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
-                                                                        <i class="bi bi-clock-history"></i> Asset History
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <?php if (!empty($array['purchase_bill'])): ?>
-                                                                        <a href="<?= htmlspecialchars($array['purchase_bill']) ?>"
-                                                                            target="_blank"
-                                                                            title="View Invoice"
-                                                                            class="btn btn-link dropdown-item text-start w-100"
-                                                                            style="padding-left: 1rem;">
-                                                                            <i class="bi bi-receipt"></i> View Invoice
+                                                                    <li>
+                                                                        <?php if (!empty($array['purchase_bill'])): ?>
+                                                                            <a href="<?= htmlspecialchars($array['purchase_bill']) ?>"
+                                                                                target="_blank"
+                                                                                title="View Invoice"
+                                                                                class="btn btn-link dropdown-item text-start w-100"
+                                                                                style="padding-left: 1rem;">
+                                                                                <i class="bi bi-receipt"></i> View Invoice
+                                                                            </a>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
+                                                                                <i class="bi bi-receipt"></i> View Invoice
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </li>
+                                                                    <li>
+                                                                        <!-- Asset History link styled like a button -->
+                                                                        <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
+                                                                            class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
+                                                                            <i class="bi bi-clock-history"></i> Asset History
                                                                         </a>
-                                                                    <?php else: ?>
-                                                                        <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
-                                                                            <i class="bi bi-receipt"></i> View Invoice
-                                                                        </span>
-                                                                    <?php endif; ?>
-                                                                </li>
+                                                                    </li>
+                                                                <?php endif; ?>
                                                                 <li>
                                                                     <?php if (!empty($array['asset_photo'])): ?>
                                                                         <a href="<?= htmlspecialchars($array['asset_photo']) ?>"
@@ -781,14 +793,14 @@ $resultArr = pg_fetch_all($result);
                                                                         </span>
                                                                     <?php endif; ?>
                                                                 </li>
-                                                                <li>
+                                                                <!-- <li>
                                                                     <a href="javascript:void(0)"
                                                                         onclick="showUploadFiles('<?= htmlspecialchars($array['itemid']) ?>')"
                                                                         title="Update Asset Photo & Bill"
                                                                         class="dropdown-item">
                                                                         <i class="bi bi-upload"></i> Update Photo & Bill
                                                                     </a>
-                                                                </li>
+                                                                </li> -->
                                                             </ul>
                                                         </div>
                                                     </td>
@@ -1002,81 +1014,81 @@ $resultArr = pg_fetch_all($result);
             return data.find(item => item.itemid == id);
         }
 
-        function showUploadFiles(id) {
-            var item = findItem(id);
-            if (!item) return;
+        // function showUploadFiles(id) {
+        //     var item = findItem(id);
+        //     if (!item) return;
 
-            // Set global mode
-            window.currentMode = 'upload';
+        //     // Set global mode
+        //     window.currentMode = 'upload';
 
-            // Set modal title for upload
-            document.getElementById('myModalLabel').textContent = 'Update Asset Files';
+        //     // Set modal title for upload
+        //     document.getElementById('myModalLabel').textContent = 'Update Asset Files';
 
-            // Populate item ID
-            document.querySelector('#myModal .itemid').textContent = item.itemid;
-            document.querySelector('#myModal .itemname').textContent = item.itemname;
-            document.getElementById('itemid1').value = item.itemid;
+        //     // Populate item ID
+        //     document.querySelector('#myModal .itemid').textContent = item.itemid;
+        //     document.querySelector('#myModal .itemname').textContent = item.itemname;
+        //     document.getElementById('itemid1').value = item.itemid;
 
-            // Fill form with current data for context (BUT DON'T SHOW THESE FIELDS)
-            <?php if ($role == 'Admin'): ?>
-                // Store values but fields will be hidden
-                document.getElementById('itemtype').value = item.itemtype || "";
-                document.getElementById('itemname').value = item.itemname || "";
-                document.getElementById('quantity').value = item.quantity || "";
-                document.getElementById('asset_status').value = item.asset_status || "";
-                document.getElementById('remarks').value = item.remarks || "";
-                document.getElementById('unit_cost').value = item.unit_cost || "";
-                document.getElementById('asset_category').value = item.asset_category || "";
-                document.getElementById('purchase_date').value = item.purchase_date || "";
+        //     // Fill form with current data for context (BUT DON'T SHOW THESE FIELDS)
+        //     <?php if ($role == 'Admin'): ?>
+        //         // Store values but fields will be hidden
+        //         document.getElementById('itemtype').value = item.itemtype || "";
+        //         document.getElementById('itemname').value = item.itemname || "";
+        //         document.getElementById('quantity').value = item.quantity || "";
+        //         document.getElementById('asset_status').value = item.asset_status || "";
+        //         document.getElementById('remarks').value = item.remarks || "";
+        //         document.getElementById('unit_cost').value = item.unit_cost || "";
+        //         document.getElementById('asset_category').value = item.asset_category || "";
+        //         document.getElementById('purchase_date').value = item.purchase_date || "";
 
-                // Handle Select2 fields
-                var collectedbyValue = item.collectedby || "";
-                if (collectedbyValue) {
-                    var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
-                    $('#collectedby').append(newOption).trigger('change');
-                } else {
-                    $('#collectedby').val(null).trigger('change');
-                }
+        //         // Handle Select2 fields
+        //         var collectedbyValue = item.collectedby || "";
+        //         if (collectedbyValue) {
+        //             var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
+        //             $('#collectedby').append(newOption).trigger('change');
+        //         } else {
+        //             $('#collectedby').val(null).trigger('change');
+        //         }
 
-                var taggedtoValue = item.taggedto || "";
-                if (taggedtoValue) {
-                    var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
-                    $('#taggedto').append(newOption).trigger('change');
-                } else {
-                    $('#taggedto').val(null).trigger('change');
-                }
-            <?php endif; ?>
+        //         var taggedtoValue = item.taggedto || "";
+        //         if (taggedtoValue) {
+        //             var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
+        //             $('#taggedto').append(newOption).trigger('change');
+        //         } else {
+        //             $('#taggedto').val(null).trigger('change');
+        //         }
+        //     <?php endif; ?>
 
-            // Hide ALL non-file fields
-            hideNonFileFields();
+        //     // Hide ALL non-file fields
+        //     hideNonFileFields();
 
-            // NEW: Check if files exist and disable fields
-            var assetPhotoField = document.getElementById('asset_photo');
-            var purchaseBillField = document.getElementById('purchase_bill');
+        //     // NEW: Check if files exist and disable fields
+        //     var assetPhotoField = document.getElementById('asset_photo');
+        //     var purchaseBillField = document.getElementById('purchase_bill');
 
-            if (item.asset_photo) {
-                if (assetPhotoField) {
-                    assetPhotoField.disabled = true;
-                    assetPhotoField.placeholder = "Photo already uploaded (leave blank to keep)";
-                }
-            }
+        //     if (item.asset_photo) {
+        //         if (assetPhotoField) {
+        //             assetPhotoField.disabled = true;
+        //             assetPhotoField.placeholder = "Photo already uploaded (leave blank to keep)";
+        //         }
+        //     }
 
-            if (item.purchase_bill) {
-                if (purchaseBillField) {
-                    purchaseBillField.disabled = true;
-                    purchaseBillField.placeholder = "Bill already uploaded (leave blank to keep)";
-                }
-            }
+        //     if (item.purchase_bill) {
+        //         if (purchaseBillField) {
+        //             purchaseBillField.disabled = true;
+        //             purchaseBillField.placeholder = "Bill already uploaded (leave blank to keep)";
+        //         }
+        //     }
 
-            // Change button text
-            document.querySelector('.button-text').textContent = 'Upload Files';
+        //     // Change button text
+        //     document.querySelector('.button-text').textContent = 'Upload Files';
 
-            // Clear file inputs (optional)
-            document.getElementById('asset_photo').value = '';
-            document.getElementById('purchase_bill').value = '';
+        //     // Clear file inputs (optional)
+        //     document.getElementById('asset_photo').value = '';
+        //     document.getElementById('purchase_bill').value = '';
 
-            modal.show();
-        }
+        //     modal.show();
+        // }
 
         function showDetails(id) {
             var item = findItem(id);
