@@ -384,7 +384,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
         }
 
         function onScanFailure(error) {
-            // Handle scan failure (optional)
+            // Handle scan failure
             console.warn(`QR scan failed: ${error}`);
         }
 
@@ -443,127 +443,120 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             const statusIcon = asset.asset_status === 'Active' ? 'check-circle' : 'x-circle';
 
             card.innerHTML = `
-    <div class="alert alert-${statusColor}">
-        <h4 class="alert-heading">
-            <i class="bi bi-${statusIcon}"></i> ${asset.asset_status}
-        </h4>
-        Asset Found: <strong>${asset.itemname}</strong>
-    </div>
-    
-    <div class="row g-3">
-    <!-- Left Column - Asset Information -->
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Asset Information</h6>
-                
-                <!-- This will stack on mobile, side-by-side on desktop -->
-                <div class="row">
-                    <!-- Info column - full width on mobile, 7/12 on desktop -->
-                    <div class="col-12 col-lg-7">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Asset ID:</strong></td>
-                                <td class="text-break">${asset.itemid}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Name:</strong></td>
-                                <td>${asset.itemname}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Type:</strong></td>
-                                <td>${asset.itemtype}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Category:</strong></td>
-                                <td>${asset.asset_category}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Quantity:</strong></td>
-                                <td id="currentQuantity">${asset.quantity}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <!-- Photo column - full width on mobile, 5/12 on desktop -->
-                    <div class="col-12 col-lg-5 mt-3 mt-lg-0">
-                        <div class="asset-photo-preview">
-                            <div class="card border">
-                                <div class="card-body text-center p-2">
-                                    <h6 class="card-title text-muted mb-2">Asset Photo</h6>
-                                    ${asset.processed_photo_url ? 
-                                        `<a href="${asset.asset_photo || asset.processed_photo_url}" target="_blank" title="View full size">
-                                            <img src="${asset.processed_photo_url}" 
-                                                 class="img-fluid rounded" 
-                                                 style="max-height: 120px; width: auto;"
-                                                 alt="Asset Photo"
-                                                 onerror="this.src='https://via.placeholder.com/150x120?text=Photo+Not+Found'">
-                                         </a>
-                                         <small class="d-block mt-1 text-muted">Click to view</small>` 
-                                        : 
-                                        `<div class="text-muted py-3">
-                                            <i class="bi bi-image" style="font-size: 2rem;"></i>
-                                            <p class="mt-2 mb-0 small">No photo available</p>
-                                         </div>`
-                                    }
+            <div class="alert alert-${statusColor}">
+                <h4 class="alert-heading">
+                    <i class="bi bi-${statusIcon}"></i> ${asset.asset_status}
+                </h4>
+                Asset Found: <strong>${asset.itemname}</strong>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Asset Information</h6>
+                            <div class="row">
+                                <div class="col-12 col-lg-7">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Asset ID:</strong></td>
+                                            <td class="text-break">${asset.itemid}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Name:</strong></td>
+                                            <td>${asset.itemname}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Type:</strong></td>
+                                            <td>${asset.itemtype}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Category:</strong></td>
+                                            <td>${asset.asset_category}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Quantity:</strong></td>
+                                            <td id="currentQuantity">${asset.quantity}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-12 col-lg-5 mt-3 mt-lg-0">
+                                    <div class="asset-photo-preview">
+                                        <div class="card border">
+                                            <div class="card-body text-center p-2">
+                                                <h6 class="card-title text-muted mb-2">Asset Photo</h6>
+                                                ${asset.processed_photo_url ? 
+                                                    `<a href="${asset.asset_photo || asset.processed_photo_url}" target="_blank" title="View full size">
+                                                        <img src="${asset.processed_photo_url}" 
+                                                             class="img-fluid rounded" 
+                                                             style="max-height: 120px; width: auto;"
+                                                             alt="Asset Photo"
+                                                             onerror="this.src='https://via.placeholder.com/150x120?text=Photo+Not+Found'">
+                                                     </a>
+                                                     <small class="d-block mt-1 text-muted">Click to view</small>` 
+                                                    : 
+                                                    `<div class="text-muted py-3">
+                                                        <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                        <p class="mt-2 mb-0 small">No photo available</p>
+                                                     </div>`
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Assignment</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Tagged To:</strong></td>
+                                    <td id="currentTaggedTo">${asset.tagged_to_name || 'Not Assigned'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Associate ID:</strong></td>
+                                    <td>${asset.taggedto || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Issued By:</strong></td>
+                                    <td>${asset.issued_by_name || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Verified:</strong></td>
+                                    <td>${asset.last_verified_on || 'Never'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Right Column - Assignment -->
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Assignment</h6>
-                <table class="table table-borderless">
-                    <tr>
-                        <td><strong>Tagged To:</strong></td>
-                        <td id="currentTaggedTo">${asset.tagged_to_name || 'Not Assigned'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Associate ID:</strong></td>
-                        <td>${asset.taggedto || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Issued By:</strong></td>
-                        <td>${asset.issued_by_name || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Last Verified:</strong></td>
-                        <td>${asset.last_verified_on || 'Never'}</td>
-                    </tr>
-                </table>
+            
+            <div class="mt-4">
+                <h6>Verification Actions</h6>
+                <div class="d-grid gap-2 d-md-flex">
+                    <button class="btn btn-success btn-lg flex-fill" onclick="prepareVerification('verified')">
+                        <i class="bi bi-check-circle"></i> Verified Correct
+                    </button>
+                    <button class="btn btn-warning btn-lg flex-fill" onclick="prepareVerification('update')">
+                        <i class="bi bi-pencil-square"></i> Update Details
+                    </button>
+                    <button class="btn btn-danger btn-lg flex-fill" onclick="prepareVerification('discrepancy')">
+                        <i class="bi bi-exclamation-triangle"></i> Report Issue
+                    </button>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-    
-    <div class="mt-4">
-        <h6>Verification Actions</h6>
-        <div class="d-grid gap-2 d-md-flex">
-            <button class="btn btn-success btn-lg flex-fill" onclick="prepareVerification('verified')">
-                <i class="bi bi-check-circle"></i> Verified Correct
-            </button>
-            <button class="btn btn-warning btn-lg flex-fill" onclick="prepareVerification('update')">
-                <i class="bi bi-pencil-square"></i> Update Details
-            </button>
-            <button class="btn btn-danger btn-lg flex-fill" onclick="prepareVerification('discrepancy')">
-                <i class="bi bi-exclamation-triangle"></i> Report Issue
-            </button>
-        </div>
-    </div>
-    
-    <div class="mt-3 text-center">
-        <button class="btn btn-outline-secondary" onclick="location.reload()">
-            <i class="bi bi-arrow-repeat"></i> Scan Another
-        </button>
-    </div>
-`;
+            
+            <div class="mt-3 text-center">
+                <button class="btn btn-outline-secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-repeat"></i> Scan Another
+                </button>
+            </div>
+        `;
 
             card.style.display = 'block';
         }
@@ -580,114 +573,131 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 
             if (actionType === 'verified') {
                 formContent += `
-            <div class="alert alert-success">
-                <h6><i class="bi bi-check-circle"></i> Confirm Verification</h6>
-                <p>All details are correct. This will record your verification.</p>
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="confirmVerified" required>
-                    <label class="form-check-label" for="confirmVerified">
-                        I confirm that all asset details are correct
-                    </label>
+                <div class="alert alert-success">
+                    <h6><i class="bi bi-check-circle"></i> Confirm Verification</h6>
+                    <p>All details are correct. This will record your verification.</p>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="confirmVerified" required>
+                        <label class="form-check-label" for="confirmVerified">
+                            I confirm that all asset details are correct
+                        </label>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Additional Remarks (Optional)</label>
-                <textarea name="remarks" class="form-control" rows="2" 
-                          placeholder="Any notes about this verification..."></textarea>
-            </div>
-        `;
+                
+                <div class="mb-3">
+                    <label class="form-label">Additional Remarks (Optional)</label>
+                    <textarea name="remarks" class="form-control" rows="2" 
+                              placeholder="Any notes about this verification..."></textarea>
+                </div>
+            `;
             } else if (actionType === 'update') {
+                // Check if files exist
+                const hasPhoto = currentAsset.asset_photo && currentAsset.asset_photo.trim() !== '';
+                const hasBill = currentAsset.purchase_bill && currentAsset.purchase_bill.trim() !== '';
+
                 formContent += `
-            <div class="alert alert-warning">
-                <h6><i class="bi bi-pencil-square"></i> Update Asset Details</h6>
-                <p>Update quantity and upload files if needed.</p>
-            </div>
-            
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="card border-warning">
-                        <div class="card-body">
-                            <h6 class="card-title">Current Values</h6>
-                            <p><strong>Quantity:</strong> ${currentAsset.quantity}</p>
-                            <p><strong>Photo:</strong> ${currentAsset.asset_photo ? 'Available' : 'Not available'}</p>
-                            <p><strong>Bill:</strong> ${currentAsset.purchase_bill ? 'Available' : 'Not available'}</p>
-                        </div>
-                    </div>
+                <div class="alert alert-warning">
+                    <h6><i class="bi bi-pencil-square"></i> Update Asset Details</h6>
+                    <p>Update quantity or upload missing files.</p>
                 </div>
                 
-                <div class="col-md-6">
-                    <div class="card border-primary">
-                        <div class="card-body">
-                            <h6 class="card-title">Update Details</h6>
-                            <div class="mb-3">
-                                <label class="form-label">New Quantity</label>
-                                <input type="number" name="new_quantity" class="form-control" 
-                                       value="${currentAsset.quantity}" min="1" required>
-                            </div>                       
-
-                            <div class="mb-3">
-                                <label class="form-label">Update Asset Photo</label>
-                                <input type="file" name="verification_photo" class="form-control" accept="image/*">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Update Purchase Bill</label>
-                                <input type="file" name="verification_bill" class="form-control" accept=".pdf,image/*">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title">Current Values</h6>
+                                <p><strong>Quantity:</strong> ${currentAsset.quantity}</p>
+                                <p><strong>Photo:</strong> ${hasPhoto ? 
+                                    '<span class="text-success"><i class="bi bi-check-circle"></i> Available</span>' : 
+                                    '<span class="text-danger"><i class="bi bi-x-circle"></i> Not available</span>'
+                                }</p>
+                                <p><strong>Bill:</strong> ${hasBill ? 
+                                    '<span class="text-success"><i class="bi bi-check-circle"></i> Available</span>' : 
+                                    '<span class="text-danger"><i class="bi bi-x-circle"></i> Not available</span>'
+                                }</p>
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h6 class="card-title">Update Details</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">New Quantity</label>
+                                    <input type="number" name="new_quantity" class="form-control" 
+                                           value="${currentAsset.quantity}" min="1"
+                                           id="newQuantityInput">
+                                </div>                       
+
+                                <div class="mb-3">
+                                    <label class="form-label">Asset Photo</label>
+                                    ${hasPhoto ? 
+                                        `<div class="form-control bg-light">
+                                            <span class="text-muted"><i class="bi bi-check-circle"></i> Photo already available</span>
+                                            <input type="hidden" name="verification_photo">
+                                        </div>` : 
+                                        `<input type="file" name="verification_photo" class="form-control" accept="image/*" id="photoInput">`
+                                    }
+                                    ${!hasPhoto ? '<div class="form-text">Upload missing asset photo</div>' : ''}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Purchase Bill</label>
+                                    ${hasBill ? 
+                                        `<div class="form-control bg-light">
+                                            <span class="text-muted"><i class="bi bi-check-circle"></i> Bill already available</span>
+                                            <input type="hidden" name="verification_bill">
+                                        </div>` : 
+                                        `<input type="file" name="verification_bill" class="form-control" accept=".pdf,image/*" id="billInput">`
+                                    }
+                                    ${!hasBill ? '<div class="form-text">Upload missing purchase bill</div>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Remarks <span class="text-danger">*</span></label>
+                        <textarea name="remarks" class="form-control" rows="3" 
+                                  placeholder="Explain the updates..." required></textarea>
+                        <div class="form-text">Please describe why you're making these updates</div>
+                    </div>
                 </div>
-                
-                <div class="col-12">
-                    <label class="form-label">Remarks <span class="text-danger">*</span></label>
-                    <textarea name="remarks" class="form-control" rows="3" 
-                              placeholder="Explain the updates..." required></textarea>
-                    <div class="form-text">Please describe why you're making these updates</div>
-                </div>
-            </div>
-        `;
+            `;
             } else if (actionType === 'discrepancy') {
                 formContent += `
-            <div class="alert alert-danger">
-                <h6><i class="bi bi-exclamation-triangle"></i> Report Discrepancy</h6>
-                <p>This report will be reviewed by admin.</p>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Issue Type <span class="text-danger">*</span></label>
-                <select name="issue_type" class="form-select" required>
-                    <option value="">Select issue type</option>
-                    <option value="missing">Asset Missing</option>
-                    <option value="damaged">Damaged/Broken</option>
-                    <option value="incorrect_info">Incorrect Information on Asset</option>
-                    <option value="wrong_location">Asset in Wrong Location</option>
-                    <option value="unauthorized_use">Unauthorized Use</option>
-                    <option value="other">Other Issue</option>
-                </select>
-            </div>
-            
-            <!-- Photo Upload for Evidence -->
-            <div class="mb-3">
-                <label class="form-label">Upload Evidence Photo (Optional)</label>
-                <input type="file" name="verification_photo" class="form-control" accept="image/*">
-                <div class="form-text">Upload photo evidence of the issue</div>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Detailed Description <span class="text-danger">*</span></label>
-                <textarea name="remarks" class="form-control" rows="4" 
-                          placeholder="Describe the issue in detail..." required></textarea>
-                <div class="form-text">Include location, condition, and any relevant information</div>
-            </div>
-            
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="confirmDiscrepancy" required>
-                <label class="form-check-label" for="confirmDiscrepancy">
-                    I confirm this is an accurate report of the discrepancy
-                </label>
-            </div>
-        `;
+                <div class="alert alert-danger">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Report Discrepancy</h6>
+                    <p>This report will be reviewed by admin.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Issue Type <span class="text-danger">*</span></label>
+                    <select name="issue_type" class="form-select" required>
+                        <option value="">Select issue type</option>
+                        <option value="missing">Asset Missing</option>
+                        <option value="damaged">Damaged/Broken</option>
+                        <option value="incorrect_info">Incorrect Information on Asset</option>
+                        <option value="wrong_location">Asset in Wrong Location</option>
+                        <option value="unauthorized_use">Unauthorized Use</option>
+                        <option value="other">Other Issue</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Upload Evidence Photo (Optional)</label>
+                    <input type="file" name="verification_photo" class="form-control" accept="image/*">
+                    <div class="form-text">Upload photo evidence of the issue</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Detailed Description <span class="text-danger">*</span></label>
+                    <textarea name="remarks" class="form-control" rows="4" 
+                              placeholder="Describe the issue in detail..." required></textarea>
+                    <div class="form-text">Include location, condition, and any relevant information</div>
+                </div>
+            `;
             }
 
             modalContent.innerHTML = formContent;
@@ -695,9 +705,35 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             const modal = new bootstrap.Modal(document.getElementById('verificationModal'));
             modal.show();
         }
-        // Handle form submission with progress modal
+
+        // Form submission handler
         document.getElementById('verificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            const actionType = document.querySelector('input[name="action_type"]')?.value;
+
+            // Special validation only for update action
+            if (actionType === 'update') {
+                const quantityInput = document.querySelector('input[name="new_quantity"]');
+                const photoInput = document.getElementById('photoInput');
+                const billInput = document.getElementById('billInput');
+
+                const originalQuantity = parseFloat(currentAsset?.quantity) || 0;
+                const newQuantity = parseFloat(quantityInput?.value) || 0;
+
+                // Check if file inputs exist (they might be hidden if files already exist)
+                const hasPhotoFile = photoInput && photoInput.files && photoInput.files.length > 0;
+                const hasBillFile = billInput && billInput.files && billInput.files.length > 0;
+
+                // Check if any changes were made
+                const quantityChanged = newQuantity !== originalQuantity;
+                const filesUploaded = hasPhotoFile || hasBillFile;
+
+                if (!quantityChanged && !filesUploaded) {
+                    alert('No changes detected. Please update quantity or upload missing files to submit.');
+                    return false;
+                }
+            }
 
             // Disable all buttons in the modal
             const modal = document.getElementById('verificationModal');
@@ -725,44 +761,40 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        return response.text().then(text => {
+                            console.error("Non-JSON response:", text);
+                            throw new Error('Server returned non-JSON response');
+                        });
+                    }
+                    return response.json();
+                })
                 .then(result => {
-                    // Update submission modal status
                     document.getElementById('submissionStatus').textContent = 'Submission Complete';
                     document.getElementById('submissionMessage').textContent = 'Finalizing...';
 
                     setTimeout(() => {
-                        // Hide submission modal
                         submissionModal.hide();
 
                         if (result.success) {
-                            // Show success modal
                             const successMessage = document.getElementById('successMessage');
                             successMessage.textContent = result.message || 'Verification has been submitted successfully.';
 
                             const successModal = new bootstrap.Modal(document.getElementById('successModal'));
                             successModal.show();
-
-                            // Auto-reload after 5 seconds if user doesn't click
-                            // setTimeout(() => {
-                            //     if (document.getElementById('successModal').classList.contains('show')) {
-                            //         location.reload();
-                            //     }
-                            // }, 5000);
-
                         } else {
-                            // Show error alert
                             alert('Error: ' + result.message);
-                            //location.reload();
+                            location.reload();
                         }
                     }, 1000);
-
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Fetch Error:', error);
                     submissionModal.hide();
-                    alert('Submission failed. Please try again.');
-                    //location.reload();
+                    alert('Submission failed: ' + error.message);
+                    location.reload();
                 });
         });
 
