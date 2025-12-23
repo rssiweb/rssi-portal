@@ -32,6 +32,12 @@ $scan_mode = isset($_GET['scan']) ? true : false;
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- HTML5 QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- In your <head> section, add this BEFORE Select2 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Add these lines to your <head> section -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
         :root {
@@ -561,7 +567,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 const currentTaggedName = currentAsset.tagged_to_name || '';
 
                 // Create display text in "Name - ID" format
-                let currentDisplayText = 'Not assigned';
+                let currentDisplayText = '';
                 if (currentTaggedId && currentTaggedName) {
                     currentDisplayText = `${currentTaggedName} - ${currentTaggedId}`;
                 } else if (currentTaggedName) {
@@ -599,13 +605,13 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">New Tagged To</label>
-                                <select name="new_tagged_to" class="form-select" required>
-                                    <option value="">Select Associate...</option>
+                                <select name="new_tagged_to" id="new_tagged_to_select" class="form-control select2-ajax" required>
                                     ${currentTaggedId ? 
                                         `<option value="${currentTaggedId}" selected>${currentDisplayText}</option>` : 
-                                        ''
+                                        '<option value="">Select Associate...</option>'
                                     }
                                 </select>
+                                <div class="form-text">Start typing to search for an associate</div>
                             </div>
                         </div>
                     </div>
@@ -657,10 +663,11 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 
             modalContent.innerHTML = formContent;
 
-            // Initialize select2 for tagged_to if in update mode
+            // Initialize Select2 if in update mode
             if (actionType === 'update') {
+                // Small delay to ensure DOM is ready
                 setTimeout(() => {
-                    fetchAssociates();
+                    initializeSelect2();
                 }, 100);
             }
 
@@ -668,67 +675,92 @@ $scan_mode = isset($_GET['scan']) ? true : false;
             modal.show();
         }
 
-        function fetchAssociates() {
-            const select = document.querySelector('select[name="new_tagged_to"]');
+        function initializeSelect2() {
+            const selectElement = $('#new_tagged_to_select');
 
-            // Get the current asset's tagged person details
-            const currentTaggedId = currentAsset.taggedto || '';
-            const currentTaggedName = currentAsset.tagged_to_name || '';
+            if (selectElement.length) {
+                // Get current value
+                const currentValue = selectElement.val();
+                const currentText = selectElement.find('option:selected').text();
 
-            // Create the display text in "Name - ID" format
-            let currentDisplayText = '';
-            if (currentTaggedId && currentTaggedName) {
-                currentDisplayText = `${currentTaggedName} - ${currentTaggedId}`;
-            }
+                console.log('Current value:', currentValue, 'Current text:', currentText);
 
-            // Keep the current option if it exists
-            const currentOption = select.querySelector('option[selected]');
-            let currentOptionHTML = '';
+                // First, preload all associates (for initial display)
+                $.ajax({
+                    url: 'fetch_associates.php?isActive=true',
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log('Preloaded data:', data);
 
-            if (currentOption && currentOption.value) {
-                // If there's already a selected option, keep it
-                currentOptionHTML = `<option value="${currentOption.value}" selected>${currentOption.text}</option>`;
-            } else if (currentTaggedId) {
-                // Otherwise, create one from the current asset data
-                currentOptionHTML = `<option value="${currentTaggedId}" selected>${currentDisplayText}</option>`;
-            }
+                        // Initialize Select2 with preloaded data
+                        selectElement.select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            placeholder: 'Type to search...',
+                            allowClear: true,
+                            data: data.results || [],
+                            dropdownParent: $('#verificationModal'),
+                            minimumInputLength: 2,
 
-            // Clear but keep current option (if exists)
-            select.innerHTML = `
-        <option value="">Select Associate...</option>
-        ${currentOptionHTML}
-    `;
+                            // Enable AJAX search for better performance with many records
+                            ajax: {
+                                url: 'fetch_associates.php?isActive=true',
+                                dataType: 'json',
+                                delay: 300,
+                                data: function(params) {
+                                    console.log('AJAX search for:', params.term);
+                                    return {
+                                        q: params.term,
+                                        page: params.page || 1
+                                    };
+                                },
+                                processResults: function(data) {
+                                    console.log('AJAX results:', data);
+                                    return {
+                                        results: data.results || []
+                                    };
+                                },
+                                cache: true
+                            }
+                        });
 
-            fetch('fetch_associates.php?isActive=true')
-                .then(response => response.json())
-                .then(data => {
-                    // Add new options, but don't duplicate current one
-                    if (data.results && Array.isArray(data.results)) {
-                        data.results.forEach(associate => {
-                            // Skip if this is already the current option
-                            if (currentTaggedId && associate.id === currentTaggedId) return;
+                        // Ensure current value is selected
+                        if (currentValue) {
+                            // Check if current value exists in options
+                            const optionExists = selectElement.find(`option[value="${currentValue}"]`).length > 0;
 
-                            const option = document.createElement('option');
-                            option.value = associate.id;
-                            option.textContent = associate.text;
-                            select.appendChild(option);
+                            if (!optionExists && currentText) {
+                                // Add current value as a new option
+                                const newOption = new Option(currentText, currentValue, true, true);
+                                selectElement.append(newOption);
+                            }
+
+                            selectElement.val(currentValue).trigger('change');
+                            console.log('Set current value to:', currentValue);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading associates:', error);
+                        // Initialize without data
+                        selectElement.select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            placeholder: 'Select Associate...',
+                            dropdownParent: $('#verificationModal')
                         });
                     }
-
-                    // If no current value was set, select the placeholder
-                    if (!currentTaggedId) {
-                        select.selectedIndex = 0;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching associates:', error);
-                    // On error, at least keep the current option if it exists
-                    if (!currentOptionHTML) {
-                        select.innerHTML = '<option value="">Error loading associates</option>';
-                    }
                 });
-        }
 
+                // Add event listeners for debugging
+                selectElement.on('select2:open', function() {
+                    console.log('Select2 opened');
+                });
+
+                selectElement.on('select2:select', function(e) {
+                    console.log('Selected:', e.params.data);
+                });
+            }
+        }
         // Handle form submission with progress modal
         document.getElementById('verificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
