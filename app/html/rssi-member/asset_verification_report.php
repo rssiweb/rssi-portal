@@ -19,10 +19,12 @@ $date_to = $_GET['date_to'] ?? '';
 // Build query based on filters
 $whereClauses = [];
 $params = [];
+$paramCount = 1;
 
 if (!empty($asset_id)) {
-    $whereClauses[] = "g.itemid ILIKE $1";
+    $whereClauses[] = "g.itemid ILIKE $" . $paramCount;
     $params[] = "%$asset_id%";
+    $paramCount++;
 }
 
 if ($search_type !== 'all') {
@@ -36,13 +38,16 @@ if ($search_type !== 'all') {
 }
 
 if (!empty($date_from)) {
-    $whereClauses[] = "v.verification_date >= $2";
+    $whereClauses[] = "v.verification_date >= $" . $paramCount;
     $params[] = $date_from;
+    $paramCount++;
 }
 
 if (!empty($date_to)) {
-    $whereClauses[] = "v.verification_date <= $3";
-    $params[] = $date_to . ' 23:59:59';
+    // Include the entire day (up to 23:59:59.999)
+    $whereClauses[] = "v.verification_date <= $" . $paramCount;
+    $params[] = $date_to . ' 23:59:59.999';
+    $paramCount++;
 }
 
 // Main query for verification records
@@ -80,6 +85,10 @@ if (!empty($whereClauses)) {
 
 $query .= " ORDER BY v.verification_date DESC LIMIT 100";
 
+// Debug: Log the query and parameters
+error_log("Query: " . $query);
+error_log("Params: " . print_r($params, true));
+
 // Execute query
 if (!empty($params)) {
     $result = pg_query_params($con, $query, $params);
@@ -87,7 +96,15 @@ if (!empty($params)) {
     $result = pg_query($con, $query);
 }
 
-$resultArr = $result ? pg_fetch_all($result) : [];
+// Check for query errors
+if (!$result) {
+    $error = pg_last_error($con);
+    error_log("Database error: " . $error);
+    // You might want to display a user-friendly error or log it
+    $resultArr = [];
+} else {
+    $resultArr = pg_fetch_all($result) ?: [];
+}
 
 // Get statistics
 $statsQuery = "SELECT 

@@ -333,7 +333,7 @@ $resultArr = pg_fetch_all($result);
                                     <i class="bi bi-inbox"></i>
                                     <h4>No Pending Requests</h4>
                                     <p class="text-muted">There are no pending change requests to review.</p>
-                                    <a href="gps.php" class="btn btn-primary">
+                                    <a href="asset_verification_report.php" class="btn btn-primary">
                                         <i class="bi bi-arrow-left"></i> Back to GPS Dashboard
                                     </a>
                                 </div>

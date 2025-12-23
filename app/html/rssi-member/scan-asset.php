@@ -810,16 +810,16 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                             successModal.show();
 
                             // Auto-reload after 5 seconds if user doesn't click
-                            setTimeout(() => {
-                                if (document.getElementById('successModal').classList.contains('show')) {
-                                    location.reload();
-                                }
-                            }, 5000);
+                            // setTimeout(() => {
+                            //     if (document.getElementById('successModal').classList.contains('show')) {
+                            //         location.reload();
+                            //     }
+                            // }, 5000);
 
                         } else {
                             // Show error alert
                             alert('Error: ' + result.message);
-                            location.reload();
+                            //location.reload();
                         }
                     }, 1000);
 
@@ -828,7 +828,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                     console.error('Error:', error);
                     submissionModal.hide();
                     alert('Submission failed. Please try again.');
-                    location.reload();
+                    //location.reload();
                 });
         });
 
