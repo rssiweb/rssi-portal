@@ -120,7 +120,7 @@ try {
         // Handle evidence photo upload for 'discrepancy' action
         if (!empty($_FILES['verification_photo']['name'])) {
             $filename_evidence_photo = "evidence_" . $asset_id . "_" . time();
-            $parent_evidence_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR';
+            $parent_evidence_photo_path = '16Ozuht4DhiIqi6c_cVG-sqYFc2qSbiLw';
             $evidence_photo_path = uploadeToDrive($_FILES['verification_photo'], $parent_evidence_photo_path, $filename_evidence_photo);
         }
     }

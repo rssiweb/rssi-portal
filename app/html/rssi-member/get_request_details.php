@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include(__DIR__ . "/../image_functions.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -233,18 +234,52 @@ $request = pg_fetch_assoc($result);
                                             <h5 class="mb-3"><i class="bi bi-exclamation-triangle"></i> Discrepancy Details</h5>
 
                                             <div class="change-highlight">
-                                                <div class="detail-label">Issue Type</div>
-                                                <div class="detail-value">
-                                                    <?php
-                                                    $issue_type = str_replace('discrepancy_', '', $request['issue_type'] ?? 'unknown');
-                                                    echo ucwords(str_replace('_', ' ', $issue_type));
-                                                    ?>
-                                                </div>
+                                                <div class="row">
+                                                    <!-- Left column: Issue details -->
+                                                    <div class="col-md-6">
+                                                        <div class="detail-label">Issue Type</div>
+                                                        <div class="detail-value">
+                                                            <?php
+                                                            $issue_type = str_replace('discrepancy_', '', $request['issue_type'] ?? 'unknown');
+                                                            echo ucwords(str_replace('_', ' ', $issue_type));
+                                                            ?>
+                                                        </div>
 
-                                                <?php if ($request['issue_description']): ?>
-                                                    <div class="detail-label">Description</div>
-                                                    <div class="detail-value"><?= nl2br(htmlspecialchars($request['issue_description'])) ?></div>
-                                                <?php endif; ?>
+                                                        <?php if ($request['issue_description']): ?>
+                                                            <div class="detail-label">Description</div>
+                                                            <div class="detail-value"><?= nl2br(htmlspecialchars($request['issue_description'])) ?></div>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <!-- Right column: Evidence photo -->
+                                                    <div class="col-md-6">
+                                                        <div class="detail-label">Evidence Photo</div>
+                                                        <div class="detail-value">
+                                                            <?php if (!empty($request['evidence_photo_path'])): ?>
+                                                                <?php
+                                                                // Clean the path - remove any query parameters for display
+                                                                $clean_path = processImageUrl($request['evidence_photo_path'], '?');
+                                                                ?>
+                                                                <a href="<?= htmlspecialchars($request['evidence_photo_path']) ?>"
+                                                                    target="_blank"
+                                                                    title="Click to open in new window">
+                                                                    <img src="<?= htmlspecialchars($clean_path) ?>"
+                                                                        alt="Evidence Photo"
+                                                                        class="img-fluid rounded border evidence-photo"
+                                                                        style="max-height: 200px; object-fit: contain; cursor: pointer;">
+                                                                </a>
+                                                                <div class="mt-1 small text-muted">
+                                                                    Click image to view full size
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <div class="text-muted py-3">
+                                                                    <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                                    <div class="mt-2">No evidence photo</div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     </div>

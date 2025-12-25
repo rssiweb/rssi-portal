@@ -347,6 +347,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
 
     <script>
         let currentAsset = null;
@@ -638,7 +639,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                                             <span class="text-muted"><i class="bi bi-check-circle"></i> Photo already available</span>
                                             <input type="hidden" name="asset_photo">
                                         </div>` : 
-                                        `<input type="file" name="asset_photo" class="form-control" accept="image/*" id="photoInput">`
+                                        `<input type="file" name="asset_photo" class="form-control" accept="image/*" id="photoInput" onchange="compressImageBeforeUpload(this)">`
                                     }
                                     ${!hasPhoto ? '<div class="form-text">Upload missing asset photo</div>' : ''}
                                 </div>
@@ -650,7 +651,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                                             <span class="text-muted"><i class="bi bi-check-circle"></i> Bill already available</span>
                                             <input type="hidden" name="verification_bill">
                                         </div>` : 
-                                        `<input type="file" name="verification_bill" class="form-control" accept=".pdf,image/*" id="billInput">`
+                                        `<input type="file" name="verification_bill" class="form-control" accept=".pdf,image/*" id="billInput" onchange="compressImageBeforeUpload(this)">`
                                     }
                                     ${!hasBill ? '<div class="form-text">Upload missing purchase bill</div>' : ''}
                                 </div>
@@ -688,7 +689,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                 
                 <div class="mb-3">
                     <label class="form-label">Upload Evidence Photo (Optional)</label>
-                    <input type="file" name="verification_photo" class="form-control" accept="image/*">
+                    <input type="file" name="verification_photo" class="form-control" accept="image/*" onchange="compressImageBeforeUpload(this)">
                     <div class="form-text">Upload photo evidence of the issue</div>
                 </div>
                 
