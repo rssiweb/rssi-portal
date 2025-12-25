@@ -150,21 +150,40 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $conditions[] = "asset_status = '$assetstatus'";
     }
 
-    $query = "SELECT * FROM gps
-    LEFT JOIN (
-        SELECT fullname AS tfullname, associatenumber AS tassociatenumber, phone AS tphone, email AS temail
-        FROM rssimyaccount_members
-    ) AS tmember ON gps.taggedto = tmember.tassociatenumber
-    LEFT JOIN (
-        SELECT fullname AS ifullname, associatenumber AS iassociatenumber, phone AS iphone, email AS iemail
-        FROM rssimyaccount_members
-    ) AS imember ON gps.collectedby = imember.iassociatenumber";
+    // Make sure your query includes these fields
+$query = "SELECT 
+    gps.*,
+    tmember.fullname AS tfullname,
+    tmember.phone AS tphone,
+    tmember.email AS temail,
+    imember.fullname AS ifullname,
+    imember.phone AS iphone,
+    imember.email AS iemail,
+    v.verification_date,
+    v.verified_by,
+    verified_member.fullname AS verified_by_name,
+    v.verification_status,
+    v.admin_review_status
+FROM gps
+LEFT JOIN rssimyaccount_members AS tmember ON gps.taggedto = tmember.associatenumber
+LEFT JOIN rssimyaccount_members AS imember ON gps.collectedby = imember.associatenumber
+LEFT JOIN (
+    SELECT DISTINCT ON (asset_id) 
+        asset_id,
+        verification_date,
+        verified_by,
+        verification_status,
+        admin_review_status
+    FROM gps_verifications
+    ORDER BY asset_id, verification_date DESC
+) AS v ON gps.itemid = v.asset_id
+LEFT JOIN rssimyaccount_members AS verified_member ON v.verified_by = verified_member.associatenumber";
 
     if (!empty($conditions)) {
         $query .= " WHERE " . implode(" AND ", $conditions);
     }
 
-    $query .= " ORDER BY date DESC";
+    $query .= " ORDER BY gps.date DESC";
 
     $gpsdetails = $query;
 }
@@ -620,6 +639,10 @@ $resultArr = pg_fetch_all($result);
                                                 <th scope="col">Photo</th>
                                                 <th scope="col">Bill</th>
                                                 <th scope="col" id="cw1">Remarks</th>
+                                                <th>Last Verified</th>
+                                                <th>Verified By</th>
+                                                <th>Verification Status</th>
+                                                <th>Review Status</th>
                                             <?php endif; ?>
                                             <th scope="col">Issued by</th>
                                             <th scope="col">Tagged to</th>
@@ -689,6 +712,80 @@ $resultArr = pg_fetch_all($result);
                                                                 </button>
                                                             <?php else: ?>
                                                                 <span>No remarks</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($array['verification_date'])): ?>
+                                                                <?= date('d/m/Y', strtotime($array['verification_date'])) ?>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">Never verified</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($array['verified_by_name'])): ?>
+                                                                <?= htmlspecialchars($array['verified_by_name']) ?>
+                                                            <?php elseif (!empty($array['verified_by'])): ?>
+                                                                <?= htmlspecialchars($array['verified_by']) ?>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">N/A</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($array['verification_status'])): ?>
+                                                                <?php
+                                                                $status_display = '';
+                                                                switch ($array['verification_status']) {
+                                                                    case 'verified':
+                                                                        $status_display = '<span class="badge bg-success">Verified</span>';
+                                                                        break;
+                                                                    case 'pending_update':
+                                                                        $status_display = '<span class="badge bg-warning">Update Pending</span>';
+                                                                        break;
+                                                                    case 'file_uploaded':
+                                                                        $status_display = '<span class="badge bg-info">Files Updated</span>';
+                                                                        break;
+                                                                    default:
+                                                                        if (strpos($array['verification_status'], 'discrepancy') !== false) {
+                                                                            $status_display = '<span class="badge bg-danger">Discrepancy</span>';
+                                                                        } else {
+                                                                            $status_display = '<span class="badge bg-secondary">' . ucfirst(str_replace('_', ' ', $array['verification_status'])) . '</span>';
+                                                                        }
+                                                                }
+                                                                echo $status_display;
+                                                                ?>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-secondary">Not Verified</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($array['verification_status']) && $array['verification_status'] !== 'verified' && $array['verification_status'] !== 'file_uploaded'): ?>
+                                                                <?php if (!empty($array['admin_review_status'])): ?>
+                                                                    <?php
+                                                                    $review_badge = '';
+                                                                    switch ($array['admin_review_status']) {
+                                                                        case 'approved':
+                                                                            $review_badge = 'success';
+                                                                            break;
+                                                                        case 'rejected':
+                                                                            $review_badge = 'danger';
+                                                                            break;
+                                                                        case 'pending':
+                                                                            $review_badge = 'warning';
+                                                                            break;
+                                                                        default:
+                                                                            $review_badge = 'secondary';
+                                                                    }
+                                                                    ?>
+                                                                    <span class="badge bg-<?= $review_badge ?>">
+                                                                        <?= ucfirst($array['admin_review_status']) ?>
+                                                                    </span>
+                                                                <?php else: ?>
+                                                                    <span class="badge bg-warning">Pending</span>
+                                                                <?php endif; ?>
+                                                            <?php elseif (!empty($array['verification_status']) && ($array['verification_status'] === 'verified' || $array['verification_status'] === 'file_uploaded')): ?>
+                                                                <span class="badge bg-success">System Approved</span>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">-</span>
                                                             <?php endif; ?>
                                                         </td>
                                                     <?php endif; ?>

@@ -245,7 +245,33 @@ function gps_export()
     $conditions[] = "asset_category = '$assetcategory'";
   }
 
-  $query = "SELECT * FROM gps";
+  $query = "SELECT 
+    gps.*,
+    tmember.fullname AS tfullname,
+    tmember.phone AS tphone,
+    tmember.email AS temail,
+    imember.fullname AS ifullname,
+    imember.phone AS iphone,
+    imember.email AS iemail,
+    v.verification_date,
+    v.verified_by,
+    verified_member.fullname AS verified_by_name,
+    v.verification_status,
+    v.admin_review_status
+FROM gps
+LEFT JOIN rssimyaccount_members AS tmember ON gps.taggedto = tmember.associatenumber
+LEFT JOIN rssimyaccount_members AS imember ON gps.collectedby = imember.associatenumber
+LEFT JOIN (
+    SELECT DISTINCT ON (asset_id) 
+        asset_id,
+        verification_date,
+        verified_by,
+        verification_status,
+        admin_review_status
+    FROM gps_verifications
+    ORDER BY asset_id, verification_date DESC
+) AS v ON gps.itemid = v.asset_id
+LEFT JOIN rssimyaccount_members AS verified_member ON v.verified_by = verified_member.associatenumber";
 
   if (!empty($conditions)) {
     $query .= " WHERE " . implode(" AND ", $conditions);
@@ -264,11 +290,11 @@ function gps_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status,Unit price,Purchase bill, Purchase Date, Asset Photo' . "\n";
+  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status,Unit price,Purchase bill, Purchase Date, Asset Photo,Last Verified,Verified By,Verification Status,Review Status' . "\n";
 
   foreach ($resultArr as $array) {
 
-    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . ',' . $array['unit_cost'] . ',' . $array['purchase_bill'] . ',' . $array['purchase_date'] . ',' . $array['asset_photo'] . "\n";
+    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . ',' . $array['unit_cost'] . ',' . $array['purchase_bill'] . ',' . $array['purchase_date'] . ',' . $array['asset_photo'] . ',' . $array['verification_date'] . ',' . $array['verified_by_name'] . ',' . $array['verification_status'] . ',' . $array['admin_review_status'] . "\n";
   }
 }
 
