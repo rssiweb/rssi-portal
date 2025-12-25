@@ -755,15 +755,15 @@ $stats = pg_fetch_assoc($statsResult);
                                         <div class="timeline">
                                             <?php
                                             $timelineQuery = "SELECT 
-                            v.*,
-                            verified_user.fullname as verified_by_name,
-                            reviewed_user.fullname as reviewed_by_name
-                          FROM gps_verifications v
-                          LEFT JOIN rssimyaccount_members verified_user ON v.verified_by = verified_user.associatenumber
-                          LEFT JOIN rssimyaccount_members reviewed_user ON v.reviewed_by = reviewed_user.associatenumber
-                          WHERE v.asset_id = $1 
-                          ORDER BY v.verification_date DESC 
-                          LIMIT 5";
+                                                v.*,
+                                                verified_user.fullname as verified_by_name,
+                                                reviewed_user.fullname as reviewed_by_name
+                                            FROM gps_verifications v
+                                            LEFT JOIN rssimyaccount_members verified_user ON v.verified_by = verified_user.associatenumber
+                                            LEFT JOIN rssimyaccount_members reviewed_user ON v.reviewed_by = reviewed_user.associatenumber
+                                            WHERE v.asset_id = $1 
+                                            ORDER BY v.verification_date DESC 
+                                            LIMIT 5";
                                             $timelineResult = pg_query_params($con, $timelineQuery, [$asset_id]);
 
                                             if ($timelineResult && pg_num_rows($timelineResult) > 0):
@@ -777,8 +777,7 @@ $stats = pg_fetch_assoc($statsResult);
                                                     if ($timeline['verification_status'] === 'verified') {
                                                         $timelineClass = 'verified';
                                                         $displayStatus = 'Verified';
-                                                        // For verified status, it's auto-approved by system
-                                                        $displayReviewStatus = 'approved';
+                                                        $displayReviewStatus = 'system approved';
                                                         $reviewStatusBadge = 'success';
                                                     } elseif ($timeline['verification_status'] === 'pending_update') {
                                                         $timelineClass = 'pending';
@@ -788,7 +787,7 @@ $stats = pg_fetch_assoc($statsResult);
                                                     } elseif ($timeline['verification_status'] === 'file_uploaded') {
                                                         $timelineClass = 'updated';
                                                         $displayStatus = 'Files Updated';
-                                                        $displayReviewStatus = 'approved'; // File uploads are auto-approved
+                                                        $displayReviewStatus = 'system approved';
                                                         $reviewStatusBadge = 'success';
                                                     } elseif (strpos($timeline['verification_status'], 'discrepancy') !== false) {
                                                         $timelineClass = 'discrepancy';
@@ -804,13 +803,35 @@ $stats = pg_fetch_assoc($statsResult);
 
                                                     // Determine who to show as the actor
                                                     $actorName = '';
-                                                    if ($displayReviewStatus === 'approved' && $displayStatus !== 'Verified') {
-                                                        // For approved items (except verified), show who reviewed it
-                                                        $actorName = $timeline['reviewed_by_name'] ?? $timeline['verified_by_name'] ?? 'Unknown';
+                                                    $actorPrefix = '';
+
+                                                    // Check if this is auto-approved by system (verified or file_uploaded)
+                                                    if (($timeline['verification_status'] === 'verified' || $timeline['verification_status'] === 'file_uploaded') &&
+                                                        $displayReviewStatus === 'approved'
+                                                    ) {
+                                                        // Auto-approved by system
+                                                        $actorName = 'system';
                                                         $actorPrefix = 'Reviewed by: ';
-                                                    } else {
-                                                        // For everything else, show who verified/reported it
-                                                        $actorName = $timeline['verified_by_name'] ?? 'Unknown';
+                                                    }
+                                                    // Check if it's approved by a human reviewer
+                                                    elseif ($displayReviewStatus === 'approved' && $displayReviewStatus !== '') {
+                                                        // Approved by human reviewer
+                                                        $actorName = $timeline['reviewed_by_name'] ?? $timeline['reviewed_by'] ?? 'Unknown';
+                                                        $actorPrefix = 'Reviewed by: ';
+                                                    }
+                                                    // Check if it's pending approval (pending_update or discrepancy pending)
+                                                    elseif (
+                                                        $displayReviewStatus === 'pending' ||
+                                                        ($timeline['verification_status'] === 'pending_update' && empty($displayReviewStatus)) ||
+                                                        (strpos($timeline['verification_status'], 'discrepancy') !== false && empty($displayReviewStatus))
+                                                    ) {
+                                                        // Pending review - show who submitted it
+                                                        $actorName = $timeline['verified_by_name'] ?? $timeline['verified_by'] ?? 'Unknown';
+                                                        $actorPrefix = 'Submitted by: ';
+                                                    }
+                                                    // Default case - show who verified/reported it
+                                                    else {
+                                                        $actorName = $timeline['verified_by_name'] ?? $timeline['verified_by'] ?? 'Unknown';
                                                         $actorPrefix = 'By: ';
                                                     }
                                             ?>
