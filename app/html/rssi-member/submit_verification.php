@@ -6,6 +6,7 @@ ini_set('display_errors', 0);
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 include("../../util/drive.php");
+include("../../util/email.php");
 
 header('Content-Type: application/json');
 
@@ -65,7 +66,8 @@ try {
         $issue_description_db = null;
         $update_reason_db = null;
         $admin_review_status = 'approved'; // Auto-approve verified actions
-
+        $reviewed_by = 'system';
+        $review_date = $now;
     } elseif ($action_type === 'update') {
         // CASE 2: Update Details
         $quantityChanged = ($new_quantity != $current_asset['quantity']);
@@ -80,6 +82,8 @@ try {
             // Only file uploads, no quantity change
             $verification_status = 'file_uploaded';
             $admin_review_status = 'approved'; // Auto-approve file-only updates
+            $reviewed_by = 'system';
+            $review_date = $now;
         }
 
         // Handle asset photo upload for 'update' action
@@ -151,6 +155,81 @@ try {
     )";
 
     $insert_result = pg_query($con, $insert_verification);
+
+    if ($insert_result && ($quantityChanged || $action_type === 'discrepancy')) {
+        // Get the verified_by user's full name from the database
+        $verified_by_name = '';
+        $name_query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$verified_by'";
+        $name_result = pg_query($con, $name_query);
+
+        if ($name_result && pg_num_rows($name_result) > 0) {
+            $name_row = pg_fetch_assoc($name_result);
+            $verified_by_name = $name_row['fullname'];
+        } else {
+            // If not found, use the associate number as fallback
+            $verified_by_name = $verified_by;
+        }
+
+        // Fetch admin details from the database
+        $query = "SELECT fullname, alt_email FROM rssimyaccount_members WHERE role = 'Admin' AND position = 'Director'";
+        $adminResult = pg_query($con, $query);
+
+        if ($adminResult && pg_num_rows($adminResult) > 0) {
+            while ($adminRow = pg_fetch_assoc($adminResult)) {
+                $admin_name = $adminRow['fullname'];
+                $admin_email = $adminRow['alt_email'];
+
+                // Replace the sendEmail call in your existing code with this:
+                $action_type_display = '';
+                switch ($action_type) {
+                    case 'verified':
+                        $action_type_display = 'Verified Correct';
+                        break;
+                    case 'update':
+                        $action_type_display = $quantityChanged ? 'Update Details (Quantity Change)' : 'Update Details (File Upload)';
+                        break;
+                    case 'discrepancy':
+                        $action_type_display = 'Report Discrepancy';
+                        break;
+                    default:
+                        $action_type_display = $action_type;
+                }
+
+                // Build extra details based on action type
+                $extra_details = '';
+                if ($action_type === 'update' && $update_reason) {
+                    $extra_details .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Update Reason:</strong></td>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #eee;">' . htmlspecialchars($update_reason) . '</td></tr>';
+                }
+
+                if ($action_type === 'discrepancy' && $issue_type) {
+                    $extra_details .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Issue Type:</strong></td>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #eee;">' . htmlspecialchars($issue_type) . '</td></tr>';
+                }
+
+                if ($action_type === 'discrepancy' && $issue_description) {
+                    $extra_details .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Issue Description:</strong></td>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #eee;">' . htmlspecialchars($issue_description) . '</td></tr>';
+                }
+
+                // Send email to each admin individually
+                sendEmail("asset_verification", [
+                    "action_type" => $action_type,
+                    "action_type_display" => $action_type_display,
+                    "verified_by" => $verified_by,  // Associate number
+                    "verified_by_name" => $verified_by_name,  // Full name
+                    "verification_date" => $now,
+                    "asset_id" => $asset_id,
+                    "asset_name" => $current_asset['itemname'],
+                    "doclink" => "https://login.rssi.in/rssi-member/asset_verification_report.php?asset_id=" . $asset_id, // Or the full URL if available
+                    "admin_name" => $admin_name,
+                    "extra_details" => $extra_details
+                ], $admin_email);
+            }
+        } else {
+            error_log("No admins found in the database.");
+        }
+    }
 
     if (!$insert_result) {
         $error = pg_last_error($con);

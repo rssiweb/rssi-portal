@@ -5,6 +5,7 @@ include("../../util/login_util.php");
 // Check if user is logged in
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }

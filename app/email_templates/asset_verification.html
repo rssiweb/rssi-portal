@@ -1,0 +1,77 @@
+Asset Verification Notification | {{asset_id}} - {{action_type_display}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Verification Notification</title>
+</head>
+
+<body
+    style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="border: 1px solid #ddd; border-radius: 5px; padding: 20px; background-color: #f9f9f9;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #4CAF50;">
+            <h1 style="color: #4CAF50; margin: 0;">Asset Verification Submission</h1>
+            <p style="color: #666; margin-top: 5px;">New verification action requires attention</p>
+        </div>
+
+        <!-- Greeting -->
+        <p>Hello <strong>{{admin_name}}</strong>,</p>
+
+        <p>A new asset verification action has been submitted and requires your review.</p>
+
+        <!-- Action Details -->
+        <div style="background-color: white; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #333;">Verification Details</h3>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Action Type:</strong></td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{action_type_display}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Asset:</strong></td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{asset_id}} - {{asset_name}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Verified By:</strong></td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{verified_by_name}} ({{verified_by}})
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Date & Time:</strong></td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{verification_date}}</td>
+                </tr>
+                {{extra_details}}
+            </table>
+        </div>
+
+        <!-- Action Required -->
+        <div
+            style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #856404;">Action Required</h4>
+            <p style="margin-bottom: 0;">
+                Please review this verification submission in the asset management system.
+            </p>
+        </div>
+
+        <!-- Button/Link -->
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{doclink}}"
+                style="display: inline-block; background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                View Verification Report
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div
+            style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px;">
+            <p>This is an automated notification from the Asset Management System.</p>
+            <p>Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+
+</html>
