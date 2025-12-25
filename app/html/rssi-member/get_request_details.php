@@ -134,19 +134,22 @@ $request = pg_fetch_assoc($result);
                                             <?php
                                             $reviewStatus = $request['admin_review_status'];
 
-                                            // Force system approval if already verified
-                                            if ($request['verification_status'] === 'verified') {
-                                                $reviewStatus = 'system_approved';
-                                            }
+                                            // Override label only when approved by system
+                                            $displayStatus = (
+                                                $request['admin_review_status'] === 'approved' &&
+                                                $request['reviewed_by'] === 'system'
+                                            )
+                                                ? 'system_approved'
+                                                : $reviewStatus;
                                             ?>
 
                                             <span class="badge 
-                                                <?= $reviewStatus === 'pending' ? 'bg-warning'
-                                                    : ($reviewStatus === 'approved' || $reviewStatus === 'system_approved' ? 'bg-success'
-                                                        : 'bg-danger') ?> 
+                                                <?= $displayStatus === 'pending' ? 'bg-warning'
+                                                    : ($displayStatus === 'approved' || $displayStatus === 'system_approved' ? 'bg-success'
+                                                        : 'bg-danger') ?>
                                                 float-end">
 
-                                                <?= strtoupper(str_replace('_', ' ', $reviewStatus)) ?>
+                                                <?= strtoupper(str_replace('_', ' ', $displayStatus)) ?>
                                             </span>
                                         </h4>
 
@@ -179,7 +182,14 @@ $request = pg_fetch_assoc($result);
                                             <div class="col-md-6">
                                                 <?php if ($request['reviewed_by']): ?>
                                                     <div class="detail-label">Reviewed By</div>
-                                                    <div class="detail-value"><?= htmlspecialchars($request['reviewed_by_name']) ?> (<?= htmlspecialchars($request['reviewed_by']) ?>)</div>
+                                                    <div class="detail-value">
+                                                        <?php if ($request['reviewed_by'] === 'system'): ?>
+                                                            System
+                                                        <?php else: ?>
+                                                            <?= htmlspecialchars($request['reviewed_by_name']) ?>
+                                                            (<?= htmlspecialchars($request['reviewed_by']) ?>)
+                                                        <?php endif; ?>
+                                                    </div>
 
                                                     <div class="detail-label">Review Date</div>
                                                     <div class="detail-value"><?= date('d/m/Y g:i a', strtotime($request['review_date'])) ?></div>

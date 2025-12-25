@@ -470,7 +470,9 @@ $stats = pg_fetch_assoc($statsResult);
                                             <?php foreach ($resultArr as $row): ?>
                                                 <tr>
                                                     <td>
-                                                        <div class="fw-semibold"><?= htmlspecialchars($row['itemname']) ?></div>
+                                                        <div class="fw-semibold" title="<?= htmlspecialchars($row['itemname']) ?>">
+                                                            <?= htmlspecialchars(mb_strimwidth($row['itemname'], 0, 40, '…')) ?>
+                                                        </div>
                                                         <div class="text-muted small"><?= htmlspecialchars($row['asset_id']) ?></div>
                                                         <div class="badge bg-secondary"><?= htmlspecialchars($row['itemtype']) ?></div>
                                                     </td>
@@ -517,23 +519,35 @@ $stats = pg_fetch_assoc($statsResult);
                                                     <td>
                                                         <?php
                                                         $reviewStatus = $row['admin_review_status'] ?? 'pending';
-                                                        if ($reviewStatus === 'approved') {
+                                                        $reviewedBy   = $row['reviewed_by'] ?? '';
+                                                        $reviewerName = $row['reviewed_by_name'] ?? '';
+
+                                                        // System Approved condition
+                                                        if ($reviewStatus === 'approved' && $reviewedBy === 'system') {
+
+                                                            echo '<span class="badge-approved status-badge">System Approved</span>';
+                                                        } elseif ($reviewStatus === 'approved') {
+
                                                             echo '<span class="badge-approved status-badge">Approved</span>';
-                                                            if ($row['reviewed_by_name']) {
-                                                                echo '<div class="small text-muted">By: ' . htmlspecialchars($row['reviewed_by_name']) . '</div>';
+                                                            if ($reviewerName) {
+                                                                echo '<div class="small text-muted">By: ' . htmlspecialchars($reviewerName) . '</div>';
                                                             }
                                                         } elseif ($reviewStatus === 'rejected') {
+
                                                             echo '<span class="badge-rejected status-badge">Rejected</span>';
-                                                            if ($row['reviewed_by_name']) {
-                                                                echo '<div class="small text-muted">By: ' . htmlspecialchars($row['reviewed_by_name']) . '</div>';
+                                                            if ($reviewerName) {
+                                                                echo '<div class="small text-muted">By: ' . htmlspecialchars($reviewerName) . '</div>';
                                                             }
-                                                        } elseif ($row['verification_status'] === 'verified') {
+                                                        } elseif (($row['verification_status'] ?? '') === 'verified') {
+
                                                             echo '<span class="badge-verified status-badge">Not Required</span>';
                                                         } else {
+
                                                             echo '<span class="badge-review-pending status-badge">Pending Review</span>';
                                                         }
                                                         ?>
                                                     </td>
+
                                                     <td class="text-center">
                                                         <div class="action-dropdown">
                                                             <button class="btn btn-link dropdown-toggle-custom" type="button"
