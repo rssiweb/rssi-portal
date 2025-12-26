@@ -221,63 +221,110 @@ function gps_export()
   @$taggedto = $_POST['taggedto'];
   @$item_type = $_POST['item_type'];
   @$assetid = $_POST['assetid'];
-  @$asset_status = $_POST['asset_status'];
+  @$assetstatus = $_POST['asset_status'];
   @$assetcategory = $_POST['asset_category'];
 
+  // -----------------------------
+  // Conditions Builder
+  // -----------------------------
   $conditions = [];
 
-  if ($taggedto != "") {
-    $conditions[] = "taggedto = '$taggedto'";
+  // Asset ID search takes PRIORITY
+  $isAssetSearch = ($assetid !== '');
+
+  if ($isAssetSearch) {
+
+    // -----------------------------
+    // ASSET ID SEARCH (Ignore all filters)
+    // -----------------------------
+    if (strpos($assetid, ',') !== false) {
+
+      $assetIds = array_map('trim', explode(',', $assetid));
+      $sanitizedIds = array_map(function ($id) use ($con) {
+        return pg_escape_string($con, $id);
+      }, $assetIds);
+
+      if (!empty($sanitizedIds)) {
+        $idList = "'" . implode("','", $sanitizedIds) . "'";
+        $conditions[] = "gps.itemid IN ($idList)";
+      }
+    } else {
+      $assetid_safe = pg_escape_string($con, $assetid);
+      $conditions[] = "(gps.itemid = '$assetid_safe' OR gps.itemname ILIKE '%$assetid_safe%')";
+    }
+  } else {
+
+    // -----------------------------
+    // NORMAL FILTERS
+    // -----------------------------
+    if ($item_type !== "ALL" && $item_type !== "") {
+      $conditions[] = "gps.itemtype = '$item_type'";
+    }
+
+    if ($assetcategory !== "ALL" && $assetcategory !== "") {
+      $conditions[] = "gps.asset_category = '$assetcategory'";
+    }
+
+    if ($taggedto !== "") {
+      $conditions[] = "gps.taggedto = '$taggedto'";
+    }
+
+    if ($assetstatus !== "") {
+      $conditions[] = "gps.asset_status = '$assetstatus'";
+    }
   }
 
-  if ($item_type != "ALL" && $item_type != "") {
-    $conditions[] = "itemtype = '$item_type'";
-  }
+  // -----------------------------
+  // MAIN QUERY
+  // -----------------------------
+  $query = "
+    SELECT 
+        gps.*,
+        tmember.fullname AS tfullname,
+        tmember.phone AS tphone,
+        tmember.email AS temail,
+        imember.fullname AS ifullname,
+        imember.phone AS iphone,
+        imember.email AS iemail,
+        v.verification_date,
+        v.verified_by,
+        verified_member.fullname AS verified_by_name,
+        v.verification_status,
+        v.admin_review_status
+    FROM gps
+    LEFT JOIN rssimyaccount_members AS tmember 
+        ON gps.taggedto = tmember.associatenumber
+    LEFT JOIN rssimyaccount_members AS imember 
+        ON gps.collectedby = imember.associatenumber
+    LEFT JOIN (
+        SELECT DISTINCT ON (asset_id)
+            asset_id,
+            verification_date,
+            verified_by,
+            verification_status,
+            admin_review_status
+        FROM gps_verifications
+        ORDER BY asset_id, verification_date DESC
+    ) AS v 
+        ON gps.itemid = v.asset_id
+    LEFT JOIN rssimyaccount_members AS verified_member 
+        ON v.verified_by = verified_member.associatenumber
+    ";
 
-  if ($assetid != "") {
-    $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
-  }
-
-  if ($asset_status != "") {
-    $conditions[] = "asset_status = '$asset_status'";
-  }
-  if ($assetcategory != "ALL" && $assetcategory != "") {
-    $conditions[] = "asset_category = '$assetcategory'";
-  }
-
-  $query = "SELECT 
-    gps.*,
-    tmember.fullname AS tfullname,
-    tmember.phone AS tphone,
-    tmember.email AS temail,
-    imember.fullname AS ifullname,
-    imember.phone AS iphone,
-    imember.email AS iemail,
-    v.verification_date,
-    v.verified_by,
-    verified_member.fullname AS verified_by_name,
-    v.verification_status,
-    v.admin_review_status
-FROM gps
-LEFT JOIN rssimyaccount_members AS tmember ON gps.taggedto = tmember.associatenumber
-LEFT JOIN rssimyaccount_members AS imember ON gps.collectedby = imember.associatenumber
-LEFT JOIN (
-    SELECT DISTINCT ON (asset_id) 
-        asset_id,
-        verification_date,
-        verified_by,
-        verification_status,
-        admin_review_status
-    FROM gps_verifications
-    ORDER BY asset_id, verification_date DESC
-) AS v ON gps.itemid = v.asset_id
-LEFT JOIN rssimyaccount_members AS verified_member ON v.verified_by = verified_member.associatenumber";
-
+  // -----------------------------
+  // Apply Conditions
+  // -----------------------------
   if (!empty($conditions)) {
     $query .= " WHERE " . implode(" AND ", $conditions);
   }
 
-  $query .= " ORDER BY itemname ASC";
+  // -----------------------------
+  // Order
+  // -----------------------------
+  $query .= " ORDER BY gps.date DESC";
+
+  // Debug if needed
+  // echo $query;
 
   $gpsdetails = $query;
 

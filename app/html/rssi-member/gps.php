@@ -18,53 +18,72 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 <?php if ($role == 'Admin') {
 
     if (isset($_POST['form-type']) && $_POST['form-type'] == "addasset") {
-        // Generate a unique itemid with microseconds to avoid duplicates
-        $microtime = microtime(true);
-        $itemid = "A" . str_replace('.', '', sprintf('%.4f', $microtime));
 
-        $itemtype = isset($_POST['itemtype']) ? $_POST['itemtype'] : '';
-        $itemname = isset($_POST['itemname']) ? $_POST['itemname'] : '';
-        $quantity = isset($_POST['quantity']) ? $_POST['quantity'] : '';
+        $itemtype = $_POST['itemtype'] ?? '';
+        $itemname = $_POST['itemname'] ?? '';
+        $quantity = (int) ($_POST['quantity'] ?? 1);
         $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
-        $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : '';
+        $asset_status = $_POST['asset_status'] ?? '';
+        $asset_category = $_POST['asset_category'] ?? '';
+        $unit_cost = $_POST['unit_cost'] ?? '';
+        $purchase_date = $_POST['purchase_date'] ?? '';
         $now = date('Y-m-d H:i:s');
-        $collectedby = $associatenumber; // Or whichever user is adding the asset
-        $asset_category = isset($_POST['asset_category']) ? $_POST['asset_category'] : '';
-        $unit_cost = isset($_POST['unit_cost']) ? $_POST['unit_cost'] : '';
-        $purchase_date = isset($_POST['purchase_date']) ? $_POST['purchase_date'] : '';
+        $collectedby = $associatenumber;
+
         $photo_path = $_FILES['asset_photo'] ?? null;
-        $bill_path = $_FILES['purchase_bill'] ?? null;
+        $bill_path  = $_FILES['purchase_bill'] ?? null;
 
-        // Initialize file links to null
+        if ($itemtype == "") {
+            $_SESSION['error_message'] = "Please select an asset type!";
+            return;
+        }
+
+        // Upload files ONCE and reuse links
         $doclink_photo_path = null;
-        $doclink_bill_path = null;
+        $doclink_bill_path  = null;
 
-        // Handle photo upload
         if (!empty($photo_path['name'])) {
-            $filename_photo_path = "photo_path_" . "$itemid" . "_" . time();
-            $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR'; // GPS Photos folder ID
+            $filename_photo_path = "photo_" . time();
+            $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR';
             $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
         }
-        // Handle bill upload
+
         if (!empty($bill_path['name'])) {
-            $filename_bill_path = "bill_path_" . "$itemid" . "_" . time();
-            $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os'; // GPS Bills folder ID
+            $filename_bill_path = "bill_" . time();
+            $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os';
             $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
         }
 
-        if ($itemtype != "") {
-            // Insert into gps table
-            $gps_query = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby, asset_status, asset_category, unit_cost, asset_photo, purchase_bill, purchase_date) 
-                      VALUES ('$itemid', '$now', '$itemtype', '$itemname', '$quantity', '$remarks', '$collectedby', '$asset_status', '$asset_category', '$unit_cost', '$doclink_photo_path', '$doclink_bill_path', '$purchase_date')";
+        $successCount = 0;
+
+        // LOOP BASED ON QUANTITY
+        for ($i = 1; $i <= max(1, $quantity); $i++) {
+
+            // Unique asset ID for each row
+            $microtime = microtime(true) + $i;
+            $itemid = "A" . str_replace('.', '', sprintf('%.4f', $microtime));
+
+            $gps_query = "
+            INSERT INTO gps (
+                itemid, date, itemtype, itemname, quantity, remarks,
+                collectedby, asset_status, asset_category, unit_cost,
+                asset_photo, purchase_bill, purchase_date
+            )
+            VALUES (
+                '$itemid', '$now', '$itemtype', '$itemname', 1, '$remarks',
+                '$collectedby', '$asset_status', '$asset_category', '$unit_cost',
+                '$doclink_photo_path', '$doclink_bill_path', '$purchase_date'
+            )
+        ";
 
             $gps_result = pg_query($con, $gps_query);
 
             if ($gps_result) {
-                // Prepare the changes array (only what's relevant)
+
                 $changes = [
                     'itemtype' => $itemtype,
                     'itemname' => $itemname,
-                    'quantity' => $quantity,
+                    'quantity' => 1,
                     'asset_status' => $asset_status,
                     'collectedby' => $collectedby,
                     'remarks' => $remarks,
@@ -74,26 +93,27 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                     'purchase_bill' => $doclink_bill_path,
                     'purchase_date' => $purchase_date
                 ];
+
                 $changes_json = json_encode($changes);
 
-                // Insert into gps_history table with only required columns
-                $history_query = "INSERT INTO gps_history (itemid, update_type, updatedby, date, changes) 
-                              VALUES ('$itemid', 'add_asset', '$collectedby', '$now', '$changes_json')";
-                $history_result = pg_query($con, $history_query);
+                $history_query = "
+                INSERT INTO gps_history (
+                    itemid, update_type, updatedby, date, changes
+                )
+                VALUES (
+                    '$itemid', 'add_asset', '$collectedby', '$now', '$changes_json'
+                )
+            ";
 
-                $cmdtuples = pg_affected_rows($gps_result);
-
-                // Set success message
-                $_SESSION['success_message'] = "Asset $itemid has been added successfully!";
-            } else {
-                // Handle SQL error
-                $error_message = pg_last_error($con);
-                $_SESSION['error_message'] = "Error adding asset: $error_message";
-                $cmdtuples = 0;
+                pg_query($con, $history_query);
+                $successCount++;
             }
+        }
+
+        if ($successCount > 0) {
+            $_SESSION['success_message'] = "$successCount asset(s) added successfully!";
         } else {
-            $_SESSION['error_message'] = "Please select an asset type!";
-            $cmdtuples = 0;
+            $_SESSION['error_message'] = "Error adding assets.";
         }
     }
 
@@ -359,16 +379,27 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <?php if ($role == 'Admin') { ?>
-                                <?php if (@$itemid != null && @$cmdtuples == 0) { ?>
+                                <?php if (isset($successCount) && $successCount == 0) { ?>
                                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
-                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                        <span class="blink_me">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </span>
+                                        &nbsp;&nbsp;
+                                        <span>ERROR: Oops, something wasn’t right while adding the asset(s).</span>
                                     </div>
-                                <?php } else if (@$cmdtuples == 1) { ?>
+
+                                <?php } else if (isset($successCount) && $successCount > 0) { ?>
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
-                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
+                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i>
+                                        &nbsp;&nbsp;
+                                        <span>
+                                            <?php echo $successCount; ?> asset<?php echo ($successCount > 1) ? 's have' : ' has'; ?>
+                                            been added successfully.
+                                        </span>
                                     </div>
+
                                     <script>
                                         if (window.history.replaceState) {
                                             window.history.replaceState(null, null, window.location.href);
@@ -376,6 +407,7 @@ $resultArr = pg_fetch_all($result);
                                     </script>
                             <?php }
                             } ?>
+
 
                             <?php if ($role == 'Admin') { ?>
                                 <div class="row mb-4">
