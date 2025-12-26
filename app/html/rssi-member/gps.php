@@ -97,14 +97,19 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         }
     }
 
-    $taggedto = isset($_GET['taggedto']) ? strtoupper($_GET['taggedto']) : '';
-    $item_type = isset($_GET['item_type']) ? $_GET['item_type'] : '';
-    $assetid = isset($_GET['assetid']) ? $_GET['assetid'] : '';
-    $is_user = isset($_GET['is_user']) ? $_GET['is_user'] : '';
-    $assetstatus = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
+    // -----------------------------
+    // Read Filters
+    // -----------------------------
+    $taggedto       = isset($_GET['taggedto']) ? strtoupper($_GET['taggedto']) : '';
+    $item_type     = isset($_GET['item_type']) ? $_GET['item_type'] : '';
+    $assetid       = isset($_GET['assetid']) ? trim($_GET['assetid']) : '';
+    $is_user       = isset($_GET['is_user']) ? $_GET['is_user'] : '';
+    $assetstatus   = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
     $assetcategory = isset($_GET['assetcategory']) ? $_GET['assetcategory'] : '';
 
-    // Check for session messages
+    // -----------------------------
+    // Session Messages
+    // -----------------------------
     if (isset($_SESSION['success_message'])) {
         $success_message = $_SESSION['success_message'];
         unset($_SESSION['success_message']);
@@ -115,22 +120,21 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         unset($_SESSION['error_message']);
     }
 
+    // -----------------------------
+    // Conditions Builder
+    // -----------------------------
     $conditions = [];
 
-    if ($item_type != "ALL" && $item_type != "") {
-        $conditions[] = "itemtype = '$item_type'";
-    }
-    if ($assetcategory != "ALL" && $assetcategory != "") {
-        $conditions[] = "asset_category = '$assetcategory'";
-    }
+    // Asset ID search takes PRIORITY
+    $isAssetSearch = ($assetid !== '');
 
-    if ($taggedto != "") {
-        $conditions[] = "taggedto = '$taggedto'";
-    }
+    if ($isAssetSearch) {
 
-    if ($assetid != "") {
-        // Check if it's comma-separated IDs
+        // -----------------------------
+        // ASSET ID SEARCH (Ignore all filters)
+        // -----------------------------
         if (strpos($assetid, ',') !== false) {
+
             $assetIds = array_map('trim', explode(',', $assetid));
             $sanitizedIds = array_map(function ($id) use ($con) {
                 return pg_escape_string($con, $id);
@@ -138,52 +142,85 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
             if (!empty($sanitizedIds)) {
                 $idList = "'" . implode("','", $sanitizedIds) . "'";
-                $conditions[] = "itemid IN ($idList)";
+                $conditions[] = "gps.itemid IN ($idList)";
             }
         } else {
-            // Single ID or name search
-            $conditions[] = "(itemid = '$assetid' OR itemname ILIKE '%$assetid%')";
+            $assetid_safe = pg_escape_string($con, $assetid);
+            $conditions[] = "(gps.itemid = '$assetid_safe' OR gps.itemname ILIKE '%$assetid_safe%')";
+        }
+    } else {
+
+        // -----------------------------
+        // NORMAL FILTERS
+        // -----------------------------
+        if ($item_type !== "ALL" && $item_type !== "") {
+            $conditions[] = "gps.itemtype = '$item_type'";
+        }
+
+        if ($assetcategory !== "ALL" && $assetcategory !== "") {
+            $conditions[] = "gps.asset_category = '$assetcategory'";
+        }
+
+        if ($taggedto !== "") {
+            $conditions[] = "gps.taggedto = '$taggedto'";
+        }
+
+        if ($assetstatus !== "") {
+            $conditions[] = "gps.asset_status = '$assetstatus'";
         }
     }
 
-    if ($assetstatus != "") {
-        $conditions[] = "asset_status = '$assetstatus'";
-    }
+    // -----------------------------
+    // MAIN QUERY
+    // -----------------------------
+    $query = "
+    SELECT 
+        gps.*,
+        tmember.fullname AS tfullname,
+        tmember.phone AS tphone,
+        tmember.email AS temail,
+        imember.fullname AS ifullname,
+        imember.phone AS iphone,
+        imember.email AS iemail,
+        v.verification_date,
+        v.verified_by,
+        verified_member.fullname AS verified_by_name,
+        v.verification_status,
+        v.admin_review_status
+    FROM gps
+    LEFT JOIN rssimyaccount_members AS tmember 
+        ON gps.taggedto = tmember.associatenumber
+    LEFT JOIN rssimyaccount_members AS imember 
+        ON gps.collectedby = imember.associatenumber
+    LEFT JOIN (
+        SELECT DISTINCT ON (asset_id)
+            asset_id,
+            verification_date,
+            verified_by,
+            verification_status,
+            admin_review_status
+        FROM gps_verifications
+        ORDER BY asset_id, verification_date DESC
+    ) AS v 
+        ON gps.itemid = v.asset_id
+    LEFT JOIN rssimyaccount_members AS verified_member 
+        ON v.verified_by = verified_member.associatenumber
+    ";
 
-    // Make sure your query includes these fields
-$query = "SELECT 
-    gps.*,
-    tmember.fullname AS tfullname,
-    tmember.phone AS tphone,
-    tmember.email AS temail,
-    imember.fullname AS ifullname,
-    imember.phone AS iphone,
-    imember.email AS iemail,
-    v.verification_date,
-    v.verified_by,
-    verified_member.fullname AS verified_by_name,
-    v.verification_status,
-    v.admin_review_status
-FROM gps
-LEFT JOIN rssimyaccount_members AS tmember ON gps.taggedto = tmember.associatenumber
-LEFT JOIN rssimyaccount_members AS imember ON gps.collectedby = imember.associatenumber
-LEFT JOIN (
-    SELECT DISTINCT ON (asset_id) 
-        asset_id,
-        verification_date,
-        verified_by,
-        verification_status,
-        admin_review_status
-    FROM gps_verifications
-    ORDER BY asset_id, verification_date DESC
-) AS v ON gps.itemid = v.asset_id
-LEFT JOIN rssimyaccount_members AS verified_member ON v.verified_by = verified_member.associatenumber";
-
+    // -----------------------------
+    // Apply Conditions
+    // -----------------------------
     if (!empty($conditions)) {
         $query .= " WHERE " . implode(" AND ", $conditions);
     }
 
+    // -----------------------------
+    // Order
+    // -----------------------------
     $query .= " ORDER BY gps.date DESC";
+
+    // Debug if needed
+    // echo $query;
 
     $gpsdetails = $query;
 }
