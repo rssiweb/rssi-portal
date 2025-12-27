@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+include(__DIR__ . "/../image_functions.php");
 
 include("../../util/login_util.php");
 include("../../util/drive.php");
@@ -612,30 +613,30 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                 <table class="table" id="table-id">
                                     <thead>
                                         <tr>
-                                            <th scope="col" width="50">
+                                            <th width="50">
                                                 <input type="checkbox" id="select-all-checkbox" class="form-check-input">
                                             </th>
-                                            <th scope="col">Asset Id</th>
-                                            <th scope="col" id="cw">Asset name</th>
-                                            <th scope="col">Quantity</th>
+                                            <th>Asset Id</th>
+                                            <th>Asset name</th>
+                                            <th>Quantity</th>
                                             <?php if ($role == 'Admin'): ?>
-                                                <th scope="col">Asset type</th>
-                                                <th scope="col">Asset category</th>
-                                                <th scope="col">Unit price</th>
-                                                <th scope="col">Purchase Date</th>
-                                                <th scope="col">Photo</th>
-                                                <th scope="col">Bill</th>
-                                                <th scope="col" id="cw1">Remarks</th>
+                                                <th>Asset type</th>
+                                                <th>Asset category</th>
+                                                <th>Unit price</th>
+                                                <th>Purchase Date</th>
+                                                <th>Photo</th>
+                                                <th>Bill</th>
+                                                <th>Remarks</th>
                                                 <th>Last Verified</th>
                                                 <th>Verified By</th>
                                                 <th>Verification Status</th>
                                                 <th>Review Status</th>
                                             <?php endif; ?>
-                                            <th scope="col">Issued by</th>
-                                            <th scope="col">Tagged to</th>
-                                            <th scope="col">Status</th>
-                                            <!-- <th scope="col">Last updated on</th> -->
-                                            <th scope="col"></th>
+                                            <th>Issued by</th>
+                                            <th>Tagged to</th>
+                                            <th>Status</th>
+                                            <!-- <th>Last updated on</th> -->
+                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -676,17 +677,43 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                 <span>N/A</span>
                                                             <?php endif; ?>
                                                         <td>
-                                                            <?php if (!empty($array['asset_photo'])): ?>
-                                                                <span>Y</span>
+                                                            <?php
+                                                            $photoUrl = !empty($array['asset_photo']) ? processImageUrl($array['asset_photo']) : null;
+                                                            $originalPhotoUrl = !empty($array['asset_photo']) ? $array['asset_photo'] : null;
+                                                            $isPhotoPdf = !empty($originalPhotoUrl) && pathinfo($originalPhotoUrl, PATHINFO_EXTENSION) === 'pdf';
+                                                            ?>
+                                                            <?php if (!empty($photoUrl)): ?>
+                                                                <button type="button"
+                                                                    class="btn btn-link p-0 border-0 view-photo-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#imageModal"
+                                                                    data-url="<?= $isPhotoPdf ? htmlspecialchars($originalPhotoUrl) : htmlspecialchars($photoUrl) ?>"
+                                                                    data-is-pdf="<?= $isPhotoPdf ? 'true' : 'false' ?>"
+                                                                    data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
+                                                                    <span class="text-primary">Y</span>
+                                                                </button>
                                                             <?php else: ?>
-                                                                <span>N/A</span>
+                                                                <span class="text-muted">N/A</span>
                                                             <?php endif; ?>
                                                         </td>
                                                         <td>
-                                                            <?php if (!empty($array['purchase_bill'])): ?>
-                                                                <span>Y</span>
+                                                            <?php
+                                                            $billUrl = !empty($array['purchase_bill']) ? processImageUrl($array['purchase_bill']) : null;
+                                                            $originalBillUrl = !empty($array['purchase_bill']) ? $array['purchase_bill'] : null;
+                                                            $isBillPdf = !empty($originalBillUrl) && pathinfo($originalBillUrl, PATHINFO_EXTENSION) === 'pdf';
+                                                            ?>
+                                                            <?php if (!empty($billUrl)): ?>
+                                                                <button type="button"
+                                                                    class="btn btn-link p-0 border-0 view-photo-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#imageModal"
+                                                                    data-url="<?= $isBillPdf ? htmlspecialchars($originalBillUrl) : htmlspecialchars($billUrl) ?>"
+                                                                    data-is-pdf="<?= $isBillPdf ? 'true' : 'false' ?>"
+                                                                    data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
+                                                                    <span class="text-primary">Y</span>
+                                                                </button>
                                                             <?php else: ?>
-                                                                <span>N/A</span>
+                                                                <span class="text-muted">N/A</span>
                                                             <?php endif; ?>
                                                         </td>
                                                         <td>
@@ -1011,6 +1038,42 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Simple Image/File Modal with Spinner -->
+                            <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="imageModalLabel">Loading...</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body p-0 position-relative" style="min-height: 500px;">
+                                            <!-- Loading Spinner -->
+                                            <div id="modalSpinner" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- For PDFs (iframe) -->
+                                            <iframe id="modalIframe" style="width: 100%; height: 70vh; border: none; display: none;"></iframe>
+
+                                            <!-- For Images (img tag) -->
+                                            <div id="imageContainer" style="display: none; text-align: center; padding: 20px;">
+                                                <img id="modalImage" class="img-fluid rounded" alt="" style="max-height: 65vh;">
+                                                <div class="mt-2 text-muted">
+                                                    <small id="imageCaption"></small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a href="#" id="downloadBtn" class="btn btn-primary" style="display: none;" download>
+                                                <i class="bi bi-download"></i> Download
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -1687,6 +1750,112 @@ $resultArr = $result ? pg_fetch_all($result) : [];
         window.addEventListener('load', function() {
             // Hide loading modal
             hideLoadingModal();
+        });
+    </script>
+    <script>
+        // Simple Modal Handler with Spinner - Fixed Version
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageModal = document.getElementById('imageModal');
+
+            if (imageModal) {
+                // Use Bootstrap's modal events properly
+                imageModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const url = button.getAttribute('data-url');
+                    const isPdf = button.getAttribute('data-is-pdf') === 'true';
+                    const title = button.getAttribute('data-title') || 'View File';
+
+                    // Set modal title immediately
+                    const modalTitle = imageModal.querySelector('#imageModalLabel');
+                    if (modalTitle) {
+                        modalTitle.textContent = title;
+                    }
+
+                    // Show spinner, hide other content
+                    const modalSpinner = imageModal.querySelector('#modalSpinner');
+                    const modalIframe = imageModal.querySelector('#modalIframe');
+                    const imageContainer = imageModal.querySelector('#imageContainer');
+                    const downloadBtn = imageModal.querySelector('#downloadBtn');
+
+                    if (modalSpinner) modalSpinner.style.display = 'block';
+                    if (modalIframe) modalIframe.style.display = 'none';
+                    if (imageContainer) imageContainer.style.display = 'none';
+                    if (downloadBtn) {
+                        downloadBtn.style.display = 'none';
+                        downloadBtn.href = url;
+                        downloadBtn.download = title.replace(/[^a-z0-9]/gi, '_') + (isPdf ? '.pdf' : '.jpg');
+                    }
+
+                    // Use setTimeout to ensure modal is visible
+                    setTimeout(function() {
+                        if (isPdf) {
+                            // Handle PDF
+                            if (modalIframe) {
+                                modalIframe.style.display = 'block';
+                                modalIframe.onload = function() {
+                                    if (modalSpinner) modalSpinner.style.display = 'none';
+                                    if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                                };
+                                modalIframe.onerror = function() {
+                                    if (modalSpinner) modalSpinner.style.display = 'none';
+                                    showError(imageModal, 'Failed to load PDF');
+                                };
+                                modalIframe.src = url;
+                            }
+                        } else {
+                            // Handle Image
+                            const modalImage = imageModal.querySelector('#modalImage');
+                            const imageCaption = imageModal.querySelector('#imageCaption');
+
+                            if (modalImage && imageCaption) {
+                                imageCaption.textContent = title;
+                                modalImage.onload = function() {
+                                    if (modalSpinner) modalSpinner.style.display = 'none';
+                                    if (imageContainer) imageContainer.style.display = 'block';
+                                    if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                                };
+                                modalImage.onerror = function() {
+                                    if (modalSpinner) modalSpinner.style.display = 'none';
+                                    showError(imageModal, 'Failed to load image');
+                                };
+                                modalImage.src = url;
+                                modalImage.alt = title;
+                            }
+                        }
+                    }, 100); // Small delay to ensure modal is rendered
+                });
+
+                // Clear on hide
+                imageModal.addEventListener('hidden.bs.modal', function() {
+                    const modalIframe = imageModal.querySelector('#modalIframe');
+                    const modalImage = imageModal.querySelector('#modalImage');
+                    const modalSpinner = imageModal.querySelector('#modalSpinner');
+                    const downloadBtn = imageModal.querySelector('#downloadBtn');
+
+                    if (modalIframe) {
+                        modalIframe.src = '';
+                        modalIframe.onload = null;
+                        modalIframe.onerror = null;
+                    }
+
+                    if (modalImage) {
+                        modalImage.src = '';
+                        modalImage.onload = null;
+                        modalImage.onerror = null;
+                    }
+
+                    if (modalSpinner) modalSpinner.style.display = 'none';
+                    if (downloadBtn) downloadBtn.style.display = 'none';
+                });
+            }
+
+            function showError(modal, message) {
+                const imageContainer = modal.querySelector('#imageContainer');
+                if (imageContainer) {
+                    imageContainer.innerHTML = '<div class="alert alert-danger mt-5">' + message + '</div>';
+                    imageContainer.style.display = 'block';
+                }
+            }
         });
     </script>
 </body>
