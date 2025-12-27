@@ -680,14 +680,15 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                             <?php
                                                             $photoUrl = !empty($array['asset_photo']) ? processImageUrl($array['asset_photo']) : null;
                                                             $originalPhotoUrl = !empty($array['asset_photo']) ? $array['asset_photo'] : null;
-                                                            $isPhotoPdf = !empty($originalPhotoUrl) && pathinfo($originalPhotoUrl, PATHINFO_EXTENSION) === 'pdf';
+                                                            $isPhotoPdf = !empty($originalPhotoUrl) && strtolower(pathinfo($originalPhotoUrl, PATHINFO_EXTENSION)) === 'pdf';
                                                             ?>
                                                             <?php if (!empty($photoUrl)): ?>
                                                                 <button type="button"
                                                                     class="btn btn-link p-0 border-0 view-photo-btn"
                                                                     data-bs-toggle="modal"
                                                                     data-bs-target="#imageModal"
-                                                                    data-url="<?= $isPhotoPdf ? htmlspecialchars($originalPhotoUrl) : htmlspecialchars($photoUrl) ?>"
+                                                                    data-proxy-url="<?= htmlspecialchars($photoUrl) ?>"
+                                                                    data-original-url="<?= htmlspecialchars($originalPhotoUrl) ?>"
                                                                     data-is-pdf="<?= $isPhotoPdf ? 'true' : 'false' ?>"
                                                                     data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
                                                                     <span class="text-primary">Y</span>
@@ -700,14 +701,15 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                             <?php
                                                             $billUrl = !empty($array['purchase_bill']) ? processImageUrl($array['purchase_bill']) : null;
                                                             $originalBillUrl = !empty($array['purchase_bill']) ? $array['purchase_bill'] : null;
-                                                            $isBillPdf = !empty($originalBillUrl) && pathinfo($originalBillUrl, PATHINFO_EXTENSION) === 'pdf';
+                                                            $isBillPdf = !empty($originalBillUrl) && strtolower(pathinfo($originalBillUrl, PATHINFO_EXTENSION)) === 'pdf';
                                                             ?>
                                                             <?php if (!empty($billUrl)): ?>
                                                                 <button type="button"
                                                                     class="btn btn-link p-0 border-0 view-photo-btn"
                                                                     data-bs-toggle="modal"
                                                                     data-bs-target="#imageModal"
-                                                                    data-url="<?= $isBillPdf ? htmlspecialchars($originalBillUrl) : htmlspecialchars($billUrl) ?>"
+                                                                    data-proxy-url="<?= htmlspecialchars($billUrl) ?>"
+                                                                    data-original-url="<?= htmlspecialchars($originalBillUrl) ?>"
                                                                     data-is-pdf="<?= $isBillPdf ? 'true' : 'false' ?>"
                                                                     data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
                                                                     <span class="text-primary">Y</span>
@@ -823,21 +825,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                         <?php endif; ?>
                                                                     </li>
                                                                     <li>
-                                                                        <?php if (!empty($array['purchase_bill'])): ?>
-                                                                            <a href="<?= htmlspecialchars($array['purchase_bill']) ?>"
-                                                                                target="_blank"
-                                                                                title="View Invoice"
-                                                                                class="btn btn-link dropdown-item text-start w-100"
-                                                                                style="padding-left: 1rem;">
-                                                                                <i class="bi bi-receipt"></i> View Invoice
-                                                                            </a>
-                                                                        <?php else: ?>
-                                                                            <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
-                                                                                <i class="bi bi-receipt"></i> View Invoice
-                                                                            </span>
-                                                                        <?php endif; ?>
-                                                                    </li>
-                                                                    <li>
                                                                         <!-- Asset History link styled like a button -->
                                                                         <a href="gps_history.php?assetid=<?= htmlspecialchars($array['itemid']) ?>" target="_blank" title="Asset History"
                                                                             class="btn btn-link dropdown-item text-start w-100" style="padding-left: 1rem;">
@@ -845,21 +832,23 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                         </a>
                                                                     </li>
                                                                 <?php endif; ?>
-                                                                <li>
-                                                                    <?php if (!empty($array['asset_photo'])): ?>
-                                                                        <a href="<?= htmlspecialchars($array['asset_photo']) ?>"
-                                                                            target="_blank"
-                                                                            title="View Asset Photo"
-                                                                            class="btn btn-link dropdown-item text-start w-100"
-                                                                            style="padding-left: 1rem;">
-                                                                            <i class="bi bi-image"></i> View Photo
-                                                                        </a>
-                                                                    <?php else: ?>
-                                                                        <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
-                                                                            <i class="bi bi-image"></i> View Photo
-                                                                        </span>
-                                                                    <?php endif; ?>
-                                                                </li>
+                                                                <?php if ($role !== 'Admin'): ?>
+                                                                    <li>
+                                                                        <?php if (!empty($array['asset_photo'])): ?>
+                                                                            <a href="<?= htmlspecialchars($array['asset_photo']) ?>"
+                                                                                target="_blank"
+                                                                                title="View Asset Photo"
+                                                                                class="btn btn-link dropdown-item text-start w-100"
+                                                                                style="padding-left: 1rem;">
+                                                                                <i class="bi bi-image"></i> View Photo
+                                                                            </a>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item text-muted disabled" style="padding-left: 1rem;">
+                                                                                <i class="bi bi-image"></i> View Photo
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </li>
+                                                                <?php endif; ?>
                                                             </ul>
                                                         </div>
                                                     </td>
@@ -1761,9 +1750,15 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 // Use Bootstrap's modal events properly
                 imageModal.addEventListener('show.bs.modal', function(event) {
                     const button = event.relatedTarget;
-                    const url = button.getAttribute('data-url');
+                    const proxyUrl = button.getAttribute('data-proxy-url');
+                    const originalUrl = button.getAttribute('data-original-url');
                     const isPdf = button.getAttribute('data-is-pdf') === 'true';
                     const title = button.getAttribute('data-title') || 'View File';
+
+                    // Determine which URL to use for viewing
+                    const viewUrl = isPdf ? originalUrl : proxyUrl;
+                    // For download: ALWAYS use original URL
+                    const downloadUrl = originalUrl;
 
                     // Set modal title immediately
                     const modalTitle = imageModal.querySelector('#imageModalLabel');
@@ -1782,7 +1777,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                     if (imageContainer) imageContainer.style.display = 'none';
                     if (downloadBtn) {
                         downloadBtn.style.display = 'none';
-                        downloadBtn.href = url;
+                        downloadBtn.href = downloadUrl; // Always original URL
                         downloadBtn.download = title.replace(/[^a-z0-9]/gi, '_') + (isPdf ? '.pdf' : '.jpg');
                     }
 
@@ -1800,7 +1795,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                     if (modalSpinner) modalSpinner.style.display = 'none';
                                     showError(imageModal, 'Failed to load PDF');
                                 };
-                                modalIframe.src = url;
+                                modalIframe.src = viewUrl;
                             }
                         } else {
                             // Handle Image
@@ -1818,7 +1813,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                     if (modalSpinner) modalSpinner.style.display = 'none';
                                     showError(imageModal, 'Failed to load image');
                                 };
-                                modalImage.src = url;
+                                modalImage.src = viewUrl;
                                 modalImage.alt = title;
                             }
                         }
