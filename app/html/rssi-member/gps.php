@@ -1082,6 +1082,22 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script src="../assets_new/js/image-compressor-100kb.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         // Assuming data is provided from PHP
         var data = <?= json_encode($resultArr) ?>;
@@ -1495,16 +1511,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             function updateRowSelection() {
                 $('#table-id tbody tr').removeClass('selected');
                 $('.asset-checkbox:checked').closest('tr').addClass('selected');
-
-                // Update text color for Y buttons in selected rows
-                $('.asset-checkbox:checked').closest('tr').find('.view-photo-btn span.text-primary')
-                    .removeClass('text-primary')
-                    .addClass('text-white');
-
-                // Reset text color for Y buttons in unselected rows
-                $('.asset-checkbox:not(:checked)').closest('tr').find('.view-photo-btn span.text-white')
-                    .removeClass('text-white')
-                    .addClass('text-primary');
             }
 
             /* -------- Bulk update section -------- */
@@ -1617,6 +1623,32 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     </script>
     <script>
         $(document).ready(function() {
+
+            function toggleBulkFields() {
+                const updateTaggedTo = $('#update-tagged-to').is(':checked');
+                const updateStatus = $('#update-status').is(':checked');
+
+                // Enable / disable Tagged To
+                $('#tagged-to-select')
+                    .prop('disabled', !updateTaggedTo)
+                    .toggleClass('bg-light', !updateTaggedTo);
+
+                // Enable / disable Status
+                $('#status-select')
+                    .prop('disabled', !updateStatus)
+                    .toggleClass('bg-light', !updateStatus);
+            }
+
+            // Run on checkbox change
+            $('#update-tagged-to, #update-status').on('change', function() {
+                toggleBulkFields();
+            });
+
+            // Run once when bulk section becomes visible
+            toggleBulkFields();
+        });
+
+        $(document).ready(function() {
             // Function to validate the form
             function validateBulkUpdateForm() {
                 const updateTaggedTo = $('#update-tagged-to').is(':checked');
@@ -1694,24 +1726,31 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                     validateBulkUpdateForm();
                 }
             });
+
+            $('#cancel-bulk-update').on('click', function() {
+
+                // Uncheck all asset checkboxes
+                $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
+
+                // Hide bulk update section
+                $('.bulk-update-section').hide();
+
+                // Reset bulk update form
+                $('#bulk-update-form')[0].reset();
+
+                // Disable fields again
+                $('#tagged-to-select').prop('disabled', true).val(null).trigger('change');
+                $('#status-select').prop('disabled', true).val('');
+
+                // Reset selected count badge
+                $('#selected-count-badge').text('0 selected');
+
+                // Remove row highlights
+                $('#table-id tbody tr').removeClass('selected');
+
+            });
         });
     </script>
-    <!-- Bootstrap Modal -->
-    <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p id="loadingMessage">Submission in progress.
-                            Please do not close or reload this page.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <script>
         // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
         const myModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
