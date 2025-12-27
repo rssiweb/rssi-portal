@@ -12,256 +12,222 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+date_default_timezone_set('Asia/Kolkata');
 
-date_default_timezone_set('Asia/Kolkata'); ?>
+// ======================================================
+// ADMIN: ADD ASSET
+// ======================================================
+if ($role === 'Admin') {
 
-<?php if ($role == 'Admin') {
+    if (isset($_POST['form-type']) && $_POST['form-type'] === "addasset") {
 
-    if (isset($_POST['form-type']) && $_POST['form-type'] == "addasset") {
-
-        $itemtype = $_POST['itemtype'] ?? '';
-        $itemname = $_POST['itemname'] ?? '';
-        $quantity = (int) ($_POST['quantity'] ?? 1);
-        $remarks = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
-        $asset_status = $_POST['asset_status'] ?? '';
+        $itemtype       = $_POST['itemtype'] ?? '';
+        $itemname       = $_POST['itemname'] ?? '';
+        $quantity       = (int)($_POST['quantity'] ?? 1);
+        $remarks        = isset($_POST['remarks']) ? htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8') : '';
+        $asset_status   = $_POST['asset_status'] ?? '';
         $asset_category = $_POST['asset_category'] ?? '';
-        $unit_cost = $_POST['unit_cost'] ?? '';
-        $purchase_date = $_POST['purchase_date'] ?? '';
-        $now = date('Y-m-d H:i:s');
-        $collectedby = $associatenumber;
+        $unit_cost      = $_POST['unit_cost'] ?? '';
+        $purchase_date  = $_POST['purchase_date'] ?? '';
+        $now            = date('Y-m-d H:i:s');
+        $collectedby    = $associatenumber;
 
-        $photo_path = $_FILES['asset_photo'] ?? null;
-        $bill_path  = $_FILES['purchase_bill'] ?? null;
-
-        if ($itemtype == "") {
+        if ($itemtype === "") {
             $_SESSION['error_message'] = "Please select an asset type!";
-            return;
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
         }
 
-        // Upload files ONCE and reuse links
+        // Upload files once
         $doclink_photo_path = null;
         $doclink_bill_path  = null;
 
-        if (!empty($photo_path['name'])) {
-            $filename_photo_path = "photo_" . time();
-            $parent_photo_path = '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR';
-            $doclink_photo_path = uploadeToDrive($photo_path, $parent_photo_path, $filename_photo_path);
+        if (!empty($_FILES['asset_photo']['name'])) {
+            $doclink_photo_path = uploadeToDrive(
+                $_FILES['asset_photo'],
+                '19maeFLJUscJcS6k2xwR6Y-Bg6LtHG7NR',
+                'photo_' . time()
+            );
         }
 
-        if (!empty($bill_path['name'])) {
-            $filename_bill_path = "bill_" . time();
-            $parent_bill_path = '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os';
-            $doclink_bill_path = uploadeToDrive($bill_path, $parent_bill_path, $filename_bill_path);
+        if (!empty($_FILES['purchase_bill']['name'])) {
+            $doclink_bill_path = uploadeToDrive(
+                $_FILES['purchase_bill'],
+                '1TxjIHmYuvvyqe48eg9q_lnsyt1wDq6os',
+                'bill_' . time()
+            );
         }
 
         $successCount = 0;
 
-        // LOOP BASED ON QUANTITY
         for ($i = 1; $i <= max(1, $quantity); $i++) {
 
-            // Unique asset ID for each row
-            $microtime = microtime(true) + $i;
-            $itemid = "A" . str_replace('.', '', sprintf('%.4f', $microtime));
+            $itemid = "A" . str_replace('.', '', sprintf('%.4f', microtime(true) + $i));
 
-            $gps_query = "
-            INSERT INTO gps (
-                itemid, date, itemtype, itemname, quantity, remarks,
-                collectedby, asset_status, asset_category, unit_cost,
-                asset_photo, purchase_bill, purchase_date
-            )
-            VALUES (
-                '$itemid', '$now', '$itemtype', '$itemname', 1, '$remarks',
-                '$collectedby', '$asset_status', '$asset_category', '$unit_cost',
-                '$doclink_photo_path', '$doclink_bill_path', '$purchase_date'
-            )
-        ";
-
-            $gps_result = pg_query($con, $gps_query);
-
-            if ($gps_result) {
-
-                $changes = [
-                    'itemtype' => $itemtype,
-                    'itemname' => $itemname,
-                    'quantity' => 1,
-                    'asset_status' => $asset_status,
-                    'collectedby' => $collectedby,
-                    'remarks' => $remarks,
-                    'asset_category' => $asset_category,
-                    'unit_cost' => $unit_cost,
-                    'asset_photo' => $doclink_photo_path,
-                    'purchase_bill' => $doclink_bill_path,
-                    'purchase_date' => $purchase_date
-                ];
-
-                $changes_json = json_encode($changes);
-
-                $history_query = "
-                INSERT INTO gps_history (
-                    itemid, update_type, updatedby, date, changes
-                )
-                VALUES (
-                    '$itemid', 'add_asset', '$collectedby', '$now', '$changes_json'
+            $insert = "
+                INSERT INTO gps (
+                    itemid, date, itemtype, itemname, quantity, remarks,
+                    collectedby, asset_status, asset_category, unit_cost,
+                    asset_photo, purchase_bill, purchase_date
+                ) VALUES (
+                    '$itemid', '$now', '$itemtype', '$itemname', 1, '$remarks',
+                    '$collectedby', '$asset_status', '$asset_category', '$unit_cost',
+                    '$doclink_photo_path', '$doclink_bill_path', '$purchase_date'
                 )
             ";
 
-                pg_query($con, $history_query);
+            if (pg_query($con, $insert)) {
+
+                $changes = json_encode([
+                    'itemtype'       => $itemtype,
+                    'itemname'       => $itemname,
+                    'quantity'       => 1,
+                    'asset_status'   => $asset_status,
+                    'collectedby'    => $collectedby,
+                    'remarks'        => $remarks,
+                    'asset_category' => $asset_category,
+                    'unit_cost'      => $unit_cost,
+                    'asset_photo'    => $doclink_photo_path,
+                    'purchase_bill'  => $doclink_bill_path,
+                    'purchase_date'  => $purchase_date
+                ]);
+
+                pg_query($con, "
+                    INSERT INTO gps_history (
+                        itemid, update_type, updatedby, date, changes
+                    ) VALUES (
+                        '$itemid', 'add_asset', '$collectedby', '$now', '$changes'
+                    )
+                ");
+
                 $successCount++;
             }
         }
 
-        if ($successCount > 0) {
-            $_SESSION['success_message'] = "$successCount asset(s) added successfully!";
-        } else {
-            $_SESSION['error_message'] = "Error adding assets.";
-        }
+        $_SESSION[$successCount ? 'success_message' : 'error_message']
+            = $successCount ? "$successCount asset(s) added successfully!" : "Error adding assets.";
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
+}
 
-    // -----------------------------
-    // Read Filters
-    // -----------------------------
-    $taggedto       = isset($_GET['taggedto']) ? strtoupper($_GET['taggedto']) : '';
-    $item_type     = isset($_GET['item_type']) ? $_GET['item_type'] : '';
-    $assetid       = isset($_GET['assetid']) ? trim($_GET['assetid']) : '';
-    $is_user       = isset($_GET['is_user']) ? $_GET['is_user'] : '';
-    $assetstatus   = isset($_GET['assetstatus']) ? $_GET['assetstatus'] : 'Active';
-    $assetcategory = isset($_GET['assetcategory']) ? $_GET['assetcategory'] : '';
+// ======================================================
+// READ FILTERS (FOR BOTH ROLES)
+// ======================================================
+$taggedto       = strtoupper($_GET['taggedto'] ?? '');
+$item_type      = $_GET['item_type'] ?? '';
+$assetid        = trim($_GET['assetid'] ?? '');
+$assetstatus    = $_GET['assetstatus'] ?? '';
+$assetcategory  = $_GET['assetcategory'] ?? '';
 
-    // -----------------------------
-    // Session Messages
-    // -----------------------------
-    if (isset($_SESSION['success_message'])) {
-        $success_message = $_SESSION['success_message'];
-        unset($_SESSION['success_message']);
-    }
+// ======================================================
+// SESSION MESSAGES
+// ======================================================
+$success_message = $_SESSION['success_message'] ?? null;
+$error_message   = $_SESSION['error_message'] ?? null;
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 
-    if (isset($_SESSION['error_message'])) {
-        $error_message = $_SESSION['error_message'];
-        unset($_SESSION['error_message']);
-    }
+// ======================================================
+// BUILD CONDITIONS (ROLE SAFE)
+// ======================================================
+$conditions = [];
 
-    // -----------------------------
-    // Conditions Builder
-    // -----------------------------
-    $conditions = [];
+// Non-Admin base restriction
+if ($role !== 'Admin') {
+    $conditions[] = "gps.taggedto = '$associatenumber'";
+    $conditions[] = "gps.asset_status = 'Active'";
+}
 
-    // Asset ID search takes PRIORITY
-    $isAssetSearch = ($assetid !== '');
+// Asset ID search priority
+$isAssetSearch = ($assetid !== '');
 
-    if ($isAssetSearch) {
+if ($isAssetSearch) {
 
-        // -----------------------------
-        // ASSET ID SEARCH (Ignore all filters)
-        // -----------------------------
-        if (strpos($assetid, ',') !== false) {
-
-            $assetIds = array_map('trim', explode(',', $assetid));
-            $sanitizedIds = array_map(function ($id) use ($con) {
-                return pg_escape_string($con, $id);
-            }, $assetIds);
-
-            if (!empty($sanitizedIds)) {
-                $idList = "'" . implode("','", $sanitizedIds) . "'";
-                $conditions[] = "gps.itemid IN ($idList)";
-            }
-        } else {
-            $assetid_safe = pg_escape_string($con, $assetid);
-            $conditions[] = "(gps.itemid = '$assetid_safe' OR gps.itemname ILIKE '%$assetid_safe%')";
-        }
+    if (strpos($assetid, ',') !== false) {
+        $ids = array_map('trim', explode(',', $assetid));
+        $ids = array_map(fn($id) => pg_escape_string($con, $id), $ids);
+        $conditions[] = "gps.itemid IN ('" . implode("','", $ids) . "')";
     } else {
+        $safe = pg_escape_string($con, $assetid);
+        $conditions[] = "(gps.itemid = '$safe' OR gps.itemname ILIKE '%$safe%')";
+    }
+} else {
 
-        // -----------------------------
-        // NORMAL FILTERS
-        // -----------------------------
-        if ($item_type !== "ALL" && $item_type !== "") {
-            $conditions[] = "gps.itemtype = '$item_type'";
-        }
-
-        if ($assetcategory !== "ALL" && $assetcategory !== "") {
-            $conditions[] = "gps.asset_category = '$assetcategory'";
-        }
-
-        if ($taggedto !== "") {
-            $conditions[] = "gps.taggedto = '$taggedto'";
-        }
-
-        if ($assetstatus !== "") {
-            $conditions[] = "gps.asset_status = '$assetstatus'";
-        }
+    if ($item_type !== "" && $item_type !== "ALL") {
+        $conditions[] = "gps.itemtype = '$item_type'";
     }
 
-    // -----------------------------
-    // MAIN QUERY
-    // -----------------------------
-    $query = "
-    SELECT 
-        gps.*,
-        tmember.fullname AS tfullname,
-        tmember.phone AS tphone,
-        tmember.email AS temail,
-        imember.fullname AS ifullname,
-        imember.phone AS iphone,
-        imember.email AS iemail,
-        v.verification_date,
-        v.verified_by,
-        verified_member.fullname AS verified_by_name,
-        v.verification_status,
-        v.admin_review_status
-    FROM gps
-    LEFT JOIN rssimyaccount_members AS tmember 
-        ON gps.taggedto = tmember.associatenumber
-    LEFT JOIN rssimyaccount_members AS imember 
-        ON gps.collectedby = imember.associatenumber
-    LEFT JOIN (
-        SELECT DISTINCT ON (asset_id)
-            asset_id,
-            verification_date,
-            verified_by,
-            verification_status,
-            admin_review_status
-        FROM gps_verifications
-        ORDER BY asset_id, verification_date DESC
-    ) AS v 
-        ON gps.itemid = v.asset_id
-    LEFT JOIN rssimyaccount_members AS verified_member 
-        ON v.verified_by = verified_member.associatenumber
-    ";
-
-    // -----------------------------
-    // Apply Conditions
-    // -----------------------------
-    if (!empty($conditions)) {
-        $query .= " WHERE " . implode(" AND ", $conditions);
+    if ($assetcategory !== "" && $assetcategory !== "ALL") {
+        $conditions[] = "gps.asset_category = '$assetcategory'";
     }
 
-    // -----------------------------
-    // Order
-    // -----------------------------
-    $query .= " ORDER BY gps.date DESC";
+    if ($assetstatus !== "") {
+        $conditions[] = "gps.asset_status = '$assetstatus'";
+    }
 
-    // Debug if needed
-    // echo $query;
-
-    $gpsdetails = $query;
-}
-?>
-
-
-<?php if ($role != 'Admin') {
-    $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' AND asset_status = 'Active' order by itemname asc";
-} ?>
-<?php
-$result = pg_query($con, $gpsdetails);
-
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
+    // Admin-only taggedto filter
+    if ($role === 'Admin' && $taggedto !== "") {
+        $conditions[] = "gps.taggedto = '$taggedto'";
+    }
 }
 
-$resultArr = pg_fetch_all($result);
+// No filter → show nothing
+$hasFilter =
+    $isAssetSearch ||
+    ($item_type && $item_type !== 'ALL') ||
+    ($assetcategory && $assetcategory !== 'ALL') ||
+    ($assetstatus) ||
+    ($role === 'Admin' && $taggedto);
 
+if (!$hasFilter) {
+    $conditions[] = "1 = 0";
+}
+
+// ======================================================
+// MAIN QUERY
+// ======================================================
+$query = "
+SELECT 
+    gps.*,
+    tmember.fullname AS tfullname,
+    tmember.phone AS tphone,
+    tmember.email AS temail,
+    imember.fullname AS ifullname,
+    imember.phone AS iphone,
+    imember.email AS iemail,
+    v.verification_date,
+    v.verified_by,
+    verified_member.fullname AS verified_by_name,
+    v.verification_status,
+    v.admin_review_status
+FROM gps
+LEFT JOIN rssimyaccount_members AS tmember
+    ON gps.taggedto = tmember.associatenumber
+LEFT JOIN rssimyaccount_members AS imember
+    ON gps.collectedby = imember.associatenumber
+LEFT JOIN (
+    SELECT DISTINCT ON (asset_id)
+        asset_id, verification_date, verified_by,
+        verification_status, admin_review_status
+    FROM gps_verifications
+    ORDER BY asset_id, verification_date DESC
+) v ON gps.itemid = v.asset_id
+LEFT JOIN rssimyaccount_members AS verified_member
+    ON v.verified_by = verified_member.associatenumber
+";
+
+if ($conditions) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$query .= " ORDER BY gps.purchase_date DESC";
+
+// ======================================================
+// EXECUTE
+// ======================================================
+$result = pg_query($con, $query);
+$resultArr = $result ? pg_fetch_all($result) : [];
 ?>
 <!doctype html>
 <html lang="en">
@@ -496,15 +462,16 @@ $resultArr = pg_fetch_all($result);
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5 class="mb-0">Search Assets</h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <form name="gpsdetails" id="gpsdetails" action="" method="GET" class="row g-3">
+                            <?php } ?>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Search Assets</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <form name="gpsdetails" id="gpsdetails" action="" method="GET" class="row g-3">
+                                                <?php if ($role == 'Admin') { ?>
                                                     <div class="col-md-3">
                                                         <label for="item_type" class="form-label">Asset Type</label>
                                                         <select name="item_type" class="form-select">
@@ -532,100 +499,99 @@ $resultArr = pg_fetch_all($result);
                                                             <option>ALL</option>
                                                         </select>
                                                     </div>
-
-                                                    <div class="col-md-3">
-                                                        <label for="assetstatus" class="form-label">Asset Status</label>
-                                                        <select name="assetstatus" class="form-select">
-                                                            <?php if ($assetstatus == null) { ?>
-                                                                <option disabled selected hidden>Select status</option>
-                                                            <?php } else { ?>
-                                                                <option hidden selected><?php echo htmlspecialchars($assetstatus) ?></option>
-                                                            <?php } ?>
-                                                            <option>Active</option>
-                                                            <option>Inactive</option>
-                                                        </select>
-                                                    </div>
-
                                                     <div class="col-md-3">
                                                         <label for="taggedto" class="form-label">Tagged To</label>
                                                         <input type="text" name="taggedto" class="form-control" placeholder="Enter person name" value="<?php echo htmlspecialchars($taggedto) ?>">
                                                     </div>
+                                                <?php } ?>
+                                                <div class="col-md-3">
+                                                    <label for="assetstatus" class="form-label">Asset Status</label>
+                                                    <select name="assetstatus" class="form-select">
+                                                        <?php if ($assetstatus == null) { ?>
+                                                            <option disabled selected hidden>Select status</option>
+                                                        <?php } else { ?>
+                                                            <option hidden selected><?php echo htmlspecialchars($assetstatus) ?></option>
+                                                        <?php } ?>
+                                                        <option>Active</option>
+                                                        <option>Inactive</option>
+                                                    </select>
+                                                </div>
 
-                                                    <div class="col-md-3">
-                                                        <label for="assetid" class="form-label">Asset ID or Name</label>
-                                                        <input type="text" name="assetid" class="form-control" placeholder="Enter asset ID or name" value="<?php echo htmlspecialchars($assetid) ?>">
-                                                    </div>
+                                                <div class="col-md-3">
+                                                    <label for="assetid" class="form-label">Asset ID or Name</label>
+                                                    <input type="text" name="assetid" class="form-control" placeholder="Enter asset ID or name" value="<?php echo htmlspecialchars($assetid) ?>">
+                                                </div>
 
-                                                    <div class="col-12">
-                                                        <div class="form-check mb-3">
-                                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked"; ?>>
-                                                            <label class="form-check-label" for="is_user">
-                                                                Search by Asset ID or name only
-                                                            </label>
-                                                        </div>
+                                                <div class="col-12">
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked"; ?>>
+                                                        <label class="form-check-label" for="is_user">
+                                                            Search by Asset ID or name only
+                                                        </label>
                                                     </div>
+                                                </div>
 
-                                                    <div class="col-12">
-                                                        <button type="submit" name="search_by_id2" class="btn btn-primary">
-                                                            <i class="bi bi-search"></i> Search
-                                                        </button>
-                                                        <button type="button" id="clear-selection" class="btn btn-secondary" style="display: none;">
-                                                            <i class="bi bi-x-circle"></i> Clear Selection
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
+                                                <div class="col-12">
+                                                    <button type="submit" name="search_by_id2" class="btn btn-primary">
+                                                        <i class="bi bi-search"></i> Search
+                                                    </button>
+                                                    <button type="button" id="clear-selection" class="btn btn-secondary" style="display: none;">
+                                                        <i class="bi bi-x-circle"></i> Clear Selection
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <script>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        const checkbox = document.getElementById('is_user');
-                                        const assetIdInput = document.getElementsByName('assetid')[0];
-                                        const itemTypeInput = document.getElementsByName('item_type')[0];
-                                        const taggedToInput = document.getElementsByName('taggedto')[0];
-                                        const itemStatusInput = document.getElementsByName('assetstatus')[0];
-                                        const assetCategoryInput = document.getElementsByName('assetcategory')[0];
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const checkbox = document.getElementById('is_user');
+                                    const assetIdInput = document.getElementsByName('assetid')[0];
+                                    const itemTypeInput = document.getElementsByName('item_type')[0];
+                                    const taggedToInput = document.getElementsByName('taggedto')[0];
+                                    const itemStatusInput = document.getElementsByName('assetstatus')[0];
+                                    const assetCategoryInput = document.getElementsByName('assetcategory')[0];
 
-                                        function updateFormState() {
-                                            if (checkbox.checked) {
-                                                assetIdInput.disabled = false;
-                                                itemTypeInput.disabled = true;
-                                                itemStatusInput.disabled = true;
-                                                taggedToInput.disabled = true;
-                                                assetCategoryInput.disabled = true;
+                                    function updateFormState() {
+                                        if (checkbox.checked) {
+                                            assetIdInput.disabled = false;
+                                            itemTypeInput.disabled = true;
+                                            itemStatusInput.disabled = true;
+                                            taggedToInput.disabled = true;
+                                            assetCategoryInput.disabled = true;
 
-                                                // Change labels to indicate disabled state
-                                                itemTypeInput.closest('.col-md-3').classList.add('text-muted');
-                                                itemStatusInput.closest('.col-md-3').classList.add('text-muted');
-                                                taggedToInput.closest('.col-md-3').classList.add('text-muted');
-                                                assetIdInput.closest('.col-md-3').classList.remove('text-muted');
-                                                assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
-                                            } else {
-                                                assetIdInput.disabled = true;
-                                                itemTypeInput.disabled = false;
-                                                itemStatusInput.disabled = false;
-                                                taggedToInput.disabled = false;
-                                                assetCategoryInput.disabled = false;
+                                            // Change labels to indicate disabled state
+                                            itemTypeInput.closest('.col-md-3').classList.add('text-muted');
+                                            itemStatusInput.closest('.col-md-3').classList.add('text-muted');
+                                            taggedToInput.closest('.col-md-3').classList.add('text-muted');
+                                            assetIdInput.closest('.col-md-3').classList.remove('text-muted');
+                                            assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
+                                        } else {
+                                            assetIdInput.disabled = true;
+                                            itemTypeInput.disabled = false;
+                                            itemStatusInput.disabled = false;
+                                            taggedToInput.disabled = false;
+                                            assetCategoryInput.disabled = false;
 
-                                                // Remove muted state
-                                                itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
-                                                itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
-                                                taggedToInput.closest('.col-md-3').classList.remove('text-muted');
-                                                assetIdInput.closest('.col-md-3').classList.add('text-muted');
-                                                assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
-                                            }
+                                            // Remove muted state
+                                            itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
+                                            itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
+                                            taggedToInput.closest('.col-md-3').classList.remove('text-muted');
+                                            assetIdInput.closest('.col-md-3').classList.add('text-muted');
+                                            assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
                                         }
+                                    }
 
-                                        // Initial state
-                                        updateFormState();
+                                    // Initial state
+                                    updateFormState();
 
-                                        // Add event listener
-                                        checkbox.addEventListener('change', updateFormState);
-                                    });
-                                </script>
-                            <?php } ?>
+                                    // Add event listener
+                                    checkbox.addEventListener('change', updateFormState);
+                                });
+                            </script>
+
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
                                 <form method="POST" action="export_function.php">
@@ -801,58 +767,14 @@ $resultArr = pg_fetch_all($result);
                                                         </td>
                                                         <td>
                                                             <?php if (!empty($array['verification_status'])): ?>
-                                                                <?php
-                                                                $status_display = '';
-                                                                switch ($array['verification_status']) {
-                                                                    case 'verified':
-                                                                        $status_display = '<span class="badge bg-success">Verified</span>';
-                                                                        break;
-                                                                    case 'pending_update':
-                                                                        $status_display = '<span class="badge bg-warning">Update Pending</span>';
-                                                                        break;
-                                                                    case 'file_uploaded':
-                                                                        $status_display = '<span class="badge bg-info">Files Updated</span>';
-                                                                        break;
-                                                                    default:
-                                                                        if (strpos($array['verification_status'], 'discrepancy') !== false) {
-                                                                            $status_display = '<span class="badge bg-danger">Discrepancy</span>';
-                                                                        } else {
-                                                                            $status_display = '<span class="badge bg-secondary">' . ucfirst(str_replace('_', ' ', $array['verification_status'])) . '</span>';
-                                                                        }
-                                                                }
-                                                                echo $status_display;
-                                                                ?>
+                                                                <?= $array['verification_status'] ?>
                                                             <?php else: ?>
                                                                 <span class="badge bg-secondary">Not Verified</span>
                                                             <?php endif; ?>
                                                         </td>
                                                         <td>
-                                                            <?php if (!empty($array['verification_status']) && $array['verification_status'] !== 'verified' && $array['verification_status'] !== 'file_uploaded'): ?>
-                                                                <?php if (!empty($array['admin_review_status'])): ?>
-                                                                    <?php
-                                                                    $review_badge = '';
-                                                                    switch ($array['admin_review_status']) {
-                                                                        case 'approved':
-                                                                            $review_badge = 'success';
-                                                                            break;
-                                                                        case 'rejected':
-                                                                            $review_badge = 'danger';
-                                                                            break;
-                                                                        case 'pending':
-                                                                            $review_badge = 'warning';
-                                                                            break;
-                                                                        default:
-                                                                            $review_badge = 'secondary';
-                                                                    }
-                                                                    ?>
-                                                                    <span class="badge bg-<?= $review_badge ?>">
-                                                                        <?= ucfirst($array['admin_review_status']) ?>
-                                                                    </span>
-                                                                <?php else: ?>
-                                                                    <span class="badge bg-warning">Pending</span>
-                                                                <?php endif; ?>
-                                                            <?php elseif (!empty($array['verification_status']) && ($array['verification_status'] === 'verified' || $array['verification_status'] === 'file_uploaded')): ?>
-                                                                <span class="badge bg-success">System Approved</span>
+                                                            <?php if (!empty($array['admin_review_status'])): ?>
+                                                                <?= $array['admin_review_status'] ?>
                                                             <?php else: ?>
                                                                 <span class="text-muted">-</span>
                                                             <?php endif; ?>
