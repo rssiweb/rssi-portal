@@ -196,13 +196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             <?php endif; ?>
 
-                            <form method="POST" action="" class="needs-validation" novalidate>
+                            <form method="POST" action="">
                                 <div class="row g-3">
                                     <!-- Event Name -->
                                     <div class="col-md-6">
                                         <label for="event_name" class="form-label required-field">Event Name</label>
                                         <input type="text" class="form-control" id="event_name" name="event_name"
-                                            value="<?php echo htmlspecialchars($_POST['event_name'] ?? ''); ?>"
+                                            value=""
                                             required maxlength="255">
                                         <div class="invalid-feedback">Please enter event name.</div>
                                     </div>
@@ -210,9 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <!-- Event Date -->
                                     <div class="col-md-6">
                                         <label for="event_date" class="form-label required-field">Event Date</label>
-                                        <input type="text" class="form-control flatpickr-date" id="event_date" name="event_date"
-                                            value="<?php echo htmlspecialchars($_POST['event_date'] ?? ''); ?>"
-                                            required>
+                                        <input type="text" class="form-control flatpickr-date" id="event_date" name="event_date" value="" required>
                                         <div class="invalid-feedback">Please select event date.</div>
                                     </div>
 
@@ -221,16 +219,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="event_type" class="form-label required-field">Event Type</label>
                                         <select class="form-select" id="event_type" name="event_type" required>
                                             <option value="">Select Type</option>
-                                            <option value="sports" <?php echo ($_POST['event_type'] ?? '') == 'sports' ? 'selected' : ''; ?>>Sports</option>
-                                            <option value="meeting" <?php echo ($_POST['event_type'] ?? '') == 'meeting' ? 'selected' : ''; ?>>Meeting</option>
-                                            <option value="celebration" <?php echo ($_POST['event_type'] ?? '') == 'celebration' ? 'selected' : ''; ?>>Celebration</option>
-                                            <option value="cultural" <?php echo ($_POST['event_type'] ?? '') == 'cultural' ? 'selected' : ''; ?>>Cultural</option>
-                                            <option value="festival" <?php echo ($_POST['event_type'] ?? '') == 'festival' ? 'selected' : ''; ?>>Festival</option>
-                                            <option value="exhibition" <?php echo ($_POST['event_type'] ?? '') == 'exhibition' ? 'selected' : ''; ?>>Exhibition</option>
-                                            <option value="national" <?php echo ($_POST['event_type'] ?? '') == 'national' ? 'selected' : ''; ?>>National</option>
-                                            <option value="training" <?php echo ($_POST['event_type'] ?? '') == 'training' ? 'selected' : ''; ?>>Training</option>
-                                            <option value="workshop" <?php echo ($_POST['event_type'] ?? '') == 'workshop' ? 'selected' : ''; ?>>Workshop</option>
-                                            <option value="other" <?php echo ($_POST['event_type'] ?? '') == 'other' ? 'selected' : ''; ?>>Other</option>
+                                            <option value="sports">Sports</option>
+                                            <option value="meeting">Meeting</option>
+                                            <option value="celebration">Celebration</option>
+                                            <option value="cultural">Cultural</option>
+                                            <option value="festival">Festival</option>
+                                            <option value="exhibition">Exhibition</option>
+                                            <option value="national">National</option>
+                                            <option value="training">Training</option>
+                                            <option value="workshop">Workshop</option>
+                                            <option value="other">Other</option>
                                         </select>
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
@@ -239,8 +237,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="col-md-6">
                                         <label for="location" class="form-label">Location</label>
                                         <input type="text" class="form-control" id="location" name="location"
-                                            value="<?php echo htmlspecialchars($_POST['location'] ?? ''); ?>"
-                                            maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground">
+                                            value=""
+                                            maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground" required>
                                     </div>
 
                                     <!-- Full Day Event -->
@@ -263,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="event_start_time" name="event_start_time"
-                                                        value="<?php echo htmlspecialchars($_POST['event_start_time'] ?? ''); ?>"
+                                                        value=""
                                                         placeholder="09:00 AM">
                                                 </div>
                                                 <small class="form-text text-muted">When the event begins</small>
@@ -275,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="event_end_time" name="event_end_time"
-                                                        value="<?php echo htmlspecialchars($_POST['event_end_time'] ?? ''); ?>"
+                                                        value=""
                                                         placeholder="05:00 PM">
                                                 </div>
                                                 <small class="form-text text-muted">When the event ends</small>
@@ -287,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="input-group time-input-group">
                                                     <span class="input-group-text"><i class="bi bi-person-check"></i></span>
                                                     <input type="text" class="form-control flatpickr-time" id="reporting_time" name="reporting_time"
-                                                        value="<?php echo htmlspecialchars($_POST['reporting_time'] ?? ''); ?>"
+                                                        value=""
                                                         placeholder="08:30 AM">
                                                 </div>
                                                 <small class="form-text text-muted">When to arrive</small>
@@ -300,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="description" class="form-label">Description</label>
                                         <textarea class="form-control" id="description" name="description"
                                             rows="4" maxlength="1000"
-                                            placeholder="Enter event details, agenda, instructions..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                                            placeholder="Enter event details, agenda, instructions..." required></textarea>
                                         <small class="form-text">Maximum 1000 characters</small>
                                     </div>
 
@@ -420,7 +418,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Date picker
             flatpickr(".flatpickr-date", {
                 dateFormat: "Y-m-d",
-                minDate: "today"
+                minDate: "today",
+                allowInput: true
             });
 
             // Time picker - 12-hour format
@@ -450,20 +449,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             toggleTimeFields(); // Initial call
 
             // Form validation
-            (function() {
-                'use strict'
-                var forms = document.querySelectorAll('.needs-validation')
-                Array.prototype.slice.call(forms)
-                    .forEach(function(form) {
-                        form.addEventListener('submit', function(event) {
-                            if (!form.checkValidity()) {
-                                event.preventDefault()
-                                event.stopPropagation()
-                            }
-                            form.classList.add('was-validated')
-                        }, false)
-                    })
-            })();
+            // (function() {
+            //     'use strict'
+            //     var forms = document.querySelectorAll('.needs-validation')
+            //     Array.prototype.slice.call(forms)
+            //         .forEach(function(form) {
+            //             form.addEventListener('submit', function(event) {
+            //                 if (!form.checkValidity()) {
+            //                     event.preventDefault()
+            //                     event.stopPropagation()
+            //                 }
+            //                 form.classList.add('was-validated')
+            //             }, false)
+            //         })
+            // })();
         });
     </script>
 </body>
