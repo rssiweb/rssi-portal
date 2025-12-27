@@ -519,7 +519,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
 
                                                 <div class="col-md-3">
                                                     <label for="assetid" class="form-label">Asset ID or Name</label>
-                                                    <input type="text" name="assetid" class="form-control" placeholder="Enter asset ID or name" value="<?php echo htmlspecialchars($assetid) ?>">
+                                                    <input type="text" name="assetid" id="assetid" class="form-control" placeholder="Enter asset ID or name" value="<?php echo htmlspecialchars($assetid) ?>">
                                                 </div>
 
                                                 <div class="col-12">
@@ -532,7 +532,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 </div>
 
                                                 <div class="col-12">
-                                                    <button type="submit" name="search_by_id2" class="btn btn-primary">
+                                                    <button type="submit" name="search_by_id2" onclick="document.getElementById('assetid').value = document.getElementById('assetid').value.trim();" class="btn btn-primary">
                                                         <i class="bi bi-search"></i> Search
                                                     </button>
                                                     <button type="button" id="clear-selection" class="btn btn-secondary" style="display: none;">
@@ -549,11 +549,11 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
                                 <form method="POST" action="export_function.php">
                                     <input type="hidden" value="gps" name="export_type" />
-                                    <input type="hidden" value="<?php echo @$item_type ?>" name="item_type" />
-                                    <input type="hidden" value="<?php echo ($role !== 'Admin') ? $associatenumber : $taggedto; ?>" name="taggedto" />
-                                    <input type="hidden" value="<?php echo @$assetid ?>" name="assetid" />
-                                    <input type="hidden" value="<?php echo ($role !== 'Admin') ? 'Active' : $assetstatus; ?>" name="asset_status" />
-                                    <input type="hidden" value="<?php echo @$assetcategory ?>" name="asset_category" />
+                                    <input type="hidden" value="<?php echo $item_type ?>" name="item_type" />
+                                    <input type="hidden" value="<?php echo $taggedto; ?>" name="taggedto" />
+                                    <input type="hidden" value="<?php echo $assetid ?>" name="assetid" />
+                                    <input type="hidden" value="<?php echo $assetstatus; ?>" name="asset_status" />
+                                    <input type="hidden" value="<?php echo $assetcategory ?>" name="asset_category" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/login_util.php");
 
 $today = date("YmdHis");
 
@@ -217,88 +218,111 @@ function donation_export()
 
 function gps_export()
 {
-  global $con, $role; // $role should already be set in session/login
+  global $con, $role, $associatenumber; // $role should already be set in session/login
 
-  @$taggedto       = $_POST['taggedto'];
-  @$item_type      = $_POST['item_type'];
-  @$assetid        = $_POST['assetid'];
-  @$assetstatus    = $_POST['asset_status'];
-  @$assetcategory  = $_POST['asset_category'];
+  // ======================================================
+  // READ FILTERS (FOR BOTH ROLES)
+  // ======================================================
+  $item_type      = $_POST['item_type'] ?? '';
+  $taggedto       = strtoupper($_POST['taggedto'] ?? '');
+  $assetid        = trim($_POST['assetid'] ?? '');
+  $assetstatus    = $_POST['assetstatus'] ?? '';
+  $assetcategory  = $_POST['assetcategory'] ?? '';
 
-  /* -----------------------------
-       Conditions Builder
-    ----------------------------- */
+  // ======================================================
+  // BUILD CONDITIONS (ROLE SAFE)
+  // ======================================================
   $conditions = [];
+
+  // Non-Admin base restriction
+  if ($role !== 'Admin') {
+    $conditions[] = "gps.taggedto = '$associatenumber'";
+    $conditions[] = "gps.asset_status = 'Active'";
+  }
+
+  // Asset ID search priority
   $isAssetSearch = ($assetid !== '');
 
   if ($isAssetSearch) {
 
     if (strpos($assetid, ',') !== false) {
-      $assetIds = array_map('trim', explode(',', $assetid));
-      $sanitizedIds = array_map(fn($id) => pg_escape_string($con, $id), $assetIds);
-
-      if ($sanitizedIds) {
-        $conditions[] = "gps.itemid IN ('" . implode("','", $sanitizedIds) . "')";
-      }
+      $ids = array_map('trim', explode(',', $assetid));
+      $ids = array_map(fn($id) => pg_escape_string($con, $id), $ids);
+      $conditions[] = "gps.itemid IN ('" . implode("','", $ids) . "')";
     } else {
       $safe = pg_escape_string($con, $assetid);
       $conditions[] = "(gps.itemid = '$safe' OR gps.itemname ILIKE '%$safe%')";
     }
   } else {
 
-    if ($item_type !== "ALL" && $item_type !== "") {
+    if ($item_type !== "" && $item_type !== "ALL") {
       $conditions[] = "gps.itemtype = '$item_type'";
     }
 
-    if ($assetcategory !== "ALL" && $assetcategory !== "") {
+    if ($assetcategory !== "" && $assetcategory !== "ALL") {
       $conditions[] = "gps.asset_category = '$assetcategory'";
-    }
-
-    if ($taggedto !== "") {
-      $conditions[] = "gps.taggedto = '$taggedto'";
     }
 
     if ($assetstatus !== "") {
       $conditions[] = "gps.asset_status = '$assetstatus'";
     }
+
+    // Admin-only taggedto filter
+    if ($role === 'Admin' && $taggedto !== "") {
+      $conditions[] = "gps.taggedto = '$taggedto'";
+    }
   }
 
-  /* -----------------------------
-       MAIN QUERY
-    ----------------------------- */
+  // No filter → show nothing
+  $hasFilter =
+    $isAssetSearch ||
+    ($item_type && $item_type !== 'ALL') ||
+    ($assetcategory && $assetcategory !== 'ALL') ||
+    ($assetstatus) ||
+    ($role === 'Admin' && $taggedto);
+
+  if (!$hasFilter) {
+    $conditions[] = "1 = 0";
+  }
+
+  // ======================================================
+  // MAIN QUERY
+  // ======================================================
   $query = "
-        SELECT 
-            gps.*,
-            tmember.fullname AS tfullname,
-            imember.fullname AS ifullname,
-            v.verification_date,
-            v.verification_status,
-            v.admin_review_status,
-            verified_member.fullname AS verified_by_name
-        FROM gps
-        LEFT JOIN rssimyaccount_members tmember 
-            ON gps.taggedto = tmember.associatenumber
-        LEFT JOIN rssimyaccount_members imember 
-            ON gps.collectedby = imember.associatenumber
-        LEFT JOIN (
-            SELECT DISTINCT ON (asset_id)
-                asset_id,
-                verification_date,
-                verified_by,
-                verification_status,
-                admin_review_status
-            FROM gps_verifications
-            ORDER BY asset_id, verification_date DESC
-        ) v ON gps.itemid = v.asset_id
-        LEFT JOIN rssimyaccount_members verified_member
-            ON v.verified_by = verified_member.associatenumber
-    ";
+  SELECT 
+      gps.*,
+      tmember.fullname AS tfullname,
+      tmember.phone AS tphone,
+      tmember.email AS temail,
+      imember.fullname AS ifullname,
+      imember.phone AS iphone,
+      imember.email AS iemail,
+      v.verification_date,
+      v.verified_by,
+      verified_member.fullname AS verified_by_name,
+      v.verification_status,
+      v.admin_review_status
+  FROM gps
+  LEFT JOIN rssimyaccount_members AS tmember
+      ON gps.taggedto = tmember.associatenumber
+  LEFT JOIN rssimyaccount_members AS imember
+      ON gps.collectedby = imember.associatenumber
+  LEFT JOIN (
+      SELECT DISTINCT ON (asset_id)
+          asset_id, verification_date, verified_by,
+          verification_status, admin_review_status
+      FROM gps_verifications
+      ORDER BY asset_id, verification_date DESC
+  ) v ON gps.itemid = v.asset_id
+  LEFT JOIN rssimyaccount_members AS verified_member
+      ON v.verified_by = verified_member.associatenumber
+  ";
 
   if ($conditions) {
     $query .= " WHERE " . implode(" AND ", $conditions);
   }
 
-  $query .= " ORDER BY gps.date DESC";
+  $query .= " ORDER BY gps.purchase_date DESC";
 
   $result = pg_query($con, $query);
   if (!$result) {
