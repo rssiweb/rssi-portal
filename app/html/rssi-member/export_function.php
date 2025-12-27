@@ -321,7 +321,7 @@ function gps_export()
     $query .= " WHERE " . implode(" AND ", $conditions);
   }
 
-  $query .= " ORDER BY gps.purchase_date DESC";
+  $query .= " ORDER BY gps.itemname ASC, gps.purchase_date DESC";
 
   $result = pg_query($con, $query);
   if (!$result) {

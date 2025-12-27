@@ -220,7 +220,7 @@ if ($conditions) {
     $query .= " WHERE " . implode(" AND ", $conditions);
 }
 
-$query .= " ORDER BY gps.purchase_date DESC";
+$query .= " ORDER BY gps.itemname ASC, gps.purchase_date DESC";
 
 // ======================================================
 // EXECUTE
@@ -382,7 +382,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 <h5 class="mb-0">Add New Asset</h5>
                                             </div>
                                             <div class="card-body">
-                                                <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST" enctype="multipart/form-data" class="row g-3">
+                                                <form autocomplete="off" name="gps" id="gps" action="" method="POST" enctype="multipart/form-data" class="row g-3">
                                                     <input type="hidden" name="form-type" value="addasset">
 
                                                     <div class="col-md-4">
@@ -634,7 +634,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                             <th scope="col">Issued by</th>
                                             <th scope="col">Tagged to</th>
                                             <th scope="col">Status</th>
-                                            <th scope="col">Last updated on</th>
+                                            <!-- <th scope="col">Last updated on</th> -->
                                             <th scope="col"></th>
                                         </tr>
                                     </thead>
@@ -649,10 +649,10 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                         <?= $array['itemid'] ?>
                                                     </td>
                                                     <td>
-                                                        <?php if (strlen($array['itemname']) <= 50): ?>
+                                                        <?php if (strlen($array['itemname']) <= 20): ?>
                                                             <?= $array['itemname'] ?>
                                                         <?php else: ?>
-                                                            <?= substr($array['itemname'], 0, 50) ?>&nbsp;...&nbsp;
+                                                            <?= substr($array['itemname'], 0, 20) ?>&nbsp;...&nbsp;
                                                             <button class="dropdown-item" type="button" onclick="showName('<?= $array['itemid'] ?>')">
                                                                 <i class="bi bi-box-arrow-up-right"></i>
                                                             </button>
@@ -690,10 +690,10 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                             <?php endif; ?>
                                                         </td>
                                                         <td>
-                                                            <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 90): ?>
+                                                            <?php if (isset($array['remarks']) && strlen($array['remarks']) <= 5): ?>
                                                                 <?= htmlspecialchars($array['remarks']) ?>
                                                             <?php elseif (isset($array['remarks'])): ?>
-                                                                <?= htmlspecialchars(substr($array['remarks'], 0, 90)) ?>&nbsp;...&nbsp;
+                                                                <?= htmlspecialchars(substr($array['remarks'], 0, 5)) ?>&nbsp;...&nbsp;
                                                                 <button class="dropdown-item" type="button" onclick="showRemarks('<?= htmlspecialchars($array['itemid']) ?>')">
                                                                     <i class="bi bi-box-arrow-up-right"></i>
                                                                 </button>
@@ -735,11 +735,11 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                     <td><?= $array['ifullname'] ?></td>
                                                     <td><?= $array['tfullname'] ?></td>
                                                     <td><?= $array['asset_status'] ?></td>
-                                                    <td>
+                                                    <!-- <td>
                                                         <?php if ($array['lastupdatedon'] != null): ?>
                                                             <?= date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>&nbsp;by&nbsp;<?= $array['lastupdatedby'] ?>
                                                         <?php endif; ?>
-                                                    </td>
+                                                    </td> -->
                                                     <td>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.15rem 0.5rem;">
