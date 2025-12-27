@@ -296,6 +296,16 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             text-align: center;
             vertical-align: middle;
         }
+
+        /* Default state (row NOT selected) */
+        #table-id tbody tr .photo-indicator {
+            color: var(--bs-primary);
+        }
+
+        /* When row is selected */
+        #table-id tbody tr.selected .photo-indicator {
+            color: #fff;
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -691,7 +701,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                     data-original-url="<?= htmlspecialchars($originalPhotoUrl) ?>"
                                                                     data-is-pdf="<?= $isPhotoPdf ? 'true' : 'false' ?>"
                                                                     data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
-                                                                    <span class="text-primary">Y</span>
+                                                                    <span class="photo-indicator">Y</span>
                                                                 </button>
                                                             <?php else: ?>
                                                                 <span class="text-muted">N/A</span>
@@ -712,7 +722,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                     data-original-url="<?= htmlspecialchars($originalBillUrl) ?>"
                                                                     data-is-pdf="<?= $isBillPdf ? 'true' : 'false' ?>"
                                                                     data-title="<?= htmlspecialchars($array['itemname'] ?? 'Asset') ?> (ID: <?= htmlspecialchars($array['itemid'] ?? '') ?>)">
-                                                                    <span class="text-primary">Y</span>
+                                                                    <span class="photo-indicator">Y</span>
                                                                 </button>
                                                             <?php else: ?>
                                                                 <span class="text-muted">N/A</span>
