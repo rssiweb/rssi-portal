@@ -1495,6 +1495,16 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             function updateRowSelection() {
                 $('#table-id tbody tr').removeClass('selected');
                 $('.asset-checkbox:checked').closest('tr').addClass('selected');
+
+                // Update text color for Y buttons in selected rows
+                $('.asset-checkbox:checked').closest('tr').find('.view-photo-btn span.text-primary')
+                    .removeClass('text-primary')
+                    .addClass('text-white');
+
+                // Reset text color for Y buttons in unselected rows
+                $('.asset-checkbox:not(:checked)').closest('tr').find('.view-photo-btn span.text-white')
+                    .removeClass('text-white')
+                    .addClass('text-primary');
             }
 
             /* -------- Bulk update section -------- */
