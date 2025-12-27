@@ -217,46 +217,35 @@ function donation_export()
 
 function gps_export()
 {
-  global $con;
-  @$taggedto = $_POST['taggedto'];
-  @$item_type = $_POST['item_type'];
-  @$assetid = $_POST['assetid'];
-  @$assetstatus = $_POST['asset_status'];
-  @$assetcategory = $_POST['asset_category'];
+  global $con, $role; // $role should already be set in session/login
 
-  // -----------------------------
-  // Conditions Builder
-  // -----------------------------
+  @$taggedto       = $_POST['taggedto'];
+  @$item_type      = $_POST['item_type'];
+  @$assetid        = $_POST['assetid'];
+  @$assetstatus    = $_POST['asset_status'];
+  @$assetcategory  = $_POST['asset_category'];
+
+  /* -----------------------------
+       Conditions Builder
+    ----------------------------- */
   $conditions = [];
-
-  // Asset ID search takes PRIORITY
   $isAssetSearch = ($assetid !== '');
 
   if ($isAssetSearch) {
 
-    // -----------------------------
-    // ASSET ID SEARCH (Ignore all filters)
-    // -----------------------------
     if (strpos($assetid, ',') !== false) {
-
       $assetIds = array_map('trim', explode(',', $assetid));
-      $sanitizedIds = array_map(function ($id) use ($con) {
-        return pg_escape_string($con, $id);
-      }, $assetIds);
+      $sanitizedIds = array_map(fn($id) => pg_escape_string($con, $id), $assetIds);
 
-      if (!empty($sanitizedIds)) {
-        $idList = "'" . implode("','", $sanitizedIds) . "'";
-        $conditions[] = "gps.itemid IN ($idList)";
+      if ($sanitizedIds) {
+        $conditions[] = "gps.itemid IN ('" . implode("','", $sanitizedIds) . "')";
       }
     } else {
-      $assetid_safe = pg_escape_string($con, $assetid);
-      $conditions[] = "(gps.itemid = '$assetid_safe' OR gps.itemname ILIKE '%$assetid_safe%')";
+      $safe = pg_escape_string($con, $assetid);
+      $conditions[] = "(gps.itemid = '$safe' OR gps.itemname ILIKE '%$safe%')";
     }
   } else {
 
-    // -----------------------------
-    // NORMAL FILTERS
-    // -----------------------------
     if ($item_type !== "ALL" && $item_type !== "") {
       $conditions[] = "gps.itemtype = '$item_type'";
     }
@@ -274,74 +263,99 @@ function gps_export()
     }
   }
 
-  // -----------------------------
-  // MAIN QUERY
-  // -----------------------------
+  /* -----------------------------
+       MAIN QUERY
+    ----------------------------- */
   $query = "
-    SELECT 
-        gps.*,
-        tmember.fullname AS tfullname,
-        tmember.phone AS tphone,
-        tmember.email AS temail,
-        imember.fullname AS ifullname,
-        imember.phone AS iphone,
-        imember.email AS iemail,
-        v.verification_date,
-        v.verified_by,
-        verified_member.fullname AS verified_by_name,
-        v.verification_status,
-        v.admin_review_status
-    FROM gps
-    LEFT JOIN rssimyaccount_members AS tmember 
-        ON gps.taggedto = tmember.associatenumber
-    LEFT JOIN rssimyaccount_members AS imember 
-        ON gps.collectedby = imember.associatenumber
-    LEFT JOIN (
-        SELECT DISTINCT ON (asset_id)
-            asset_id,
-            verification_date,
-            verified_by,
-            verification_status,
-            admin_review_status
-        FROM gps_verifications
-        ORDER BY asset_id, verification_date DESC
-    ) AS v 
-        ON gps.itemid = v.asset_id
-    LEFT JOIN rssimyaccount_members AS verified_member 
-        ON v.verified_by = verified_member.associatenumber
+        SELECT 
+            gps.*,
+            tmember.fullname AS tfullname,
+            imember.fullname AS ifullname,
+            v.verification_date,
+            v.verification_status,
+            v.admin_review_status,
+            verified_member.fullname AS verified_by_name
+        FROM gps
+        LEFT JOIN rssimyaccount_members tmember 
+            ON gps.taggedto = tmember.associatenumber
+        LEFT JOIN rssimyaccount_members imember 
+            ON gps.collectedby = imember.associatenumber
+        LEFT JOIN (
+            SELECT DISTINCT ON (asset_id)
+                asset_id,
+                verification_date,
+                verified_by,
+                verification_status,
+                admin_review_status
+            FROM gps_verifications
+            ORDER BY asset_id, verification_date DESC
+        ) v ON gps.itemid = v.asset_id
+        LEFT JOIN rssimyaccount_members verified_member
+            ON v.verified_by = verified_member.associatenumber
     ";
 
-  // -----------------------------
-  // Apply Conditions
-  // -----------------------------
-  if (!empty($conditions)) {
+  if ($conditions) {
     $query .= " WHERE " . implode(" AND ", $conditions);
   }
 
-  // -----------------------------
-  // Order
-  // -----------------------------
   $query .= " ORDER BY gps.date DESC";
 
-  // Debug if needed
-  // echo $query;
-
-  $gpsdetails = $query;
-
-  $result = pg_query($con, $gpsdetails);
-
+  $result = pg_query($con, $query);
   if (!$result) {
-    echo "An error occurred.\n";
+    echo "Error exporting data";
     exit;
   }
 
-  $resultArr = pg_fetch_all($result);
+  $rows = pg_fetch_all($result) ?: [];
 
-  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status,Unit price,Purchase bill, Purchase Date, Asset Photo,Last Verified,Verified By,Verification Status,Review Status' . "\n";
+  /* -----------------------------
+       CSV HEADER (ROLE BASED)
+    ----------------------------- */
+  if ($role === 'Admin') {
 
-  foreach ($resultArr as $array) {
+    echo "Asset Id,Asset Name,Asset Type,Quantity,Tagged To,Status,Unit Price,Purchase Bill,Purchase Date,Asset Photo,Last Verified,Verified By,Verification Status,Review Status\n";
+  } else {
 
-    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . ',' . $array['unit_cost'] . ',' . $array['purchase_bill'] . ',' . $array['purchase_date'] . ',' . $array['asset_photo'] . ',' . $array['verification_date'] . ',' . $array['verified_by_name'] . ',' . $array['verification_status'] . ',' . $array['admin_review_status'] . "\n";
+    echo "Asset Id,Asset Name,Quantity,Tagged To,Status,Purchase Bill,Asset Photo,Last Verified,Verified By,Verification Status\n";
+  }
+
+  /* -----------------------------
+       CSV DATA
+    ----------------------------- */
+  foreach ($rows as $r) {
+
+    $hasBill  = !empty($r['purchase_bill']) ? 'Yes' : 'No';
+    $hasPhoto = !empty($r['asset_photo'])   ? 'Yes' : 'No';
+
+    if ($role === 'Admin') {
+
+      echo
+      $r['itemid'] . ',"' . $r['itemname'] . '",' .
+        $r['itemtype'] . ',' .
+        $r['quantity'] . ',' .
+        $r['taggedto'] . ',' .
+        $r['asset_status'] . ',' .
+        $r['unit_cost'] . ',' .
+        $r['purchase_bill'] . ',' .
+        $r['purchase_date'] . ',' .
+        $r['asset_photo'] . ',' .
+        $r['verification_date'] . ',"' .
+        $r['verified_by_name'] . '",' .
+        $r['verification_status'] . ',' .
+        $r['admin_review_status'] . "\n";
+    } else {
+
+      echo
+      $r['itemid'] . ',"' . $r['itemname'] . '",' .
+        $r['quantity'] . ',' .
+        $r['taggedto'] . ',' .
+        $r['asset_status'] . ',' .
+        $hasBill . ',' .
+        $hasPhoto . ',' .
+        $r['verification_date'] . ',"' .
+        $r['verified_by_name'] . '",' .
+        $r['verification_status'] . "\n";
+    }
   }
 }
 
