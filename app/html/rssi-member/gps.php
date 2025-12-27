@@ -545,53 +545,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                 </div>
                             </div>
 
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    const checkbox = document.getElementById('is_user');
-                                    const assetIdInput = document.getElementsByName('assetid')[0];
-                                    const itemTypeInput = document.getElementsByName('item_type')[0];
-                                    const taggedToInput = document.getElementsByName('taggedto')[0];
-                                    const itemStatusInput = document.getElementsByName('assetstatus')[0];
-                                    const assetCategoryInput = document.getElementsByName('assetcategory')[0];
-
-                                    function updateFormState() {
-                                        if (checkbox.checked) {
-                                            assetIdInput.disabled = false;
-                                            itemTypeInput.disabled = true;
-                                            itemStatusInput.disabled = true;
-                                            taggedToInput.disabled = true;
-                                            assetCategoryInput.disabled = true;
-
-                                            // Change labels to indicate disabled state
-                                            itemTypeInput.closest('.col-md-3').classList.add('text-muted');
-                                            itemStatusInput.closest('.col-md-3').classList.add('text-muted');
-                                            taggedToInput.closest('.col-md-3').classList.add('text-muted');
-                                            assetIdInput.closest('.col-md-3').classList.remove('text-muted');
-                                            assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
-                                        } else {
-                                            assetIdInput.disabled = true;
-                                            itemTypeInput.disabled = false;
-                                            itemStatusInput.disabled = false;
-                                            taggedToInput.disabled = false;
-                                            assetCategoryInput.disabled = false;
-
-                                            // Remove muted state
-                                            itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
-                                            itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
-                                            taggedToInput.closest('.col-md-3').classList.remove('text-muted');
-                                            assetIdInput.closest('.col-md-3').classList.add('text-muted');
-                                            assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
-                                        }
-                                    }
-
-                                    // Initial state
-                                    updateFormState();
-
-                                    // Add event listener
-                                    checkbox.addEventListener('change', updateFormState);
-                                });
-                            </script>
-
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
                                 <form method="POST" action="export_function.php">
@@ -1102,82 +1055,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             return data.find(item => item.itemid == id);
         }
 
-        // function showUploadFiles(id) {
-        //     var item = findItem(id);
-        //     if (!item) return;
-
-        //     // Set global mode
-        //     window.currentMode = 'upload';
-
-        //     // Set modal title for upload
-        //     document.getElementById('myModalLabel').textContent = 'Update Asset Files';
-
-        //     // Populate item ID
-        //     document.querySelector('#myModal .itemid').textContent = item.itemid;
-        //     document.querySelector('#myModal .itemname').textContent = item.itemname;
-        //     document.getElementById('itemid1').value = item.itemid;
-
-        //     // Fill form with current data for context (BUT DON'T SHOW THESE FIELDS)
-        //     <?php if ($role == 'Admin'): ?>
-        //         // Store values but fields will be hidden
-        //         document.getElementById('itemtype').value = item.itemtype || "";
-        //         document.getElementById('itemname').value = item.itemname || "";
-        //         document.getElementById('quantity').value = item.quantity || "";
-        //         document.getElementById('asset_status').value = item.asset_status || "";
-        //         document.getElementById('remarks').value = item.remarks || "";
-        //         document.getElementById('unit_cost').value = item.unit_cost || "";
-        //         document.getElementById('asset_category').value = item.asset_category || "";
-        //         document.getElementById('purchase_date').value = item.purchase_date || "";
-
-        //         // Handle Select2 fields
-        //         var collectedbyValue = item.collectedby || "";
-        //         if (collectedbyValue) {
-        //             var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
-        //             $('#collectedby').append(newOption).trigger('change');
-        //         } else {
-        //             $('#collectedby').val(null).trigger('change');
-        //         }
-
-        //         var taggedtoValue = item.taggedto || "";
-        //         if (taggedtoValue) {
-        //             var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
-        //             $('#taggedto').append(newOption).trigger('change');
-        //         } else {
-        //             $('#taggedto').val(null).trigger('change');
-        //         }
-        //     <?php endif; ?>
-
-        //     // Hide ALL non-file fields
-        //     hideNonFileFields();
-
-        //     // NEW: Check if files exist and disable fields
-        //     var assetPhotoField = document.getElementById('asset_photo');
-        //     var purchaseBillField = document.getElementById('purchase_bill');
-
-        //     if (item.asset_photo) {
-        //         if (assetPhotoField) {
-        //             assetPhotoField.disabled = true;
-        //             assetPhotoField.placeholder = "Photo already uploaded (leave blank to keep)";
-        //         }
-        //     }
-
-        //     if (item.purchase_bill) {
-        //         if (purchaseBillField) {
-        //             purchaseBillField.disabled = true;
-        //             purchaseBillField.placeholder = "Bill already uploaded (leave blank to keep)";
-        //         }
-        //     }
-
-        //     // Change button text
-        //     document.querySelector('.button-text').textContent = 'Upload Files';
-
-        //     // Clear file inputs (optional)
-        //     document.getElementById('asset_photo').value = '';
-        //     document.getElementById('purchase_bill').value = '';
-
-        //     modal.show();
-        // }
-
         function showDetails(id) {
             var item = findItem(id);
             if (!item) return;
@@ -1458,273 +1335,182 @@ $resultArr = $result ? pg_fetch_all($result) : [];
         }
     </script>
     <script>
+        /* ===============================
+        COMMON SAFE HELPERS
+        ================================ */
+        function setFieldState(field, enabled) {
+            if (!field) return;
+
+            field.disabled = !enabled;
+
+            const wrapper = field.closest('.col-md-3');
+            if (wrapper) {
+                wrapper.classList.toggle('text-muted', !enabled);
+            }
+        }
+
+        /* ===============================
+           FORM STATE HANDLING
+        ================================ */
+        function updateFormState() {
+            const checkbox = document.getElementById('is_user');
+            if (!checkbox) return;
+
+            const assetIdInput = document.getElementsByName('assetid')[0] || null;
+            const itemTypeInput = document.getElementsByName('item_type')[0] || null;
+            const taggedToInput = document.getElementsByName('taggedto')[0] || null;
+            const itemStatusInput = document.getElementsByName('assetstatus')[0] || null;
+            const assetCategoryInput = document.getElementsByName('assetcategory')[0] || null;
+
+            if (checkbox.checked) {
+                setFieldState(assetIdInput, true);
+                setFieldState(itemTypeInput, false);
+                setFieldState(itemStatusInput, false);
+                setFieldState(taggedToInput, false);
+                setFieldState(assetCategoryInput, false);
+            } else {
+                setFieldState(assetIdInput, false);
+                setFieldState(itemTypeInput, true);
+                setFieldState(itemStatusInput, true);
+                setFieldState(taggedToInput, true);
+                setFieldState(assetCategoryInput, true);
+            }
+        }
+
+        /* ===============================
+           DOM READY
+        ================================ */
         $(document).ready(function() {
-            // Function to check if Asset ID field has value and update button visibility
+
+            /* -------- Clear button visibility -------- */
             function updateClearButtonVisibility() {
-                const assetIdValue = $('input[name="assetid"]').val().trim();
-                if (assetIdValue) {
-                    $('#clear-selection').show();
-                } else {
-                    $('#clear-selection').hide();
-                }
+                const val = $('input[name="assetid"]').val()?.trim();
+                $('#clear-selection').toggle(!!val);
             }
 
-            // Initial check on page load
             updateClearButtonVisibility();
+            updateFormState();
 
-            // Select all checkbox functionality
+            $('#is_user').on('change', updateFormState);
+
+            /* -------- Select all -------- */
             $('#select-all-checkbox').change(function() {
                 $('.asset-checkbox').prop('checked', this.checked);
                 toggleBulkUpdateSection();
                 updateRowSelection();
+                updateAssetIdSearchField();
             });
 
-            // Individual checkbox functionality using event delegation
+            /* -------- Individual checkbox -------- */
             $(document).on('change', '.asset-checkbox', function() {
                 toggleBulkUpdateSection();
                 updateRowSelection();
 
-                // If all checkboxes are unchecked, uncheck select all
-                if ($('.asset-checkbox:checked').length === 0) {
-                    $('#select-all-checkbox').prop('checked', false);
-                }
-                // If all checkboxes are checked, check select all
-                else if ($('.asset-checkbox:checked').length === $('.asset-checkbox').length) {
-                    $('#select-all-checkbox').prop('checked', true);
-                }
+                const total = $('.asset-checkbox').length;
+                const checked = $('.asset-checkbox:checked').length;
+                $('#select-all-checkbox').prop('checked', total === checked);
+
+                updateAssetIdSearchField();
             });
 
-            // Row selection with pointer using event delegation
+            /* -------- Row click selection -------- */
             $(document).on('click', '#table-id tbody tr', function(e) {
-                // Don't select row if clicking on checkbox, link, or dropdown
-                if (e.target.type !== 'checkbox' &&
-                    e.target.tagName !== 'A' &&
-                    !$(e.target).hasClass('dropdown-toggle') &&
-                    !$(e.target).closest('.dropdown').length) {
+                if (
+                    e.target.type === 'checkbox' ||
+                    e.target.tagName === 'A' ||
+                    $(e.target).hasClass('dropdown-toggle') ||
+                    $(e.target).closest('.dropdown').length
+                ) return;
 
-                    const checkbox = $(this).find('.asset-checkbox');
-                    checkbox.prop('checked', !checkbox.prop('checked'));
-                    checkbox.trigger('change');
-
-                    // NEW: Populate Asset ID search field with selected IDs
-                    updateAssetIdSearchField();
-                }
+                const checkbox = $(this).find('.asset-checkbox');
+                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
             });
 
-            // NEW: Function to update Asset ID search field with selected IDs
+            /* -------- Populate Asset ID field -------- */
             function updateAssetIdSearchField() {
-                const selectedCheckboxes = $('.asset-checkbox:checked');
                 const assetIds = [];
 
-                selectedCheckboxes.each(function() {
-                    // Get the itemid from the second column of the same row
+                $('.asset-checkbox:checked').each(function() {
                     const itemid = $(this).closest('tr').find('td:nth-child(2)').text().trim();
-                    if (itemid) {
-                        assetIds.push(itemid);
-                    }
+                    if (itemid) assetIds.push(itemid);
                 });
 
-                // Update the search field with comma-separated IDs
-                if (assetIds.length > 0) {
-                    // Enable the "Search by Asset ID or name only" checkbox
+                if (assetIds.length) {
                     $('#is_user').prop('checked', true);
-
-                    // Trigger the updateFormState function to enable the assetid field
                     updateFormState();
-
-                    // Set the assetid field value
                     $('input[name="assetid"]').val(assetIds.join(', '));
-
-                    // Show the clear button
-                    updateClearButtonVisibility();
                 } else {
-                    // If no checkboxes are selected, clear the field and hide button
                     $('input[name="assetid"]').val('');
                     $('#is_user').prop('checked', false);
                     updateFormState();
-                    updateClearButtonVisibility();
                 }
+
+                updateClearButtonVisibility();
             }
 
-            // Function to update form state based on checkbox
-            function updateFormState() {
-                const checkbox = document.getElementById('is_user');
-                const assetIdInput = document.getElementsByName('assetid')[0];
-                const itemTypeInput = document.getElementsByName('item_type')[0];
-                const taggedToInput = document.getElementsByName('taggedto')[0];
-                const itemStatusInput = document.getElementsByName('assetstatus')[0];
-                const assetCategoryInput = document.getElementsByName('assetcategory')[0];
-
-                if (checkbox.checked) {
-                    assetIdInput.disabled = false;
-                    itemTypeInput.disabled = true;
-                    itemStatusInput.disabled = true;
-                    taggedToInput.disabled = true;
-                    assetCategoryInput.disabled = true;
-
-                    // Change labels to indicate disabled state
-                    itemTypeInput.closest('.col-md-3').classList.add('text-muted');
-                    itemStatusInput.closest('.col-md-3').classList.add('text-muted');
-                    taggedToInput.closest('.col-md-3').classList.add('text-muted');
-                    assetIdInput.closest('.col-md-3').classList.remove('text-muted');
-                    assetCategoryInput.closest('.col-md-3').classList.add('text-muted');
-                } else {
-                    assetIdInput.disabled = true;
-                    itemTypeInput.disabled = false;
-                    itemStatusInput.disabled = false;
-                    taggedToInput.disabled = false;
-                    assetCategoryInput.disabled = false;
-
-                    // Remove muted state
-                    itemTypeInput.closest('.col-md-3').classList.remove('text-muted');
-                    itemStatusInput.closest('.col-md-3').classList.remove('text-muted');
-                    taggedToInput.closest('.col-md-3').classList.remove('text-muted');
-                    assetIdInput.closest('.col-md-3').classList.add('text-muted');
-                    assetCategoryInput.closest('.col-md-3').classList.remove('text-muted');
-                }
-            }
-
-            // Update row selection styling
+            /* -------- Row highlight -------- */
             function updateRowSelection() {
                 $('#table-id tbody tr').removeClass('selected');
-                $('.asset-checkbox:checked').each(function() {
-                    $(this).closest('tr').addClass('selected');
-                });
+                $('.asset-checkbox:checked').closest('tr').addClass('selected');
             }
 
-            // Toggle bulk update section based on selected items
+            /* -------- Bulk update section -------- */
             function toggleBulkUpdateSection() {
-                const selectedCount = $('.asset-checkbox:checked').length;
-                const selectedCountBadge = $('#selected-count-badge');
+                const count = $('.asset-checkbox:checked').length;
+                $('#selected-count-badge').text(count + ' selected');
 
-                // Update the count badge
-                selectedCountBadge.text(selectedCount + ' selected');
-
-                if (selectedCount > 0 && '<?= $role ?>' === 'Admin') {
+                if (count > 0 && '<?= $role ?>' === 'Admin') {
                     $('.bulk-update-section').show();
-
-                    // Update the bulk form with selected assets
                     $('#selected-assets-container').empty();
+
                     $('.asset-checkbox:checked').each(function() {
-                        $('#selected-assets-container').append('<input type="hidden" name="selected_assets[]" value="' + $(this).val() + '">');
+                        $('#selected-assets-container')
+                            .append('<input type="hidden" name="selected_assets[]" value="' + $(this).val() + '">');
                     });
                 } else {
                     $('.bulk-update-section').hide();
                 }
             }
 
-            // Enable/disable form elements based on checkbox selection
-            $('#update-tagged-to').change(function() {
-                $('#tagged-to-select').prop('disabled', !this.checked);
-                if (!this.checked) {
-                    $('#tagged-to-select').val('');
-                }
-            });
-
-            $('#update-status').change(function() {
-                $('#status-select').prop('disabled', !this.checked);
-                if (!this.checked) {
-                    $('#status-select').val('');
-                }
-            });
-
-            // Cancel bulk update
-            $('#cancel-bulk-update').click(function() {
-                $('.asset-checkbox').prop('checked', false);
-                $('#select-all-checkbox').prop('checked', false);
-                $('.bulk-update-section').hide();
-                $('#table-id tbody tr').removeClass('selected');
-                $('#update-tagged-to').prop('checked', false);
-                $('#update-status').prop('checked', false);
-                $('#tagged-to-select').prop('disabled', true).val('');
-                $('#status-select').prop('disabled', true).val('');
-                $('#update-remarks').val('');
-
-                // Reset the count badge
-                $('#selected-count-badge').text('0 selected');
-
-                // Also clear the Asset ID search field
-                $('input[name="assetid"]').val('');
-                $('#is_user').prop('checked', false);
-                updateFormState();
-                updateClearButtonVisibility();
-            });
-
-            // Clear selection button functionality
+            /* -------- Clear selection -------- */
             $('#clear-selection').click(function(e) {
                 e.preventDefault();
 
-                // Clear the search field
                 $('input[name="assetid"]').val('');
-
-                // Uncheck the checkbox
                 $('#is_user').prop('checked', false);
+                $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
 
-                // Update form state
                 updateFormState();
-
-                // Remove highlighting from all rows
-                $('#table-id tbody tr').removeClass('table-primary');
-
-                // Uncheck all checkboxes
-                $('.asset-checkbox').prop('checked', false);
-                $('#select-all-checkbox').prop('checked', false);
                 updateRowSelection();
-
-                // Hide the clear button
                 updateClearButtonVisibility();
-
-                // Get current URL
-                const url = new URL(window.location.href);
-
-                // Remove assetid and is_user parameters
-                url.searchParams.delete('assetid');
-                url.searchParams.delete('is_user');
-
-                // Redirect to the updated URL (reloads the page)
-                //window.location.href = url.toString();
             });
 
-            // Also listen for manual input in the Asset ID field
+            /* -------- Manual typing in assetid -------- */
             $('input[name="assetid"]').on('input', function() {
+                $('#is_user').prop('checked', !!$(this).val().trim());
+                updateFormState();
                 updateClearButtonVisibility();
-
-                // If user types something, check the checkbox automatically
-                if ($(this).val().trim()) {
-                    $('#is_user').prop('checked', true);
-                    updateFormState();
-                } else {
-                    $('#is_user').prop('checked', false);
-                    updateFormState();
-                }
             });
 
-            // Initialize DataTable with proper configuration
+            /* -------- DataTable -------- */
             <?php if (!empty($resultArr)) : ?>
                 $('#table-id').DataTable({
-                    "order": [],
-                    "columnDefs": [{
-                        "orderable": false,
-                        "targets": 0 // Disable sorting for checkbox column
+                    order: [],
+                    columnDefs: [{
+                        orderable: false,
+                        targets: 0
                     }],
-                    "drawCallback": function(settings) {
-                        // Re-initialize checkboxes after DataTable redraws
-                        $('.asset-checkbox').prop('checked', false);
-                        $('#select-all-checkbox').prop('checked', false);
+                    drawCallback: function() {
+                        $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
                         $('.bulk-update-section').hide();
-                        $('#table-id tbody tr').removeClass('selected');
-
-                        // Reset the count badge
                         $('#selected-count-badge').text('0 selected');
-
-                        // Check if Asset ID field has value from URL
                         updateClearButtonVisibility();
                     }
                 });
             <?php endif; ?>
 
-            // Update search placeholder to indicate both ID and name search
-            $('div.dataTables_filter input').attr('placeholder', 'Search by Asset ID or Name...');
+            $('div.dataTables_filter input')
+                .attr('placeholder', 'Search by Asset ID or Name...');
         });
     </script>
     <script>
