@@ -136,7 +136,6 @@ $conditions = [];
 // Non-Admin base restriction
 if ($role !== 'Admin') {
     $conditions[] = "gps.taggedto = '$associatenumber'";
-    $conditions[] = "gps.asset_status = 'Active'";
 }
 
 // Asset ID search priority
@@ -834,14 +833,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                         </span>
                                                                     <?php endif; ?>
                                                                 </li>
-                                                                <!-- <li>
-                                                                    <a href="javascript:void(0)"
-                                                                        onclick="showUploadFiles('<?= htmlspecialchars($array['itemid']) ?>')"
-                                                                        title="Update Asset Photo & Bill"
-                                                                        class="dropdown-item">
-                                                                        <i class="bi bi-upload"></i> Update Photo & Bill
-                                                                    </a>
-                                                                </li> -->
                                                             </ul>
                                                         </div>
                                                     </td>

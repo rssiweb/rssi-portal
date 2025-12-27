@@ -226,8 +226,8 @@ function gps_export()
   $item_type      = $_POST['item_type'] ?? '';
   $taggedto       = strtoupper($_POST['taggedto'] ?? '');
   $assetid        = trim($_POST['assetid'] ?? '');
-  $assetstatus    = $_POST['assetstatus'] ?? '';
-  $assetcategory  = $_POST['assetcategory'] ?? '';
+  $assetstatus    = $_POST['asset_status'] ?? '';
+  $assetcategory  = $_POST['asset_category'] ?? '';
 
   // ======================================================
   // BUILD CONDITIONS (ROLE SAFE)
@@ -237,7 +237,6 @@ function gps_export()
   // Non-Admin base restriction
   if ($role !== 'Admin') {
     $conditions[] = "gps.taggedto = '$associatenumber'";
-    $conditions[] = "gps.asset_status = 'Active'";
   }
 
   // Asset ID search priority
