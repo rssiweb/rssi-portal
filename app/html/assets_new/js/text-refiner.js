@@ -10,11 +10,14 @@ class TextRefiner {
 
         // Watch for textareas dynamically added to the page
         this.observeTextareas();
+        // Observe disabled state changes
+        this.observeTextareaState();
 
         // Process existing textareas - EXCLUDE SELECT2
         document.querySelectorAll('textarea').forEach(textarea => {
             if (!textarea.classList.contains('no-refiner') &&
-                !this.isInsideSelect2(textarea)) {
+                !this.isInsideSelect2(textarea) &&
+                !textarea.disabled) {
                 this.addRefinerButton(textarea);
             }
         });
@@ -122,7 +125,8 @@ class TextRefiner {
     addRefinerButton(textarea) {
         // Check if already has refiner OR is inside Select2
         if (textarea.parentNode.classList.contains('refiner-container') ||
-            this.isInsideSelect2(textarea)) {
+            this.isInsideSelect2(textarea) ||
+            textarea.disabled) {
             return;
         }
 
@@ -184,6 +188,41 @@ class TextRefiner {
         }
     }
 
+    observeTextareaState() {
+        // Watch for disabled attribute changes on existing textareas
+        const disabledObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' &&
+                    mutation.attributeName === 'disabled' &&
+                    mutation.target.nodeName === 'TEXTAREA') {
+
+                    const textarea = mutation.target;
+                    const container = textarea.parentNode;
+
+                    if (textarea.disabled && container.classList.contains('refiner-container')) {
+                        // Remove refiner if textarea becomes disabled
+                        const refinerContainer = textarea.parentNode;
+                        if (refinerContainer.classList.contains('refiner-container')) {
+                            // Unwrap the textarea and remove refiner elements
+                            refinerContainer.parentNode.insertBefore(textarea, refinerContainer);
+                            refinerContainer.remove();
+                        }
+                    } else if (!textarea.disabled && !container.classList.contains('refiner-container')) {
+                        // Add refiner if textarea becomes enabled
+                        if (!this.isInsideSelect2(textarea)) {
+                            this.addRefinerButton(textarea);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Start observing all textareas for disabled attribute changes
+        document.querySelectorAll('textarea').forEach(textarea => {
+            disabledObserver.observe(textarea, { attributes: true });
+        });
+    }
+
     async refineText(textarea, tone) {
         const originalText = textarea.value.trim();
 
@@ -235,13 +274,15 @@ class TextRefiner {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeName === 'TEXTAREA' &&
-                        !this.isInsideSelect2(node)) {
+                        !this.isInsideSelect2(node) &&
+                        !node.disabled) {
                         this.addRefinerButton(node);
                     }
                     // Also check for textareas inside added nodes
                     if (node.querySelectorAll) {
                         node.querySelectorAll('textarea').forEach(textarea => {
-                            if (!this.isInsideSelect2(textarea)) {
+                            if (!this.isInsideSelect2(textarea) &&
+                                !textarea.disabled) {
                                 this.addRefinerButton(textarea);
                             }
                         });

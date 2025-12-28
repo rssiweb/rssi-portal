@@ -937,7 +937,7 @@ if (!$result) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script src="../assets_new/js/text-refiner.js"></script>
+    <script src="../assets_new/js/text-refiner.js?v=1.2.0"></script>
 
     <script>
         // Get all textarea elements in the form
