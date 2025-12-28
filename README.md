@@ -27,71 +27,6 @@ E:\RSSIWebsite>git reset --hard origin/rssiweb HEAD is now at 7ef1a78 lazy loadi
 
 git fetch origin d75e8d81318243376cf355c5ec4dfa84f3b git checkout FETCH_HEAD git checkout -b "rssiweb" git push --all git push --set-upstream origin rssiweb
 
-pipenv run flask run
-
-Password change
-heroku Login - rssi.connect@gmail.com More Run console flask generate-hash-for 2310 Run Save the session and copy the encripted value and paste it to Settings Reveal config variable paste the codes (SECURE_USER, INDIGO_CODE, SECURE1_USER, PASSWORD_CODE) DO NOT REMOVE Salt
-
-Change in .env file offline
-Run new terminal and type pipenv run flask generate-hash-for 2310 copy the code and replace it.
-
-select class from rssimyaccount_members where associatenumber='VLKO21034'
-
-UPDATE rssimyaccount_members SET class = 'LG4 Accountancy - Mon, Wed, Fri - 4 p.m. to 4:45 p.m.
-' WHERE associatenumber='VLKO21034';
-
-UPDATE rssimyprofile_student SET photourl = 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1622616675/students/Aditya1.jpg' WHERE student_id='ALKO21059';
-
-UPDATE rssimyaccount_members SET class = 'XI LG4S2 Biology - Mon, Wed, Fri - 4 p.m. to 4:45 p.m.' WHERE associatenumber='VLKO21035';
-
-ALTER TABLE rssimyaccount_members ALTER COLUMN effectivedate TYPE VARCHAR(512);
-
-update employee set department = null, name = null, bloodgroup = null where employeeid=2;
-
-ALTER TABLE rssimyprofile_student ALTER selectdateofformsubmission DROP DEFAULT ,ALTER selectdateofformsubmission type timestamp USING selectdateofformsubmission::timestamp ,ALTER selectdateofformsubmission SET DEFAULT '1970-01-01 01:00:00'::timestamp;
-
-DELETE from tablename WHERE id IN (1, 5 , 7);
-
-DELETE from rssimyaccount_members WHERE __hevo_id IN (21); DELETE from userlog_member WHERE ipaddress IN ('::1');
-
-select lastupdatedon,__hevo_id,fullname from rssimyaccount_members where associatenumber='VBKP21033';
-
-and Col32 is null or Col32 > date '"&text(datevalue("2021/06/3"),"yyyy-mm-dd")&"'
-
-and Col33 is null or Col33 > date '"&text(datevalue("2021/06/1"),"yyyy-mm-dd")&"'
-
-UPDATE rssimyprofile_student SET fees = 'Development Fees - ₹200, Fees due.
-1st Term Exam Fees - ₹200
-2nd Term Exam Fees - ₹200
-Annual Exam Fees - ₹200' WHERE __hevo_id='24';
-
-&& $role='Admin'
-
-UPDATE rssimyaccount_members SET badge = 'Volunteer of the Quarter' WHERE associatenumber='VLKO20016';
-
-UPDATE myappraisal_sheet1
-SET appraisaltype = 'Quarterly 1/2021'
-
-UPDATE rssimyaccount_members SET questionflag = 'Y' WHERE associatenumber='VLKO20016';
-
-CREATE TABLE Public. "userlog_member" ( username varchar(255) NOT NULL, password varchar(255) NOT NULL, userip varchar(16) NOT NULL, logintime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP )
-
-select * from userlog_member truncate table userlog_member drop table userlog_member
-
-CREATE TABLE Public."userlog_member"(username text, password text, ipaddress text, logintime timestamptz) SET TIMEZONE='Asia/Calcutta';
-
-set timezone to 'Asia/Calcutta'; select now();
-
-SHOW TIMEZONE;
-
-ALTER TABLE table_name DROP COLUMN column_name;
-
-ALTER TABLE rssimyaccount_members ADD COLUMN attd_pending text;
-
-UPDATE d88k3j2m61uu9j.public.rssimyaccount_members SET allocationdate = '19/Apr/2021 - 30/Jun/2021' WHERE associatenumber='VBKP20021';
-
-ALTER TABLE "d88k3j2m61uu9j"."public"."allocationdb_allocationdb" RENAME COLUMN applicantid TO associatenumber;
-
 SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'
 
 ***** TO CHECK OFFLINE
@@ -108,9 +43,6 @@ git reset --hard HEAD~3
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
 
-UPDATE rssimyprofile_student
-SET studentname = TRIM(studentname);
-
 SELECT column_name, ordinal_position
 FROM information_schema.columns
 WHERE table_name = 'rssimyaccount_members'
@@ -122,20 +54,7 @@ git pull --rebase origin master
 ALTER TABLE fees
 ADD COLUMN id SERIAL PRIMARY KEY;
 
-update leavedb_leavedb
-set lyear='2023-2024'
-where leaveid='RSL1712286415'
-
 ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);
-
-set datestyle to DMY;
-ALTER TABLE donation ADD COLUMN timestamp_new TIMESTAMP without time zone NULL;
-UPDATE donation SET timestamp_new = timestamp::TIMESTAMP;
-ALTER TABLE donation ALTER COLUMN timestamp TYPE TIMESTAMP without time zone USING timestamp_new;
-ALTER TABLE donation DROP COLUMN timestamp_new;
-
-ALTER TABLE ipfsubmission 
-RENAME ipfststus TO ipfstatus;
 
 SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rssimyprofile_student';
 
@@ -154,111 +73,16 @@ UPDATE leavedb_leavedb
 SET doc = CONCAT(doc,'/view')
 WHERE doc is not null;
 
-<!--How to create auto serial number -->
-
-CREATE SEQUENCE result_id_seq;
-
-CREATE TABLE result(
-id integer NOT NULL DEFAULT nextval('result_id_seq'),
-
-DROP SEQUENCE IF EXISTS resourcemovement_serial_number_seq CASCADE;
-CREATE SEQUENCE onboarding_serial_number_seq START WITH 1;
-
-ALTER TABLE onboarding ALTER COLUMN serial_number SET DEFAULT nextval('onboarding_serial_number_seq'::regclass);
-
-
-
--- Truncate the table with Foreign key
-TRUNCATE TABLE payslip_entry CASCADE;
-
-<!-- Secure-->
-$name = $_GET['name']
-$age = $_GET['age']
-
-$sql = 'INSERT INTO employee (name, age) VALUES($1, $2);';
-$result = pg_query_params($connection, $sql, array($name, $age));
-
-
 ///PDE generate
 npm install puppeteer
 cd /d/RSSILogin/app/html/rssi-member
 node generatePDF.js
 
-delete from support_ticket where ticket_id='66d9262c7dede'
+<!-- to update vendor file -->
+export COMPOSER_PROCESS_TIMEOUT=600
+composer install --no-dev --prefer-dist (ensures only required files are downloaded)
 
-delete from support_ticket_assignment where ticket_id='66d9262c7dede'
+<!-- to add any new API key, correct way to use -->
+For API add - for local use add it in .env file under services and update docker-compose.override and docker-compose file as well. - this is for local use. call boostrap file and call the key in the php file.
 
-delete from support_ticket_status where ticket_id='66d9262c7dede'
-
-
-SELECT 
-    'CREATE TABLE ' || table_name || ' (' ||
-    string_agg(column_name || ' ' || 
-               CASE
-                   WHEN character_maximum_length IS NOT NULL 
-                        THEN data_type || '(' || character_maximum_length || ')'
-                   ELSE data_type
-               END, ', ') || ');' AS create_table_query
-FROM information_schema.columns
-WHERE table_name = 'signup'
-GROUP BY table_name;
-
-
-ALTER SEQUENCE signup_id_seq RESTART WITH 1;
-
-
-CREATE TABLE signup (
-    -- Candidate Information
-    application_number character varying(100) PRIMARY KEY, -- Unique application number
-    applicant_name character varying(100),
-    gender character varying(10),
-    date_of_birth date,
-    telephone character varying(10),
-    email character varying(100),
-    postal_address text,
-    permanent_address text,
-    caste text,
-    education_qualification text,
-    specialization text,
-    work_experience text,
-    identifier text,
-    identifier_number text,
-    association character varying(100), -- Added association
-    branch character varying(100),      -- Added branch
-    
-    -- Job and Interview Information
-    job_select character varying(225),
-    post_select character varying(225),
-    subject1 character varying(225),
-    subject2 character varying(20),
-    subject3 character varying(20),
-    medium character varying(225),
-    membership_purpose text,
-    purpose text,
-    availability text,
-    interests character varying(50),
-    
-    -- Miscellaneous Information
-    duration integer, -- Duration column added
-    consent boolean,
-    heard_about character varying(100),
-    
-    -- Document and File Uploads
-    payment_photo text,
-    applicant_photo text,
-    resume_upload text,
-    supporting_document text,
-    caste_document text,
-    
-    -- Password and Security Information
-    password text,
-    password_updated_by text,
-    password_updated_on timestamp without time zone,
-    default_pass_updated_on timestamp without time zone,
-    
-    -- Timestamp Information
-    timestamp timestamp without time zone,
-    tech_interview_schedule timestamp without time zone,
-    hr_interview_schedule timestamp without time zone,
-    application_status text
-);
+For production - update publish.yml file as well under service and update in git under code>settings > Security> Secrets and variables and update key there.

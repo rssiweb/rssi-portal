@@ -56,32 +56,3 @@ git checkout FETCH_HEAD
 git checkout -b "rssiweb"
 git push --all
 git push --set-upstream origin rssiweb
-
-
-pipenv run flask run
-
-
-Password change
---------------------------
-heroku Login - rssi.connect@gmail.com
-More
-Run console
-flask generate-hash-for 2310
-Run
-Save the session and copy the encripted value and paste it to
-Settings
-Reveal config variable
-paste the codes (SECURE_USER, INDIGO_CODE, SECURE1_USER, PASSWORD_CODE)
-DO NOT REMOVE Salt
-
-Change in .env file offline
----------------------------------
-Run new terminal and type
-pipenv run flask generate-hash-for 2310
-copy the code and replace it.
-
-After 127.0.0.1 kubernetes.docker.internal put
-127.0.0.1 web.local
-127.0.0.1 portal.local
-
-C:\Windows\System32\drivers\etc\hosts

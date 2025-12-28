@@ -1,8 +1,6 @@
 <?php
-header('Content-Type: application/json');
 require_once __DIR__ . "/../../bootstrap.php";
-
-include("../../util/login_util.php");
+header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true);
 $apiKey = '';
