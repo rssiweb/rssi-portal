@@ -275,8 +275,8 @@ function gps_export()
   // No filter → show nothing
   $hasFilter =
     $isAssetSearch ||
-    ($item_type && $item_type !== 'ALL') ||
-    ($assetcategory && $assetcategory !== 'ALL') ||
+    ($item_type) ||
+    ($assetcategory) ||
     ($assetstatus) ||
     ($role === 'Admin' && $taggedto);
 
