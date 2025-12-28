@@ -11,12 +11,27 @@ class TextRefiner {
         // Watch for textareas dynamically added to the page
         this.observeTextareas();
 
-        // Process existing textareas
+        // Process existing textareas - EXCLUDE SELECT2
         document.querySelectorAll('textarea').forEach(textarea => {
-            if (!textarea.classList.contains('no-refiner')) {
+            if (!textarea.classList.contains('no-refiner') &&
+                !this.isInsideSelect2(textarea)) {
                 this.addRefinerButton(textarea);
             }
         });
+    }
+
+    isInsideSelect2(element) {
+        // Check if element or its parents are part of Select2
+        let parent = element.parentElement;
+        while (parent) {
+            if (parent.classList.contains('select2-container') ||
+                parent.classList.contains('select2') ||
+                parent.id && parent.id.includes('select2')) {
+                return true;
+            }
+            parent = parent.parentElement;
+        }
+        return false;
     }
 
     addStyles() {
@@ -105,8 +120,9 @@ class TextRefiner {
     }
 
     addRefinerButton(textarea) {
-        // Check if already has refiner
-        if (textarea.parentNode.classList.contains('refiner-container')) {
+        // Check if already has refiner OR is inside Select2
+        if (textarea.parentNode.classList.contains('refiner-container') ||
+            this.isInsideSelect2(textarea)) {
             return;
         }
 
@@ -218,13 +234,16 @@ class TextRefiner {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
-                    if (node.nodeName === 'TEXTAREA') {
+                    if (node.nodeName === 'TEXTAREA' &&
+                        !this.isInsideSelect2(node)) {
                         this.addRefinerButton(node);
                     }
                     // Also check for textareas inside added nodes
                     if (node.querySelectorAll) {
                         node.querySelectorAll('textarea').forEach(textarea => {
-                            this.addRefinerButton(textarea);
+                            if (!this.isInsideSelect2(textarea)) {
+                                this.addRefinerButton(textarea);
+                            }
                         });
                     }
                 });
