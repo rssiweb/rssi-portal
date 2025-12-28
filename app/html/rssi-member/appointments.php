@@ -925,7 +925,7 @@ $result = pg_query_params($con, $query, $query_builder['params']);
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js"></script>
+  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty

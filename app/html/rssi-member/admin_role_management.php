@@ -680,7 +680,7 @@ $total_pages = ceil($total_count / $limit);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js"></script>
+  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
     <script>
         // Open Assign Role Modal
         function openAssignModal(userId, userName) {

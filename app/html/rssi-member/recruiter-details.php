@@ -788,7 +788,7 @@ $activeJobs = pg_fetch_result($activeJobsResult, 0, 'active_jobs');
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js"></script>
+  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
 
     <script>
         // API endpoint configuration

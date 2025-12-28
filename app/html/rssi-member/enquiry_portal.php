@@ -1239,7 +1239,7 @@ if (isset($_GET['view'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js"></script>
+  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
     <script>
         // Main form field handlers
         function setupFormFieldHandlers() {
