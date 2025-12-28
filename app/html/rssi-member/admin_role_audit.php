@@ -347,7 +347,8 @@ $actions = pg_fetch_all_columns($actions_result, 0);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         function viewDetails(details) {
             document.getElementById('detailsContent').textContent =

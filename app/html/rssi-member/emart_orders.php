@@ -361,7 +361,8 @@ $paymentModes = pg_fetch_all($paymentModesResult);
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
 
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
 
     <script>
         // Initialize date range picker

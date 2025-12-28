@@ -385,7 +385,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         $(document).ready(function() {
             // Initialize Select2 for multiple selects

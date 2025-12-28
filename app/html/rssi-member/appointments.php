@@ -924,7 +924,8 @@ $result = pg_query_params($con, $query, $query_builder['params']);
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
 
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty

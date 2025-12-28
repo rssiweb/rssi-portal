@@ -411,7 +411,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

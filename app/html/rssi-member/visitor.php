@@ -464,7 +464,8 @@ if (!$phoneNumber) {
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
 
     <!--------------- POP-UP BOX ------------
 -------------------------------------->

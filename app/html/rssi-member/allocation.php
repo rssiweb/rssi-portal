@@ -815,7 +815,8 @@ pg_close($con);
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         const today = new Date();
         const maxMonth = today.toISOString().slice(0, 7);

@@ -921,7 +921,8 @@ if (!function_exists('makeClickableLinks')) {
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
   <!-- Template Main JS File -->
-  <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

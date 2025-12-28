@@ -470,7 +470,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
 
     <script>
         $(document).ready(function() {

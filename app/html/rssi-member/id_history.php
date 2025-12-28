@@ -301,7 +301,8 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         $(document).ready(function() {
             const deliveryModal = new bootstrap.Modal('#deliveryModal');

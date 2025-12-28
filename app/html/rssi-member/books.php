@@ -899,7 +899,8 @@ $stats = [
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets_new/js/image-compressor-100kb.js"></script>
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
     <script>
         // Enhance filter dropdowns with search functionality
         document.querySelectorAll('select.form-select').forEach(select => {

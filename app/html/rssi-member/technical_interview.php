@@ -882,7 +882,8 @@ if (!empty($interviewData['submitted_by'])) {
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
+      <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/text-refiner.js"></script>
 
     <script>
         $(document).ready(function() {
