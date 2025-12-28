@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
 
     <script>
         let offset = 0; // Start from the first record

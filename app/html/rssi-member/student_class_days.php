@@ -233,7 +233,7 @@ $activeSettings = pg_fetch_all($activeResult);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script>
         // Set today's date as default for effective_from
         document.getElementById('effective_from').valueAsDate = new Date();

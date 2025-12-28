@@ -806,7 +806,7 @@ if (!$result) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <!-- Add this script in your HTML file -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {

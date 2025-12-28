@@ -708,7 +708,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <!-- Add this script at the end of the HTML body -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- Bootstrap Modal -->

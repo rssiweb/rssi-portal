@@ -215,7 +215,7 @@ while ($row = pg_fetch_assoc($locations_result)) {
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
         var enableLocationCheck = true;

@@ -601,7 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script>
         function showSpinner() {
             // Disable the submit button to prevent multiple submissions

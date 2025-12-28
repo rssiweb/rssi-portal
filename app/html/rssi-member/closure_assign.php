@@ -238,7 +238,7 @@ echo "<script>var userRole = '$role';</script>";
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

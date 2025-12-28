@@ -385,7 +385,7 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
         const scriptURL = 'payment-api.php'

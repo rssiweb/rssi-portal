@@ -362,7 +362,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
 
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
 
     <script>
         // Initialize date range picker

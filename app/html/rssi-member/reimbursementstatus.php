@@ -831,7 +831,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
   <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
   <script>
     $(document).ready(function() {
       // Check if resultArr is empty

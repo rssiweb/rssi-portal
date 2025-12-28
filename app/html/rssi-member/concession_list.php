@@ -692,7 +692,7 @@ if (isset($_GET['tab']) && in_array($_GET['tab'], ['billable', 'non-billable']))
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editConcessionModal" tabindex="-1" aria-hidden="true">

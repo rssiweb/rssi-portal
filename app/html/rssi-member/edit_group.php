@@ -332,7 +332,7 @@ $units = pg_fetch_all($units_result) ?: [];
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {

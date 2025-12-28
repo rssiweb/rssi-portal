@@ -2509,7 +2509,7 @@ foreach ($card_access_levels as $card => $required_level) {
     <script src="../assets_new/js/image-compressor-200kb.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
 
     <script>
         // Mobile menu setup (similar to HRMS)

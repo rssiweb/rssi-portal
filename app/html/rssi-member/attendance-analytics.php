@@ -704,7 +704,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Template Main JS File -->
       <script src="../assets_new/js/main.js"></script>
-  <script src="../assets_new/js/text-refiner.js?v=1.1.0"></script>
+  
     <script>
         // Export to Excel function
         function exportToExcel(mode) {
