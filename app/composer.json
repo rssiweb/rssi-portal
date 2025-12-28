@@ -12,7 +12,8 @@
         "symfony/yaml": "^5.4",
         "symfony/cache": "^5.4",
         "doctrine/annotations": "^1.13",
-        "google/apiclient": "^2.13"
+        "google/apiclient": "^2.13",
+        "spomky-labs/otphp": "^11.3"
     },
     "autoload": {
         "psr-0": { "": "models/" }
