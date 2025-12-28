@@ -130,11 +130,13 @@ class TextRefiner {
         options.className = 'refiner-options';
 
         const professionalBtn = document.createElement('button');
+        professionalBtn.type = 'button';
         professionalBtn.className = 'refiner-option professional';
         professionalBtn.textContent = 'Professional';
         professionalBtn.onclick = () => this.refineText(textarea, 'professional');
 
         const friendlyBtn = document.createElement('button');
+        friendlyBtn.type = 'button';
         friendlyBtn.className = 'refiner-option friendly';
         friendlyBtn.textContent = 'Friendly';
         friendlyBtn.onclick = () => this.refineText(textarea, 'friendly');
@@ -153,6 +155,17 @@ class TextRefiner {
         document.addEventListener('click', () => {
             options.classList.remove('show');
         });
+
+        // Prevent form submission when Enter is pressed during rephrasing
+        const form = textarea.closest('form');
+        if (form) {
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && textarea.classList.contains('refining')) {
+                    e.preventDefault();
+                    console.log('Form submission prevented during rephrasing');
+                }
+            });
+        }
     }
 
     async refineText(textarea, tone) {
@@ -197,6 +210,8 @@ class TextRefiner {
             textarea.classList.remove('refining');
             textarea.placeholder = originalPlaceholder;
         }
+
+        return false; // Prevent any default behavior
     }
 
     observeTextareas() {
@@ -219,6 +234,27 @@ class TextRefiner {
         observer.observe(document.body, {
             childList: true,
             subtree: true
+        });
+    }
+
+    preventFormSubmission() {
+        // Prevent accidental form submission when clicking refiner options
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('refiner-option') ||
+                e.target.classList.contains('refiner-icon')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+
+        // Prevent form submission when any textarea is being refined
+        document.addEventListener('submit', (e) => {
+            const activeRefiner = document.querySelector('.refining');
+            if (activeRefiner) {
+                e.preventDefault();
+                console.log('Form submission prevented: rephrasing in progress');
+                alert('Please wait for rephrasing to complete before submitting the form.');
+            }
         });
     }
 }
