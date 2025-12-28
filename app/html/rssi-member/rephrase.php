@@ -11,8 +11,8 @@ $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generat
 
 // Different prompts based on tone
 $prompts = [
-    'professional' => "Rephrase this text to make it more professional and formal while keeping the original meaning: ",
-    'friendly' => "Rephrase this text to make it more friendly, casual, and approachable while keeping the original meaning: "
+    'professional' => "Return ONLY a single professional rephrasing of this text. Do not give options, explanations, or additional text. Just return the rephrased version. Text: ",
+    'friendly' => "Return ONLY a single friendly rephrasing of this text. Do not give options, explanations, or additional text. Just return the rephrased version. Text: "
 ];
 
 $prompt = $prompts[$tone] ?? $prompts['professional'];
