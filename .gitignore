@@ -2,3 +2,8 @@
 app/.DS_Store
 app/vendor/
 app/models/*~
+# NEW: Protect your API keys
+.env
+.env.local
+.env.*.local
+*.env

@@ -2,7 +2,9 @@
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true);
-$apiKey = 'AIzaSyASRlu6MaHyf7Ai1wuc9EP6HunLu9jAE-g';
+$apiKey = '';
+// Method 1: Direct environment variable (for production servers)
+$apiKey = getenv('GEMINI_API_KEY');
 $text = $input['text'] ?? '';
 $tone = $input['tone'] ?? 'professional'; // Get the tone parameter
 
