@@ -325,7 +325,7 @@ if (!$result) {
                                                                     </select>
                                                                 </td>
 
-                                                                <td><textarea name="manager_remarks_1" id="manager_remarks_1"><?php echo $array['manager_remarks_1'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_1" id="manager_remarks_1" disabled><?php echo $array['manager_remarks_1'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_2'] ?></td>
@@ -350,7 +350,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_2" id="manager_remarks_2"><?php echo $array['manager_remarks_2'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_2" id="manager_remarks_2" disabled><?php echo $array['manager_remarks_2'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_3'] ?></td>
@@ -375,7 +375,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_3" id="manager_remarks_3"><?php echo $array['manager_remarks_3'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_3" id="manager_remarks_3" disabled><?php echo $array['manager_remarks_3'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_4'] ?></td>
@@ -400,7 +400,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_4" id="manager_remarks_4"><?php echo $array['manager_remarks_4'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_4" id="manager_remarks_4" disabled><?php echo $array['manager_remarks_4'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_5'] ?></td>
@@ -425,7 +425,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_5" id="manager_remarks_5"><?php echo $array['manager_remarks_5'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_5" id="manager_remarks_5" disabled><?php echo $array['manager_remarks_5'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_6'] ?></td>
@@ -450,7 +450,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_6" id="manager_remarks_6"><?php echo $array['manager_remarks_6'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_6" id="manager_remarks_6" disabled><?php echo $array['manager_remarks_6'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_7'] ?></td>
@@ -475,7 +475,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_7" id="manager_remarks_7"><?php echo $array['manager_remarks_7'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_7" id="manager_remarks_7" disabled><?php echo $array['manager_remarks_7'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_8'] ?></td>
@@ -500,7 +500,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_8" id="manager_remarks_8"><?php echo $array['manager_remarks_8'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_8" id="manager_remarks_8" disabled><?php echo $array['manager_remarks_8'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_9'] ?></td>
@@ -525,7 +525,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_9" id="manager_remarks_9"><?php echo $array['manager_remarks_9'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_9" id="manager_remarks_9" disabled><?php echo $array['manager_remarks_9'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_10'] ?></td>
@@ -550,7 +550,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_10" id="manager_remarks_10"><?php echo $array['manager_remarks_10'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_10" id="manager_remarks_10" disabled><?php echo $array['manager_remarks_10'] ?></textarea></td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -593,7 +593,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_11" id="manager_remarks_11"><?php echo $array['manager_remarks_11'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_11" id="manager_remarks_11" disabled><?php echo $array['manager_remarks_11'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_12'] ?></td>
@@ -618,7 +618,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_12" id="manager_remarks_12"><?php echo $array['manager_remarks_12'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_12" id="manager_remarks_12" disabled><?php echo $array['manager_remarks_12'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_13'] ?></td>
@@ -643,7 +643,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_13" id="manager_remarks_13"><?php echo $array['manager_remarks_13'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_13" id="manager_remarks_13" disabled><?php echo $array['manager_remarks_13'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_14'] ?></td>
@@ -668,7 +668,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_14" id="manager_remarks_14"><?php echo $array['manager_remarks_14'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_14" id="manager_remarks_14" disabled><?php echo $array['manager_remarks_14'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_15'] ?></td>
@@ -693,7 +693,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_15" id="manager_remarks_15"><?php echo $array['manager_remarks_15'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_15" id="manager_remarks_15" disabled><?php echo $array['manager_remarks_15'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_16'] ?></td>
@@ -718,7 +718,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_16" id="manager_remarks_16"><?php echo $array['manager_remarks_16'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_16" id="manager_remarks_16" disabled><?php echo $array['manager_remarks_16'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_17'] ?></td>
@@ -743,7 +743,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_17" id="manager_remarks_17"><?php echo $array['manager_remarks_17'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_17" id="manager_remarks_17" disabled><?php echo $array['manager_remarks_17'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_18'] ?></td>
@@ -768,7 +768,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_18" id="manager_remarks_18"><?php echo $array['manager_remarks_18'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_18" id="manager_remarks_18" disabled><?php echo $array['manager_remarks_18'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_19'] ?></td>
@@ -793,7 +793,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_19" id="manager_remarks_19"><?php echo $array['manager_remarks_19'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_19" id="manager_remarks_19" disabled><?php echo $array['manager_remarks_19'] ?></textarea></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><?php echo $array['parameter_20'] ?></td>
@@ -818,7 +818,7 @@ if (!$result) {
                                                                         <option>5</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea name="manager_remarks_20" id="manager_remarks_20"><?php echo $array['manager_remarks_20'] ?></textarea></td>
+                                                                <td><textarea name="manager_remarks_20" id="manager_remarks_20" disabled><?php echo $array['manager_remarks_20'] ?></textarea></td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
