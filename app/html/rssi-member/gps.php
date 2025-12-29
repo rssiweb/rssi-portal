@@ -185,11 +185,12 @@ if (!$hasFilter) {
 }
 
 // ======================================================
-// MAIN QUERY
+// MAIN QUERY - UPDATED WITH LOCATION JOIN
 // ======================================================
 $query = "
 SELECT 
     gps.*,
+    office_locations.name as location_name,  -- ADD THIS
     tmember.fullname AS tfullname,
     tmember.phone AS tphone,
     tmember.email AS temail,
@@ -202,6 +203,7 @@ SELECT
     v.verification_status,
     v.admin_review_status
 FROM gps
+LEFT JOIN office_locations ON gps.location = office_locations.id  -- ADD THIS
 LEFT JOIN rssimyaccount_members AS tmember
     ON gps.taggedto = tmember.associatenumber
 LEFT JOIN rssimyaccount_members AS imember
@@ -636,6 +638,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                 <th>Purchase Date</th>
                                                 <th>Photo</th>
                                                 <th>Bill</th>
+                                                <th>Linked Assets</th>
                                                 <th>Remarks</th>
                                                 <th>Last Verified</th>
                                                 <th>Verified By</th>
@@ -726,6 +729,31 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                                 </button>
                                                             <?php else: ?>
                                                                 <span class="text-muted">N/A</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <!-- In the table body for each row: -->
+                                                        <td>
+                                                            <?php
+                                                            // Check if asset has linked assets
+                                                            $linked_assets_query = "
+                                                            SELECT COUNT(*) as link_count 
+                                                            FROM asset_links 
+                                                            WHERE asset_itemid = '" . $array['itemid'] . "' 
+                                                            AND is_active = TRUE";
+                                                            $linked_result = pg_query($con, $linked_assets_query);
+                                                            $link_data = pg_fetch_assoc($linked_result);
+                                                            $link_count = $link_data['link_count'];
+
+                                                            if ($link_count > 0): ?>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-info view-linked-assets"
+                                                                    data-asset-id="<?= $array['itemid'] ?>"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#linkedAssetsModal">
+                                                                    <i class="bi bi-link-45deg"></i> View Links (<?= $link_count ?>)
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">None</span>
                                                             <?php endif; ?>
                                                         </td>
                                                         <td>
@@ -973,6 +1001,25 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                             </select>
                                                             <small class="text-muted">Tagged to</small>
                                                         </div>
+
+                                                        <!-- Location Field -->
+                                                        <div class="col-md-6">
+                                                            <label for="location" class="form-label">Location</label>
+                                                            <select name="location" id="location" class="form-select select2">
+                                                                <option value="">Select location</option>
+                                                                <!-- Options will be loaded via AJAX -->
+                                                            </select>
+                                                            <small class="text-muted">Office location</small>
+                                                        </div>
+
+                                                        <!-- Asset Links Field -->
+                                                        <div class="col-md-12">
+                                                            <label for="linked_assets" class="form-label">Linked Assets</label>
+                                                            <select name="linked_assets[]" id="linked_assets" class="form-select select2" multiple="multiple" style="width: 100%;">
+                                                                <!-- Options will be loaded via AJAX -->
+                                                            </select>
+                                                            <small class="text-muted">Link other assets (use CTRL/CMD to select multiple)</small>
+                                                        </div>
                                                     <?php endif; ?>
                                                     <!-- Asset Photo (Replace) -->
                                                     <div class="col-md-6">
@@ -1082,7 +1129,6 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 </div><!-- End Reports -->
             </div>
         </section>
-
     </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -1090,8 +1136,8 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script src="../assets_new/js/image-compressor-100kb.js"></script>
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -1109,810 +1155,1110 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             </div>
         </div>
     </div>
-    <script>
-        // Assuming data is provided from PHP
-        var data = <?= json_encode($resultArr) ?>;
+    <!-- Linked Assets Modal -->
+    <div class="modal fade" id="linkedAssetsModal" tabindex="-1" aria-labelledby="linkedAssetsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="linkedAssetsModalLabel">Linked Assets</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-end mb-3">
+                        <p class="badge bg-info"><span id="current-asset-id"></span></p>
+                    </div>
+                    <div id="linked-assets-container">
+                        <!-- Linked assets will be loaded here -->
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading linked assets...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    // ======================================================
+    // ASSET LINKING FUNCTIONS - GLOBAL SCOPE
+    // ======================================================
 
-        // Initialize modals
-        var modal = new bootstrap.Modal(document.getElementById('myModal'));
-        var modal1 = new bootstrap.Modal(document.getElementById('myModal1'));
-        var modal2 = new bootstrap.Modal(document.getElementById('myModal2'));
+    // Function to load asset options for linking (excluding current asset)
+    function loadAssetOptions(currentAssetId = null) {
+        $.ajax({
+            url: 'fetch_assets_for_linking.php',
+            type: 'GET',
+            data: {
+                exclude: currentAssetId
+            },
+            dataType: 'json',
+            success: function(data) {
+                const linkedAssetsSelect = $('#linked_assets');
+                linkedAssetsSelect.empty();
 
-        // Make currentMode a global variable
-        window.currentMode = 'details'; // 'details' or 'upload'
-
-        function findItem(id) {
-            return data.find(item => item.itemid == id);
-        }
-
-        function showDetails(id) {
-            var item = findItem(id);
-            if (!item) return;
-
-            // Set global mode
-            window.currentMode = 'details';
-
-            // Reset to default state
-            resetModalToDefault();
-
-            // Set modal title
-            document.getElementById('myModalLabel').textContent = 'GPS Details';
-
-            // Populate form fields
-            document.querySelector('#myModal .itemid').textContent = item.itemid;
-            document.querySelector('#myModal .itemname').textContent = item.itemname;
-            document.getElementById('itemid1').value = item.itemid;
-
-            <?php if ($role == 'Admin'): ?>
-                document.getElementById('itemtype').value = item.itemtype || "";
-                document.getElementById('itemname').value = item.itemname || "";
-                document.getElementById('quantity').value = item.quantity || "";
-                document.getElementById('asset_status').value = item.asset_status || "";
-                document.getElementById('remarks').value = item.remarks || "";
-                document.getElementById('unit_cost').value = item.unit_cost || "";
-                document.getElementById('asset_category').value = item.asset_category || "";
-                document.getElementById('purchase_date').value = item.purchase_date || "";
-
-                // Handle Select2 field for collectedby
-                var collectedbyValue = item.collectedby || "";
-                if (collectedbyValue) {
-                    // Create a new option and append it to the select
-                    var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
-                    $('#collectedby').append(newOption).trigger('change');
-                } else {
-                    // Clear if no value
-                    $('#collectedby').val(null).trigger('change');
-                }
-
-                // Handle Select2 field for taggedto
-                var taggedtoValue = item.taggedto || "";
-                if (taggedtoValue) {
-                    // Create a new option and append it to the select
-                    var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
-                    $('#taggedto').append(newOption).trigger('change');
-                } else {
-                    // Clear if no value
-                    $('#taggedto').val(null).trigger('change');
-                }
-            <?php endif; ?>
-
-            // NEW: Check existing files and disable fields if files exist
-            var assetPhotoField = document.getElementById('asset_photo');
-            var purchaseBillField = document.getElementById('purchase_bill');
-
-            if (item.asset_photo && assetPhotoField) {
-                assetPhotoField.disabled = true;
-                assetPhotoField.placeholder = "Photo already uploaded";
-            }
-
-            if (item.purchase_bill && purchaseBillField) {
-                purchaseBillField.disabled = true;
-                purchaseBillField.placeholder = "Bill already uploaded";
-            }
-
-            modal.show();
-        }
-
-        function showRemarks(id) {
-            var item = findItem(id);
-            if (!item) return;
-
-            document.querySelector('#myModal1 .itemid').textContent = item.itemid;
-            document.querySelector('#myModal1 .remarks').textContent = item.remarks || "No remarks available.";
-
-            modal1.show();
-        }
-
-        function showName(id) {
-            var item = findItem(id);
-            if (!item) return;
-
-            document.querySelector('#myModal2 .itemid').textContent = item.itemid;
-            document.querySelector('#myModal2 .itemname').textContent = item.itemname || "No item name available.";
-
-            modal2.show();
-        }
-
-        // Helper function to hide non-file fields - FIXED VERSION
-        function hideNonFileFields() {
-            // Hide ALL form groups except file uploads
-            var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
-
-            allFormGroups.forEach(function(formGroup) {
-                // Check if this form group contains file inputs
-                var fileInput = formGroup.querySelector('input[type="file"]');
-
-                if (fileInput) {
-                    // This is a file upload field - show it
-                    formGroup.style.display = 'block';
-                    fileInput.disabled = false;
-                    // Ensure file inputs are NOT required when in upload mode
-                    fileInput.required = window.currentMode === 'upload' ? false : true;
-                } else {
-                    // This is NOT a file upload field - hide it
-                    formGroup.style.display = 'none';
-
-                    // Remove required attribute from all inputs in hidden groups
-                    var formElements = formGroup.querySelectorAll('input, select, textarea');
-                    formElements.forEach(function(element) {
-                        element.disabled = false; // Keep enabled
-                        element.removeAttribute('required'); // Remove required attribute
-                        element.setAttribute('data-hidden', 'true');
-                        element.setAttribute('data-was-required', element.hasAttribute('required')); // Store if it was required
+                if (data && data.length > 0) {
+                    data.forEach(function(asset) {
+                        const optionText = `${asset.itemid} - ${asset.itemname}`;
+                        linkedAssetsSelect.append(
+                            `<option value="${asset.itemid}">${optionText}</option>`
+                        );
                     });
                 }
-            });
 
-            // Also handle form elements not in .col-md-6
-            var allFormElements = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
-            allFormElements.forEach(function(element) {
-                if (element.type !== 'file') {
-                    // For non-file fields, remove required if they're in upload mode
-                    if (window.currentMode === 'upload') {
-                        element.removeAttribute('required');
-                    }
-                }
-            });
-        }
-
-        // Helper function to reset modal to default state
-        function resetModalToDefault() {
-            // Show all form groups
-            var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
-            allFormGroups.forEach(function(formGroup) {
-                formGroup.style.display = 'block';
-            });
-
-            // Enable all fields and restore required attributes
-            var allFields = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
-            allFields.forEach(function(field) {
-                field.disabled = false;
-
-                // Restore required attribute if it was originally required
-                if (field.getAttribute('data-was-required') === 'true') {
-                    field.setAttribute('required', 'required');
-                }
-                // Remove the data attributes
-                field.removeAttribute('data-hidden');
-                field.removeAttribute('data-was-required');
-            });
-
-            // Reset button text
-            document.querySelector('.button-text').textContent = 'Save changes';
-        }
-
-        // Reset modal when it's closed
-        document.getElementById('myModal').addEventListener('hidden.bs.modal', function() {
-            resetModalToDefault();
-            // Reset modal title
-            document.getElementById('myModalLabel').textContent = 'GPS Details';
-            // Reset mode
-            window.currentMode = 'details';
-
-            // Clear any Select2 appended options
-            <?php if ($role == 'Admin'): ?>
-                $('#collectedby').val(null).trigger('change');
-                $('#taggedto').val(null).trigger('change');
-            <?php endif; ?>
+                // Re-initialize Select2 WITHOUT bootstrap theme
+                linkedAssetsSelect.select2({
+                    width: '100%',
+                    dropdownParent: $('#myModal'),
+                    placeholder: 'Select assets to link',
+                    allowClear: true
+                });
+            },
+            error: function() {
+                console.error('Failed to load assets for linking');
+                $('#linked_assets').select2({
+                    width: '100%',
+                    dropdownParent: $('#myModal'),
+                    placeholder: 'Select assets to link',
+                    allowClear: true
+                });
+            }
         });
-    </script>
+    }
 
-    <script>
-        const scriptURL = 'payment-api.php';
-        const form = document.getElementById('gpsform');
+    // Function to load already linked assets for the current asset
+    function loadLinkedAssets(assetId) {
+        if (!assetId) return;
 
-        // Use the global currentMode variable (don't redeclare it)
-        // window.currentMode is already defined in the first script block
-
-        if (form) {
-            const updateButton = document.getElementById('update-button');
-            const buttonText = updateButton.querySelector('.button-text');
-            const spinner = updateButton.querySelector('.spinner-border');
-
-            form.addEventListener('submit', e => {
-                e.preventDefault();
-
-                // Add novalidate to form in upload mode to bypass HTML5 validation
-                if (window.currentMode === 'upload') {
-                    form.setAttribute('novalidate', 'novalidate');
+        $.ajax({
+            url: 'fetch_linked_assets.php',
+            type: 'GET',
+            data: {
+                asset_id: assetId
+            },
+            dataType: 'json',
+            success: function(data) {
+                const linkedAssetsSelect = $('#linked_assets');
+                if (data && data.length > 0) {
+                    const selectedValues = data.map(asset => asset.linked_asset_itemid);
+                    linkedAssetsSelect.val(selectedValues).trigger('change');
                 }
-
-                // Show spinner and disable button - use window.currentMode
-                buttonText.textContent = window.currentMode === 'upload' ? 'Uploading...' : 'Updating...';
-                spinner.classList.remove('d-none');
-                updateButton.disabled = true;
-
-                const formData = new FormData(form);
-                formData.append('form-type', 'gpsedit');
-
-                // Add the current mode to the form data
-                formData.append('mode', window.currentMode);
-
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        // Reset button state
-                        resetButton();
-
-                        if (result === 'success') {
-                            let message = window.currentMode === 'upload' ?
-                                "Files have been uploaded successfully." :
-                                "Record has been successfully updated.";
-                            alert(message);
-                            location.reload();
-                        } else if (result === 'nochange') {
-                            alert("No changes detected.");
-                        } else if (result === 'invalid') {
-                            alert("Invalid asset ID.");
-                        } else if (result === 'unauthorized') {
-                            alert("You are not authorized to perform this action.");
-                        } else {
-                            let errorMsg = window.currentMode === 'upload' ?
-                                "Error uploading files. Please try again." :
-                                "Error updating record. Please try again or contact support.";
-                            alert(errorMsg);
-                        }
-                    })
-                    .catch(error => {
-                        // Reset button state
-                        resetButton();
-
-                        console.error('Error!', error.message);
-                        alert("Network error or server issue occurred.");
-                    });
-            });
-
-            // Function to reset button to original state
-            function resetButton() {
-                if (buttonText && spinner && updateButton) {
-                    buttonText.textContent = window.currentMode === 'upload' ? 'Upload Files' : 'Save changes';
-                    spinner.classList.add('d-none');
-                    updateButton.disabled = false;
-                }
+            },
+            error: function() {
+                console.error('Failed to load linked assets');
             }
+        });
+    }
 
-            // Reset button state and mode when modal is closed
-            $('#myModal').on('hidden.bs.modal', function() {
-                window.currentMode = 'details'; // Reset to default mode
-                resetButton();
-            });
-        }
+    // Function to load linked assets for modal view - FIXED VERSION
+    function loadLinkedAssetsForModal(assetId) {
+        const container = document.getElementById('linked-assets-container');
 
-        // Email form event listeners - check if data exists
-        if (typeof data !== 'undefined') {
-            data.forEach(item => {
-                const formId = 'email-form-' + item.itemid;
-                const form = document.forms[formId];
+        $.ajax({
+            url: 'get_linked_assets_details.php',
+            type: 'GET',
+            data: {
+                asset_id: assetId
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.length > 0) {
+                    let html = '<div class="table-responsive"><table class="table table-sm">';
+                    html += '<thead><tr><th>Asset ID</th><th>Asset Name</th><th>Status</th><th>Tagged To</th><th>Actions</th></tr></thead>';
+                    html += '<tbody>';
 
-                // Check if form exists before adding event listener
-                if (form) {
-                    form.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        fetch('mailer.php', {
-                                method: 'POST',
-                                body: new FormData(form)
-                            })
-                            .then(response => {
-                                alert("Email has been sent.");
-                            })
-                            .catch(error => console.error('Error!', error.message));
+                    data.forEach(function(asset) {
+                        html += `<tr>
+                            <td>${asset.itemid}</td>
+                            <td>${asset.itemname}</td>
+                            <td><span class="badge bg-${asset.asset_status === 'Active' ? 'success' : 'secondary'}">${asset.asset_status}</span></td>
+                            <td>${asset.taggedto_name || asset.taggedto}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary view-linked-asset" 
+                                    data-asset-id="${asset.itemid}">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>`;
                     });
+
+                    html += '</tbody></table></div>';
+                    container.innerHTML = html;
+
+                    // Add event listener for the view buttons
+                    $('.view-linked-asset').on('click', function() {
+                        const assetId = $(this).data('asset-id');
+                        showDetails(assetId);
+                        $('#linkedAssetsModal').modal('hide');
+                    });
+                } else {
+                    container.innerHTML = '<div class="alert alert-info">No linked assets found.</div>';
                 }
+            },
+            error: function() {
+                container.innerHTML = '<div class="alert alert-danger">Failed to load linked assets.</div>';
+            }
+        });
+    }
+
+    // Function to initialize a Select2 on a given element ID
+    function initSelect2(elementId, modalId = null) {
+        const ajaxConfig = {
+            url: 'fetch_associates.php?isActive=true',
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    q: params.term
+                };
+            },
+            processResults: function(data) {
+                return {
+                    results: data.results
+                };
+            },
+            cache: true
+        };
+
+        const $element = $(`#${elementId}`);
+        if (!$element.hasClass("select2-hidden-accessible")) {
+            $element.select2({
+                ajax: ajaxConfig,
+                minimumInputLength: 2,
+                placeholder: 'Select associate(s)',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: modalId ? $(`#${modalId}`) : undefined
             });
         }
-    </script>
-    <script>
-        /* ===============================
-        COMMON SAFE HELPERS
-        ================================ */
-        function setFieldState(field, enabled) {
-            if (!field) return;
+    }
 
-            field.disabled = !enabled;
+    // ======================================================
+    // MAIN FUNCTIONS
+    // ======================================================
 
-            const wrapper = field.closest('.col-md-3');
-            if (wrapper) {
-                wrapper.classList.toggle('text-muted', !enabled);
-            }
-        }
+    // Assuming data is provided from PHP
+    var data = <?= json_encode($resultArr) ?>;
 
-        /* ===============================
-           FORM STATE HANDLING
-        ================================ */
-        function updateFormState() {
-            const checkbox = document.getElementById('is_user');
-            if (!checkbox) return;
+    // Initialize modals
+    var modal = new bootstrap.Modal(document.getElementById('myModal'));
+    var modal1 = new bootstrap.Modal(document.getElementById('myModal1'));
+    var modal2 = new bootstrap.Modal(document.getElementById('myModal2'));
 
-            const assetIdInput = document.getElementsByName('assetid')[0] || null;
-            const itemTypeInput = document.getElementsByName('item_type')[0] || null;
-            const taggedToInput = document.getElementsByName('taggedto')[0] || null;
-            const itemStatusInput = document.getElementsByName('assetstatus')[0] || null;
-            const assetCategoryInput = document.getElementsByName('assetcategory')[0] || null;
+    // Make currentMode a global variable
+    window.currentMode = 'details'; // 'details' or 'upload'
 
-            if (checkbox.checked) {
-                setFieldState(assetIdInput, true);
-                setFieldState(itemTypeInput, false);
-                setFieldState(itemStatusInput, false);
-                setFieldState(taggedToInput, false);
-                setFieldState(assetCategoryInput, false);
+    function findItem(id) {
+        return data.find(item => item.itemid == id);
+    }
+
+    function showDetails(id) {
+        var item = findItem(id);
+        if (!item) return;
+
+        // Set global mode
+        window.currentMode = 'details';
+
+        // Reset to default state
+        resetModalToDefault();
+
+        // Set modal title
+        document.getElementById('myModalLabel').textContent = 'GPS Details';
+
+        // Populate form fields
+        document.querySelector('#myModal .itemid').textContent = item.itemid;
+        document.querySelector('#myModal .itemname').textContent = item.itemname;
+        document.getElementById('itemid1').value = item.itemid;
+
+        <?php if ($role == 'Admin'): ?>
+            // Existing fields...
+            document.getElementById('itemtype').value = item.itemtype || "";
+            document.getElementById('itemname').value = item.itemname || "";
+            document.getElementById('quantity').value = item.quantity || "";
+            document.getElementById('asset_status').value = item.asset_status || "";
+            document.getElementById('remarks').value = item.remarks || "";
+            document.getElementById('unit_cost').value = item.unit_cost || "";
+            document.getElementById('asset_category').value = item.asset_category || "";
+            document.getElementById('purchase_date').value = item.purchase_date || "";
+
+            // NEW: Initialize location field and load options
+            // First, initialize the Select2 (empty)
+            $('#location').select2({
+                width: '100%',
+                dropdownParent: $('#myModal'),
+                placeholder: 'Select location',
+                allowClear: true
+            });
+
+            // Then load options and set value
+            loadLocationOptionsAndSetValue(item.location ? item.location.toString() : null);
+
+            // Load asset options for linking
+            if (typeof loadAssetOptions === 'function') {
+                loadAssetOptions(item.itemid);
             } else {
-                setFieldState(assetIdInput, false);
-                setFieldState(itemTypeInput, true);
-                setFieldState(itemStatusInput, true);
-                setFieldState(taggedToInput, true);
-                setFieldState(assetCategoryInput, true);
+                console.error('loadAssetOptions function not found');
+            }
+
+            // Load already linked assets
+            if (typeof loadLinkedAssets === 'function') {
+                // Wait a bit for the select2 to be initialized
+                setTimeout(() => {
+                    loadLinkedAssets(item.itemid);
+                }, 200);
+            }
+
+            // Handle Select2 fields for collectedby and taggedto...
+            var collectedbyValue = item.collectedby || "";
+            if (collectedbyValue) {
+                var newOption = new Option(collectedbyValue, collectedbyValue, true, true);
+                $('#collectedby').append(newOption).trigger('change');
+            } else {
+                $('#collectedby').val(null).trigger('change');
+            }
+
+            var taggedtoValue = item.taggedto || "";
+            if (taggedtoValue) {
+                var newOption = new Option(taggedtoValue, taggedtoValue, true, true);
+                $('#taggedto').append(newOption).trigger('change');
+            } else {
+                $('#taggedto').val(null).trigger('change');
+            }
+        <?php endif; ?>
+
+        // Existing file handling...
+        var assetPhotoField = document.getElementById('asset_photo');
+        var purchaseBillField = document.getElementById('purchase_bill');
+
+        if (item.asset_photo && assetPhotoField) {
+            assetPhotoField.disabled = true;
+            assetPhotoField.placeholder = "Photo already uploaded";
+        }
+
+        if (item.purchase_bill && purchaseBillField) {
+            purchaseBillField.disabled = true;
+            purchaseBillField.placeholder = "Bill already uploaded";
+        }
+
+        modal.show();
+    }
+
+    // Function to load location options and set value
+    function loadLocationOptionsAndSetValue(selectedValue = null) {
+        $.ajax({
+            url: 'fetch_locations.php',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                const locationSelect = $('#location');
+
+                // Store current value before emptying
+                const currentValue = locationSelect.val();
+
+                locationSelect.empty();
+                locationSelect.append('<option value="">Select location</option>');
+
+                if (data && data.length > 0) {
+                    data.forEach(function(location) {
+                        if (location.is_active) {
+                            locationSelect.append(
+                                `<option value="${location.id.toString()}">${location.name}</option>`
+                            );
+                        }
+                    });
+                }
+
+                // Set the value - use provided selectedValue or keep current
+                const valueToSet = selectedValue !== null ? selectedValue : currentValue;
+                if (valueToSet) {
+                    locationSelect.val(valueToSet).trigger('change');
+                }
+            },
+            error: function() {
+                console.error('Failed to load locations');
+            }
+        });
+    }
+
+    function showRemarks(id) {
+        var item = findItem(id);
+        if (!item) return;
+
+        document.querySelector('#myModal1 .itemid').textContent = item.itemid;
+        document.querySelector('#myModal1 .remarks').textContent = item.remarks || "No remarks available.";
+
+        modal1.show();
+    }
+
+    function showName(id) {
+        var item = findItem(id);
+        if (!item) return;
+
+        document.querySelector('#myModal2 .itemid').textContent = item.itemid;
+        document.querySelector('#myModal2 .itemname').textContent = item.itemname || "No item name available.";
+
+        modal2.show();
+    }
+
+    // Helper function to hide non-file fields - FIXED VERSION
+    function hideNonFileFields() {
+        // Hide ALL form groups except file uploads
+        var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
+
+        allFormGroups.forEach(function(formGroup) {
+            // Check if this form group contains file inputs
+            var fileInput = formGroup.querySelector('input[type="file"]');
+
+            if (fileInput) {
+                // This is a file upload field - show it
+                formGroup.style.display = 'block';
+                fileInput.disabled = false;
+                // Ensure file inputs are NOT required when in upload mode
+                fileInput.required = window.currentMode === 'upload' ? false : true;
+            } else {
+                // This is NOT a file upload field - hide it
+                formGroup.style.display = 'none';
+
+                // Remove required attribute from all inputs in hidden groups
+                var formElements = formGroup.querySelectorAll('input, select, textarea');
+                formElements.forEach(function(element) {
+                    element.disabled = false; // Keep enabled
+                    element.removeAttribute('required'); // Remove required attribute
+                    element.setAttribute('data-hidden', 'true');
+                    element.setAttribute('data-was-required', element.hasAttribute('required')); // Store if it was required
+                });
+            }
+        });
+
+        // Also handle form elements not in .col-md-6
+        var allFormElements = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
+        allFormElements.forEach(function(element) {
+            if (element.type !== 'file') {
+                // For non-file fields, remove required if they're in upload mode
+                if (window.currentMode === 'upload') {
+                    element.removeAttribute('required');
+                }
+            }
+        });
+    }
+
+    // Helper function to reset modal to default state
+    function resetModalToDefault() {
+        // Show all form groups
+        var allFormGroups = document.querySelectorAll('#gpsform .col-md-6');
+        allFormGroups.forEach(function(formGroup) {
+            formGroup.style.display = 'block';
+        });
+
+        // Enable all fields and restore required attributes
+        var allFields = document.querySelectorAll('#gpsform input, #gpsform select, #gpsform textarea');
+        allFields.forEach(function(field) {
+            field.disabled = false;
+
+            // Restore required attribute if it was originally required
+            if (field.getAttribute('data-was-required') === 'true') {
+                field.setAttribute('required', 'required');
+            }
+            // Remove the data attributes
+            field.removeAttribute('data-hidden');
+            field.removeAttribute('data-was-required');
+        });
+
+        // Reset button text
+        document.querySelector('.button-text').textContent = 'Save changes';
+    }
+
+    // Reset modal when it's closed
+    document.getElementById('myModal').addEventListener('hidden.bs.modal', function() {
+        resetModalToDefault();
+        // Reset modal title
+        document.getElementById('myModalLabel').textContent = 'GPS Details';
+        // Reset mode
+        window.currentMode = 'details';
+
+        // Clear any Select2 appended options
+        <?php if ($role == 'Admin'): ?>
+            $('#collectedby').val(null).trigger('change');
+            $('#taggedto').val(null).trigger('change');
+            $('#location').val(null).trigger('change');
+            $('#linked_assets').val(null).trigger('change');
+        <?php endif; ?>
+    });
+
+    // ======================================================
+    // FORM SUBMISSION HANDLER
+    // ======================================================
+
+    const scriptURL = 'payment-api.php';
+    const form = document.getElementById('gpsform');
+
+    // In your form submission handler, update it to send linked assets properly
+    if (form) {
+        const updateButton = document.getElementById('update-button');
+        const buttonText = updateButton.querySelector('.button-text');
+        const spinner = updateButton.querySelector('.spinner-border');
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+
+            // Add novalidate to form in upload mode to bypass HTML5 validation
+            if (window.currentMode === 'upload') {
+                form.setAttribute('novalidate', 'novalidate');
+            }
+
+            // Show spinner and disable button - use window.currentMode
+            buttonText.textContent = window.currentMode === 'upload' ? 'Uploading...' : 'Updating...';
+            spinner.classList.remove('d-none');
+            updateButton.disabled = true;
+
+            const formData = new FormData(form);
+            formData.append('form-type', 'gpsedit');
+
+            // Add the current mode to the form data
+            formData.append('mode', window.currentMode);
+
+            // Get selected linked assets and add to form data
+            const linkedAssets = $('#linked_assets').val() || [];
+            formData.append('linked_assets', JSON.stringify(linkedAssets));
+
+            // Get location value (CHANGED: use locationValue instead of location)
+            const locationValue = $('#location').val() || '';
+            formData.append('location', locationValue);
+
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(result => {
+                    // Reset button state
+                    resetButton();
+
+                    if (result === 'success') {
+                        let message = window.currentMode === 'upload' ?
+                            "Files have been uploaded successfully." :
+                            "Record has been successfully updated.";
+                        alert(message);
+                        window.location.reload(); // CHANGED: Use window.location.reload()
+                    } else if (result === 'nochange') {
+                        alert("No changes detected.");
+                    } else if (result === 'invalid') {
+                        alert("Invalid asset ID.");
+                    } else if (result === 'unauthorized') {
+                        alert("You are not authorized to perform this action.");
+                    } else if (result === 'nofiles') {
+                        alert("No files selected for upload.");
+                    } else {
+                        let errorMsg = window.currentMode === 'upload' ?
+                            "Error uploading files. Please try again." :
+                            "Error updating record. Please try again or contact support.";
+                        alert(errorMsg);
+                    }
+                })
+                .catch(error => {
+                    // Reset button state
+                    resetButton();
+
+                    console.error('Error!', error.message);
+                    alert("Network error or server issue occurred.");
+                });
+        });
+
+        // Function to reset button to original state
+        function resetButton() {
+            if (buttonText && spinner && updateButton) {
+                buttonText.textContent = window.currentMode === 'upload' ? 'Upload Files' : 'Save changes';
+                spinner.classList.add('d-none');
+                updateButton.disabled = false;
             }
         }
 
-        /* ===============================
-           DOM READY
-        ================================ */
-        $(document).ready(function() {
+        // Reset button state and mode when modal is closed
+        $('#myModal').on('hidden.bs.modal', function() {
+            window.currentMode = 'details'; // Reset to default mode
+            resetButton();
+        });
+    }
 
-            /* -------- Clear button visibility -------- */
-            function updateClearButtonVisibility() {
-                const val = $('input[name="assetid"]').val()?.trim();
-                $('#clear-selection').toggle(!!val);
+    // Email form event listeners - check if data exists
+    if (typeof data !== 'undefined') {
+        data.forEach(item => {
+            const formId = 'email-form-' + item.itemid;
+            const form = document.forms[formId];
+
+            // Check if form exists before adding event listener
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    fetch('mailer.php', {
+                            method: 'POST',
+                            body: new FormData(form)
+                        })
+                        .then(response => {
+                            alert("Email has been sent.");
+                        })
+                        .catch(error => console.error('Error!', error.message));
+                });
+            }
+        });
+    }
+
+    // ======================================================
+    // COMMON SAFE HELPERS
+    // ======================================================
+
+    function setFieldState(field, enabled) {
+        if (!field) return;
+
+        field.disabled = !enabled;
+
+        const wrapper = field.closest('.col-md-3');
+        if (wrapper) {
+            wrapper.classList.toggle('text-muted', !enabled);
+        }
+    }
+
+    // ======================================================
+    // FORM STATE HANDLING
+    // ======================================================
+
+    function updateFormState() {
+        const checkbox = document.getElementById('is_user');
+        if (!checkbox) return;
+
+        const assetIdInput = document.getElementsByName('assetid')[0] || null;
+        const itemTypeInput = document.getElementsByName('item_type')[0] || null;
+        const taggedToInput = document.getElementsByName('taggedto')[0] || null;
+        const itemStatusInput = document.getElementsByName('assetstatus')[0] || null;
+        const assetCategoryInput = document.getElementsByName('assetcategory')[0] || null;
+
+        if (checkbox.checked) {
+            setFieldState(assetIdInput, true);
+            setFieldState(itemTypeInput, false);
+            setFieldState(itemStatusInput, false);
+            setFieldState(taggedToInput, false);
+            setFieldState(assetCategoryInput, false);
+        } else {
+            setFieldState(assetIdInput, false);
+            setFieldState(itemTypeInput, true);
+            setFieldState(itemStatusInput, true);
+            setFieldState(taggedToInput, true);
+            setFieldState(assetCategoryInput, true);
+        }
+    }
+
+    // ======================================================
+    // DOM READY - INITIALIZATION
+    // ======================================================
+
+    $(document).ready(function() {
+
+        /* -------- Clear button visibility -------- */
+        function updateClearButtonVisibility() {
+            const val = $('input[name="assetid"]').val()?.trim();
+            $('#clear-selection').toggle(!!val);
+        }
+
+        updateClearButtonVisibility();
+        updateFormState();
+
+        $('#is_user').on('change', updateFormState);
+
+        /* -------- Select all -------- */
+        $('#select-all-checkbox').change(function() {
+            $('.asset-checkbox').prop('checked', this.checked);
+            toggleBulkUpdateSection();
+            updateRowSelection();
+            updateAssetIdSearchField();
+        });
+
+        /* -------- Individual checkbox -------- */
+        $(document).on('change', '.asset-checkbox', function() {
+            toggleBulkUpdateSection();
+            updateRowSelection();
+
+            const total = $('.asset-checkbox').length;
+            const checked = $('.asset-checkbox:checked').length;
+            $('#select-all-checkbox').prop('checked', total === checked);
+
+            updateAssetIdSearchField();
+        });
+
+        /* -------- Row click selection -------- */
+        $(document).on('click', '#table-id tbody tr', function(e) {
+            if (
+                e.target.type === 'checkbox' ||
+                e.target.tagName === 'A' ||
+                $(e.target).hasClass('dropdown-toggle') ||
+                $(e.target).closest('.dropdown').length
+            ) return;
+
+            const checkbox = $(this).find('.asset-checkbox');
+            checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+        });
+
+        /* -------- Populate Asset ID field -------- */
+        function updateAssetIdSearchField() {
+            const assetIds = [];
+
+            $('.asset-checkbox:checked').each(function() {
+                const itemid = $(this).closest('tr').find('td:nth-child(2)').text().trim();
+                if (itemid) assetIds.push(itemid);
+            });
+
+            if (assetIds.length) {
+                $('#is_user').prop('checked', true);
+                updateFormState();
+                $('input[name="assetid"]').val(assetIds.join(', '));
+            } else {
+                $('input[name="assetid"]').val('');
+                $('#is_user').prop('checked', false);
+                updateFormState();
             }
 
             updateClearButtonVisibility();
-            updateFormState();
+        }
 
-            $('#is_user').on('change', updateFormState);
+        /* -------- Row highlight -------- */
+        function updateRowSelection() {
+            $('#table-id tbody tr').removeClass('selected');
+            $('.asset-checkbox:checked').closest('tr').addClass('selected');
+        }
 
-            /* -------- Select all -------- */
-            $('#select-all-checkbox').change(function() {
-                $('.asset-checkbox').prop('checked', this.checked);
-                toggleBulkUpdateSection();
-                updateRowSelection();
-                updateAssetIdSearchField();
-            });
+        /* -------- Bulk update section -------- */
+        function toggleBulkUpdateSection() {
+            const count = $('.asset-checkbox:checked').length;
+            $('#selected-count-badge').text(count + ' selected');
 
-            /* -------- Individual checkbox -------- */
-            $(document).on('change', '.asset-checkbox', function() {
-                toggleBulkUpdateSection();
-                updateRowSelection();
-
-                const total = $('.asset-checkbox').length;
-                const checked = $('.asset-checkbox:checked').length;
-                $('#select-all-checkbox').prop('checked', total === checked);
-
-                updateAssetIdSearchField();
-            });
-
-            /* -------- Row click selection -------- */
-            $(document).on('click', '#table-id tbody tr', function(e) {
-                if (
-                    e.target.type === 'checkbox' ||
-                    e.target.tagName === 'A' ||
-                    $(e.target).hasClass('dropdown-toggle') ||
-                    $(e.target).closest('.dropdown').length
-                ) return;
-
-                const checkbox = $(this).find('.asset-checkbox');
-                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
-            });
-
-            /* -------- Populate Asset ID field -------- */
-            function updateAssetIdSearchField() {
-                const assetIds = [];
+            if (count > 0 && '<?= $role ?>' === 'Admin') {
+                $('.bulk-update-section').show();
+                $('#selected-assets-container').empty();
 
                 $('.asset-checkbox:checked').each(function() {
-                    const itemid = $(this).closest('tr').find('td:nth-child(2)').text().trim();
-                    if (itemid) assetIds.push(itemid);
+                    $('#selected-assets-container')
+                        .append('<input type="hidden" name="selected_assets[]" value="' + $(this).val() + '">');
                 });
-
-                if (assetIds.length) {
-                    $('#is_user').prop('checked', true);
-                    updateFormState();
-                    $('input[name="assetid"]').val(assetIds.join(', '));
-                } else {
-                    $('input[name="assetid"]').val('');
-                    $('#is_user').prop('checked', false);
-                    updateFormState();
-                }
-
-                updateClearButtonVisibility();
+            } else {
+                $('.bulk-update-section').hide();
             }
+        }
 
-            /* -------- Row highlight -------- */
-            function updateRowSelection() {
-                $('#table-id tbody tr').removeClass('selected');
-                $('.asset-checkbox:checked').closest('tr').addClass('selected');
-            }
+        /* -------- Clear selection -------- */
+        $('#clear-selection').click(function(e) {
+            e.preventDefault();
 
-            /* -------- Bulk update section -------- */
-            function toggleBulkUpdateSection() {
-                const count = $('.asset-checkbox:checked').length;
-                $('#selected-count-badge').text(count + ' selected');
+            $('input[name="assetid"]').val('');
+            $('#is_user').prop('checked', false);
+            $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
 
-                if (count > 0 && '<?= $role ?>' === 'Admin') {
-                    $('.bulk-update-section').show();
-                    $('#selected-assets-container').empty();
+            updateFormState();
+            updateRowSelection();
+            updateClearButtonVisibility();
+        });
 
-                    $('.asset-checkbox:checked').each(function() {
-                        $('#selected-assets-container')
-                            .append('<input type="hidden" name="selected_assets[]" value="' + $(this).val() + '">');
-                    });
-                } else {
+        /* -------- Manual typing in assetid -------- */
+        $('input[name="assetid"]').on('input', function() {
+            $('#is_user').prop('checked', !!$(this).val().trim());
+            updateFormState();
+            updateClearButtonVisibility();
+        });
+
+        /* -------- DataTable -------- */
+        <?php if (!empty($resultArr)) : ?>
+            $('#table-id').DataTable({
+                order: [],
+                columnDefs: [{
+                    orderable: false,
+                    targets: 0
+                }],
+                drawCallback: function() {
+                    $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
                     $('.bulk-update-section').hide();
+                    $('#selected-count-badge').text('0 selected');
+                    updateClearButtonVisibility();
                 }
-            }
-
-            /* -------- Clear selection -------- */
-            $('#clear-selection').click(function(e) {
-                e.preventDefault();
-
-                $('input[name="assetid"]').val('');
-                $('#is_user').prop('checked', false);
-                $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
-
-                updateFormState();
-                updateRowSelection();
-                updateClearButtonVisibility();
             });
+        <?php endif; ?>
 
-            /* -------- Manual typing in assetid -------- */
-            $('input[name="assetid"]').on('input', function() {
-                $('#is_user').prop('checked', !!$(this).val().trim());
-                updateFormState();
-                updateClearButtonVisibility();
-            });
+        $('div.dataTables_filter input')
+            .attr('placeholder', 'Search by Asset ID or Name...');
 
-            /* -------- DataTable -------- */
-            <?php if (!empty($resultArr)) : ?>
-                $('#table-id').DataTable({
-                    order: [],
-                    columnDefs: [{
-                        orderable: false,
-                        targets: 0
-                    }],
-                    drawCallback: function() {
-                        $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
-                        $('.bulk-update-section').hide();
-                        $('#selected-count-badge').text('0 selected');
-                        updateClearButtonVisibility();
-                    }
-                });
-            <?php endif; ?>
-
-            $('div.dataTables_filter input')
-                .attr('placeholder', 'Search by Asset ID or Name...');
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Common AJAX configuration for both selects
-            const ajaxConfig = {
-                url: 'fetch_associates.php?isActive=true',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        q: params.term
-                    };
+        // Initialize bulk update select2
+        function initBulkUpdateSelect2() {
+            $('#tagged-to-select').select2({
+                ajax: {
+                    url: 'fetch_associates.php?isActive=true',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
                 },
-                processResults: function(data) {
-                    return {
-                        results: data.results
-                    };
-                },
-                cache: true
-            };
+                minimumInputLength: 2,
+                placeholder: 'Select associate',
+                allowClear: true,
+                width: '100%'
+            });
+        }
 
-            // Function to initialize a Select2 on a given element ID
-            function initSelect2(elementId, modalId = null) {
-                const $element = $(`#${elementId}`);
-                if (!$element.hasClass("select2-hidden-accessible")) {
-                    $element.select2({
-                        ajax: ajaxConfig,
-                        minimumInputLength: 2,
-                        placeholder: 'Select associate(s)',
-                        allowClear: true,
-                        width: '100%',
-                        theme: 'bootstrap-5',
-                        dropdownParent: modalId ? $(`#${modalId}`) : undefined
-                    });
-                }
+        // Initialize when bulk section is shown
+        $(document).on('change', '.asset-checkbox', function() {
+            if ($('.bulk-update-section').is(':visible')) {
+                initBulkUpdateSelect2();
             }
-
-            // Initialize when modal is shown
-            $('#myModal').on('shown.bs.modal', function() {
-                initSelect2('taggedto', 'myModal');
-            });
-            // Initialize when modal is shown
-            $('#myModal').on('shown.bs.modal', function() {
-                initSelect2('collectedby', 'myModal');
-            });
-
-            // Or initialize immediately if not inside modal:
-            initSelect2('tagged-to-select');
         });
-    </script>
-    <script>
-        $(document).ready(function() {
 
-            function toggleBulkFields() {
-                const updateTaggedTo = $('#update-tagged-to').is(':checked');
-                const updateStatus = $('#update-status').is(':checked');
+        // Also initialize when page loads if bulk section is visible
+        if ($('.bulk-update-section').is(':visible')) {
+            initBulkUpdateSelect2();
+        }
 
-                // Enable / disable Tagged To
-                $('#tagged-to-select')
-                    .prop('disabled', !updateTaggedTo)
-                    .toggleClass('bg-light', !updateTaggedTo);
+        // Also initialize the select2 for linked_assets when modal is shown
+        $('#myModal').on('shown.bs.modal', function() {
+            // Existing initializations...
+            initSelect2('taggedto', 'myModal');
+            initSelect2('collectedby', 'myModal');
 
-                // Enable / disable Status
-                $('#status-select')
-                    .prop('disabled', !updateStatus)
-                    .toggleClass('bg-light', !updateStatus);
-            }
-
-            // Run on checkbox change
-            $('#update-tagged-to, #update-status').on('change', function() {
-                toggleBulkFields();
+            // Initialize new fields WITHOUT bootstrap theme
+            $('#linked_assets').select2({
+                width: '100%',
+                dropdownParent: $('#myModal'),
+                placeholder: 'Select assets to link',
+                allowClear: true
             });
 
-            // Run once when bulk section becomes visible
+            // Initialize location field WITHOUT bootstrap theme
+            $('#location').select2({
+                width: '100%',
+                dropdownParent: $('#myModal'),
+                placeholder: 'Select location',
+                allowClear: true
+            });
+        });
+    });
+
+    // ======================================================
+    // BULK UPDATE FORM HANDLING
+    // ======================================================
+
+    $(document).ready(function() {
+
+        function toggleBulkFields() {
+            const updateTaggedTo = $('#update-tagged-to').is(':checked');
+            const updateStatus = $('#update-status').is(':checked');
+
+            // Enable / disable Tagged To
+            $('#tagged-to-select')
+                .prop('disabled', !updateTaggedTo)
+                .toggleClass('bg-light', !updateTaggedTo);
+
+            // Enable / disable Status
+            $('#status-select')
+                .prop('disabled', !updateStatus)
+                .toggleClass('bg-light', !updateStatus);
+        }
+
+        // Run on checkbox change
+        $('#update-tagged-to, #update-status').on('change', function() {
             toggleBulkFields();
         });
 
-        $(document).ready(function() {
-            // Function to validate the form
-            function validateBulkUpdateForm() {
-                const updateTaggedTo = $('#update-tagged-to').is(':checked');
-                const updateStatus = $('#update-status').is(':checked');
-                const taggedToValue = $('#tagged-to-select').val();
-                const statusValue = $('#status-select').val();
-                const remarksValue = $('#update-remarks').val().trim();
+        // Run once when bulk section becomes visible
+        toggleBulkFields();
+    });
 
-                let isValid = true;
-                let errorMessage = '';
+    $(document).ready(function() {
+        // Function to validate the form
+        function validateBulkUpdateForm() {
+            const updateTaggedTo = $('#update-tagged-to').is(':checked');
+            const updateStatus = $('#update-status').is(':checked');
+            const taggedToValue = $('#tagged-to-select').val();
+            const statusValue = $('#status-select').val();
+            const remarksValue = $('#update-remarks').val().trim();
 
-                // Validation logic
-                if (updateTaggedTo && updateStatus) {
-                    // Both fields enabled - both are required
-                    if (!taggedToValue) {
-                        isValid = false;
-                        errorMessage = 'Please select a Tagged To value';
-                    }
-                    if (!statusValue) {
-                        isValid = false;
-                        errorMessage = errorMessage ? errorMessage + ' and Status' : 'Please select a Status';
-                    }
-                } else if (updateTaggedTo) {
-                    // Only Tagged To enabled - required
-                    if (!taggedToValue) {
-                        isValid = false;
-                        errorMessage = 'Please select a Tagged To value';
-                    }
-                } else if (updateStatus) {
-                    // Only Status enabled - required
-                    if (!statusValue) {
-                        isValid = false;
-                        errorMessage = 'Please select a Status';
-                    }
-                } else {
-                    // Both fields disabled - Remarks becomes required
-                    if (!remarksValue) {
-                        isValid = false;
-                        errorMessage = 'Remarks are required when no other fields are selected';
-                    }
+            let isValid = true;
+            let errorMessage = '';
+
+            // Validation logic
+            if (updateTaggedTo && updateStatus) {
+                // Both fields enabled - both are required
+                if (!taggedToValue) {
+                    isValid = false;
+                    errorMessage = 'Please select a Tagged To value';
                 }
-
-                return {
-                    isValid,
-                    errorMessage
-                };
+                if (!statusValue) {
+                    isValid = false;
+                    errorMessage = errorMessage ? errorMessage + ' and Status' : 'Please select a Status';
+                }
+            } else if (updateTaggedTo) {
+                // Only Tagged To enabled - required
+                if (!taggedToValue) {
+                    isValid = false;
+                    errorMessage = 'Please select a Tagged To value';
+                }
+            } else if (updateStatus) {
+                // Only Status enabled - required
+                if (!statusValue) {
+                    isValid = false;
+                    errorMessage = 'Please select a Status';
+                }
+            } else {
+                // Both fields disabled - Remarks becomes required
+                if (!remarksValue) {
+                    isValid = false;
+                    errorMessage = 'Remarks are required when no other fields are selected';
+                }
             }
 
-            // Add change event listeners to checkboxes
-            $('#update-tagged-to, #update-status').change(function() {
-                // Re-validate when checkboxes change
+            return {
+                isValid,
+                errorMessage
+            };
+        }
+
+        // Add change event listeners to checkboxes
+        $('#update-tagged-to, #update-status').change(function() {
+            // Re-validate when checkboxes change
+            validateBulkUpdateForm();
+        });
+
+        // Handle form submission
+        $('#bulk-update-form').on('submit', function(e) {
+            e.preventDefault();
+
+            const validation = validateBulkUpdateForm();
+
+            if (!validation.isValid) {
+                // Show error message
+                alert('Error: ' + validation.errorMessage);
+                return false;
+            }
+
+            // If validation passes, submit the form
+            this.submit();
+        });
+
+        // Also add validation when the bulk update section is shown
+        $(document).on('change', '.asset-checkbox', function() {
+            // Re-validate when assets are selected/deselected
+            if ($('.bulk-update-section').is(':visible')) {
                 validateBulkUpdateForm();
-            });
-
-            // Handle form submission
-            $('#bulk-update-form').on('submit', function(e) {
-                e.preventDefault();
-
-                const validation = validateBulkUpdateForm();
-
-                if (!validation.isValid) {
-                    // Show error message
-                    alert('Error: ' + validation.errorMessage);
-                    return false;
-                }
-
-                // If validation passes, submit the form
-                this.submit();
-            });
-
-            // Also add validation when the bulk update section is shown
-            $(document).on('change', '.asset-checkbox', function() {
-                // Re-validate when assets are selected/deselected
-                if ($('.bulk-update-section').is(':visible')) {
-                    validateBulkUpdateForm();
-                }
-            });
-
-            $('#cancel-bulk-update').on('click', function() {
-
-                // Uncheck all asset checkboxes
-                $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
-
-                // Hide bulk update section
-                $('.bulk-update-section').hide();
-
-                // Reset bulk update form
-                $('#bulk-update-form')[0].reset();
-
-                // Disable fields again
-                $('#tagged-to-select').prop('disabled', true).val(null).trigger('change');
-                $('#status-select').prop('disabled', true).val('');
-
-                // Reset selected count badge
-                $('#selected-count-badge').text('0 selected');
-
-                // Remove row highlights
-                $('#table-id tbody tr').removeClass('selected');
-
-            });
-        });
-    </script>
-    <script>
-        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
-        const myModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        // Add event listener to intercept Escape key press
-        document.body.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                // Prevent default behavior of Escape key
-                event.preventDefault();
             }
         });
-    </script>
-    <script>
-        // Function to show loading modal
-        function showLoadingModal() {
-            $('#submissionModal').modal('show');
-        }
 
-        // Function to hide loading modal
-        function hideLoadingModal() {
-            $('#submissionModal').modal('hide');
-        }
+        $('#cancel-bulk-update').on('click', function() {
 
-        const gpsForm = document.getElementById('gps');
-        if (gpsForm) {
-            gpsForm.addEventListener('submit', function(event) {
-                // Show loading modal when form is submitted
-                showLoadingModal();
-            });
-        }
+            // Uncheck all asset checkboxes
+            $('.asset-checkbox, #select-all-checkbox').prop('checked', false);
 
-        // Optional: Close loading modal when the page is fully loaded
-        window.addEventListener('load', function() {
-            // Hide loading modal
-            hideLoadingModal();
+            // Hide bulk update section
+            $('.bulk-update-section').hide();
+
+            // Reset bulk update form
+            $('#bulk-update-form')[0].reset();
+
+            // Disable fields again
+            $('#tagged-to-select').prop('disabled', true).val(null).trigger('change');
+            $('#status-select').prop('disabled', true).val('');
+
+            // Reset selected count badge
+            $('#selected-count-badge').text('0 selected');
+
+            // Remove row highlights
+            $('#table-id tbody tr').removeClass('selected');
+
         });
-    </script>
-    <script>
-        // Simple Modal Handler with Spinner - Fixed Version
-        document.addEventListener('DOMContentLoaded', function() {
-            const imageModal = document.getElementById('imageModal');
+    });
 
-            if (imageModal) {
-                // Use Bootstrap's modal events properly
-                imageModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const proxyUrl = button.getAttribute('data-proxy-url');
-                    const originalUrl = button.getAttribute('data-original-url');
-                    const isPdf = button.getAttribute('data-is-pdf') === 'true';
-                    const title = button.getAttribute('data-title') || 'View File';
+    // ======================================================
+    // LOADING MODAL HANDLING
+    // ======================================================
 
-                    // Determine which URL to use for viewing
-                    const viewUrl = isPdf ? originalUrl : proxyUrl;
-                    // For download: ALWAYS use original URL
-                    const downloadUrl = originalUrl;
+    // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+    const myModal = new bootstrap.Modal(document.getElementById("submissionModal"), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    // Add event listener to intercept Escape key press
+    document.body.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            // Prevent default behavior of Escape key
+            event.preventDefault();
+        }
+    });
 
-                    // Set modal title immediately
-                    const modalTitle = imageModal.querySelector('#imageModalLabel');
-                    if (modalTitle) {
-                        modalTitle.textContent = title;
-                    }
+    // Function to show loading modal
+    function showLoadingModal() {
+        $('#submissionModal').modal('show');
+    }
 
-                    // Show spinner, hide other content
-                    const modalSpinner = imageModal.querySelector('#modalSpinner');
-                    const modalIframe = imageModal.querySelector('#modalIframe');
-                    const imageContainer = imageModal.querySelector('#imageContainer');
-                    const downloadBtn = imageModal.querySelector('#downloadBtn');
+    // Function to hide loading modal
+    function hideLoadingModal() {
+        $('#submissionModal').modal('hide');
+    }
 
-                    if (modalSpinner) modalSpinner.style.display = 'block';
-                    if (modalIframe) modalIframe.style.display = 'none';
-                    if (imageContainer) imageContainer.style.display = 'none';
-                    if (downloadBtn) {
-                        downloadBtn.style.display = 'none';
-                        downloadBtn.href = downloadUrl; // Always original URL
-                        downloadBtn.download = title.replace(/[^a-z0-9]/gi, '_') + (isPdf ? '.pdf' : '.jpg');
-                    }
+    const gpsForm = document.getElementById('gps');
+    if (gpsForm) {
+        gpsForm.addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+    }
 
-                    // Use setTimeout to ensure modal is visible
-                    setTimeout(function() {
-                        if (isPdf) {
-                            // Handle PDF
-                            if (modalIframe) {
-                                modalIframe.style.display = 'block';
-                                modalIframe.onload = function() {
-                                    if (modalSpinner) modalSpinner.style.display = 'none';
-                                    if (downloadBtn) downloadBtn.style.display = 'inline-block';
-                                };
-                                modalIframe.onerror = function() {
-                                    if (modalSpinner) modalSpinner.style.display = 'none';
-                                    showError(imageModal, 'Failed to load PDF');
-                                };
-                                modalIframe.src = viewUrl;
-                            }
-                        } else {
-                            // Handle Image
-                            const modalImage = imageModal.querySelector('#modalImage');
-                            const imageCaption = imageModal.querySelector('#imageCaption');
+    // Optional: Close loading modal when the page is fully loaded
+    window.addEventListener('load', function() {
+        // Hide loading modal
+        hideLoadingModal();
+    });
 
-                            if (modalImage && imageCaption) {
-                                imageCaption.textContent = title;
-                                modalImage.onload = function() {
-                                    if (modalSpinner) modalSpinner.style.display = 'none';
-                                    if (imageContainer) imageContainer.style.display = 'block';
-                                    if (downloadBtn) downloadBtn.style.display = 'inline-block';
-                                };
-                                modalImage.onerror = function() {
-                                    if (modalSpinner) modalSpinner.style.display = 'none';
-                                    showError(imageModal, 'Failed to load image');
-                                };
-                                modalImage.src = viewUrl;
-                                modalImage.alt = title;
-                            }
+    // ======================================================
+    // IMAGE MODAL HANDLING
+    // ======================================================
+
+    // Simple Modal Handler with Spinner - Fixed Version
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageModal = document.getElementById('imageModal');
+
+        if (imageModal) {
+            // Use Bootstrap's modal events properly
+            imageModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const proxyUrl = button.getAttribute('data-proxy-url');
+                const originalUrl = button.getAttribute('data-original-url');
+                const isPdf = button.getAttribute('data-is-pdf') === 'true';
+                const title = button.getAttribute('data-title') || 'View File';
+
+                // Determine which URL to use for viewing
+                const viewUrl = isPdf ? originalUrl : proxyUrl;
+                // For download: ALWAYS use original URL
+                const downloadUrl = originalUrl;
+
+                // Set modal title immediately
+                const modalTitle = imageModal.querySelector('#imageModalLabel');
+                if (modalTitle) {
+                    modalTitle.textContent = title;
+                }
+
+                // Show spinner, hide other content
+                const modalSpinner = imageModal.querySelector('#modalSpinner');
+                const modalIframe = imageModal.querySelector('#modalIframe');
+                const imageContainer = imageModal.querySelector('#imageContainer');
+                const downloadBtn = imageModal.querySelector('#downloadBtn');
+
+                if (modalSpinner) modalSpinner.style.display = 'block';
+                if (modalIframe) modalIframe.style.display = 'none';
+                if (imageContainer) imageContainer.style.display = 'none';
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'none';
+                    downloadBtn.href = downloadUrl; // Always original URL
+                    downloadBtn.download = title.replace(/[^a-z0-9]/gi, '_') + (isPdf ? '.pdf' : '.jpg');
+                }
+
+                // Use setTimeout to ensure modal is visible
+                setTimeout(function() {
+                    if (isPdf) {
+                        // Handle PDF
+                        if (modalIframe) {
+                            modalIframe.style.display = 'block';
+                            modalIframe.onload = function() {
+                                if (modalSpinner) modalSpinner.style.display = 'none';
+                                if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                            };
+                            modalIframe.onerror = function() {
+                                if (modalSpinner) modalSpinner.style.display = 'none';
+                                showError(imageModal, 'Failed to load PDF');
+                            };
+                            modalIframe.src = viewUrl;
                         }
-                    }, 100); // Small delay to ensure modal is rendered
-                });
+                    } else {
+                        // Handle Image
+                        const modalImage = imageModal.querySelector('#modalImage');
+                        const imageCaption = imageModal.querySelector('#imageCaption');
 
-                // Clear on hide
-                imageModal.addEventListener('hidden.bs.modal', function() {
-                    const modalIframe = imageModal.querySelector('#modalIframe');
-                    const modalImage = imageModal.querySelector('#modalImage');
-                    const modalSpinner = imageModal.querySelector('#modalSpinner');
-                    const downloadBtn = imageModal.querySelector('#downloadBtn');
-
-                    if (modalIframe) {
-                        modalIframe.src = '';
-                        modalIframe.onload = null;
-                        modalIframe.onerror = null;
+                        if (modalImage && imageCaption) {
+                            imageCaption.textContent = title;
+                            modalImage.onload = function() {
+                                if (modalSpinner) modalSpinner.style.display = 'none';
+                                if (imageContainer) imageContainer.style.display = 'block';
+                                if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                            };
+                            modalImage.onerror = function() {
+                                if (modalSpinner) modalSpinner.style.display = 'none';
+                                showError(imageModal, 'Failed to load image');
+                            };
+                            modalImage.src = viewUrl;
+                            modalImage.alt = title;
+                        }
                     }
+                }, 100); // Small delay to ensure modal is rendered
+            });
 
-                    if (modalImage) {
-                        modalImage.src = '';
-                        modalImage.onload = null;
-                        modalImage.onerror = null;
-                    }
+            // Clear on hide
+            imageModal.addEventListener('hidden.bs.modal', function() {
+                const modalIframe = imageModal.querySelector('#modalIframe');
+                const modalImage = imageModal.querySelector('#modalImage');
+                const modalSpinner = imageModal.querySelector('#modalSpinner');
+                const downloadBtn = imageModal.querySelector('#downloadBtn');
 
-                    if (modalSpinner) modalSpinner.style.display = 'none';
-                    if (downloadBtn) downloadBtn.style.display = 'none';
-                });
-            }
-
-            function showError(modal, message) {
-                const imageContainer = modal.querySelector('#imageContainer');
-                if (imageContainer) {
-                    imageContainer.innerHTML = '<div class="alert alert-danger mt-5">' + message + '</div>';
-                    imageContainer.style.display = 'block';
+                if (modalIframe) {
+                    modalIframe.src = '';
+                    modalIframe.onload = null;
+                    modalIframe.onerror = null;
                 }
+
+                if (modalImage) {
+                    modalImage.src = '';
+                    modalImage.onload = null;
+                    modalImage.onerror = null;
+                }
+
+                if (modalSpinner) modalSpinner.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+            });
+        }
+
+        function showError(modal, message) {
+            const imageContainer = modal.querySelector('#imageContainer');
+            if (imageContainer) {
+                imageContainer.innerHTML = '<div class="alert alert-danger mt-5">' + message + '</div>';
+                imageContainer.style.display = 'block';
             }
-        });
-    </script>
-</body>
+        }
+    });
+
+    // ======================================================
+    // LINKED ASSETS MODAL HANDLER
+    // ======================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const linkedAssetsModal = document.getElementById('linkedAssetsModal');
+
+        if (linkedAssetsModal) {
+            linkedAssetsModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const assetId = button.getAttribute('data-asset-id');
+
+                // Set current asset ID
+                document.getElementById('current-asset-id').textContent = assetId;
+
+                // Load linked assets
+                loadLinkedAssetsForModal(assetId);
+            });
+        }
+    });
+</script>
 
 </html>

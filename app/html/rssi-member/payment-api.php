@@ -262,6 +262,13 @@ if ($formtype == "gpsedit") {
     $unit_cost = isset($_POST['unit_cost']) ? pg_escape_string($con, $_POST['unit_cost']) : '';
     $purchase_date = isset($_POST['purchase_date']) ? pg_escape_string($con, $_POST['purchase_date']) : '';
 
+    // NEW: Location field
+    $location = isset($_POST['location']) && $_POST['location'] !== '' ? (int)$_POST['location'] : null;
+
+    // NEW: Linked assets (JSON array)
+    $linked_assets_json = isset($_POST['linked_assets']) ? $_POST['linked_assets'] : '[]';
+    $linked_assets = json_decode($linked_assets_json, true);
+
     // Check each field for changes
     $fields_to_check = [
       'itemtype' => $itemtype,
@@ -273,13 +280,103 @@ if ($formtype == "gpsedit") {
       'asset_status' => $asset_status,
       'asset_category' => $asset_category,
       'unit_cost' => $unit_cost,
-      'purchase_date' => $purchase_date
+      'purchase_date' => $purchase_date,
+      'location' => $location  // NEW: Add location field
     ];
 
     foreach ($fields_to_check as $field => $new_value) {
       if ($current_data[$field] !== $new_value) {
         $changes[$field] = $new_value;
         $update_fields[] = "$field = '" . pg_escape_string($con, $new_value) . "'";
+      }
+    }
+
+    // Process asset links (NEW)
+    if (is_array($linked_assets)) {
+      // Track link changes for history
+      $link_changes = [];
+
+      // Get current linked assets
+      $current_links_query = "
+        SELECT linked_asset_itemid 
+        FROM asset_links 
+        WHERE asset_itemid = '$itemid' 
+        AND is_active = TRUE";
+      $current_links_result = pg_query($con, $current_links_query);
+
+      $current_links = [];
+      while ($row = pg_fetch_assoc($current_links_result)) {
+        $current_links[] = $row['linked_asset_itemid'];
+      }
+
+      // Find links to remove (in current but not in new)
+      $links_to_remove = array_diff($current_links, $linked_assets);
+
+      // Find links to add (in new but not in current)
+      $links_to_add = array_diff($linked_assets, $current_links);
+
+      // Deactivate removed links
+      if (!empty($links_to_remove)) {
+        $links_to_remove_str = "'" . implode("','", array_map('pg_escape_string', $links_to_remove)) . "'";
+        $deactivate_query = "
+          UPDATE asset_links 
+          SET is_active = FALSE, 
+              unlinked_on = '$now',
+              linked_by = '$updatedby'
+          WHERE asset_itemid = '$itemid' 
+          AND linked_asset_itemid IN ($links_to_remove_str)";
+        pg_query($con, $deactivate_query);
+
+        $link_changes['removed'] = $links_to_remove;
+      }
+
+      // Add new links
+      foreach ($links_to_add as $linked_asset_id) {
+        $linked_asset_id = pg_escape_string($con, $linked_asset_id);
+
+        // Check if link already exists (inactive)
+        $check_query = "
+          SELECT id FROM asset_links 
+          WHERE asset_itemid = '$itemid' 
+          AND linked_asset_itemid = '$linked_asset_id'";
+        $check_result = pg_query($con, $check_query);
+
+        if (pg_num_rows($check_result) > 0) {
+          // Reactivate existing link
+          $update_link_query = "
+            UPDATE asset_links 
+            SET is_active = TRUE, 
+                unlinked_on = NULL,
+                linked_on = '$now',
+                linked_by = '$updatedby'
+            WHERE asset_itemid = '$itemid' 
+            AND linked_asset_itemid = '$linked_asset_id'";
+        } else {
+          // Create new link
+          $insert_link_query = "
+            INSERT INTO asset_links (
+              asset_itemid, 
+              linked_asset_itemid, 
+              linked_by,
+              linked_on
+            ) VALUES (
+              '$itemid', 
+              '$linked_asset_id',
+              '$updatedby',
+              '$now'
+            )";
+          pg_query($con, $insert_link_query);
+        }
+      }
+
+      // Add link changes to main changes array
+      if (!empty($link_changes)) {
+        $changes['asset_links'] = $link_changes;
+      }
+
+      // Add to update_fields to indicate links were processed
+      if (!empty($links_to_add) || !empty($links_to_remove)) {
+        $update_fields[] = "lastupdatedon = '$now'"; // Force update timestamp
       }
     }
   }
@@ -312,8 +409,13 @@ if ($formtype == "gpsedit") {
 
   // If there are changes, update the database
   if (!empty($update_fields)) {
-    $update_fields[] = "lastupdatedon = '$now'";
-    $update_fields[] = "lastupdatedby = '$updatedby'";
+    // Ensure lastupdatedon and lastupdatedby are always updated
+    if (!in_array("lastupdatedon = '$now'", $update_fields)) {
+      $update_fields[] = "lastupdatedon = '$now'";
+    }
+    if (!in_array("lastupdatedby = '$updatedby'", $update_fields)) {
+      $update_fields[] = "lastupdatedby = '$updatedby'";
+    }
 
     $update_query = "UPDATE gps SET " . implode(", ", $update_fields) . " WHERE itemid = '$itemid'";
     $update_result = pg_query($con, $update_query);
