@@ -786,8 +786,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -843,7 +843,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         });
     </script>
     <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o&libraries=places"></script>
+        src="https://maps.googleapis.com/maps/api/js?key=<?= htmlspecialchars($_ENV['GOOGLE_LOCATION_API_KEY']) ?>&libraries=places">
+    </script>
 
 
     <script>
