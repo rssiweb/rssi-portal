@@ -190,6 +190,7 @@ if ($copy_source_data) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
@@ -273,7 +274,7 @@ if ($copy_source_data) {
                                         <form method="get" class="row g-3">
                                             <div class="col-md-8">
                                                 <label for="associate_number" class="form-label">Associate Number</label>
-                                                <select class="form-select select2" id="associate_number" name="associate_number" required>
+                                                <select class="form-select" id="associate_number" name="associate_number" required>
                                                     <option value="">Select Associate</option>
                                                     <?php if (isset($associate_number)): ?>
                                                         <option value="<?= htmlspecialchars($associate_number) ?>" selected>
@@ -682,16 +683,16 @@ if ($copy_source_data) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         $(document).ready(function() {
             // Initialize Select2
-            $('.select2').select2({
+            $('#associate_number').select2({
                 ajax: {
                     url: 'fetch_associates.php',
                     dataType: 'json',
@@ -708,7 +709,7 @@ if ($copy_source_data) {
                     },
                     cache: true
                 },
-                minimumInputLength: 1
+                minimumInputLength: 2
             });
 
             // Global component counter
