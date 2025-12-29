@@ -1254,7 +1254,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
         });
     }
 
-    // Function to load linked assets for modal view - FIXED VERSION
+    // Function to load linked assets for modal view - UPDATED VERSION
     function loadLinkedAssetsForModal(assetId) {
         const container = document.getElementById('linked-assets-container');
 
@@ -1273,17 +1273,17 @@ $resultArr = $result ? pg_fetch_all($result) : [];
 
                     data.forEach(function(asset) {
                         html += `<tr>
-                            <td>${asset.itemid}</td>
-                            <td>${asset.itemname}</td>
-                            <td><span class="badge bg-${asset.asset_status === 'Active' ? 'success' : 'secondary'}">${asset.asset_status}</span></td>
-                            <td>${asset.taggedto_name || asset.taggedto}</td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-outline-primary view-linked-asset" 
-                                    data-asset-id="${asset.itemid}">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>`;
+                        <td>${asset.itemid}</td>
+                        <td>${asset.itemname}</td>
+                        <td><span class="badge bg-${asset.asset_status === 'Active' ? 'success' : 'secondary'}">${asset.asset_status}</span></td>
+                        <td>${asset.taggedto_name || asset.taggedto}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary view-linked-asset" 
+                                data-asset-id="${asset.itemid}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>`;
                     });
 
                     html += '</tbody></table></div>';
@@ -1292,7 +1292,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                     // Add event listener for the view buttons
                     $('.view-linked-asset').on('click', function() {
                         const assetId = $(this).data('asset-id');
-                        showDetails(assetId);
+                        showDetails(assetId); // This will now work for all assets!
                         $('#linkedAssetsModal').modal('hide');
                     });
                 } else {
@@ -1357,9 +1357,20 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     }
 
     function showDetails(id) {
+        // First, try to find the item in the current data (filtered results)
         var item = findItem(id);
-        if (!item) return;
 
+        if (item) {
+            // Asset is in current filtered list - use existing logic
+            openDetailsModal(item);
+        } else {
+            // Asset is NOT in current filtered list - fetch it from server
+            fetchAssetDetails(id);
+        }
+    }
+
+    // Helper function to open modal with item data
+    function openDetailsModal(item) {
         // Set global mode
         window.currentMode = 'details';
 
@@ -1445,6 +1456,41 @@ $resultArr = $result ? pg_fetch_all($result) : [];
         }
 
         modal.show();
+    }
+
+    // Function to fetch asset details from server
+    function fetchAssetDetails(assetId) {
+        // Show loading message in modal
+        document.querySelector('#myModal .itemid').textContent = assetId;
+        document.querySelector('#myModal .itemname').textContent = 'Loading...';
+        document.getElementById('itemid1').value = assetId;
+
+        // Show modal with loading state
+        modal.show();
+
+        // Fetch asset details
+        $.ajax({
+            url: 'fetch_asset.php',
+            type: 'GET',
+            data: {
+                asset_id: assetId
+            },
+            dataType: 'json',
+            success: function(asset) {
+                if (asset.error) {
+                    alert('Error: ' + asset.error);
+                    modal.hide();
+                    return;
+                }
+
+                // Now open the modal with the fetched data
+                openDetailsModal(asset);
+            },
+            error: function() {
+                alert('Failed to load asset details. Please try again.');
+                modal.hide();
+            }
+        });
     }
 
     // Function to load location options and set value
