@@ -649,12 +649,12 @@
       </li>
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#gps" data-bs-toggle="collapse" href="#">
-          <span>GPS</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>Global Procurement System (GPS)</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="gps" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a id="my-asset" href="gps.php">
-              <span>My Asset (GPS)</span>
+              <span>My Assets</span>
             </a>
           </li>
           <li>

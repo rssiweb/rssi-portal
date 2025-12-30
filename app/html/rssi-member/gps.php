@@ -254,7 +254,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
         <?php
         echo ($role === 'Admin')
             ? 'GPS (Global Procurement System)'
-            : 'My Asset';
+            : 'My Assets';
         ?>
     </title>
 
@@ -334,14 +334,14 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 <?php
                 echo ($role === 'Admin')
                     ? 'GPS Admin'
-                    : 'My Asset';
+                    : 'My Assets';
                 ?>
             </h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">GPS</a></li>
-                    <li class="breadcrumb-item active">My Asset</li>
+                    <li class="breadcrumb-item active">My Assets</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
