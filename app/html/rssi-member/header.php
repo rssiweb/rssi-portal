@@ -654,7 +654,7 @@
         <ul id="gps" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a id="my-asset" href="gps.php">
-              <span>My Asset</span>
+              <span>My Asset (GPS)</span>
             </a>
           </li>
           <li>
