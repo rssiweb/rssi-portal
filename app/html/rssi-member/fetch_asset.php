@@ -20,14 +20,16 @@ $query = "SELECT
             tm.email as tagged_to_email,
             im.fullname as issued_by_name,
             im.phone as issued_by_phone,
+            ol.name as current_location,
             COUNT(v.id) as verification_count,
             MAX(v.verification_date) as last_verified_on
           FROM gps
           LEFT JOIN rssimyaccount_members as tm ON gps.taggedto = tm.associatenumber
           LEFT JOIN rssimyaccount_members as im ON gps.collectedby = im.associatenumber
           LEFT JOIN gps_verifications as v ON gps.itemid = v.asset_id
+          LEFT JOIN office_locations as ol ON gps.location = ol.id
           WHERE gps.itemid = '$safe_asset_id'
-          GROUP BY gps.itemid, tm.fullname, tm.phone, tm.email, im.fullname, im.phone";
+          GROUP BY gps.itemid, tm.fullname, tm.phone, tm.email, im.fullname, im.phone, ol.name";
 
 $result = pg_query($con, $query);
 

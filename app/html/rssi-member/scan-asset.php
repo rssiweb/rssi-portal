@@ -346,8 +346,8 @@ $scan_mode = isset($_GET['scan']) ? true : false;
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script src="../assets_new/js/image-compressor-100kb.js"></script>
 
     <script>
@@ -517,6 +517,10 @@ $scan_mode = isset($_GET['scan']) ? true : false;
                         <div class="card-body">
                             <h6 class="card-title text-muted">Assignment</h6>
                             <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Location:</strong></td>
+                                    <td id="currentLocation">${asset.current_location || 'Not Assigned'}</td>
+                                </tr>
                                 <tr>
                                     <td><strong>Tagged To:</strong></td>
                                     <td id="currentTaggedTo">${asset.tagged_to_name || 'Not Assigned'}</td>
