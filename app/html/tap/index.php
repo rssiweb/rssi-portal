@@ -9,7 +9,7 @@ $login_failed_dialog = "";
 function afterlogin($con, $date)
 {
     $username = $_SESSION['tid'];
-    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$username'");
+    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$username' AND is_active=true");
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
     $password_updated_on = $row[1];
@@ -59,7 +59,7 @@ function checkLogin($con, $date)
     $username = $_POST['tid'];
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM signup WHERE email='$username'";
+    $query = "SELECT password, absconding FROM signup WHERE email='$username' AND is_active=true";
     $result = pg_query($con, $query);
     if ($result) {
         $user = pg_fetch_assoc($result);

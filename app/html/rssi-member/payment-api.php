@@ -1635,7 +1635,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verif
 
   $email = strtolower($_POST['email_verify']);
 
-  $query = "SELECT COUNT(*) AS count FROM signup WHERE email = $1";
+  $query = "SELECT COUNT(*) AS count FROM signup WHERE email = $1 AND is_active = true";
   $result = pg_query_params($con, $query, [$email]);
 
   if ($result) {

@@ -125,7 +125,7 @@ function checkLogin($con, $date)
     }
 
     // Check in tap (signup table)
-    $query = "SELECT password, absconding, applicant_name, email, telephone FROM signup WHERE email='$username'";
+    $query = "SELECT password, absconding, applicant_name, email, telephone FROM signup WHERE email='$username' AND is_active=true";
     $result = pg_query($con, $query);
     if ($result && $user = pg_fetch_assoc($result)) {
         if ($user['password'] !== null && password_verify($password, $user['password'])) {
