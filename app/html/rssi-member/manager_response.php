@@ -220,675 +220,678 @@ if (!$result) {
                                         <!-- <p></p> -->
                                         <hr>
                                         <?php if (($array['appraisee_response_complete'] == "yes" && $array['manager1_associatenumber'] == $associatenumber) || ($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == 'yes') || $role == 'Admin') { ?>
+                                            <?php
+                                            function isDisabled($array, $associatenumber)
+                                            {
+                                                return ($array['manager_evaluation_complete'] == "yes" ||
+                                                    ($array['manager1_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == "yes") ||
+                                                    $array['ipf_process_closed_on'] != null);
+                                            }
+                                            $disabled = isDisabled($array, $associatenumber) ? 'disabled' : '';
+                                            ?>
+                                            <?php
+                                            $status = '';
+
+                                            if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                $status = 'Self-assessment';
+                                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                $status = 'Manager assessment in progress';
+                                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                $status = 'Reviewer assessment in progress';
+                                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+                                                $status = 'IPF released';
+                                            } elseif ($array['ipf_response'] == 'accepted') {
+                                                $status = 'IPF Accepted';
+                                            } elseif ($array['ipf_response'] == 'rejected') {
+                                                $status = 'IPF Rejected';
+                                            } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
+                                                $status = 'Incomplete';
+                                            }
+
+                                            $badge_color = '';
+                                            switch ($status) {
+                                                case 'IPF Rejected':
+                                                case 'Self-assessment':
+                                                    $badge_color = 'danger';
+                                                    break;
+                                                case 'IPF Accepted':
+                                                case 'IPF released':
+                                                    $badge_color = 'success';
+                                                    break;
+                                                case 'Manager assessment in progress':
+                                                    $badge_color = 'warning';
+                                                    break;
+                                                case 'Reviewer assessment in progress':
+                                                    $badge_color = 'primary';
+                                                    break;
+                                                default:
+                                                    $badge_color = 'secondary';
+                                                    break;
+                                            }
+
+                                            echo '<span class="float-end badge bg-' . $badge_color . ' text-start">' . $status . '</span>';
+                                            ?>
                                             <form method="post" name="m_response" id="m_response">
+                                                <input type="hidden" name="form-type" value="manager_remarks_update">
+                                                <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
+                                                <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
+                                                <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
+                                                <input type="hidden" name="manager1_associatenumber" Value="<?php echo $array['manager1_associatenumber'] ?>" readonly>
 
-                                                <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes" || ($array['manager1_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == "yes") || $array['ipf_process_closed_on'] != null) ? "disabled" : ""; ?>>
+                                                <table class="table">
+                                                    <tr>
+                                                        <td>
+                                                            <label for="appraisee_associate_number" class="form-label">Appraisee:</label>
+                                                            &nbsp;<?php echo $appraisee_name ?> (<?php echo $array['appraisee_associatenumber'] ?>)
+                                                        </td>
+                                                        <td>
+                                                            <label for="role" class="form-label">Role:</label>
+                                                            &nbsp;<?php echo $array['role'] ?>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <?php if (!empty($manager1_name)) : ?>
+                                                                <label for="manager_associate_number" class="form-label">Immediate Manager:</label>
+                                                                &nbsp;<?php echo $manager1_name ?> (<?php echo $array['manager1_associatenumber'] ?>)<br>
+                                                            <?php endif; ?>
 
-                                                    <?php
-                                                    $status = '';
+                                                            <label for="manager_associate_number" class="form-label">Manager:</label>
+                                                            &nbsp;<?php echo $manager_name ?> (<?php echo $array['manager_associatenumber'] ?>)
+                                                        </td>
+                                                        <td>
+                                                            <label for="appraisal_type" class="form-label">Appraisal Type:</label>
+                                                            <?php $effectiveStartDate = isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null;
+                                                            $effectiveEndDate = isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null; ?>
+                                                            <?php echo ($effectiveStartDate ? $effectiveStartDate : '') . ($effectiveStartDate && $effectiveEndDate ? ' - ' : '') . ($effectiveEndDate ? $effectiveEndDate : ''); ?>
+                                                            <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
+                                                        </td>
+                                                    </tr>
 
-                                                    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Self-assessment';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Manager assessment in progress';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
-                                                        $status = 'Reviewer assessment in progress';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                                        $status = 'IPF released';
-                                                    } elseif ($array['ipf_response'] == 'accepted') {
-                                                        $status = 'IPF Accepted';
-                                                    } elseif ($array['ipf_response'] == 'rejected') {
-                                                        $status = 'IPF Rejected';
-                                                    } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
-                                                        $status = 'Incomplete';
-                                                    }
+                                                    <tr>
+                                                        <td>
+                                                            <label for="reviewer_associate_number" class="form-label">Reviewer:</label>
+                                                            &nbsp;<?php echo $reviewer_name ?> (<?php echo $array['reviewer_associatenumber'] ?>)
+                                                        </td>
+                                                        <td>
+                                                            <label for="appraisal_year" class="form-label">IPF:</label>
+                                                            <?php echo $array['ipf'] ?>
+                                                            <span id="rating-average"></span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
 
-                                                    $badge_color = '';
-                                                    switch ($status) {
-                                                        case 'IPF Rejected':
-                                                        case 'Self-assessment':
-                                                            $badge_color = 'danger';
-                                                            break;
-                                                        case 'IPF Accepted':
-                                                        case 'IPF released':
-                                                            $badge_color = 'success';
-                                                            break;
-                                                        case 'Manager assessment in progress':
-                                                            $badge_color = 'warning';
-                                                            break;
-                                                        case 'Reviewer assessment in progress':
-                                                            $badge_color = 'primary';
-                                                            break;
-                                                        default:
-                                                            $badge_color = 'secondary';
-                                                            break;
-                                                    }
-
-                                                    echo '<span class="float-end badge bg-' . $badge_color . ' text-start">' . $status . '</span>';
-                                                    ?>
-
-                                                    <input type="hidden" name="form-type" value="manager_remarks_update">
-                                                    <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
-                                                    <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
-                                                    <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
-                                                    <input type="hidden" name="manager1_associatenumber" Value="<?php echo $array['manager1_associatenumber'] ?>" readonly>
-
-                                                    <table class="table">
+                                                <h2>Goals</h2>
+                                                <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
+                                                <p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>
+                                                <table class="table table-bordered resizable-table">
+                                                    <thead>
                                                         <tr>
+                                                            <th scope="col" id="cw">Parameter</th>
+                                                            <th scope="col" id="cw">Expectation</th>
+                                                            <th scope="col">Appraisee Response</th>
+                                                            <th scope="col">Rating Obtained</th>
+                                                            <th scope="col">Manager Remarks</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td id="parameter_1"><?php echo $array['parameter_1'] ?></td>
+                                                            <td><?php echo $array['expectation_1'] ?></td>
+                                                            <td><textarea name="appraisee_response_1" id="appraisee_response_1" disabled><?php echo $array['appraisee_response_1'] ?></textarea></td>
                                                             <td>
-                                                                <label for="appraisee_associate_number" class="form-label">Appraisee:</label>
-                                                                &nbsp;<?php echo $appraisee_name ?> (<?php echo $array['appraisee_associatenumber'] ?>)
+                                                                <select name="rating_obtained_1" id="rating_obtained_1" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
+
+                                                                    <?php if ($array['rating_obtained_1'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_1'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
                                                             </td>
-                                                            <td>
-                                                                <label for="role" class="form-label">Role:</label>
-                                                                &nbsp;<?php echo $array['role'] ?>
-                                                            </td>
+
+                                                            <td><textarea name="manager_remarks_1" id="manager_remarks_1" <?php echo $disabled; ?>><?php echo $array['manager_remarks_1'] ?></textarea></td>
                                                         </tr>
                                                         <tr>
+                                                            <td id="parameter_2"><?php echo $array['parameter_2'] ?></td>
+                                                            <td><?php echo $array['expectation_2'] ?></td>
+                                                            <td><textarea name="appraisee_response_2" id="appraisee_response_2" disabled><?php echo $array['appraisee_response_2'] ?></textarea></td>
                                                             <td>
-                                                                <?php if (!empty($manager1_name)) : ?>
-                                                                    <label for="manager_associate_number" class="form-label">Immediate Manager:</label>
-                                                                    &nbsp;<?php echo $manager1_name ?> (<?php echo $array['manager1_associatenumber'] ?>)<br>
-                                                                <?php endif; ?>
+                                                                <select name="rating_obtained_2" id="rating_obtained_2" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                <label for="manager_associate_number" class="form-label">Manager:</label>
-                                                                &nbsp;<?php echo $manager_name ?> (<?php echo $array['manager_associatenumber'] ?>)
+                                                                    <?php if ($array['rating_obtained_2'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_2'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
                                                             </td>
-                                                            <td>
-                                                                <label for="appraisal_type" class="form-label">Appraisal Type:</label>
-                                                                <?php $effectiveStartDate = isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null;
-                                                                $effectiveEndDate = isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null; ?>
-                                                                <?php echo ($effectiveStartDate ? $effectiveStartDate : '') . ($effectiveStartDate && $effectiveEndDate ? ' - ' : '') . ($effectiveEndDate ? $effectiveEndDate : ''); ?>
-                                                                <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
-                                                            </td>
+                                                            <td><textarea name="manager_remarks_2" id="manager_remarks_2" <?php echo $disabled; ?>><?php echo $array['manager_remarks_2'] ?></textarea></td>
                                                         </tr>
-
                                                         <tr>
+                                                            <td id="parameter_3"><?php echo $array['parameter_3'] ?></td>
+                                                            <td><?php echo $array['expectation_3'] ?></td>
+                                                            <td><textarea name="appraisee_response_3" id="appraisee_response_3" disabled><?php echo $array['appraisee_response_3'] ?></textarea></td>
                                                             <td>
-                                                                <label for="reviewer_associate_number" class="form-label">Reviewer:</label>
-                                                                &nbsp;<?php echo $reviewer_name ?> (<?php echo $array['reviewer_associatenumber'] ?>)
+                                                                <select name="rating_obtained_3" id="rating_obtained_3" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
+
+                                                                    <?php if ($array['rating_obtained_3'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_3'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
                                                             </td>
-                                                            <td>
-                                                                <label for="appraisal_year" class="form-label">IPF:</label>
-                                                                <?php echo $array['ipf'] ?>
-                                                                <span id="rating-average"></span>
-                                                            </td>
+                                                            <td><textarea name="manager_remarks_3" id="manager_remarks_3" <?php echo $disabled; ?>><?php echo $array['manager_remarks_3'] ?></textarea></td>
                                                         </tr>
-                                                    </table>
+                                                        <tr>
+                                                            <td id="parameter_4"><?php echo $array['parameter_4'] ?></td>
+                                                            <td><?php echo $array['expectation_4'] ?></td>
+                                                            <td><textarea name="appraisee_response_4" id="appraisee_response_4" disabled><?php echo $array['appraisee_response_4'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_4" id="rating_obtained_4" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                    <h2>Goals</h2>
-                                                    <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
-                                                    <p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>
-                                                    <table class="table table-bordered resizable-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col" id="cw">Parameter</th>
-                                                                <th scope="col" id="cw">Expectation</th>
-                                                                <th scope="col">Appraisee Response</th>
-                                                                <th scope="col">Rating Obtained</th>
-                                                                <th scope="col">Manager Remarks</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td id="parameter_1"><?php echo $array['parameter_1'] ?></td>
-                                                                <td><?php echo $array['expectation_1'] ?></td>
-                                                                <td><textarea name="appraisee_response_1" id="appraisee_response_1" disabled><?php echo $array['appraisee_response_1'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_1" id="rating_obtained_1" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_4'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_4'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_4" id="manager_remarks_4" <?php echo $disabled; ?>><?php echo $array['manager_remarks_4'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_5"><?php echo $array['parameter_5'] ?></td>
+                                                            <td><?php echo $array['expectation_5'] ?></td>
+                                                            <td><textarea name="appraisee_response_5" id="appraisee_response_5" disabled><?php echo $array['appraisee_response_5'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_5" id="rating_obtained_5" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_1'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_1'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
+                                                                    <?php if ($array['rating_obtained_5'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_5'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_5" id="manager_remarks_5" <?php echo $disabled; ?>><?php echo $array['manager_remarks_5'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_6"><?php echo $array['parameter_6'] ?></td>
+                                                            <td><?php echo $array['expectation_6'] ?></td>
+                                                            <td><textarea name="appraisee_response_6" id="appraisee_response_6" disabled><?php echo $array['appraisee_response_6'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_6" id="rating_obtained_6" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                <td><textarea name="manager_remarks_1" id="manager_remarks_1"><?php echo $array['manager_remarks_1'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_2"><?php echo $array['parameter_2'] ?></td>
-                                                                <td><?php echo $array['expectation_2'] ?></td>
-                                                                <td><textarea name="appraisee_response_2" id="appraisee_response_2" disabled><?php echo $array['appraisee_response_2'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_2" id="rating_obtained_2" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_6'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_6'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_6" id="manager_remarks_6" <?php echo $disabled; ?>><?php echo $array['manager_remarks_6'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_7"><?php echo $array['parameter_7'] ?></td>
+                                                            <td><?php echo $array['expectation_7'] ?></td>
+                                                            <td><textarea name="appraisee_response_7" id="appraisee_response_7" disabled><?php echo $array['appraisee_response_7'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_7" id="rating_obtained_7" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_2'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_2'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_2" id="manager_remarks_2"><?php echo $array['manager_remarks_2'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_3"><?php echo $array['parameter_3'] ?></td>
-                                                                <td><?php echo $array['expectation_3'] ?></td>
-                                                                <td><textarea name="appraisee_response_3" id="appraisee_response_3" disabled><?php echo $array['appraisee_response_3'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_3" id="rating_obtained_3" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_7'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_7'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_7" id="manager_remarks_7" <?php echo $disabled; ?>><?php echo $array['manager_remarks_7'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_8"><?php echo $array['parameter_8'] ?></td>
+                                                            <td><?php echo $array['expectation_8'] ?></td>
+                                                            <td><textarea name="appraisee_response_8" id="appraisee_response_8" disabled><?php echo $array['appraisee_response_8'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_8" id="rating_obtained_8" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_3'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_3'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_3" id="manager_remarks_3"><?php echo $array['manager_remarks_3'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_4"><?php echo $array['parameter_4'] ?></td>
-                                                                <td><?php echo $array['expectation_4'] ?></td>
-                                                                <td><textarea name="appraisee_response_4" id="appraisee_response_4" disabled><?php echo $array['appraisee_response_4'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_4" id="rating_obtained_4" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_8'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_8'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_8" id="manager_remarks_8" <?php echo $disabled; ?>><?php echo $array['manager_remarks_8'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_9"><?php echo $array['parameter_9'] ?></td>
+                                                            <td><?php echo $array['expectation_9'] ?></td>
+                                                            <td><textarea name="appraisee_response_9" id="appraisee_response_9" disabled><?php echo $array['appraisee_response_9'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_9" id="rating_obtained_9" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_4'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_4'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_4" id="manager_remarks_4"><?php echo $array['manager_remarks_4'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_5"><?php echo $array['parameter_5'] ?></td>
-                                                                <td><?php echo $array['expectation_5'] ?></td>
-                                                                <td><textarea name="appraisee_response_5" id="appraisee_response_5" disabled><?php echo $array['appraisee_response_5'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_5" id="rating_obtained_5" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_9'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_9'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_9" id="manager_remarks_9" <?php echo $disabled; ?>><?php echo $array['manager_remarks_9'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_10"><?php echo $array['parameter_10'] ?></td>
+                                                            <td><?php echo $array['expectation_10'] ?></td>
+                                                            <td><textarea name="appraisee_response_10" id="appraisee_response_10" disabled><?php echo $array['appraisee_response_10'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_10" id="rating_obtained_10" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_5'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_5'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_5" id="manager_remarks_5"><?php echo $array['manager_remarks_5'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_6"><?php echo $array['parameter_6'] ?></td>
-                                                                <td><?php echo $array['expectation_6'] ?></td>
-                                                                <td><textarea name="appraisee_response_6" id="appraisee_response_6" disabled><?php echo $array['appraisee_response_6'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_6" id="rating_obtained_6" class="form-select rating-select">
-
-                                                                        <?php if ($array['rating_obtained_6'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_6'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_6" id="manager_remarks_6"><?php echo $array['manager_remarks_6'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_7"><?php echo $array['parameter_7'] ?></td>
-                                                                <td><?php echo $array['expectation_7'] ?></td>
-                                                                <td><textarea name="appraisee_response_7" id="appraisee_response_7" disabled><?php echo $array['appraisee_response_7'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_7" id="rating_obtained_7" class="form-select rating-select">
-
-                                                                        <?php if ($array['rating_obtained_7'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_7'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_7" id="manager_remarks_7"><?php echo $array['manager_remarks_7'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_8"><?php echo $array['parameter_8'] ?></td>
-                                                                <td><?php echo $array['expectation_8'] ?></td>
-                                                                <td><textarea name="appraisee_response_8" id="appraisee_response_8" disabled><?php echo $array['appraisee_response_8'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_8" id="rating_obtained_8" class="form-select rating-select">
-
-                                                                        <?php if ($array['rating_obtained_8'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_8'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_8" id="manager_remarks_8"><?php echo $array['manager_remarks_8'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_9"><?php echo $array['parameter_9'] ?></td>
-                                                                <td><?php echo $array['expectation_9'] ?></td>
-                                                                <td><textarea name="appraisee_response_9" id="appraisee_response_9" disabled><?php echo $array['appraisee_response_9'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_9" id="rating_obtained_9" class="form-select rating-select">
-
-                                                                        <?php if ($array['rating_obtained_9'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_9'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_9" id="manager_remarks_9"><?php echo $array['manager_remarks_9'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_10"><?php echo $array['parameter_10'] ?></td>
-                                                                <td><?php echo $array['expectation_10'] ?></td>
-                                                                <td><textarea name="appraisee_response_10" id="appraisee_response_10" disabled><?php echo $array['appraisee_response_10'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_10" id="rating_obtained_10" class="form-select rating-select">
-
-                                                                        <?php if ($array['rating_obtained_10'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_10'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_10" id="manager_remarks_10"><?php echo $array['manager_remarks_10'] ?></textarea></td>
-                                                            </tr>
+                                                                    <?php if ($array['rating_obtained_10'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_10'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_10" id="manager_remarks_10" <?php echo $disabled; ?>><?php echo $array['manager_remarks_10'] ?></textarea></td>
+                                                        </tr>
 
 
-                                                        </tbody>
-                                                    </table>
-                                                    <p>*SLA - Service level agreement, KPI - Key performance indicator</p>
+                                                    </tbody>
+                                                </table>
+                                                <p>*SLA - Service level agreement, KPI - Key performance indicator</p>
 
-                                                    <h2>Attributes</h2>
-                                                    <p>Attributes are competencies essential for performing a role.</p>
-                                                    <table class="table table-bordered resizable-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col" id="cw">Parameter</th>
-                                                                <th scope="col" id="cw1">Expectation</th>
-                                                                <th scope="col">Appraisee Response</th>
-                                                                <th scope="col">Rating Obtained</th>
-                                                                <th scope="col">Manager Remarks</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td id="parameter_11"><?php echo $array['parameter_11'] ?></td>
-                                                                <td><?php echo $array['expectation_11'] ?></td>
-                                                                <td><textarea name="appraisee_response_11" id="appraisee_response_11" disabled><?php echo $array['appraisee_response_11'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_11" id="rating_obtained_11" class="form-select rating-select">
+                                                <h2>Attributes</h2>
+                                                <p>Attributes are competencies essential for performing a role.</p>
+                                                <table class="table table-bordered resizable-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col" id="cw">Parameter</th>
+                                                            <th scope="col" id="cw1">Expectation</th>
+                                                            <th scope="col">Appraisee Response</th>
+                                                            <th scope="col">Rating Obtained</th>
+                                                            <th scope="col">Manager Remarks</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td id="parameter_11"><?php echo $array['parameter_11'] ?></td>
+                                                            <td><?php echo $array['expectation_11'] ?></td>
+                                                            <td><textarea name="appraisee_response_11" id="appraisee_response_11" disabled><?php echo $array['appraisee_response_11'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_11" id="rating_obtained_11" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_11'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_11'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_11" id="manager_remarks_11"><?php echo $array['manager_remarks_11'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_12"><?php echo $array['parameter_12'] ?></td>
-                                                                <td><?php echo $array['expectation_12'] ?></td>
-                                                                <td><textarea name="appraisee_response_12" id="appraisee_response_12" disabled><?php echo $array['appraisee_response_12'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_12" id="rating_obtained_12" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_11'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_11'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_11" id="manager_remarks_11" <?php echo $disabled; ?>><?php echo $array['manager_remarks_11'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_12"><?php echo $array['parameter_12'] ?></td>
+                                                            <td><?php echo $array['expectation_12'] ?></td>
+                                                            <td><textarea name="appraisee_response_12" id="appraisee_response_12" disabled><?php echo $array['appraisee_response_12'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_12" id="rating_obtained_12" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_12'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_12'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_12" id="manager_remarks_12"><?php echo $array['manager_remarks_12'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_13"><?php echo $array['parameter_13'] ?></td>
-                                                                <td><?php echo $array['expectation_13'] ?></td>
-                                                                <td><textarea name="appraisee_response_13" id="appraisee_response_13" disabled><?php echo $array['appraisee_response_13'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_13" id="rating_obtained_13" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_12'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_12'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_12" id="manager_remarks_12" <?php echo $disabled; ?>><?php echo $array['manager_remarks_12'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_13"><?php echo $array['parameter_13'] ?></td>
+                                                            <td><?php echo $array['expectation_13'] ?></td>
+                                                            <td><textarea name="appraisee_response_13" id="appraisee_response_13" disabled><?php echo $array['appraisee_response_13'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_13" id="rating_obtained_13" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_13'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_13'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_13" id="manager_remarks_13"><?php echo $array['manager_remarks_13'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_14"><?php echo $array['parameter_14'] ?></td>
-                                                                <td><?php echo $array['expectation_14'] ?></td>
-                                                                <td><textarea name="appraisee_response_14" id="appraisee_response_14" disabled><?php echo $array['appraisee_response_14'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_14" id="rating_obtained_14" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_13'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_13'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_13" id="manager_remarks_13" <?php echo $disabled; ?>><?php echo $array['manager_remarks_13'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_14"><?php echo $array['parameter_14'] ?></td>
+                                                            <td><?php echo $array['expectation_14'] ?></td>
+                                                            <td><textarea name="appraisee_response_14" id="appraisee_response_14" disabled><?php echo $array['appraisee_response_14'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_14" id="rating_obtained_14" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_14'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_14'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_14" id="manager_remarks_14"><?php echo $array['manager_remarks_14'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_15"><?php echo $array['parameter_15'] ?></td>
-                                                                <td><?php echo $array['expectation_15'] ?></td>
-                                                                <td><textarea name="appraisee_response_15" id="appraisee_response_15" disabled><?php echo $array['appraisee_response_15'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_15" id="rating_obtained_15" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_14'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_14'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_14" id="manager_remarks_14" <?php echo $disabled; ?>><?php echo $array['manager_remarks_14'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_15"><?php echo $array['parameter_15'] ?></td>
+                                                            <td><?php echo $array['expectation_15'] ?></td>
+                                                            <td><textarea name="appraisee_response_15" id="appraisee_response_15" disabled><?php echo $array['appraisee_response_15'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_15" id="rating_obtained_15" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_15'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_15'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_15" id="manager_remarks_15"><?php echo $array['manager_remarks_15'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_16"><?php echo $array['parameter_16'] ?></td>
-                                                                <td><?php echo $array['expectation_16'] ?></td>
-                                                                <td><textarea name="appraisee_response_16" id="appraisee_response_16" disabled><?php echo $array['appraisee_response_16'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_16" id="rating_obtained_16" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_15'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_15'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_15" id="manager_remarks_15" <?php echo $disabled; ?>><?php echo $array['manager_remarks_15'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_16"><?php echo $array['parameter_16'] ?></td>
+                                                            <td><?php echo $array['expectation_16'] ?></td>
+                                                            <td><textarea name="appraisee_response_16" id="appraisee_response_16" disabled><?php echo $array['appraisee_response_16'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_16" id="rating_obtained_16" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_16'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_16'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_16" id="manager_remarks_16"><?php echo $array['manager_remarks_16'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_17"><?php echo $array['parameter_17'] ?></td>
-                                                                <td><?php echo $array['expectation_17'] ?></td>
-                                                                <td><textarea name="appraisee_response_17" id="appraisee_response_17" disabled><?php echo $array['appraisee_response_17'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_17" id="rating_obtained_17" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_16'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_16'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_16" id="manager_remarks_16" <?php echo $disabled; ?>><?php echo $array['manager_remarks_16'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_17"><?php echo $array['parameter_17'] ?></td>
+                                                            <td><?php echo $array['expectation_17'] ?></td>
+                                                            <td><textarea name="appraisee_response_17" id="appraisee_response_17" disabled><?php echo $array['appraisee_response_17'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_17" id="rating_obtained_17" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_17'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_17'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_17" id="manager_remarks_17"><?php echo $array['manager_remarks_17'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_18"><?php echo $array['parameter_18'] ?></td>
-                                                                <td><?php echo $array['expectation_18'] ?></td>
-                                                                <td><textarea name="appraisee_response_18" id="appraisee_response_18" disabled><?php echo $array['appraisee_response_18'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_18" id="rating_obtained_18" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_17'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_17'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_17" id="manager_remarks_17" <?php echo $disabled; ?>><?php echo $array['manager_remarks_17'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_18"><?php echo $array['parameter_18'] ?></td>
+                                                            <td><?php echo $array['expectation_18'] ?></td>
+                                                            <td><textarea name="appraisee_response_18" id="appraisee_response_18" disabled><?php echo $array['appraisee_response_18'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_18" id="rating_obtained_18" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_18'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_18'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_18" id="manager_remarks_18"><?php echo $array['manager_remarks_18'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_19"><?php echo $array['parameter_19'] ?></td>
-                                                                <td><?php echo $array['expectation_19'] ?></td>
-                                                                <td><textarea name="appraisee_response_19" id="appraisee_response_19" disabled><?php echo $array['appraisee_response_19'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_19" id="rating_obtained_19" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_18'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_18'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_18" id="manager_remarks_18" <?php echo $disabled; ?>><?php echo $array['manager_remarks_18'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_19"><?php echo $array['parameter_19'] ?></td>
+                                                            <td><?php echo $array['expectation_19'] ?></td>
+                                                            <td><textarea name="appraisee_response_19" id="appraisee_response_19" disabled><?php echo $array['appraisee_response_19'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_19" id="rating_obtained_19" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_19'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_19'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_19" id="manager_remarks_19"><?php echo $array['manager_remarks_19'] ?></textarea></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td id="parameter_20"><?php echo $array['parameter_20'] ?></td>
-                                                                <td><?php echo $array['expectation_20'] ?></td>
-                                                                <td><textarea name="appraisee_response_20" id="appraisee_response_20" disabled><?php echo $array['appraisee_response_20'] ?></textarea></td>
-                                                                <td>
-                                                                    <select name="rating_obtained_20" id="rating_obtained_20" class="form-select rating-select">
+                                                                    <?php if ($array['rating_obtained_19'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_19'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_19" id="manager_remarks_19" <?php echo $disabled; ?>><?php echo $array['manager_remarks_19'] ?></textarea></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td id="parameter_20"><?php echo $array['parameter_20'] ?></td>
+                                                            <td><?php echo $array['expectation_20'] ?></td>
+                                                            <td><textarea name="appraisee_response_20" id="appraisee_response_20" disabled><?php echo $array['appraisee_response_20'] ?></textarea></td>
+                                                            <td>
+                                                                <select name="rating_obtained_20" id="rating_obtained_20" class="form-select rating-select" <?php echo $disabled ? 'disabled' : ''; ?>>
 
-                                                                        <?php if ($array['rating_obtained_20'] == null) { ?>
-                                                                            <option disabled selected hidden>Select</option>
-                                                                        <?php
-                                                                        } else { ?>
-                                                                            <option hidden selected><?php echo $array['rating_obtained_20'] ?></option>
-                                                                        <?php }
-                                                                        ?>
-                                                                        <option>0</option>
-                                                                        <option>1</option>
-                                                                        <option>2</option>
-                                                                        <option>3</option>
-                                                                        <option>4</option>
-                                                                        <option>5</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea name="manager_remarks_20" id="manager_remarks_20"><?php echo $array['manager_remarks_20'] ?></textarea></td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
+                                                                    <?php if ($array['rating_obtained_20'] == null) { ?>
+                                                                        <option disabled selected hidden>Select</option>
+                                                                    <?php
+                                                                    } else { ?>
+                                                                        <option hidden selected><?php echo $array['rating_obtained_20'] ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                    <option>0</option>
+                                                                    <option>1</option>
+                                                                    <option>2</option>
+                                                                    <option>3</option>
+                                                                    <option>4</option>
+                                                                    <option>5</option>
+                                                                </select>
+                                                            </td>
+                                                            <td><textarea name="manager_remarks_20" id="manager_remarks_20" <?php echo $disabled; ?>><?php echo $array['manager_remarks_20'] ?></textarea></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-                                                    <button type="submit" id="submit1" class="btn btn-success">Save</button>
-                                                    <!-- Inside your PHP loop -->
-                                                    <?php if ($array['manager1_associatenumber'] == $associatenumber) : ?>
-                                                        <button type="submit" id="submit4" class="btn btn-primary">Submit</button>
-                                                    <?php endif; ?>
+                                                <button type="submit" id="submit1" class="btn btn-success" <?php echo $disabled ? 'disabled' : ''; ?>>Save</button>
+                                                <!-- Inside your PHP loop -->
+                                                <?php if ($array['manager1_associatenumber'] == $associatenumber) : ?>
+                                                    <button type="submit" id="submit4" class="btn btn-primary" <?php echo $disabled ? 'disabled' : ''; ?>>Submit</button>
+                                                <?php endif; ?>
 
-                                                    <?php if ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') : ?>
-                                                        <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
-                                                    <?php endif; ?>
+                                                <?php if ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') : ?>
+                                                    <button type="submit" id="submit2" class="btn btn-primary" <?php echo $disabled ? 'disabled' : ''; ?>>Submit</button>
+                                                <?php endif; ?>
 
-                                                    <br><br>
-                                                    <hr>
+                                                <br><br>
+                                                <hr>
 
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            Goal Sheet Status
-                                                        </div>
-                                                        <ul class="list-group list-group-flush">
-                                                            <li class="list-group-item">
-                                                                <div class="row">
-                                                                    <div class="col-6">Created On:</div>
-                                                                    <div class="col-6">
-                                                                        <?php echo ($array['goalsheet_created_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) . ' by ' . $array['goalsheet_created_by'] : '' ?>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                            <li class="list-group-item">
-                                                                <div class="row">
-                                                                    <div class="col-6">Submitted On:</div>
-                                                                    <div class="col-6">
-                                                                        <?php echo ($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '' ?>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                            <li class="list-group-item">
-                                                                <div class="row">
-                                                                    <div class="col-6">Evaluated On:</div>
-                                                                    <div class="col-6">
-                                                                        <?php echo ($array['goalsheet_evaluated1_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated1_on'])) . ' by ' . $array['goalsheet_evaluated1_by'] : '' ?>
-                                                                        <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                            <li class="list-group-item">
-                                                                <div class="row">
-                                                                    <div class="col-6">Process Closed On:</div>
-                                                                    <div class="col-6">
-                                                                        <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
-                                                                        <?php echo ($array['ipf_process_closed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) . ' by ' . $array['ipf_process_closed_by'] : '' ?>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                        </ul>
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        Goal Sheet Status
                                                     </div>
-                                                    <br><br>
-                                                </fieldset>
+                                                    <ul class="list-group list-group-flush">
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-6">Created On:</div>
+                                                                <div class="col-6">
+                                                                    <?php echo ($array['goalsheet_created_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) . ' by ' . $array['goalsheet_created_by'] : '' ?>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-6">Submitted On:</div>
+                                                                <div class="col-6">
+                                                                    <?php echo ($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '' ?>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-6">Evaluated On:</div>
+                                                                <div class="col-6">
+                                                                    <?php echo ($array['goalsheet_evaluated1_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated1_on'])) . ' by ' . $array['goalsheet_evaluated1_by'] : '' ?>
+                                                                    <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-6">Process Closed On:</div>
+                                                                <div class="col-6">
+                                                                    <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
+                                                                    <?php echo ($array['ipf_process_closed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) . ' by ' . $array['ipf_process_closed_by'] : '' ?>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </form>
                                         <?php } ?>
                                     <?php } ?>
