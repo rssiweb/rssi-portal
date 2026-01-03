@@ -949,8 +949,11 @@ if (!function_exists('makeClickableLinks')) {
             </div>
             <div class="mb-3">
               <label for="event_description" class="form-label">Event Description</label>
-              <textarea class="form-control" id="event_description" name="event_description" rows="3" required maxlength="1000" oninput="updateCharacterCount()"></textarea>
-              <small id="charCount" class="form-text text-muted">0/1000 characters used</small>
+              <!-- <textarea class="form-control" id="event_description" name="event_description" rows="3" required maxlength="1000" oninput="updateCharacterCount()"></textarea> -->
+              <div id="event_description_editor" style="height: 200px;"></div>
+              <!-- Hidden input to store the HTML content -->
+              <input type="hidden" id="event_description" name="event_description" required>
+              <!-- <small id="charCount" class="form-text text-muted">0/1000 characters used</small> -->
             </div>
             <div class="mb-3">
               <label for="event_date" class="form-label required-field">Event Date</label>
@@ -1647,6 +1650,47 @@ if (!function_exists('makeClickableLinks')) {
           setTimeout(() => calendar.updateSize(), 100);
         }
       });
+    });
+  </script>
+  <!-- Quill.js CDN -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Quill editor
+      var quill = new Quill('#event_description_editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{
+              'header': [2, 3, false]
+            }],
+            ['bold', 'italic', 'underline'],
+            ['link', 'blockquote'],
+            [{
+              'list': 'ordered'
+            }, {
+              'list': 'bullet'
+            }],
+            ['clean']
+          ]
+        },
+        placeholder: 'Write your event description here...'
+      });
+
+      // Update hidden input before form submission
+      var form = document.querySelector('form');
+      form.onsubmit = function() {
+        var descriptionInput = document.querySelector('#event_description');
+        descriptionInput.value = quill.root.innerHTML;
+
+        // Validation: Check if content is not just empty HTML
+        if (quill.getText().trim().length === 0) {
+          alert('Please enter event description');
+          return false;
+        }
+        return true;
+      };
     });
   </script>
 </body>

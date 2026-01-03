@@ -19,7 +19,16 @@ validation();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Collect and sanitize input data
     $event_name = htmlspecialchars($_POST['event_name'], ENT_QUOTES, 'UTF-8');
-    $event_description = htmlspecialchars($_POST['event_description'], ENT_QUOTES, 'UTF-8');
+    // $event_description = htmlspecialchars($_POST['event_description'], ENT_QUOTES, 'UTF-8');
+    // Sanitize rich text content with HTML Purifier
+    if (class_exists('HTMLPurifier')) {
+        $config = HTMLPurifier_Config::createDefault();
+        $purifier = new HTMLPurifier($config);
+        $event_description = $purifier->purify($_POST['event_description']);
+    } else {
+        // Fallback if HTML Purifier is not available
+        $event_description = htmlspecialchars($_POST['event_description'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
     $event_date = $_POST['event_date']; // Ensure the format matches your TIMESTAMP requirement
     $event_location = htmlspecialchars($_POST['event_location'], ENT_QUOTES, 'UTF-8');
     $created_by = $associatenumber; // Replace this with dynamic user identification logic (e.g., session)
@@ -65,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "now" => date("d/m/Y g:i a"),
         ], 'info@rssi.in');
         echo "<script>
-    alert('Event successfully created. The post is currently under review and will be published on the home page after approval.');
+    alert('Post successfully created. The post is currently under review and will be published on the home page after approval.');
     
     if (window.history.replaceState) {
         // Update the URL without causing a page reload or resubmission

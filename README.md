@@ -86,3 +86,5 @@ composer install --no-dev --prefer-dist (ensures only required files are downloa
 For API add - for local use add it in .env file under services and update docker-compose.override and docker-compose file as well. - this is for local use. call boostrap file and call the key in the php file.
 
 For production - update publish.yml file as well under service and update in git under code>settings > Security> Secrets and variables and update key there.
+
+cd D:\RSSILogin\app - our composer is here.
