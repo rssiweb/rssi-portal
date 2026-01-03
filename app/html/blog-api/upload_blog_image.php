@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/drive.php");
+include(__DIR__ . "/../image_functions.php");
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -42,9 +43,8 @@ if ($drive_url) {
     // Return URL for Summernote editor
     echo json_encode([
         'success' => true,
-        'url' => $drive_url
+        'url' => processImageUrl($drive_url)
     ]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Failed to upload image to Drive']);
 }
-?>

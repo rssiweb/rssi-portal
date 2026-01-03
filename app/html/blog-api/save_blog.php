@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/drive.php"); // Your existing Drive upload system
+include(__DIR__ . "/../image_functions.php");
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -43,7 +44,7 @@ if (!empty($data['featured_image'])) {
         // It's a base64 image, upload to Drive
         $image_url = uploadBase64ImageToDrive($data['featured_image'], 'blog_featured_' . time());
         if ($image_url) {
-            $featured_image = $image_url;
+            $featured_image = processImageUrl($image_url);
         }
     } else {
         // It's already a URL
@@ -61,7 +62,7 @@ if (!empty($data['author_photo'])) {
         // It's a base64 image, upload to Drive
         $author_image_url = uploadBase64ImageToDrive($data['author_photo'], 'author_' . time());
         if ($author_image_url) {
-            $author_photo = $author_image_url;
+            $author_photo = processImageUrl($author_image_url);
         }
     } else {
         // It's already a URL
@@ -78,18 +79,19 @@ $views = 0;
 $tags = !empty($data['tags']) && is_array($data['tags']) ? $data['tags'] : [];
 
 // Function to format array for PostgreSQL
-function formatPostgresArray($array) {
+function formatPostgresArray($array)
+{
     if (empty($array)) {
         return '{}';
     }
-    
+
     // Escape and quote each element
-    $elements = array_map(function($item) {
+    $elements = array_map(function ($item) {
         // Escape quotes and backslashes
         $escaped = addcslashes($item, '"\\');
         return '"' . $escaped . '"';
     }, $array);
-    
+
     return '{' . implode(',', $elements) . '}';
 }
 
@@ -135,7 +137,7 @@ if ($result) {
     // Get the inserted ID using RETURNING clause
     $row = pg_fetch_assoc($result);
     $post_id = $row['id'];
-    
+
     // Process images in content and upload to Drive
     if (!empty($content)) {
         $updated_content = processContentImages($content, $post_id);
@@ -145,13 +147,13 @@ if ($result) {
             pg_query($con, $update_sql);
         }
     }
-    
+
     // Update tags in blog_tags table if tags array exists
     if (!empty($tags)) {
         foreach ($tags as $tag_name) {
             $tag_name_clean = strtolower(trim($tag_name));
             $tag_name_escaped = pg_escape_string($con, $tag_name_clean);
-            
+
             // Check if tag exists
             $tag_check = pg_query($con, "SELECT id FROM blog_tags WHERE name = '$tag_name_escaped'");
             if ($tag_check && pg_num_rows($tag_check) > 0) {
@@ -169,7 +171,7 @@ if ($result) {
                     $tag_id = null;
                 }
             }
-            
+
             // Link tag to post
             if ($tag_id) {
                 $link_sql = "INSERT INTO blog_post_tags (post_id, tag_id) VALUES ($post_id, $tag_id)";
@@ -177,7 +179,7 @@ if ($result) {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Blog post saved successfully',
@@ -193,13 +195,14 @@ if ($result) {
     ]);
 }
 
-function generateSlug($title) {
+function generateSlug($title)
+{
     global $con;
     $slug = strtolower(trim($title));
     $slug = preg_replace('/[^a-z0-9-]/', '-', $slug);
     $slug = preg_replace('/-+/', '-', $slug);
     $slug = trim($slug, '-');
-    
+
     // Check if slug exists
     $check_sql = "SELECT COUNT(*) as count FROM blog_posts WHERE slug = '$slug'";
     $result = pg_query($con, $check_sql);
@@ -209,24 +212,25 @@ function generateSlug($title) {
             $slug .= '-' . time();
         }
     }
-    
+
     return $slug;
 }
 
 /**
  * Upload base64 image to Google Drive
  */
-function uploadBase64ImageToDrive($base64_image, $filename) {
+function uploadBase64ImageToDrive($base64_image, $filename)
+{
     // Extract the base64 data
     if (preg_match('/^data:image\/(\w+);base64,/', $base64_image, $matches)) {
         $image_type = $matches[1];
         $base64_data = substr($base64_image, strpos($base64_image, ',') + 1);
         $image_data = base64_decode($base64_data);
-        
+
         // Create a temporary file
         $temp_file = tempnam(sys_get_temp_dir(), 'blog_img_');
         file_put_contents($temp_file, $image_data);
-        
+
         // Prepare file for upload
         $uploadedFile = [
             'name' => $filename . '.' . $image_type,
@@ -235,45 +239,45 @@ function uploadBase64ImageToDrive($base64_image, $filename) {
             'error' => 0,
             'size' => filesize($temp_file)
         ];
-        
+
         // Upload to Google Drive
         // Replace with your actual Drive folder ID for blog images
         $parent_folder_id = '1lhVTEMKD7ItMjPjYCow-cWboq0jOo-Ut';
-        
+
         $drive_url = uploadeToDrive($uploadedFile, $parent_folder_id, $filename);
-        
+
         // Clean up temp file
         unlink($temp_file);
-        
+
         return $drive_url;
     }
-    
+
     return null;
 }
 
 /**
  * Process images in content and upload base64 images to Drive
  */
-function processContentImages($content, $post_id) {
+function processContentImages($content, $post_id)
+{
     // Find all base64 images in the content
     $pattern = '/<img[^>]+src="(data:image\/[^;]+;base64,[^"]+)"[^>]*>/i';
-    
+
     preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
-    
+
     foreach ($matches as $match) {
         $full_img_tag = $match[0];
         $base64_src = $match[1];
-        
+
         // Upload to Drive
         $drive_url = uploadBase64ImageToDrive($base64_src, 'blog_content_' . $post_id . '_' . uniqid());
-        
+
         if ($drive_url) {
             // Replace base64 with Drive URL
-            $new_img_tag = str_replace($base64_src, $drive_url, $full_img_tag);
+            $new_img_tag = str_replace($base64_src, processImageUrl($drive_url), $full_img_tag);
             $content = str_replace($full_img_tag, $new_img_tag, $content);
         }
     }
-    
+
     return $content;
 }
-?>
