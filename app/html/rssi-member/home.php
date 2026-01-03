@@ -156,6 +156,8 @@ if (!function_exists('makeClickableLinks')) {
 
   <!-- Template Main CSS File -->
   <link href="../assets_new/css/style.css" rel="stylesheet">
+  <!-- Quill CSS -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
   <!-- Glow Cookies v3.0.1 -->
@@ -922,7 +924,14 @@ if (!function_exists('makeClickableLinks')) {
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
+  <script src="../assets_new/js/image-compressor-100kb.js"></script>
   <script src="../assets_new/js/text-refiner.js?v=1.2.0"></script>
+
+  <!-- Quill JS -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+  <!-- Our Quill Manager -->
+  <script src="../assets_new/js/quill-manager.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -933,7 +942,7 @@ if (!function_exists('makeClickableLinks')) {
     });
   </script>
 
-  <!-- Bootstrap Modal -->
+  <!-- Bootstrap Modal for Post Creation -->
   <div class="modal fade" id="editEventModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
@@ -942,38 +951,62 @@ if (!function_exists('makeClickableLinks')) {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" action="create_post.php" enctype="multipart/form-data">
+          <form method="POST" action="create_post.php" enctype="multipart/form-data" id="eventForm">
             <div class="mb-3">
-              <label for="event_name" class="form-label required-field">Event Name</label>
-              <input type="text" class="form-control" id="event_name" name="event_name" required>
+              <label for="event_name" class="form-label required-field">Event Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="event_name" name="event_name"
+                placeholder="Enter event name (e.g., Annual Conference 2024)" required>
             </div>
+
+            <!-- Rich Text Editor - NEW FORMAT -->
             <div class="mb-3">
-              <label for="event_description" class="form-label">Event Description</label>
-              <!-- <textarea class="form-control" id="event_description" name="event_description" rows="3" required maxlength="1000" oninput="updateCharacterCount()"></textarea> -->
-              <div id="event_description_editor" style="height: 200px;"></div>
-              <!-- Hidden input to store the HTML content -->
+              <label for="event_description" class="form-label required-field">Event Description <span class="text-danger">*</span></label>
+              <!-- Quill Editor Container -->
+              <div id="event_description_editor"
+                class="quill-rich-text"
+                data-hidden-input="event_description"
+                data-label="event description"
+                data-placeholder="Write your event description here..."
+                style="height: 200px;">
+              </div>
+              <!-- Hidden Input for Form Submission -->
               <input type="hidden" id="event_description" name="event_description" required>
-              <!-- <small id="charCount" class="form-text text-muted">0/1000 characters used</small> -->
+              <div class="form-text">You can format your text using the toolbar</div>
             </div>
+
             <div class="mb-3">
-              <label for="event_date" class="form-label required-field">Event Date</label>
+              <label for="event_date" class="form-label required-field">Event Date <span class="text-danger">*</span></label>
               <input type="datetime-local" class="form-control" id="event_date" name="event_date" required>
+              <div class="form-text">Select date and time for the event</div>
             </div>
+
             <div class="mb-3">
-              <label for="event_location" class="form-label required-field">Event Location</label>
+              <label for="event_location" class="form-label required-field">Event Location <span class="text-danger">*</span></label>
               <select class="form-select" id="event_location" name="event_location" required>
-                <option>Lucknow</option>
-                <option>West Bengal</option>
+                <option value="" disabled selected>Select location from the list</option>
+                <option value="Lucknow">Lucknow</option>
+                <option value="West Bengal">West Bengal</option>
               </select>
+              <div class="form-text">Choose where the event will take place</div>
             </div>
+
             <div class="mb-3">
-              <label for="event_image" class="form-label required-field">Event Image (The maximum file size allowed is 300KB, with any height and width.)</label>
-              <input type="file" class="form-control" id="event_image" name="event_image" accept="image/*">
-              <img id="imagePreview" src="#" alt="Image Preview" class="mt-3" style="max-width: 50%; height: auto;">
+              <label for="event_image" class="form-label">Event Image</label>
+              <input type="file" class="form-control" id="event_image" name="event_image" accept="image/*" onchange="compressImageBeforeUpload(this)">
+              <div class="form-text">Upload an image for your event (optional)</div>
+              <img id="imagePreview" src="#" alt="Preview" class="mt-2" style="max-width: 300px; max-height: 200px; display: none; object-fit: contain;">
             </div>
-            <button type="submit" class="btn btn-primary">Create Post</button>
-          </form>
         </div>
+        <div class="modal-footer">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <span id="submitText">Create Post</span>
+              <span class="spinner-border spinner-border-sm d-none" id="submitSpinner" role="status" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="resetEventForm()" id="clearBtn">Clear</button>
+          </div>
+        </div>
+        </form>
       </div>
     </div>
   </div>
@@ -985,60 +1018,260 @@ if (!function_exists('makeClickableLinks')) {
       $('form')
         .find('input[required]:not(.no-required-mark), select[required], textarea[required]')
         .each(function() {
-          const label = $(this).closest('div').find('label'); // Ensure proper label selection
-          if ($(this).prop('required') && label.length && !label.find('span').length) {
-            label.append(' <span style="color: red">*</span>');
+          const label = $(this).closest('div').find('label');
+          if ($(this).prop('required') && label.length && !label.find('.text-danger').length) {
+            label.append(' <span class="text-danger">*</span>');
           }
         });
 
-      // Image preview and validation
-      $('#event_image').on('change', function(event) {
-        const file = event.target.files[0];
-        const imagePreview = $('#imagePreview');
-        if (file) {
-          // Check image size (300 KB limit)
-          if (file.size > 300 * 1024) {
-            alert('Image size should not exceed 300 KB.');
-            $('#event_image').val(''); // Clear the input
-            imagePreview.hide(); // Hide preview
-            return;
-          }
+      // Image preview handler - NO SIZE RESTRICTIONS
+      document.getElementById('event_image').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        const file = e.target.files[0];
 
+        if (file) {
           const reader = new FileReader();
           reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
-
-            img.onload = function() {
-              // Check dimensions (800x400)
-              // if (img.width !== 800 || img.height !== 400) {
-              //   alert('Image should be resized to 800x400.');
-              //   $('#event_image').val(''); // Clear the input
-              //   imagePreview.hide(); // Hide preview
-              //   return;
-              // }
-
-              // Valid image: show preview
-              imagePreview.attr('src', e.target.result).show();
-            };
-          };
-
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          }
           reader.readAsDataURL(file);
         } else {
-          // No file selected: hide preview
-          imagePreview.hide();
+          preview.style.display = 'none';
         }
       });
 
-      // Character count update
-      $('#event_description').on('input', function() {
-        const charCount = $('#charCount');
-        charCount.text(`${this.value.length}/1000 characters used`);
+      // Form submission handler with loading state
+      $('#eventForm').on('submit', function(e) {
+        e.preventDefault();
+
+        // Validate form before submission
+        if (!validateForm()) {
+          return false;
+        }
+
+        // Show loading state
+        showLoadingState(true);
+
+        // Get form data
+        const formData = new FormData(this);
+
+        // Get Quill content and add to form data
+        const quill = window.quillManager?.getQuillInstance('event_description_editor');
+        if (quill) {
+          const quillContent = quill.root.innerHTML;
+          formData.set('event_description', quillContent);
+        }
+
+        // Submit via AJAX
+        $.ajax({
+          url: $(this).attr('action'),
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(response) {
+            // Hide loading state
+            showLoadingState(false);
+
+            // Show the response (your PHP script shows alerts)
+            $('body').append(response);
+
+            // Reset form
+            resetEventForm();
+
+            // Close modal after 1.5 seconds to let user see success message
+            setTimeout(function() {
+              $('#editEventModal').modal('hide');
+
+              // Reload the page after modal closes
+              setTimeout(function() {
+                window.location.reload();
+              }, 500);
+            }, 1500);
+          },
+          error: function(xhr, status, error) {
+            // Hide loading state
+            showLoadingState(false);
+
+            // Show error message
+            alert('Error submitting form: ' + error);
+
+            // Re-enable form
+            enableForm(true);
+          }
+        });
+
+        return false;
       });
 
       // Initially hide the image preview
       $('#imagePreview').hide();
     });
+
+    // Reset form function
+    function resetEventForm() {
+      const form = document.getElementById('eventForm');
+      if (form) {
+        form.reset();
+      }
+
+      // Clear Quill editor
+      const quill = window.quillManager?.getQuillInstance('event_description_editor');
+      if (quill) {
+        quill.setContents([]);
+        window.quillManager.saveEditorContent('event_description_editor');
+      }
+
+      // Hide preview
+      document.getElementById('imagePreview').style.display = 'none';
+
+      // Re-enable form if it was disabled
+      enableForm(true);
+    }
+
+    // Show/hide loading state
+    function showLoadingState(show) {
+      const submitBtn = document.getElementById('submitBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const submitText = document.getElementById('submitText');
+      const submitSpinner = document.getElementById('submitSpinner');
+
+      if (show) {
+        // Disable buttons
+        submitBtn.disabled = true;
+        clearBtn.disabled = true;
+
+        // Show spinner, hide text
+        submitText.textContent = 'Submitting...';
+        submitSpinner.classList.remove('d-none');
+
+        // Add processing class
+        submitBtn.classList.add('processing');
+      } else {
+        // Enable buttons
+        submitBtn.disabled = false;
+        clearBtn.disabled = false;
+
+        // Hide spinner, show original text
+        submitText.textContent = 'Create Post';
+        submitSpinner.classList.add('d-none');
+
+        // Remove processing class
+        submitBtn.classList.remove('processing');
+      }
+    }
+
+    // Enable/disable form elements
+    function enableForm(enable) {
+      const form = document.getElementById('eventForm');
+      const elements = form.querySelectorAll('input, select, textarea, button');
+
+      elements.forEach(element => {
+        if (element.id !== 'submitBtn' && element.id !== 'clearBtn') {
+          element.disabled = !enable;
+        }
+      });
+
+      // Enable/disable Quill editor
+      const quill = window.quillManager?.getQuillInstance('event_description_editor');
+      if (quill) {
+        quill.enable(enable);
+      }
+    }
+
+    // Form validation
+    function validateForm() {
+      const form = document.getElementById('eventForm');
+      let isValid = true;
+
+      // Clear previous errors
+      form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+      form.querySelectorAll('.text-danger').forEach(el => {
+        if (el.parentElement.classList.contains('form-text')) {
+          el.remove();
+        }
+      });
+
+      // Check required fields
+      const requiredFields = form.querySelectorAll('[required]');
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          isValid = false;
+          field.classList.add('is-invalid');
+
+          // Add error message
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'invalid-feedback';
+          errorDiv.textContent = 'This field is required';
+          field.parentNode.appendChild(errorDiv);
+        }
+      });
+
+      // Check Quill editor content
+      const quill = window.quillManager?.getQuillInstance('event_description_editor');
+      if (quill) {
+        const quillText = quill.getText().trim();
+        if (quillText === '') {
+          isValid = false;
+          const editorContainer = document.getElementById('event_description_editor');
+          editorContainer.classList.add('border-danger');
+
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'text-danger small mt-1';
+          errorMsg.textContent = 'Event description is required';
+          const formText = editorContainer.parentNode.querySelector('.form-text');
+          if (formText) {
+            formText.after(errorMsg);
+          }
+        }
+      }
+
+      return isValid;
+    }
+
+    // Add CSS for loading state
+    const style = document.createElement('style');
+    style.textContent = `
+    #submitBtn.processing {
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+    
+    .quill-rich-text.border-danger {
+      border: 1px solid #dc3545 !important;
+    }
+    
+    .quill-rich-text.border-danger .ql-toolbar {
+      border-color: #dc3545 !important;
+    }
+    
+    .quill-rich-text.border-danger .ql-container {
+      border-color: #dc3545 !important;
+    }
+    
+    .is-invalid {
+      border-color: #dc3545 !important;
+    }
+    
+    .invalid-feedback {
+      display: block;
+      color: #dc3545;
+      font-size: 0.875em;
+      margin-top: 0.25rem;
+    }
+    
+    #submitBtn:disabled {
+      cursor: not-allowed;
+    }
+    
+    #clearBtn:disabled {
+      cursor: not-allowed;
+    }
+  `;
+    document.head.appendChild(style);
   </script>
   <script>
     function toggleLike(eventId) {
@@ -1650,47 +1883,6 @@ if (!function_exists('makeClickableLinks')) {
           setTimeout(() => calendar.updateSize(), 100);
         }
       });
-    });
-  </script>
-  <!-- Quill.js CDN -->
-  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize Quill editor
-      var quill = new Quill('#event_description_editor', {
-        theme: 'snow',
-        modules: {
-          toolbar: [
-            [{
-              'header': [2, 3, false]
-            }],
-            ['bold', 'italic', 'underline'],
-            ['link', 'blockquote'],
-            [{
-              'list': 'ordered'
-            }, {
-              'list': 'bullet'
-            }],
-            ['clean']
-          ]
-        },
-        placeholder: 'Write your event description here...'
-      });
-
-      // Update hidden input before form submission
-      var form = document.querySelector('form');
-      form.onsubmit = function() {
-        var descriptionInput = document.querySelector('#event_description');
-        descriptionInput.value = quill.root.innerHTML;
-
-        // Validation: Check if content is not just empty HTML
-        if (quill.getText().trim().length === 0) {
-          alert('Please enter event description');
-          return false;
-        }
-        return true;
-      };
     });
   </script>
 </body>
