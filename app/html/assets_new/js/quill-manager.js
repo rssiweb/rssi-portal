@@ -42,10 +42,14 @@ class QuillManager {
                 theme: 'snow',
                 modules: {
                     toolbar: [
-                        [{ 'header': [2, 3, false] }],
-                        ['bold', 'italic', 'underline'],
-                        ['link', 'blockquote'],
+                        [{ 'font': [] }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'header': [2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link', 'blockquote', 'code-block'],
                         ['clean']
                     ]
                 },

@@ -906,14 +906,15 @@ $resultArr = $result ? pg_fetch_all($result) : [];
 
                             <!-- GPS Details Modal -->
                             <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-xl">
+                                <div class="modal-dialog modal-dialog-scrollable modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h1 class="modal-title fs-5" id="myModalLabel">GPS Details</h1>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <form id="gpsform" action="#" method="POST" enctype="multipart/form-data">
-                                            <div class="modal-body">
+                                        <div class="modal-body">
+                                            <form id="gpsform" action="#" method="POST" enctype="multipart/form-data">
+
                                                 <div class="text-end mb-3">
                                                     <p class="badge bg-info"><span class="itemid"></span></p>
                                                 </div>
@@ -1032,15 +1033,15 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                         <small class="text-muted">Replace purchase bill (optional)</small>
                                                     </div>
                                                 </div>
-                                            </div>
+                                        </div>
 
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" name="search_by_id3" class="btn btn-primary" id="update-button">
-                                                    <span class="button-text">Save changes</span>
-                                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                                </button>
-                                            </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" name="search_by_id3" class="btn btn-primary" id="update-button">
+                                                <span class="button-text">Save changes</span>
+                                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
                                         </form>
                                     </div>
                                 </div>

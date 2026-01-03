@@ -931,7 +931,7 @@ if (!function_exists('makeClickableLinks')) {
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
   <!-- Our Quill Manager -->
-  <script src="../assets_new/js/quill-manager.js"></script>
+  <script src="../assets_new/js/quill-manager.js?v=1.0.0"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
