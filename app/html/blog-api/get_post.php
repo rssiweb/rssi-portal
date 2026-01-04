@@ -17,7 +17,7 @@ if (!$post_id || !$user_id) {
 
 try {
     // First get user email from user ID
-    $user_sql = "SELECT email FROM blog_users WHERE google_id = '$user_id' LIMIT 1";
+    $user_sql = "SELECT email FROM blog_users WHERE id = '$user_id' LIMIT 1";
     $user_result = pg_query($con, $user_sql);
     
     if (!$user_result || pg_num_rows($user_result) === 0) {

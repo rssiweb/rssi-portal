@@ -26,7 +26,7 @@ $post_id = (int)$data['id'];
 $user_id = pg_escape_string($con, $data['user_id']);
 
 // Get user email
-$user_sql = "SELECT email FROM blog_users WHERE google_id = '$user_id' LIMIT 1";
+$user_sql = "SELECT email FROM blog_users WHERE id = '$user_id' LIMIT 1";
 $user_result = pg_query($con, $user_sql);
 
 if (!$user_result || pg_num_rows($user_result) === 0) {
