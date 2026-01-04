@@ -117,14 +117,14 @@ $_SESSION['logged_in'] = true;
 $_SESSION['login_time'] = time();
 
 // Set session cookie with secure parameters
-setcookie(session_name(), session_id(), [
-    'expires' => time() + (24 * 3600), // 24 hours
-    'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'secure' => isset($_SERVER['HTTPS']),
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
+// setcookie(session_name(), session_id(), [
+//     'expires' => time() + (24 * 3600), // 24 hours
+//     'path' => '/',
+//     'domain' => $_SERVER['HTTP_HOST'],
+//     'secure' => isset($_SERVER['HTTPS']),
+//     'httponly' => true,
+//     'samesite' => 'Lax'
+// ]);
 
 // Return user data
 echo json_encode([

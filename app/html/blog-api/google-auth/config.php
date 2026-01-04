@@ -24,16 +24,19 @@ define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_OAUTH_CLIENT_ID']);
 define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_OAUTH_CLIENT_SECRET']);
 
 // Start session with security settings
-session_start([
-    'cookie_httponly' => true,
-    'cookie_secure' => true,
-    'cookie_samesite' => 'None',
-    'use_strict_mode' => true
-]);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start([
+        'cookie_httponly' => true,
+        'cookie_secure' => true,
+        'cookie_samesite' => 'None',
+        'use_strict_mode' => true
+    ]);
+}
 
-function verifyGoogleToken($idToken) {
+function verifyGoogleToken($idToken)
+{
     $client = new Google_Client(['client_id' => GOOGLE_CLIENT_ID]);
-    
+
     try {
         $payload = $client->verifyIdToken($idToken);
         if ($payload) {
@@ -53,12 +56,14 @@ function verifyGoogleToken($idToken) {
     }
 }
 
-function isLoggedIn() {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) && 
-           isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+function isLoggedIn()
+{
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']) &&
+        isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 }
 
-function getCurrentUser() {
+function getCurrentUser()
+{
     if (isLoggedIn()) {
         return [
             'id' => $_SESSION['user_id'],
@@ -72,14 +77,15 @@ function getCurrentUser() {
 }
 
 // Add CSRF protection
-function generateCSRFToken() {
+function generateCSRFToken()
+{
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf_token'];
 }
 
-function validateCSRFToken($token) {
+function validateCSRFToken($token)
+{
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
-?>
