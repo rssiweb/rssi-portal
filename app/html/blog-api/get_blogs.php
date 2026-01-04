@@ -3,11 +3,10 @@ require_once __DIR__ . "/../../bootstrap.php";
 header('Content-Type: application/json');
 include(__DIR__ . "/../image_functions.php");
 
-// CORS headers - Add these at the very beginning
-header('Access-Control-Allow-Origin: ' . (isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*'));
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+// At the top of your PHP file, after header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
