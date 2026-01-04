@@ -1,7 +1,19 @@
 <?php
+// CORS headers - Add these at the very beginning
+header("Access-Control-Allow-Origin: https://www.rssi.in");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once __DIR__ . '/../../bootstrap.php';
 
-// Database connection (add this)
+// Database connection
 global $con;
 if (!isset($con)) {
     die('Database connection not established');
@@ -14,7 +26,8 @@ define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_OAUTH_CLIENT_SECRET']);
 // Start session with security settings
 session_start([
     'cookie_httponly' => true,
-    'cookie_secure' => isset($_SERVER['HTTPS']),
+    'cookie_secure' => true,
+    'cookie_samesite' => 'None',
     'use_strict_mode' => true
 ]);
 
