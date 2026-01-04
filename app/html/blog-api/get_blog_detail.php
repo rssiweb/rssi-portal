@@ -69,7 +69,7 @@ pg_query_params($con, $viewSql, [$post['id']]);
 
 // Get likes
 $likeSql = "SELECT COUNT(*) as like_count, 
-                   ARRAY_AGG(user_name) as liked_users 
+                   ARRAY_AGG(user_id) as liked_users 
             FROM blog_likes 
             WHERE post_id = $1";
 $likeResult = pg_query_params($con, $likeSql, [$post['id']]);
