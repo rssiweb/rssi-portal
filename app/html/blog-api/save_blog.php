@@ -34,6 +34,8 @@ $title = pg_escape_string($con, $data['title']);
 $slug = pg_escape_string($con, $data['slug']);
 $excerpt = !empty($data['excerpt']) ? pg_escape_string($con, $data['excerpt']) : null;
 $content = pg_escape_string($con, $data['content']);
+// In your save_blog.php, modify the INSERT statement to include author_email:
+$author_email = !empty($data['author_email']) ? pg_escape_string($con, $data['author_email']) : '';
 
 // Handle featured image - upload to Drive if it's a base64 string
 $featured_image = null;
@@ -109,7 +111,7 @@ if (!empty($data['publish_date']) && $status === 'published') {
 // Build SQL query
 $sql = "INSERT INTO blog_posts (
     title, slug, excerpt, content, featured_image, 
-    category, tags, author_name, author_photo, 
+    category, tags, author_name, author_email, author_photo, 
     reading_time, views, status, created_at, updated_at
 ) VALUES (
     '$title', 
@@ -120,6 +122,7 @@ $sql = "INSERT INTO blog_posts (
     '$category', 
     '$tags_formatted',
     '$author_name', 
+    '$author_email',
     " . ($author_photo ? "'$author_photo'" : "NULL") . ",
     $reading_time, 
     $views, 
