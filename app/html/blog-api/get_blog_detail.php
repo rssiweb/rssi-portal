@@ -76,9 +76,10 @@ $likeResult = pg_query_params($con, $likeSql, [$post['id']]);
 $likes = pg_fetch_assoc($likeResult);
 
 // Get comments
-$commentSql = "SELECT c.*, 
+$commentSql = "SELECT c.*, u.profile_picture AS user_photo,
                       (SELECT COUNT(*) FROM blog_comments WHERE parent_id = c.id) as replies_count
                FROM blog_comments c 
+               LEFT JOIN blog_users u ON c.user_id = u.id
                WHERE c.post_id = $1 AND c.status = 'approved' AND c.parent_id IS NULL
                ORDER BY c.created_at DESC";
 $commentResult = pg_query_params($con, $commentSql, [$post['id']]);
@@ -86,9 +87,10 @@ $commentResult = pg_query_params($con, $commentSql, [$post['id']]);
 $comments = [];
 while ($comment = pg_fetch_assoc($commentResult)) {
     // Get replies
-    $replySql = "SELECT * FROM blog_comments 
+    $replySql = "SELECT *, u.profile_picture AS user_photo FROM blog_comments c
+                 LEFT JOIN blog_users u ON c.user_id = u.id
                  WHERE parent_id = $1 AND status = 'approved'
-                 ORDER BY created_at ASC";
+                 ORDER BY c.created_at ASC";
     $replyResult = pg_query_params($con, $replySql, [$comment['id']]);
 
     $replies = [];
