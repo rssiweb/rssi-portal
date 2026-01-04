@@ -54,7 +54,7 @@ if (!$result) {
 if ($row = pg_fetch_assoc($result)) {
     // Existing user
     $userId = $row['id'];
-    
+
     // Update user info if needed
     $updateSql = "UPDATE blog_users SET 
                  name = $1, 
@@ -63,14 +63,14 @@ if ($row = pg_fetch_assoc($result)) {
                  google_id = COALESCE(google_id, $3)
                  WHERE id = $4 
                  AND (google_id IS NULL OR google_id = $3)";
-    
+
     $updateResult = pg_query_params($con, $updateSql, [
-        $name, 
-        $picture, 
-        $googleId, 
+        $name,
+        $picture,
+        $googleId,
         $userId
     ]);
-    
+
     if (!$updateResult) {
         error_log('Update failed: ' . pg_last_error($con));
     }
@@ -78,28 +78,28 @@ if ($row = pg_fetch_assoc($result)) {
     // New user - check if email exists with different google_id
     $checkSql = "SELECT id FROM blog_users WHERE email = $1 AND google_id IS NOT NULL AND google_id != $2";
     $checkResult = pg_query_params($con, $checkSql, [$email, $googleId]);
-    
+
     if (pg_num_rows($checkResult) > 0) {
         echo json_encode([
-            'success' => false, 
+            'success' => false,
             'message' => 'Email already registered with different Google account'
         ]);
         exit;
     }
-    
+
     // Insert new user
     $insertSql = "INSERT INTO blog_users (google_id, name, email, profile_picture, created_at, last_login) 
                  VALUES ($1, $2, $3, $4, NOW(), NOW()) 
                  RETURNING id";
-    
+
     $result = pg_query_params($con, $insertSql, [$googleId, $name, $email, $picture]);
-    
+
     if (!$result) {
         error_log('Insert failed: ' . pg_last_error($con));
         echo json_encode(['success' => false, 'message' => 'Failed to create user account']);
         exit;
     }
-    
+
     $row = pg_fetch_assoc($result);
     $userId = $row['id'];
 }
@@ -137,4 +137,3 @@ echo json_encode([
         'google_id' => $googleId
     ]
 ]);
-?>

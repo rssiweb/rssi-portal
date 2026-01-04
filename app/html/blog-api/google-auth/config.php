@@ -20,8 +20,8 @@ if (!isset($con)) {
 }
 
 // Google OAuth Configuration
-define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_OAUTH_CLIENT_ID']);
-define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_OAUTH_CLIENT_SECRET']);
+define('GOOGLE_CLIENT_ID', getenv('GOOGLE_OAUTH_CLIENT_ID') ?: '');
+define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_OAUTH_CLIENT_SECRET') ?: '');
 
 // Start session with security settings
 if (session_status() === PHP_SESSION_NONE) {
