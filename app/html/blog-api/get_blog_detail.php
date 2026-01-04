@@ -50,6 +50,19 @@ foreach ($body->childNodes as $child) {
 }
 $post['content'] = $innerHTML;
 
+// Add reading time calculation in your PHP:
+function calculateReadingTime($content) {
+    $word_count = str_word_count(strip_tags($content));
+    $reading_time = ceil($word_count / 200); // 200 words per minute
+    return $reading_time;
+}
+
+// Update the post array to include these:
+$post['reading_time'] = calculateReadingTime($post['content']);
+$post['word_count'] = str_word_count(strip_tags($post['content']));
+
+// Then ensure your JSON response includes these fields:
+
 // Increment view count
 $viewSql = "UPDATE blog_posts SET views = views + 1 WHERE id = $1";
 pg_query_params($con, $viewSql, [$post['id']]);
