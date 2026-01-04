@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../../bootstrap.php';
 
 // Google OAuth Configuration
-define('GOOGLE_CLIENT_ID', '880893711562-48c591om401pva696dnk9ffnqb9it4mm.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', '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');
+define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_OAUTH_CLIENT_ID']);
+define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_OAUTH_CLIENT_SECRET']);
 
 // Start session
 session_start();
