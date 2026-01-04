@@ -24,19 +24,23 @@ $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
 
 $sql = "INSERT INTO blog_comments 
         (post_id, parent_id, user_id, user_name, user_email, content, status)
-        VALUES ($1, $2, $3, $4, $5, $6, 'pending')";
-        
+        VALUES ($1, $2, $3, $4, $5, $6, 'approved')";
+
 $result = pg_query_params($con, $sql, [
-    $post_id, $parent_id, $user_id, $user_name, $user_email, $content
+    $post_id,
+    $parent_id,
+    $user_id,
+    $user_name,
+    $user_email,
+    $content
 ]);
 
 if ($result) {
     echo json_encode([
-        'success' => true, 
-        'message' => 'Comment submitted for approval',
+        'success' => true,
+        'message' => 'Comment posted successfully',
         'comment_id' => pg_last_oid($result)
     ]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Failed to submit comment']);
 }
-?>
