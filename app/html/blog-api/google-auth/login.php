@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-// Add CORS headers if needed
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . (isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*'));
-header('Access-Control-Allow-Credentials: true');
+// CORS headers - Add these at the very beginning
+header("Access-Control-Allow-Origin: https://www.rssi.in");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
 $data = json_decode(file_get_contents('php://input'), true);
 $idToken = $data['id_token'] ?? '';

@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-require_once __DIR__ . '/../../bootstrap.php';
+require_once __DIR__ . "/../../bootstrap.php";
 
 // Database connection
 global $con;
