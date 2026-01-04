@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 header('Content-Type: application/json');
+include(__DIR__ . "/../image_functions.php");
 
 // At the top of your PHP file, after header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -75,6 +76,8 @@ if ($total > 0) {
             $row['id'] = (int)$row['id'];
             $row['views'] = (int)($row['views'] ?? 0);
             $row['reading_time'] = (int)($row['reading_time'] ?? 5);
+            $row['featured_image'] = processImageUrl($row['featured_image']) ?? null;
+            $row['author_photo'] = processImageUrl($row['author_photo']) ?? null;
             
             // Handle tags
             if (!empty($row['tags']) && !is_array($row['tags'])) {

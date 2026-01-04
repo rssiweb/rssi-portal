@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/drive.php"); // Your existing Drive upload system
-include(__DIR__ . "/../image_functions.php");
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -44,7 +43,7 @@ if (!empty($data['featured_image'])) {
         // It's a base64 image, upload to Drive
         $image_url = uploadBase64ImageToDrive($data['featured_image'], 'blog_featured_' . time());
         if ($image_url) {
-            $featured_image = processImageUrl($image_url);
+            $featured_image = $image_url;
         }
     } else {
         // It's already a URL
@@ -62,7 +61,7 @@ if (!empty($data['author_photo'])) {
         // It's a base64 image, upload to Drive
         $author_image_url = uploadBase64ImageToDrive($data['author_photo'], 'author_' . time());
         if ($author_image_url) {
-            $author_photo = processImageUrl($author_image_url);
+            $author_photo = $author_image_url;
         }
     } else {
         // It's already a URL
@@ -274,7 +273,7 @@ function processContentImages($content, $post_id)
 
         if ($drive_url) {
             // Replace base64 with Drive URL
-            $new_img_tag = str_replace($base64_src, processImageUrl($drive_url), $full_img_tag);
+            $new_img_tag = str_replace($base64_src, $drive_url, $full_img_tag);
             $content = str_replace($full_img_tag, $new_img_tag, $content);
         }
     }

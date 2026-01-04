@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 header('Content-Type: application/json');
+include(__DIR__ . "/../image_functions.php");
 
 // At the top of your PHP file, after header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -28,6 +29,26 @@ if (!$result || pg_num_rows($result) === 0) {
 }
 
 $post = pg_fetch_assoc($result);
+$post['featured_image'] = processImageUrl($post['featured_image']) ?? null;
+$post['author_photo'] = processImageUrl($post['author_photo']) ?? null;
+$dom = new DOMDocument();
+libxml_use_internal_errors(true); // ignore warnings for HTML5 tags
+$dom->loadHTML(mb_convert_encoding($post['content'], 'HTML-ENTITIES', 'UTF-8'));
+libxml_clear_errors();
+
+// Update all <img> src attributes
+foreach ($dom->getElementsByTagName('img') as $img) {
+    $src = $img->getAttribute('src');
+    $img->setAttribute('src', processImageUrl($src) ?? null);
+}
+
+// Save back the updated HTML without <html> and <body> wrappers
+$body = $dom->getElementsByTagName('body')->item(0);
+$innerHTML = '';
+foreach ($body->childNodes as $child) {
+    $innerHTML .= $dom->saveHTML($child);
+}
+$post['content'] = $innerHTML;
 
 // Increment view count
 $viewSql = "UPDATE blog_posts SET views = views + 1 WHERE id = $1";
@@ -56,12 +77,12 @@ while ($comment = pg_fetch_assoc($commentResult)) {
                  WHERE parent_id = $1 AND status = 'approved'
                  ORDER BY created_at ASC";
     $replyResult = pg_query_params($con, $replySql, [$comment['id']]);
-    
+
     $replies = [];
     while ($reply = pg_fetch_assoc($replyResult)) {
         $replies[] = $reply;
     }
-    
+
     $comment['replies'] = $replies;
     $comments[] = $comment;
 }
@@ -86,4 +107,3 @@ echo json_encode([
     'comments' => $comments,
     'related_posts' => $related_posts
 ]);
-?>
