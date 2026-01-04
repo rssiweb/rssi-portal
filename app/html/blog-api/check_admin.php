@@ -61,7 +61,7 @@ try {
 
     // User exists, get admin status
     $userData = pg_fetch_assoc($result);
-    $isAdmin = filter_var($userData['is_admin'], FILTER_VALIDATE_BOOLEAN);
+    $isAdmin = ($userData['is_admin'] === 't' || $userData['is_admin'] === true);
 
     error_log("User found. Admin status: " . ($isAdmin ? 'true' : 'false'));
 
