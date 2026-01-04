@@ -24,7 +24,8 @@ $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
 
 $sql = "INSERT INTO blog_comments 
         (post_id, parent_id, user_id, user_name, user_email, content, status)
-        VALUES ($1, $2, $3, $4, $5, $6, 'approved')";
+        VALUES ($1, $2, $3, $4, $5, $6, 'approved')
+        RETURNING id, post_id, parent_id, user_id, user_name, user_email, content, status, created_at";
 
 $result = pg_query_params($con, $sql, [
     $post_id,
@@ -36,10 +37,18 @@ $result = pg_query_params($con, $sql, [
 ]);
 
 if ($result) {
+    $row = pg_fetch_assoc($result);
     echo json_encode([
         'success' => true,
         'message' => 'Comment posted successfully',
-        'comment_id' => pg_last_oid($result)
+        'comment_id' => $row['id'],
+        'comment' => [
+            'id' => $row['id'],
+            'user_name' => $row['user_name'],
+            'content' => $row['content'],
+            'created_at' => $row['created_at'],
+            'replies' => []
+        ]
     ]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Failed to submit comment']);
