@@ -38,7 +38,7 @@ $user_data = pg_fetch_assoc($user_result);
 $user_email = $user_data['email'];
 
 // Check if post belongs to user
-$check_sql = "SELECT id, status FROM blog_posts WHERE id = $post_id AND author_email = '$user_email'";
+$check_sql = "SELECT id, status FROM blog_posts WHERE id = $post_id AND author_id = '$user_id'";
 $check_result = pg_query($con, $check_sql);
 
 if (!$check_result || pg_num_rows($check_result) === 0) {
@@ -144,9 +144,6 @@ if ($original_status !== 'published') {
                 featured_image = " . ($featured_image ? "'$featured_image'" : "featured_image") . ",
                 category = '$category',
                 tags = '$tags_formatted',
-                author_name = '$author_name',
-                author_email = '$author_email',
-                author_photo = " . ($author_photo ? "'$author_photo'" : "author_photo") . ",
                 reading_time = $reading_time,
                 status = '$status',
                 updated_at = NOW()

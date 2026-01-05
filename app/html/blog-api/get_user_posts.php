@@ -33,7 +33,7 @@ try {
                 views, created_at, published_at,
                 COALESCE(featured_image, '') as featured_image
             FROM blog_posts 
-            WHERE author_email = '$user_email'
+            WHERE author_id = '$user_id'
             ORDER BY 
                 CASE status 
                     WHEN 'published' THEN 1

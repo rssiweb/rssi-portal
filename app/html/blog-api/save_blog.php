@@ -36,6 +36,7 @@ $excerpt = !empty($data['excerpt']) ? pg_escape_string($con, $data['excerpt']) :
 $content = pg_escape_string($con, $data['content']);
 // In your save_blog.php, modify the INSERT statement to include author_email:
 $author_email = !empty($data['author_email']) ? pg_escape_string($con, $data['author_email']) : '';
+$author_id = !empty($data['user_id']) ? pg_escape_string($con, $data['user_id']) : '';
 
 // Handle featured image - upload to Drive if it's a base64 string
 $featured_image = null;
@@ -111,7 +112,7 @@ if (!empty($data['publish_date']) && $status === 'published') {
 // Build SQL query
 $sql = "INSERT INTO blog_posts (
     title, slug, excerpt, content, featured_image, 
-    category, tags, author_name, author_email, author_photo, 
+    category, tags, author_id, 
     reading_time, views, status, created_at, updated_at
 ) VALUES (
     '$title', 
@@ -121,9 +122,7 @@ $sql = "INSERT INTO blog_posts (
     " . ($featured_image ? "'$featured_image'" : "NULL") . ",
     '$category', 
     '$tags_formatted',
-    '$author_name', 
-    '$author_email',
-    " . ($author_photo ? "'$author_photo'" : "NULL") . ",
+    '$author_id',
     $reading_time, 
     $views, 
     '$status', 
@@ -139,6 +138,42 @@ if ($result) {
     // Get the inserted ID using RETURNING clause
     $row = pg_fetch_assoc($result);
     $post_id = $row['id'];
+
+    if ($author_id && (!empty($author_name) || !empty($author_photo))) {
+
+        $user_result = pg_query(
+            $con,
+            "SELECT name, profile_picture FROM blog_users WHERE id = $author_id"
+        );
+
+        if ($user_result && pg_num_rows($user_result) === 1) {
+            $user = pg_fetch_assoc($user_result);
+
+            $updates = [];
+
+            // Compare author name
+            if (!empty($author_name) && $author_name !== $user['name']) {
+                $updates[] = "name = '$author_name'";
+            }
+
+            // Compare author photo
+            if (!empty($author_photo) && $author_photo !== $user['profile_picture']) {
+                $author_photo_escaped = pg_escape_string($con, $author_photo);
+                $updates[] = "profile_picture = '$author_photo_escaped'";
+            }
+
+            // Update only if something changed
+            if (!empty($updates)) {
+                $update_user_sql = "
+                UPDATE blog_users 
+                SET " . implode(', ', $updates) . ", updated_at = NOW()
+                WHERE id = $author_id
+            ";
+
+                pg_query($con, $update_user_sql);
+            }
+        }
+    }
 
     // Process images in content and upload to Drive
     if (!empty($content)) {
