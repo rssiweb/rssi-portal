@@ -133,72 +133,145 @@ if ($status === 'published') {
     }
 }
 
-// Build SQL query for UPDATE
-$sql = "UPDATE blog_posts SET
-            title = '$title',
-            slug = '$slug',
-            excerpt = " . ($excerpt ? "'$excerpt'" : "NULL") . ",
-            content = '$content',
-            featured_image = " . ($featured_image ? "'$featured_image'" : "featured_image") . ",
-            category = '$category',
-            tags = '$tags_formatted',
-            author_name = '$author_name',
-            author_email = '$author_email',
-            author_photo = " . ($author_photo ? "'$author_photo'" : "author_photo") . ",
-            reading_time = $reading_time,
-            status = '$status',
-            updated_at = NOW()
-            $publish_sql
-        WHERE id = $post_id
-        RETURNING id";
+// Determine if we should UPDATE or INSERT
+if ($original_status !== 'published') {
+    // Post is not published, UPDATE existing record
+    $sql = "UPDATE blog_posts SET
+                title = '$title',
+                slug = '$slug',
+                excerpt = " . ($excerpt ? "'$excerpt'" : "NULL") . ",
+                content = '$content',
+                featured_image = " . ($featured_image ? "'$featured_image'" : "featured_image") . ",
+                category = '$category',
+                tags = '$tags_formatted',
+                author_name = '$author_name',
+                author_email = '$author_email',
+                author_photo = " . ($author_photo ? "'$author_photo'" : "author_photo") . ",
+                reading_time = $reading_time,
+                status = '$status',
+                updated_at = NOW()
+                $publish_sql
+            WHERE id = $post_id
+            RETURNING id";
+
+    $result = pg_query($con, $sql);
+
+    if ($result) {
+        // Post was UPDATED
+        $return_post_id = $post_id;
+        $return_slug = $slug;
+        $message = 'Blog post updated successfully';
+        $is_revision = false;
+    }
+} else {
+    // Post is published, INSERT as new draft (revision)
+    // Generate new unique slug if needed
+    $new_slug = $slug;
+    $slug_check = pg_query($con, "SELECT COUNT(*) as count FROM blog_posts WHERE slug = '$new_slug'");
+    if ($slug_check) {
+        $row = pg_fetch_assoc($slug_check);
+        if ($row['count'] > 0) {
+            $new_slug = $slug . '-rev-' . time();
+        }
+    }
+
+    // INSERT new post as draft revision
+    $sql = "INSERT INTO blog_posts (
+                title, slug, excerpt, content, featured_image, 
+                category, tags, author_name, author_email, author_photo,
+                reading_time, status, published_at, created_at, updated_at
+            ) VALUES (
+                '$title',
+                '$new_slug',
+                " . ($excerpt ? "'$excerpt'" : "NULL") . ",
+                '$content',
+                " . ($featured_image ? "'$featured_image'" : "NULL") . ",
+                '$category',
+                '$tags_formatted',
+                '$author_name',
+                '$author_email',
+                " . ($author_photo ? "'$author_photo'" : "NULL") . ",
+                $reading_time,
+                'draft',  -- Always insert as draft when editing published post
+                NULL,     -- No publish date for draft
+                NOW(),
+                NOW()
+            ) RETURNING id";
+
+    $result = pg_query($con, $sql);
+
+    if ($result) {
+        $new_post_row = pg_fetch_assoc($result);
+        $return_post_id = $new_post_row['id'];
+        $return_slug = $new_slug;
+        $message = 'New revision created as draft';
+        $is_revision = true;
+    }
+}
 
 error_log("Update SQL Query: " . $sql);
-
-$result = pg_query($con, $sql);
 
 if ($result) {
     // Process images in content and upload to Drive
     if (!empty($content)) {
-        $updated_content = processContentImages($content, $post_id);
+        $updated_content = processContentImages($content, $return_post_id);
         if ($updated_content !== $content) {
             // Update content with Drive URLs
-            $update_sql = "UPDATE blog_posts SET content = '" . pg_escape_string($con, $updated_content) . "' WHERE id = $post_id";
+            $update_sql = "UPDATE blog_posts SET content = '" . pg_escape_string($con, $updated_content) . "' WHERE id = $return_post_id";
             pg_query($con, $update_sql);
         }
     }
 
     // Update tags in blog_tags table
-    // First, remove existing tags
-    $delete_tags_sql = "DELETE FROM blog_post_tags WHERE post_id = $post_id";
+    // First, remove existing tags (only for the specific post ID)
+    $delete_tags_sql = "DELETE FROM blog_post_tags WHERE post_id = $return_post_id";
     pg_query($con, $delete_tags_sql);
-    
+
     // Add new tags
     if (!empty($tags)) {
         foreach ($tags as $tag_name) {
             $tag_name_clean = strtolower(trim($tag_name));
             $tag_name_escaped = pg_escape_string($con, $tag_name_clean);
+            $tag_slug = str_replace(' ', '-', $tag_name_clean);
+            $tag_slug_escaped = pg_escape_string($con, $tag_slug);
 
-            // Check if tag exists
-            $tag_check = pg_query($con, "SELECT id FROM blog_tags WHERE name = '$tag_name_escaped'");
+            // Check if tag exists by SLUG (unique constraint is on slug)
+            $tag_check = pg_query($con, "SELECT id FROM blog_tags WHERE slug = '$tag_slug_escaped' LIMIT 1");
             if ($tag_check && pg_num_rows($tag_check) > 0) {
+                // Tag exists, use existing ID
                 $tag_row = pg_fetch_assoc($tag_check);
                 $tag_id = $tag_row['id'];
             } else {
-                // Create new tag
-                $tag_slug = str_replace(' ', '-', $tag_name_clean);
-                $tag_slug_escaped = pg_escape_string($con, $tag_slug);
-                $tag_insert = pg_query($con, "INSERT INTO blog_tags (name, slug) VALUES ('$tag_name_escaped', '$tag_slug_escaped') RETURNING id");
-                if ($tag_insert) {
+                // Tag doesn't exist, create it with ON CONFLICT handling
+                $tag_insert = pg_query(
+                    $con,
+                    "INSERT INTO blog_tags (name, slug) 
+                     VALUES ('$tag_name_escaped', '$tag_slug_escaped') 
+                     ON CONFLICT (slug) DO NOTHING 
+                     RETURNING id"
+                );
+
+                if ($tag_insert && pg_num_rows($tag_insert) > 0) {
+                    // Tag was created successfully
                     $tag_row = pg_fetch_assoc($tag_insert);
                     $tag_id = $tag_row['id'];
                 } else {
-                    $tag_id = null;
+                    // Insert failed, try to get existing tag
+                    $tag_check = pg_query($con, "SELECT id FROM blog_tags WHERE slug = '$tag_slug_escaped' LIMIT 1");
+                    if ($tag_check && pg_num_rows($tag_check) > 0) {
+                        $tag_row = pg_fetch_assoc($tag_check);
+                        $tag_id = $tag_row['id'];
+                    } else {
+                        // Can't find or create tag, skip it
+                        error_log("Failed to create/find tag: '$tag_name_clean' with slug: '$tag_slug'");
+                        continue;
+                    }
                 }
             }
 
             // Link tag to post
-            if ($tag_id) {
-                $link_sql = "INSERT INTO blog_post_tags (post_id, tag_id) VALUES ($post_id, $tag_id)";
+            if (!empty($tag_id)) {
+                $link_sql = "INSERT INTO blog_post_tags (post_id, tag_id) VALUES ($return_post_id, $tag_id)";
                 pg_query($con, $link_sql);
             }
         }
@@ -206,9 +279,10 @@ if ($result) {
 
     echo json_encode([
         'success' => true,
-        'message' => 'Blog post updated successfully',
-        'post_id' => $post_id,
-        'slug' => $slug
+        'message' => $message,
+        'post_id' => $return_post_id,
+        'slug' => $return_slug,
+        'is_revision' => $is_revision
     ]);
 } else {
     $error = pg_last_error($con);
@@ -299,4 +373,3 @@ function processContentImages($content, $post_id)
 
     return $content;
 }
-?>
