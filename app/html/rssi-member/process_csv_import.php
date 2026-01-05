@@ -233,8 +233,6 @@ try {
             $amount = str_replace(',', '', $record['amount']);
             if (!is_numeric($amount)) {
                 $validationErrors[] = "Amount '{$record['amount']}' is not a valid number";
-            } elseif ($amount <= 0) {
-                $validationErrors[] = "Amount must be greater than 0";
             } else {
                 $record['amount'] = number_format($amount, 2, '.', '');
             }

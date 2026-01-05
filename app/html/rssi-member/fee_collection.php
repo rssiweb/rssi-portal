@@ -144,7 +144,7 @@ if ($hasFilters) {
 
         // Get student-specific fees with details
         $studentSpecificDetails = [];
-        $studentSpecificQuery = "SELECT fc.category_name, ssf.amount 
+        $studentSpecificQuery = "SELECT fc.category_name, ssf.amount, ssf.remarks 
                             FROM student_specific_fees ssf
                             JOIN fee_categories fc ON ssf.category_id = fc.id
                             WHERE ssf.student_id = '{$student['student_id']}'
@@ -157,7 +157,8 @@ if ($hasFilters) {
             $studentSpecificTotal += $fee['amount'];
             $studentSpecificDetails[] = [
                 'category' => $fee['category_name'],
-                'amount' => $fee['amount']
+                'amount' => $fee['amount'],
+                'remarks' => $fee['remarks']
             ];
         }
 
@@ -759,7 +760,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                     $studentSpecific = $student['student_specific_fees'] ?? 0;
                                                                     $totalMisc = $standardMisc + $studentSpecific;
 
-                                                                    if ($totalMisc > 0) {
+                                                                    if ($totalMisc !== 0) {
                                                                         echo '₹' . number_format($totalMisc, 2);
 
                                                                         // Build tooltip content as array
@@ -771,11 +772,19 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                         }
 
                                                                         // Add student-specific details if exists
-                                                                        if ($studentSpecific > 0 && !empty($student['student_specific_details'])) {
+                                                                        if ($studentSpecific !== 0 && !empty($student['student_specific_details'])) {
                                                                             $tooltipLines[] = 'Student-specific:';
+
                                                                             foreach ($student['student_specific_details'] as $detail) {
-                                                                                $tooltipLines[] = '• ' . htmlspecialchars($detail['category']) . ': ₹' .
+                                                                                $line = '• ' . htmlspecialchars($detail['category']) . ': ₹' .
                                                                                     number_format($detail['amount'], 2);
+
+                                                                                // Add remarks if present
+                                                                                if (!empty($detail['remarks'])) {
+                                                                                    $line .= ' (' . htmlspecialchars($detail['remarks']) . ')';
+                                                                                }
+
+                                                                                $tooltipLines[] = $line;
                                                                             }
                                                                         }
 
