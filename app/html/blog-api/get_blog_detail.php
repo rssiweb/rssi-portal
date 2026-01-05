@@ -113,6 +113,7 @@ $relatedResult = pg_query_params($con, $relatedSql, [$post['category'], $post['i
 
 $related_posts = [];
 while ($related = pg_fetch_assoc($relatedResult)) {
+    $related['featured_image'] = processImageUrl($related['featured_image']) ?? null;
     $related_posts[] = $related;
 }
 
