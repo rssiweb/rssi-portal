@@ -54,14 +54,15 @@ if ($countResult) {
 $posts = [];
 if ($total > 0) {
     $postSql = "SELECT 
-                    id, title, slug, excerpt, content, 
+                    b.id, title, slug, excerpt, content, 
                     featured_image, category, tags, 
-                    author_name, author_photo,
+                    u.name AS author_name, u.profile_picture AS author_photo,
                     views, reading_time,
-                    created_at, published_at
-                FROM blog_posts 
+                    b.created_at, published_at
+                FROM blog_posts b
+                LEFT JOIN blog_users u ON b.author_id = u.id
                 $where 
-                ORDER BY COALESCE(published_at, created_at) DESC 
+                ORDER BY COALESCE(published_at, b.created_at) DESC 
                 LIMIT $" . ($paramCount + 1) . " OFFSET $" . ($paramCount + 2);
     
     $postParams = $params;

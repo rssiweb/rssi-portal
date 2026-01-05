@@ -20,7 +20,8 @@ $where = $id ? "id = $1" : "slug = $1";
 $param = $id ? [$id] : [$slug];
 
 // Get post
-$sql = "SELECT * FROM blog_posts WHERE $where AND status = 'published'";
+$sql = "SELECT *, u.name AS author_name, u.profile_picture AS author_photo FROM blog_posts b
+LEFT JOIN blog_users u ON b.author_id = u.id WHERE $where AND status = 'published'";
 $result = pg_query_params($con, $sql, $param);
 
 if (!$result || pg_num_rows($result) === 0) {
