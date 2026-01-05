@@ -11,8 +11,6 @@ $post_id = (int)$_POST['post_id'];
 $parent_id = isset($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
 $content = trim($_POST['content']);
 $user_id = $_SESSION['user_id'] ?? $_POST['user_id'];
-$user_name = $_SESSION['user_name'] ?? $_POST['user_name'];
-$user_email = $_SESSION['user_email'] ?? $_POST['user_email'];
 
 if (!$post_id || empty($content) || !$user_id) {
     echo json_encode(['success' => false, 'message' => 'Missing parameters']);
@@ -22,17 +20,43 @@ if (!$post_id || empty($content) || !$user_id) {
 // Clean content
 $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
 
-$sql = "INSERT INTO blog_comments 
-        (post_id, parent_id, user_id, user_name, user_email, content, status)
-        VALUES ($1, $2, $3, $4, $5, $6, 'approved')
-        RETURNING id, post_id, parent_id, user_id, user_name, user_email, content, status, created_at";
+$sql = "WITH inserted_comment AS (
+    INSERT INTO blog_comments (
+        post_id,
+        parent_id,
+        user_id,
+        content,
+        status
+    )
+    VALUES ($1, $2, $3, $4, 'approved')
+    RETURNING
+        id,
+        post_id,
+        parent_id,
+        user_id,
+        content,
+        status,
+        created_at
+)
+SELECT
+    ic.id,
+    ic.post_id,
+    ic.parent_id,
+    ic.user_id,
+    u.name  AS user_name,
+    u.email AS user_email,
+    ic.content,
+    ic.status,
+    ic.created_at
+FROM inserted_comment ic
+LEFT JOIN blog_users u
+    ON u.id = ic.user_id;
+";
 
 $result = pg_query_params($con, $sql, [
     $post_id,
     $parent_id,
     $user_id,
-    $user_name,
-    $user_email,
     $content
 ]);
 
