@@ -20,7 +20,7 @@ $where = $id ? "id = $1" : "slug = $1";
 $param = $id ? [$id] : [$slug];
 
 // Get post
-$sql = "SELECT *, u.name AS author_name, u.profile_picture AS author_photo FROM blog_posts b
+$sql = "SELECT *, b.id, u.name AS author_name, u.profile_picture AS author_photo FROM blog_posts b
 LEFT JOIN blog_users u ON b.author_id = u.id WHERE $where AND status = 'published'";
 $result = pg_query_params($con, $sql, $param);
 
@@ -52,7 +52,8 @@ foreach ($body->childNodes as $child) {
 $post['content'] = $innerHTML;
 
 // Add reading time calculation in your PHP:
-function calculateReadingTime($content) {
+function calculateReadingTime($content)
+{
     $word_count = str_word_count(strip_tags($content));
     $reading_time = ceil($word_count / 200); // 200 words per minute
     return $reading_time;
