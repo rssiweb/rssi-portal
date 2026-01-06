@@ -60,7 +60,7 @@ if ($total > 0) {
                     views, reading_time,
                     bp.created_at, published_at
                 FROM blog_posts bp
-                LEFT JOIN blog_users u ON bp.author_id = bu.id
+                LEFT JOIN blog_users bu ON bp.author_id = bu.id
                 $where 
                 ORDER BY COALESCE(published_at, bp.created_at) DESC 
                 LIMIT $" . ($paramCount + 1) . " OFFSET $" . ($paramCount + 2);
