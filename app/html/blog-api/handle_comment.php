@@ -43,14 +43,14 @@ SELECT
     ic.post_id,
     ic.parent_id,
     ic.user_id,
-    u.name  AS user_name,
-    u.email AS user_email,
+    bu.name  AS user_name,
+    bu.email AS user_email,
     ic.content,
     ic.status,
     ic.created_at
 FROM inserted_comment ic
-LEFT JOIN blog_users u
-    ON u.id = ic.user_id;
+LEFT JOIN blog_users bu
+    ON bu.id = ic.user_id;
 ";
 
 $result = pg_query_params($con, $sql, [

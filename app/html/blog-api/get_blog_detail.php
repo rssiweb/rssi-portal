@@ -20,8 +20,8 @@ $where = $id ? "id = $1" : "slug = $1";
 $param = $id ? [$id] : [$slug];
 
 // Get post
-$sql = "SELECT *, b.id, u.name AS author_name, u.profile_picture AS author_photo FROM blog_posts b
-LEFT JOIN blog_users u ON b.author_id = u.id WHERE $where AND status = 'published'";
+$sql = "SELECT *, bp.id, bu.name AS author_name, bu.profile_picture AS author_photo FROM blog_posts bp
+LEFT JOIN blog_users bu ON bp.author_id = bu.id WHERE $where AND status = 'published'";
 $result = pg_query_params($con, $sql, $param);
 
 if (!$result || pg_num_rows($result) === 0) {
@@ -78,21 +78,21 @@ $likeResult = pg_query_params($con, $likeSql, [$post['id']]);
 $likes = pg_fetch_assoc($likeResult);
 
 // Get comments
-$commentSql = "SELECT c.*, u.name AS user_name, u.profile_picture AS user_photo,
-                      (SELECT COUNT(*) FROM blog_comments WHERE parent_id = c.id) as replies_count
-               FROM blog_comments c 
-               LEFT JOIN blog_users u ON c.user_id = u.id
-               WHERE c.post_id = $1 AND c.status = 'approved' AND c.parent_id IS NULL
-               ORDER BY c.created_at DESC";
+$commentSql = "SELECT bc.*, bu.name AS user_name, bu.profile_picture AS user_photo,
+                      (SELECT COUNT(*) FROM blog_comments WHERE parent_id = bc.id) as replies_count
+               FROM blog_comments bc 
+               LEFT JOIN blog_users bu ON bc.user_id = bu.id
+               WHERE bc.post_id = $1 AND bc.status = 'approved' AND bc.parent_id IS NULL
+               ORDER BY bc.created_at DESC";
 $commentResult = pg_query_params($con, $commentSql, [$post['id']]);
 
 $comments = [];
 while ($comment = pg_fetch_assoc($commentResult)) {
     // Get replies
-    $replySql = "SELECT *, u.name AS user_name, u.profile_picture AS user_photo FROM blog_comments c
-                 LEFT JOIN blog_users u ON c.user_id = u.id
+    $replySql = "SELECT *, bu.name AS user_name, bu.profile_picture AS user_photo FROM blog_comments bc
+                 LEFT JOIN blog_users bu ON bc.user_id = bu.id
                  WHERE parent_id = $1 AND status = 'approved'
-                 ORDER BY c.created_at ASC";
+                 ORDER BY bc.created_at ASC";
     $replyResult = pg_query_params($con, $replySql, [$comment['id']]);
 
     $replies = [];

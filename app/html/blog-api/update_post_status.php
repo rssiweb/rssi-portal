@@ -35,30 +35,30 @@ try {
     // First, verify the post belongs to the user
     $verify_sql = "SELECT bp.id 
                    FROM blog_posts bp
-                   INNER JOIN blog_users bu ON bu.email = bp.author_email
-                   WHERE bp.id = $post_id AND bu.google_id = '$user_id'";
-    
+                   INNER JOIN blog_users bu ON bu.id = bp.author_id
+                   WHERE bp.id = $post_id AND bu.id = '$user_id'";
+
     $verify_result = pg_query($con, $verify_sql);
-    
+
     if (!$verify_result || pg_num_rows($verify_result) === 0) {
         echo json_encode(['success' => false, 'message' => 'Post not found or unauthorized']);
         exit;
     }
-    
+
     // Update post status
     $update_sql = "UPDATE blog_posts 
                    SET status = '$status', 
                        updated_at = NOW()";
-    
+
     // If publishing, set publish date
     if ($status === 'published') {
         $update_sql .= ", published_at = NOW()";
     }
-    
+
     $update_sql .= " WHERE id = $post_id";
-    
+
     $update_result = pg_query($con, $update_sql);
-    
+
     if ($update_result) {
         echo json_encode([
             'success' => true,
@@ -67,7 +67,6 @@ try {
     } else {
         throw new Exception('Update failed: ' . pg_last_error($con));
     }
-    
 } catch (Exception $e) {
     error_log("Error in update_post_status.php: " . $e->getMessage());
     echo json_encode([
@@ -75,4 +74,3 @@ try {
         'message' => 'Error updating post: ' . $e->getMessage()
     ]);
 }
-?>

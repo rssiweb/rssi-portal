@@ -54,23 +54,23 @@ if ($countResult) {
 $posts = [];
 if ($total > 0) {
     $postSql = "SELECT 
-                    b.id, title, slug, excerpt, content, 
+                    bp.id, title, slug, excerpt, content, 
                     featured_image, category, tags, 
-                    u.name AS author_name, u.profile_picture AS author_photo,
+                    bu.name AS author_name, bu.profile_picture AS author_photo,
                     views, reading_time,
-                    b.created_at, published_at
-                FROM blog_posts b
-                LEFT JOIN blog_users u ON b.author_id = u.id
+                    bp.created_at, published_at
+                FROM blog_posts bp
+                LEFT JOIN blog_users u ON bp.author_id = bu.id
                 $where 
-                ORDER BY COALESCE(published_at, b.created_at) DESC 
+                ORDER BY COALESCE(published_at, bp.created_at) DESC 
                 LIMIT $" . ($paramCount + 1) . " OFFSET $" . ($paramCount + 2);
-    
+
     $postParams = $params;
     $postParams[] = $limit;
     $postParams[] = $offset;
-    
+
     $result = pg_query_params($con, $postSql, $postParams);
-    
+
     if ($result) {
         while ($row = pg_fetch_assoc($result)) {
             // Ensure proper data types
@@ -79,13 +79,13 @@ if ($total > 0) {
             $row['reading_time'] = (int)($row['reading_time'] ?? 5);
             $row['featured_image'] = processImageUrl($row['featured_image']) ?? null;
             $row['author_photo'] = processImageUrl($row['author_photo']) ?? null;
-            
+
             // Handle tags
             if (!empty($row['tags']) && !is_array($row['tags'])) {
                 $row['tags'] = json_decode($row['tags'], true) ?? [];
             }
             $row['tags'] = $row['tags'] ?? [];
-            
+
             // Get likes count
             $likeCount = 0;
             $likeSql = "SELECT COUNT(*) as like_count FROM blog_likes WHERE post_id = " . $row['id'];
@@ -93,7 +93,7 @@ if ($total > 0) {
             if ($likeResult && $likeData = pg_fetch_assoc($likeResult)) {
                 $likeCount = (int)$likeData['like_count'];
             }
-            
+
             // Get comments count
             $commentCount = 0;
             $commentSql = "SELECT COUNT(*) as comment_count FROM blog_comments WHERE post_id = " . $row['id'] . " AND status = 'approved'";
@@ -101,22 +101,22 @@ if ($total > 0) {
             if ($commentResult && $commentData = pg_fetch_assoc($commentResult)) {
                 $commentCount = (int)$commentData['comment_count'];
             }
-            
+
             // Format dates
             $row['like_count'] = $likeCount;
             $row['comment_count'] = $commentCount;
             $row['created_at_formatted'] = date('F j, Y', strtotime($row['created_at']));
-            
+
             // Handle featured image - add default if missing
             if (empty($row['featured_image']) || $row['featured_image'] == 'null') {
                 $row['featured_image'] = 'https://via.placeholder.com/400x250/e3f2fd/2c3e50?text=RSSI+BLOG';
             }
-            
+
             // Create excerpt if missing
             if (empty($row['excerpt'])) {
                 $row['excerpt'] = strip_tags(substr($row['content'] ?? '', 0, 150)) . '...';
             }
-            
+
             $posts[] = $row;
         }
     }
@@ -157,7 +157,7 @@ if ($tagResult) {
         }
         $tagCounts[$tagName]++;
     }
-    
+
     foreach ($tagCounts as $name => $count) {
         $tags[] = [
             'name' => $name,
@@ -194,4 +194,3 @@ if (isset($_GET['debug'])) {
 
 // Send response
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-?>

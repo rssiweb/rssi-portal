@@ -31,12 +31,12 @@ try {
 
     // Get post data
     $sql = "SELECT 
-                b.id, title, slug, excerpt, content, featured_image, 
-                category, tags, u.name AS author_name, u.profile_picture AS author_photo, u.email AS author_email,
-                reading_time, status, views, b.created_at, published_at
-            FROM blog_posts b
-            LEFT JOIN blog_users u ON b.author_id = u.id
-            WHERE b.id = $post_id AND author_id = '$user_id'
+                bp.id, title, slug, excerpt, content, featured_image, 
+                category, tags, bu.name AS author_name, bu.profile_picture AS author_photo, bu.email AS author_email,
+                reading_time, status, views, bp.created_at, published_at
+            FROM blog_posts bp
+            LEFT JOIN blog_users bu ON bp.author_id = bu.id
+            WHERE bp.id = $post_id AND author_id = '$user_id'
             LIMIT 1";
 
     error_log("Getting post query: " . $sql);
