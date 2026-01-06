@@ -30,7 +30,7 @@ try {
     // Get posts by author_email
     $sql = "SELECT 
                 bp.id, title, slug, excerpt, category, status, 
-                views, bp.created_at, published_at,
+                views, bp.created_at, published_at, rejection_reason, is_rejected,
                 COALESCE(featured_image, '') as featured_image,
                 bu.name as author_name,
             bu.email as author_email,
@@ -69,6 +69,8 @@ try {
             'author_name' => $row['author_name'],
             'author_email' => $row['author_email'],
             'author_photo' => $row['author_photo'],
+            'rejection_reason' => $row['rejection_reason'],
+            'is_rejected' => $row['is_rejected'],
         ];
     }
 

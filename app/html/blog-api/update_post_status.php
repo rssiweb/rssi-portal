@@ -47,7 +47,8 @@ try {
 
     // Update post status
     $update_sql = "UPDATE blog_posts 
-                   SET status = '$status', 
+                   SET status = '$status',
+                   is_rejected = false, 
                        updated_at = NOW()";
 
     // If publishing, set publish date

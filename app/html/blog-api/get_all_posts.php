@@ -88,7 +88,9 @@ try {
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at'],
             'published_at' => $row['published_at'],
-            'published_by' => $row['published_by']
+            'published_by' => $row['published_by'],
+            'rejection_reason' => $row['rejection_reason'],
+            'is_rejected' => $row['is_rejected'],
         ];
         
         // Calculate a default reading time if not set

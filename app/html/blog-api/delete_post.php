@@ -27,7 +27,7 @@ try {
     // First, verify the post belongs to the user
     $verify_sql = "SELECT bp.id 
                    FROM blog_posts bp
-                   INNER JOIN blog_users bu ON bu.email = bp.author_email
+                   INNER JOIN blog_users bu ON bu.id = bp.author_id
                    WHERE bp.id = $post_id AND bu.id = '$user_id'";
     
     $verify_result = pg_query($con, $verify_sql);
