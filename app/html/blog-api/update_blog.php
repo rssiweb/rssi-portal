@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/drive.php");
+include(__DIR__ . "/../proxy_to_drive_image.php"); // Add this line
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -62,18 +63,30 @@ $category = pg_escape_string($con, $data['category']);
 $status = !empty($data['status']) ? pg_escape_string($con, $data['status']) : 'draft';
 $reading_time = !empty($data['reading_time']) ? (int)$data['reading_time'] : 5;
 
-// Handle featured image
+// ==================== HANDLE IMAGES ====================
+
+// Handle featured image - convert proxy URLs to Drive URLs
 $featured_image = null;
 if (!empty($data['featured_image'])) {
     if (strpos($data['featured_image'], 'data:image') === 0) {
+        // It's a base64 image, upload to Drive
         $image_url = uploadBase64ImageToDrive($data['featured_image'], 'blog_featured_' . time());
         if ($image_url) {
             $featured_image = $image_url;
         }
     } else {
-        $featured_image = pg_escape_string($con, $data['featured_image']);
+        // It's a URL, check if it's a proxy URL and convert to Drive URL
+        $featured_image = convertProxyToDriveUrl($data['featured_image']);
+        $featured_image = pg_escape_string($con, $featured_image);
     }
 }
+
+// Handle content - convert all proxy image URLs to Drive URLs
+$content = !empty($data['content']) ? $data['content'] : '';
+// First convert proxy URLs to Drive URLs
+$content = processProxyImagesInContent($content);
+// Then escape for database
+$content = pg_escape_string($con, $content);
 
 // Handle author details - UPDATE BLOG_USERS if changed
 $new_name = !empty($data['author_name']) ? pg_escape_string($con, $data['author_name']) : $current_name;
