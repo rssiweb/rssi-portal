@@ -29,10 +29,15 @@ try {
 
     // Get posts by author_email
     $sql = "SELECT 
-                id, title, slug, excerpt, category, status, 
-                views, created_at, published_at,
-                COALESCE(featured_image, '') as featured_image
-            FROM blog_posts 
+                bp.id, title, slug, excerpt, category, status, 
+                views, bp.created_at, published_at,
+                COALESCE(featured_image, '') as featured_image,
+                bu.name as author_name,
+            bu.email as author_email,
+            bu.profile_picture as author_photo,
+            bu.id as author_id
+            FROM blog_posts bp
+            LEFT JOIN blog_users bu ON bp.author_id = bu.id 
             WHERE author_id = '$user_id'
             ORDER BY 
                 CASE status 
@@ -40,7 +45,7 @@ try {
                     WHEN 'pending' THEN 2
                     WHEN 'draft' THEN 3
                 END,
-                created_at DESC";
+                bp.created_at DESC";
 
     $result = pg_query($con, $sql);
 
@@ -60,7 +65,10 @@ try {
             'views' => (int)$row['views'],
             'created_at' => $row['created_at'],
             'published_at' => $row['published_at'],
-            'featured_image' => $row['featured_image']
+            'featured_image' => $row['featured_image'],
+            'author_name' => $row['author_name'],
+            'author_email' => $row['author_email'],
+            'author_photo' => $row['author_photo'],
         ];
     }
 
