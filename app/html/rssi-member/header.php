@@ -649,7 +649,7 @@
       </li>
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#gps" data-bs-toggle="collapse" href="#">
-          <span>Global Procurement System (GPS)</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>GPS</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="gps" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -658,13 +658,8 @@
             </a>
           </li>
           <li>
-            <a id="scan-asset" href="scan-asset.php">
-              <span>Asset Verification</span>
-            </a>
-          </li>
-          <li>
-            <a id="asset_verification_report" href="asset_verification_report.php">
-              <span>Asset Verification Status</span>
+            <a id="asset-management" href="asset-management.php">
+              <span>Asset Management</span>
             </a>
           </li>
         </ul>
@@ -1027,23 +1022,27 @@
         url: 'gps.php'
       }, {
         id: 'gps',
-        linkId: 'scan-asset',
+        linkId: 'asset-management',
         url: 'scan-asset.php'
       }, {
         id: 'gps',
-        linkId: 'admin_change_requests',
+        linkId: 'asset-management',
         url: 'admin_change_requests.php'
       }, {
         id: 'gps',
-        linkId: 'get_request_details',
+        linkId: 'asset-management',
         url: 'get_request_details.php'
+      }, {
+        id: 'gps',
+        linkId: 'asset-management',
+        url: 'asset-management.php'
       }, {
         id: 'gps',
         linkId: 'gps',
         url: 'gps_history.php'
       }, {
         id: 'gps',
-        linkId: 'asset_verification_report',
+        linkId: 'asset-management',
         url: 'asset_verification_report.php'
       },
       {

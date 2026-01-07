@@ -253,7 +253,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     <title>
         <?php
         echo ($role === 'Admin')
-            ? 'GPS (Global Procurement System)'
+            ? 'GPS'
             : 'My Assets';
         ?>
     </title>

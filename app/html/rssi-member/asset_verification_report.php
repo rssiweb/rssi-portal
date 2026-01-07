@@ -19,36 +19,51 @@ $date_to = $_GET['date_to'] ?? '';
 
 // Build query based on filters
 $whereClauses = [];
+$statsWhereClauses = []; // Separate for stats query
 $params = [];
+$statsParams = []; // Separate params for stats query
 $paramCount = 1;
+$statsParamCount = 1;
 
 if (!empty($asset_id)) {
     $whereClauses[] = "g.itemid ILIKE $" . $paramCount;
+    $statsWhereClauses[] = "v.asset_id ILIKE $" . $statsParamCount;
     $params[] = "%$asset_id%";
+    $statsParams[] = "%$asset_id%";
     $paramCount++;
+    $statsParamCount++;
 }
 
 if ($search_type !== 'all') {
     if ($search_type === 'verified') {
         $whereClauses[] = "v.verification_status = 'verified'";
+        $statsWhereClauses[] = "v.verification_status = 'verified'";
     } elseif ($search_type === 'pending') {
         $whereClauses[] = "v.admin_review_status = 'pending'";
+        $statsWhereClauses[] = "v.admin_review_status = 'pending'";
     } elseif ($search_type === 'discrepancies') {
         $whereClauses[] = "v.verification_status LIKE 'discrepancy_%'";
+        $statsWhereClauses[] = "v.verification_status LIKE 'discrepancy_%'";
     }
 }
 
 if (!empty($date_from)) {
     $whereClauses[] = "v.verification_date >= $" . $paramCount;
+    $statsWhereClauses[] = "v.verification_date >= $" . $statsParamCount;
     $params[] = $date_from;
+    $statsParams[] = $date_from;
     $paramCount++;
+    $statsParamCount++;
 }
 
 if (!empty($date_to)) {
     // Include the entire day (up to 23:59:59.999)
     $whereClauses[] = "v.verification_date <= $" . $paramCount;
+    $statsWhereClauses[] = "v.verification_date <= $" . $statsParamCount;
     $params[] = $date_to . ' 23:59:59.999';
+    $statsParams[] = $date_to . ' 23:59:59.999';
     $paramCount++;
+    $statsParamCount++;
 }
 
 // Main query for verification records
@@ -79,11 +94,7 @@ if (!empty($whereClauses)) {
 
 $query .= " ORDER BY v.verification_date DESC LIMIT 100";
 
-// Debug: Log the query and parameters
-error_log("Query: " . $query);
-error_log("Params: " . print_r($params, true));
-
-// Execute query
+// Execute main query
 if (!empty($params)) {
     $result = pg_query_params($con, $query, $params);
 } else {
@@ -94,13 +105,12 @@ if (!empty($params)) {
 if (!$result) {
     $error = pg_last_error($con);
     error_log("Database error: " . $error);
-    // You might want to display a user-friendly error or log it
     $resultArr = [];
 } else {
     $resultArr = pg_fetch_all($result) ?: [];
 }
 
-// Get statistics
+// Get statistics with same filters
 $statsQuery = "SELECT 
                 COUNT(*) as total_verifications,
                 SUM(CASE WHEN verification_status = 'verified' THEN 1 ELSE 0 END) as verified_count,
@@ -108,9 +118,59 @@ $statsQuery = "SELECT
                 SUM(CASE WHEN verification_status LIKE 'discrepancy_%' AND admin_review_status = 'pending' THEN 1 ELSE 0 END) as pending_discrepancies,
                 SUM(CASE WHEN admin_review_status = 'approved' THEN 1 ELSE 0 END) as approved_count,
                 SUM(CASE WHEN admin_review_status = 'rejected' THEN 1 ELSE 0 END) as rejected_count
-               FROM gps_verifications";
-$statsResult = pg_query($con, $statsQuery);
-$stats = pg_fetch_assoc($statsResult);
+               FROM gps_verifications v";
+
+// Apply the same filters to stats query
+if (!empty($statsWhereClauses)) {
+    $statsQuery .= " WHERE " . implode(" AND ", $statsWhereClauses);
+}
+
+// Execute stats query with parameters
+if (!empty($statsParams)) {
+    $statsResult = pg_query_params($con, $statsQuery, $statsParams);
+} else {
+    $statsResult = pg_query($con, $statsQuery);
+}
+
+if (!$statsResult) {
+    $error = pg_last_error($con);
+    error_log("Stats query error: " . $error);
+    // Initialize empty stats
+    $stats = [
+        'total_verifications' => 0,
+        'verified_count' => 0,
+        'pending_updates' => 0,
+        'pending_discrepancies' => 0,
+        'approved_count' => 0,
+        'rejected_count' => 0
+    ];
+} else {
+    $stats = pg_fetch_assoc($statsResult);
+    // Handle NULL values from SUM() when no records match
+    if ($stats) {
+        foreach ($stats as $key => $value) {
+            if ($value === null) {
+                $stats[$key] = 0;
+            }
+        }
+    } else {
+        $stats = [
+            'total_verifications' => 0,
+            'verified_count' => 0,
+            'pending_updates' => 0,
+            'pending_discrepancies' => 0,
+            'approved_count' => 0,
+            'rejected_count' => 0
+        ];
+    }
+}
+
+// Debug: Log for testing
+error_log("Main query: " . $query);
+error_log("Main params: " . print_r($params, true));
+error_log("Stats query: " . $statsQuery);
+error_log("Stats params: " . print_r($statsParams, true));
+error_log("Stats result: " . print_r($stats, true));
 ?>
 
 <!doctype html>
@@ -899,8 +959,8 @@ $stats = pg_fetch_assoc($statsResult);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
