@@ -164,7 +164,7 @@ if (is_array($resultArr) && count($resultArr) > 0) {
 <body>
     <div class="container-lg">
         <!-- Search and print section (Not visible in print preview) -->
-        <form action="donation_invoice.php" method="get">
+        <form action="donation_invoice.php" method="get" class="mt-3">
             <div class="row mb-3 search-print-section">
                 <div class="col-md-3">
                     <input type="text" class="form-control" id="searchField" name="searchField" placeholder="Donation reference ID" value="<?php echo $searchField ?>">
@@ -213,7 +213,7 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                             <h4>Bill to</h4>
                             <p><?php echo $array['fullname'] ?><br>
                                 <?php echo $array['postaladdress'] ?><br>
-                                <?php echo $array['documenttype'] . ' - ' . str_repeat('X', max(0, strlen($array['nationalid']) - 4)) . substr($array['nationalid'], -4); ?><br>
+                                <?php echo $array['id_type'] . ' - ' . str_repeat('X', max(0, strlen($array['id_number']) - 4)) . substr($array['id_number'], -4); ?><br>
                                 <?php echo $array['tel'] ?><br>
                                 <?php echo $array['email'] ?></p>
                             <hr>
