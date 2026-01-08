@@ -261,7 +261,15 @@ if ($searchField !== '' || $fyear !== '') {
                           <td><?= $array['financial_year'] ?></td>
                           <td><?= $array['transactionid'] ?></td>
                           <td><?= $array['currency'] ?>&nbsp;<?= $array['amount'] ?></td>
-                          <td><?= $array['documenttype'] ?>/<?= $array['nationalid'] ?></td>
+                          <td>
+                            <?php if (!empty($array['nationalid'])): ?>
+                              <a href="<?= htmlspecialchars($array['nationalid']) ?>" target="_blank">
+                                <?= htmlspecialchars($array['id_type']) ?>
+                              </a>/<?= $array['id_number'] ?>
+                            <?php else: ?>
+                              <?= htmlspecialchars($array['id_type']) ?>/<?= $array['id_number'] ?>
+                            <?php endif; ?>
+                          </td>
                           <td>Online</td>
                           <td>
                             <?php if ($array['status'] === 'Approved'): ?>
@@ -487,8 +495,8 @@ if ($searchField !== '' || $fyear !== '') {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-  
+  <script src="../assets_new/js/main.js"></script>
+
   <script>
     $(document).ready(function() {
       // Check if resultArr is empty

@@ -702,12 +702,22 @@ if ($formtype == "donation_form") {
       $contactNumberNew = $_POST['contactNumberNew'];
       $idType = $_POST['idType'];
       $idNumber = $_POST['idNumber'];
-      $governmentId = $_POST['governmentId'];
+      $governmentId = $_FILES['governmentId'];
       $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
+
+      // This is for governmentId which will be require for new visitor
+
+      if (empty($_FILES['governmentId']['name'])) {
+        $doclink_governmentId = null;
+      } else {
+        $filename_governmentId = "doc_" . $fullName . "_" . time();
+        $parent_governmentId = '14NyXPZBNzetqMPr4i8Blf_wtItsSJ5eJ';
+        $doclink_governmentId = uploadeToDrive($governmentId, $parent_governmentId, $filename_governmentId);
+      }
 
       // Insert userdata
       $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, id_type, id_number, nationalid, postaladdress) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idType', '$idNumber', '$governmentId', '$postalAddress')";
+                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idType', '$idNumber', '$doclink_governmentId', '$postalAddress')";
       @$resultUserdata = pg_query($con, $userdataQuery);
 
       if ($resultUserdata) {
