@@ -700,13 +700,14 @@ if ($formtype == "donation_form") {
       $fullName = $_POST['fullName'];
       $email = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
-      $documentType = $_POST['documentType'];
-      $nationalId = $_POST['nationalId'];
+      $idType = $_POST['idType'];
+      $idNumber = $_POST['idNumber'];
+      $governmentId = $_POST['governmentId'];
       $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
 
       // Insert userdata
-      $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, documenttype, nationalid, postaladdress) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$documentType', '$nationalId', '$postalAddress')";
+      $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, id_type, id_number, nationalid, postaladdress) 
+                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idType', '$idNumber', '$governmentId', '$postalAddress')";
       @$resultUserdata = pg_query($con, $userdataQuery);
 
       if ($resultUserdata) {
@@ -1465,17 +1466,19 @@ if ($formtype == "visitor_form") {
       $fullName = $_POST['fullName'];
       $email = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
-      $nationalId = $_FILES['nationalId'];
+      $idType = $_POST['idType'];
+      $idNumber = $_POST['idNumber'];
+      $governmentId = $_FILES['governmentId'];
       $photo = $_FILES['photo'];
 
-      // This is for nationalId and photo which will be require for new visitor
+      // This is for governmentId and photo which will be require for new visitor
 
-      if (empty($_FILES['nationalId']['name'])) {
-        $doclink_nationalId = null;
+      if (empty($_FILES['governmentId']['name'])) {
+        $doclink_governmentId = null;
       } else {
-        $filename_nationalId = "doc_" . $fullName . "_" . time();
-        $parent_nationalId = '1sdu_dkdrRezOr6IdRMJOknFOSovz1qGP2zRg9Db5IyLIMtVxwWgy-Io8aV36B4uTx9-Gwg3W';
-        $doclink_nationalId = uploadeToDrive($nationalId, $parent_nationalId, $filename_nationalId);
+        $filename_governmentId = "doc_" . $fullName . "_" . time();
+        $parent_governmentId = '1sdu_dkdrRezOr6IdRMJOknFOSovz1qGP2zRg9Db5IyLIMtVxwWgy-Io8aV36B4uTx9-Gwg3W';
+        $doclink_governmentId = uploadeToDrive($governmentId, $parent_governmentId, $filename_governmentId);
       }
       if (empty($_FILES['photo']['name'])) {
         $doclink_photo = null;
@@ -1486,8 +1489,8 @@ if ($formtype == "visitor_form") {
       }
 
       // Insert userdata
-      $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, nationalid, photo) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$doclink_nationalId', '$doclink_photo')";
+      $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, id_type, id_number, nationalid, photo) 
+                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idType', '$idNumber', '$doclink_governmentId', '$doclink_photo')";
       @$resultUserdata = pg_query($con, $userdataQuery);
 
       if ($resultUserdata) {
