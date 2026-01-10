@@ -1600,7 +1600,49 @@ if ($formtype == "visitreviewform") {
 }
 
 if ($_POST['form-type'] == "contact_Form") {
-  // Retrieve form data
+
+  // =========== CAPTCHA VALIDATION ===========
+  // Check if CAPTCHA fields exist
+  if (!isset($_POST['captchaAnswer']) || !isset($_POST['captchaExpected'])) {
+    echo json_encode(array("error" => true, "errorMessage" => "Security verification failed. Please refresh and try again."));
+    exit;
+  }
+
+  $userAnswer = trim($_POST['captchaAnswer']);
+  $expectedAnswer = trim($_POST['captchaExpected']);
+
+  // Convert to integers for comparison
+  $userAnswerInt = intval($userAnswer);
+  $expectedAnswerInt = intval($expectedAnswer);
+
+  // Validate CAPTCHA answer
+  if ($userAnswerInt !== $expectedAnswerInt) {
+    echo json_encode(array("error" => true, "errorMessage" => "Incorrect verification answer. Please try again."));
+    exit;
+  }
+
+  // Honeypot check (if you added honeypot field)
+  if (isset($_POST['website']) && !empty(trim($_POST['website']))) {
+    // Silently fail for bots - don't give them feedback
+    echo json_encode(array("error" => true, "errorMessage" => ""));
+    exit;
+  }
+
+  // Optional: Time-based validation to prevent too fast submissions
+  if (isset($_POST['submission_time']) && isset($_POST['form_load_time'])) {
+    $formLoadTime = intval($_POST['form_load_time']);
+    $submissionTime = strtotime($_POST['submission_time']) * 1000; // Convert to milliseconds
+    $timeDiff = $submissionTime - $formLoadTime;
+
+    // If form was submitted in less than 3 seconds, likely a bot
+    if ($timeDiff < 3000) {
+      echo json_encode(array("error" => true, "errorMessage" => "Please take your time to fill the form properly."));
+      exit;
+    }
+  }
+  // =========== END CAPTCHA VALIDATION ===========
+
+  // Retrieve form data (existing code)
   $queryid = uniqid();
   $name = $_POST['name'];
   $email = $_POST['email'];
@@ -1630,6 +1672,7 @@ if ($_POST['form-type'] == "contact_Form") {
     // Query failed
     echo json_encode(array("error" => true, "errorMessage" => "Error occurred during form submission."));
   }
+
   if ($email != "") {
     sendEmail("contact_us_ack", array(
       "name" => $name,
@@ -1641,7 +1684,6 @@ if ($_POST['form-type'] == "contact_Form") {
     ), $email, true);
   }
 }
-
 
 // Ensure this is included in your script where the POST request is handled
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verify_signup") {
