@@ -763,10 +763,21 @@ $isFormDisabled = null;
                                                             <td>
                                                                 <label for="tech_interview_schedule">Schedule Technical Interview:</label>
                                                             </td>
-                                                            <td>
-                                                                <input type="datetime-local" class="form-control" id="tech_interview_schedule" name="tech_interview_schedule"
-                                                                    value="<?php echo htmlspecialchars($array['tech_interview_schedule'] ?? ''); ?>" <?php echo (!empty($array['tech_interview_schedule']) || $array['application_status'] != 'Identity Verification Completed') ? 'disabled' : ''; ?>>
-                                                                <small id="tech-help" class="form-text text-muted">Select the date and time for the technical interview.</small>
+                                                            <td class="d-flex align-items-center">
+                                                                <input type="datetime-local" class="form-control me-2" id="tech_interview_schedule" name="tech_interview_schedule"
+                                                                    value="<?php echo htmlspecialchars($array['tech_interview_schedule'] ?? ''); ?>"
+                                                                    <?php
+                                                                    // Disable if already scheduled or HR interview is scheduled
+                                                                    if (!empty($array['tech_interview_schedule']) || $array['application_status'] != 'Identity Verification Completed' || !empty($array['hr_interview_schedule'])) {
+                                                                        echo 'disabled';
+                                                                    }
+                                                                    ?>>
+                                                                <?php if ($array['application_status'] === 'Technical Interview Scheduled'): ?>
+                                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="enableField('tech_interview_schedule')">
+                                                                        <i class="bi bi-pencil-square"></i>
+                                                                    </button>
+                                                                    <small id="tech-help" class="form-text text-muted ms-2">Select the date and time for the technical interview.</small>
+                                                                <?php endif; ?>
                                                             </td>
                                                         </tr>
 
@@ -775,13 +786,19 @@ $isFormDisabled = null;
                                                             <td>
                                                                 <label for="hr_interview_schedule">Schedule HR Interview:</label>
                                                             </td>
-                                                            <td>
-                                                                <input type="datetime-local" class="form-control" id="hr_interview_schedule" name="hr_interview_schedule"
+                                                            <td class="d-flex align-items-center">
+                                                                <input type="datetime-local" class="form-control me-2" id="hr_interview_schedule" name="hr_interview_schedule"
                                                                     value="<?php echo htmlspecialchars($array['hr_interview_schedule'] ?? ''); ?>"
                                                                     <?php echo (!empty($array['hr_interview_schedule']) || $array['application_status'] != 'Technical Interview Completed') ? 'disabled' : ''; ?>>
-                                                                <small id="hr-help" class="form-text text-muted">Select the date and time for the HR interview.</small>
+                                                                <?php if ($array['application_status'] === 'HR Interview Scheduled'): ?>
+                                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="enableField('hr_interview_schedule')">
+                                                                        <i class="bi bi-pencil-square"></i>
+                                                                    </button>
+                                                                    <small id="hr-help" class="form-text text-muted ms-2">Select the date and time for the HR interview.</small>
+                                                                <?php endif; ?>
                                                             </td>
                                                         </tr>
+
                                                         <tr>
                                                             <td>
                                                                 <label for="no_show">No Show:</label>
@@ -852,7 +869,7 @@ $isFormDisabled = null;
                                                                     name="cancel_application"
                                                                     <?php
                                                                     // Enable checkbox only if the application is currently active
-                                                                    if ($array['is_active']===true) {
+                                                                    if ($array['is_active'] === 't') {
                                                                         // Active applications: checkbox unchecked by default
                                                                         echo '';
                                                                     } else {
@@ -993,6 +1010,15 @@ $isFormDisabled = null;
                 }
             });
         });
+    </script>
+    <script>
+        function enableField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = false;
+                field.focus();
+            }
+        }
     </script>
 </body>
 
