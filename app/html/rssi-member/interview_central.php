@@ -18,7 +18,7 @@ $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
 $query = "SELECT * FROM signup 
-          WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed')";
+          WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed') AND is_active=true";
           
 // Add filters based on user input
 $conditions = [];

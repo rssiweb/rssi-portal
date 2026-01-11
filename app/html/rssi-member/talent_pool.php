@@ -71,7 +71,7 @@ if (!empty($filter_application_number)) {
 }
 
 if (!empty($conditions)) {
-    $query .= " WHERE " . implode(" AND ", $conditions);
+    $query .= " WHERE is_active=true AND " . implode(" AND ", $conditions);
 }
 
 $query .= " ORDER BY timestamp DESC";

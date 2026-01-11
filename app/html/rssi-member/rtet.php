@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     if ($searchQuery) {
         // Fetch applicant details from the signup table
         $signupQuery = "SELECT applicant_name, application_number, email FROM signup 
-                        WHERE applicant_name ILIKE $1 OR application_number ILIKE $1 OR email ILIKE $1;";
+                        WHERE (applicant_name ILIKE $1 OR application_number ILIKE $1 OR email ILIKE $1) AND is_active=true;";
         $signupResult = pg_query_params($con, $signupQuery, ["%$searchQuery%"]);
 
         if ($signupResult && pg_num_rows($signupResult) > 0) {

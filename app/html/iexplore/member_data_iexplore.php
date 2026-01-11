@@ -18,7 +18,7 @@ if ($userData) {
     if ($user_type == 'rssi-member') {
         $extra_query = "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email = '$user_check'";
     } elseif ($user_type == 'tap') {
-        $extra_query = "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM signup WHERE email = '$user_check'";
+        $extra_query = "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM signup WHERE email = '$user_check'  AND is_active=true";
     } elseif ($user_type == 'iexplore') {
         $extra_query = "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM test_users WHERE email = '$user_check'";
     } else {
