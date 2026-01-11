@@ -11,7 +11,7 @@ if (!isset($_SESSION['tid'])) {
 $user_check = $_SESSION['tid'];
 
 // Step 1: Retrieve name and phone from rssimyaccount_members table
-$rssi_user_query = pg_query($con, "SELECT applicant_name, telephone FROM signup WHERE email='$user_check'");
+$rssi_user_query = pg_query($con, "SELECT applicant_name, telephone FROM signup WHERE email='$user_check' AND is_active=true");
 $rssi_user = pg_fetch_assoc($rssi_user_query);
 
 if ($rssi_user) {

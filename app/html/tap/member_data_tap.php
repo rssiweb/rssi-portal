@@ -3,7 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 $user_check = $_SESSION['tid'];
 $view_users_query = "SELECT * FROM signup
-WHERE email='$user_check'"; // Select query for viewing users.
+WHERE email='$user_check' AND is_active=true"; // Select query for viewing users.
 $run = pg_query($con, $view_users_query); // Execute the SQL query.
 
 while ($row = pg_fetch_assoc($run)) { // Fetch the result as an associative array.

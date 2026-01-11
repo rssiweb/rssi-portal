@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     // Check if the email exists in the database
     try {
         // Query to check if the email exists and fetch the user's name
-        $query = "SELECT applicant_name FROM signup WHERE email = $1";
+        $query = "SELECT applicant_name FROM signup WHERE email = $1 AND is_active=true";
         $stmt = pg_prepare($con, "check_email", $query);
         $result = pg_execute($con, "check_email", array($email));
 
