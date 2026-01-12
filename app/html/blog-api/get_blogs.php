@@ -13,6 +13,7 @@ $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 $category = isset($_GET['category']) ? pg_escape_string($con, $_GET['category']) : null;
 $tag = isset($_GET['tag']) ? pg_escape_string($con, $_GET['tag']) : null;
 $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : null;
+$is_featured = isset($_GET['is_featured']) ? pg_escape_string($con, $_GET['is_featured']) : null;
 
 // Build query
 $where = "WHERE status = 'published'";
@@ -23,6 +24,12 @@ if ($category) {
     $paramCount++;
     $where .= " AND category = $" . $paramCount;
     $params[] = $category;
+}
+
+if ($is_featured) {
+    $paramCount++;
+    $where .= " AND is_featured = $" . $paramCount;
+    $params[] = $is_featured;
 }
 
 if ($tag) {
