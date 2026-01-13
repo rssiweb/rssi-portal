@@ -1,50 +1,98 @@
 <?php
-require_once __DIR__ . "/bootstrap.php";
-include __DIR__ . "/image_functions.php";
+// ===============================
+// blog-meta.php
+// Server-rendered meta for social crawlers
+// ===============================
 
+// Validate slug
 $slug = $_GET['slug'] ?? '';
-if (!$slug) exit;
+if (!$slug) {
+    http_response_code(404);
+    exit;
+}
 
-$sql = "SELECT title, excerpt, featured_image, slug 
-        FROM blog_posts 
-        WHERE slug = $1 AND status = 'published' LIMIT 1";
+// Detect environment (same logic as JS)
+$isLocal = in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']);
 
-$result = pg_query_params($con, $sql, [$slug]);
-if (!$result || pg_num_rows($result) === 0) exit;
+$API_BASE = $isLocal
+    ? 'http://localhost:8082/blog-api/'
+    : 'https://login.rssi.in/blog-api/';
 
-$post = pg_fetch_assoc($result);
+// Build API URL
+$apiUrl = $API_BASE . 'get_blog_detail.php?slug=' . urlencode($slug);
 
-// Auto-generate meta
-$title = htmlspecialchars($post['title'] . " | RSSI NGO Blog");
+// Call API (cURL)
+$ch = curl_init($apiUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 5,
+    CURLOPT_FOLLOWLOCATION => true,
+]);
+$response = curl_exec($ch);
+curl_close($ch);
+
+// Decode response
+$data = json_decode($response, true);
+
+// Validate API response
+if (!$data || empty($data['success']) || empty($data['post'])) {
+    http_response_code(404);
+    exit;
+}
+
+$post = $data['post'];
+
+// Prepare meta values safely
+$title = htmlspecialchars($post['title'] ?? 'RSSI NGO Blog');
 $description = htmlspecialchars(
-    $post['excerpt'] ?: mb_substr(strip_tags($post['title']), 0, 160)
+    $post['excerpt']
+        ?? substr(strip_tags($post['content'] ?? ''), 0, 160)
+);
+$image = htmlspecialchars(
+    $post['featured_image']
+        ?? 'https://login.rssi.in/img/default-og-image.jpg'
 );
 
-$image = processImageUrl($post['featured_image']) 
-    ?: "https://rssi.in/img/default-og.jpg";
-
-$url = "https://rssi.in/blog/" . $post['slug'];
+// Canonical URL (main JS page)
+$canonicalUrl = (
+    $isLocal
+    ? 'http://localhost/blog-detail.html'
+    : 'https://login.rssi.in/blog-detail.html'
+) . '?slug=' . urlencode($slug);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title><?= $title ?></title>
+    <meta charset="utf-8">
 
-<meta name="description" content="<?= $description ?>">
+    <title><?= $title ?></title>
 
-<meta property="og:type" content="article">
-<meta property="og:title" content="<?= $title ?>">
-<meta property="og:description" content="<?= $description ?>">
-<meta property="og:image" content="<?= $image ?>">
-<meta property="og:url" content="<?= $url ?>">
+    <!-- Basic SEO -->
+    <meta name="description" content="<?= $description ?>">
+    <link rel="canonical" href="<?= $canonicalUrl ?>">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?= $title ?>">
-<meta name="twitter:description" content="<?= $description ?>">
-<meta name="twitter:image" content="<?= $image ?>">
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="<?= $title ?>">
+    <meta property="og:description" content="<?= $description ?>">
+    <meta property="og:image" content="<?= $image ?>">
+    <meta property="og:url" content="<?= $canonicalUrl ?>">
+    <meta property="og:site_name" content="RSSI NGO">
 
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= $title ?>">
+    <meta name="twitter:description" content="<?= $description ?>">
+    <meta name="twitter:image" content="<?= $image ?>">
+
+    <!-- Redirect humans to JS page -->
+    <meta http-equiv="refresh" content="0;url=<?= $canonicalUrl ?>">
+
+    <!-- Cache (recommended) -->
+    <meta http-equiv="Cache-Control" content="public, max-age=600">
 </head>
+
 <body></body>
+
 </html>
