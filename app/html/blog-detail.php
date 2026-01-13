@@ -12,10 +12,15 @@ if (!$slug) {
 
 // Fetch post
 $sql = "
-SELECT bp.*, bu.name AS author_name, bu.profile_picture AS author_photo
+SELECT 
+    bp.title,
+    bp.excerpt,
+    bp.content,
+    bp.featured_image,
+    bp.slug
 FROM blog_posts bp
-LEFT JOIN blog_users bu ON bp.author_id = bu.id
-WHERE bp.slug = $1 AND bp.status = 'published'
+WHERE bp.slug = $1
+  AND bp.status = 'published'
 LIMIT 1
 ";
 
