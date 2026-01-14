@@ -1,16 +1,27 @@
 <?php
+// --------------------------------------------------
+// Force correct HTTP response for LinkedIn
+// --------------------------------------------------
+http_response_code(200);
+header("Content-Type: text/html; charset=UTF-8");
+header("Accept-Ranges: none");
+
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/image_functions.php");
 
+// --------------------------------------------------
 // Get slug
-$slug = isset($_GET['slug']) ? pg_escape_string($con, $_GET['slug']) : '';
+// --------------------------------------------------
+$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 
-if (!$slug) {
+if ($slug === '') {
     http_response_code(404);
     exit;
 }
 
+// --------------------------------------------------
 // Fetch post
+// --------------------------------------------------
 $sql = "
 SELECT 
     bp.title,
@@ -33,17 +44,26 @@ if (!$result || pg_num_rows($result) === 0) {
 
 $post = pg_fetch_assoc($result);
 
+// --------------------------------------------------
 // Prepare meta values
-$title = htmlspecialchars($post['title']);
+// --------------------------------------------------
+$title = htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8');
+
 $description = htmlspecialchars(
     $post['excerpt']
-        ?: substr(strip_tags($post['content']), 0, 160)
+        ?: substr(trim(strip_tags($post['content'])), 0, 160),
+    ENT_QUOTES,
+    'UTF-8'
 );
 
-$image = processImageUrl($post['featured_image'])
-    ?: 'https://login.rssi.in/img/default-og-image.jpg';
+$image = processImageUrl($post['featured_image']);
+if (!$image) {
+    $image = 'https://login.rssi.in/img/default-og-image.jpg';
+}
 
+// --------------------------------------------------
 // Environment detection
+// --------------------------------------------------
 $host = $_SERVER['HTTP_HOST'] ?? '';
 
 $isLocal = (
@@ -53,7 +73,9 @@ $isLocal = (
     str_starts_with($host, '127.0.0.1:')
 );
 
-// Frontend URL (JS page)
+// --------------------------------------------------
+// Frontend URL
+// --------------------------------------------------
 $frontendUrl = $isLocal
     ? "http://localhost:8081/blog/blog-detail.html?slug={$slug}"
     : "https://rssi.in/blog/blog-detail.html?slug={$slug}";
@@ -69,7 +91,7 @@ $frontendUrl = $isLocal
     <meta name="description" content="<?= $description ?>">
     <link rel="canonical" href="<?= $frontendUrl ?>">
 
-    <!-- Open Graph -->
+    <!-- Open Graph (LinkedIn / Facebook) -->
     <meta property="og:type" content="article">
     <meta property="og:title" content="<?= $title ?>">
     <meta property="og:description" content="<?= $description ?>">
@@ -86,9 +108,11 @@ $frontendUrl = $isLocal
     <!-- Cache -->
     <meta http-equiv="Cache-Control" content="public, max-age=600">
 
-    <!-- JS Redirect for users -->
+    <!-- Delayed JS Redirect (crawler-safe) -->
     <script>
-        window.location.href = "<?= $frontendUrl ?>";
+        setTimeout(function() {
+            window.location.href = "<?= $frontendUrl ?>";
+        }, 800);
     </script>
 </head>
 
