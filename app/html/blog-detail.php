@@ -1,6 +1,6 @@
 <?php
 // --------------------------------------------------
-// Force correct HTTP response for LinkedIn
+// Force correct response
 // --------------------------------------------------
 http_response_code(200);
 header("Content-Type: text/html; charset=UTF-8");
@@ -10,9 +10,19 @@ require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/image_functions.php");
 
 // --------------------------------------------------
+// Detect social crawlers
+// --------------------------------------------------
+$userAgent = strtolower($_SERVER['HTTP_USER_AGENT'] ?? '');
+
+$isBot = preg_match(
+    '/linkedinbot|facebookexternalhit|twitterbot|whatsapp|telegrambot|slackbot|googlebot|bingbot/i',
+    $userAgent
+);
+
+// --------------------------------------------------
 // Get slug
 // --------------------------------------------------
-$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+$slug = trim($_GET['slug'] ?? '');
 
 if ($slug === '') {
     http_response_code(404);
@@ -24,14 +34,14 @@ if ($slug === '') {
 // --------------------------------------------------
 $sql = "
 SELECT 
-    bp.title,
-    bp.excerpt,
-    bp.content,
-    bp.featured_image,
-    bp.slug
-FROM blog_posts bp
-WHERE bp.slug = $1
-  AND bp.status = 'published'
+    title,
+    excerpt,
+    content,
+    featured_image,
+    slug
+FROM blog_posts
+WHERE slug = $1
+  AND status = 'published'
 LIMIT 1
 ";
 
@@ -45,44 +55,27 @@ if (!$result || pg_num_rows($result) === 0) {
 $post = pg_fetch_assoc($result);
 
 // --------------------------------------------------
-// Prepare meta values
+// Meta values
 // --------------------------------------------------
 $title = htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8');
 
 $description = htmlspecialchars(
     $post['excerpt']
-        ?: substr(trim(strip_tags($post['content'])), 0, 160),
+        ?: substr(strip_tags($post['content']), 0, 160),
     ENT_QUOTES,
     'UTF-8'
 );
 
-$image = processImageUrl($post['featured_image']);
-if (!$image) {
-    $image = 'https://login.rssi.in/img/default-og-image.jpg';
-}
-
-// --------------------------------------------------
-// Environment detection
-// --------------------------------------------------
-$host = $_SERVER['HTTP_HOST'] ?? '';
-
-$isLocal = (
-    $host === 'localhost' ||
-    str_starts_with($host, 'localhost:') ||
-    $host === '127.0.0.1' ||
-    str_starts_with($host, '127.0.0.1:')
-);
+$image = processImageUrl($post['featured_image'])
+    ?: 'https://login.rssi.in/img/default-og-image.jpg';
 
 // --------------------------------------------------
 // Frontend URL
 // --------------------------------------------------
-$frontendUrl = $isLocal
-    ? "http://localhost:8081/blog/blog-detail.html?slug={$slug}"
-    : "https://rssi.in/blog/blog-detail.html?slug={$slug}";
+$frontendUrl = "https://rssi.in/blog/blog-detail.html?slug={$slug}";
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <title><?= $title ?></title>
@@ -91,7 +84,7 @@ $frontendUrl = $isLocal
     <meta name="description" content="<?= $description ?>">
     <link rel="canonical" href="<?= $frontendUrl ?>">
 
-    <!-- Open Graph (LinkedIn / Facebook) -->
+    <!-- Open Graph -->
     <meta property="og:type" content="article">
     <meta property="og:title" content="<?= $title ?>">
     <meta property="og:description" content="<?= $description ?>">
@@ -105,17 +98,13 @@ $frontendUrl = $isLocal
     <meta name="twitter:description" content="<?= $description ?>">
     <meta name="twitter:image" content="<?= $image ?>">
 
-    <!-- Cache -->
-    <meta http-equiv="Cache-Control" content="public, max-age=600">
-
-    <!-- Delayed JS Redirect (crawler-safe) -->
+<?php if (!$isBot): ?>
+    <!-- Redirect ONLY real users -->
     <script>
-        setTimeout(function() {
-            window.location.href = "<?= $frontendUrl ?>";
-        }, 800);
+        window.location.href = "<?= $frontendUrl ?>";
     </script>
+<?php endif; ?>
+
 </head>
-
 <body></body>
-
 </html>
