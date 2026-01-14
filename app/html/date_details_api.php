@@ -44,18 +44,20 @@ try {
             ];
         }
     } else {
-        // Log database error but don't stop execution
         error_log("Holiday query failed for date: $date");
     }
 
-    // Fetch events for this specific date with all details
+    // Fetch events for this specific date with event_type display_name
     $eventResult = pg_query_params(
         $con,
-        "SELECT e.*, u.fullname as created_by_name, 
-                u2.fullname as updated_by_name
+        "SELECT e.*, 
+                u.fullname AS created_by_name, 
+                u2.fullname AS updated_by_name,
+                et.display_name AS event_type_name
          FROM internal_events e 
          LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
          LEFT JOIN rssimyaccount_members u2 ON e.updated_by = u2.associatenumber 
+         LEFT JOIN event_types et ON e.event_type = et.id
          WHERE e.event_date = $1 
          ORDER BY e.created_at",
         [$date]
@@ -67,7 +69,8 @@ try {
                 'id' => $row['id'],
                 'name' => $row['event_name'],
                 'date' => $row['event_date'],
-                'type' => $row['event_type'] ?? 'event',
+                // Replace ID with display_name
+                'type' => $row['event_type_name'] ?? 'Other',
                 'is_full_day' => $row['is_full_day'] == 't',
                 'location' => $row['location'],
                 'description' => $row['description'],
@@ -89,7 +92,6 @@ try {
             $response['events'][] = $event;
         }
     } else {
-        // Log database error but don't stop execution
         error_log("Event query failed for date: $date");
     }
 
@@ -100,7 +102,6 @@ try {
         'has_data' => !empty($response['holidays']) || !empty($response['events'])
     ];
 } catch (Exception $e) {
-    // Handle any exceptions
     $response['error'] = $e->getMessage();
     http_response_code(400);
 }

@@ -11,6 +11,17 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// Fetch event types from database
+$event_types = [];
+$type_sql = "SELECT id, display_name FROM event_types WHERE is_active = true ORDER BY sort_order";
+$type_result = pg_query($con, $type_sql);
+
+if ($type_result) {
+    while ($row = pg_fetch_assoc($type_result)) {
+        $event_types[$row['id']] = $row['display_name'];
+    }
+}
+
 // Handle form submission
 $message = '';
 $message_type = '';
@@ -219,16 +230,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="event_type" class="form-label required-field">Event Type</label>
                                         <select class="form-select" id="event_type" name="event_type" required>
                                             <option value="">Select Type</option>
-                                            <option value="sports">Sports</option>
-                                            <option value="meeting">Meeting</option>
-                                            <option value="celebration">Celebration</option>
-                                            <option value="cultural">Cultural</option>
-                                            <option value="festival">Festival</option>
-                                            <option value="exhibition">Exhibition</option>
-                                            <option value="national">National</option>
-                                            <option value="training">Training</option>
-                                            <option value="workshop">Workshop</option>
-                                            <option value="other">Other</option>
+                                            <?php
+                                            $current_type = $_POST['event_type'] ?? $event['event_type'] ?? '';
+                                            foreach ($event_types as $type_value => $display_name):
+                                            ?>
+                                                <option value="<?php echo htmlspecialchars($type_value); ?>"
+                                                    <?php echo $current_type == $type_value ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($display_name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
@@ -334,32 +344,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $recent_events_sql = "SELECT e.*, u.fullname 
-                                                             FROM internal_events e 
-                                                             LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
-                                                             ORDER BY e.event_date DESC, e.created_at DESC 
-                                                             LIMIT 10";
+                                        // Fetch recent events with event type display name
+                                        $recent_events_sql = "
+                                            SELECT 
+                                                e.*, 
+                                                u.fullname,
+                                                et.display_name AS event_type_name
+                                            FROM internal_events e
+                                            LEFT JOIN rssimyaccount_members u 
+                                                ON e.created_by = u.associatenumber
+                                            LEFT JOIN event_types et
+                                                ON e.event_type = et.id
+                                            ORDER BY e.event_date DESC, e.created_at DESC
+                                            LIMIT 10
+                                        ";
+
                                         $recent_events_result = pg_query($con, $recent_events_sql);
 
                                         if ($recent_events_result && pg_num_rows($recent_events_result) > 0) {
                                             while ($event = pg_fetch_assoc($recent_events_result)) {
-                                                $event_type_badge = '';
-                                                switch ($event['event_type']) {
-                                                    case 'sports':
-                                                        $event_type_badge = '<span class="badge bg-success">Sports</span>';
-                                                        break;
-                                                    case 'meeting':
-                                                        $event_type_badge = '<span class="badge bg-primary">Meeting</span>';
-                                                        break;
-                                                    case 'celebration':
-                                                        $event_type_badge = '<span class="badge bg-warning">Celebration</span>';
-                                                        break;
-                                                    default:
-                                                        $event_type_badge = '<span class="badge bg-secondary">' . ucfirst($event['event_type']) . '</span>';
-                                                }
 
+                                                // Prepare time info
                                                 $time_info = '';
-                                                if ($event['is_full_day'] == 't') {
+                                                if ($event['is_full_day'] === 't') {
                                                     $time_info = '<small class="text-muted">Full Day</small>';
                                                 } else if ($event['event_start_time']) {
                                                     $start_time = date('h:i A', strtotime($event['event_start_time']));
@@ -369,21 +376,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         ?>
                                                 <tr>
                                                     <td>
-                                                        <strong><?php echo htmlspecialchars($event['event_name']); ?></strong>
+                                                        <strong><?= htmlspecialchars($event['event_name']); ?></strong>
                                                         <?php if ($event['description']): ?>
-                                                            <br><small class="text-muted"><?php echo substr(htmlspecialchars($event['description']), 0, 50) . '...'; ?></small>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <?= substr(htmlspecialchars($event['description']), 0, 50) . '...'; ?>
+                                                            </small>
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <?php echo date('d M Y', strtotime($event['event_date'])); ?>
-                                                        <br><?php echo $time_info; ?>
+                                                        <?= date('d M Y', strtotime($event['event_date'])); ?>
+                                                        <br><?= $time_info; ?>
                                                     </td>
-                                                    <td><?php echo $event_type_badge; ?></td>
-                                                    <td><?php echo htmlspecialchars($event['location'] ?: 'N/A'); ?></td>
-                                                    <td><?php echo htmlspecialchars($event['fullname'] ?: 'User ' . $event['created_by']); ?></td>
                                                     <td>
-                                                        <a href="edit_event.php?id=<?php echo $event['id']; ?>"
-                                                            class="btn btn-sm btn-outline-primary">
+                                                        <?= htmlspecialchars($event['event_type_name'] ?? 'Other'); ?>
+                                                    </td>
+                                                    <td>
+                                                        <?= htmlspecialchars($event['location'] ?: 'N/A'); ?>
+                                                    </td>
+                                                    <td>
+                                                        <?= htmlspecialchars($event['fullname'] ?: 'User ' . $event['created_by']); ?>
+                                                    </td>
+                                                    <td>
+                                                        <a href="edit_event.php?id=<?= $event['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
                                                     </td>

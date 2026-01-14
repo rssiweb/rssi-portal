@@ -52,6 +52,17 @@ if (!$canEdit) {
     exit;
 }
 
+// Fetch event types from database
+$event_types = [];
+$type_sql = "SELECT id, display_name FROM event_types WHERE is_active = true ORDER BY sort_order";
+$type_result = pg_query($con, $type_sql);
+
+if ($type_result) {
+    while ($row = pg_fetch_assoc($type_result)) {
+        $event_types[$row['id']] = $row['display_name'];
+    }
+}
+
 // Handle form submission for update
 $message = '';
 $message_type = '';
@@ -339,16 +350,15 @@ if ($event['reporting_time']) {
                                         <label for="event_type" class="form-label required-field">Event Type</label>
                                         <select class="form-select" id="event_type" name="event_type" required>
                                             <option value="">Select Type</option>
-                                            <option value="sports" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'sports' ? 'selected' : ''; ?>>Sports</option>
-                                            <option value="meeting" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'meeting' ? 'selected' : ''; ?>>Meeting</option>
-                                            <option value="celebration" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'celebration' ? 'selected' : ''; ?>>Celebration</option>
-                                            <option value="cultural" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'cultural' ? 'selected' : ''; ?>>Cultural</option>
-                                            <option value="festival" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'festival' ? 'selected' : ''; ?>>Festival</option>
-                                            <option value="exhibition" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'exhibition' ? 'selected' : ''; ?>>Exhibition</option>
-                                            <option value="national" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'national' ? 'selected' : ''; ?>>National</option>
-                                            <option value="training" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'training' ? 'selected' : ''; ?>>Training</option>
-                                            <option value="workshop" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'workshop' ? 'selected' : ''; ?>>Workshop</option>
-                                            <option value="other" <?php echo ($_POST['event_type'] ?? $event['event_type']) == 'other' ? 'selected' : ''; ?>>Other</option>
+                                            <?php
+                                            $current_type = $_POST['event_type'] ?? $event['event_type'] ?? '';
+                                            foreach ($event_types as $type_value => $display_name):
+                                            ?>
+                                                <option value="<?php echo htmlspecialchars($type_value); ?>"
+                                                    <?php echo $current_type == $type_value ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($display_name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
@@ -416,13 +426,7 @@ if ($event['reporting_time']) {
                                     <!-- Description -->
                                     <div class="col-12">
                                         <label for="description" class="form-label">Description</label>
-                                        <textarea class="form-control" id="description" name="description"
-                                            rows="4" maxlength="1000"
-                                            placeholder="Enter event details, agenda, instructions...">
-                                            <?php
-                                            echo htmlspecialchars($_POST['description'] ?? $event['description'] ?? '', ENT_QUOTES, 'UTF-8');
-                                            ?>
-                                        </textarea>
+                                        <textarea class="form-control" id="description" name="description" rows="4" maxlength="1000" placeholder="Enter event details, agenda, instructions..."><?= htmlspecialchars($_POST['description'] ?? $event['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                                         <small class="form-text">Maximum 1000 characters</small>
                                     </div>
 
