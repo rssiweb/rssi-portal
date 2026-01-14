@@ -357,7 +357,7 @@ if ($event['reporting_time']) {
                                     <div class="col-md-6">
                                         <label for="location" class="form-label">Location</label>
                                         <input type="text" class="form-control" id="location" name="location"
-                                            value="<?php echo htmlspecialchars($_POST['location'] ?? $event['location']); ?>"
+                                            value="<?php echo htmlspecialchars($_POST['location'] ?? $event['location'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                             maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground">
                                     </div>
 
@@ -418,7 +418,11 @@ if ($event['reporting_time']) {
                                         <label for="description" class="form-label">Description</label>
                                         <textarea class="form-control" id="description" name="description"
                                             rows="4" maxlength="1000"
-                                            placeholder="Enter event details, agenda, instructions..."><?php echo htmlspecialchars($_POST['description'] ?? $event['description']); ?></textarea>
+                                            placeholder="Enter event details, agenda, instructions...">
+                                            <?php
+                                            echo htmlspecialchars($_POST['description'] ?? $event['description'] ?? '', ENT_QUOTES, 'UTF-8');
+                                            ?>
+                                        </textarea>
                                         <small class="form-text">Maximum 1000 characters</small>
                                     </div>
 
