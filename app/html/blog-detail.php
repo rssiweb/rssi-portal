@@ -63,7 +63,6 @@ $frontendUrl = $isLocal
 
 <head>
     <meta charset="utf-8">
-
     <title><?= $title ?></title>
 
     <!-- SEO -->
@@ -84,11 +83,13 @@ $frontendUrl = $isLocal
     <meta name="twitter:description" content="<?= $description ?>">
     <meta name="twitter:image" content="<?= $image ?>">
 
-    <!-- Redirect users to frontend -->
-    <meta http-equiv="refresh" content="0;url=<?= $frontendUrl ?>">
-
     <!-- Cache -->
     <meta http-equiv="Cache-Control" content="public, max-age=600">
+
+    <!-- JS Redirect for users -->
+    <script>
+        window.location.href = "<?= $frontendUrl ?>";
+    </script>
 </head>
 
 <body></body>
