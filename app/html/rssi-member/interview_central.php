@@ -12,22 +12,57 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-// Handle filtering
-$filter_application_number = isset($_POST['filter_application_number']) ? trim($_POST['filter_application_number']) : '';
+// Get current date for default date range
+$today = date("Y-m-d");
+$defaultStartDate = $today;
+$defaultEndDate = $today;
+
+// Handle filtering - using POST like the Talent Pool page
+$filter_search = isset($_POST['filter_search']) ? trim($_POST['filter_search']) : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+$start_date = isset($_POST['start_date']) ? $_POST['start_date'] : $defaultStartDate;
+$end_date = isset($_POST['end_date']) ? $_POST['end_date'] : $defaultEndDate;
+$disable_filters = isset($_POST['disable_filters']) ? true : false;
+
+// Server-side validation: if disable_filters is checked but no search is provided
+if ($disable_filters) {
+    if (empty($filter_search) && empty($filter_status)) {
+        echo "<script>
+            alert('Error: Please enter Application Number/Name or select at least one Status when disabling date filters.');
+            window.onload = function() {
+                document.getElementById('disable_filters').checked = false;
+                document.getElementById('start_date').disabled = false;
+                document.getElementById('end_date').disabled = false;
+            };
+        </script>";
+        $disable_filters = false; // Reset disable_filters so form reloads with date range enabled
+    }
+}
 
 // Start building the query
 $query = "SELECT * FROM signup 
           WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed') AND is_active=true";
-          
+
 // Add filters based on user input
 $conditions = [];
 
-if (!empty($filter_application_number)) {
-    $conditions[] = "application_number = '" . pg_escape_string($con, $filter_application_number) . "'";
+if (!$disable_filters) {
+    // Apply date range filter only when filters are not disabled
+    if (!empty($start_date) && !empty($end_date)) {
+        $conditions[] = "(
+            (tech_interview_schedule::date BETWEEN '$start_date' AND '$end_date') OR 
+            (hr_interview_schedule::date BETWEEN '$start_date' AND '$end_date')
+        )";
+    }
 }
 
-if (!empty($filter_status)) {
+// Search by application number or applicant name
+if (!empty($filter_search)) {
+    $searchTerm = pg_escape_string($con, $filter_search);
+    $conditions[] = "(application_number ILIKE '%$searchTerm%' OR applicant_name ILIKE '%$searchTerm%')";
+}
+
+if (!empty($filter_status) && !$disable_filters) {
     $statuses = array_map(function ($status) use ($con) {
         return pg_escape_string($con, $status);
     }, $filter_status);
@@ -43,7 +78,7 @@ if (!empty($conditions)) {
 $query .= " ORDER BY tech_interview_schedule DESC";
 
 // Add a limit of 100 if no filters are applied
-if (empty($filter_application_number) && empty($filter_status)) {
+if (empty($filter_search) && empty($filter_status) && $disable_filters) {
     $query .= " LIMIT 100";
 }
 
@@ -146,46 +181,68 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="POST" class="filter-form" style="display: flex;">
-                                    <div class="form-group" style="margin-right: 10px;">
-                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="width: 200px;">
+                                <form id="filterForm" method="POST" class="filter-form d-flex flex-wrap" style="gap: 10px;">
+                                    <div class="form-group">
+                                        <input type="text" id="filter_search" name="filter_search" class="form-control" placeholder="Application Number or Name" value="<?php echo htmlspecialchars($filter_search); ?>" style="max-width: 200px;">
+                                        <small class="form-text text-muted">Application Number or Name</small>
                                     </div>
 
-                                    <div class="form-group" style="margin-right: 10px;">
+                                    <!-- Date Range Filter -->
+                                    <div class="form-group">
+                                        <input type="date" name="start_date" id="start_date" class="form-control"
+                                            value="<?php echo htmlspecialchars($start_date); ?>" />
+                                        <small class="form-text text-muted">Select the starting date for the range.</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <input type="date" name="end_date" id="end_date" class="form-control"
+                                            value="<?php echo htmlspecialchars($end_date); ?>" />
+                                        <small class="form-text text-muted">Select the ending date for the range.</small>
+                                    </div>
+
+                                    <div class="form-group">
                                         <select id="status" name="status[]" class="form-select" multiple>
                                             <option value="Technical Interview Scheduled" <?php echo in_array('Technical Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Scheduled</option>
                                             <option value="Technical Interview Completed" <?php echo in_array('Technical Interview Completed', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Completed</option>
                                             <option value="HR Interview Scheduled" <?php echo in_array('HR Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Scheduled</option>
-                                            <!-- <option value="Recommended" <?php echo in_array('Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Recommended</option>
-                                            <option value="Not Recommended" <?php echo in_array('Not Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Not Recommended</option>
-                                            <option value="On Hold" <?php echo in_array('On Hold', $filter_status ?? []) ? 'selected' : ''; ?>>On Hold</option>
-                                            <option value="No-Show" <?php echo in_array('No-Show', $filter_status ?? []) ? 'selected' : ''; ?>>No-Show</option>
-                                            <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
-                                            <option value="Offer Not Extended" <?php echo in_array('Offer Not Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Not Extended</option> -->
+                                            <option value="HR Interview Completed" <?php echo in_array('HR Interview Completed', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Completed</option>
                                         </select>
-
                                     </div>
 
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
+                                        <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="bi bi-search"></i>&nbsp;Filter
                                         </button>
                                     </div>
+                                    <!-- New line for checkbox -->
+                                    <div class="w-100"></div> <!-- This forces a new line in flex-wrap -->
+
+                                    <!-- Disable Date Filters Checkbox -->
+                                    <div class="form-group">
+                                        <input class="form-check-input" type="checkbox" name="disable_filters" id="disable_filters" value="1" <?php echo isset($disable_filters) && $disable_filters ? 'checked' : ''; ?>>
+                                        <label for="disable_filters">Ignore Date Range</label>
+                                    </div>
                                 </form>
-                                <div class="table-responsive">
-                                    <table class="table" id="table-id">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Application Number</th>
-                                                <th scope="col">Applicant Name</th>
-                                                <th scope="col">Technical Interview Scheduled On</th>
-                                                <th scope="col">HR Interview Scheduled On</th>
-                                                <th scope="col">Status</th>
-                                                <th scope="col">Enter Evaluation</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Application Number</th>
+                                            <th scope="col">Applicant Name</th>
+                                            <th scope="col">Technical Interview Scheduled On</th>
+                                            <th scope="col">HR Interview Scheduled On</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Enter Evaluation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        if ($disable_filters && !empty($filter_search) && empty($resultArr)) {
+                                            echo '<tr><td colspan="6" class="text-center">No interviews scheduled for "' . htmlspecialchars($filter_search) . '"</td></tr>';
+                                        } elseif (empty($resultArr)) {
+                                            echo '<tr><td colspan="6" class="text-center">No interviews found for the selected criteria.</td></tr>';
+                                        } else {
                                             foreach ($resultArr as $array) {
                                                 $interviewTimestamp = empty($array['tech_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['tech_interview_schedule']));
                                                 $hrTimestamp = empty($array['hr_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_interview_schedule']));
@@ -201,7 +258,7 @@ $resultArr = pg_fetch_all($result);
                                                 }
 
                                                 $interviewStatus = empty($array['application_status']) ? '' : $array['application_status'];
-                                            ?>
+                                        ?>
                                                 <tr>
                                                     <td><?php echo $array['application_number']; ?></td>
                                                     <td><?php echo $array['applicant_name']; ?></td>
@@ -210,16 +267,17 @@ $resultArr = pg_fetch_all($result);
                                                     <td><?php echo $interviewStatus; ?></td>
                                                     <td><?php echo $linkToShow; ?></td>
                                                 </tr>
-                                            <?php
+                                        <?php
                                             }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div><!-- End Reports -->
-                </div>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
             </div>
         </section>
     </main><!-- End #main -->
@@ -230,8 +288,8 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
@@ -245,7 +303,54 @@ $resultArr = pg_fetch_all($result);
             <?php endif; ?>
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const disableFiltersCheckbox = document.getElementById('disable_filters');
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const filterSearch = document.getElementById('filter_search');
+            const statusSelect = document.getElementById('status');
+            const filterForm = document.getElementById('filterForm');
 
+            function toggleFilterInputs() {
+                const isDisabled = disableFiltersCheckbox.checked;
+                startDate.disabled = isDisabled;
+                endDate.disabled = isDisabled;
+                statusSelect.disabled = isDisabled;
+
+                if (isDisabled) {
+                    filterSearch.focus();
+                }
+            }
+
+            disableFiltersCheckbox.addEventListener('change', toggleFilterInputs);
+            toggleFilterInputs();
+
+            // Form validation before submit (client-side)
+            filterForm.addEventListener('submit', function(e) {
+                if (disableFiltersCheckbox.checked) {
+                    const searchTerm = filterSearch.value.trim();
+                    const statusSelected = Array.from(statusSelect.selectedOptions).length > 0;
+
+                    if (searchTerm === '' && !statusSelected) {
+                        e.preventDefault();
+                        alert("Please enter Application Number/Name or select at least one Status when disabling date filters.");
+                        disableFiltersCheckbox.checked = false;
+                        toggleFilterInputs();
+                    }
+                }
+            });
+
+            // Set default dates to today if empty
+            const today = new Date().toISOString().split('T')[0];
+            if (!startDate.value) {
+                startDate.value = today;
+            }
+            if (!endDate.value) {
+                endDate.value = today;
+            }
+        });
+    </script>
 </body>
 
 </html>
