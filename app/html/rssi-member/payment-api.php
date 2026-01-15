@@ -1443,6 +1443,28 @@ if ($formtype == "visitor_form") {
     $cmdtuples = 0; // Initialize cmdtuples
     $errorOccurred = false; // Flag to track if an error occurred
     $errorMessage = '';
+    $additional_services_array = [];
+
+    if (!empty($_POST['additional_services'])) {
+
+      foreach ($_POST['additional_services'] as $service) {
+        if ($service === 'videography') {
+          // Append camera count
+          $camera_count = isset($_POST['camera_count']) ? intval($_POST['camera_count']) : 1;
+          $additional_services_array[] = "videography({$camera_count})";
+        } elseif ($service === 'interview') {
+          // Append duration
+          $duration = isset($_POST['interview_duration']) ? intval($_POST['interview_duration']) : 30;
+          $additional_services_array[] = "interview({$duration}min)";
+        } else {
+          // Other services like certificate
+          $additional_services_array[] = $service;
+        }
+      }
+    }
+
+    // Convert array to comma-separated string for DB
+    $additional_services = implode(',', $additional_services_array);
 
     // This is for paymentdoc and instituteid which will be require in both new and existing visitor
 
@@ -1462,8 +1484,8 @@ if ($formtype == "visitor_form") {
     }
 
     if ($_POST['visitorType'] === "existing") {
-      $visitorQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason) 
-                          VALUES ('$visitId', '$tel', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason')";
+      $visitorQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason, additional_services) 
+                          VALUES ('$visitId', '$tel', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason', '$additional_services')";
       $resultUserdata = pg_query($con, $visitorQuery);
 
       if ($resultUserdata) {
@@ -1505,8 +1527,8 @@ if ($formtype == "visitor_form") {
 
       if ($resultUserdata) {
         // Insert visit
-        $visitQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason) 
-                              VALUES ('$visitId', '$contactNumberNew', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason')";
+        $visitQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason, additional_services) 
+                              VALUES ('$visitId', '$contactNumberNew', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason', '$additional_services')";
         $resultVisitor = pg_query($con, $visitQuery);
 
         if ($resultVisitor) {

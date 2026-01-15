@@ -329,6 +329,7 @@ if (!$phoneNumber) {
                                                             <p><strong>Mentor Email:</strong> <?php echo $array['mentoremail']; ?></p>
                                                             <p><strong>Enrollment Number:</strong> <?php echo $array['enrollmentnumber']; ?></p>
                                                             <p><strong>Institute Name:</strong> <?php echo $array['institutename']; ?></p>
+                                                            <p><strong>Additional Services:</strong> <?= !empty($array['additional_services']) ? htmlspecialchars($array['additional_services']) : 'None'; ?></p>
 
                                                             <?php if (!empty($array['instituteid'])): ?>
                                                                 <div class="mt-3">
@@ -464,8 +465,8 @@ if (!$phoneNumber) {
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <!--------------- POP-UP BOX ------------
 -------------------------------------->
