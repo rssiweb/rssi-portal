@@ -3,6 +3,34 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_recruiters.php");
 include("../../util/email.php");
 
+// Simple math captcha function
+function generateMathCaptcha()
+{
+    $num1 = rand(1, 10);
+    $num2 = rand(1, 10);
+    $operators = ['+', '-', '*'];
+    $operator = $operators[array_rand($operators)];
+
+    // Calculate answer
+    switch ($operator) {
+        case '+':
+            $answer = $num1 + $num2;
+            break;
+        case '-':
+            $answer = $num1 - $num2;
+            break;
+        case '*':
+            $answer = $num1 * $num2;
+            break;
+    }
+
+    // Store in session
+    $_SESSION['captcha_answer'] = $answer;
+    $_SESSION['captcha_question'] = "$num1 $operator $num2";
+
+    return $_SESSION['captcha_question'];
+}
+
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
 $registration_success = "";
@@ -88,24 +116,36 @@ function checkLogin($con, $date)
 
 // Handle Registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'register') {
-    // Basic validation
-    $full_name = pg_escape_string($con, $_POST['full_name']);
-    $company_name = pg_escape_string($con, $_POST['company_name']);
-    $email = pg_escape_string($con, $_POST['email']);
-    $phone = pg_escape_string($con, $_POST['phone']);
-    $company_address = pg_escape_string($con, $_POST['company_address']);
 
-    // Check if email already exists
-    $check_email = pg_query($con, "SELECT email FROM recruiters WHERE email='$email'");
-    if (pg_num_rows($check_email) > 0) {
-        $registration_error = "Email already registered. Please login or use another email.";
+    // CAPTCHA Validation
+    if (empty($_SESSION['captcha_answer']) || empty($_POST['captcha'])) {
+        $registration_error = "Please complete the math verification.";
+        // Generate new captcha
+        generateMathCaptcha();
+    } elseif ((int)$_POST['captcha'] !== (int)$_SESSION['captcha_answer']) {
+        $registration_error = "Math verification failed. Please try again.";
+        // Generate new captcha
+        generateMathCaptcha();
     } else {
-        // Generate temporary password
-        $temp_password = bin2hex(random_bytes(3)); // Generates 6-character hex string
-        $hashed_password = password_hash($temp_password, PASSWORD_DEFAULT);
+        // CAPTCHA passed - proceed with registration
+        // Basic validation
+        $full_name = pg_escape_string($con, $_POST['full_name']);
+        $company_name = pg_escape_string($con, $_POST['company_name']);
+        $email = pg_escape_string($con, $_POST['email']);
+        $phone = pg_escape_string($con, $_POST['phone']);
+        $company_address = pg_escape_string($con, $_POST['company_address']);
 
-        // Insert new recruiter with pending status
-        $query = "INSERT INTO recruiters (
+        // Check if email already exists
+        $check_email = pg_query($con, "SELECT email FROM recruiters WHERE email='$email'");
+        if (pg_num_rows($check_email) > 0) {
+            $registration_error = "Email already registered. Please login or use another email.";
+        } else {
+            // Generate temporary password
+            $temp_password = bin2hex(random_bytes(3)); // Generates 6-character hex string
+            $hashed_password = password_hash($temp_password, PASSWORD_DEFAULT);
+
+            // Insert new recruiter with pending status
+            $query = "INSERT INTO recruiters (
             full_name, 
             company_name, 
             email, 
@@ -125,29 +165,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
             '$date'
         )";
 
-        $result = pg_query($con, $query);
+            $result = pg_query($con, $query);
 
-        if ($result) {
-            // Prepare email data
-            $email_data = [
-                "name" => $full_name,
-                "email" => $email,
-                "temp_password" => $temp_password,
-                "now" => date("d/m/Y g:i a")
-            ];
+            if ($result) {
+                // Prepare email data
+                $email_data = [
+                    "name" => $full_name,
+                    "email" => $email,
+                    "temp_password" => $temp_password,
+                    "now" => date("d/m/Y g:i a")
+                ];
 
-            // Send email (do not depend on return value)
-            sendEmail("recruiter_registration", $email_data, $email, false);
+                // Send email (do not depend on return value)
+                sendEmail("recruiter_registration", $email_data, $email, false);
 
-            // Always treat registration as successful
-            $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
+                // Always treat registration as successful
+                $registration_success = "Registration successful! A temporary password has been sent to your email. Your account is pending approval.";
 
-            // Store in session and redirect to prevent resubmission
-            $_SESSION['registration_success'] = $registration_success;
-            header("Location: index.php?tab=register&success=1");
-            exit;
-        } else {
-            $registration_error = "Registration failed. Please try again.";
+                // Store in session and redirect to prevent resubmission
+                $_SESSION['registration_success'] = $registration_success;
+                header("Location: index.php?tab=register&success=1");
+                exit;
+            } else {
+                $registration_error = "Registration failed. Please try again.";
+            }
         }
     }
 }
@@ -751,6 +792,23 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                         </div>
                                     </div>
 
+                                    <!-- Add this in registration form section -->
+                                    <div class="col-md-6">
+                                        <label for="captcha" class="form-label required-field">Math Verification</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+                                            <input type="text" class="form-control" id="captcha" name="captcha"
+                                                placeholder="Solve: <?php echo isset($_SESSION['captcha_question']) ? $_SESSION['captcha_question'] : generateMathCaptcha(); ?> = ?"
+                                                required>
+                                            <button type="button" class="btn btn-outline-secondary" id="refresh-captcha">
+                                                <i class="bi bi-arrow-clockwise"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            Solve this simple math problem to prove you're human
+                                        </div>
+                                    </div>
+
                                     <div class="col-12">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="terms" required>
@@ -1075,6 +1133,32 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
             </div>
         </div>
     <?php } ?>
+    <script>
+        // Add this to your existing JavaScript
+        document.getElementById('refresh-captcha')?.addEventListener('click', function() {
+            fetch('refresh_captcha.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const captchaInput = document.getElementById('captcha');
+                        captchaInput.placeholder = 'Solve: ' + data.question + ' = ?';
+                        captchaInput.value = '';
+                        captchaInput.focus();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing captcha:', error);
+                });
+        });
+
+        // Initialize captcha when register tab is shown
+        document.getElementById('register-tab')?.addEventListener('shown.bs.tab', function() {
+            // Generate new captcha if not already set
+            if (!<?php echo isset($_SESSION['captcha_question']) ? 'true' : 'false'; ?>) {
+                fetch('refresh_captcha.php');
+            }
+        });
+    </script>
 </body>
 
 </html>
