@@ -17,12 +17,13 @@ $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 $filter_from_date = isset($_POST['from_date']) ? $_POST['from_date'] : date('Y-m-d', strtotime('-1 month'));
 $filter_to_date = isset($_POST['to_date']) ? $_POST['to_date'] : date('Y-m-d');
 $ignore_date = isset($_POST['ignore_date']) ? true : false; // New checkbox for ignoring date
+$filter_interview_date_range = isset($_POST['interview_date_range']) ? trim($_POST['interview_date_range']) : '';
 
 // Server-side validation: if ignore date is checked but no filters are provided
 if ($ignore_date) {
-    if (empty($filter_application_number) && empty($filter_status)) {
+    if (empty($filter_application_number) && empty($filter_status) && empty($filter_interview_date_range)) {
         echo "<script>
-            alert('Error: Please enter Application Number or select at least one Status when ignoring the date range.');
+            alert('Error: Please enter Application Number, select at least one Status, and select an Interview Date Range when ignoring the date range.');
             window.onload = function() {
                 document.getElementById('ignore_date').checked = false;
                 document.getElementById('from_date').disabled = false;
@@ -70,6 +71,24 @@ if (!empty($filter_application_number)) {
     }
 }
 
+// Interview date range filter (covers both tech and HR interviews)
+if (!empty($filter_interview_date_range)) {
+    // Parse the date range string (format: "YYYY-MM-DD to YYYY-MM-DD")
+    $date_parts = explode(' to ', $filter_interview_date_range);
+    if (count($date_parts) == 2) {
+        $interview_start_date = pg_escape_string($con, trim($date_parts[0]));
+        $interview_end_date = pg_escape_string($con, trim($date_parts[1]));
+        $interview_end_date = $interview_end_date . ' 23:59:59';
+
+        // Add condition for either tech_interview_schedule OR hr_interview_schedule within the range
+        $conditions[] = "(
+            (tech_interview_schedule::date >= '$interview_start_date' AND tech_interview_schedule::date <= '$interview_end_date')
+            OR 
+            (hr_interview_schedule::date >= '$interview_start_date' AND hr_interview_schedule::date <= '$interview_end_date')
+        )";
+    }
+}
+
 if (!empty($conditions)) {
     $query .= " WHERE is_active=true AND " . implode(" AND ", $conditions);
 }
@@ -113,6 +132,9 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <!-- Add this with other CSS links -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -175,6 +197,21 @@ $resultArr = pg_fetch_all($result);
             opacity: 1;
             /* Full opacity on hover */
         }
+
+        .daterangepicker {
+            font-family: inherit;
+            z-index: 9999 !important;
+        }
+
+        .date-range-picker {
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .date-range-picker:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
     </style>
 </head>
 
@@ -226,6 +263,14 @@ $resultArr = pg_fetch_all($result);
                                         <input type="date" name="to_date" id="to_date" class="form-control"
                                             value="<?php echo htmlspecialchars($filter_to_date); ?>" required />
                                         <small class="form-text text-muted">Select the ending date for the range.</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <input type="text" id="interview_date_range" name="interview_date_range" class="form-control date-range-picker"
+                                            placeholder="Select Interview Date Range"
+                                            value="<?php echo htmlspecialchars($filter_interview_date_range); ?>"
+                                            style="max-width: 250px;" autocomplete="off">
+                                        <small class="form-text text-muted">Click to select date range</small>
                                     </div>
 
                                     <div class="form-group"> <select id="status" name="status[]" class="form-select" multiple>
@@ -493,10 +538,13 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- Add this with other JS scripts (before your custom scripts) -->
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
@@ -590,12 +638,118 @@ $resultArr = pg_fetch_all($result);
                     const appNum = applicationNumber.value.trim();
                     const statusSelected = Array.from(statusSelect.selectedOptions).length > 0;
 
-                    if (appNum === '' && !statusSelected) {
+                    if (appNum === '' && !statusSelected && document.getElementById('interview_date_range').value.trim() === '') {
                         e.preventDefault();
-                        alert("Please enter Application Number or select at least one Status when ignoring the date range.");
+                        alert("Please enter Application Number, select at least one Status, and select an Interview Date Range when ignoring the date range.");
                     }
                 }
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const interviewDateRangeInput = document.getElementById('interview_date_range');
+
+            // Initialize date range picker with empty initial value
+            $(interviewDateRangeInput).daterangepicker({
+                autoUpdateInput: false, // Change this to false
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' to ',
+                    applyLabel: 'Apply',
+                    cancelLabel: 'Clear',
+                    fromLabel: 'From',
+                    toLabel: 'To',
+                    customRangeLabel: 'Custom',
+                    daysOfWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    monthNames: ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ],
+                    firstDay: 1
+                },
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'),
+                        moment().subtract(1, 'month').endOf('month')
+                    ],
+                    'This Quarter': [moment().startOf('quarter'), moment().endOf('quarter')]
+                },
+                showDropdowns: true,
+                minDate: '2020-01-01', // Adjust as needed
+                maxDate: moment(),
+                opens: 'right',
+                drops: 'down',
+                startDate: moment().subtract(29, 'days'), // Default view when opened
+                endDate: moment() // Default view when opened
+            }, function(start, end, label) {
+                // This function runs when a date range is selected
+                $(interviewDateRangeInput).val(start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+            });
+
+            // Clear button functionality - clear the input field
+            $(interviewDateRangeInput).on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+
+            // Also clear the field on page load if it has default value from previous submit
+            // This ensures field is empty when page loads fresh
+            document.addEventListener('DOMContentLoaded', function() {
+                // If the field has today's date as default (which shouldn't happen with our PHP code)
+                const currentValue = interviewDateRangeInput.value;
+                if (currentValue && currentValue.includes(moment().format('YYYY-MM-DD') + ' to ' + moment().format('YYYY-MM-DD'))) {
+                    // Check if it's the default "today to today" value
+                    interviewDateRangeInput.value = '';
+                }
+            });
+
+            // Form submission validation
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                if (interviewDateRangeInput.value.trim()) {
+                    const dateRange = parseDateRange(interviewDateRangeInput.value);
+                    if (!dateRange) {
+                        e.preventDefault();
+                        alert('Invalid interview date range format. Please use the date picker or format: YYYY-MM-DD to YYYY-MM-DD');
+                        interviewDateRangeInput.focus();
+                        return;
+                    }
+
+                    if (dateRange.start > dateRange.end) {
+                        e.preventDefault();
+                        alert('Interview start date cannot be after end date');
+                        interviewDateRangeInput.focus();
+                        return;
+                    }
+
+                    // Validate dates are not in future
+                    const maxDateObj = new Date();
+                    if (dateRange.start > maxDateObj || dateRange.end > maxDateObj) {
+                        e.preventDefault();
+                        alert('Interview dates cannot be in the future');
+                        interviewDateRangeInput.focus();
+                        return;
+                    }
+                }
+            });
+
+            // Helper function to parse date range
+            function parseDateRange(rangeString) {
+                const parts = rangeString.split(' to ');
+                if (parts.length !== 2) return null;
+
+                const startDate = new Date(parts[0].trim());
+                const endDate = new Date(parts[1].trim());
+
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
+
+                return {
+                    start: startDate,
+                    end: endDate
+                };
+            }
         });
     </script>
 </body>
