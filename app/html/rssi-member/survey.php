@@ -403,7 +403,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             <div class="mb-3">
                                                 <label for="houseStay">How long does the family stay in the current
                                                     house?</label>
-                                                <select class="form-select" id="houseStay" name="houseStay" required>
+                                                <select class="form-select" id="houseStay" name="houseStay">
                                                     <option disabled selected>Select duration</option>
                                                     <option value="<1">Less than 1 year</option>
                                                     <option value="1">1 year</option>
@@ -419,7 +419,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             <div class="mb-3">
                                                 <label for="familyMembers">Total number of family members:</label>
                                                 <input type="number" class="form-control" id="familyMembers"
-                                                    name="familyMembers" required>
+                                                    name="familyMembers" placeholder="Enter total number of family members">
                                             </div>
 
                                             <!-- Main source of earning for the family -->
@@ -427,7 +427,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 <label for="earningSource">Main source of earning for the
                                                     family:</label>
                                                 <select class="form-select" id="earningSource" name="earningSource"
-                                                    onchange="checkOtherOption()" required>
+                                                    onchange="checkOtherOption()">
                                                     <option selected disabled>Select an option</option>
                                                     <option value="agriculture">Agriculture</option>
                                                     <option value="business">Business</option>
