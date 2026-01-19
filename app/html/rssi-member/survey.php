@@ -359,411 +359,418 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <div class="row justify-content-center">
                                 <div class="col-md-8">
                                     <div class="form-container">
-                                        <h1 class="text-center mb-4">Potential Student Survey</h1>
+                                        <!-- <h1 class="text-center mb-4">Potential Student Survey</h1> -->
                                         <form method="post"
                                             action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>"
                                             id="surveyForm" onsubmit="return validateForm()">
-                                            <!-- Parent's Name -->
-                                            <div class="mb-3">
-                                                <label for="parentName" class="form-label">Parent's Name</label>
-                                                <input type="text" class="form-control" id="parentName"
-                                                    name="parentName" placeholder="Enter parent's name" required>
-                                            </div>
-                                            <!-- Address -->
-                                            <div class="mb-3">
-                                                <label for="address" class="form-label">Address</label>
-                                                <div class="input-group">
-                                                    <textarea class="form-control" id="address" name="address" rows="3"
-                                                        placeholder="Enter address" required></textarea>
-                                                    <button class="btn btn-outline-secondary" type="button"
-                                                        id="getAddressBtn">Get Current Address</button>
-                                                </div>
-                                            </div>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Basic Information</h5>
+                                                    <!-- Parent's Name -->
+                                                    <div class="mb-3">
+                                                        <label for="parentName" class="form-label">Respondent Name</label>
+                                                        <input type="text" class="form-control" id="parentName"
+                                                            name="parentName" placeholder="Enter respondent name" required>
+                                                    </div>
+                                                    <!-- Address -->
+                                                    <div class="mb-3">
+                                                        <label for="address" class="form-label">Address</label>
+                                                        <div class="input-group">
+                                                            <textarea class="form-control" id="address" name="address" rows="3"
+                                                                placeholder="Enter address" required></textarea>
+                                                            <button class="btn btn-outline-secondary" type="button"
+                                                                id="getAddressBtn">Get Current Address</button>
+                                                        </div>
+                                                    </div>
 
-                                            <div class="row">
-                                                <!-- Contact Number -->
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="contact" class="form-label">Contact Number</label>
-                                                    <input type="tel" class="form-control" id="contact" name="contact"
-                                                        placeholder="Enter contact number" pattern="[0-9]{10}"
-                                                        title="Please enter a valid 10-digit contact number" required>
-                                                </div>
+                                                    <div class="row">
+                                                        <!-- Contact Number -->
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="contact" class="form-label">Contact Number</label>
+                                                            <input type="tel" class="form-control" id="contact" name="contact"
+                                                                placeholder="Enter contact number" pattern="[0-9]{10}"
+                                                                title="Please enter a valid 10-digit contact number" required>
+                                                        </div>
 
-                                                <!-- Alternative Contact Number -->
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="altcontact" class="form-label">Alternative Contact
-                                                        Number</label>
-                                                    <input type="tel" class="form-control" id="altcontact"
-                                                        name="altcontact" placeholder="Enter alternative contact number"
-                                                        pattern="[0-9]{10}"
-                                                        title="Please enter a valid 10-digit alternative contact number">
-                                                </div>
-                                            </div>
+                                                        <!-- Alternative Contact Number -->
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="altcontact" class="form-label">Alternative Contact
+                                                                Number</label>
+                                                            <input type="tel" class="form-control" id="altcontact"
+                                                                name="altcontact" placeholder="Enter alternative contact number"
+                                                                pattern="[0-9]{10}"
+                                                                title="Please enter a valid 10-digit alternative contact number">
+                                                        </div>
+                                                    </div>
 
-                                            <div class="mb-3">
-                                                <label for="houseStay">How long does the family stay in the current
-                                                    house?</label>
-                                                <select class="form-select" id="houseStay" name="houseStay">
-                                                    <option disabled selected>Select duration</option>
-                                                    <option value="<1">Less than 1 year</option>
-                                                    <option value="1">1 year</option>
-                                                    <option value="2">2 years</option>
-                                                    <option value="3">3 years</option>
-                                                    <option value="4">4 years</option>
-                                                    <option value="5">5 years</option>
-                                                    <option value=">5">More than 5 years</option>
-                                                </select>
-                                            </div>
+                                                    <div class="mb-3">
+                                                        <label for="houseStay">How long does the family stay in the current
+                                                            house?</label>
+                                                        <select class="form-select" id="houseStay" name="houseStay">
+                                                            <option disabled selected>Select duration</option>
+                                                            <option value="<1">Less than 1 year</option>
+                                                            <option value="1">1 year</option>
+                                                            <option value="2">2 years</option>
+                                                            <option value="3">3 years</option>
+                                                            <option value="4">4 years</option>
+                                                            <option value="5">5 years</option>
+                                                            <option value=">5">More than 5 years</option>
+                                                        </select>
+                                                    </div>
 
-                                            <!-- Total number of family members -->
-                                            <div class="mb-3">
-                                                <label for="familyMembers">Total number of family members:</label>
-                                                <input type="number" class="form-control" id="familyMembers"
-                                                    name="familyMembers" placeholder="Enter total number of family members">
-                                            </div>
+                                                    <!-- Total number of family members -->
+                                                    <div class="mb-3">
+                                                        <label for="familyMembers">Total number of family members:</label>
+                                                        <input type="number" class="form-control" id="familyMembers"
+                                                            name="familyMembers" placeholder="Enter total number of family members">
+                                                    </div>
 
-                                            <!-- Main source of earning for the family -->
-                                            <div class="mb-3">
-                                                <label for="earningSource">Main source of earning for the
-                                                    family:</label>
-                                                <select class="form-select" id="earningSource" name="earningSource"
-                                                    onchange="checkOtherOption()">
-                                                    <option selected disabled>Select an option</option>
-                                                    <option value="agriculture">Agriculture</option>
-                                                    <option value="business">Business</option>
-                                                    <option value="government_job">Government Job</option>
-                                                    <option value="private_job">Private Job</option>
-                                                    <option value="Construction Worker">Construction Worker</option>
-                                                    <option value="Electrician">Electrician</option>
-                                                    <option value="Plumber">Plumber</option>
-                                                    <option value="Carpenter">Carpenter</option>
-                                                    <option value="Welder">Welder</option>
-                                                    <option value="Mechanic">Mechanic</option>
-                                                    <option value="Painter">Painter</option>
-                                                    <option value="Mason">Mason</option>
-                                                    <option value="Roofer">Roofer</option>
-                                                    <option value="Landscaper">Landscaper</option>
-                                                    <option value="Janitor">Janitor</option>
-                                                    <option value="Factory Worker">Factory Worker</option>
-                                                    <option value="Warehouse Worker">Warehouse Worker</option>
-                                                    <option value="Truck Driver">Truck Driver</option>
-                                                    <option value="Delivery Driver">Delivery Driver</option>
-                                                    <option value="other">Other</option>
-                                                </select>
-                                                <div id="otherEarningSource" style="display: none;">
-                                                    <label for="otherEarningSourceInput">Enter other source:</label>
-                                                    <input type="text" class="form-control" id="otherEarningSourceInput"
-                                                        name="otherEarningSourceInput">
-                                                </div>
+                                                    <!-- Main source of earning for the family -->
+                                                    <div class="mb-3">
+                                                        <label for="earningSource">Main source of earning for the
+                                                            family:</label>
+                                                        <select class="form-select" id="earningSource" name="earningSource"
+                                                            onchange="checkOtherOption()">
+                                                            <option selected disabled>Select an option</option>
+                                                            <option value="agriculture">Agriculture</option>
+                                                            <option value="business">Business</option>
+                                                            <option value="government_job">Government Job</option>
+                                                            <option value="private_job">Private Job</option>
+                                                            <option value="Construction Worker">Construction Worker</option>
+                                                            <option value="Electrician">Electrician</option>
+                                                            <option value="Plumber">Plumber</option>
+                                                            <option value="Carpenter">Carpenter</option>
+                                                            <option value="Welder">Welder</option>
+                                                            <option value="Mechanic">Mechanic</option>
+                                                            <option value="Painter">Painter</option>
+                                                            <option value="Mason">Mason</option>
+                                                            <option value="Roofer">Roofer</option>
+                                                            <option value="Landscaper">Landscaper</option>
+                                                            <option value="Janitor">Janitor</option>
+                                                            <option value="Factory Worker">Factory Worker</option>
+                                                            <option value="Warehouse Worker">Warehouse Worker</option>
+                                                            <option value="Truck Driver">Truck Driver</option>
+                                                            <option value="Delivery Driver">Delivery Driver</option>
+                                                            <option value="other">Other</option>
+                                                        </select>
+                                                        <div id="otherEarningSource" style="display: none;">
+                                                            <label for="otherEarningSourceInput">Enter other source:</label>
+                                                            <input type="text" class="form-control" id="otherEarningSourceInput"
+                                                                name="otherEarningSourceInput">
+                                                        </div>
 
-                                                <!-- Additional Information -->
-                                                <div class="mb-3">
-                                                    <label for="additionalInfo" class="form-label">Additional
-                                                        Information</label>
-                                                    <textarea class="form-control" id="additionalInfo"
-                                                        name="additionalInfo" rows="3"
-                                                        placeholder="Enter any additional information"></textarea>
-                                                </div>
-
-                                                <!-- Citizen Services Section -->
-                                                <div class="card mb-4">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title">Citizen Services Assistance</h5>
-
-                                                        <!-- Need Assistance -->
+                                                        <!-- Additional Information -->
                                                         <div class="mb-3">
-                                                            <label for="needAssistance" class="form-label">Do you need any assistance regarding Citizen Services (Aadhar, PAN, Shram Card, ABHA, etc.)?</label>
-                                                            <select class="form-select" id="needAssistance" name="needAssistance" onchange="toggleAppointmentSection()" required>
-                                                                <option value="" selected disabled>Select option</option>
-                                                                <option value="no">No</option>
-                                                                <option value="yes">Yes</option>
-                                                            </select>
-                                                        </div>
-
-                                                        <!-- Services Needed -->
-                                                        <div id="servicesNeededSection" style="display: none;" class="mb-3">
-                                                            <label for="servicesNeeded" class="form-label">Which services do you need assistance with? (Select all that apply)</label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="serviceAadhar" name="servicesNeeded[]" value="Aadhar Card">
-                                                                <label class="form-check-label" for="serviceAadhar">Aadhar Card</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="servicePAN" name="servicesNeeded[]" value="PAN Card">
-                                                                <label class="form-check-label" for="servicePAN">PAN Card</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="serviceShram" name="servicesNeeded[]" value="Shram Card">
-                                                                <label class="form-check-label" for="serviceShram">Shram Card</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="serviceABHA" name="servicesNeeded[]" value="ABHA Card">
-                                                                <label class="form-check-label" for="serviceABHA">ABHA Card</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="serviceOther" name="servicesNeeded[]" value="Other">
-                                                                <label class="form-check-label" for="serviceOther">Other (please specify)</label>
-                                                                <input type="text" class="form-control mt-2" id="otherService" name="otherService" style="display: none;">
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Book Appointment -->
-                                                        <div id="bookAppointmentSection" style="display: none;" class="mb-3">
-                                                            <label for="bookAppointment" class="form-label">Would you like to book an appointment for these services?</label>
-                                                            <select class="form-select" id="bookAppointment" name="bookAppointment" onchange="togglePersonalInfoSection()">
-                                                                <option value="" selected disabled>Select option</option>
-                                                                <option value="no">No</option>
-                                                                <option value="yes">Yes</option>
-                                                            </select>
+                                                            <label for="additionalInfo" class="form-label">Additional
+                                                                Information</label>
+                                                            <textarea class="form-control" id="additionalInfo"
+                                                                name="additionalInfo" rows="3"
+                                                                placeholder="Enter any additional information"></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Personal Information for Appointment -->
-                                                <div id="personalInfoSection" style="display: none;">
-                                                    <div class="card mb-4">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title">Personal Information for Appointment</h5>
+                                            <!-- Citizen Services Section -->
+                                            <div class="card mb-4">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Citizen Services Assistance</h5>
 
-                                                            <!-- Date of Birth -->
+                                                    <!-- Need Assistance -->
+                                                    <div class="mb-3">
+                                                        <label for="needAssistance" class="form-label">Do you need any assistance regarding Citizen Services (Aadhar, PAN, Shram Card, ABHA, etc.)?</label>
+                                                        <select class="form-select" id="needAssistance" name="needAssistance" onchange="toggleAppointmentSection()" required>
+                                                            <option value="" selected disabled>Select option</option>
+                                                            <option value="no">No</option>
+                                                            <option value="yes">Yes</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Services Needed -->
+                                                    <div id="servicesNeededSection" style="display: none;" class="mb-3">
+                                                        <label for="servicesNeeded" class="form-label">Which services do you need assistance with? (Select all that apply)</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="serviceAadhar" name="servicesNeeded[]" value="Aadhar Card">
+                                                            <label class="form-check-label" for="serviceAadhar">Aadhar Card</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="servicePAN" name="servicesNeeded[]" value="PAN Card">
+                                                            <label class="form-check-label" for="servicePAN">PAN Card</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="serviceShram" name="servicesNeeded[]" value="Shram Card">
+                                                            <label class="form-check-label" for="serviceShram">Shram Card</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="serviceABHA" name="servicesNeeded[]" value="ABHA Card">
+                                                            <label class="form-check-label" for="serviceABHA">ABHA Card</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="serviceOther" name="servicesNeeded[]" value="Other">
+                                                            <label class="form-check-label" for="serviceOther">Other (please specify)</label>
+                                                            <input type="text" class="form-control mt-2" id="otherService" name="otherService" style="display: none;">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Book Appointment -->
+                                                    <div id="bookAppointmentSection" style="display: none;" class="mb-3">
+                                                        <label for="bookAppointment" class="form-label">Would you like to book an appointment for these services?</label>
+                                                        <select class="form-select" id="bookAppointment" name="bookAppointment" onchange="togglePersonalInfoSection()">
+                                                            <option value="" selected disabled>Select option</option>
+                                                            <option value="no">No</option>
+                                                            <option value="yes">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Personal Information for Appointment -->
+                                            <div id="personalInfoSection" style="display: none;">
+                                                <div class="card mb-4">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Personal Information for Appointment</h5>
+
+                                                        <!-- Date of Birth -->
+                                                        <div class="mb-3">
+                                                            <label for="dob" class="form-label">Date of Birth</label>
+                                                            <input type="date" class="form-control" id="dob" name="dob">
+                                                        </div>
+
+                                                        <!-- Gender -->
+                                                        <div class="mb-3">
+                                                            <label for="gender" class="form-label">Gender</label>
+                                                            <select class="form-select" id="gender" name="gender">
+                                                                <option value="" selected disabled>Select gender</option>
+                                                                <option value="Male">Male</option>
+                                                                <option value="Female">Female</option>
+                                                                <option value="Other">Other</option>
+                                                                <option value="Prefer not to say">Prefer not to say</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Email -->
+                                                        <div class="mb-3">
+                                                            <label for="email" class="form-label">Email</label>
+                                                            <input type="email" class="form-control" id="email" name="email">
+                                                        </div>
+
+                                                        <!-- Appointment Date -->
+                                                        <div class="mb-3">
+                                                            <label for="appointmentDate" class="form-label">Preferred Appointment Date</label>
+                                                            <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
+                                                        </div>
+
+                                                        <!-- Appointment Time -->
+                                                        <div class="mb-3">
+                                                            <label for="appointmentTime" class="form-label">Preferred Appointment Time</label>
+                                                            <input type="time" class="form-control" id="appointmentTime" name="appointmentTime">
+                                                        </div>
+
+                                                        <!-- Profile Photo -->
+                                                        <div class="mb-3">
+                                                            <label for="profilePhoto" class="form-label">Profile Photo</label>
+                                                            <input type="file" class="form-control" id="profilePhoto" name="profilePhoto" accept="image/*" capture="camera">
+                                                            <input type="hidden" id="photo_data" name="photo_data">
+                                                            <small class="text-muted">Take or upload a clear photo</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Job Search Assistance Section -->
+                                            <div class="card mb-4">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Job Search Assistance</h5>
+
+                                                    <!-- Need Job Assistance -->
+                                                    <div class="mb-3">
+                                                        <label for="needJobAssistance" class="form-label">Do you need any assistance regarding job search?</label>
+                                                        <select class="form-select" id="needJobAssistance" name="needJobAssistance" onchange="toggleJobAssistanceSection()" required>
+                                                            <option value="" selected disabled>Select option</option>
+                                                            <option value="no">No</option>
+                                                            <option value="yes">Yes</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Job Seeker Details -->
+                                                    <div id="jobSeekerSection" style="display: none;">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Job Seeker Details</label>
+                                                            <div id="jobSeekerRows">
+                                                                <!-- Initial row will be added here -->
+                                                            </div>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addJobSeekerRow()">
+                                                                <i class="bi bi-plus"></i> Add Another Job Seeker
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Potential Student Details</h5>
+                                                    <!-- Checkbox for Interest in Admission -->
+                                                    <div class="mb-3">
+                                                        <label for="interestInAdmission">Interested in
+                                                            Admission</label>
+                                                        <select class="form-select" id="interestInAdmission"
+                                                            name="interestInAdmission"
+                                                            onchange="toggleStudentFields()" required>
+                                                            <option value="" selected disabled>Select an option
+                                                            </option>
+                                                            <option value="no">No</option>
+                                                            <option value="yes">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <!-- Student Details -->
+                                                    <div id="studentsContainer" style="display: none;">
+                                                        <div class="student-details">
+                                                            <!-- Student's Name -->
                                                             <div class="mb-3">
-                                                                <label for="dob" class="form-label">Date of Birth</label>
-                                                                <input type="date" class="form-control" id="dob" name="dob">
+                                                                <label for="sname">Student's Name</label>
+                                                                <input type="text" class="form-control" id="sname"
+                                                                    name="students[0][name]"
+                                                                    placeholder="Enter student's name">
                                                             </div>
 
-                                                            <!-- Gender -->
+                                                            <!-- Age and Gender -->
+                                                            <div class="row">
+                                                                <!-- Age -->
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label for="sage" class="form-label">Age</label>
+                                                                    <input type="number" class="form-control"
+                                                                        id="sage" name="students[0][age]"
+                                                                        placeholder="Enter student's age">
+                                                                </div>
+                                                                <!-- Gender -->
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label for="sgender"
+                                                                        class="form-label">Gender</label>
+                                                                    <select class="form-select" id="sgender" name="students[0][gender]">
+                                                                        <option value="" selected disabled>Select gender</option>
+                                                                        <option value="Male">Male</option>
+                                                                        <option value="Female">Female</option>
+                                                                        <option value="Binary">Binary</option>
+                                                                        <option value="Prefer not to say">Prefer not
+                                                                            to say</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Grade Eligibility -->
                                                             <div class="mb-3">
-                                                                <label for="gender" class="form-label">Gender</label>
-                                                                <select class="form-select" id="gender" name="gender">
-                                                                    <option value="" selected disabled>Select gender</option>
-                                                                    <option value="Male">Male</option>
-                                                                    <option value="Female">Female</option>
-                                                                    <option value="Other">Other</option>
-                                                                    <option value="Prefer not to say">Prefer not to say</option>
+                                                                <label for="sgrade">Grade Eligibility</label>
+                                                                <select class="form-select" id="sgrade" name="students[0][grade]">
+                                                                    <option value="" selected disabled>Select Grade</option>
+                                                                    <option value="Nursery">Nursery</option>
+                                                                    <option value="LKG">LKG</option>
+                                                                    <option value="UKG">UKG</option>
+                                                                    <option value="Class 1">Class 1</option>
+                                                                    <option value="Class 2">Class 2</option>
+                                                                    <option value="Class 3">Class 3</option>
+                                                                    <option value="Class 4">Class 4</option>
+                                                                    <option value="Class 5">Class 5</option>
+                                                                    <option value="Class 6">Class 6</option>
+                                                                    <option value="Class 7">Class 7</option>
+                                                                    <option value="Class 8">Class 8</option>
+                                                                    <option value="Class 9">Class 9</option>
+                                                                    <option value="Class 10">Class 10</option>
+                                                                    <option value="Class 11">Class 11</option>
+                                                                    <option value="Class 12">Class 12</option>
+                                                                    <!-- Add additional grade options here -->
                                                                 </select>
                                                             </div>
 
-                                                            <!-- Email -->
+                                                            <!-- Other student details -->
                                                             <div class="mb-3">
-                                                                <label for="email" class="form-label">Email</label>
-                                                                <input type="email" class="form-control" id="email" name="email">
+                                                                <label for="alreadyGoingSchool">Is the student
+                                                                    already going to school?</label>
+                                                                <select class="form-select" id="alreadyGoingSchool" name="students[0][already_going_school]">
+                                                                    <option value="" selected disabled>Select an option</option>
+                                                                    <option value="yes">Yes</option>
+                                                                    <option value="no">No</option>
+                                                                </select>
                                                             </div>
 
-                                                            <!-- Appointment Date -->
-                                                            <div class="mb-3">
-                                                                <label for="appointmentDate" class="form-label">Preferred Appointment Date</label>
-                                                                <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
+                                                            <!-- School Type -->
+                                                            <div class="mb-3" id="schoolType">
+                                                                <label for="schoolType">Type of school currently
+                                                                    attending:</label>
+                                                                <select class="form-select" id="schoolType" name="students[0][school_type]">
+                                                                    <option value="" selected disabled>Select an option</option>
+                                                                    <option value="private">Private</option>
+                                                                    <option value="government">Government</option>
+                                                                </select>
                                                             </div>
 
-                                                            <!-- Appointment Time -->
+                                                            <!-- Coaching Classes -->
                                                             <div class="mb-3">
-                                                                <label for="appointmentTime" class="form-label">Preferred Appointment Time</label>
-                                                                <input type="time" class="form-control" id="appointmentTime" name="appointmentTime">
+                                                                <label for="alreadyCoaching">Is the student already
+                                                                    attending any coaching classes?</label>
+                                                                <select class="form-select" id="alreadyCoaching" name="students[0][already_coaching]">
+                                                                    <option value="" selected disabled>Select an option</option>
+                                                                    <option value="yes">Yes</option>
+                                                                    <option value="no">No</option>
+                                                                </select>
                                                             </div>
 
-                                                            <!-- Profile Photo -->
+                                                            <!-- Coaching Name -->
+                                                            <div class="mb-3" id="coachingNameInput">
+                                                                <label for="coachingName">Name of the
+                                                                    coaching:</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="coachingName"
+                                                                    name="students[0][coaching_name]"
+                                                                    placeholder="Enter coaching name">
+                                                            </div>
+
                                                             <div class="mb-3">
-                                                                <label for="profilePhoto" class="form-label">Profile Photo</label>
-                                                                <input type="file" class="form-control" id="profilePhoto" name="profilePhoto" accept="image/*" capture="camera">
-                                                                <input type="hidden" id="photo_data" name="photo_data">
-                                                                <small class="text-muted">Take or upload a clear photo</small>
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2"
+                                                                    onclick="addStudentDetails()"><i class="bi bi-plus"></i> Add
+                                                                    Student</button>
+                                                                <!-- <button type="button" class="btn btn-danger" onclick="removeStudentDetails(this)">Remove Student</button> -->
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Job Search Assistance Section -->
-                                                <div class="card mb-4">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title">Job Search Assistance</h5>
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                    toggleStudentFields();
+                                                    document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
+                                                });
 
-                                                        <!-- Need Job Assistance -->
-                                                        <div class="mb-3">
-                                                            <label for="needJobAssistance" class="form-label">Do you need any assistance regarding job search?</label>
-                                                            <select class="form-select" id="needJobAssistance" name="needJobAssistance" onchange="toggleJobAssistanceSection()" required>
-                                                                <option value="" selected disabled>Select option</option>
-                                                                <option value="no">No</option>
-                                                                <option value="yes">Yes</option>
-                                                            </select>
-                                                        </div>
+                                                function toggleStudentFields() {
+                                                    var dropdown = document.getElementById('interestInAdmission');
+                                                    var studentFields = document.querySelectorAll('.student-details .mb-3 input, .student-details .mb-3 select');
 
-                                                        <!-- Job Seeker Details -->
-                                                        <div id="jobSeekerSection" style="display: none;">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Job Seeker Details</label>
-                                                                <div id="jobSeekerRows">
-                                                                    <!-- Initial row will be added here -->
-                                                                </div>
-                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addJobSeekerRow()">
-                                                                    <i class="bi bi-plus"></i> Add Another Job Seeker
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="card">
-                                                    <div class="card-body">
-                                                        <!-- Checkbox for Interest in Admission -->
-                                                        <div class="mb-3">
-                                                            <label for="interestInAdmission">Interested in
-                                                                Admission</label>
-                                                            <select class="form-select" id="interestInAdmission"
-                                                                name="interestInAdmission"
-                                                                onchange="toggleStudentFields()" required>
-                                                                <option value="" selected disabled>Select an option
-                                                                </option>
-                                                                <option value="no">No</option>
-                                                                <option value="yes">Yes</option>
-                                                            </select>
-                                                        </div>
-                                                        <!-- Student Details -->
-                                                        <div id="studentsContainer" style="display: none;">
-                                                            <div class="student-details">
-                                                                <!-- Student's Name -->
-                                                                <div class="mb-3">
-                                                                    <label for="sname">Student's Name</label>
-                                                                    <input type="text" class="form-control" id="sname"
-                                                                        name="students[0][name]"
-                                                                        placeholder="Enter student's name">
-                                                                </div>
-
-                                                                <!-- Age and Gender -->
-                                                                <div class="row">
-                                                                    <!-- Age -->
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label for="sage" class="form-label">Age</label>
-                                                                        <input type="number" class="form-control"
-                                                                            id="sage" name="students[0][age]"
-                                                                            placeholder="Enter student's age">
-                                                                    </div>
-                                                                    <!-- Gender -->
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label for="sgender"
-                                                                            class="form-label">Gender</label>
-                                                                        <select class="form-select" id="sgender" name="students[0][gender]">
-                                                                            <option value="" selected disabled>Select gender</option>
-                                                                            <option value="Male">Male</option>
-                                                                            <option value="Female">Female</option>
-                                                                            <option value="Binary">Binary</option>
-                                                                            <option value="Prefer not to say">Prefer not
-                                                                                to say</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- Grade Eligibility -->
-                                                                <div class="mb-3">
-                                                                    <label for="sgrade">Grade Eligibility</label>
-                                                                    <select class="form-select" id="sgrade" name="students[0][grade]">
-                                                                        <option value="" selected disabled>Select Grade</option>
-                                                                        <option value="Nursery">Nursery</option>
-                                                                        <option value="LKG">LKG</option>
-                                                                        <option value="UKG">UKG</option>
-                                                                        <option value="Class 1">Class 1</option>
-                                                                        <option value="Class 2">Class 2</option>
-                                                                        <option value="Class 3">Class 3</option>
-                                                                        <option value="Class 4">Class 4</option>
-                                                                        <option value="Class 5">Class 5</option>
-                                                                        <option value="Class 6">Class 6</option>
-                                                                        <option value="Class 7">Class 7</option>
-                                                                        <option value="Class 8">Class 8</option>
-                                                                        <option value="Class 9">Class 9</option>
-                                                                        <option value="Class 10">Class 10</option>
-                                                                        <option value="Class 11">Class 11</option>
-                                                                        <option value="Class 12">Class 12</option>
-                                                                        <!-- Add additional grade options here -->
-                                                                    </select>
-                                                                </div>
-
-                                                                <!-- Other student details -->
-                                                                <div class="mb-3">
-                                                                    <label for="alreadyGoingSchool">Is the student
-                                                                        already going to school?</label>
-                                                                    <select class="form-select" id="alreadyGoingSchool" name="students[0][already_going_school]">
-                                                                        <option value="" selected disabled>Select an option</option>
-                                                                        <option value="yes">Yes</option>
-                                                                        <option value="no">No</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <!-- School Type -->
-                                                                <div class="mb-3" id="schoolType">
-                                                                    <label for="schoolType">Type of school currently
-                                                                        attending:</label>
-                                                                    <select class="form-select" id="schoolType" name="students[0][school_type]">
-                                                                        <option value="" selected disabled>Select an option</option>
-                                                                        <option value="private">Private</option>
-                                                                        <option value="government">Government</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <!-- Coaching Classes -->
-                                                                <div class="mb-3">
-                                                                    <label for="alreadyCoaching">Is the student already
-                                                                        attending any coaching classes?</label>
-                                                                    <select class="form-select" id="alreadyCoaching" name="students[0][already_coaching]">
-                                                                        <option value="" selected disabled>Select an option</option>
-                                                                        <option value="yes">Yes</option>
-                                                                        <option value="no">No</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <!-- Coaching Name -->
-                                                                <div class="mb-3" id="coachingNameInput">
-                                                                    <label for="coachingName">Name of the
-                                                                        coaching:</label>
-                                                                    <input type="text" class="form-control"
-                                                                        id="coachingName"
-                                                                        name="students[0][coaching_name]"
-                                                                        placeholder="Enter coaching name">
-                                                                </div>
-
-                                                                <div class="mb-3">
-                                                                    <button type="button" class="btn btn-primary"
-                                                                        onclick="addStudentDetails()">Add
-                                                                        Student</button>
-                                                                    <!-- <button type="button" class="btn btn-danger" onclick="removeStudentDetails(this)">Remove Student</button> -->
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <script>
-                                                    document.addEventListener("DOMContentLoaded", function() {
-                                                        toggleStudentFields();
-                                                        document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
-                                                    });
-
-                                                    function toggleStudentFields() {
-                                                        var dropdown = document.getElementById('interestInAdmission');
-                                                        var studentFields = document.querySelectorAll('.student-details .mb-3 input, .student-details .mb-3 select');
-
-                                                        if (dropdown.value === 'yes') {
-                                                            document.getElementById('studentsContainer').style.display = 'block';
-                                                            studentFields.forEach(function(field) {
-                                                                // Check if the field is the coachingName input
-                                                                if (field.id !== 'coachingName' && field.id !== 'schoolType') {
-                                                                    // If it's not the coachingName input, mark it as required
-                                                                    field.required = true;
-                                                                }
-                                                            });
-                                                        } else {
-                                                            document.getElementById('studentsContainer').style.display = 'none';
-                                                            studentFields.forEach(function(field) {
-                                                                field.required = false;
-                                                                field.value = ''; // Reset field value
-                                                            });
-                                                        }
+                                                    if (dropdown.value === 'yes') {
+                                                        document.getElementById('studentsContainer').style.display = 'block';
+                                                        studentFields.forEach(function(field) {
+                                                            // Check if the field is the coachingName input
+                                                            if (field.id !== 'coachingName' && field.id !== 'schoolType') {
+                                                                // If it's not the coachingName input, mark it as required
+                                                                field.required = true;
+                                                            }
+                                                        });
+                                                    } else {
+                                                        document.getElementById('studentsContainer').style.display = 'none';
+                                                        studentFields.forEach(function(field) {
+                                                            field.required = false;
+                                                            field.value = ''; // Reset field value
+                                                        });
                                                     }
-                                                </script>
-                                                <!-- Submit and Surveyor Details -->
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <button type="submit" class="btn btn-primary mt-2">Submit</button>
-                                                    <p class="mb-0">Surveyor Id:
-                                                        <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?>
-                                                    </p>
-                                                </div>
+                                                }
+                                            </script>
+                                            <!-- Submit and Surveyor Details -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <button type="submit" class="btn btn-primary mt-2">Submit</button>
+                                                <p class="mb-0">Surveyor Id:
+                                                    <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?>
+                                                </p>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>
@@ -775,6 +782,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </section>
 
     </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Bootstrap JS -->
     <script
@@ -916,9 +925,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Add remove button
             var removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove Student';
+            removeButton.innerHTML = '<i class="bi bi-trash"></i> Remove Student';
             removeButton.type = 'button';
-            removeButton.classList.add('btn', 'btn-danger');
+            removeButton.classList.add('btn', 'btn-sm', 'btn-outline-danger');
             removeButton.addEventListener('click', function() {
                 removeStudentDetails(this);
             });
@@ -1090,7 +1099,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                            id="sameAsParent-${jobSeekerRowCount}" 
                            onchange="fillFromParent(${jobSeekerRowCount})">
                     <label class="form-check-label" for="sameAsParent-${jobSeekerRowCount}">
-                        Same as parent/guardian details
+                        Same as respondent details
                     </label>
                 </div>
             </div>
@@ -1194,7 +1203,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             const contactField = document.getElementById(`jobSeekerContact-${rowId}`);
 
             if (checkbox.checked) {
-                // Fill with parent/guardian details
+                // Fill with respondent details
                 const parentName = document.getElementById('parentName').value;
                 const parentContact = document.getElementById('contact').value;
 
