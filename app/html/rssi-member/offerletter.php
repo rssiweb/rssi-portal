@@ -48,6 +48,7 @@ if (!$result) {
 $array = $resultArr[0] ?? [];
 $isPaidMembership = ($array['is_paid_membership'] ?? '') === 't';
 $isVolunteer = ($array['engagement'] ?? '') === 'Volunteer' && !str_contains($array['position'] ?? '', 'Intern');
+$isIntern = str_contains($array['position'] ?? '', 'Intern');
 ?>
 <?php
 $documents = [
@@ -366,9 +367,9 @@ $documents = [
                                                 'Full-time' => ["ninety (90) days", "12 months", "7.5-hour", "6"],
                                                 'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
                                             ],
-                                            'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
-                                            'Volunteer' => ["fifteen (15) days", "", "4-hour", "3"],
-                                            'VolunteerIntern' => ["thirty (30) days", "4 months", "4-hour", "3"],
+                                            'Intern' => ["", "one (1)", "4-hour", "4"],
+                                            'Volunteer' => ["", "", "4-hour", "3"],
+                                            'VolunteerIntern' => ["", "three (3)", "4-hour", "3"],
                                         ];
 
                                         // Check the engagement and job type, and set the values accordingly
@@ -400,7 +401,7 @@ $documents = [
                                             <li>This contract is prepared for a tenure of <?php echo $mintenure; ?> starting from the date of joining as mentioned in the joining letter.</li>
                                             <li>If you fail to serve the contract period as mentioned above, you shall be liable to pay RSSI ₹5000/- as a penalty.</li>
                                         <?php } ?>
-                                        <?php if ($array['job_type'] != "Contractual") { ?>
+                                        <?php if ($array['job_type'] != "Contractual" && !($isIntern) && !($isVolunteer)) { ?>
                                             <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
                                             <?php if (!($isVolunteer)): ?>
                                                 <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
@@ -417,7 +418,7 @@ $documents = [
                                         // 2) job_type is not Contractual
                                         // 3) not a volunteer
 
-                                        if ($removeMinDuration !== "yes" && $array['job_type'] != "Contractual" && !$isVolunteer) {
+                                        if ($removeMinDuration !== "yes" && $array['job_type'] != "Contractual" && !$isVolunteer && !$isIntern) {
                                         ?>
                                             <li>
                                                 You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least
@@ -429,27 +430,45 @@ $documents = [
                                         ?>
 
                                         <li>You are expected to be active and responsive throughout your service period.</li>
-                                        <?php
-                                        // Choose custom value if present, else default
-                                        $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
-                                        $finalWorkingHours = !empty($customWorkingHours) ? $customWorkingHours : $workinghours;
-                                        ?>
-
                                         <li>
                                             <p>Working Hours:</p>
-                                            The work schedule comprises <?php echo $finalWorkday; ?> days per week,
-                                            with each day requiring a <?php echo $finalWorkingHours; ?> commitment,
-                                            inclusive of essential administrative tasks as required.
-
-                                            <?php if ($array['college_name'] == "upes") { ?>
-                                                For the two-month internship program,
-                                                you will be assigned to one month in the morning shift and one month in the afternoon shift,
-                                                based on business requirements.
+                                            <?php if ($array['project'] !== "hvco" && $array['project'] !== "srijan") { ?>
+                                                <?php
+                                                // Choose custom value if present, else default
+                                                $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
+                                                $finalWorkingHours = !empty($customWorkingHours) ? $customWorkingHours : $workinghours;
+                                                ?>
+                                                <?php if ($isIntern) { ?>
+                                                    <p>This is a <?php echo $mintenure; ?> month program.</p>
+                                                <?php } ?>
+                                                <p>
+                                                    The work schedule comprises <?php echo $finalWorkday; ?> days per week,
+                                                    with each day requiring a <?php echo $finalWorkingHours; ?> commitment,
+                                                    inclusive of essential administrative tasks as required.
+                                                </p>
+                                            <?php } ?>
+                                            <?php if ($array['project'] == "hvco") { ?>
+                                                <p>
+                                                    This is a three (3) month program. The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
+                                                </p>
                                             <?php } ?>
 
-                                            <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes,
-                                            contingent upon real-time demands pertaining to non-academic activities and similar operational necessities.
-                                            You should be flexible in terms of working hours.
+                                            <?php if ($array['project'] == "srijan") { ?>
+                                                <p>
+                                                    This is a two (2) month program. The work schedule comprises four (4) days per week, with each day requiring a four (4) hour commitment, inclusive of essential administrative responsibilities as required. You will be assigned one month in the morning shift and one month in the afternoon shift, based on business requirements.
+                                                </p>
+                                            <?php } ?>
+
+                                            <?php if ($isIntern) { ?>
+                                                <P>
+                                                    Adherence to the defined timeline and attendance requirements is a mandatory criterion for eligibility to receive the completion certificate. In the event that the candidate discontinues the program prior to completion, no certificate or credit shall be issued for the period completed.
+                                                </P>
+                                            <?php } ?>
+                                            <p>
+                                                The regular working hours may be subject to an extension of up to a maximum of 30 minutes,
+                                                contingent upon real-time demands pertaining to non-academic activities and similar operational necessities.
+                                                You should be flexible in terms of working hours.
+                                            </p>
                                         </li>
                                         <li>
                                             <p>Primary responsibility:</p>

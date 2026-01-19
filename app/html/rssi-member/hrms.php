@@ -188,7 +188,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'photo',
             'security_deposit',
             'is_paid_membership',
-            'mandatory_training_pending'
+            'mandatory_training_pending',
+            'project'
         ];
 
         $user_editable_fields = [
@@ -1973,6 +1974,24 @@ echo "<script>
                                                                                         </div>
                                                                                     </td>
                                                                                 </tr>
+                                                                                <tr>
+                                                                                    <td><label for="project">Project:</label></td>
+                                                                                    <td>
+                                                                                        <span id="projectText"><?php echo $array['project']; ?></span>
+                                                                                        <select name="project" id="project" disabled class="form-select" style="display:none;">
+                                                                                            <option disabled selected>Select Project</option>
+                                                                                            <?php
+                                                                                            // List of Projects
+                                                                                            $projects = ["hvco", "srijan"];
+
+                                                                                            foreach ($projects as $project) {
+                                                                                                $selected = ($array["project"] == $project) ? "selected" : "";
+                                                                                                echo "<option value=\"$project\" $selected>" . strtoupper($project) . "</option>";
+                                                                                            }
+                                                                                            ?>
+                                                                                        </select>
+                                                                                    </td>
+                                                                                </tr>
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
@@ -2001,8 +2020,8 @@ echo "<script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const menuItems = document.querySelector('#menu-items');
