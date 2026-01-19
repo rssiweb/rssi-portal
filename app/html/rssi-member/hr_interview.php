@@ -461,6 +461,10 @@ if (!empty($interviewData['submitted_by'])) {
                                                                         <td><?php echo htmlspecialchars($responseData['email']); ?>
                                                                         </td>
                                                                     </tr>
+                                                                    <tr>
+                                                                        <td><strong>HR Interview Date:</strong></td>
+                                                                        <td><?= !empty($responseData['hr_interview_schedule']) ? (new DateTime($responseData['hr_interview_schedule']))->format('d/m/Y h:i A') : '' ?></td>
+                                                                    </tr>
                                                                 </tbody>
                                                             </table>
 
@@ -749,8 +753,8 @@ if (!empty($interviewData['submitted_by'])) {
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         $(document).ready(function() {
