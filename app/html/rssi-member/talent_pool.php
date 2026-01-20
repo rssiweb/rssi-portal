@@ -649,10 +649,11 @@ $resultArr = pg_fetch_all($result);
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const interviewDateRangeInput = document.getElementById('interview_date_range');
+            const filterForm = document.getElementById('filterForm');
 
-            // Initialize date range picker with empty initial value
+            // Initialize Date Range Picker
             $(interviewDateRangeInput).daterangepicker({
-                autoUpdateInput: false, // Change this to false
+                autoUpdateInput: false,
                 locale: {
                     format: 'YYYY-MM-DD',
                     separator: ' to ',
@@ -662,7 +663,8 @@ $resultArr = pg_fetch_all($result);
                     toLabel: 'To',
                     customRangeLabel: 'Custom',
                     daysOfWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                    monthNames: ['January', 'February', 'March', 'April', 'May', 'June',
+                    monthNames: [
+                        'January', 'February', 'March', 'April', 'May', 'June',
                         'July', 'August', 'September', 'October', 'November', 'December'
                     ],
                     firstDay: 1
@@ -672,66 +674,49 @@ $resultArr = pg_fetch_all($result);
                     'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
                     'Last 7 Days': [moment().subtract(6, 'days'), moment()],
                     'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'Next 7 Days': [moment(), moment().add(6, 'days')],
+                    'Next 30 Days': [moment(), moment().add(29, 'days')],
                     'This Month': [moment().startOf('month'), moment().endOf('month')],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'),
-                        moment().subtract(1, 'month').endOf('month')
-                    ],
-                    'This Quarter': [moment().startOf('quarter'), moment().endOf('quarter')]
+                    'Next Month': [
+                        moment().add(1, 'month').startOf('month'),
+                        moment().add(1, 'month').endOf('month')
+                    ]
                 },
                 showDropdowns: true,
-                minDate: '2020-01-01', // Adjust as needed
-                maxDate: moment(),
+                minDate: '2020-01-01',
+                maxDate: moment().add(1, 'year'), // ✅ Future dates allowed
                 opens: 'right',
-                drops: 'down',
-                startDate: moment().subtract(29, 'days'), // Default view when opened
-                endDate: moment() // Default view when opened
-            }, function(start, end, label) {
-                // This function runs when a date range is selected
-                $(interviewDateRangeInput).val(start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                drops: 'down'
+            }, function(start, end) {
+                interviewDateRangeInput.value =
+                    start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD');
             });
 
-            // Clear button functionality - clear the input field
-            $(interviewDateRangeInput).on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-
-            // Also clear the field on page load if it has default value from previous submit
-            // This ensures field is empty when page loads fresh
-            document.addEventListener('DOMContentLoaded', function() {
-                // If the field has today's date as default (which shouldn't happen with our PHP code)
-                const currentValue = interviewDateRangeInput.value;
-                if (currentValue && currentValue.includes(moment().format('YYYY-MM-DD') + ' to ' + moment().format('YYYY-MM-DD'))) {
-                    // Check if it's the default "today to today" value
-                    interviewDateRangeInput.value = '';
-                }
+            // Clear input when cancel is clicked
+            $(interviewDateRangeInput).on('cancel.daterangepicker', function() {
+                this.value = '';
             });
 
             // Form submission validation
-            document.getElementById('filterForm').addEventListener('submit', function(e) {
-                if (interviewDateRangeInput.value.trim()) {
-                    const dateRange = parseDateRange(interviewDateRangeInput.value);
-                    if (!dateRange) {
-                        e.preventDefault();
-                        alert('Invalid interview date range format. Please use the date picker or format: YYYY-MM-DD to YYYY-MM-DD');
-                        interviewDateRangeInput.focus();
-                        return;
-                    }
+            filterForm.addEventListener('submit', function(e) {
+                const value = interviewDateRangeInput.value.trim();
 
-                    if (dateRange.start > dateRange.end) {
-                        e.preventDefault();
-                        alert('Interview start date cannot be after end date');
-                        interviewDateRangeInput.focus();
-                        return;
-                    }
+                if (!value) return;
 
-                    // Validate dates are not in future
-                    const maxDateObj = new Date();
-                    if (dateRange.start > maxDateObj || dateRange.end > maxDateObj) {
-                        e.preventDefault();
-                        alert('Interview dates cannot be in the future');
-                        interviewDateRangeInput.focus();
-                        return;
-                    }
+                const dateRange = parseDateRange(value);
+                if (!dateRange) {
+                    e.preventDefault();
+                    alert(
+                        'Invalid interview date range format. Please use YYYY-MM-DD to YYYY-MM-DD.'
+                    );
+                    interviewDateRangeInput.focus();
+                    return;
+                }
+
+                if (dateRange.start > dateRange.end) {
+                    e.preventDefault();
+                    alert('Interview start date cannot be after end date.');
+                    interviewDateRangeInput.focus();
                 }
             });
 
@@ -740,8 +725,8 @@ $resultArr = pg_fetch_all($result);
                 const parts = rangeString.split(' to ');
                 if (parts.length !== 2) return null;
 
-                const startDate = new Date(parts[0].trim());
-                const endDate = new Date(parts[1].trim());
+                const startDate = new Date(parts[0]);
+                const endDate = new Date(parts[1]);
 
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
 
@@ -752,6 +737,7 @@ $resultArr = pg_fetch_all($result);
             }
         });
     </script>
+
 </body>
 
 </html>
