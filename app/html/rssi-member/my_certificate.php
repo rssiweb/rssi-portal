@@ -815,7 +815,7 @@ $resultArr = pg_fetch_all($result);
                                                                             <span class="dropdown-item disabled"><i class="bi bi-whatsapp"></i> No Phone</span>
                                                                         <?php } ?>
                                                                     </li>
-                                                                    <li>
+                                                                    <!-- <li>
                                                                         <form name="cmsdelete_<?= $array['certificate_no']; ?>" action="#" method="POST" style="display:inline;">
                                                                             <input type="hidden" name="form-type" value="cmsdelete">
                                                                             <input type="hidden" name="cmsid" value="<?= $array['certificate_no']; ?>">
@@ -823,7 +823,7 @@ $resultArr = pg_fetch_all($result);
                                                                                 <i class="bi bi-x-lg"></i> Delete
                                                                             </button>
                                                                         </form>
-                                                                    </li>
+                                                                    </li> -->
                                                                 </ul>
                                                             </div>
                                                         </td>
@@ -888,8 +888,8 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty

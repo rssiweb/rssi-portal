@@ -432,7 +432,7 @@ $documents = [
                                         <li>You are expected to be active and responsive throughout your service period.</li>
                                         <li>
                                             <p>Working Hours:</p>
-                                            <?php if ($array['project'] !== "hvco" && $array['project'] !== "srijan") { ?>
+                                            <?php if ($array['project'] !== "hvco_3_month" && $array['project'] !== "srijan") { ?>
                                                 <?php
                                                 // Choose custom value if present, else default
                                                 $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
@@ -447,7 +447,7 @@ $documents = [
                                                     inclusive of essential administrative tasks as required.
                                                 </p>
                                             <?php } ?>
-                                            <?php if ($array['project'] == "hvco") { ?>
+                                            <?php if ($array['project'] == "hvco_3_month") { ?>
                                                 <p>
                                                     This is a three (3) month program. The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
                                                 </p>

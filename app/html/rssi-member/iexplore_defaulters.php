@@ -38,6 +38,7 @@ AssociateCourses AS (
     WHERE 
         rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
+        AND rm.grade NOT IN ('D')
 ),
 ExpiredCourses AS (
     SELECT
@@ -57,6 +58,7 @@ ExpiredCourses AS (
         AND ws.timestamp + (w.validity || ' years')::INTERVAL < NOW()
         AND rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
+        AND rm.grade NOT IN ('D')
         -- Exclude records where a more recent attempt exists that passes
         AND NOT EXISTS (
             SELECT 1
@@ -80,6 +82,7 @@ LatestAssociateCourses AS (
     WHERE
         rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
+        AND rm.grade NOT IN ('D')
         AND ws.timestamp = (
             SELECT MAX(timestamp)
             FROM wbt_status
@@ -102,6 +105,7 @@ MissingCourses AS (
     WHERE 
         rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
+        AND rm.grade NOT IN ('D')
         AND (
             lac.associatenumber IS NULL  
             OR lac.score < w.passingmarks  
