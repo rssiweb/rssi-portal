@@ -24,7 +24,8 @@ $headers = [
     'category_name',    // Required: Fee category name (must exist in fee_categories)
     'amount',           // Required: Positive number
     'effective_from',   // Required: Date in YYYY-MM-DD format
-    'effective_until'   // Optional: Date in YYYY-MM-DD format (leave empty for indefinite)
+    'effective_until',   // Optional: Date in YYYY-MM-DD format (leave empty for indefinite)
+    'remarks'           // Optional
 ];
 fputcsv($output, $headers);
 
@@ -95,6 +96,7 @@ fputcsv($output, ['2. category_name: Must exist in fee_categories table, be acti
 fputcsv($output, ['3. amount: Must be a positive number (e.g., 1000.50)']);
 fputcsv($output, ['4. effective_from: Must be in YYYY-MM-DD format']);
 fputcsv($output, ['5. effective_until: Optional, but must be in YYYY-MM-DD format if provided']);
+fputcsv($output, ['5. remarks: Optional']);
 
 fclose($output);
 exit;
