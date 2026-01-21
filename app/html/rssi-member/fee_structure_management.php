@@ -938,6 +938,16 @@ if (!empty($statusCondition)) {
                                                             <input type="month" id="effective_until_month" class="form-control month-last-day">
                                                             <input type="hidden" name="effective_until" id="effective_until">
                                                         </div>
+
+                                                        <div class="col-md-4">
+                                                            <label for="remarks" class="form-label">Remarks</label>
+                                                            <textarea
+                                                                name="remarks"
+                                                                id="remarks"
+                                                                class="form-control"
+                                                                rows="3"
+                                                                placeholder="Enter remarks (if any)"></textarea>
+                                                        </div>
                                                         <div class="col-md-4 d-flex align-items-end">
                                                             <button type="submit" name="assign_fee" class="btn btn-primary">
                                                                 <i class="fas fa-save me-1"></i> Assign Fee
@@ -1014,6 +1024,7 @@ if (!empty($statusCondition)) {
                                                                             <th>Amount</th>
                                                                             <th>Effective From</th>
                                                                             <th>Effective Until</th>
+                                                                            <th>Remarks</th>
                                                                             <th>Status</th>
                                                                         </tr>
                                                                     </thead>
@@ -1085,6 +1096,7 @@ if (!empty($statusCondition)) {
                                                                     <th>Effective From</th>
                                                                     <th>Effective Until</th>
                                                                     <th>Status</th>
+                                                                    <th>Remakrs</th>
                                                                     <th>Actions</th>
                                                                 </tr>
                                                             </thead>
@@ -1125,6 +1137,9 @@ if (!empty($statusCondition)) {
                                                                                     <?php else: ?>
                                                                                         <span class="badge bg-secondary">Inactive</span>
                                                                                     <?php endif; ?>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?= htmlspecialchars($fee['remarks']) ?>
                                                                                 </td>
                                                                                 <td>
                                                                                     <?php if ($isActive): ?>
@@ -1251,8 +1266,8 @@ if (!empty($statusCondition)) {
     <!-- Required JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         $(document).ready(function() {
@@ -1468,13 +1483,21 @@ if (!empty($statusCondition)) {
                 if (!monthInput.value) return;
 
                 const [year, month] = monthInput.value.split('-');
-                const date = isFirstDay ?
-                    new Date(year, month - 1, 1) : // First day of month
-                    new Date(year, month, 0); // Last day of month
+                let dateStr;
+
+                if (isFirstDay) {
+                    // First day of selected month (YYYY-MM-01)
+                    dateStr = `${year}-${month.padStart(2, '0')}-01`;
+                } else {
+                    // Last day of selected month - calculate without timezone issues
+                    const lastDay = new Date(year, month, 0).getDate();
+                    dateStr = `${year}-${month.padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
+                }
 
                 const hiddenInput = monthInput.nextElementSibling;
                 if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
-                    hiddenInput.value = date.toISOString().split('T')[0];
+                    hiddenInput.value = dateStr; // Direct string, no timezone conversion
+                    console.log(`Setting ${hiddenInput.id} to: ${dateStr}`); // Debug
                 }
             }
 
@@ -1582,14 +1605,21 @@ if (!empty($statusCondition)) {
                 if (!monthInput.value) return;
 
                 const [year, month] = monthInput.value.split('-');
-                const date = isFirstDay ?
-                    new Date(year, month - 1, 1) : // First day of month
-                    new Date(year, month, 0); // Last day of month
+                let dateStr;
 
-                // Find the nearest hidden input with the same base name
+                if (isFirstDay) {
+                    // First day of selected month (YYYY-MM-01)
+                    dateStr = `${year}-${month.padStart(2, '0')}-01`;
+                } else {
+                    // Last day of selected month - calculate without timezone issues
+                    const lastDay = new Date(year, month, 0).getDate();
+                    dateStr = `${year}-${month.padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
+                }
+
                 const hiddenInput = monthInput.nextElementSibling;
                 if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
-                    hiddenInput.value = date.toISOString().split('T')[0];
+                    hiddenInput.value = dateStr; // Direct string, no timezone conversion
+                    console.log(`Setting ${hiddenInput.id} to: ${dateStr}`); // Debug
                 }
             }
         });
@@ -1676,7 +1706,7 @@ if (!empty($statusCondition)) {
     <!-- Initialize Select2 -->
     <script>
         $(document).ready(function() {
-            $('.select2').select2({
+            $('#class').select2({
                 width: '100%',
                 placeholder: 'Select options',
                 allowClear: true,
@@ -1909,6 +1939,7 @@ if (!empty($statusCondition)) {
                     <td>₹${parseFloat(record.amount || 0).toFixed(2)}</td>
                     <td>${escapeHtml(record.effective_from)}</td>
                     <td>${escapeHtml(record.effective_until || 'N/A')}</td>
+                    <td>${escapeHtml(record.remarks || 'N/A')}</td>
                     <td><span class="${statusClass}">${escapeHtml(record.status)}</span></td>
                 </tr>
             `;
