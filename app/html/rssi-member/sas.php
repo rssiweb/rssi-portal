@@ -11,7 +11,7 @@ if (!isLoggedIn("aid")) {
 validation();
 
 // Initialize all variables used in the form
-$status = $_GET['status'] ?? 'Active'; // Initialize status with default value
+$status = $_GET['status'] ?? 'Active';
 $startDate = $_GET['start_date'] ?? date('Y-m-01');
 $endDate = $_GET['end_date'] ?? date('Y-m-t');
 $selectedCategories = (array)($_GET['categories'] ?? []);
@@ -24,9 +24,8 @@ $attendanceData = [];
 $averagePercentage = 0;
 $message = "Please select filters to view attendance data";
 
-// Only process if at least one filter is set (excluding default values)
+// Only process if at least one filter is set
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function ($v, $k) {
-    // Ignore these default parameters when checking for filters
     $defaults = ['status' => 'Active', 'start_date' => date('Y-m-01'), 'end_date' => date('Y-m-t')];
     return !(array_key_exists($k, $defaults) && $v == $defaults[$k]);
 }, ARRAY_FILTER_USE_BOTH))) {
@@ -34,226 +33,192 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
     $hasFilters = true;
     $startTime = microtime(true);
 
-    function makePlaceholders($array)
-    {
-        return implode(',', array_map(fn($i) => '$' . ($i + 1), array_keys($array)));
+    // Build WHERE conditions for student filtering
+    $conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
+    $params = [];
+    $paramCount = 1;
+
+    if (!empty($selectedCategories)) {
+        $placeholders = implode(',', array_fill(0, count($selectedCategories), '$' . $paramCount));
+        $params = array_merge($params, $selectedCategories);
+        $conditions[] = "s.category IN ($placeholders)";
+        $paramCount += count($selectedCategories);
     }
 
-    // Validate and filter selections
-    function validateSelection($con, $table, $column, $values)
-    {
-        if (empty($values)) return [];
-        $ph = makePlaceholders($values);
-        $sql = "SELECT $column FROM $table WHERE $column IN ($ph)";
-        $res = pg_query_params($con, $sql, $values);
-        return $res ? array_column(pg_fetch_all($res) ?: [], $column) : [];
+    if (!empty($selectedClasses)) {
+        $placeholders = implode(',', array_fill(0, count($selectedClasses), '$' . $paramCount));
+        $params = array_merge($params, $selectedClasses);
+        $conditions[] = "s.class IN ($placeholders)";
+        $paramCount += count($selectedClasses);
     }
-
-    $validCategories = !empty($selectedCategories) ? validateSelection($con, 'school_categories', 'category_value', $selectedCategories) : [];
-    $validClasses = !empty($selectedClasses) ? validateSelection($con, 'school_classes', 'value', $selectedClasses) : [];
-    $validStudents = [];
 
     if (!empty($selectedStudents)) {
-        $ph = makePlaceholders($selectedStudents);
-        $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($ph)";
-        $res = pg_query_params($con, $sql, $selectedStudents);
-        $validStudents = $res ? pg_fetch_all($res) ?: [] : [];
-    }
-
-    // Build WHERE conditions
-    $conditions = ["s.filterstatus = '" . pg_escape_string($con, $status) . "'"];
-
-    if (!empty($validCategories)) {
-        $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $validCategories));
-        $conditions[] = "s.category IN ('$list')";
-    }
-
-    if (!empty($validClasses)) {
-        $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $validClasses));
-        $conditions[] = "s.class IN ('$list')";
-    }
-
-    if (!empty($validStudents)) {
-        $ids = array_column($validStudents, 'student_id');
-        $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $ids));
-        $conditions[] = "s.student_id IN ('$list')";
+        $placeholders = implode(',', array_fill(0, count($selectedStudents), '$' . $paramCount));
+        $params = array_merge($params, $selectedStudents);
+        $conditions[] = "s.student_id IN ($placeholders)";
+        $paramCount += count($selectedStudents);
     }
 
     $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    // Main query (only executed if we have valid filters)
+    // Main query - OPTIMIZED VERSION
     if (!empty($conditions)) {
         $query = "
-    WITH date_range AS (
-        SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
-    ),
-    holidays AS (
-        SELECT holiday_date FROM holidays 
-        WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
-    ),
-    student_exceptions AS (
+        WITH filtered_students AS (
+            SELECT student_id, studentname, category, class, doa
+            FROM rssimyprofile_student s
+            $whereClause
+        ),
+        -- Get all relevant dates once
+        relevant_dates AS (
+            SELECT DISTINCT a.date AS attendance_date
+            FROM attendance a
+            JOIN filtered_students fs ON a.user_id = fs.student_id
+            WHERE a.date BETWEEN $1 AND $2
+            UNION
+            SELECT holiday_date AS attendance_date
+            FROM holidays
+            WHERE holiday_date BETWEEN $1 AND $2
+            UNION
+            SELECT e.exception_date AS attendance_date
+            FROM student_class_days_exceptions e
+            JOIN student_exception_mapping m ON e.exception_id = m.exception_id
+            JOIN filtered_students fs ON m.student_id = fs.student_id
+            WHERE e.exception_date BETWEEN $1 AND $2
+        ),
+        -- Get holidays and exceptions as arrays
+        holidays_array AS (
+            SELECT array_agg(holiday_date) AS dates
+            FROM holidays
+            WHERE holiday_date BETWEEN $1 AND $2
+        ),
+        student_exceptions_array AS (
+            SELECT 
+                m.student_id,
+                array_agg(DISTINCT e.exception_date) AS exception_dates
+            FROM student_class_days_exceptions e
+            JOIN student_exception_mapping m ON e.exception_id = m.exception_id
+            WHERE e.exception_date BETWEEN $1 AND $2
+            GROUP BY m.student_id
+        ),
+        -- Get class days configuration
+        class_days_config AS (
+            SELECT 
+                category,
+                effective_from,
+                effective_to,
+                class_days
+            FROM student_class_days
+            WHERE effective_to >= $1 OR effective_to IS NULL
+        ),
+        -- Get attendance records
+        student_attendance AS (
+            SELECT 
+                fs.student_id,
+                a.date AS attendance_date,
+                COUNT(*) as present_count
+            FROM filtered_students fs
+            JOIN attendance a ON fs.student_id = a.user_id
+            WHERE a.date BETWEEN $1 AND $2
+            GROUP BY fs.student_id, a.date
+        )
         SELECT 
-            m.student_id,
-            e.exception_date AS attendance_date
-        FROM 
-            student_class_days_exceptions e
-        JOIN 
-            student_exception_mapping m ON e.exception_id = m.exception_id
-        WHERE 
-            e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
-    ),
-    filtered_students AS (
-        SELECT student_id, studentname, category, class, doa
-        FROM rssimyprofile_student s
-        $whereClause
-    ),
-    student_class_days_filtered AS (
-        SELECT 
-            fs.student_id, fs.studentname, fs.category, fs.class,
-            d.attendance_date,
+            fs.student_id,
+            fs.studentname,
+            fs.category,
+            fs.class,
             TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
-            EXISTS (
-                SELECT 1 FROM student_class_days cw
-                WHERE cw.category = fs.category
-                  AND cw.effective_from <= d.attendance_date
-                  AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                  AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
-            ) AS is_class_day,
-            EXISTS (
-                SELECT 1 FROM attendance a 
-                WHERE a.user_id = fs.student_id AND a.date = d.attendance_date
-            ) AS is_present,
-            EXISTS (
-                SELECT 1 FROM holidays h 
-                WHERE h.holiday_date = d.attendance_date
-            ) AS is_holiday,
-            EXISTS (
-                SELECT 1 FROM student_exceptions se
-                WHERE se.student_id = fs.student_id AND se.attendance_date = d.attendance_date
-            ) AS has_exception
-        FROM date_range d
-        JOIN filtered_students fs ON d.attendance_date >= fs.doa
-    ),
-    attendance_data AS (
-        SELECT
-            student_id, studentname, category, class, month_year, attendance_date,
-            CASE
-                WHEN is_present THEN 'P'
-                WHEN is_holiday THEN NULL
-                WHEN has_exception THEN NULL
-                WHEN is_class_day AND EXISTS (SELECT 1 FROM attendance WHERE date = attendance_date) THEN 'A'
+            -- Check if it's a class day
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 FROM class_days_config c
+                    WHERE c.category = fs.category
+                    AND c.effective_from <= d.attendance_date
+                    AND (c.effective_to IS NULL OR c.effective_to >= d.attendance_date)
+                    AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN c.class_days) > 0
+                ) THEN 1
+                ELSE 0
+            END AS is_class_day,
+            -- Check attendance
+            CASE 
+                WHEN sa.present_count > 0 THEN 'P'
+                WHEN ha.dates IS NOT NULL AND d.attendance_date = ANY(ha.dates) THEN NULL
+                WHEN sea.exception_dates IS NOT NULL AND d.attendance_date = ANY(sea.exception_dates) THEN NULL
+                WHEN EXISTS (
+                    SELECT 1 FROM class_days_config c
+                    WHERE c.category = fs.category
+                    AND c.effective_from <= d.attendance_date
+                    AND (c.effective_to IS NULL OR c.effective_to >= d.attendance_date)
+                    AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN c.class_days) > 0
+                ) THEN 'A'
                 ELSE NULL
             END AS attendance_status
-        FROM student_class_days_filtered
-    )
-    SELECT 
-        student_id, studentname, category, class, month_year,
-        COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) AS total_classes,
-        COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) AS attended_classes,
-        CASE 
-            WHEN COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END) = 0 THEN NULL
-            ELSE ROUND(
-                (COUNT(DISTINCT CASE WHEN attendance_status = 'P' THEN attendance_date END) * 100.0) /
-                COUNT(DISTINCT CASE WHEN attendance_status IS NOT NULL THEN attendance_date END), 2
-            )
-        END AS attendance_percentage
-    FROM attendance_data
-    GROUP BY student_id, studentname, category, class, month_year
-    ORDER BY studentname, month_year;
-";
+        FROM filtered_students fs
+        CROSS JOIN relevant_dates d
+        LEFT JOIN holidays_array ha ON 1=1
+        LEFT JOIN student_exceptions_array sea ON sea.student_id = fs.student_id
+        LEFT JOIN student_attendance sa ON sa.student_id = fs.student_id AND sa.attendance_date = d.attendance_date
+        WHERE d.attendance_date >= fs.doa
+        ORDER BY fs.student_id, d.attendance_date
+        ";
 
-        $result = pg_query($con, $query);
-        $attendanceData = pg_fetch_all($result) ?: [];
+        // Add start and end dates to parameters
+        array_unshift($params, $endDate, $startDate);
 
-        // Calculate average percentage
-        $totalPercentage = 0;
-        $monthCount = 0;
-        foreach ($attendanceData as $row) {
-            if ($row['attendance_percentage'] !== null) {
-                $totalPercentage += $row['attendance_percentage'];
-                $monthCount++;
-            }
-        }
-        $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
+        $result = pg_query_params($con, $query, $params);
 
-        // Handle CSV export
-        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-            header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename=attendance_summary_' . date('Y-m-d') . '.csv');
-            $output = fopen('php://output', 'w');
+        if ($result) {
+            $rawData = pg_fetch_all($result) ?: [];
 
-            $headers = ['Sl. No.', 'Student ID', 'Student Name', 'Category', 'Class'];
-            $months = array_unique(array_column($attendanceData, 'month_year'));
-            sort($months);
+            // Process data in PHP instead of complex SQL
+            $groupedData = [];
+            foreach ($rawData as $row) {
+                $key = $row['student_id'] . '|' . $row['month_year'];
 
-            foreach ($months as $month) {
-                $label = date('M Y', strtotime($month . '-01'));
-                $headers[] = "$label Present";
-                $headers[] = "$label Total";
-                $headers[] = "$label Percentage";
-            }
-            $headers[] = 'Overall Percentage';
-            fputcsv($output, $headers);
-
-            $students = [];
-            foreach ($attendanceData as $row) {
-                $id = $row['student_id'];
-                if (!isset($students[$id])) {
-                    $students[$id] = [
-                        'info' => [
-                            'studentname' => $row['studentname'],
-                            'category' => $row['category'],
-                            'class' => $row['class']
-                        ],
-                        'months' => [],
-                        'total_present' => 0,
-                        'total_classes' => 0
+                if (!isset($groupedData[$key])) {
+                    $groupedData[$key] = [
+                        'student_id' => $row['student_id'],
+                        'studentname' => $row['studentname'],
+                        'category' => $row['category'],
+                        'class' => $row['class'],
+                        'month_year' => $row['month_year'],
+                        'total_classes' => 0,
+                        'attended_classes' => 0
                     ];
                 }
-                $students[$id]['months'][$row['month_year']] = [
-                    'present' => $row['attended_classes'],
-                    'total' => $row['total_classes'],
-                    'percentage' => $row['attendance_percentage']
-                ];
-                $students[$id]['total_present'] += $row['attended_classes'];
-                $students[$id]['total_classes'] += $row['total_classes'];
-            }
 
-            $sl = 1;
-            foreach ($students as $id => $data) {
-                $row = [
-                    $sl++,
-                    $id,
-                    $data['info']['studentname'],
-                    $data['info']['category'],
-                    $data['info']['class']
-                ];
-                foreach ($months as $m) {
-                    $month = $data['months'][$m] ?? ['present' => '', 'total' => '', 'percentage' => ''];
-                    $row[] = $month['present'];
-                    $row[] = $month['total'];
-                    $row[] = $month['percentage'] !== '' ? $month['percentage'] . '%' : '';
+                if ($row['attendance_status'] !== null) {
+                    $groupedData[$key]['total_classes']++;
+                    if ($row['attendance_status'] === 'P') {
+                        $groupedData[$key]['attended_classes']++;
+                    }
                 }
-                $overall = $data['total_classes'] > 0
-                    ? round(($data['total_present'] / $data['total_classes']) * 100, 2) . '%'
-                    : '0%';
-                $row[] = $overall;
-                fputcsv($output, $row);
             }
 
-            fclose($output);
-            exit;
-        }
+            // Calculate percentages
+            foreach ($groupedData as &$data) {
+                $data['attendance_percentage'] = $data['total_classes'] > 0
+                    ? round(($data['attended_classes'] * 100.0) / $data['total_classes'], 2)
+                    : null;
+            }
 
-        echo "<script>console.log('Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds');</script>";
-    } else {
-        $message = "No valid filters selected. Please check your filter values.";
+            $attendanceData = array_values($groupedData);
+
+            // Calculate average percentage
+            $totalPercentage = 0;
+            $monthCount = 0;
+            foreach ($attendanceData as $row) {
+                if ($row['attendance_percentage'] !== null) {
+                    $totalPercentage += $row['attendance_percentage'];
+                    $monthCount++;
+                }
+            }
+            $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
+
+            echo "<script>console.log('Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds');</script>";
+        }
     }
 }
-
-// The HTML portion of your page would go here
-// You can use $hasFilters, $attendanceData, $averagePercentage, and $message variables
-// to display appropriate content
 ?>
 
 <!doctype html>
@@ -470,8 +435,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         $(document).ready(function() {
