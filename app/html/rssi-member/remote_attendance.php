@@ -336,8 +336,8 @@ validation();
                         ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
                         <div class="text-muted small">ID: ${person.id}</div>
                     </div>
-                    <span class="badge ${person.type === 'student' ? 'bg-primary' : 'bg-info'}">
-                        ${person.type}
+                    <span class="badge ${person.filterstatus === 'Active' ? 'bg-success' : 'bg-danger'}">
+                        ${person.filterstatus}
                     </span>
                 </div>
             </a>
@@ -373,6 +373,7 @@ validation();
                         name: person.name,
                         identifier: person.id,
                         type: person.type,
+                        filterstatus: person.filterstatus,
                         class: person.class || ''
                     });
                     updateSelectedList();
@@ -405,7 +406,7 @@ validation();
                                 <div>
                                     <strong>${person.name}</strong>
                                     ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
-                                    <div class="text-muted small">ID: ${person.identifier} (${person.type})</div>
+                                    <div class="text-muted small">ID: ${person.identifier} (${person.filterstatus})</div>
                                 </div>
                                 <span class="remove-item" data-id="${person.id}">
                                     <i class="bi bi-x-circle-fill"></i>

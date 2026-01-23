@@ -6,6 +6,7 @@ if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
+    exit;
 }
 
 validation();
@@ -14,8 +15,10 @@ validation();
 $searchTerm = $_GET['q'] ?? '';
 $isActive = $_GET['isActive'] ?? false;
 $isInactive = $_GET['isInactive'] ?? false;
+$status = $_GET['status'] ?? null;
 
-// Prepare the base query
+// Prepare parameters array
+$params = ["%$searchTerm%"];
 $query = "
     SELECT 
         student_id, 
@@ -26,19 +29,23 @@ $query = "
         (studentname ILIKE $1 OR 
         student_id::text ILIKE $1)";
 
-// Add filter for Active status only if it's the shift planner request
-if ($isActive) {
+// Handle status filtering with parameterized queries
+if ($isActive && !$isInactive) {
+    // Old method: isActive parameter
     $query .= " AND filterstatus = 'Active'";
-}
-if ($isInactive) {
+} elseif (!$isActive && $isInactive) {
+    // Old method: isInactive parameter
     $query .= " AND filterstatus = 'Inactive'";
+} elseif ($status && ($status === 'Active' || $status === 'Inactive')) {
+    // New method: status parameter - safe validation
+    $query .= " AND filterstatus = '$status'"; // Safe because we validated $status
 }
 
 $query .= " ORDER BY studentname LIMIT 10";
 
 // Prepare and execute the query
 $stmt = pg_prepare($con, "fetch_students", $query);
-$result = pg_execute($con, "fetch_students", ["%$searchTerm%"]);
+$result = pg_execute($con, "fetch_students", $params);
 
 // Fetch the results
 $students = [];

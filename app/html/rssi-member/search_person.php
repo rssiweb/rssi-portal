@@ -19,7 +19,7 @@ try {
     $results = [];
 
     // Search in students
-    $studentQuery = "SELECT student_id as id, studentname as name, class 
+    $studentQuery = "SELECT student_id as id, studentname as name, class, filterstatus 
                     FROM rssimyprofile_student 
                     WHERE (student_id = $1 OR LOWER(studentname) LIKE LOWER($2))";
     $studentParams = [$searchTerm, '%' . $searchTerm . '%'];
@@ -30,7 +30,7 @@ try {
     }
 
     // Search in associates
-    $associateQuery = "SELECT associatenumber as id, fullname as name 
+    $associateQuery = "SELECT associatenumber as id, fullname as name, filterstatus 
                       FROM rssimyaccount_members 
                       WHERE (associatenumber = $1 OR LOWER(fullname) LIKE LOWER($2))
                       AND filterstatus = 'Active'

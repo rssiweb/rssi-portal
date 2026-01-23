@@ -1663,28 +1663,41 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     </script>
     <script>
         $(document).ready(function() {
-            $('#student-select').select2({
-                ajax: {
-                    url: 'fetch_students.php',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term, // search term
-                            isActive: true // or false depending on your needs
-                        };
+            function initializeStudentSelect(status = 'Active') {
+                $('#student-select').select2({
+                    ajax: {
+                        url: 'fetch_students.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                status: status // Pass the current status value
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results
+                            };
+                        },
+                        cache: true
                     },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 2,
-                placeholder: 'Search by Student ID or Name',
-                // allowClear: true,
-                width: '100%'
+                    minimumInputLength: 2,
+                    placeholder: 'Search by Student ID or Name',
+                    width: '100%'
+                });
+            }
+
+            // Get initial status from dropdown
+            const initialStatus = $("select[name='status']").val() || 'Active';
+            initializeStudentSelect(initialStatus);
+
+            // Update when status changes
+            $("select[name='status']").on('change', function() {
+                const newStatus = $(this).val();
+                // Destroy and reinitialize with new status
+                $('#student-select').select2('destroy').empty();
+                initializeStudentSelect(newStatus);
             });
         });
     </script>
