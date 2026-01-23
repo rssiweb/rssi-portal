@@ -71,8 +71,8 @@ if ($months_selected) {
         $from_month_name = date('F', mktime(0, 0, 0, $from_month_num, 1));
         $to_month_name = date('F', mktime(0, 0, 0, $to_month_num, 1));
 
-        $from_academic_year = ($from_month_num >= 4) ? $from_year : $from_year - 1;
-        $to_academic_year = ($to_month_num >= 4) ? $to_year : $to_year - 1;
+        $from_academic_year = $from_year;
+        $to_academic_year = $to_year;
 
         $month_order = [
             'January' => 1,
@@ -692,8 +692,8 @@ if ($months_selected) {
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Initialize DataTable only if we have data and table exists
@@ -835,7 +835,7 @@ if ($months_selected) {
                     data: function(params) {
                         return {
                             q: params.term,
-                            isActive: true
+                            //isActive: true
                         };
                     },
                     processResults: function(data) {
