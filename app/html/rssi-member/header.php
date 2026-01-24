@@ -330,38 +330,12 @@
           </li>
         </ul>
       </li>
+
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#stockmanagement" data-bs-toggle="collapse" href="#">
-          <span>Stock Management</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link collapsed" id="stockmanagementLink" href="stock_management.php">
+          <span>Stock Management</span>
         </a>
-        <ul id="stockmanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a id="stock_add" href="stock_add.php">
-              <span>Add Stock</span>
-            </a>
-          </li>
-          <li>
-            <a id="stock_out" href="stock_out.php">
-              <span>Distribute Stock</span>
-            </a>
-          </li>
-          <li>
-            <a id="stock_in" href="stock_in.php">
-              <span>In Stock</span>
-            </a>
-          </li>
-          <li>
-            <a id="inventory-insights" href="inventory-insights.php">
-              <span>Inventory Insights</span>
-            </a>
-          </li>
-          <li>
-            <a id="group_management" href="group_management.php">
-              <span>Stock Item Group Management</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Components Nav -->
+      </li><!-- End Contact Page Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#csu" data-bs-toggle="collapse" href="#">
@@ -1206,30 +1180,6 @@
         id: 'support360',
         linkId: 'ticket_log',
         url: 'ticket-dashboard.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'stock_add',
-        url: 'stock_add.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'stock_out',
-        url: 'stock_out.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'stock_in',
-        url: 'stock_in.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'inventory-insights',
-        url: 'inventory-insights.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'group_management',
-        url: 'group_management.php'
-      }, {
-        id: 'stockmanagement',
-        linkId: 'group_management',
-        url: 'edit_group.php'
       },
       {
         id: 'exceptionPortal',
@@ -1415,6 +1365,16 @@
     toggleCollapsedClass('remote_attendance.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
     toggleCollapsedClass('sas.php', 'attendX');
+    toggleCollapsedClass('stock_add.php', 'stockmanagementLink');
+    toggleCollapsedClass('stock_out.php', 'stockmanagementLink');
+    toggleCollapsedClass('stock_management.php', 'stockmanagementLink');
+    toggleCollapsedClass('items_management.php', 'stockmanagementLink');
+    toggleCollapsedClass('item_prices_management.php', 'stockmanagementLink');
+    toggleCollapsedClass('units_management.php', 'stockmanagementLink');
+    toggleCollapsedClass('stock_in.php', 'stockmanagementLink');
+    toggleCollapsedClass('inventory-insights.php', 'stockmanagementLink');
+    toggleCollapsedClass('group_management.php', 'stockmanagementLink');
+    toggleCollapsedClass('edit_group.php', 'stockmanagementLink');
   </script>
   <script>
     document.getElementById('switchRoleModal').addEventListener('show.bs.modal', function() {

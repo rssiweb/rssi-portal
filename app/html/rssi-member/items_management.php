@@ -49,10 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($action === 'add') {
                 // Insert new item
-                $sql = "INSERT INTO items (item_name, access_scope, image_url, description, is_featured, rating, review_count, category, is_active, is_ration, created_at) 
+                $sql = "INSERT INTO stock_item (item_name, access_scope, image_url, description, is_featured, rating, review_count, category, is_active, is_ration, created_at, created_by) 
                         VALUES ('{$data['item_name']}', '{$data['access_scope']}', '{$data['image_url']}', '{$data['description']}', 
                                 '{$data['is_featured']}', {$data['rating']}, {$data['review_count']}, '{$data['category']}', 
-                                '{$data['is_active']}', '{$data['is_ration']}', NOW())";
+                                '{$data['is_active']}', '{$data['is_ration']}', NOW(), '$associatenumber')";
 
                 $result = pg_query($con, $sql);
                 if ($result) {
