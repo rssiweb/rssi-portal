@@ -4,6 +4,7 @@
 class MenuConfig
 {
     private static $pageData = null;
+    private static $menuStructure = null;
 
     private static function init()
     {
@@ -13,17 +14,13 @@ class MenuConfig
         $linkIdGroups = [
             // ============ TOP LEVEL PAGES ============
             'homeLink' => [
-                'section' => 'Dashboard',
+                'section' => '',
                 'remove_collapsed' => true,
                 'pages' => [
-                    'home.php' => 'Home',
-                    'create_event.php' => 'Create Event',
-                    'edit_event.php' => 'Edit Event',
-                    'polls.php' => 'Polls'
+                    'home.php' => ['title' => 'Home', 'show_in_menu' => true]
                 ],
                 'descriptions' => [
-                    'home.php' => 'Phoenix Portal dashboard overview and quick access.',
-                    'create_event.php' => 'Create and manage events efficiently in Phoenix Portal.'
+                    'home.php' => 'Phoenix Portal dashboard overview and quick access.'
                 ]
             ],
 
@@ -31,31 +28,14 @@ class MenuConfig
                 'section' => 'Attendance Portal',
                 'remove_collapsed' => true,
                 'pages' => [
-                    'attendx.php' => 'Attendance Portal',
-                    'scan.php' => 'Scan Attendance',
-                    'in_out_tracker.php' => 'In-Out Tracker',
-                    'monthly_attd_report.php' => 'Monthly Attendance Report',
-                    'monthly_attd_report_associate.php' => 'Monthly Associate Report',
-                    'attendance-analytics.php' => 'Attendance Analytics',
-                    'remote_attendance.php' => 'Remote Attendance',
-                    'sas.php' => 'SAS'
-                ]
-            ],
-
-            'stockmanagementLink' => [
-                'section' => 'Stock Management',
-                'remove_collapsed' => true,
-                'pages' => [
-                    'stock_management.php' => 'Stock Management',
-                    'stock_add.php' => 'Add Stock',
-                    'stock_out.php' => 'Stock Out',
-                    'items_management.php' => 'Items Management',
-                    'item_prices_management.php' => 'Item Prices Management',
-                    'units_management.php' => 'Units Management',
-                    'stock_in.php' => 'Stock In',
-                    'inventory-insights.php' => 'Inventory Insights',
-                    'group_management.php' => 'Group Management',
-                    'edit_group.php' => 'Edit Group'
+                    'attendx.php' => ['title' => 'Attendance Portal', 'show_in_menu' => true],
+                    'scan.php' => ['title' => 'Scan Attendance', 'show_in_menu' => false],
+                    'in_out_tracker.php' => ['title' => 'In-Out Tracker', 'show_in_menu' => false],
+                    'monthly_attd_report.php' => ['title' => 'Monthly Attendance Report', 'show_in_menu' => false],
+                    'monthly_attd_report_associate.php' => ['title' => 'Monthly Associate Report', 'show_in_menu' => false],
+                    'attendance-analytics.php' => ['title' => 'Attendance Analytics', 'show_in_menu' => false],
+                    'remote_attendance.php' => ['title' => 'Remote Attendance', 'show_in_menu' => false],
+                    'sas.php' => ['title' => 'SAS', 'show_in_menu' => false]
                 ]
             ],
 
@@ -63,9 +43,9 @@ class MenuConfig
                 'section' => 'Profile',
                 'remove_collapsed' => true,
                 'pages' => [
-                    'hrms.php' => 'Profile',
-                    'resetpassword.php' => 'Reset Password',
-                    'setup_2fa.php' => 'Enable 2FA'
+                    'hrms.php' => ['title' => 'Profile', 'show_in_menu' => false],
+                    'resetpassword.php' => ['title' => 'Reset Password', 'show_in_menu' => false],
+                    'setup_2fa.php' => ['title' => 'Enable 2FA', 'show_in_menu' => false]
                 ]
             ],
 
@@ -74,7 +54,7 @@ class MenuConfig
                 'section' => 'Academic',
                 'sidebar_id' => 'acadamis',
                 'pages' => [
-                    'exam.php' => 'Examination'
+                    'exam.php' => ['title' => 'Examination', 'show_in_menu' => true]
                 ]
             ],
 
@@ -82,16 +62,16 @@ class MenuConfig
                 'section' => 'Academic',
                 'sidebar_id' => 'acadamis',
                 'pages' => [
-                    'exam-management.php' => 'Exam Management',
-                    'append-students.php' => 'Append Students',
-                    'result-scheduler.php' => 'Result Scheduler',
-                    'exam_create.php' => 'Create Exam',
-                    'progress_curve.php' => 'Progress Curve',
-                    'exam_allotment.php' => 'Exam Allotment',
-                    'exam_marks_upload.php' => 'Upload Exam Marks',
-                    'exam_summary_report.php' => 'Exam Summary Report',
-                    'reexam.php' => 'Re-exam',
-                    'reexam_record.php' => 'Re-exam Records'
+                    'exam-management.php' => ['title' => 'Exam Management', 'show_in_menu' => true],
+                    'append-students.php' => ['title' => 'Append Students', 'show_in_menu' => false],
+                    'result-scheduler.php' => ['title' => 'Result Scheduler', 'show_in_menu' => false],
+                    'exam_create.php' => ['title' => 'Create Exam', 'show_in_menu' => false],
+                    'progress_curve.php' => ['title' => 'Progress Curve', 'show_in_menu' => false],
+                    'exam_allotment.php' => ['title' => 'Exam Allotment', 'show_in_menu' => false],
+                    'exam_marks_upload.php' => ['title' => 'Upload Exam Marks', 'show_in_menu' => false],
+                    'exam_summary_report.php' => ['title' => 'Exam Summary Report', 'show_in_menu' => false],
+                    'reexam.php' => ['title' => 'Re-exam', 'show_in_menu' => false],
+                    'reexam_record.php' => ['title' => 'Re-exam Records', 'show_in_menu' => false]
                 ]
             ],
 
@@ -100,9 +80,9 @@ class MenuConfig
                 'section' => 'My Services',
                 'sidebar_id' => 'myservices',
                 'pages' => [
-                    'leave.php' => 'Apply for Leave',
-                    'leaveallo.php' => 'Leave Allocation',
-                    'leaveadjustment.php' => 'Leave Adjustment'
+                    'leave.php' => ['title' => 'Apply for Leave', 'show_in_menu' => true],
+                    'leaveallo.php' => ['title' => 'Leave Allocation', 'show_in_menu' => false],
+                    'leaveadjustment.php' => ['title' => 'Leave Adjustment', 'show_in_menu' => false]
                 ]
             ],
 
@@ -110,12 +90,12 @@ class MenuConfig
                 'section' => 'My Services',
                 'sidebar_id' => 'myservices',
                 'pages' => [
-                    'document.php' => 'My Document',
-                    'my_certificate.php' => 'My Certificate',
-                    'pay_details.php' => 'Pay Details',
-                    'old_payslip.php' => 'Old Payslip',
-                    'digital_archive.php' => 'Digital Archive',
-                    'bankdetails.php' => 'Bank Details'
+                    'document.php' => ['title' => 'My Document', 'show_in_menu' => true],
+                    'my_certificate.php' => ['title' => 'My Certificate', 'show_in_menu' => false],
+                    'pay_details.php' => ['title' => 'Pay Details', 'show_in_menu' => false],
+                    'old_payslip.php' => ['title' => 'Old Payslip', 'show_in_menu' => false],
+                    'digital_archive.php' => ['title' => 'Digital Archive', 'show_in_menu' => false],
+                    'bankdetails.php' => ['title' => 'Bank Details', 'show_in_menu' => false]
                 ]
             ],
 
@@ -123,7 +103,7 @@ class MenuConfig
                 'section' => 'My Services',
                 'sidebar_id' => 'myservices',
                 'pages' => [
-                    'allocation.php' => 'My Allocation'
+                    'allocation.php' => ['title' => 'My Allocation', 'show_in_menu' => true]
                 ]
             ],
 
@@ -131,7 +111,7 @@ class MenuConfig
                 'section' => 'My Services',
                 'sidebar_id' => 'myservices',
                 'pages' => [
-                    'resourcehub.php' => 'Resource Hub'
+                    'resourcehub.php' => ['title' => 'Resource Hub', 'show_in_menu' => true]
                 ]
             ],
 
@@ -140,7 +120,7 @@ class MenuConfig
                 'section' => 'Exception',
                 'sidebar_id' => 'exceptionPortal',
                 'pages' => [
-                    'exception-portal.php' => 'Raise Exception'
+                    'exception-portal.php' => ['title' => 'Raise Exception', 'show_in_menu' => true]
                 ]
             ],
 
@@ -148,7 +128,7 @@ class MenuConfig
                 'section' => 'Exception',
                 'sidebar_id' => 'exceptionPortal',
                 'pages' => [
-                    'exception_admin.php' => 'Exception Dashboard'
+                    'exception_admin.php' => ['title' => 'Exception Dashboard', 'show_in_menu' => true]
                 ]
             ],
 
@@ -157,7 +137,7 @@ class MenuConfig
                 'section' => 'iExplore Learner',
                 'sidebar_id' => 'learning',
                 'pages' => [
-                    'iexplore.php' => 'Courses'
+                    'iexplore.php' => ['title' => 'Courses', 'show_in_menu' => true]
                 ]
             ],
 
@@ -165,7 +145,7 @@ class MenuConfig
                 'section' => 'iExplore Learner',
                 'sidebar_id' => 'learning',
                 'pages' => [
-                    'my_learning.php' => 'My Learnings'
+                    'my_learning.php' => ['title' => 'My Learnings', 'show_in_menu' => true]
                 ]
             ],
 
@@ -173,9 +153,9 @@ class MenuConfig
                 'section' => 'iExplore Learner',
                 'sidebar_id' => 'learning',
                 'pages' => [
-                    'visco.php' => 'Visco',
-                    'library.php' => 'Library',
-                    'my_book.php' => 'My Book'
+                    'visco.php' => ['title' => 'Visco', 'show_in_menu' => false],
+                    'library.php' => ['title' => 'Library', 'show_in_menu' => false],
+                    'my_book.php' => ['title' => 'My Book', 'show_in_menu' => false]
                 ]
             ],
 
@@ -183,7 +163,7 @@ class MenuConfig
                 'section' => 'iExplore Learner',
                 'sidebar_id' => 'learning',
                 'pages' => [
-                    'iexplore_admin.php' => 'Modify Course'
+                    'iexplore_admin.php' => ['title' => 'Modify Course', 'show_in_menu' => true]
                 ]
             ],
 
@@ -191,7 +171,7 @@ class MenuConfig
                 'section' => 'iExplore Learner',
                 'sidebar_id' => 'learning',
                 'pages' => [
-                    'iexplore_defaulters.php' => 'Defaulters List'
+                    'iexplore_defaulters.php' => ['title' => 'Defaulters List', 'show_in_menu' => true]
                 ]
             ],
 
@@ -200,7 +180,7 @@ class MenuConfig
                 'section' => 'iExplore Edge',
                 'sidebar_id' => 'iexploreedge',
                 'pages' => [
-                    'exam_management.php' => 'Exam Management'
+                    'exam_management.php' => ['title' => 'Exam Management', 'show_in_menu' => true]
                 ]
             ],
 
@@ -208,7 +188,7 @@ class MenuConfig
                 'section' => 'iExplore Edge',
                 'sidebar_id' => 'iexploreedge',
                 'pages' => [
-                    'add_question.php' => 'Add Question'
+                    'add_question.php' => ['title' => 'Add Question', 'show_in_menu' => true]
                 ]
             ],
 
@@ -216,7 +196,7 @@ class MenuConfig
                 'section' => 'iExplore Edge',
                 'sidebar_id' => 'iexploreedge',
                 'pages' => [
-                    'question_dashboard.php' => 'Question Dashboard'
+                    'question_dashboard.php' => ['title' => 'Question Dashboard', 'show_in_menu' => true]
                 ]
             ],
 
@@ -224,7 +204,7 @@ class MenuConfig
                 'section' => 'iExplore Edge',
                 'sidebar_id' => 'iexploreedge',
                 'pages' => [
-                    'manage_category.php' => 'Manage Category'
+                    'manage_category.php' => ['title' => 'Manage Category', 'show_in_menu' => true]
                 ]
             ],
 
@@ -233,12 +213,12 @@ class MenuConfig
                 'section' => 'Performance Management',
                 'sidebar_id' => 'performance',
                 'pages' => [
-                    'my_appraisal.php' => 'My Appraisal',
-                    'ipf-management.php' => 'IPF Management',
-                    'manager_response.php' => 'Manager Response',
-                    'appraisee_response.php' => 'Appraisee Response',
-                    'reviewer_response.php' => 'Reviewer Response',
-                    'process.php' => 'Process'
+                    'my_appraisal.php' => ['title' => 'My Appraisal', 'show_in_menu' => true],
+                    'ipf-management.php' => ['title' => 'IPF Management', 'show_in_menu' => false],
+                    'manager_response.php' => ['title' => 'Manager Response', 'show_in_menu' => false],
+                    'appraisee_response.php' => ['title' => 'Appraisee Response', 'show_in_menu' => false],
+                    'reviewer_response.php' => ['title' => 'Reviewer Response', 'show_in_menu' => false],
+                    'process.php' => ['title' => 'Process', 'show_in_menu' => false]
                 ]
             ],
 
@@ -247,7 +227,7 @@ class MenuConfig
                 'section' => 'Rewards & Recognition',
                 'sidebar_id' => 'rewards',
                 'pages' => [
-                    'gems-mart.php' => 'Gems Mart'
+                    'gems-mart.php' => ['title' => 'Gems Mart', 'show_in_menu' => true]
                 ]
             ],
 
@@ -255,7 +235,7 @@ class MenuConfig
                 'section' => 'Rewards & Recognition',
                 'sidebar_id' => 'rewards',
                 'pages' => [
-                    'my-orders.php' => 'My Orders'
+                    'my-orders.php' => ['title' => 'My Orders', 'show_in_menu' => true]
                 ]
             ],
 
@@ -264,8 +244,8 @@ class MenuConfig
                 'section' => 'Claims and Advances',
                 'sidebar_id' => 'claims',
                 'pages' => [
-                    'reimbursement.php' => 'Reimbursement',
-                    'reimbursementstatus.php' => 'Reimbursement Status'
+                    'reimbursement.php' => ['title' => 'Reimbursement', 'show_in_menu' => true],
+                    'reimbursementstatus.php' => ['title' => 'Reimbursement Status', 'show_in_menu' => false]
                 ]
             ],
 
@@ -273,7 +253,7 @@ class MenuConfig
                 'section' => 'Claims and Advances',
                 'sidebar_id' => 'claims',
                 'pages' => [
-                    'medimate.php' => 'Medimate'
+                    'medimate.php' => ['title' => 'Medimate', 'show_in_menu' => false]
                 ]
             ],
 
@@ -282,7 +262,7 @@ class MenuConfig
                 'section' => 'Support 360',
                 'sidebar_id' => 'support360',
                 'pages' => [
-                    'create_ticket.php' => 'Create Ticket'
+                    'create_ticket.php' => ['title' => 'Create Ticket', 'show_in_menu' => true]
                 ]
             ],
 
@@ -290,8 +270,27 @@ class MenuConfig
                 'section' => 'Support 360',
                 'sidebar_id' => 'support360',
                 'pages' => [
-                    'ticket_log.php' => 'Ticket Log',
-                    'ticket-dashboard.php' => 'Ticket Dashboard'
+                    'ticket_log.php' => ['title' => 'Ticket Log', 'show_in_menu' => true],
+                    'ticket-dashboard.php' => ['title' => 'Ticket Dashboard', 'show_in_menu' => false]
+                ]
+            ],
+
+            // ============ STOCK MANAGEMENT ============
+
+            'stockmanagementLink' => [
+                'section' => 'Stock Management',
+                'remove_collapsed' => true,
+                'pages' => [
+                    'stock_management.php' => ['title' => 'Stock Management', 'show_in_menu' => true],
+                    'stock_add.php' => ['title' => 'Add Stock', 'show_in_menu' => false],
+                    'stock_out.php' => ['title' => 'Stock Out', 'show_in_menu' => false],
+                    'items_management.php' => ['title' => 'Items Management', 'show_in_menu' => false],
+                    'item_prices_management.php' => ['title' => 'Item Prices Management', 'show_in_menu' => false],
+                    'units_management.php' => ['title' => 'Units Management', 'show_in_menu' => false],
+                    'stock_in.php' => ['title' => 'Stock In', 'show_in_menu' => false],
+                    'inventory-insights.php' => ['title' => 'Inventory Insights', 'show_in_menu' => false],
+                    'group_management.php' => ['title' => 'Group Management', 'show_in_menu' => false],
+                    'edit_group.php' => ['title' => 'Edit Group', 'show_in_menu' => false]
                 ]
             ],
 
@@ -300,7 +299,7 @@ class MenuConfig
                 'section' => 'Community Supply',
                 'sidebar_id' => 'csu',
                 'pages' => [
-                    'emart.php' => 'eMart'
+                    'emart.php' => ['title' => 'eMart', 'show_in_menu' => true]
                 ]
             ],
 
@@ -308,7 +307,7 @@ class MenuConfig
                 'section' => 'Community Supply',
                 'sidebar_id' => 'csu',
                 'pages' => [
-                    'emart_orders.php' => 'eMart Orders'
+                    'emart_orders.php' => ['title' => 'eMart Orders', 'show_in_menu' => true]
                 ]
             ],
 
@@ -317,7 +316,7 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'shift_planner.php' => 'Shift Planner'
+                    'shift_planner.php' => ['title' => 'Shift Planner', 'show_in_menu' => true]
                 ]
             ],
 
@@ -325,7 +324,7 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'view_shift.php' => 'View Shift'
+                    'view_shift.php' => ['title' => 'View Shift', 'show_in_menu' => true]
                 ]
             ],
 
@@ -333,7 +332,7 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'closure_assign.php' => 'Closing Duty Roster'
+                    'closure_assign.php' => ['title' => 'Closing Duty Roster', 'show_in_menu' => true]
                 ]
             ],
 
@@ -341,7 +340,7 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'student_class_days.php' => 'Student Class Days'
+                    'student_class_days.php' => ['title' => 'Student Class Days', 'show_in_menu' => true]
                 ]
             ],
 
@@ -349,8 +348,8 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'exception_view.php' => 'Class Days Exceptions',
-                    'class_days_exception.php' => 'Class Days Exception'
+                    'exception_view.php' => ['title' => 'Class Days Exceptions', 'show_in_menu' => true],
+                    'class_days_exception.php' => ['title' => 'Class Days Exception', 'show_in_menu' => false]
                 ]
             ],
 
@@ -359,7 +358,7 @@ class MenuConfig
                 'section' => 'Survey',
                 'sidebar_id' => 'survey',
                 'pages' => [
-                    'survey.php' => 'Create Survey'
+                    'survey.php' => ['title' => 'Create Survey', 'show_in_menu' => true]
                 ]
             ],
 
@@ -367,7 +366,7 @@ class MenuConfig
                 'section' => 'Survey',
                 'sidebar_id' => 'survey',
                 'pages' => [
-                    'survey_view.php' => 'View Survey Results'
+                    'survey_view.php' => ['title' => 'View Survey Results', 'show_in_menu' => true]
                 ]
             ],
 
@@ -375,7 +374,7 @@ class MenuConfig
                 'section' => 'Survey',
                 'sidebar_id' => 'survey',
                 'pages' => [
-                    'appointments.php' => 'View Appointments'
+                    'appointments.php' => ['title' => 'View Appointments', 'show_in_menu' => true]
                 ]
             ],
 
@@ -383,7 +382,7 @@ class MenuConfig
                 'section' => 'Survey',
                 'sidebar_id' => 'survey',
                 'pages' => [
-                    'enquiry_portal.php' => 'Enquiry Portal'
+                    'enquiry_portal.php' => ['title' => 'Enquiry Portal', 'show_in_menu' => true]
                 ]
             ],
 
@@ -392,7 +391,7 @@ class MenuConfig
                 'section' => 'Job Assistance',
                 'sidebar_id' => 'job',
                 'pages' => [
-                    'job_seekers.php' => 'Job Seeker Records'
+                    'job_seekers.php' => ['title' => 'Job Seeker Records', 'show_in_menu' => true]
                 ]
             ],
 
@@ -400,9 +399,9 @@ class MenuConfig
                 'section' => 'Job Assistance',
                 'sidebar_id' => 'job',
                 'pages' => [
-                    'job-admin.php' => 'Job Admin Panel',
-                    'job-approval.php' => 'Job Approval',
-                    'job_view.php' => 'Job View'
+                    'job-admin.php' => ['title' => 'Job Admin Panel', 'show_in_menu' => true],
+                    'job-approval.php' => ['title' => 'Job Approval', 'show_in_menu' => false],
+                    'job_view.php' => ['title' => 'Job View', 'show_in_menu' => false]
                 ]
             ],
 
@@ -411,8 +410,8 @@ class MenuConfig
                 'section' => 'People Plus',
                 'sidebar_id' => 'peoplePlus',
                 'pages' => [
-                    'talent_pool.php' => 'Talent Pool',
-                    'applicant_profile.php' => 'Applicant Profile'
+                    'talent_pool.php' => ['title' => 'Talent Pool', 'show_in_menu' => true],
+                    'applicant_profile.php' => ['title' => 'Applicant Profile', 'show_in_menu' => false]
                 ]
             ],
 
@@ -420,9 +419,9 @@ class MenuConfig
                 'section' => 'People Plus',
                 'sidebar_id' => 'peoplePlus',
                 'pages' => [
-                    'interview_central.php' => 'Interview Central',
-                    'technical_interview.php' => 'Technical Interview',
-                    'hr_interview.php' => 'HR Interview'
+                    'interview_central.php' => ['title' => 'Interview Central', 'show_in_menu' => true],
+                    'technical_interview.php' => ['title' => 'Technical Interview', 'show_in_menu' => false],
+                    'hr_interview.php' => ['title' => 'HR Interview', 'show_in_menu' => false]
                 ]
             ],
 
@@ -430,7 +429,7 @@ class MenuConfig
                 'section' => 'People Plus',
                 'sidebar_id' => 'peoplePlus',
                 'pages' => [
-                    'rtet.php' => 'Create RTET'
+                    'rtet.php' => ['title' => 'Create RTET', 'show_in_menu' => true]
                 ]
             ],
 
@@ -439,7 +438,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'fee_collection.php' => 'Fee Collection'
+                    'fee_collection.php' => ['title' => 'Fee Collection', 'show_in_menu' => true]
                 ]
             ],
 
@@ -447,7 +446,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'concession_list.php' => 'Student Concessions'
+                    'concession_list.php' => ['title' => 'Student Concessions', 'show_in_menu' => true]
                 ]
             ],
 
@@ -455,7 +454,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'settlement.php' => 'Fee Settlement'
+                    'settlement.php' => ['title' => 'Fee Settlement', 'show_in_menu' => true]
                 ]
             ],
 
@@ -463,7 +462,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'fee_payments_report.php' => 'Fee Payments Report'
+                    'fee_payments_report.php' => ['title' => 'Fee Payments Report', 'show_in_menu' => true]
                 ]
             ],
 
@@ -471,7 +470,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'fee_structure_management.php' => 'Fee Structure Management'
+                    'fee_structure_management.php' => ['title' => 'Fee Structure Management', 'show_in_menu' => true]
                 ]
             ],
 
@@ -479,7 +478,7 @@ class MenuConfig
                 'section' => 'Fee Portal',
                 'sidebar_id' => 'feePortal',
                 'pages' => [
-                    'fee_lock_management.php' => 'Fee Collection Lock Management'
+                    'fee_lock_management.php' => ['title' => 'Fee Collection Lock Management', 'show_in_menu' => true]
                 ]
             ],
 
@@ -488,7 +487,7 @@ class MenuConfig
                 'section' => 'IRC',
                 'sidebar_id' => 'irc',
                 'pages' => [
-                    'books.php' => 'Library Dashboard'
+                    'books.php' => ['title' => 'Library Dashboard', 'show_in_menu' => true]
                 ]
             ],
 
@@ -496,7 +495,7 @@ class MenuConfig
                 'section' => 'IRC',
                 'sidebar_id' => 'irc',
                 'pages' => [
-                    'book_orders.php' => 'Library Orders Management'
+                    'book_orders.php' => ['title' => 'Library Orders Management', 'show_in_menu' => true]
                 ]
             ],
 
@@ -505,8 +504,8 @@ class MenuConfig
                 'section' => 'Payroll',
                 'sidebar_id' => 'payroll',
                 'pages' => [
-                    'salary_structure.php' => 'Salary Structure Management',
-                    'view_structure.php' => 'View Structure'
+                    'salary_structure.php' => ['title' => 'Salary Structure Management', 'show_in_menu' => true],
+                    'view_structure.php' => ['title' => 'View Structure', 'show_in_menu' => false]
                 ]
             ],
 
@@ -514,7 +513,7 @@ class MenuConfig
                 'section' => 'Payroll',
                 'sidebar_id' => 'payroll',
                 'pages' => [
-                    'payroll_processing.php' => 'Payroll Processing'
+                    'payroll_processing.php' => ['title' => 'Payroll Processing', 'show_in_menu' => true]
                 ]
             ],
 
@@ -523,7 +522,7 @@ class MenuConfig
                 'section' => 'Health & Wellness Initiatives',
                 'sidebar_id' => 'health_portal',
                 'pages' => [
-                    'health_portal.php' => 'Student Health Portal'
+                    'health_portal.php' => ['title' => 'Student Health Portal', 'show_in_menu' => true]
                 ]
             ],
 
@@ -531,7 +530,7 @@ class MenuConfig
                 'section' => 'Health & Wellness Initiatives',
                 'sidebar_id' => 'health_portal',
                 'pages' => [
-                    'community_care.php' => 'Community Care Portal'
+                    'community_care.php' => ['title' => 'Community Care Portal', 'show_in_menu' => true]
                 ]
             ],
 
@@ -540,7 +539,7 @@ class MenuConfig
                 'section' => 'Worklist',
                 'sidebar_id' => 'worklist',
                 'pages' => [
-                    'hrms_worklist.php' => 'HRMS Worklist'
+                    'hrms_worklist.php' => ['title' => 'HRMS Worklist', 'show_in_menu' => true]
                 ]
             ],
 
@@ -548,7 +547,7 @@ class MenuConfig
                 'section' => 'Worklist',
                 'sidebar_id' => 'worklist',
                 'pages' => [
-                    'post_worklist.php' => 'Post Worklist'
+                    'post_worklist.php' => ['title' => 'Post Worklist', 'show_in_menu' => true]
                 ]
             ],
 
@@ -556,7 +555,7 @@ class MenuConfig
                 'section' => 'Worklist',
                 'sidebar_id' => 'worklist',
                 'pages' => [
-                    'iexplore_worklist.php' => 'iExplore Worklist'
+                    'iexplore_worklist.php' => ['title' => 'iExplore Worklist', 'show_in_menu' => true]
                 ]
             ],
 
@@ -565,7 +564,7 @@ class MenuConfig
                 'section' => 'Alliance Portal',
                 'sidebar_id' => 'alliance_portal',
                 'pages' => [
-                    'contact-directory.php' => 'Contact Directory'
+                    'contact-directory.php' => ['title' => 'Contact Directory', 'show_in_menu' => true]
                 ]
             ],
 
@@ -574,7 +573,7 @@ class MenuConfig
                 'section' => 'ID Card Order Management',
                 'sidebar_id' => 'icom',
                 'pages' => [
-                    'icom.php' => 'Order Management'
+                    'icom.php' => ['title' => 'Order Management', 'show_in_menu' => true]
                 ]
             ],
 
@@ -582,7 +581,7 @@ class MenuConfig
                 'section' => 'ID Card Order Management',
                 'sidebar_id' => 'icom',
                 'pages' => [
-                    'id_history.php' => 'Order History'
+                    'id_history.php' => ['title' => 'Order History', 'show_in_menu' => true]
                 ]
             ],
 
@@ -591,7 +590,7 @@ class MenuConfig
                 'section' => 'Leave Management System',
                 'sidebar_id' => 'lms',
                 'pages' => [
-                    'leave_approval.php' => 'Leave Approval'
+                    'leave_approval.php' => ['title' => 'Leave Approval', 'show_in_menu' => true]
                 ]
             ],
 
@@ -599,7 +598,7 @@ class MenuConfig
                 'section' => 'Leave Management System',
                 'sidebar_id' => 'lms',
                 'pages' => [
-                    'leave_admin.php' => 'Leave Admin'
+                    'leave_admin.php' => ['title' => 'Leave Admin', 'show_in_menu' => true]
                 ]
             ],
 
@@ -608,7 +607,7 @@ class MenuConfig
                 'section' => 'GPS',
                 'sidebar_id' => 'gps',
                 'pages' => [
-                    'gps.php' => 'My Assets'
+                    'gps.php' => ['title' => 'My Assets', 'show_in_menu' => true]
                 ]
             ],
 
@@ -616,12 +615,12 @@ class MenuConfig
                 'section' => 'GPS',
                 'sidebar_id' => 'gps',
                 'pages' => [
-                    'asset-management.php' => 'Asset Management',
-                    'scan-asset.php' => 'Scan Asset',
-                    'admin_change_requests.php' => 'Admin Change Requests',
-                    'get_request_details.php' => 'Get Request Details',
-                    'gps_history.php' => 'GPS History',
-                    'asset_verification_report.php' => 'Asset Verification Report'
+                    'asset-management.php' => ['title' => 'Asset Management', 'show_in_menu' => true],
+                    'scan-asset.php' => ['title' => 'Scan Asset', 'show_in_menu' => false],
+                    'admin_change_requests.php' => ['title' => 'Admin Change Requests', 'show_in_menu' => false],
+                    'get_request_details.php' => ['title' => 'Get Request Details', 'show_in_menu' => false],
+                    'gps_history.php' => ['title' => 'GPS History', 'show_in_menu' => false],
+                    'asset_verification_report.php' => ['title' => 'Asset Verification Report', 'show_in_menu' => false]
                 ]
             ],
 
@@ -630,10 +629,10 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'student.php' => 'RSSI Student',
-                    'admission_admin.php' => 'Admission Admin',
-                    'fees.php' => 'Fees',
-                    'sps.php' => 'SPS'
+                    'student.php' => ['title' => 'RSSI Student', 'show_in_menu' => true],
+                    'admission_admin.php' => ['title' => 'Admission Admin', 'show_in_menu' => false],
+                    'fees.php' => ['title' => 'Fees', 'show_in_menu' => false],
+                    'sps.php' => ['title' => 'SPS', 'show_in_menu' => true]
                 ]
             ],
 
@@ -641,7 +640,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'student_attrition.php' => 'Student Attrition'
+                    'student_attrition.php' => ['title' => 'Student Attrition', 'show_in_menu' => true]
                 ]
             ],
 
@@ -649,7 +648,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'distribution_analytics.php' => 'Distribution Analytics'
+                    'distribution_analytics.php' => ['title' => 'Distribution Analytics', 'show_in_menu' => true]
                 ]
             ],
 
@@ -657,7 +656,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'facility-hygiene-monitoring.php' => 'Facility Hygiene Monitoring'
+                    'facility-hygiene-monitoring.php' => ['title' => 'Facility Hygiene Monitoring', 'show_in_menu' => true]
                 ]
             ],
 
@@ -665,7 +664,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'archive_approval.php' => 'Document Approval'
+                    'archive_approval.php' => ['title' => 'Document Approval', 'show_in_menu' => true]
                 ]
             ],
 
@@ -673,7 +672,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'bankdetails_admin.php' => 'HR Banking Records'
+                    'bankdetails_admin.php' => ['title' => 'HR Banking Records', 'show_in_menu' => true]
                 ]
             ],
 
@@ -681,10 +680,10 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'process-hub.php' => 'Process Hub',
-                    'onboarding.php' => 'Onboarding',
-                    'exit.php' => 'Exit',
-                    'visitor.php' => 'Visitor'
+                    'process-hub.php' => ['title' => 'Process Hub', 'show_in_menu' => true],
+                    'onboarding.php' => ['title' => 'Onboarding', 'show_in_menu' => true],
+                    'exit.php' => ['title' => 'Exit', 'show_in_menu' => true],
+                    'visitor.php' => ['title' => 'Visitor', 'show_in_menu' => true]
                 ]
             ],
 
@@ -692,8 +691,8 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'faculty.php' => 'RSSI Faculty',
-                    'facultyexp.php' => 'Faculty Experience'
+                    'faculty.php' => ['title' => 'RSSI Faculty', 'show_in_menu' => true],
+                    'facultyexp.php' => ['title' => 'Faculty Experience', 'show_in_menu' => false]
                 ]
             ],
 
@@ -701,7 +700,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'monthly_timesheet.php' => 'Monthly Timesheet'
+                    'monthly_timesheet.php' => ['title' => 'Monthly Timesheet', 'show_in_menu' => true]
                 ]
             ],
 
@@ -709,7 +708,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'medistatus.php' => 'Medimate Approval'
+                    'medistatus.php' => ['title' => 'Medimate Approval', 'show_in_menu' => true]
                 ]
             ],
 
@@ -717,7 +716,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'reimbursementstatus.php' => 'Reimbursement Approval'
+                    'reimbursementstatus.php' => ['title' => 'Reimbursement Approval', 'show_in_menu' => true]
                 ]
             ],
 
@@ -725,7 +724,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'donationinfo_admin.php' => 'Donation'
+                    'donationinfo_admin.php' => ['title' => 'Donation', 'show_in_menu' => true]
                 ]
             ],
 
@@ -733,7 +732,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'pms.php' => 'PMS'
+                    'pms.php' => ['title' => 'PMS', 'show_in_menu' => true]
                 ]
             ],
 
@@ -741,8 +740,8 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'admin_role_management.php' => 'RMC',
-                    'admin_role_audit.php' => 'Admin Role Audit'
+                    'admin_role_management.php' => ['title' => 'RMC', 'show_in_menu' => true],
+                    'admin_role_audit.php' => ['title' => 'Admin Role Audit', 'show_in_menu' => false]
                 ]
             ],
 
@@ -750,7 +749,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'ams.php' => 'Announcement'
+                    'ams.php' => ['title' => 'Announcement', 'show_in_menu' => true]
                 ]
             ],
 
@@ -758,7 +757,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'onexit.php' => 'OnExit'
+                    'onexit.php' => ['title' => 'OnExit', 'show_in_menu' => true]
                 ]
             ],
 
@@ -766,7 +765,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'userlog.php' => 'User log'
+                    'userlog.php' => ['title' => 'User log', 'show_in_menu' => true]
                 ]
             ],
 
@@ -774,7 +773,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'access_panel.php' => 'Access Panel'
+                    'access_panel.php' => ['title' => 'Access Panel', 'show_in_menu' => true]
                 ]
             ],
 
@@ -782,7 +781,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'maintenance_panel.php' => 'Maintenance Panel'
+                    'maintenance_panel.php' => ['title' => 'Maintenance Panel', 'show_in_menu' => true]
                 ]
             ]
         ];
@@ -790,13 +789,14 @@ class MenuConfig
         // Build the pageData array from groups
         self::$pageData = [];
         foreach ($linkIdGroups as $linkId => $group) {
-            foreach ($group['pages'] as $page => $title) {
+            foreach ($group['pages'] as $page => $pageInfo) {
                 self::$pageData[$page] = [
-                    'title' => $title,
+                    'title' => $pageInfo['title'],
                     'section' => $group['section'],
                     'link_id' => $linkId,
+                    'show_in_menu' => $pageInfo['show_in_menu'] ?? true, // Default to true if not specified
                     'description' => $group['descriptions'][$page]
-                        ?? $title . ' | ' . $group['section'] . ' - Phoenix Portal'
+                        ?? $pageInfo['title'] . ' | ' . $group['section'] . ' - Phoenix Portal'
                 ];
 
                 // Add sidebar_id if exists
@@ -812,11 +812,12 @@ class MenuConfig
         }
 
         // Add default for unknown pages
-        self::$pageData['default'] = [
-            'title' => 'Dashboard',
-            'section' => 'Dashboard',
-            'description' => 'Phoenix Portal dashboard and internal management system.'
-        ];
+        // self::$pageData['default'] = [
+        //     'title' => 'Dashboard',
+        //     'section' => 'Dashboard',
+        //     'show_in_menu' => true,
+        //     'description' => 'Phoenix Portal dashboard and internal management system.'
+        // ];
     }
 
     public static function getPageInfo($page)
@@ -839,6 +840,50 @@ class MenuConfig
     {
         self::init();
         return self::$pageData;
+    }
+
+    public static function getMenuStructure()
+    {
+        self::init();
+
+        if (self::$menuStructure === null) {
+            $structure = [];
+
+            // Group pages by section and sidebar_id
+            foreach (self::$pageData as $page => $info) {
+                if (!($info['show_in_menu'] ?? true)) {
+                    continue; // Skip hidden pages
+                }
+
+                $section = $info['section'];
+                $sidebarId = $info['sidebar_id'] ?? null;
+
+                if ($sidebarId) {
+                    // This is a collapsible menu item
+                    if (!isset($structure[$section])) {
+                        $structure[$section] = [
+                            'type' => 'collapsible',
+                            'sidebar_id' => $sidebarId,
+                            'pages' => []
+                        ];
+                    }
+                    $structure[$section]['pages'][$page] = $info;
+                } else {
+                    // This is a top-level menu item
+                    if (!isset($structure[$section])) {
+                        $structure[$section] = [
+                            'type' => 'top_level',
+                            'pages' => []
+                        ];
+                    }
+                    $structure[$section]['pages'][$page] = $info;
+                }
+            }
+
+            self::$menuStructure = $structure;
+        }
+
+        return self::$menuStructure;
     }
 
     public static function getCurrentPageData()
