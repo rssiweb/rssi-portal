@@ -29,12 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Field '$field' is required");
                 }
             }
-            
+
             // Prepare data
             $unit_name = pg_escape_string($con, trim($_POST['unit_name']));
             $description = pg_escape_string($con, trim($_POST['description'] ?? ''));
             $is_active = isset($_POST['is_active']) ? 't' : 'f';
-            
+
             // Check for duplicate unit name
             $check_sql = "SELECT unit_id FROM stock_item_unit WHERE LOWER(unit_name) = LOWER('$unit_name')";
             if ($action === 'edit' && $unit_id) {
@@ -44,12 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (pg_num_rows($check_result) > 0) {
                 throw new Exception("Unit with this name already exists!");
             }
-            
+
             if ($action === 'add') {
                 // Insert new unit
-                $sql = "INSERT INTO stock_item_unit (unit_name, description, is_active, created_at) 
-                        VALUES ('$unit_name', '$description', '$is_active', NOW())";
-                
+                $sql = "INSERT INTO stock_item_unit (unit_name, description, is_active, created_at, created_by) 
+                        VALUES ('$unit_name', '$description', '$is_active', NOW(),'$associatenumber')";
+
                 $result = pg_query($con, $sql);
                 if ($result) {
                     $message = "Unit added successfully!";
@@ -62,9 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unit_name = '$unit_name',
                         description = '$description',
                         is_active = '$is_active',
-                        updated_at = NOW()
+                        updated_at = NOW(),
+                        updated_by = '$associatenumber'
                         WHERE unit_id = $unit_id";
-                
+
                 $result = pg_query($con, $sql);
                 if ($result) {
                     $message = "Unit updated successfully!";
@@ -77,11 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check_sql = "SELECT COUNT(*) as count FROM stock_item_price WHERE unit_id = $unit_id";
             $check_result = pg_query($con, $check_sql);
             $usage_count = pg_fetch_assoc($check_result)['count'];
-            
+
             if ($usage_count > 0) {
                 throw new Exception("Cannot delete unit. It is used in $usage_count price records.");
             }
-            
+
             // Delete unit
             $sql = "DELETE FROM stock_item_unit WHERE unit_id = $unit_id";
             $result = pg_query($con, $sql);
@@ -154,7 +155,10 @@ $units = pg_fetch_all($result) ?: [];
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
         gtag('js', new Date());
         gtag('config', 'AW-11316670180');
     </script>
@@ -169,12 +173,37 @@ $units = pg_fetch_all($result) ?: [];
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
-        .form-container { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .filter-card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .badge-active { background-color: #198754; }
-        .badge-inactive { background-color: #6c757d; }
-        .badge-usage { background-color: #0d6efd; }
-        .table-responsive { max-height: 600px; overflow-y: auto; }
+        .form-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-active {
+            background-color: #198754;
+        }
+
+        .badge-inactive {
+            background-color: #6c757d;
+        }
+
+        .badge-usage {
+            background-color: #0d6efd;
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -203,7 +232,7 @@ $units = pg_fetch_all($result) ?: [];
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if ($error): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <?= htmlspecialchars($error) ?>
@@ -221,33 +250,33 @@ $units = pg_fetch_all($result) ?: [];
                                 <?php if (!empty($unit_data)): ?>
                                     <input type="hidden" name="unit_id" value="<?= $unit_data['unit_id'] ?>">
                                 <?php endif; ?>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="unit_name" class="form-label">Unit Name *</label>
-                                            <input type="text" class="form-control" id="unit_name" name="unit_name" 
-                                                   required value="<?= htmlspecialchars($unit_data['unit_name'] ?? '') ?>"
-                                                   placeholder="e.g., Kilogram, Liter, Piece, Pack">
+                                            <input type="text" class="form-control" id="unit_name" name="unit_name"
+                                                required value="<?= htmlspecialchars($unit_data['unit_name'] ?? '') ?>"
+                                                placeholder="e.g., Kilogram, Liter, Piece, Pack">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="description" class="form-label">Description (Optional)</label>
-                                            <input type="text" class="form-control" id="description" name="description" 
-                                                   value="<?= htmlspecialchars($unit_data['description'] ?? '') ?>"
-                                                   placeholder="e.g., Standard unit for weight">
+                                            <input type="text" class="form-control" id="description" name="description"
+                                                value="<?= htmlspecialchars($unit_data['description'] ?? '') ?>"
+                                                placeholder="e.g., Standard unit for weight">
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
-                                           value="1" <?= (empty($unit_data) || ($unit_data['is_active'] ?? 't') === 't') ? 'checked' : '' ?>>
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                                        value="1" <?= (empty($unit_data) || ($unit_data['is_active'] ?? 't') === 't') ? 'checked' : '' ?>>
                                     <label class="form-check-label" for="is_active">Active</label>
                                 </div>
-                                
+
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button type="submit" class="btn btn-primary">
                                         <?= empty($unit_data) ? 'Add Unit' : 'Update Unit' ?>
@@ -272,7 +301,7 @@ $units = pg_fetch_all($result) ?: [];
                                     value="<?= htmlspecialchars($filters['search']) ?>"
                                     placeholder="Search by name or description...">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="is_active" class="form-label">Status</label>
                                 <select class="form-select" id="is_active" name="is_active">
@@ -281,7 +310,7 @@ $units = pg_fetch_all($result) ?: [];
                                     <option value="f" <?= $filters['is_active'] === 'f' ? 'selected' : '' ?>>Inactive</option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-5">
                                 <label class="form-label d-block">&nbsp;</label>
                                 <div class="btn-group" role="group">
@@ -305,7 +334,7 @@ $units = pg_fetch_all($result) ?: [];
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Units List (<?= number_format($total_units) ?> total)</h5>
-                            
+
                             <?php if (count($units) > 0): ?>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -323,9 +352,9 @@ $units = pg_fetch_all($result) ?: [];
                                             <?php foreach ($units as $unit): ?>
                                                 <tr>
                                                     <td>
-                                                        <strong><?= htmlspecialchars($unit['unit_name']) ?></strong>
+                                                        <?= htmlspecialchars($unit['unit_name']) ?>
                                                     </td>
-                                                    <td><?= htmlspecialchars($unit['description'] ?? '—') ?></td>
+                                                    <td><?= htmlspecialchars($unit['description'] ?? '') ?></td>
                                                     <td>
                                                         <span class="badge <?= $unit['is_active'] === 't' ? 'badge-active' : 'badge-inactive' ?>">
                                                             <?= $unit['is_active'] === 't' ? 'Active' : 'Inactive' ?>
@@ -345,8 +374,8 @@ $units = pg_fetch_all($result) ?: [];
                                                                 <i class="bi bi-pencil"></i>
                                                             </a>
                                                             <?php if ($unit['usage_count'] == 0): ?>
-                                                                <form method="POST" style="display:inline;" 
-                                                                      onsubmit="return confirm('Delete this unit?');">
+                                                                <form method="POST" style="display:inline;"
+                                                                    onsubmit="return confirm('Delete this unit?');">
                                                                     <input type="hidden" name="action" value="delete">
                                                                     <input type="hidden" name="unit_id" value="<?= $unit['unit_id'] ?>">
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -361,14 +390,14 @@ $units = pg_fetch_all($result) ?: [];
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 <div class="text-center text-muted mt-3">
                                     Showing <?= count($units) ?> units
                                     <?php if (!empty($where_conditions)): ?>
                                         (filtered)
                                     <?php endif; ?>
                                 </div>
-                                
+
                             <?php else: ?>
                                 <div class="alert alert-info">
                                     No units found.
@@ -390,7 +419,7 @@ $units = pg_fetch_all($result) ?: [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Auto-hide alerts after 5 seconds
@@ -402,4 +431,5 @@ $units = pg_fetch_all($result) ?: [];
         });
     </script>
 </body>
+
 </html>
