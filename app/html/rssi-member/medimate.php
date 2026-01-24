@@ -64,25 +64,29 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    
+    <?php include 'includes/meta.php' ?>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -111,48 +115,48 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class=col style="text-align: right;"><a href="medistatus.php"><button type="button" class="exam_btn"><i class="fas fa-child" style="font-size: 17px;"></i>
                             Track Your Claim</button></a>
                 </div>
-                
 
-                    <table class="table" style="font-size:13px">
-                        <thead>
-                            <tr>
-                                <th scope="col">Health insurance policy</th>
-                                <th scope="col">Submit Domiciliary Claim</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="line-height: 2;"><span class="noticea"><a href="https://drive.google.com/file/d/1pqXufu38P3T15L0jMeK_poRifJAMPPP1/view" target="_blank">RSSI Vaccination Policy</a></span></td>
-                                <td style="line-height: 2;"><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSePgeXEKY4R_WH_d6mOcHFPiEoMbbWnh2MxIxTojrxMzvckYA/viewform?usp=pp_url&entry.1268051974=<?php echo $fullname ?>&entry.288127209=<?php echo $associatenumber ?>&entry.995125243=<?php echo $phone ?>&entry.605633398=<?php echo $email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Domiciliary Claim</a></span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Bank Account Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="line-height: 2; font-size:13px">
-                                    <?php echo @$bankname ?><br>
-                                    Account Number:&nbsp;<b><?php echo @$accountnumber ?></b><br>
-                                    Account Holder Name:&nbsp;<?php echo @$accountholdername ?><br>
-                                    IFSC Code:&nbsp;<?php echo @$ifsccode ?>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-                <div>
-                    <p><b>Note:</b></p>
-                    Once the claim is settled, amount will be credited to applicant's account within 5 to 6 working days from date of Settlement.</p>
-                    <p>For the first time you have to fill the complete Domiciliary Claim Form. From the second time onwards your bank account details will be automatically updated based on your previous information.</p>
-                    <br>Last updated on: <?php echo @$mlastupdatedon ?>
-                </div>
-            </div>
+
+                <table class="table" style="font-size:13px">
+                    <thead>
+                        <tr>
+                            <th scope="col">Health insurance policy</th>
+                            <th scope="col">Submit Domiciliary Claim</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="line-height: 2;"><span class="noticea"><a href="https://drive.google.com/file/d/1pqXufu38P3T15L0jMeK_poRifJAMPPP1/view" target="_blank">RSSI Vaccination Policy</a></span></td>
+                            <td style="line-height: 2;"><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSePgeXEKY4R_WH_d6mOcHFPiEoMbbWnh2MxIxTojrxMzvckYA/viewform?usp=pp_url&entry.1268051974=<?php echo $fullname ?>&entry.288127209=<?php echo $associatenumber ?>&entry.995125243=<?php echo $phone ?>&entry.605633398=<?php echo $email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Domiciliary Claim</a></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Bank Account Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="line-height: 2; font-size:13px">
+                                <?php echo @$bankname ?><br>
+                                Account Number:&nbsp;<b><?php echo @$accountnumber ?></b><br>
+                                Account Holder Name:&nbsp;<?php echo @$accountholdername ?><br>
+                                IFSC Code:&nbsp;<?php echo @$ifsccode ?>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
         </section>
+        <div>
+            <p><b>Note:</b></p>
+            Once the claim is settled, amount will be credited to applicant's account within 5 to 6 working days from date of Settlement.</p>
+            <p>For the first time you have to fill the complete Domiciliary Claim Form. From the second time onwards your bank account details will be automatically updated based on your previous information.</p>
+            <br>Last updated on: <?php echo @$mlastupdatedon ?>
+        </div>
+        </div>
+    </section>
     </section>
 </body>
 

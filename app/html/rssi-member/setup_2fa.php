@@ -55,8 +55,7 @@ $verificationStarted = isset($_SESSION['email_verification_started']) &&
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php' ?>
-    
+    <title>Setup Two-Factor Authentication | RSSI My Account</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -779,8 +778,8 @@ $verificationStarted = isset($_SESSION['email_verification_started']) &&
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const qrCodeCanvas = document.getElementById('qrcode');

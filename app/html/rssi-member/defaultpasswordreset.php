@@ -59,58 +59,29 @@ if (isset($_POST['login'])) {
     }
 }
 ?>
-<?php if (@$newpass != @$oldpass) { ?>
-    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
-    </div>
-<?php } ?>
-<?php
-if (@$cmdtuples == 1) {
-    echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
-    echo '<span><i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
-    echo '</div>';
-
-    // Redirect the user after a delay
-    echo '<meta http-equiv="refresh" content="3;url=index.php">';
-    exit; // End the script to prevent any further output
-}
-?>
-<?php
-if (@$login_failed_dialog) { ?>
-    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
-    </div>
-<?php } ?>
-<?php if (@$newpass == null) { ?>
-    <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span>Hi <?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),&nbsp;Please change your default password.</span>
-    </div>
-<?php } ?>
 
 <!DOCTYPE html>
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
-    <meta name="description" content="">
-    <meta name="author" content="">
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset password</title>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <link href="../img/favicon.ico" rel="icon">
     <!-- Main css -->
     <link rel="stylesheet" href="/css/style.css" />
 
@@ -168,49 +139,74 @@ if (@$login_failed_dialog) { ?>
         <div class="logo-area"> </div>
     </div>
     <section>
+        <?php if (@$newpass != @$oldpass) { ?>
+            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+            </div>
+        <?php } ?>
+        <?php
+        if (@$cmdtuples == 1) {
+            echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
+            echo '<span><i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
+            echo '</div>';
+
+            // Redirect the user after a delay
+            echo '<meta http-equiv="refresh" content="3;url=index.php">';
+            exit; // End the script to prevent any further output
+        }
+        ?>
+        <?php
+        if (@$login_failed_dialog) { ?>
+            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+            </div>
+        <?php } ?>
+        <?php if (@$newpass == null) { ?>
+            <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span>Hi <?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),&nbsp;Please change your default password.</span>
+            </div>
+        <?php } ?>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <!-- <div class="col" style="display: inline-block; width:100%; text-align:right">
-                    <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a>
-                </div> -->
-
-                
-                    <div class="col-md-4 col-md-offset-4">
-                        <div class="login-panel panel panel-default" style="margin-top: unset;">
-                            <div class="panel-heading">
-                                <b>Reset password</b>
-                            </div>
-                            <div class="panel-body">
-                                <form role="form" method="post" name="login" id="login" action="defaultpasswordreset.php">
-                                    <fieldset>
-                                        <div class="form-group">
-                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" required title="Enter your current password.">
-                                        </div>
-                                        <div class="form-group">
-                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
-                                            <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                                <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
-                                            </label>
-                                            <div id="password-message"></div>
-                                        </div>
-                                        <div class="form-group">
-                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" required title="Enter the same password again to confirm.">
-                                            <div id="password_message_conf"></div>
-                                            <div id="password-message-success"></div>
-                                        </div>
-                                        <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
-                                        <br><br><br>
-                                        <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Password Fields User Guide</a></p>
+                <div class="col-md-4 col-md-offset-4">
+                    <div class="login-panel panel panel-default" style="margin-top: unset;">
+                        <div class="panel-heading">
+                            <b>Reset password</b>
+                        </div>
+                        <div class="panel-body">
+                            <form role="form" method="post" name="login" id="login" action="defaultpasswordreset.php">
+                                <fieldset>
+                                    <div class="form-group">
+                                        <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" required title="Enter your current password.">
+                                    </div>
+                                    <div class="form-group">
+                                        <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
+                                        <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
+                                            <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                        </label>
+                                        <div id="password-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" required title="Enter the same password again to confirm.">
+                                        <div id="password_message_conf"></div>
+                                        <div id="password-message-success"></div>
+                                    </div>
+                                    <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+                                    <br><br><br>
+                                    <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Password Fields User Guide</a></p>
 
 
-                                    </fieldset>
-                                </form>
-                            </div>
+                                </fieldset>
+                            </form>
                         </div>
                     </div>
-                </section>
-            </div>
+                </div>
         </section>
+        </div>
+    </section>
     </section>
 
     <div id="myModal" class="modal fade" role="dialog">

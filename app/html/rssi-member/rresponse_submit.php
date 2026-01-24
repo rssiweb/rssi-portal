@@ -112,6 +112,7 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <?php include 'includes/meta.php' ?>
     
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->

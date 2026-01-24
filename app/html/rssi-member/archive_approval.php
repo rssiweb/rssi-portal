@@ -90,6 +90,7 @@ $resultArr = pg_fetch_all($result);
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <?php include 'includes/meta.php' ?>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">

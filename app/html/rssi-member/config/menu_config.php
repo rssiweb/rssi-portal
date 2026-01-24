@@ -401,6 +401,9 @@ class MenuConfig
                 'pages' => [
                     'job-admin.php' => ['title' => 'Job Admin Panel', 'show_in_menu' => true],
                     'job-approval.php' => ['title' => 'Job Approval', 'show_in_menu' => false],
+                    'recruiter-management.php' => ['title' => 'Recruiter Management', 'show_in_menu' => false],
+                    'recruiter-add.php' => ['title' => 'Add Recruiter', 'show_in_menu' => false],
+                    'job-add.php' => ['title' => 'Add Job', 'show_in_menu' => false],
                     'job_view.php' => ['title' => 'Job View', 'show_in_menu' => false]
                 ]
             ],
@@ -812,12 +815,12 @@ class MenuConfig
         }
 
         // Add default for unknown pages
-        // self::$pageData['default'] = [
-        //     'title' => 'Dashboard',
-        //     'section' => 'Dashboard',
-        //     'show_in_menu' => true,
-        //     'description' => 'Phoenix Portal dashboard and internal management system.'
-        // ];
+        self::$pageData['default'] = [
+            'title' => 'Dashboard',
+            'section' => 'Dashboard',
+            'show_in_menu' => false,
+            'description' => 'Phoenix Portal dashboard and internal management system.'
+        ];
     }
 
     public static function getPageInfo($page)
