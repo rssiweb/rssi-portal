@@ -50,6 +50,22 @@ $conditions = [];
 if (!empty($filter_application_number)) {
     $search = pg_escape_string($con, $filter_application_number);
     $conditions[] = "(application_number ILIKE '%$search%' OR applicant_name ILIKE '%$search%')";
+} // Interview date range filter (covers both tech and HR interviews)
+else if (!empty($filter_interview_date_range)) {
+    // Parse the date range string (format: "YYYY-MM-DD to YYYY-MM-DD")
+    $date_parts = explode(' to ', $filter_interview_date_range);
+    if (count($date_parts) == 2) {
+        $interview_start_date = pg_escape_string($con, trim($date_parts[0]));
+        $interview_end_date = pg_escape_string($con, trim($date_parts[1]));
+        $interview_end_date = $interview_end_date . ' 23:59:59';
+
+        // Add condition for either tech_interview_schedule OR hr_interview_schedule within the range
+        $conditions[] = "(
+            (tech_interview_schedule::date >= '$interview_start_date' AND tech_interview_schedule::date <= '$interview_end_date')
+            OR 
+            (hr_interview_schedule::date >= '$interview_start_date' AND hr_interview_schedule::date <= '$interview_end_date')
+        )";
+    }
 } else {
     // Status filter
     if (!empty($filter_status)) {
@@ -68,24 +84,6 @@ if (!empty($filter_application_number)) {
         if ($from_date <= $to_date) {
             $conditions[] = "timestamp::date >= '$from_date' AND timestamp::date <= '$to_date'";
         }
-    }
-}
-
-// Interview date range filter (covers both tech and HR interviews)
-if (!empty($filter_interview_date_range)) {
-    // Parse the date range string (format: "YYYY-MM-DD to YYYY-MM-DD")
-    $date_parts = explode(' to ', $filter_interview_date_range);
-    if (count($date_parts) == 2) {
-        $interview_start_date = pg_escape_string($con, trim($date_parts[0]));
-        $interview_end_date = pg_escape_string($con, trim($date_parts[1]));
-        $interview_end_date = $interview_end_date . ' 23:59:59';
-
-        // Add condition for either tech_interview_schedule OR hr_interview_schedule within the range
-        $conditions[] = "(
-            (tech_interview_schedule::date >= '$interview_start_date' AND tech_interview_schedule::date <= '$interview_end_date')
-            OR 
-            (hr_interview_schedule::date >= '$interview_start_date' AND hr_interview_schedule::date <= '$interview_end_date')
-        )";
     }
 }
 
@@ -252,6 +250,14 @@ $resultArr = pg_fetch_all($result);
                                         <small class="form-text text-muted">Application Number or Name</small>
                                     </div>
 
+                                    <div class="form-group">
+                                        <input type="text" id="interview_date_range" name="interview_date_range" class="form-control date-range-picker"
+                                            placeholder="Select Interview Date Range"
+                                            value="<?php echo htmlspecialchars($filter_interview_date_range); ?>"
+                                            style="max-width: 250px;" autocomplete="off">
+                                        <small class="form-text text-muted">Click to select date range</small>
+                                    </div>
+
                                     <!-- Date Range Filter -->
                                     <div class="form-group">
                                         <input type="date" name="from_date" id="from_date" class="form-control"
@@ -263,14 +269,6 @@ $resultArr = pg_fetch_all($result);
                                         <input type="date" name="to_date" id="to_date" class="form-control"
                                             value="<?php echo htmlspecialchars($filter_to_date); ?>" required />
                                         <small class="form-text text-muted">Select the ending date for the range.</small>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <input type="text" id="interview_date_range" name="interview_date_range" class="form-control date-range-picker"
-                                            placeholder="Select Interview Date Range"
-                                            value="<?php echo htmlspecialchars($filter_interview_date_range); ?>"
-                                            style="max-width: 250px;" autocomplete="off">
-                                        <small class="form-text text-muted">Click to select date range</small>
                                     </div>
 
                                     <div class="form-group"> <select id="status" name="status[]" class="form-select" multiple>
@@ -687,9 +685,13 @@ $resultArr = pg_fetch_all($result);
                 maxDate: moment().add(1, 'year'), // ✅ Future dates allowed
                 opens: 'right',
                 drops: 'down'
-            }, function(start, end) {
-                interviewDateRangeInput.value =
-                    start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD');
+            });
+
+            $(interviewDateRangeInput).on('apply.daterangepicker', function(ev, picker) {
+                this.value =
+                    picker.startDate.format('YYYY-MM-DD') +
+                    ' to ' +
+                    picker.endDate.format('YYYY-MM-DD');
             });
 
             // Clear input when cancel is clicked
