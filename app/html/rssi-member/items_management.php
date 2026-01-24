@@ -73,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         category = '{$data['category']}',
                         is_active = '{$data['is_active']}',
                         is_ration = '{$data['is_ration']}',
-                        updated_at = NOW()
+                        updated_at = NOW(),
+                        updated_by = $associatenumber
                         WHERE item_id = $item_id";
 
                 $result = pg_query($con, $sql);
@@ -85,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($action === 'delete' && $item_id) {
             // Soft delete (mark as inactive) instead of hard delete
-            $sql = "UPDATE stock_item SET is_active = '0', updated_at = NOW() WHERE item_id = $item_id";
+            $sql = "UPDATE stock_item SET is_active = '0', updated_at = NOW(), updated_by = $associatenumber WHERE item_id = $item_id";
             $result = pg_query($con, $sql);
             if ($result) {
                 $message = "Item deactivated successfully!";
@@ -94,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($action === 'toggle_featured' && $item_id) {
             // Toggle featured status
-            $sql = "UPDATE stock_item SET is_featured = NOT is_featured, updated_at = NOW() WHERE item_id = $item_id";
+            $sql = "UPDATE stock_item SET is_featured = NOT is_featured, updated_at = NOW(), updated_by = $associatenumber WHERE item_id = $item_id";
             $result = pg_query($con, $sql);
             if ($result) {
                 $message = "Featured status updated!";
