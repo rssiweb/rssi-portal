@@ -716,7 +716,7 @@ class MenuConfig
                 'section' => 'Work',
                 'sidebar_id' => 'work',
                 'pages' => [
-                    'reimbursementstatus.php' => ['title' => 'Reimbursement Approval', 'show_in_menu' => true]
+                    'reimbursementstatus.php?source=work' => ['title' => 'Reimbursement Approval', 'show_in_menu' => true]
                 ]
             ],
 
