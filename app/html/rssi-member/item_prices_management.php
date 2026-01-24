@@ -30,23 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Field '$field' is required");
                 }
             }
-            
+
             // Prepare data
             $data = [
                 'item_id' => intval($_POST['item_id']),
                 'unit_id' => intval($_POST['unit_id']),
                 'price_per_unit' => floatval($_POST['price_per_unit']),
                 'effective_start_date' => pg_escape_string($con, $_POST['effective_start_date']),
-                'effective_end_date' => !empty($_POST['effective_end_date']) ? 
+                'effective_end_date' => !empty($_POST['effective_end_date']) ?
                     "'" . pg_escape_string($con, $_POST['effective_end_date']) . "'" : 'NULL',
-                'unit_quantity' => !empty($_POST['unit_quantity']) ? 
+                'unit_quantity' => !empty($_POST['unit_quantity']) ?
                     floatval($_POST['unit_quantity']) : 'NULL',
-                'discount_percentage' => !empty($_POST['discount_percentage']) ? 
+                'discount_percentage' => !empty($_POST['discount_percentage']) ?
                     floatval($_POST['discount_percentage']) : 'NULL',
-                'original_price' => !empty($_POST['original_price']) ? 
+                'original_price' => !empty($_POST['original_price']) ?
                     floatval($_POST['original_price']) : 'NULL'
             ];
-            
+
             if ($action === 'add') {
                 // Insert new price
                 $sql = "INSERT INTO stock_item_price 
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 '{$data['effective_start_date']}', {$data['effective_end_date']}, 
                                 {$data['unit_quantity']}, {$data['discount_percentage']}, 
                                 {$data['original_price']}, NOW())";
-                
+
                 $result = pg_query($con, $sql);
                 if ($result) {
                     $message = "Price added successfully!";
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         original_price = {$data['original_price']},
                         updated_at = NOW()
                         WHERE price_id = $price_id";
-                
+
                 $result = pg_query($con, $sql);
                 if ($result) {
                     $message = "Price updated successfully!";
@@ -199,7 +199,10 @@ $prices = pg_fetch_all($result) ?: [];
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
         gtag('js', new Date());
         gtag('config', 'AW-11316670180');
     </script>
@@ -214,14 +217,46 @@ $prices = pg_fetch_all($result) ?: [];
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
-        .form-container { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .filter-card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .badge-active { background-color: #198754; }
-        .badge-inactive { background-color: #6c757d; }
-        .badge-future { background-color: #ffc107; color: #000; }
-        .badge-expired { background-color: #dc3545; }
-        .table-responsive { max-height: 600px; overflow-y: auto; }
-        .current-price { background-color: #e8f5e9; }
+        .form-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-active {
+            background-color: #198754;
+        }
+
+        .badge-inactive {
+            background-color: #6c757d;
+        }
+
+        .badge-future {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .badge-expired {
+            background-color: #dc3545;
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .current-price {
+            background-color: #e8f5e9;
+        }
     </style>
 </head>
 
@@ -231,15 +266,9 @@ $prices = pg_fetch_all($result) ?: [];
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Item Prices Management</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="items_management.php">Inventory</a></li>
-                    <li class="breadcrumb-item active">Item Prices</li>
-                </ol>
-            </nav>
-        </div>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
 
         <section class="section dashboard">
             <div class="row">
@@ -250,7 +279,7 @@ $prices = pg_fetch_all($result) ?: [];
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if ($error): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <?= htmlspecialchars($error) ?>
@@ -273,12 +302,12 @@ $prices = pg_fetch_all($result) ?: [];
                                 <?php if (!empty($price_data)): ?>
                                     <input type="hidden" name="price_id" value="<?= $price_data['price_id'] ?>">
                                 <?php endif; ?>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="item_id" class="form-label">Item *</label>
-                                            <select class="form-select" id="item_id" name="item_id" required 
+                                            <select class="form-select" id="item_id" name="item_id" required
                                                 <?= !empty($item_id) ? 'readonly style="background-color: #e9ecef;"' : '' ?>>
                                                 <option value="">Select Item</option>
                                                 <?php foreach ($items as $item): ?>
@@ -293,7 +322,7 @@ $prices = pg_fetch_all($result) ?: [];
                                             <?php endif; ?>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="unit_id" class="form-label">Unit *</label>
@@ -309,76 +338,76 @@ $prices = pg_fetch_all($result) ?: [];
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="price_per_unit" class="form-label">Price Per Unit *</label>
                                             <div class="input-group">
                                                 <span class="input-group-text">₹</span>
-                                                <input type="number" class="form-control" id="price_per_unit" name="price_per_unit" 
-                                                       step="0.01" min="0" required
-                                                       value="<?= number_format($price_data['price_per_unit'] ?? 0, 2) ?>">
+                                                <input type="number" class="form-control" id="price_per_unit" name="price_per_unit"
+                                                    step="0.01" min="0" required
+                                                    value="<?= number_format($price_data['price_per_unit'] ?? 0, 2) ?>">
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="unit_quantity" class="form-label">Quantity in Unit (Optional)</label>
-                                            <input type="number" class="form-control" id="unit_quantity" name="unit_quantity" 
-                                                   step="0.001" min="0"
-                                                   value="<?= $price_data['unit_quantity'] ?? '' ?>">
+                                            <input type="number" class="form-control" id="unit_quantity" name="unit_quantity"
+                                                step="0.001" min="0"
+                                                value="<?= $price_data['unit_quantity'] ?? '' ?>">
                                             <small class="text-muted">e.g., 1 kg = 1000 grams</small>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="discount_percentage" class="form-label">Discount % (Optional)</label>
                                             <div class="input-group">
-                                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" 
-                                                       step="0.01" min="0" max="100"
-                                                       value="<?= $price_data['discount_percentage'] ?? '' ?>">
+                                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage"
+                                                    step="0.01" min="0" max="100"
+                                                    value="<?= $price_data['discount_percentage'] ?? '' ?>">
                                                 <span class="input-group-text">%</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="effective_start_date" class="form-label">Effective Start Date *</label>
-                                            <input type="date" class="form-control" id="effective_start_date" name="effective_start_date" 
-                                                   required value="<?= $price_data['effective_start_date'] ?? date('Y-m-d') ?>">
+                                            <input type="date" class="form-control" id="effective_start_date" name="effective_start_date"
+                                                required value="<?= $price_data['effective_start_date'] ?? date('Y-m-d') ?>">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="effective_end_date" class="form-label">Effective End Date (Optional)</label>
-                                            <input type="date" class="form-control" id="effective_end_date" name="effective_end_date" 
-                                                   value="<?= $price_data['effective_end_date'] ?? '' ?>">
+                                            <input type="date" class="form-control" id="effective_end_date" name="effective_end_date"
+                                                value="<?= $price_data['effective_end_date'] ?? '' ?>">
                                             <small class="text-muted">Leave empty for ongoing price</small>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="original_price" class="form-label">Original Price (Optional)</label>
                                             <div class="input-group">
                                                 <span class="input-group-text">₹</span>
-                                                <input type="number" class="form-control" id="original_price" name="original_price" 
-                                                       step="0.01" min="0"
-                                                       value="<?= $price_data['original_price'] ?? '' ?>">
+                                                <input type="number" class="form-control" id="original_price" name="original_price"
+                                                    step="0.01" min="0"
+                                                    value="<?= $price_data['original_price'] ?? '' ?>">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button type="submit" class="btn btn-primary">
                                         <?= empty($price_data) ? 'Add Price' : 'Update Price' ?>
@@ -409,7 +438,7 @@ $prices = pg_fetch_all($result) ?: [];
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="unit_id" class="form-label">Unit</label>
                                 <select class="form-select" id="unit_id" name="unit_id">
@@ -422,7 +451,7 @@ $prices = pg_fetch_all($result) ?: [];
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label for="active_only" class="form-label">Status</label>
                                 <select class="form-select" id="active_only" name="active_only">
@@ -430,7 +459,7 @@ $prices = pg_fetch_all($result) ?: [];
                                     <option value="0" <?= $filters['active_only'] === '0' ? 'selected' : '' ?>>All Prices</option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-2">
                                 <label class="form-label d-block">&nbsp;</label>
                                 <div class="btn-group" role="group">
@@ -451,7 +480,7 @@ $prices = pg_fetch_all($result) ?: [];
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Price History</h5>
-                            
+
                             <?php if (count($prices) > 0): ?>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -468,7 +497,7 @@ $prices = pg_fetch_all($result) ?: [];
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($prices as $price): 
+                                            <?php foreach ($prices as $price):
                                                 $isCurrent = $price['price_status'] === 'Active';
                                                 $rowClass = $isCurrent ? 'current-price' : '';
                                             ?>
@@ -484,11 +513,11 @@ $prices = pg_fetch_all($result) ?: [];
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <?= !empty($price['unit_quantity']) ? 
+                                                        <?= !empty($price['unit_quantity']) ?
                                                             number_format($price['unit_quantity'], 3) : '1' ?>
                                                     </td>
                                                     <td>
-                                                        <?= !empty($price['discount_percentage']) ? 
+                                                        <?= !empty($price['discount_percentage']) ?
                                                             number_format($price['discount_percentage'], 1) . '%' : '—' ?>
                                                     </td>
                                                     <td>
@@ -500,10 +529,9 @@ $prices = pg_fetch_all($result) ?: [];
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <span class="badge <?= 
-                                                            $price['price_status'] === 'Active' ? 'badge-active' : 
-                                                            ($price['effective_start_date'] > date('Y-m-d') ? 'badge-future' : 'badge-expired')
-                                                        ?>">
+                                                        <span class="badge <?=
+                                                                            $price['price_status'] === 'Active' ? 'badge-active' : ($price['effective_start_date'] > date('Y-m-d') ? 'badge-future' : 'badge-expired')
+                                                                            ?>">
                                                             <?= $price['price_status'] ?>
                                                         </span>
                                                     </td>
@@ -513,8 +541,8 @@ $prices = pg_fetch_all($result) ?: [];
                                                                 <i class="bi bi-pencil"></i>
                                                             </a>
                                                             <?php if ($price['price_status'] === 'Active'): ?>
-                                                                <form method="POST" style="display:inline;" 
-                                                                      onsubmit="return confirm('Deactivate this price?');">
+                                                                <form method="POST" style="display:inline;"
+                                                                    onsubmit="return confirm('Deactivate this price?');">
                                                                     <input type="hidden" name="action" value="deactivate_current">
                                                                     <input type="hidden" name="price_id" value="<?= $price['price_id'] ?>">
                                                                     <button type="submit" class="btn btn-sm btn-outline-warning" title="Deactivate">
@@ -522,8 +550,8 @@ $prices = pg_fetch_all($result) ?: [];
                                                                     </button>
                                                                 </form>
                                                             <?php endif; ?>
-                                                            <form method="POST" style="display:inline;" 
-                                                                  onsubmit="return confirm('Delete this price record?');">
+                                                            <form method="POST" style="display:inline;"
+                                                                onsubmit="return confirm('Delete this price record?');">
                                                                 <input type="hidden" name="action" value="delete">
                                                                 <input type="hidden" name="price_id" value="<?= $price['price_id'] ?>">
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -537,14 +565,14 @@ $prices = pg_fetch_all($result) ?: [];
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 <div class="text-center text-muted mt-3">
                                     Showing <?= count($prices) ?> price records
                                     <?php if ($filters['active_only'] === '1'): ?>
                                         (active only)
                                     <?php endif; ?>
                                 </div>
-                                
+
                             <?php else: ?>
                                 <div class="alert alert-info">
                                     No price records found.
@@ -566,7 +594,7 @@ $prices = pg_fetch_all($result) ?: [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Auto-hide alerts after 5 seconds
@@ -575,12 +603,12 @@ $prices = pg_fetch_all($result) ?: [];
                     new bootstrap.Alert(alert).close();
                 });
             }, 5000);
-            
+
             // Calculate discounted price
             const priceInput = document.getElementById('price_per_unit');
             const discountInput = document.getElementById('discount_percentage');
             const originalInput = document.getElementById('original_price');
-            
+
             function calculateOriginalPrice() {
                 if (priceInput.value && discountInput.value) {
                     const price = parseFloat(priceInput.value);
@@ -591,7 +619,7 @@ $prices = pg_fetch_all($result) ?: [];
                     }
                 }
             }
-            
+
             if (priceInput && discountInput && originalInput) {
                 priceInput.addEventListener('change', calculateOriginalPrice);
                 discountInput.addEventListener('change', calculateOriginalPrice);
@@ -599,4 +627,5 @@ $prices = pg_fetch_all($result) ?: [];
         });
     </script>
 </body>
+
 </html>

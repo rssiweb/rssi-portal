@@ -343,14 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Create RTET</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">People Plus</a></li>
-                    <li class="breadcrumb-item active">Create RTET</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

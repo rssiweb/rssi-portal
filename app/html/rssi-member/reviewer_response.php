@@ -135,15 +135,8 @@ if (!$result) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Reviewer Response</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Performance management</a></li>
-                    <li class="breadcrumb-item"><a href="my_appraisal.php?form-type=reviewer">My Appraisal</a></li>
-                    <li class="breadcrumb-item active">Reviewer</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

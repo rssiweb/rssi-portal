@@ -139,15 +139,8 @@ for ($i = 0; $i < 4; $i++) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Result Scheduler</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Academic</a></li>
-                    <li class="breadcrumb-item"><a href="exam-management.php">Exam Management</a></li>
-                    <li class="breadcrumb-item active">Result Scheduler</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

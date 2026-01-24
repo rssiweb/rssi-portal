@@ -367,14 +367,8 @@ $result = pg_query($con, $query);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Question Dashboard</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">iExplore Edge</li>
-                    <li class="breadcrumb-item active">Question Dashboard</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

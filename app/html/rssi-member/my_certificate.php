@@ -357,28 +357,8 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>My Certificate</h1>
-            <nav>
-                <!-- <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item active">Class details</li>
-                </ol> -->
-                <?php if ($role == 'Admin') { ?>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">My Services</a></li>
-                        <li class="breadcrumb-item"><a href="document.php">My Document</a></li>
-                        <li class="breadcrumb-item active">Certificate Management System (CMS)</li>
-                    </ol>
-                <?php } else { ?>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">My Services</a></li>
-                        <li class="breadcrumb-item"><a href="document.php">My Document</a></li>
-                        <li class="breadcrumb-item active">My Certificate</li>
-                    </ol>
-                <?php } ?>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

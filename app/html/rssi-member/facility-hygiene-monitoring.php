@@ -342,15 +342,9 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
         <main id="main" class="main">
 
             <div class="pagetitle">
-                <h1>FHM</h1>
-                <nav>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Work</a></li>
-                        <li class="breadcrumb-item active">Facility Hygiene Monitoring</li>
-                    </ol>
-                </nav>
-            </div><!-- End Page Title -->
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
 
             <section class="section dashboard">
                 <div class="row">

@@ -110,15 +110,9 @@ while ($row = pg_fetch_assoc($unit_result)) {
     <?php include 'header.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Distribute Stock</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Stock Management</a></li>
-                    <li class="breadcrumb-item active">Distribute Stock</li>
-                </ol>
-            </nav>
-        </div>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
         <section class="section dashboard">
             <div class="row">
                 <div class="col-12">

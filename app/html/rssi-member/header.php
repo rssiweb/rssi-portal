@@ -1,3 +1,427 @@
+<?php
+// ==================== BREADCRUMB FUNCTION ====================
+// Add this PHP function at the VERY TOP of your header.php file, right after opening <?php tag
+
+function generateDynamicBreadcrumb()
+{
+  $currentPage = basename($_SERVER['PHP_SELF']);
+
+  // Map of page URLs to their titles (you can expand this as needed)
+  $pageTitles = [
+    // Work Section
+    'userlog.php' => 'User log',
+    'student.php' => 'RSSI Student',
+    'student_attrition.php' => 'Student Attrition',
+    'distribution_analytics.php' => 'Distribution Analytics',
+    'facility-hygiene-monitoring.php' => 'Facility Hygiene Monitoring',
+    'archive_approval.php' => 'Document Approval',
+    'bankdetails_admin.php' => 'HR Banking Records',
+    'process-hub.php' => 'Process Hub',
+    'faculty.php' => 'RSSI Faculty',
+    'monthly_timesheet.php' => 'Monthly Timesheet',
+    'reimbursementstatus.php' => 'Reimbursement Approval',
+    'donationinfo_admin.php' => 'Donation',
+    'pms.php' => 'PMS',
+    'admin_role_management.php' => 'RMC',
+    'ams.php' => 'Announcement',
+    'onexit.php' => 'OnExit',
+    'access_panel.php' => 'Access Panel',
+    'maintenance_panel.php' => 'Maintenance Panel',
+
+    // Academic Section
+    'exam.php' => 'Examination',
+    'exam-management.php' => 'Exam Management',
+
+    // My Services Section
+    'leave.php' => 'Apply for Leave',
+    'document.php' => 'My Document',
+    'allocation.php' => 'My Allocation',
+    'resourcehub.php' => 'Resource Hub',
+
+    // Exception Portal
+    'exception-portal.php' => 'Raise Exception',
+    'exception_admin.php' => 'Exception Dashboard',
+
+    // iExplore Learner
+    'iexplore.php' => 'Courses',
+    'my_learning.php' => 'My Learnings',
+    'iexplore_admin.php' => 'Modify Course',
+    'iexplore_defaulters.php' => 'Defaulters List',
+
+    // iExplore Edge
+    'exam_management.php' => 'Exam Management',
+    'add_question.php' => 'Add Question',
+    'question_dashboard.php' => 'Question Dashboard',
+    'manage_category.php' => 'Manage Category',
+
+    // Performance Management
+    'my_appraisal.php' => 'My Appraisal',
+
+    // Rewards & Recognition
+    'gems-mart.php' => 'Gems Mart',
+    'my-orders.php' => 'My Orders',
+
+    // Claims and Advances
+    'reimbursement.php' => 'Reimbursement',
+    'medimate.php' => 'Medimate',
+
+    // Support 360
+    'create_ticket.php' => 'Create Ticket',
+    'ticket_log.php' => 'Ticket Log',
+
+    // Stock Management
+    'stock_management.php' => 'Stock Management',
+
+    // Community Supply
+    'emart.php' => 'eMart',
+    'emart_orders.php' => 'eMart Orders',
+
+    // Schedule Hub
+    'shift_planner.php' => 'Shift Planner',
+    'view_shift.php' => 'View Shift',
+    'closure_assign.php' => 'Closing Duty Roster',
+    'student_class_days.php' => 'Student Class Days',
+    'exception_view.php' => 'Class Days Exceptions',
+
+    // Survey
+    'survey.php' => 'Create Survey',
+    'survey_view.php' => 'View Survey Results',
+    'appointments.php' => 'View Appointments',
+    'enquiry_portal.php' => 'Enquiry Portal',
+
+    // Job Assistance
+    'job_seekers.php' => 'Job Seeker Records',
+    'job-admin.php' => 'Job Admin Panel',
+
+    // People Plus
+    'talent_pool.php' => 'Talent Pool',
+    'interview_central.php' => 'Interview Central',
+    'rtet.php' => 'Create RTET',
+
+    // Fee Portal
+    'fee_collection.php' => 'Fee Collection',
+    'concession_list.php' => 'Student Concessions',
+    'settlement.php' => 'Fee Settlement',
+    'fee_payments_report.php' => 'Fee Payments Report',
+    'fee_structure_management.php' => 'Fee Structure Management',
+    'fee_lock_management.php' => 'Fee Collection Lock Management',
+
+    // IRC
+    'books.php' => 'Library Dashboard',
+    'book_orders.php' => 'Library Orders Management',
+
+    // Payroll
+    'salary_structure.php' => 'Salary Structure Management',
+    'payroll_processing.php' => 'Payroll Processing',
+
+    // Health Portal
+    'health_portal.php' => 'Student Health Portal',
+    'community_care.php' => 'Community Care Portal',
+
+    // Worklist
+    'hrms_worklist.php' => 'HRMS Worklist',
+    'post_worklist.php' => 'Post Worklist',
+    'iexplore_worklist.php' => 'iExplore Worklist',
+
+    // Alliance Portal
+    'contact-directory.php' => 'Contact Directory',
+
+    // ICOM
+    'icom.php' => 'Order Management',
+    'id_history.php' => 'Order History',
+
+    // Leave Management System
+    'leave_approval.php' => 'Leave Approval',
+    'leave_admin.php' => 'Leave Admin',
+
+    // GPS
+    'gps.php' => 'My Assets',
+    'asset-management.php' => 'Asset Management',
+
+    // Other Pages
+    'home.php' => 'Home',
+    'attendx.php' => 'Attendance Portal',
+    'hrms.php' => 'Profile',
+  ];
+
+  // Map pages to their sections based on your sidebar structure
+  $sectionMap = [
+    // Work Section (all pages under #work collapse)
+    'userlog.php' => 'Work',
+    'student.php' => 'Work',
+    'student_attrition.php' => 'Work',
+    'distribution_analytics.php' => 'Work',
+    'facility-hygiene-monitoring.php' => 'Work',
+    'archive_approval.php' => 'Work',
+    'bankdetails_admin.php' => 'Work',
+    'process-hub.php' => 'Work',
+    'faculty.php' => 'Work',
+    'monthly_timesheet.php' => 'Work',
+    'medistatus.php' => 'Work',
+    'reimbursementstatus.php' => 'Work',
+    'donationinfo_admin.php' => 'Work',
+    'pms.php' => 'Work',
+    'admin_role_management.php' => 'Work',
+    'ams.php' => 'Work',
+    'onexit.php' => 'Work',
+    'access_panel.php' => 'Work',
+    'maintenance_panel.php' => 'Work',
+    'facultyexp.php' => 'Work',
+    'visitor.php' => 'Work',
+    'digital_archive.php' => 'Work',
+    'bankdetails.php' => 'Work',
+    'admin_role_audit.php' => 'Work',
+    'admission_admin.php' => 'Work',
+    'fees.php' => 'Work',
+    'sps.php' => 'Work',
+    'onboarding.php' => 'Work',
+    'exit.php' => 'Work',
+
+    // Academic Section (#acadamis)
+    'exam.php' => 'Academic',
+    'exam-management.php' => 'Academic',
+    'append-students.php' => 'Academic',
+    'result-scheduler.php' => 'Academic',
+    'exam_create.php' => 'Academic',
+    'progress_curve.php' => 'Academic',
+    'exam_allotment.php' => 'Academic',
+    'exam_marks_upload.php' => 'Academic',
+    'exam_summary_report.php' => 'Academic',
+    'reexam.php' => 'Academic',
+    'reexam_record.php' => 'Academic',
+
+    // My Services Section (#myservices)
+    'leave.php' => 'My Services',
+    'document.php' => 'My Services',
+    'allocation.php' => 'My Services',
+    'resourcehub.php' => 'My Services',
+    'my_certificate.php' => 'My Services',
+    'pay_details.php' => 'My Services',
+    'old_payslip.php' => 'My Services',
+    'leaveallo.php' => 'My Services',
+    'leaveadjustment.php' => 'My Services',
+
+    // Exception Portal (#exceptionPortal)
+    'exception-portal.php' => 'Exception',
+    'exception_admin.php' => 'Exception',
+
+    // iExplore Learner (#learning)
+    'iexplore.php' => 'iExplore Learner',
+    'my_learning.php' => 'iExplore Learner',
+    'visco.php' => 'iExplore Learner',
+    'library.php' => 'iExplore Learner',
+    'iexplore_admin.php' => 'iExplore Learner',
+    'iexplore_defaulters.php' => 'iExplore Learner',
+    'my_book.php' => 'iExplore Learner',
+
+    // iExplore Edge (#iexploreedge)
+    'exam_management.php' => 'iExplore Edge',
+    'add_question.php' => 'iExplore Edge',
+    'question_dashboard.php' => 'iExplore Edge',
+    'manage_category.php' => 'iExplore Edge',
+
+    // Performance Management (#performance)
+    'my_appraisal.php' => 'Performance Management',
+    'ipf-management.php' => 'Performance Management',
+    'manager_response.php' => 'Performance Management',
+    'appraisee_response.php' => 'Performance Management',
+    'reviewer_response.php' => 'Performance Management',
+    'process.php' => 'Performance Management',
+
+    // Rewards & Recognition (#rewards)
+    'gems-mart.php' => 'Rewards & Recognition',
+    'my-orders.php' => 'Rewards & Recognition',
+
+    // Claims and Advances (#claims)
+    'reimbursement.php' => 'Claims and Advances',
+    'reimbursementstatus.php' => 'Claims and Advances',
+    'medimate.php' => 'Claims and Advances',
+
+    // Support 360 (#support360)
+    'create_ticket.php' => 'Support 360',
+    'ticket_log.php' => 'Support 360',
+    'ticket-dashboard.php' => 'Support 360',
+
+    // Stock Management
+    'stock_management.php' => 'Stock Management',
+    'stock_add.php' => 'Stock Management',
+    'stock_out.php' => 'Stock Management',
+    'items_management.php' => 'Stock Management',
+    'item_prices_management.php' => 'Stock Management',
+    'units_management.php' => 'Stock Management',
+    'stock_in.php' => 'Stock Management',
+    'inventory-insights.php' => 'Stock Management',
+    'group_management.php' => 'Stock Management',
+    'edit_group.php' => 'Stock Management',
+
+    // Community Supply (#csu)
+    'emart.php' => 'Community Supply',
+    'emart_orders.php' => 'Community Supply',
+
+    // Schedule Hub (#rostermanagement)
+    'shift_planner.php' => 'Schedule Hub',
+    'view_shift.php' => 'Schedule Hub',
+    'closure_assign.php' => 'Schedule Hub',
+    'student_class_days.php' => 'Schedule Hub',
+    'exception_view.php' => 'Schedule Hub',
+    'class_days_exception.php' => 'Schedule Hub',
+
+    // Survey (#survey)
+    'survey.php' => 'Survey',
+    'survey_view.php' => 'Survey',
+    'appointments.php' => 'Survey',
+    'enquiry_portal.php' => 'Survey',
+
+    // Job Assistance (#job)
+    'job_seekers.php' => 'Job Assistance',
+    'job-admin.php' => 'Job Assistance',
+    'job-approval.php' => 'Job Assistance',
+    'job_view.php' => 'Job Assistance',
+
+    // People Plus (#peoplePlus)
+    'talent_pool.php' => 'People Plus',
+    'interview_central.php' => 'People Plus',
+    'rtet.php' => 'People Plus',
+    'technical_interview.php' => 'People Plus',
+    'hr_interview.php' => 'People Plus',
+    'applicant_profile.php' => 'People Plus',
+
+    // Fee Portal (#feePortal)
+    'fee_collection.php' => 'Fee Portal',
+    'concession_list.php' => 'Fee Portal',
+    'settlement.php' => 'Fee Portal',
+    'fee_payments_report.php' => 'Fee Portal',
+    'fee_structure_management.php' => 'Fee Portal',
+    'fee_lock_management.php' => 'Fee Portal',
+
+    // IRC (#irc)
+    'books.php' => 'IRC',
+    'book_orders.php' => 'IRC',
+
+    // Payroll (#payroll)
+    'salary_structure.php' => 'Payroll',
+    'payroll_processing.php' => 'Payroll',
+    'view_structure.php' => 'Payroll',
+
+    // Health Portal (#health_portal)
+    'health_portal.php' => 'Health & Wellness Initiatives',
+    'community_care.php' => 'Health & Wellness Initiatives',
+
+    // Worklist (#worklist)
+    'hrms_worklist.php' => 'Worklist',
+    'post_worklist.php' => 'Worklist',
+    'iexplore_worklist.php' => 'Worklist',
+
+    // Alliance Portal (#alliance_portal)
+    'contact-directory.php' => 'Alliance Portal',
+
+    // ICOM (#icom)
+    'icom.php' => 'ID Card Order Management',
+    'id_history.php' => 'ID Card Order Management',
+
+    // Leave Management System (#lms)
+    'leave_approval.php' => 'Leave Management System',
+    'leave_admin.php' => 'Leave Management System',
+
+    // GPS (#gps)
+    'gps.php' => 'GPS',
+    'asset-management.php' => 'GPS',
+    'scan-asset.php' => 'GPS',
+    'admin_change_requests.php' => 'GPS',
+    'get_request_details.php' => 'GPS',
+    'gps_history.php' => 'GPS',
+    'asset_verification_report.php' => 'GPS',
+
+    // Top Level Pages (no collapse sections)
+    'home.php' => 'Dashboard',
+    'attendx.php' => 'Attendance Portal',
+    'scan.php' => 'Attendance Portal',
+    'in_out_tracker.php' => 'Attendance Portal',
+    'monthly_attd_report.php' => 'Attendance Portal',
+    'monthly_attd_report_associate.php' => 'Attendance Portal',
+    'attendance-analytics.php' => 'Attendance Portal',
+    'remote_attendance.php' => 'Attendance Portal',
+    'sas.php' => 'Attendance Portal',
+
+    // Profile Pages
+    'hrms.php' => 'Profile',
+    'resetpassword.php' => 'Profile',
+    'setup_2fa.php' => 'Profile',
+
+    // Other standalone pages
+    'create_event.php' => 'Home',
+    'edit_event.php' => 'Home',
+    'polls.php' => 'Home',
+  ];
+
+  // Default title if not found
+  $title = isset($pageTitles[$currentPage])
+    ? $pageTitles[$currentPage]
+    : ucwords(str_replace(['.php', '_', '-'], ['', ' ', ' '], $currentPage));
+
+  // Default section if not found
+  $section = isset($sectionMap[$currentPage])
+    ? $sectionMap[$currentPage]
+    : 'Dashboard';
+
+  // Generate breadcrumb HTML
+  $html = '
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="home.php">Home</a></li>';
+
+  // Only add section if it's not the home page
+  if ($currentPage !== 'home.php') {
+    $html .= '<li class="breadcrumb-item"><a href="#">' . htmlspecialchars($section) . '</a></li>';
+  }
+
+  $html .= '<li class="breadcrumb-item active" aria-current="page">' . htmlspecialchars($title) . '</li>
+        </ol>
+    </nav>';
+
+  return $html;
+}
+
+// Function to get just the page title for the <h1> tag
+function getPageTitle()
+{
+  $currentPage = basename($_SERVER['PHP_SELF']);
+
+  $pageTitles = [
+    'userlog.php' => 'User log',
+    'student.php' => 'RSSI Student',
+    'faculty.php' => 'RSSI Faculty',
+    'exam.php' => 'Examination',
+    'leave.php' => 'Apply for Leave',
+    'document.php' => 'My Document',
+    'allocation.php' => 'My Allocation',
+    'resourcehub.php' => 'Resource Hub',
+    'home.php' => 'Dashboard',
+    'attendx.php' => 'Attendance Portal',
+    'hrms.php' => 'My Profile',
+    // Add all your page titles here...
+  ];
+
+  if (isset($pageTitles[$currentPage])) {
+    return $pageTitles[$currentPage];
+  }
+
+  return ucwords(str_replace(['.php', '_', '-'], ['', ' ', ' '], $currentPage));
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phoenix Portal</title>
+  <!-- Your existing head content here -->
+</head>
+
+<body>
+
   <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top d-flex align-items-center">
 

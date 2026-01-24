@@ -219,14 +219,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Payroll Processing</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="#">Payroll</a></li>
-          <li class="breadcrumb-item active">Payroll Processing</li>
-        </ol>
-      </nav>
+      <h1><?php echo getPageTitle(); ?></h1>
+      <?php echo generateDynamicBreadcrumb(); ?>
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
@@ -489,8 +483,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   <!-- Bootstrap JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-  
+  <script src="../assets_new/js/main.js"></script>
+
 
   <script>
     // Global variable to store component options

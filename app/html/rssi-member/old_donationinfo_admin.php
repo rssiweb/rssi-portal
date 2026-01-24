@@ -46,15 +46,18 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -86,20 +89,14 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Donation</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="#">Work</a></li>
-          <li class="breadcrumb-item active">Donation</li>
-        </ol>
-      </nav>
+      <h1><?php echo getPageTitle(); ?></h1>
+      <?php echo generateDynamicBreadcrumb(); ?>
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
@@ -268,8 +265,8 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-  
+  <script src="../assets_new/js/main.js"></script>
+
 
 </body>
 

@@ -613,14 +613,8 @@ if (!empty($statusCondition)) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Fee Structure Management</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Fee Portal</a></li>
-                    <li class="breadcrumb-item active">Fee Structure Management</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

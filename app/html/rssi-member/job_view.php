@@ -262,17 +262,9 @@ if ($export) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Job Details</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Job Assistance</a></li>
-                    <li class="breadcrumb-item"><a href="job-admin.php">Job Admin Panel</a></li>
-                    <li class="breadcrumb-item"><a href="job-approval.php">Job Approval</a></li>
-                    <li class="breadcrumb-item active">Job Details</li>
-                </ol>
-            </nav>
-        </div>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
 
         <section class="section">
             <div class="row">

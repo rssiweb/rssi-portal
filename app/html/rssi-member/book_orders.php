@@ -318,14 +318,8 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Library Orders Management</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Information Resource Center</a></li>
-                    <li class="breadcrumb-item active">Library Orders Management</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

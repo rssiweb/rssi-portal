@@ -227,15 +227,8 @@ $classlist = [
     <?php include 'inactive_session_expire_check.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Exam summary report</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">Academic</li>
-                    <li class="breadcrumb-item"><a href="exam-management.php">Exam Management</a></li>
-                    <li class="breadcrumb-item active">Exam summary report</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

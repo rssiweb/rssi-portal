@@ -184,14 +184,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Create Event</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item active">Create Event</li>
-                </ol>
-            </nav>
-        </div>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
 
         <section class="section dashboard">
             <div class="row">

@@ -408,15 +408,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>View Survey Results</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Survey</a></li>
-                    <li class="breadcrumb-item active">View Survey Results</li>
-                </ol>
-            </nav>
-        </div>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
 
         <section class="section">
             <div class="row">

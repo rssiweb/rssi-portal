@@ -325,14 +325,8 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
     <?php include 'header.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Attendance Analytics</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="attendx.php">AttendX</a></li>
-                    <li class="breadcrumb-item active">Attendance Analytics</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

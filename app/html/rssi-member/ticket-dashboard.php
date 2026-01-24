@@ -453,15 +453,8 @@ if (!function_exists('makeClickableLinks')) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Ticket dashboard</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Support 360</a></li>
-                    <li class="breadcrumb-item"><a href="ticket_log.php">Ticket Log</a></li>
-                    <li class="breadcrumb-item active">Ticket dashboard</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">

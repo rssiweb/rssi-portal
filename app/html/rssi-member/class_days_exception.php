@@ -216,14 +216,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Class Days Exception</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">Schedule Hub</li>
-                    <li class="breadcrumb-item active">Create Exceptions</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">
@@ -385,8 +379,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Initialize Select2 for multiple selects
