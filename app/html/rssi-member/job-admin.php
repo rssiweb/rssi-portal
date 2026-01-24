@@ -28,8 +28,9 @@ validation();
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-    <title>Job Admin Panel</title>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -97,8 +98,8 @@ validation();
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

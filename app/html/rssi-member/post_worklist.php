@@ -59,7 +59,8 @@ if (!$result) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Worklist</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -77,8 +78,8 @@ if (!$result) {
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
     <main id="main" class="main">
 
         <div class="pagetitle">

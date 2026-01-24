@@ -69,7 +69,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>HR Banking Records</title>
+    
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -121,8 +121,8 @@ $resultArr = pg_fetch_all($result);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

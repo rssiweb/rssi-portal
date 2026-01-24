@@ -252,7 +252,8 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facility Hygiene Monitoring</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -337,7 +338,7 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
 
     <body>
         <?php include 'inactive_session_expire_check.php'; ?>
-        <?php include 'header.php'; ?>
+        <?php include 'includes/header.php'; ?>
 
         <main id="main" class="main">
 

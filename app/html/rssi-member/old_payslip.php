@@ -60,8 +60,9 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-    <title>Old Pay Details (Payslips till May 2023)</title>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -84,8 +85,8 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

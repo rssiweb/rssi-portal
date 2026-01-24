@@ -38,7 +38,7 @@ rsort($academicYears);
 
 <head>
     <meta charset="UTF-8">
-    <title>Inventory Insights</title>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -75,8 +75,8 @@ rsort($academicYears);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

@@ -60,8 +60,9 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-  <title>Old_Donation (till June 23)</title>
+  
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -90,7 +91,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 
 <body>
   <?php include 'inactive_session_expire_check.php'; ?>
-  <?php include 'header.php'; ?>
+  <?php include 'includes/header.php'; ?>
 
   <main id="main" class="main">
 

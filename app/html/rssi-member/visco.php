@@ -31,7 +31,7 @@ validation();
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>VISCO</title>
+    
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -157,8 +157,8 @@ validation();
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
+<?php include 'includes/header.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">
 

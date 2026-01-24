@@ -92,7 +92,8 @@ while ($row = pg_fetch_assoc($result)) {
     <!-- Your existing meta tags and scripts -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Stock</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
 
@@ -181,8 +182,8 @@ while ($row = pg_fetch_assoc($result)) {
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
         <div class="pagetitle">

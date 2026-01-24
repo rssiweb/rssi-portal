@@ -48,7 +48,7 @@ $searchTerm = $_SESSION['emart_search'] ?? '';
 <html>
 
 <head>
-    <title>Order Confirmation</title>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -57,7 +57,8 @@ if (empty($active_roles)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Your Role</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">

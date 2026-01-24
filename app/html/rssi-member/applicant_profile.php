@@ -326,8 +326,9 @@ $isFormDisabled = null;
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-    <title>Applicant_Profile_<?php echo $applicant_name; ?>_<?php echo $application_number; ?></title>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -351,7 +352,7 @@ $isFormDisabled = null;
 
 <body>
 
-    <?php include 'header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">

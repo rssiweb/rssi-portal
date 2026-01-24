@@ -432,8 +432,9 @@ pg_close($con);
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-    <title>Attendance Report</title>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -519,8 +520,8 @@ pg_close($con);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
         <div class="pagetitle">

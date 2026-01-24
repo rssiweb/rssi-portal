@@ -56,7 +56,7 @@ if (!empty($courseid_search)) {
     </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Modify Course</title>
+    
     <meta content="" name="description">
     <meta content="" name="keywords">
     <!-- Favicons -->
@@ -82,8 +82,8 @@ if (!empty($courseid_search)) {
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>

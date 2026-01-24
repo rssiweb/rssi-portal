@@ -27,7 +27,8 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ID Card Order History</title>
+    <?php include 'includes/meta.php' ?>
+    
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -106,8 +107,8 @@ $default_status = isset($_GET['status']) ? $_GET['status'] : 'Ordered';
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
         <div class="pagetitle">

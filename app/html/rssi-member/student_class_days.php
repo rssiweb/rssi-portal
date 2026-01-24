@@ -58,7 +58,7 @@ $activeSettings = pg_fetch_all($activeResult);
 <html>
 
 <head>
-    <title>Student Class Days</title>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
@@ -78,8 +78,8 @@ $activeSettings = pg_fetch_all($activeResult);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

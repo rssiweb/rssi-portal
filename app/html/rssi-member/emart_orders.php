@@ -138,7 +138,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
 <html>
 
 <head>
-    <title>eMart Order Summary</title>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -150,8 +150,8 @@ $paymentModes = pg_fetch_all($paymentModesResult);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

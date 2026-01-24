@@ -62,8 +62,9 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
-    <title>Gems Mart</title>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -118,8 +119,8 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

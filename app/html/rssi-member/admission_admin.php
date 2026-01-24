@@ -922,7 +922,8 @@ foreach ($card_access_levels as $card => $required_level) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Profile</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -1221,7 +1222,7 @@ foreach ($card_access_levels as $card => $required_level) {
 </head>
 
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">

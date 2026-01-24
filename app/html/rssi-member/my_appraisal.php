@@ -132,7 +132,7 @@ function displayTDs($array)
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>My Appraisal</title>
+    
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -249,8 +249,8 @@ function displayTDs($array)
 ============================== -->
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

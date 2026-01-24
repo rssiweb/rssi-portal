@@ -192,7 +192,8 @@ if (@$_POST['form-type'] == "exam") {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Exam</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -227,7 +228,7 @@ if (@$_POST['form-type'] == "exam") {
 </head>
 
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">

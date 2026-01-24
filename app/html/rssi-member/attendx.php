@@ -28,8 +28,7 @@ validation();
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>AttendX</title>
+    <?php include 'includes/meta.php' ?>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -70,8 +69,8 @@ validation();
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 
@@ -191,8 +190,8 @@ validation();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
 </body>
 

@@ -176,7 +176,8 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>View Class Days Exceptions</title>
+    <?php include 'includes/meta.php' ?>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -223,7 +224,7 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
 </head>
 
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">

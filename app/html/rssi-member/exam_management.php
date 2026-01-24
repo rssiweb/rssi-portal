@@ -198,7 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exam Management</title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -247,8 +248,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
 

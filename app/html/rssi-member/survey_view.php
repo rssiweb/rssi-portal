@@ -257,7 +257,8 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>View Survey Results</title>
+    <?php include 'includes/meta.php' ?>
+    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -403,8 +404,8 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
     <main id="main" class="main">
         <div class="pagetitle">

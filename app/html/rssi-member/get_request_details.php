@@ -45,7 +45,8 @@ $request = pg_fetch_assoc($result);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request Details - <?= htmlspecialchars($request['asset_id']) ?></title>
+    <?php include 'includes/meta.php' ?>
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -98,7 +99,7 @@ $request = pg_fetch_assoc($result);
 
     <body>
         <?php include 'inactive_session_expire_check.php'; ?>
-        <?php include 'header.php'; ?>
+        <?php include 'includes/header.php'; ?>
 
         <main id="main" class="main">
 

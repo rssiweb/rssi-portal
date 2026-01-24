@@ -235,15 +235,16 @@ foreach ($accountNatures as $accountNature) {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
 
     <?php if ($role != 'Admin') { ?>
-        <title>Payslip_<?php echo $ref ?></title>
+        
     <?php } ?>
     <?php if ($role == 'Admin' && $ref != null) { ?>
-        <title>Payslip_<?php echo $ref ?></title>
+        
     <?php } ?>
     <?php if ($role == 'Admin' && $ref == null) { ?>
-        <title>Payslip_</title>
+        
     <?php } ?>
 
     <!-- Favicons -->

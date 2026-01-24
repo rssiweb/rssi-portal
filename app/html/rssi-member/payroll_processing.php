@@ -169,7 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payroll Processing</title>
+    <?php include 'includes/meta.php' ?>
+  
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
 
@@ -214,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 <body>
 
   <?php include 'inactive_session_expire_check.php'; ?>
-  <?php include 'header.php'; ?>
+  <?php include 'includes/header.php'; ?>
 
   <main id="main" class="main">
 

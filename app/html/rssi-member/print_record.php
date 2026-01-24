@@ -230,7 +230,7 @@ header('Content-Type: text/html');
 <html>
 
 <head>
-    <title>Official Record - <?= ucfirst($type) ?>_<?= $record['admissionnumber'] ?></title>
+    
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
