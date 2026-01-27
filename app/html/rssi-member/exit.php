@@ -509,7 +509,8 @@ if (@$_POST['form-type'] == "exit") {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script src="../assets_new/js/image-compressor-100kb.js"></script>
+    <!-- Add this line after your existing scripts -->
+    <script src="../assets_new/js/camera-compressor-100kb.js"></script>
 
 
     <script>
@@ -654,17 +655,41 @@ if (@$_POST['form-type'] == "exit") {
 
         function capturePhoto() {
             canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-            const photoURL = canvasPreview.toDataURL('image/png');
+            const originalPhotoURL = canvasPreview.toDataURL('image/png');
 
-            // Store base64 data in hidden field
-            document.getElementById('photo_base64').value = photoURL;
-
+            // Stop camera
             videoPreview.srcObject.getTracks().forEach(track => track.stop());
-            videoPreview.classList.add('d-none');
-            captureBtn.classList.add('d-none');
-            document.getElementById('photo-preview').setAttribute('src', photoURL);
-            document.getElementById('photo-preview').classList.remove('d-none');
-            photoCaptured = true;
+
+            // Show loading
+            const previewImg = document.getElementById('photo-preview');
+            previewImg.src = '';
+            previewImg.alt = "Compressing...";
+            previewImg.classList.remove('d-none');
+
+            // Compress the camera photo
+            compressCameraPhoto(originalPhotoURL)
+                .then(compressedResult => {
+                    document.getElementById('photo_base64').value = compressedResult.base64;
+                    previewImg.setAttribute('src', compressedResult.base64);
+                    previewImg.setAttribute('alt', 'Compressed Photo');
+
+                    videoPreview.classList.add('d-none');
+                    captureBtn.classList.add('d-none');
+                    photoCaptured = true;
+
+                    console.log('Compressed to:', formatBytes(compressedResult.blob.size));
+                })
+                .catch(error => {
+                    console.error('Compression failed:', error);
+                    // Fallback to original
+                    document.getElementById('photo_base64').value = originalPhotoURL;
+                    previewImg.setAttribute('src', originalPhotoURL);
+                    previewImg.classList.remove('d-none');
+
+                    videoPreview.classList.add('d-none');
+                    captureBtn.classList.add('d-none');
+                    photoCaptured = true;
+                });
         }
     </script>
 
