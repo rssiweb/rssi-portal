@@ -2,6 +2,8 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
+include(__DIR__ . "/../image_functions.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -42,7 +44,46 @@ if (@$_POST['form-type'] == "exit") {
     @$authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
     if ($authSuccess) {
         $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
-        $exit_photo = $_POST['photo'];
+
+        // Handle photo upload to Google Drive
+        $exit_photo = null; // Initialize as null
+        if (!empty($_POST['photo_base64']) && $_POST['photo_base64'] != 'data:,') {
+            // Convert base64 to file
+            $base64_string = $_POST['photo_base64'];
+
+            // Remove the data:image/png;base64, prefix
+            if (strpos($base64_string, ',') !== false) {
+                list(, $base64_string) = explode(',', $base64_string);
+            }
+
+            // Decode base64 string
+            $image_data = base64_decode($base64_string);
+
+            // Create a temporary file
+            $temp_file = tempnam(sys_get_temp_dir(), 'exit_photo_');
+            file_put_contents($temp_file, $image_data);
+
+            // Create file object for Google Drive upload
+            $file_array = [
+                'name' => 'exit_photo_' . $otp_initiatedfor_main . '_' . time() . '.png',
+                'type' => 'image/png',
+                'tmp_name' => $temp_file,
+                'error' => 0,
+                'size' => filesize($temp_file)
+            ];
+
+            // Upload to Google Drive
+            $filename = "exit_photo_" . $otp_initiatedfor_main . "_" . time();
+            $parent_folder_id = '194ONgGFdOrfpxmrYZAH1y8-MsDZRHT8s'; // Your folder ID
+            $exit_photo = uploadeToDrive($file_array, $parent_folder_id, $filename);
+
+            // Clean up temporary file
+            unlink($temp_file);
+        } else if (!empty($array['exit_photo'])) {
+            // Keep existing photo if no new one captured
+            $exit_photo = $array['exit_photo'];
+        }
+
         $exit_remarks = htmlspecialchars($_POST['reason-for-leaving'], ENT_QUOTES, 'UTF-8');
 
         $asset_clearance = isset($_POST['clearance']) && in_array('asset-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
@@ -73,7 +114,7 @@ if (@$_POST['form-type'] == "exit") {
         }
 
         $ip_address = getUserIpAddr();
-        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview',donate_security_deposit='$donate_security_deposit' where exit_associate_id='$otp_initiatedfor_main'";
+        $exit = "UPDATE associate_exit SET exit_photo = " . ($exit_photo ? "'$exit_photo'" : "NULL") . ", exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview',donate_security_deposit='$donate_security_deposit' where exit_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $exit);
         $cmdtuples = pg_affected_rows($result);
     } else {
@@ -115,7 +156,7 @@ if (@$_POST['form-type'] == "exit") {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
@@ -204,7 +245,8 @@ if (@$_POST['form-type'] == "exit") {
 
                                                     <div class="mb-3">
                                                         <label for="photo" class="form-label">Current Photo</label>
-                                                        <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['exit_photo'] ?>">
+                                                        <!-- Add new hidden field for base64 data -->
+                                                        <input type="hidden" class="form-control" id="photo_base64" name="photo_base64" value="">
                                                         <div class="mt-2">
                                                             <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                                             <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -216,8 +258,17 @@ if (@$_POST['form-type'] == "exit") {
                                                         <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                                                     </div>
                                                     <?php if ($array['exit_photo'] != null) { ?>
+                                                        <?php
+                                                        $photo = $array['exit_photo'] ?? '';
+
+                                                        if (!empty($photo) && str_contains($photo, 'https://drive.google.com/file/')) {
+                                                            $photo_src = processImageUrl($photo);
+                                                        } else {
+                                                            $photo_src = $photo;
+                                                        }
+                                                        ?>
                                                         <div class="row mb-3">
-                                                            <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['exit_photo'] ?>">
+                                                            <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?= $photo_src ?>">
                                                         </div>
                                                     <?php } ?>
 
@@ -457,8 +508,9 @@ if (@$_POST['form-type'] == "exit") {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
+
 
     <script>
         const scriptURL = 'payment-api.php';
@@ -603,7 +655,10 @@ if (@$_POST['form-type'] == "exit") {
         function capturePhoto() {
             canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
             const photoURL = canvasPreview.toDataURL('image/png');
-            photoInput.value = photoURL;
+
+            // Store base64 data in hidden field
+            document.getElementById('photo_base64').value = photoURL;
+
             videoPreview.srcObject.getTracks().forEach(track => track.stop());
             videoPreview.classList.add('d-none');
             captureBtn.classList.add('d-none');
@@ -621,10 +676,14 @@ if (@$_POST['form-type'] == "exit") {
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
-                // First validate photo capture
-                if (!photoCaptured) {
-                    alert('Please capture the photo before submitting the form.');
-                    return false;
+                // Modify the photo capture validation in handleFormSubmit function:
+                if (!photoCaptured && !document.getElementById('photo_base64').value) {
+                    // Check if there's already an existing photo in the database
+                    const existingPhoto = document.querySelector('img[alt="Captured Photo"][src]');
+                    if (!existingPhoto || !existingPhoto.src.includes('drive.google.com')) {
+                        alert('Please capture the photo before submitting the form.');
+                        return false;
+                    }
                 }
 
                 // Then validate OTP fields (basic client-side check)
