@@ -341,7 +341,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RSSI-My Account</title>
+    <title>RSSI Phoenix | My Account</title>
+    <meta name="author" content="RSSI NGO">
+    <meta name="keywords" content="RSSI Phoenix, Internal Management System, Organizational Platform, Data and Record Management, Operational System, RSSI NGO Portal">
+    <meta name="description" content="RSSI Phoenix is a secure and integrated platform designed to support the management of organizational data, records, and operations through a single, unified system.">
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -600,8 +603,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     </div>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         function showSpinner() {
             // Disable the submit button to prevent multiple submissions

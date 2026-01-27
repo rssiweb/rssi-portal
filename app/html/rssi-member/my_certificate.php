@@ -270,8 +270,8 @@ $resultArr = pg_fetch_all($result);
     </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <?php include 'includes/meta.php' ?>
 
-    
     <meta content="" name="description">
     <meta content="" name="keywords">
 
