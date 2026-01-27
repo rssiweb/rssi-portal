@@ -2,6 +2,8 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
+include(__DIR__ . "/../image_functions.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -58,7 +60,44 @@ if (@$_POST['form-type'] == "onboarding") {
 
     @$authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
     if ($authSuccess) {
-        $onboarding_photo = $_POST['photo'];
+        // Handle photo upload to Google Drive
+        $onboarding_photo = null; // Initialize as null
+        if (!empty($_POST['photo_base64']) && $_POST['photo_base64'] != 'data:,') {
+            // Convert base64 to file
+            $base64_string = $_POST['photo_base64'];
+
+            // Remove the data:image/png;base64, prefix
+            if (strpos($base64_string, ',') !== false) {
+                list(, $base64_string) = explode(',', $base64_string);
+            }
+
+            // Decode base64 string
+            $image_data = base64_decode($base64_string);
+
+            // Create a temporary file
+            $temp_file = tempnam(sys_get_temp_dir(), 'onboarding_photo_');
+            file_put_contents($temp_file, $image_data);
+
+            // Create file object for Google Drive upload
+            $file_array = [
+                'name' => 'onboarding_photo_' . $otp_initiatedfor_main . '_' . time() . '.png',
+                'type' => 'image/png',
+                'tmp_name' => $temp_file,
+                'error' => 0,
+                'size' => filesize($temp_file)
+            ];
+
+            // Upload to Google Drive
+            $filename = "onboarding_photo_" . $otp_initiatedfor_main . "_" . time();
+            $parent_folder_id = '1BLANVtrzzJ0tjcBJ8Lg_fpLD0A3bML1O'; // Your folder ID
+            $onboarding_photo = uploadeToDrive($file_array, $parent_folder_id, $filename);
+
+            // Clean up temporary file
+            unlink($temp_file);
+        } else if (!empty($array['onboarding_photo'])) {
+            // Keep existing photo if no new one captured
+            $onboarding_photo = $array['onboarding_photo'];
+        }
         $reporting_date_time = $_POST['reporting-date-time'];
         $disclaimer = $_POST['onboarding_complete'];
         $now = date('Y-m-d H:i:s');
@@ -85,7 +124,7 @@ if (@$_POST['form-type'] == "onboarding") {
 
         // Prepare the update query with conditional inclusion of fields
         $onboarded = "UPDATE onboarding SET 
-            onboarding_photo = '$onboarding_photo', 
+            onboarding_photo = " . ($onboarding_photo ? "'$onboarding_photo'" : "NULL") . ",  
             reporting_date_time = '$reporting_date_time', 
             onboarding_otp_associate = '$otp_associate', 
             onboarding_otp_center_incharge = '$otp_centreincharge', 
@@ -149,7 +188,7 @@ if (@$cmdtuples == 1) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
@@ -279,7 +318,8 @@ if (@$cmdtuples == 1) {
 
                                                     <div class="mb-3">
                                                         <label for="photo" class="form-label">Current Photo</label>
-                                                        <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>">
+                                                        <!-- Add new hidden field for base64 data -->
+                                                        <input type="hidden" class="form-control" id="photo_base64" name="photo_base64" value="">
                                                         <div class="mt-2">
                                                             <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                                             <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -291,8 +331,17 @@ if (@$cmdtuples == 1) {
                                                         <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                                                     </div>
                                                     <?php if ($array['onboarding_photo'] != null) { ?>
+                                                        <?php
+                                                        $photo = $array['onboarding_photo'] ?? '';
+
+                                                        if (!empty($photo) && str_contains($photo, 'https://drive.google.com/file/')) {
+                                                            $photo_src = processImageUrl($photo);
+                                                        } else {
+                                                            $photo_src = $photo;
+                                                        }
+                                                        ?>
                                                         <div class="row mb-3">
-                                                            <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['onboarding_photo'] ?>">
+                                                            <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?= $photo_src ?>">
                                                         </div>
                                                     <?php } ?>
                                                     <?php if ($array['position'] == 'Intern') : ?>
@@ -356,9 +405,9 @@ if (@$cmdtuples == 1) {
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>
-                                                            <input type="checkbox" name="onboarding_complete" value="yes" required <?php if ($array['disclaimer'] == 'yes') {
-                                                                                                                                        echo "checked";
-                                                                                                                                    } ?>>
+                                                            <input class="form-check-input" type="checkbox" name="onboarding_complete" value="yes" required <?php if ($array['disclaimer'] == 'yes') {
+                                                                                                                                                                echo "checked";
+                                                                                                                                                            } ?>>
                                                             I confirm that I have completed all the onboarding tasks for this associate, including:
                                                             <ol>
                                                                 <li>Reviewing the associate's job description and responsibilities</li>
@@ -510,8 +559,8 @@ if (@$cmdtuples == 1) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         window.onload = function() {
@@ -629,7 +678,10 @@ if (@$cmdtuples == 1) {
         function capturePhoto() {
             canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
             const photoURL = canvasPreview.toDataURL('image/png');
-            photoInput.value = photoURL;
+
+            // Store base64 data in hidden field
+            document.getElementById('photo_base64').value = photoURL;
+
             videoPreview.srcObject.getTracks().forEach(track => track.stop());
             videoPreview.classList.add('d-none');
             captureBtn.classList.add('d-none');
@@ -644,11 +696,14 @@ if (@$cmdtuples == 1) {
         async function handleFormSubmit(event) {
             event.preventDefault();
 
-            // First validate photo capture
-            if (!photoCaptured) {
-                // Use a simple alert that will dismiss on first click
-                alert('Please capture the photo before submitting the form.');
-                return false;
+            // Modify the photo capture validation in handleFormSubmit function:
+            if (!photoCaptured && !document.getElementById('photo_base64').value) {
+                // Check if there's already an existing photo in the database
+                const existingPhoto = document.querySelector('img[alt="Captured Photo"][src]');
+                if (!existingPhoto || !existingPhoto.src.includes('drive.google.com')) {
+                    alert('Please capture the photo before submitting the form.');
+                    return false;
+                }
             }
 
             // UI state update
