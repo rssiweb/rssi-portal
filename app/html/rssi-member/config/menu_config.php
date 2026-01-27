@@ -815,8 +815,23 @@ class MenuConfig
         }
 
         // Add default for unknown pages
+        $url = $_SERVER['REQUEST_URI'];
+        $path = parse_url($url, PHP_URL_PATH);
+        $pageName = basename($path);
+
+        // Clean up the page name
+        if (empty($pageName) || $pageName === '/' || $pageName === 'index.php') {
+            $pageName = 'Dashboard';
+        } else {
+            // Remove query strings and file extensions
+            $pageName = strtok($pageName, '?');
+            $pageName = pathinfo($pageName, PATHINFO_FILENAME);
+            $pageName = str_replace(['-', '_'], ' ', $pageName);
+            $pageName = ucwords($pageName);
+        }
+
         self::$pageData['default'] = [
-            'title' => 'Dashboard',
+            'title' => $pageName,
             'section' => 'Dashboard',
             'show_in_menu' => false,
             'description' => 'Phoenix Portal dashboard and internal management system.'
