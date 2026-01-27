@@ -111,7 +111,9 @@ foreach ($data as $associateNumber => &$entries) {
 if (!empty($filterStatus)) {
     foreach ($data as $associateNumber => &$entries) {
         $entries = array_filter($entries, function ($entry) use ($filterStatus, $currentDate) {
-            $isActive = strtotime($entry['end_date']) >= strtotime($currentDate);
+            $isActive =
+                empty($entry['end_date']) ||
+                strtotime($entry['end_date']) >= strtotime($currentDate);
             $status = $isActive ? 'active' : 'history';
             return in_array($status, $filterStatus);
         });
@@ -119,8 +121,6 @@ if (!empty($filterStatus)) {
     // Remove associates with no matching entries
     $data = array_filter($data);
 }
-
-pg_close($con); // Close the connection
 ?>
 
 <!doctype html>
@@ -142,7 +142,7 @@ pg_close($con); // Close the connection
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -261,7 +261,9 @@ pg_close($con); // Close the connection
                                             <?php foreach ($associateRows as $row): ?>
                                                 <?php
                                                 // Determine if this is an active record
-                                                $isActive = strtotime($row['end_date']) >= strtotime($currentDate);
+                                                $isActive =
+                                                    empty($row['end_date']) ||
+                                                    strtotime($row['end_date']) >= strtotime($currentDate);
                                                 $rowClass = $isActive ? 'table-success' : '';
                                                 ?>
                                                 <tr class="<?php echo $rowClass; ?>">
@@ -315,8 +317,8 @@ pg_close($con); // Close the connection
     <!-- Bootstrap JS and Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Initialize DataTables
