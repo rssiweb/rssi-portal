@@ -5,6 +5,8 @@ class MenuConfig
 {
     private static $pageData = null;
     private static $menuStructure = null;
+    private static $roleAccessCache = null;
+    private static $publicPagesCache = null; // NEW: Cache for pages with no true access for any role
 
     private static function init()
     {
@@ -797,17 +799,15 @@ class MenuConfig
                     'title' => $pageInfo['title'],
                     'section' => $group['section'],
                     'link_id' => $linkId,
-                    'show_in_menu' => $pageInfo['show_in_menu'] ?? true, // Default to true if not specified
+                    'show_in_menu' => $pageInfo['show_in_menu'] ?? true,
                     'description' => $group['descriptions'][$page]
                         ?? $pageInfo['title'] . ' | ' . $group['section'] . ' - Phoenix Portal'
                 ];
 
-                // Add sidebar_id if exists
                 if (isset($group['sidebar_id'])) {
                     self::$pageData[$page]['sidebar_id'] = $group['sidebar_id'];
                 }
 
-                // Add remove_collapsed if exists
                 if (isset($group['remove_collapsed'])) {
                     self::$pageData[$page]['remove_collapsed'] = $group['remove_collapsed'];
                 }
@@ -819,11 +819,9 @@ class MenuConfig
         $path = parse_url($url, PHP_URL_PATH);
         $pageName = basename($path);
 
-        // Clean up the page name
         if (empty($pageName) || $pageName === '/' || $pageName === 'index.php') {
             $pageName = 'Dashboard';
         } else {
-            // Remove query strings and file extensions
             $pageName = strtok($pageName, '?');
             $pageName = pathinfo($pageName, PATHINFO_FILENAME);
             $pageName = str_replace(['-', '_'], ' ', $pageName);
@@ -838,19 +836,185 @@ class MenuConfig
         ];
     }
 
+    /**
+     * Check if current role has access to a specific page
+     */
+    private static function hasRoleAccess($pageFilename)
+    {
+        global $role;
+
+        // If no role is set, allow access
+        if (empty($role)) {
+            return true;
+        }
+
+        // Initialize cache if needed
+        if (self::$roleAccessCache === null) {
+            self::$roleAccessCache = self::loadRoleAccessCache($role);
+        }
+
+        // Check if page exists in cache with access
+        return isset(self::$roleAccessCache[$pageFilename]) && self::$roleAccessCache[$pageFilename] === true;
+    }
+
+    /**
+     * Check if page is public (no role has true access)
+     */
+    private static function isPublicPage($pageFilename)
+    {
+        // Initialize public pages cache if needed
+        if (self::$publicPagesCache === null) {
+            self::$publicPagesCache = self::loadPublicPagesCache();
+        }
+
+        // Check if page is in public pages list
+        return isset(self::$publicPagesCache[$pageFilename]) && self::$publicPagesCache[$pageFilename] === true;
+    }
+
+    /**
+     * Load role access permissions from database (PostgreSQL version)
+     */
+    private static function loadRoleAccessCache($roleName)
+    {
+        $cache = [];
+
+        try {
+            global $con;
+
+            if (!$con) {
+                error_log("MenuConfig: PostgreSQL connection not available");
+                return $cache;
+            }
+
+            $connectionStatus = pg_connection_status($con);
+            if ($connectionStatus !== PGSQL_CONNECTION_OK) {
+                error_log("MenuConfig: PostgreSQL connection is not OK");
+                return $cache;
+            }
+
+            // Query to get all pages the role has access to
+            $query = "
+                SELECT p.page_name, pr.has_access 
+                FROM pages p
+                JOIN page_roles pr ON p.id = pr.page_id
+                JOIN roles r ON pr.role_id = r.id
+                WHERE r.role_name = $1 AND pr.has_access = true
+            ";
+
+            $result = pg_prepare($con, "get_role_access", $query);
+            if (!$result) {
+                error_log("MenuConfig: Prepare failed - " . pg_last_error($con));
+                return $cache;
+            }
+
+            $result = pg_execute($con, "get_role_access", array($roleName));
+            if (!$result) {
+                error_log("MenuConfig: Execute failed - " . pg_last_error($con));
+                return $cache;
+            }
+
+            while ($row = pg_fetch_assoc($result)) {
+                $cache[$row['page_name']] = $row['has_access'] === 't' || $row['has_access'] === true;
+            }
+
+            pg_free_result($result);
+        } catch (Exception $e) {
+            error_log("MenuConfig: Error loading role access - " . $e->getMessage());
+        }
+
+        return $cache;
+    }
+
+    /**
+     * Load pages that have NO role with has_access = true (public pages)
+     */
+    private static function loadPublicPagesCache()
+    {
+        $cache = [];
+
+        try {
+            global $con;
+
+            if (!$con) {
+                error_log("MenuConfig: PostgreSQL connection not available for public pages");
+                return $cache;
+            }
+
+            $connectionStatus = pg_connection_status($con);
+            if ($connectionStatus !== PGSQL_CONNECTION_OK) {
+                error_log("MenuConfig: PostgreSQL connection is not OK for public pages");
+                return $cache;
+            }
+
+            // Query to find pages where ALL roles have has_access = false
+            // This means pages that are NOT in page_roles with has_access = true for ANY role
+            $query = "
+                SELECT p.page_name
+                FROM pages p
+                WHERE NOT EXISTS (
+                    SELECT 1 
+                    FROM page_roles pr 
+                    WHERE pr.page_id = p.id AND pr.has_access = true
+                )
+            ";
+
+            $result = pg_prepare($con, "get_public_pages", $query);
+            if (!$result) {
+                error_log("MenuConfig: Prepare failed for public pages - " . pg_last_error($con));
+                return $cache;
+            }
+
+            $result = pg_execute($con, "get_public_pages", array());
+            if (!$result) {
+                error_log("MenuConfig: Execute failed for public pages - " . pg_last_error($con));
+                return $cache;
+            }
+
+            while ($row = pg_fetch_assoc($result)) {
+                $cache[$row['page_name']] = true;
+            }
+
+            pg_free_result($result);
+
+            error_log("MenuConfig: Found " . count($cache) . " public pages (no role has true access)");
+        } catch (Exception $e) {
+            error_log("MenuConfig: Error loading public pages - " . $e->getMessage());
+        }
+
+        return $cache;
+    }
+
+    /**
+     * Check if user can see the page in menu (consolidated logic)
+     */
+    private static function canSeeInMenu($pageFilename)
+    {
+        global $role;
+
+        // If page is public (no role has true access), show to all
+        if (self::isPublicPage($pageFilename)) {
+            return true;
+        }
+
+        // If no role is set, don't show (except public pages above)
+        if (empty($role)) {
+            return false;
+        }
+
+        // Check if current role has access
+        return self::hasRoleAccess($pageFilename);
+    }
+
     public static function getPageInfo($page)
     {
         self::init();
 
-        // Extract just filename if it's a path
         $filename = basename($page);
 
-        // Check if page exists
         if (isset(self::$pageData[$filename])) {
             return self::$pageData[$filename];
         }
 
-        // Default
         return self::$pageData['default'];
     }
 
@@ -860,24 +1024,33 @@ class MenuConfig
         return self::$pageData;
     }
 
+    /**
+     * Get menu structure with role-based filtering
+     */
     public static function getMenuStructure()
     {
         self::init();
 
         if (self::$menuStructure === null) {
             $structure = [];
+            global $role;
 
             // Group pages by section and sidebar_id
             foreach (self::$pageData as $page => $info) {
+                // FIRST: Check if page is marked to show in menu
                 if (!($info['show_in_menu'] ?? true)) {
                     continue; // Skip hidden pages
+                }
+
+                // SECOND: Check if user can see this page (public or role-based access)
+                if (!self::canSeeInMenu($page)) {
+                    continue; // Skip pages without access
                 }
 
                 $section = $info['section'];
                 $sidebarId = $info['sidebar_id'] ?? null;
 
                 if ($sidebarId) {
-                    // This is a collapsible menu item
                     if (!isset($structure[$section])) {
                         $structure[$section] = [
                             'type' => 'collapsible',
@@ -887,7 +1060,6 @@ class MenuConfig
                     }
                     $structure[$section]['pages'][$page] = $info;
                 } else {
-                    // This is a top-level menu item
                     if (!isset($structure[$section])) {
                         $structure[$section] = [
                             'type' => 'top_level',
@@ -908,5 +1080,31 @@ class MenuConfig
     {
         $currentPage = $_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME'] ?? 'home.php';
         return self::getPageInfo($currentPage);
+    }
+
+    /**
+     * Check if current user can access the requested page
+     */
+    public static function canAccessPage($page = null)
+    {
+        global $role;
+
+        if ($page === null) {
+            $page = $_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME'] ?? 'home.php';
+        }
+
+        $filename = basename($page);
+
+        // Public pages are accessible to all
+        if (self::isPublicPage($filename)) {
+            return true;
+        }
+
+        // If no role is set, deny access to non-public pages
+        if (empty($role)) {
+            return false;
+        }
+
+        return self::hasRoleAccess($filename);
     }
 }
