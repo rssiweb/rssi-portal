@@ -464,7 +464,7 @@ echo "<script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -1978,7 +1978,7 @@ echo "<script>
                                                                                             <option disabled selected>Select Project</option>
                                                                                             <?php
                                                                                             // List of Projects
-                                                                                            $projects = ["hvco", "srijan"];
+                                                                                            $projects = ["hvco_1_month", "hvco_3_month", "srijan"];
 
                                                                                             foreach ($projects as $project) {
                                                                                                 $selected = ($array["project"] == $project) ? "selected" : "";
