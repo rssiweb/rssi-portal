@@ -129,9 +129,9 @@ if ($searchField !== '' || $fyear !== '') {
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php' ?>
+  <?php include 'includes/meta.php' ?>
 
-  
+
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -257,13 +257,7 @@ if ($searchField !== '' || $fyear !== '') {
                           <td><?= $array['transactionid'] ?></td>
                           <td><?= $array['currency'] ?>&nbsp;<?= $array['amount'] ?></td>
                           <td>
-                            <?php if (!empty($array['nationalid'])): ?>
-                              <a href="<?= htmlspecialchars($array['nationalid']) ?>" target="_blank">
-                                <?= htmlspecialchars($array['id_type']) ?>
-                              </a>/<?= $array['id_number'] ?>
-                            <?php else: ?>
-                              <?= htmlspecialchars($array['id_type']) ?>/<?= $array['id_number'] ?>
-                            <?php endif; ?>
+                            <?= htmlspecialchars($array['id_type']) ?>/<?= $array['id_number'] ?>
                           </td>
                           <td>Online</td>
                           <td>
