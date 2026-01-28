@@ -433,78 +433,87 @@ if (!empty($students)) {
         // 8. Calculate carry forward (previous months' unpaid dues)
         $carryForward = 0;
         if ($monthNumber != '04') { // No carry forward in April (start of academic year)
-            // Get all months from April to previous month of current year
-            $startMonth = 4; // April
-            $endMonth = $monthNumber - 1;
+            // We need to calculate from April of academic year to month before current month
 
-            // Get student's date of admission
-            $doa = $student['doa'];
-            $doaMonth = date('m', strtotime($doa));
-            $doaYear = date('Y', strtotime($doa));
+            // Determine academic year start
+            $academicStartYear = ($monthNumber >= 4) ? $year : $year - 1;
 
-            for ($m = $startMonth; $m <= $endMonth; $m++) {
-                $loopMonthNum = str_pad($m, 2, '0', STR_PAD_LEFT);
-                $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
-                $loopMonthDate = "$year-$loopMonthNum-01";
+            // We'll process months in sequence
+            $currentDate = strtotime("$year-$monthNumber-01");
+            $startDate = strtotime("$academicStartYear-04-01"); // April of academic year
+            $endDate = strtotime("-1 month", $currentDate); // Month before current
+
+            // Loop through each month from start to end
+            $loopDate = $startDate;
+            while ($loopDate <= $endDate) {
+                $loopYear = date('Y', $loopDate);
+                $loopMonthNum = date('m', $loopDate);
+                $loopMonthName = date('F', $loopDate);
+                $loopMonthDate = date('Y-m-d', $loopDate);
 
                 // Skip months before student's admission
-                if ($year == $doaYear && $m < $doaMonth) {
+                $doa = strtotime($student['doa']);
+                if ($loopDate < $doa) {
+                    $loopDate = strtotime("+1 month", $loopDate);
                     continue;
                 }
 
                 // Get student type for this historical month
                 $historicalInfo = getStudentInfoForDate($con, $studentId, $loopMonthDate);
-                $loopStudentType = $historicalInfo['category_type'] ?? 'Regular';
+                $loopStudentType = $historicalInfo['category_type'];
                 $loopClass = $historicalInfo['class'] ?? $student['class'];
 
                 // Get month's fees
                 $loopFeeQuery = "SELECT COALESCE(SUM(fs.amount), 0) as total_fee
-                   FROM fee_structure fs
-                   JOIN fee_categories fc ON fs.category_id = fc.id
-                   WHERE fs.class = '$loopClass'
-                   AND fs.student_type = '$loopStudentType'
-                   AND '$year-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
-                   AND (
-                       fc.category_name != 'Admission Fee'
-                       OR (
-                           fc.category_name = 'Admission Fee'
-                           AND (
-                               '$loopMonthNum' = '04'
-                               OR (
-                                   EXTRACT(MONTH FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopMonthNum'
-                                   AND EXTRACT(YEAR FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$year'
-                               )
+               FROM fee_structure fs
+               JOIN fee_categories fc ON fs.category_id = fc.id
+               WHERE fs.class = '$loopClass'
+               AND fs.student_type = '$loopStudentType'
+               AND '$loopYear-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
+               AND (
+                   fc.category_name != 'Admission Fee'
+                   OR (
+                       fc.category_name = 'Admission Fee'
+                       AND (
+                           '$loopMonthNum' = '04'
+                           OR (
+                               EXTRACT(MONTH FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopMonthNum'
+                               AND EXTRACT(YEAR FROM TO_DATE('{$student['doa']}', 'YYYY-MM-DD')) = '$loopYear'
                            )
                        )
-                   )";
+                   )
+               )";
                 $loopFeeResult = pg_query($con, $loopFeeQuery);
                 $loopTotalFee = (float)(pg_fetch_assoc($loopFeeResult)['total_fee'] ?? 0);
 
+                // Get student-specific fees
                 $loopStudentSpecificQuery = "SELECT COALESCE(SUM(ssf.amount), 0) as total_fee
-                              FROM student_specific_fees ssf
-                              JOIN fee_categories fc ON ssf.category_id = fc.id
-                              WHERE ssf.student_id = '{$student['student_id']}'
-                              AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
+                      FROM student_specific_fees ssf
+                      JOIN fee_categories fc ON ssf.category_id = fc.id
+                      WHERE ssf.student_id = '{$student['student_id']}'
+                      AND '$loopYear-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
                 $loopStudentSpecificResult = pg_query($con, $loopStudentSpecificQuery);
                 $loopStudentSpecificFee = (float)(pg_fetch_assoc($loopStudentSpecificResult)['total_fee'] ?? 0);
 
                 $CombLoopTotalFee = $loopTotalFee + $loopStudentSpecificFee;
 
+                // Get payments
                 $loopPaymentsQuery = "SELECT COALESCE(SUM(p.amount), 0) as paid_amount
-                       FROM fee_payments p
-                       JOIN fee_categories fc ON p.category_id = fc.id
-                       WHERE p.student_id = '$studentId'
-                       AND p.month = '$loopMonthName'
-                       AND p.academic_year = '$year'
-                       AND fc.category_name IN ('Admission Fee', 'Monthly Fee')";
+               FROM fee_payments p
+               JOIN fee_categories fc ON p.category_id = fc.id
+               WHERE p.student_id = '$studentId'
+               AND p.month = '$loopMonthName'
+               AND p.academic_year = '$loopYear'
+               AND fc.category_name IN ('Admission Fee', 'Monthly Fee')";
 
                 $loopPaymentsResult = pg_query($con, $loopPaymentsQuery);
                 $loopPaidAmount = (float)(pg_fetch_assoc($loopPaymentsResult)['paid_amount'] ?? 0);
 
+                // Get concessions
                 $loopConcessionQuery = "SELECT COALESCE(SUM(concession_amount), 0) as concession_amount
-                          FROM student_concessions
-                          WHERE student_id = '$studentId'
-                          AND '$year-$loopMonthNum-01' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31')";
+                  FROM student_concessions
+                  WHERE student_id = '$studentId'
+                  AND '$loopYear-$loopMonthNum-01' BETWEEN effective_from AND COALESCE(effective_until, '9999-12-31')";
                 $loopConcessionResult = pg_query($con, $loopConcessionQuery);
                 $loopConcessionAmount = (float)(pg_fetch_assoc($loopConcessionResult)['concession_amount'] ?? 0);
 
@@ -512,6 +521,9 @@ if (!empty($students)) {
                 $loopDueAmount = $loopNetFee - $loopPaidAmount;
 
                 $carryForward += $loopDueAmount;
+
+                // Move to next month
+                $loopDate = strtotime("+1 month", $loopDate);
             }
         }
 
@@ -551,7 +563,7 @@ if (!empty($students)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -1166,8 +1178,8 @@ if (!empty($students)) {
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty

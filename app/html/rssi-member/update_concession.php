@@ -16,9 +16,21 @@ try {
         throw new Exception('Invalid concession ID');
     }
 
+    function validateRequiredField($field, $value)
+    {
+        if ($field === 'concession_amount') {
+            // For concession_amount, 0 is valid, only check if it's set
+            return isset($value) && $value !== '';
+        } else {
+            // For other fields, use normal empty check
+            return !empty($value);
+        }
+    }
+
+    // Then in your validation:
     $requiredFields = ['effective_from', 'concession_amount', 'reason', 'concession_category'];
     foreach ($requiredFields as $field) {
-        if (empty($_POST[$field])) {
+        if (!validateRequiredField($field, $_POST[$field])) {
             throw new Exception("Missing required field: $field");
         }
     }
