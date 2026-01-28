@@ -935,8 +935,8 @@ if ($formtype == "transfer_all") {
     echo "failed";
   }
 
-  // Close the database connection
-  pg_close($con);
+  
+  
 }
 
 if ($formtype == "gemsredeem") {

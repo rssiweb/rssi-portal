@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Close the database connection
-pg_close($con);
+
+
 ?>
 
 <!doctype html>

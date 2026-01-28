@@ -545,8 +545,8 @@ $attendanceData = pg_fetch_all($result);
 $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
 $associateNumberCount = count($uniqueAssociateNumbers);
 
-// Close the connection
-pg_close($con);
+
+
 ?>
 <!doctype html>
 <html lang="en">

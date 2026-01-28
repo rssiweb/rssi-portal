@@ -158,8 +158,6 @@ if (!$requireCategorySelection) {
     $attendanceData = pg_fetch_all($result);
     $studentIDCount = count(array_unique(array_column($attendanceData, 'student_id')));
 }
-
-pg_close($con);
 ?>
 
 <!doctype html>

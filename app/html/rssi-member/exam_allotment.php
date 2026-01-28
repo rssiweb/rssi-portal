@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         pg_free_result($result);
     }
 
-    pg_close($con);
+    
 }
 
 

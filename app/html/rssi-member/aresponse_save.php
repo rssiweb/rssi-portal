@@ -57,8 +57,8 @@ if (@$_POST['form-type'] === "appraisee_response_update") {
     }
 }
 
-// Close the connection
-pg_close($con);
+
+
 ?>
 
 <head>

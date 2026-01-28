@@ -179,4 +179,4 @@ if (empty($data)) {
     echo '</tbody></table></div>';
 }
 
-pg_close($con);
+

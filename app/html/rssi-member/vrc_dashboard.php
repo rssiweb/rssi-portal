@@ -83,8 +83,8 @@ if (!$result) {
     </div>
 
     <?php
-    // Close the database connection
-    pg_close($con);
+    
+    
     ?>
 </body>
 
