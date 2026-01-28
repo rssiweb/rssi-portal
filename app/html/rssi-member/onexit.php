@@ -63,7 +63,7 @@ if ($id != null) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -83,7 +83,11 @@ if ($id != null) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <!-- =========================
@@ -91,20 +95,14 @@ if ($id != null) {
 ============================== -->
 
 <body>
-<?php include 'includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>OnExit</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">OnExit</li>
-                </ol>
-            </nav>
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">
@@ -132,19 +130,6 @@ if ($id != null) {
                             <div style="display: inline-block; width:100%; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                             </div>
                             <!-- HTML Table -->
-                            <p>Select Number Of Rows</p>
-                            <div class="form-group">
-                                <select class="form-select" name="state" id="maxRows">
-                                    <option value="5000">Show ALL Rows</option>
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="15">15</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                    <option value="70">70</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
@@ -184,130 +169,7 @@ if ($id != null) {
                                     }
                                     ?>
                                 </table>
-
                             </div>
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
                         </div>
                     </div>
                 </div><!-- End Reports -->
@@ -322,8 +184,20 @@ if ($id != null) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 
 </body>
 
