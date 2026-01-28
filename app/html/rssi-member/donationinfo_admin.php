@@ -236,7 +236,7 @@ if ($searchField !== '' || $fyear !== '') {
                       <th scope="col">FY</th>
                       <th scope="col">Transaction id</th>
                       <th scope="col">Amount</th>
-                      <th scope="col">National Identifier/Number</th>
+                      <th scope="col">PAN Number</th>
                       <th scope="col">Mode of payment</th>
                       <th scope="col">Invoice</th>
                       <th scope="col">Status</th>
@@ -257,7 +257,18 @@ if ($searchField !== '' || $fyear !== '') {
                           <td><?= $array['transactionid'] ?></td>
                           <td><?= $array['currency'] ?>&nbsp;<?= $array['amount'] ?></td>
                           <td>
-                            <?= htmlspecialchars($array['id_type']) ?>/<?= $array['id_number'] ?>
+                            <?php
+                            $idType = !empty($array['id_type']) ? htmlspecialchars($array['id_type']) : null;
+                            $idNumber = !empty($array['id_number']) ? htmlspecialchars($array['id_number']) : null;
+
+                            if ($idType && $idNumber) {
+                              echo $idType . '/' . $idNumber;
+                            } elseif ($idNumber) {
+                              echo $idNumber;
+                            } else {
+                              echo '-'; // fallback if both are null
+                            }
+                            ?>
                           </td>
                           <td>Online</td>
                           <td>

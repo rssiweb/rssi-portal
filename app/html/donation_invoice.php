@@ -21,8 +21,9 @@ if ($searchField !== '') {
 
 // Check if donation exists and if its status is Approved
 $isValidDonation = false;
+
 if (is_array($resultArr) && count($resultArr) > 0) {
-    if (strtolower($resultArr[0]['status']) === 'approved') {
+    if (strtolower($resultArr[0]['status'] ?? '') === 'approved') {
         $isValidDonation = true;
     }
 }
@@ -120,11 +121,51 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                 position: fixed;
                 bottom: 0;
                 display: inline-block;
-                width: 100%;
+                /* width: 100%; */
                 border-top: solid 1px #ccc;
-                padding: 5px 0;
+                /* padding: 5px 0;
+                text-align: center; */
+                /* background-color: #f9f9f9; */
+                word-wrap: break-word;
+            }
+        }
+
+        @media print {
+            .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 60px;
+                width: 80%;
+                color: rgba(0, 0, 0, 0.15);
+                /* Light gray with transparency */
+                z-index: 9999;
+                pointer-events: none;
+                font-weight: bold;
                 text-align: center;
-                background-color: #f9f9f9;
+                /* opacity: 0.8; */
+            }
+        }
+
+        /*@media print {
+            .watermark {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9999;
+                pointer-events: none;
+                opacity: 0.1;
+                background: url('path/to/watermark-image.png') center center no-repeat;
+                background-size: 50% auto;
+            }
+        }*/
+
+        @media screen {
+            .watermark {
+                display: none;
             }
         }
     </style>
@@ -213,7 +254,15 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                             <h4>Bill to</h4>
                             <p><?php echo $array['fullname'] ?><br>
                                 <?php echo $array['postaladdress'] ?><br>
-                                <?php echo $array['id_type'] . ' - ' . str_repeat('X', max(0, strlen($array['id_number']) - 4)) . substr($array['id_number'], -4); ?><br>
+                                <?php
+                                if (!empty($array['id_number'])) {
+                                    $idType = !empty($array['id_type']) ? $array['id_type'] : 'pan';
+
+                                    echo $idType . ' - '
+                                        . str_repeat('X', max(0, strlen($array['id_number']) - 4))
+                                        . substr($array['id_number'], -4) . '<br>';
+                                }
+                                ?>
                                 <?php echo $array['tel'] ?><br>
                                 <?php echo $array['email'] ?></p>
                             <hr>
@@ -233,12 +282,19 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                                 </tr>
                             </table>
                             <hr>
-                            <p class="small">Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
+
+                            <?php if ($array['id_number'] !== null) { ?>
+                                <p class="small">Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
+                            <?php } else { ?>
+                                <p class="small">PAN has not been provided. As per Income Tax rules, the donor is not eligible
+                                    to claim 50% tax exemption under Section 80G of the Income Tax Act, 1961.</p>
+                                <div id="watermark" class="watermark">NOT ELIGIBLE FOR 80G TAX BENEFIT</div>
+                            <?php } ?>
                         </div>
                     </div>
 
                     <!-- Footer to display document generated date and message -->
-                    <div class="report-footer p-2 bg-light text-end">
+                    <div class="report-footer p-2 text-end">
                         <p class="small mb-0">Document generated on: <?php echo date("d/m/Y g:i a") ?>. This is a computer-generated document. No signature is required. </p>
                     </div>
                 <?php else: ?>

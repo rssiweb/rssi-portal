@@ -672,105 +672,176 @@ if ($formtype == "update-document") {
   }
 }
 
-if ($formtype == "donation_form") {
+if ($formtype === "donation_form") {
   if (isset($_POST['form-type']) && $_POST['form-type'] === "donation_form") {
-    $tel = $_POST['tel'];
-    $currency = $_POST['currency'];
-    $transactionId = $_POST['transactionid'];
-    $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
-    $donationAmount = $_POST['donationAmount'];
-    $timestamp = date('Y-m-d H:i:s');
-    $donationId = uniqid();
-    $cmdtuples = 0; // Initialize cmdtuples
-    $errorOccurred = false; // Flag to track if an error occurred
-    $errorMessage = '';
 
+    // Common fields
+    $currency        = $_POST['currency'];
+    $transactionId   = $_POST['transactionid'];
+    $message         = !empty($_POST['message']) ? htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8') : null;
+    $donationAmount  = $_POST['donationAmount'];
+    $timestamp       = date('Y-m-d H:i:s');
+    $donationId      = uniqid();
+
+    $cmdtuples     = 0;
+    $errorOccurred = false;
+    $errorMessage  = '';
+
+    /* ===============================
+       EXISTING DONOR
+    ================================ */
     if ($_POST['donationType'] === "existing") {
-      $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
-                          VALUES ('$donationId', '$tel', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
-      $resultUserdata = pg_query($con, $donationQuery);
 
-      if ($resultUserdata) {
-        $cmdtuples = pg_affected_rows($resultUserdata);
+      $tel = $_POST['tel'];
+
+      $donationQuery = "
+        INSERT INTO donation_paymentdata
+        (donationid, tel, currency, amount, transactionid, message, timestamp)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ";
+
+      $resultDonation = pg_query_params(
+        $con,
+        $donationQuery,
+        [
+          $donationId,
+          $tel,
+          $currency,
+          $donationAmount,
+          $transactionId,
+          $message,
+          $timestamp
+        ]
+      );
+
+      if ($resultDonation) {
+        $cmdtuples = pg_affected_rows($resultDonation);
       } else {
         $errorOccurred = true;
-        $errorMessage = handleInsertionError($con, "Donation insertion", $tel);
+        $errorMessage  = handleInsertionError($con, "Donation insertion", $tel);
       }
-    } elseif ($_POST['donationType'] === "new") {
-      $fullName = $_POST['fullName'];
-      $email = $_POST['email'];
-      $contactNumberNew = $_POST['contactNumberNew'];
-      $idNumber = $_POST['idNumber'];
-      $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
+    }
+
+    /* ===============================
+       NEW DONOR
+    ================================ */ elseif ($_POST['donationType'] === "new") {
+
+      $fullName          = $_POST['fullName'];
+      $email             = $_POST['email'];
+      $contactNumberNew  = $_POST['contactNumberNew'];
+      $idNumber          = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null;
+      $postalAddress     = !empty($_POST['postalAddress'])
+        ? htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8')
+        : null;
+
+      // Begin transaction for new donor
+      pg_query($con, 'BEGIN');
 
       // Insert userdata
-      $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, id_number, postaladdress) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idNumber', '$postalAddress')";
-      @$resultUserdata = pg_query($con, $userdataQuery);
+      $userdataQuery = "
+        INSERT INTO donation_userdata
+        (fullname, email, tel, id_number, postaladdress)
+        VALUES ($1, $2, $3, $4, $5)
+      ";
+
+      $resultUserdata = pg_query_params(
+        $con,
+        $userdataQuery,
+        [
+          $fullName,
+          $email,
+          $contactNumberNew,
+          $idNumber,
+          $postalAddress
+        ]
+      );
 
       if ($resultUserdata) {
-        // Insert donation
-        $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
-                              VALUES ('$donationId', '$contactNumberNew', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
-        $resultDonation = pg_query($con, $donationQuery);
+
+        // Insert donation payment
+        $donationQuery = "
+          INSERT INTO donation_paymentdata
+          (donationid, tel, currency, amount, transactionid, message, timestamp)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ";
+
+        $resultDonation = pg_query_params(
+          $con,
+          $donationQuery,
+          [
+            $donationId,
+            $contactNumberNew,
+            $currency,
+            $donationAmount,
+            $transactionId,
+            $message,
+            $timestamp
+          ]
+        );
 
         if ($resultDonation) {
           $cmdtuples = pg_affected_rows($resultDonation);
+          pg_query($con, 'COMMIT');
         } else {
+          pg_query($con, 'ROLLBACK');
           $errorOccurred = true;
-          $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
+          $errorMessage  = handleInsertionError($con, "Donation insertion", $contactNumberNew);
         }
       } else {
+        pg_query($con, 'ROLLBACK');
         $errorOccurred = true;
-        $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
+        $errorMessage  = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
       }
     }
 
-    // After successful form submission
+    /* ===============================
+       SEND EMAIL (only if no error)
+    ================================ */
     if (!$errorOccurred) {
-      // Sending email based on the donation type
+
       if ($_POST['donationType'] === "existing") {
-        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel'";
-      } else if ($_POST['donationType'] === "new") {
-        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$contactNumberNew'";
-      }
-      $result = pg_query($con, $emailQuery);
-
-      if ($result) {
-        $row = pg_fetch_assoc($result);
-        $email = $row['email'];
-        $name = $row['fullname'];
+        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel = $1";
+        $emailResult = pg_query_params($con, $emailQuery, [$tel]);
       } else {
-        // Handle error if the query fails
-        $email = null;
-        $name = null;
+        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel = $1";
+        $emailResult = pg_query_params($con, $emailQuery, [$contactNumberNew]);
       }
 
-      if (($_POST['donationType'] === "existing" || $_POST['donationType'] === "new") && $email != "") {
-        sendEmail("donation_ack", array(
-          "fullname" => $name,
-          "donationId" => $donationId,
-          "timestamp" => $timestamp,
-          "tel" => @$tel . @$contactNumberNew,
-          "email" => $email,
-          "transactionid" => $transactionId,
-          "currency" => $currency,
-          "amount" => $donationAmount
-        ), $email);
+      if ($emailResult && pg_num_rows($emailResult) > 0) {
+        $row   = pg_fetch_assoc($emailResult);
+        $email = $row['email'];
+        $name  = $row['fullname'];
+
+        if (!empty($email)) {
+          sendEmail(
+            "donation_ack",
+            [
+              "fullname"      => $name,
+              "donationId"    => $donationId,
+              "timestamp"     => $timestamp,
+              "tel"           => $_POST['donationType'] === "existing" ? $tel : $contactNumberNew,
+              "email"         => $email,
+              "transactionid" => $transactionId,
+              "currency"      => $currency,
+              "amount"        => $donationAmount
+            ],
+            $email
+          );
+        }
       }
     }
 
-    // Prepare the API response data
-    $responseData = array(
-      'error' => $errorOccurred,
-      'errorMessage' => $errorOccurred ? $errorMessage : '', // Return the actual error message if an error occurred
-      'cmdtuples' => $cmdtuples,
-      'donationId' => $donationId
-    );
+    /* ===============================
+       API RESPONSE
+    ================================ */
+    echo json_encode([
+      'error'        => $errorOccurred,
+      'errorMessage' => $errorOccurred ? $errorMessage : '',
+      'cmdtuples'    => $cmdtuples,
+      'donationId'   => $donationId
+    ]);
 
-    // Return the response as JSON
-    echo json_encode($responseData);
-    exit; // Stop further PHP execution
+    exit;
   }
 }
 
