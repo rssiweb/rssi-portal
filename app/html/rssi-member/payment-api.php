@@ -719,62 +719,71 @@ if ($formtype == "donation_form") {
         $errorMessage = handleInsertionError($con, "Donation insertion", $tel);
       }
     } elseif ($_POST['donationType'] === "new") {
-      $fullName = $_POST['fullName'];
-      $email = $_POST['email'];
+      $fullName         = $_POST['fullName'];
+      $email            = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
-      $idNumber = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null;
-      $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
+      $idNumber         = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null;
+      $postalAddress    = !empty($_POST['postalAddress']) ? htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8') : null;
 
-      // Insert userdata
-      $userdataQuery = "
-        INSERT INTO donation_userdata
-        (fullname, email, tel, id_number, postaladdress)
-        VALUES ($1, $2, $3, $4, $5)
-      ";
+      // Check if user already exists
+      $checkQuery = "SELECT 1 FROM donation_userdata WHERE tel = $1";
+      $checkResult = pg_query_params($con, $checkQuery, [$contactNumberNew]);
 
-      $resultUserdata = pg_query_params(
-        $con,
-        $userdataQuery,
-        [
-          $fullName,
-          $email,
-          $contactNumberNew,
-          $idNumber,        // NULL stored correctly
-          $postalAddress
-        ]
-      );
-
-      if ($resultUserdata) {
-        // Insert donation
-        $donationQuery = "
-          INSERT INTO donation_paymentdata
-          (donationid, tel, currency, amount, transactionid, message, timestamp)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+      if ($checkResult && pg_num_rows($checkResult) > 0) {
+        $errorOccurred = true;
+        $errorMessage  = "already_registered";
+      } else {
+        // User does not exist, safe to insert
+        $userdataQuery = "
+            INSERT INTO donation_userdata
+            (fullname, email, tel, id_number, postaladdress)
+            VALUES ($1, $2, $3, $4, $5)
         ";
 
-        $resultDonation = pg_query_params(
+        $resultUserdata = pg_query_params(
           $con,
-          $donationQuery,
+          $userdataQuery,
           [
-            $donationId,
+            $fullName,
+            $email,
             $contactNumberNew,
-            $currency,
-            $donationAmount,
-            $transactionId,
-            $message,      // NULL stored correctly
-            $timestamp
+            $idNumber,
+            $postalAddress
           ]
         );
 
-        if ($resultDonation) {
-          $cmdtuples = pg_affected_rows($resultDonation);
+        if ($resultUserdata) {
+          // Insert donation record
+          $donationQuery = "
+                INSERT INTO donation_paymentdata
+                (donationid, tel, currency, amount, transactionid, message, timestamp)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ";
+
+          $resultDonation = pg_query_params(
+            $con,
+            $donationQuery,
+            [
+              $donationId,
+              $contactNumberNew,
+              $currency,
+              $donationAmount,
+              $transactionId,
+              $message, // NULL stored correctly
+              $timestamp
+            ]
+          );
+
+          if ($resultDonation) {
+            $cmdtuples = pg_affected_rows($resultDonation);
+          } else {
+            $errorOccurred = true;
+            $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
+          }
         } else {
           $errorOccurred = true;
-          $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
+          $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
         }
-      } else {
-        $errorOccurred = true;
-        $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
       }
     }
 
