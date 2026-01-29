@@ -1521,12 +1521,34 @@ if ($formtype == "visitor_form") {
     }
 
     if ($_POST['visitorType'] === "existing") {
-      $visitorQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason, additional_services) 
-                          VALUES ('$visitId', '$tel', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason', '$additional_services')";
-      $resultUserdata = pg_query($con, $visitorQuery);
+      $visitorQuery = "
+        INSERT INTO visitor_visitdata 
+        (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, 
+         institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, 
+         timestamp, other_reason, additional_services)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    ";
 
-      if ($resultUserdata) {
-        $cmdtuples = pg_affected_rows($resultUserdata);
+      $resultVisitor = pg_query_params($con, $visitorQuery, [
+        $visitId,
+        $tel,
+        $visitbranch,
+        $visitstartdatetime,
+        $visitenddate,
+        $visitpurpose,
+        $institutename,
+        $enrollmentnumber,
+        $doclink_instituteid,
+        $mentoremail,
+        $doclink_paymentdoc,
+        $declaration,
+        $timestamp,
+        $other_reason,
+        $additional_services
+      ]);
+
+      if ($resultVisitor) {
+        $cmdtuples = pg_affected_rows($resultVisitor);
       } else {
         $errorOccurred = true;
         $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $tel);
@@ -1536,47 +1558,86 @@ if ($formtype == "visitor_form") {
       $email = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
       $idType = $_POST['idType'];
-      $idNumber = $_POST['idNumber'];
+      $idNumber = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null; // allow null
       $governmentId = $_FILES['governmentId'];
       $photo = $_FILES['photo'];
 
-      // This is for governmentId and photo which will be require for new visitor
+      // Step 1: Check if visitor already exists
+      $checkQuery = "SELECT 1 FROM visitor_userdata WHERE tel = $1";
+      $checkResult = pg_query_params($con, $checkQuery, [$contactNumberNew]);
 
-      if (empty($_FILES['governmentId']['name'])) {
+      if ($checkResult && pg_num_rows($checkResult) > 0) {
+        // Already registered
+        $errorOccurred = true;
+        $errorMessage = 'already_registered';
+      }
+
+      // Step 2: If no error, upload files
+      if (!$errorOccurred) {
+        // Government ID
         $doclink_governmentId = null;
-      } else {
-        $filename_governmentId = "doc_" . $fullName . "_" . time();
-        $parent_governmentId = '1sdu_dkdrRezOr6IdRMJOknFOSovz1qGP2zRg9Db5IyLIMtVxwWgy-Io8aV36B4uTx9-Gwg3W';
-        $doclink_governmentId = uploadeToDrive($governmentId, $parent_governmentId, $filename_governmentId);
-      }
-      if (empty($_FILES['photo']['name'])) {
+        if (!empty($governmentId['name'])) {
+          $filename_governmentId = "doc_" . $fullName . "_" . time();
+          $parent_governmentId = '1sdu_dkdrRezOr6IdRMJOknFOSovz1qGP2zRg9Db5IyLIMtVxwWgy-Io8aV36B4uTx9-Gwg3W';
+          $doclink_governmentId = uploadeToDrive($governmentId, $parent_governmentId, $filename_governmentId);
+        }
+
+        // Photo
         $doclink_photo = null;
-      } else {
-        $filename_photo = "doc_" . $fullName . "_" . time();
-        $parent_photo = '1bgjv3Ei5Go073xcZa7sXKjlOFSTHdoqo8Ffdba_ICNFdcq4ashhxTHGEr0rbX3KdH3CjDbwH';
-        $doclink_photo = uploadeToDrive($photo, $parent_photo, $filename_photo);
-      }
+        if (!empty($photo['name'])) {
+          $filename_photo = "doc_" . $fullName . "_" . time();
+          $parent_photo = '1bgjv3Ei5Go073xcZa7sXKjlOFSTHdoqo8Ffdba_ICNFdcq4ashhxTHGEr0rbX3KdH3CjDbwH';
+          $doclink_photo = uploadeToDrive($photo, $parent_photo, $filename_photo);
+        }
 
-      // Insert userdata
-      $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, id_type, id_number, nationalid, photo) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idType', '$idNumber', '$doclink_governmentId', '$doclink_photo')";
-      @$resultUserdata = pg_query($con, $userdataQuery);
+        // Step 3: Insert userdata
+        $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, id_type, id_number, nationalid, photo) 
+                          VALUES ($1, $2, $3, $4, $5, $6, $7)";
+        $resultUserdata = pg_query_params($con, $userdataQuery, [
+          $fullName,
+          $email,
+          $contactNumberNew,
+          $idType,
+          $idNumber,
+          $doclink_governmentId,
+          $doclink_photo
+        ]);
 
-      if ($resultUserdata) {
-        // Insert visit
-        $visitQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason, additional_services) 
-                              VALUES ('$visitId', '$contactNumberNew', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason', '$additional_services')";
-        $resultVisitor = pg_query($con, $visitQuery);
+        if ($resultUserdata) {
+          // Step 4: Insert visit data
+          $visitQuery = "INSERT INTO visitor_visitdata 
+                           (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, 
+                            institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, 
+                            timestamp, other_reason, additional_services)
+                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)";
+          $resultVisitor = pg_query_params($con, $visitQuery, [
+            $visitId,
+            $contactNumberNew,
+            $visitbranch,
+            $visitstartdatetime,
+            $visitenddate,
+            $visitpurpose,
+            $institutename,
+            $enrollmentnumber,
+            $doclink_instituteid,
+            $mentoremail,
+            $doclink_paymentdoc,
+            $declaration,
+            $timestamp,
+            $other_reason,
+            $additional_services
+          ]);
 
-        if ($resultVisitor) {
-          $cmdtuples = pg_affected_rows($resultVisitor);
+          if ($resultVisitor) {
+            $cmdtuples = pg_affected_rows($resultVisitor);
+          } else {
+            $errorOccurred = true;
+            $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $contactNumberNew);
+          }
         } else {
           $errorOccurred = true;
-          $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $contactNumberNew);
+          $errorMessage = handleInsertionErrorVisit($con, "Userdata insertion", $contactNumberNew);
         }
-      } else {
-        $errorOccurred = true;
-        $errorMessage = handleInsertionErrorVisit($con, "Userdata insertion", $contactNumberNew);
       }
     }
 
