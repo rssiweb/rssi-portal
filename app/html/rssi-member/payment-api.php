@@ -6,6 +6,10 @@ include("../../util/email.php");
 include("../../util/drive.php");
 // require_once("email.php");
 
+// Prevent PHP warnings/notices from breaking JSON output for the frontend
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+
 date_default_timezone_set('Asia/Kolkata');
 
 $formtype = $_POST['form-type'];

@@ -394,7 +394,7 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    This donation has been rejected and cannot be used to generate an invoice. Please contact support for further assistance.
+                                    This donation is either under review or has been rejected and cannot be used to generate an invoice. Please contact support for further assistance.
                                 </div>
                             </div>
                         </div>
