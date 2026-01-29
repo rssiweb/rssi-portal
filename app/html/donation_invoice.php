@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/login_util.php");
-$searchField = isset($_GET['searchField']) ? $_GET['searchField'] : '';
+$searchField = isset($_GET['searchField']) ? trim($_GET['searchField']) : '';
 
 // Set up the database connection ($con) here if not already done.
 
@@ -268,7 +268,94 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                             <hr>
                             <p class="text-end">Total in <?php echo $array['currency'] ?></p>
                             <h4 class="text-end">&#8377;<?php echo $array['amount'] ?></h4>
-                            <hr>
+                            <?php
+                            function amountInWords($amount)
+                            {
+                                $words = [
+                                    0 => 'Zero',
+                                    1 => 'One',
+                                    2 => 'Two',
+                                    3 => 'Three',
+                                    4 => 'Four',
+                                    5 => 'Five',
+                                    6 => 'Six',
+                                    7 => 'Seven',
+                                    8 => 'Eight',
+                                    9 => 'Nine',
+                                    10 => 'Ten',
+                                    11 => 'Eleven',
+                                    12 => 'Twelve',
+                                    13 => 'Thirteen',
+                                    14 => 'Fourteen',
+                                    15 => 'Fifteen',
+                                    16 => 'Sixteen',
+                                    17 => 'Seventeen',
+                                    18 => 'Eighteen',
+                                    19 => 'Nineteen',
+                                    20 => 'Twenty',
+                                    30 => 'Thirty',
+                                    40 => 'Forty',
+                                    50 => 'Fifty',
+                                    60 => 'Sixty',
+                                    70 => 'Seventy',
+                                    80 => 'Eighty',
+                                    90 => 'Ninety'
+                                ];
+
+                                $amount = number_format($amount, 2, '.', '');
+                                [$rupees, $paise] = explode('.', $amount);
+
+                                $rupees = (int)$rupees;
+
+                                if ($rupees === 0) {
+                                    $result = 'Zero Rupees';
+                                } else {
+                                    $result = '';
+
+                                    $levels = [
+                                        10000000 => 'Crore',
+                                        100000   => 'Lakh',
+                                        1000     => 'Thousand',
+                                        100      => 'Hundred'
+                                    ];
+
+                                    foreach ($levels as $value => $label) {
+                                        if ($rupees >= $value) {
+                                            $count = intdiv($rupees, $value);
+                                            $rupees %= $value;
+                                            $result .= numberToWords($count, $words) . " $label ";
+                                        }
+                                    }
+
+                                    if ($rupees > 0) {
+                                        $result .= numberToWords($rupees, $words) . ' ';
+                                    }
+
+                                    $result = trim($result) . ' Rupees';
+                                }
+
+                                if ((int)$paise > 0) {
+                                    $result .= ' and ' . numberToWords((int)$paise, $words) . ' Paise';
+                                }
+
+                                return $result . ' Only';
+                            }
+
+                            function numberToWords($num, $words)
+                            {
+                                if ($num < 21) {
+                                    return $words[$num];
+                                }
+                                if ($num < 100) {
+                                    return $words[intdiv($num, 10) * 10] . ($num % 10 ? ' ' . $words[$num % 10] : '');
+                                }
+                                return '';
+                            }
+                            ?>
+                            <p class="text-end small fst-italic">
+                                (<?= amountInWords($array['amount']); ?>)
+                            </p>
+                            <!-- <hr> -->
                             <h4>Summary</h4>
                             <hr>
                             <table class="table">
@@ -281,7 +368,7 @@ if (is_array($resultArr) && count($resultArr) > 0) {
                                     <td>Online</td>
                                 </tr>
                             </table>
-                            <hr>
+                            <!-- <hr> -->
 
                             <?php if ($array['id_number'] !== null) { ?>
                                 <p class="small">Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
