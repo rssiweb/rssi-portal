@@ -677,7 +677,9 @@ if ($formtype == "donation_form") {
     $tel = $_POST['tel'];
     $currency = $_POST['currency'];
     $transactionId = $_POST['transactionid'];
-    $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
+    $message = !empty($_POST['message'])
+      ? htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8')
+      : null;
     $donationAmount = $_POST['donationAmount'];
     $timestamp = date('Y-m-d H:i:s');
     $donationId = uniqid();
@@ -686,9 +688,25 @@ if ($formtype == "donation_form") {
     $errorMessage = '';
 
     if ($_POST['donationType'] === "existing") {
-      $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
-                          VALUES ('$donationId', '$tel', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
-      $resultUserdata = pg_query($con, $donationQuery);
+      $donationQuery = "
+        INSERT INTO donation_paymentdata
+        (donationid, tel, currency, amount, transactionid, message, timestamp)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ";
+
+      $resultUserdata = pg_query_params(
+        $con,
+        $donationQuery,
+        [
+          $donationId,
+          $tel,
+          $currency,
+          $donationAmount,
+          $transactionId,
+          $message,      // NULL stored correctly
+          $timestamp
+        ]
+      );
 
       if ($resultUserdata) {
         $cmdtuples = pg_affected_rows($resultUserdata);
@@ -700,19 +718,49 @@ if ($formtype == "donation_form") {
       $fullName = $_POST['fullName'];
       $email = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
-      $idNumber = $_POST['idNumber'];
+      $idNumber = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null;
       $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
 
       // Insert userdata
-      $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, id_number, postaladdress) 
-                          VALUES ('$fullName', '$email', '$contactNumberNew', '$idNumber', '$postalAddress')";
-      @$resultUserdata = pg_query($con, $userdataQuery);
+      $userdataQuery = "
+        INSERT INTO donation_userdata
+        (fullname, email, tel, id_number, postaladdress)
+        VALUES ($1, $2, $3, $4, $5)
+      ";
+
+      $resultUserdata = pg_query_params(
+        $con,
+        $userdataQuery,
+        [
+          $fullName,
+          $email,
+          $contactNumberNew,
+          $idNumber,        // NULL stored correctly
+          $postalAddress
+        ]
+      );
 
       if ($resultUserdata) {
         // Insert donation
-        $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
-                              VALUES ('$donationId', '$contactNumberNew', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
-        $resultDonation = pg_query($con, $donationQuery);
+        $donationQuery = "
+          INSERT INTO donation_paymentdata
+          (donationid, tel, currency, amount, transactionid, message, timestamp)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ";
+
+        $resultDonation = pg_query_params(
+          $con,
+          $donationQuery,
+          [
+            $donationId,
+            $contactNumberNew,
+            $currency,
+            $donationAmount,
+            $transactionId,
+            $message,      // NULL stored correctly
+            $timestamp
+          ]
+        );
 
         if ($resultDonation) {
           $cmdtuples = pg_affected_rows($resultDonation);
