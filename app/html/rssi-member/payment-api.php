@@ -687,12 +687,13 @@ if ($formtype == "donation_form") {
       : null;
     $donationAmount = $_POST['donationAmount'];
     $timestamp = date('Y-m-d H:i:s');
-    $donationId = null; // generate only on success
-    $cmdtuples = 0; // Initialize cmdtuples
-    $errorOccurred = false; // Flag to track if an error occurred
+    $donationId = null; // initialize as null
+    $cmdtuples = 0;
+    $errorOccurred = false;
     $errorMessage = '';
 
     if ($_POST['donationType'] === "existing") {
+      // Only generate donationId if we're going to use it (no error yet)
       $donationId = uniqid();
       $donationQuery = "
         INSERT INTO donation_paymentdata
@@ -709,7 +710,7 @@ if ($formtype == "donation_form") {
           $currency,
           $donationAmount,
           $transactionId,
-          $message,      // NULL stored correctly
+          $message,
           $timestamp
         ]
       );
@@ -718,7 +719,7 @@ if ($formtype == "donation_form") {
         $cmdtuples = pg_affected_rows($resultUserdata);
       } else {
         $errorOccurred = true;
-        $errorMessage = handleInsertionError($con, "Donation insertion", $tel);
+        $donationId = null; // Reset donationId on error
       }
     } elseif ($_POST['donationType'] === "new") {
       $fullName         = $_POST['fullName'];
@@ -755,6 +756,7 @@ if ($formtype == "donation_form") {
         );
 
         if ($resultUserdata) {
+          // Only generate donationId if user insertion succeeded
           $donationId = uniqid();
           // Insert donation record
           $donationQuery = "
@@ -772,7 +774,7 @@ if ($formtype == "donation_form") {
               $currency,
               $donationAmount,
               $transactionId,
-              $message, // NULL stored correctly
+              $message,
               $timestamp
             ]
           );
@@ -781,11 +783,10 @@ if ($formtype == "donation_form") {
             $cmdtuples = pg_affected_rows($resultDonation);
           } else {
             $errorOccurred = true;
-            $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
+            $donationId = null; // Reset donationId on error
           }
         } else {
           $errorOccurred = true;
-          $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
         }
       }
     }
@@ -815,7 +816,7 @@ if ($formtype == "donation_form") {
           "fullname" => $name,
           "donationId" => $donationId,
           "timestamp" => $timestamp,
-          "tel" => @$tel . @$contactNumberNew,
+          "tel" => $_POST['donationType'] === "existing" ? $tel : $contactNumberNew,
           "email" => $email,
           "transactionid" => $transactionId,
           "currency" => $currency,
@@ -827,23 +828,15 @@ if ($formtype == "donation_form") {
     // Prepare the API response data
     $responseData = array(
       'error' => $errorOccurred,
-      'errorMessage' => $errorOccurred ? $errorMessage : '', // Return the actual error message if an error occurred
+      'errorMessage' => $errorOccurred ? $errorMessage : '',
       'cmdtuples' => $cmdtuples,
-      'donationId' => $donationId
+      'donationId' => $errorOccurred ? null : $donationId // Only return donationId if no error
     );
 
     // Return the response as JSON
     echo json_encode($responseData);
-    exit; // Stop further PHP execution
+    exit;
   }
-}
-
-function handleInsertionError($connection, $errorMessage)
-{
-  $error = pg_last_error($connection);
-  // Log or display the generic error message
-  error_log($errorMessage . " error: " . $error);
-  return "generic_error"; // Return a specific code for generic error
 }
 
 if ($formtype == "exit_gen_otp_associate") {
@@ -1477,55 +1470,50 @@ if ($formtype == "visitor_form") {
     $instituteid = $_FILES['instituteid'];
     $mentoremail = $_POST['mentoremail'];
     $paymentdoc = $_FILES['paymentdoc'];
-    $mentoremail = $_POST['mentoremail'];
     $declaration = $_POST['declaration'];
     $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
     $timestamp = date('Y-m-d H:i:s');
-    $visitId = null; // generate only on success
-    $cmdtuples = 0; // Initialize cmdtuples
-    $errorOccurred = false; // Flag to track if an error occurred
+    $visitId = null; // initialize as null
+    $cmdtuples = 0;
+    $errorOccurred = false;
     $errorMessage = '';
     $additional_services_array = [];
 
     if (!empty($_POST['additional_services'])) {
-
       foreach ($_POST['additional_services'] as $service) {
         if ($service === 'videography') {
-          // Append camera count
           $camera_count = isset($_POST['camera_count']) ? intval($_POST['camera_count']) : 1;
           $additional_services_array[] = "videography({$camera_count})";
         } elseif ($service === 'interview') {
-          // Append duration
           $duration = isset($_POST['interview_duration']) ? intval($_POST['interview_duration']) : 30;
           $additional_services_array[] = "interview({$duration}min)";
         } else {
-          // Other services like certificate
           $additional_services_array[] = $service;
         }
       }
     }
 
-    // Convert array to comma-separated string for DB
     $additional_services = implode(',', $additional_services_array);
 
-    // This is for paymentdoc and instituteid which will be require in both new and existing visitor
-
+    // Upload files first (these will be used for both new and existing visitors)
     if (empty($_FILES['paymentdoc']['name'])) {
       $doclink_paymentdoc = null;
     } else {
-      $filename_paymentdoc = "doc_" . $visitId . "_" . time();
+      $filename_paymentdoc = "doc_" . time() . "_" . rand(1000, 9999);
       $parent_paymentdoc = '1f_UvwDaxvloRyYgNs9rjl6ZGW8nUB8RwXHQtQ3RsA9W6SaYY-7xLNn0kXvGV8A9fAjJ6x9yZ';
       $doclink_paymentdoc = uploadeToDrive($paymentdoc, $parent_paymentdoc, $filename_paymentdoc);
     }
+
     if (empty($_FILES['instituteid']['name'])) {
       $doclink_instituteid = null;
     } else {
-      $filename_instituteid = "doc_" . $visitId . "_" . time();
+      $filename_instituteid = "doc_" . time() . "_" . rand(1000, 9999);
       $parent_instituteid = '1OFTSdUFZm1RVYNWaux1jv_EW5iftuKh_RSLHXkdbqLacK9nziY-Vx4KrUrJoiNIvohQPSzi3';
       $doclink_instituteid = uploadeToDrive($instituteid, $parent_instituteid, $filename_instituteid);
     }
 
     if ($_POST['visitorType'] === "existing") {
+      // Only generate visitId if we're going to use it
       $visitId = uniqid();
       $visitorQuery = "
         INSERT INTO visitor_visitdata 
@@ -1533,7 +1521,7 @@ if ($formtype == "visitor_form") {
          institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, 
          timestamp, other_reason, additional_services)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    ";
+      ";
 
       $resultVisitor = pg_query_params($con, $visitorQuery, [
         $visitId,
@@ -1557,30 +1545,26 @@ if ($formtype == "visitor_form") {
         $cmdtuples = pg_affected_rows($resultVisitor);
       } else {
         $errorOccurred = true;
-        $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $tel);
+        $visitId = null; // Reset visitId on error
       }
     } elseif ($_POST['visitorType'] === "new") {
       $fullName = $_POST['fullName'];
       $email = $_POST['email'];
       $contactNumberNew = $_POST['contactNumberNew'];
       $idType = $_POST['idType'];
-      $idNumber = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null; // allow null
+      $idNumber = !empty($_POST['idNumber']) ? $_POST['idNumber'] : null;
       $governmentId = $_FILES['governmentId'];
       $photo = $_FILES['photo'];
 
-      // Step 1: Check if visitor already exists
+      // Check if visitor already exists
       $checkQuery = "SELECT 1 FROM visitor_userdata WHERE tel = $1";
       $checkResult = pg_query_params($con, $checkQuery, [$contactNumberNew]);
 
       if ($checkResult && pg_num_rows($checkResult) > 0) {
-        // Already registered
         $errorOccurred = true;
         $errorMessage = 'already_registered';
-      }
-
-      // Step 2: If no error, upload files
-      if (!$errorOccurred) {
-        // Government ID
+      } else {
+        // Upload files for new visitor
         $doclink_governmentId = null;
         if (!empty($governmentId['name'])) {
           $filename_governmentId = "doc_" . $fullName . "_" . time();
@@ -1588,7 +1572,6 @@ if ($formtype == "visitor_form") {
           $doclink_governmentId = uploadeToDrive($governmentId, $parent_governmentId, $filename_governmentId);
         }
 
-        // Photo
         $doclink_photo = null;
         if (!empty($photo['name'])) {
           $filename_photo = "doc_" . $fullName . "_" . time();
@@ -1596,9 +1579,7 @@ if ($formtype == "visitor_form") {
           $doclink_photo = uploadeToDrive($photo, $parent_photo, $filename_photo);
         }
 
-        $visitId = uniqid();
-
-        // Step 3: Insert userdata
+        // Insert userdata
         $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, id_type, id_number, nationalid, photo) 
                           VALUES ($1, $2, $3, $4, $5, $6, $7)";
         $resultUserdata = pg_query_params($con, $userdataQuery, [
@@ -1612,7 +1593,9 @@ if ($formtype == "visitor_form") {
         ]);
 
         if ($resultUserdata) {
-          // Step 4: Insert visit data
+          // Only generate visitId if user insertion succeeded
+          $visitId = uniqid();
+
           $visitQuery = "INSERT INTO visitor_visitdata 
                            (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, 
                             institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, 
@@ -1640,11 +1623,10 @@ if ($formtype == "visitor_form") {
             $cmdtuples = pg_affected_rows($resultVisitor);
           } else {
             $errorOccurred = true;
-            $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $contactNumberNew);
+            $visitId = null; // Reset visitId on error
           }
         } else {
           $errorOccurred = true;
-          $errorMessage = handleInsertionErrorVisit($con, "Userdata insertion", $contactNumberNew);
         }
       }
     }
@@ -1664,7 +1646,6 @@ if ($formtype == "visitor_form") {
         $email = $row['email'];
         $name = $row['fullname'];
       } else {
-        // Handle error if the query fails
         $email = null;
         $name = null;
       }
@@ -1674,7 +1655,7 @@ if ($formtype == "visitor_form") {
           "fullname" => $name,
           "visitId" => $visitId,
           "timestamp" => date("d/m/Y h:i A", strtotime($timestamp)),
-          "tel" => @$tel . @$contactNumberNew,
+          "tel" => $_POST['visitorType'] === "existing" ? $tel : $contactNumberNew,
           "email" => $email,
           "visitstartdatetime" => date("d/m/Y h:i A", strtotime($visitstartdatetime)),
           "visitenddate" => $visitenddate,
@@ -1686,23 +1667,15 @@ if ($formtype == "visitor_form") {
     // Prepare the API response data
     $responseData = array(
       'error' => $errorOccurred,
-      'errorMessage' => $errorOccurred ? $errorMessage : '', // Return the actual error message if an error occurred
+      'errorMessage' => $errorOccurred ? $errorMessage : '',
       'cmdtuples' => $cmdtuples,
-      'visitorId' => $visitId
+      'visitorId' => $errorOccurred ? null : $visitId // Only return visitorId if no error
     );
 
     // Return the response as JSON
     echo json_encode($responseData);
-    exit; // Stop further PHP execution
+    exit;
   }
-}
-
-function handleInsertionErrorVisit($connection, $errorMessage)
-{
-  $error = pg_last_error($connection);
-  // Log or display the generic error message
-  error_log($errorMessage . " error: " . $error);
-  return "generic_error"; // Return a specific code for generic error
 }
 
 if ($formtype == "visitreviewform") {
