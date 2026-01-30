@@ -1488,7 +1488,7 @@ if ($formtype == "visitor_form") {
     $declaration = $_POST['declaration'];
     $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
     $timestamp = date('Y-m-d H:i:s');
-    $visitId = uniqid();
+    $visitId = null; // generate only on success
     $cmdtuples = 0; // Initialize cmdtuples
     $errorOccurred = false; // Flag to track if an error occurred
     $errorMessage = '';
@@ -1533,6 +1533,7 @@ if ($formtype == "visitor_form") {
     }
 
     if ($_POST['visitorType'] === "existing") {
+      $visitId = uniqid();
       $visitorQuery = "
         INSERT INTO visitor_visitdata 
         (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, 
@@ -1602,6 +1603,8 @@ if ($formtype == "visitor_form") {
           $doclink_photo = uploadeToDrive($photo, $parent_photo, $filename_photo);
         }
 
+        $visitId = uniqid();
+
         // Step 3: Insert userdata
         $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, id_type, id_number, nationalid, photo) 
                           VALUES ($1, $2, $3, $4, $5, $6, $7)";
@@ -1654,7 +1657,7 @@ if ($formtype == "visitor_form") {
     }
 
     // After successful form submission
-    if (!$errorOccurred) {
+    if (!$errorOccurred && $errorMessage !== "already_registered") {
       // Sending email based on the visitor type
       if ($_POST['visitorType'] === "existing") {
         $emailQuery = "SELECT email, fullname FROM visitor_userdata WHERE tel='$tel'";
