@@ -842,10 +842,9 @@ function handleInsertionError($connection, $errorMessage, $tel)
 {
   $error = pg_last_error($connection);
 
-  // Check for duplicate key violation error
+  // Duplicate key should NOT be treated as a business rule here
   if (strpos($error, 'duplicate key value violates unique constraint') !== false) {
-    return "already_registered"; // Return a specific code for duplicate key violation error
-    // Additional handling specific to duplicate key violation error can be done here
+    return "database_constraint_error";
   } else {
     // Log or display the generic error message
     error_log($errorMessage . " error: " . $error);
@@ -1708,10 +1707,9 @@ function handleInsertionErrorVisit($connection, $errorMessage, $tel)
 {
   $error = pg_last_error($connection);
 
-  // Check for duplicate key violation error
+  // Duplicate key should NOT be treated as a business rule here
   if (strpos($error, 'duplicate key value violates unique constraint') !== false) {
-    return "already_registered"; // Return a specific code for duplicate key violation error
-    // Additional handling specific to duplicate key violation error can be done here
+    return "database_constraint_error";
   } else {
     // Log or display the generic error message
     error_log($errorMessage . " error: " . $error);
