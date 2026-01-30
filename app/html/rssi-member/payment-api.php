@@ -7,9 +7,9 @@ include("../../util/drive.php");
 // require_once("email.php");
 
 // Prevent PHP warnings/notices from breaking JSON output for the frontend
-// ini_set('display_errors', '0');
-// ini_set('display_startup_errors', '0');
-// header('Content-Type: application/json; charset=utf-8');
+header('Content-Type: application/json');
+ini_set('display_errors', 0);
+error_reporting(0);
 
 date_default_timezone_set('Asia/Kolkata');
 
@@ -833,8 +833,8 @@ if ($formtype == "donation_form") {
       'donationId' => $errorOccurred ? null : $donationId // Only return donationId if no error
     );
 
-    // Return the response as JSON
-    echo json_encode($responseData);
+    ob_clean();
+    echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
     exit;
   }
 }
