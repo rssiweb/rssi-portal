@@ -7,9 +7,9 @@ include("../../util/drive.php");
 // require_once("email.php");
 
 // Prevent PHP warnings/notices from breaking JSON output for the frontend
-ini_set('display_errors', '0');
-ini_set('display_startup_errors', '0');
-header('Content-Type: application/json; charset=utf-8');
+// ini_set('display_errors', '0');
+// ini_set('display_startup_errors', '0');
+// header('Content-Type: application/json; charset=utf-8');
 
 date_default_timezone_set('Asia/Kolkata');
 
