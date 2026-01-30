@@ -728,67 +728,67 @@ if ($formtype == "donation_form") {
       $postalAddress    = !empty($_POST['postalAddress']) ? htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8') : null;
 
       // Check if user already exists
-      $checkQuery = "SELECT 1 FROM donation_userdata WHERE tel = $1";
-      $checkResult = pg_query_params($con, $checkQuery, [$contactNumberNew]);
+      // $checkQuery = "SELECT 1 FROM donation_userdata WHERE tel = $1";
+      // $checkResult = pg_query_params($con, $checkQuery, [$contactNumberNew]);
 
-      if ($checkResult && pg_num_rows($checkResult) > 0) {
-        $errorOccurred = true;
-        $errorMessage  = "already_registered";
-      } else {
-        // User does not exist, safe to insert
-        $userdataQuery = "
+      // if ($checkResult && pg_num_rows($checkResult) > 0) {
+      //   $errorOccurred = true;
+      //   $errorMessage  = "already_registered";
+      // } else {
+      // User does not exist, safe to insert
+      $userdataQuery = "
             INSERT INTO donation_userdata
             (fullname, email, tel, id_number, postaladdress)
             VALUES ($1, $2, $3, $4, $5)
         ";
 
-        $resultUserdata = pg_query_params(
-          $con,
-          $userdataQuery,
-          [
-            $fullName,
-            $email,
-            $contactNumberNew,
-            $idNumber,
-            $postalAddress
-          ]
-        );
+      $resultUserdata = pg_query_params(
+        $con,
+        $userdataQuery,
+        [
+          $fullName,
+          $email,
+          $contactNumberNew,
+          $idNumber,
+          $postalAddress
+        ]
+      );
 
-        if ($resultUserdata) {
-          $donationId = uniqid();
-          // Insert donation record
-          $donationQuery = "
+      if ($resultUserdata) {
+        $donationId = uniqid();
+        // Insert donation record
+        $donationQuery = "
                 INSERT INTO donation_paymentdata
                 (donationid, tel, currency, amount, transactionid, message, timestamp)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
             ";
 
-          $resultDonation = pg_query_params(
-            $con,
-            $donationQuery,
-            [
-              $donationId,
-              $contactNumberNew,
-              $currency,
-              $donationAmount,
-              $transactionId,
-              $message, // NULL stored correctly
-              $timestamp
-            ]
-          );
+        $resultDonation = pg_query_params(
+          $con,
+          $donationQuery,
+          [
+            $donationId,
+            $contactNumberNew,
+            $currency,
+            $donationAmount,
+            $transactionId,
+            $message, // NULL stored correctly
+            $timestamp
+          ]
+        );
 
-          if ($resultDonation) {
-            $cmdtuples = pg_affected_rows($resultDonation);
-          } else {
-            $errorOccurred = true;
-            $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
-          }
+        if ($resultDonation) {
+          $cmdtuples = pg_affected_rows($resultDonation);
         } else {
           $errorOccurred = true;
-          $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
+          $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
         }
+      } else {
+        $errorOccurred = true;
+        $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
       }
     }
+    // }
 
     // After successful form submission
     if (!$errorOccurred && $errorMessage !== "already_registered") {
@@ -844,7 +844,7 @@ function handleInsertionError($connection, $errorMessage, $tel)
 
   // Duplicate key should NOT be treated as a business rule here
   if (strpos($error, 'duplicate key value violates unique constraint') !== false) {
-    return "database_constraint_error";
+    return "already_registered";
   } else {
     // Log or display the generic error message
     error_log($errorMessage . " error: " . $error);
