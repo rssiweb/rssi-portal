@@ -9,6 +9,7 @@ include("../../util/drive.php");
 // Prevent PHP warnings/notices from breaking JSON output for the frontend
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
+header('Content-Type: application/json; charset=utf-8');
 
 date_default_timezone_set('Asia/Kolkata');
 
@@ -686,12 +687,13 @@ if ($formtype == "donation_form") {
       : null;
     $donationAmount = $_POST['donationAmount'];
     $timestamp = date('Y-m-d H:i:s');
-    $donationId = uniqid();
+    $donationId = null; // generate only on success
     $cmdtuples = 0; // Initialize cmdtuples
     $errorOccurred = false; // Flag to track if an error occurred
     $errorMessage = '';
 
     if ($_POST['donationType'] === "existing") {
+      $donationId = uniqid();
       $donationQuery = "
         INSERT INTO donation_paymentdata
         (donationid, tel, currency, amount, transactionid, message, timestamp)
@@ -753,6 +755,7 @@ if ($formtype == "donation_form") {
         );
 
         if ($resultUserdata) {
+          $donationId = uniqid();
           // Insert donation record
           $donationQuery = "
                 INSERT INTO donation_paymentdata
@@ -788,7 +791,7 @@ if ($formtype == "donation_form") {
     }
 
     // After successful form submission
-    if (!$errorOccurred) {
+    if (!$errorOccurred && $errorMessage !== "already_registered") {
       // Sending email based on the donation type
       if ($_POST['donationType'] === "existing") {
         $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel'";
