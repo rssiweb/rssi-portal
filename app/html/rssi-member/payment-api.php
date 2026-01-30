@@ -1697,7 +1697,7 @@ if ($formtype == "visitor_form") {
   }
 }
 
-function handleInsertionErrorVisit($connection, $errorMessage, $tel)
+function handleInsertionErrorVisit($connection, $errorMessage)
 {
   $error = pg_last_error($connection);
   // Log or display the generic error message
