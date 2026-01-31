@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . "/../../../bootstrap.php";
+require_once __DIR__ . "/../../bootstrap.php";
 
-include("../../../util/email.php");
-include("../../../util/drive.php");
+include("../../util/email.php");
+include("../../util/drive.php");
 
 /* =======================
    STRICT JSON BOOTSTRAP
