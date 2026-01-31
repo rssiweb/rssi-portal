@@ -173,14 +173,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 specialization AS mjorsub,
                 '$associatenumber' AS approvedby,
                 CONCAT(
-                RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),   -- Current Year (2 digits)
+                RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),     -- Current Year (2 digits)
                 LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'), -- Current Month (2 digits)
-                LPAD(
-                    (SELECT COUNT(*) + 1 
-                    FROM rssimyaccount_members
-                    )::text, 3, '0' -- Adding +1 to the total count
-                )
-            ) AS associatenumber,
+                LPAD(NEXTVAL('associate_seq')::text, 3, '0')        -- Sequence starting from 676
+            ) AS associatenumber;
             college_name,
             enrollment_number
             FROM signup 
@@ -328,7 +324,7 @@ $isFormDisabled = null;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">

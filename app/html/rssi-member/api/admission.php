@@ -93,20 +93,14 @@ if ($payment_mode === 'cash' && !$is_verified) {
 }
 
 /* =======================
-   STUDENT ID LOGIC
-======================= */
-$branchCode = $preferred_branch === 'Lucknow' ? 'LKO' : 'KOL';
-$student_id = 'A' . $branchCode . date('y') . str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
-
-/* =======================
    FILE UPLOADS
 ======================= */
-function uploadOrNull($fileKey, $parent, $prefix)
+function uploadOrNull($key, $parent, $prefix)
 {
-  if (empty($_FILES[$fileKey]['name'])) {
+  if (empty($_FILES[$key]['name'])) {
     return null;
   }
-  return uploadeToDrive($_FILES[$fileKey], $parent, $prefix . time());
+  return uploadeToDrive($_FILES[$key], $parent, $prefix . '_' . time());
 }
 
 /* =======================
@@ -120,8 +114,8 @@ try {
   $studentSQL = "
     INSERT INTO rssimyprofile_student (
       type_of_admission, studentname, dateofbirth, gender,
-      student_photo_raw, aadhar_available, studentaadhar,
-      upload_aadhar_card, guardiansname, relationwithstudent,
+      aadhar_available, studentaadhar,
+      guardiansname, relationwithstudent,
       guardianaadhar, stateofdomicile, postaladdress,
       permanentaddress, contact, emailaddress, preferredbranch,
       class, schooladmissionrequired, nameoftheschool,
@@ -130,10 +124,17 @@ try {
       c_authentication_code, transaction_id, student_id,
       nameofthesubjects, doa, caste
     ) VALUES (
-      $1,$2,$3,$4,NULL,$5,$6,NULL,$7,$8,
+      $1,$2,$3,$4,$5,$6,$7,$8,
       $9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
-      $19,$20,$21,$22,$23,$24,$25,$26,$27,$28, $29
+      $19,$20,$21,$22,$23,$24,$25,
+    CONCAT(
+      RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),
+      LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'),
+      LPAD(nextval('student_number_seq')::text, 4, '0')
+    ),
+    $26,$27,$28
     )
+    RETURNING student_id
   ";
 
   $studentParams = [
@@ -162,19 +163,20 @@ try {
     $payment_mode,
     $c_auth_code,
     $transaction_id,
-    $student_id,
     $subject_select,
     $timestamp,
     $caste
   ];
 
   pg_query_params($con, $studentSQL, $studentParams);
+  // Execute insert and get student_id in one line
+  $student_id = pg_fetch_result(pg_query_params($con, $studentSQL, $studentParams), 0, 'student_id');
 
   // Now upload files only AFTER DB insert
-  $doc_student_photo = uploadOrNull('student-photo', '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9', "photo_$student_name" . '_' . time());
-  $doc_aadhar        = uploadOrNull('aadhar-card-upload', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "aadhar_$student_name" . '_' . time());
-  $doc_caste         = uploadOrNull('caste-document', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "caste_$student_name" . '_' . time());
-  $doc_support       = uploadOrNull('supporting-document', '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC', "sup_$student_name" . '_' . time());
+  $doc_student_photo = uploadOrNull('student-photo', '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9', "photo_$student_name");
+  $doc_aadhar        = uploadOrNull('aadhar-card-upload', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "aadhar_$student_name");
+  $doc_caste         = uploadOrNull('caste-document', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "caste_$student_name");
+  $doc_support       = uploadOrNull('supporting-document', '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC', "sup_$student_name");
 
   // Update student record with uploaded file links
   $updateSQL = "
@@ -209,8 +211,22 @@ try {
 
   pg_query($con, 'COMMIT');
 } catch (Throwable $e) {
+
   pg_query($con, 'ROLLBACK');
-  jsonResponse(['success' => false, 'message' => 'Database error'], 500);
+
+  error_log(
+    "[" . date('Y-m-d H:i:s') . "] SIGNUP ERROR\n" .
+      "Message: " . $e->getMessage() . "\n" .
+      "File: " . $e->getFile() . "\n" .
+      "Line: " . $e->getLine() . "\n\n",
+    3,
+    __DIR__ . "/error.log"
+  );
+
+  jsonResponse([
+    'success' => false,
+    'message' => 'Database error'
+  ], 500);
 }
 
 /* =======================
