@@ -109,11 +109,6 @@ function uploadOrNull($fileKey, $parent, $prefix)
   return uploadeToDrive($_FILES[$fileKey], $parent, $prefix . time());
 }
 
-$doc_student_photo = uploadOrNull('student-photo', '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9', 'photo_');
-$doc_aadhar        = uploadOrNull('aadhar-card-upload', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', 'aadhar_');
-$doc_caste         = uploadOrNull('caste-document', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', 'caste_');
-$doc_support       = uploadOrNull('supporting-document', '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC', 'sup_');
-
 /* =======================
    DATABASE TRANSACTION
 ======================= */
@@ -121,7 +116,7 @@ pg_query($con, 'BEGIN');
 
 try {
 
-  /* STUDENT INSERT */
+  /* STUDENT INSERT (with placeholders for file links) */
   $studentSQL = "
     INSERT INTO rssimyprofile_student (
       type_of_admission, studentname, dateofbirth, gender,
@@ -133,12 +128,11 @@ try {
       nameoftheboard, medium, familymonthlyincome,
       totalnumberoffamilymembers, payment_mode,
       c_authentication_code, transaction_id, student_id,
-      nameofthesubjects, doa, caste, caste_document, supporting_doc
+      nameofthesubjects, doa, caste
     ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-      $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-      $21,$22,$23,$24,$25,$26,$27,$28,$29,$30,
-      $31,$32,$33
+      $1,$2,$3,$4,NULL,$5,$6,NULL,$7,$8,
+      $9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
+      $19,$20,$21,$22,$23,$24,$25,$26,$27,$28, $29
     )
   ";
 
@@ -147,10 +141,8 @@ try {
     $student_name,
     $date_of_birth,
     $gender,
-    $doc_student_photo,
     $aadhar_available,
     $aadhar_card,
-    $doc_aadhar,
     $guardian_name,
     $guardian_relation,
     $guardian_aadhar,
@@ -173,12 +165,33 @@ try {
     $student_id,
     $subject_select,
     $timestamp,
-    $caste,
-    $doc_caste,
-    $doc_support
+    $caste
   ];
 
   pg_query_params($con, $studentSQL, $studentParams);
+
+  // Now upload files only AFTER DB insert
+  $doc_student_photo = uploadOrNull('student-photo', '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9', "photo_$student_name" . '_' . time());
+  $doc_aadhar        = uploadOrNull('aadhar-card-upload', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "aadhar_$student_name" . '_' . time());
+  $doc_caste         = uploadOrNull('caste-document', '186KMGzX07IohJUhQ72mfHQ6NHiIKV33E', "caste_$student_name" . '_' . time());
+  $doc_support       = uploadOrNull('supporting-document', '1h2elj3V86Y65RFWkYtIXTJFMwG_KX_gC', "sup_$student_name" . '_' . time());
+
+  // Update student record with uploaded file links
+  $updateSQL = "
+    UPDATE rssimyprofile_student
+    SET student_photo_raw=$1,
+        upload_aadhar_card=$2,
+        caste_document=$3,
+        supporting_doc=$4
+    WHERE student_id=$5
+  ";
+  pg_query_params($con, $updateSQL, [
+    $doc_student_photo,
+    $doc_aadhar,
+    $doc_caste,
+    $doc_support,
+    $student_id
+  ]);
 
   /* CATEGORY HISTORY */
   $historySQL = "
@@ -186,7 +199,6 @@ try {
       student_id, category_type, effective_from, class, created_by
     ) VALUES ($1, $2, $3, $4, $5)
   ";
-
   pg_query_params($con, $historySQL, [
     $student_id,
     $type_of_admission,
