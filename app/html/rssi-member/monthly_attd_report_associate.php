@@ -79,24 +79,35 @@ WITH date_range AS (
     ) AS attendance_date
 ),
 DynamicSchedule AS (
-    SELECT
+    SELECT DISTINCT ON (s.associate_number, d.attendance_date, s.workday)
         s.associate_number,
+        d.attendance_date,
+        s.workday,
         s.start_date,
         s.reporting_time,
         s.exit_time,
         m.filterstatus,
-        m.effectivedate,
-        COALESCE(
-    LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
-    CASE
-        WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
-        ELSE CURRENT_DATE
-    END
-) AS end_date
-    FROM associate_schedule s
-    INNER JOIN rssimyaccount_members m
-        ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
+        m.effectivedate
+    FROM date_range d
+    CROSS JOIN rssimyaccount_members m
+    LEFT JOIN associate_schedule_v2 s
+        ON m.associatenumber = s.associate_number
+        AND s.start_date <= d.attendance_date  -- Changed: schedule must start on or before the date
+        AND s.workday = 
+            CASE EXTRACT(DOW FROM d.attendance_date)
+                WHEN 1 THEN 'Mon'
+                WHEN 2 THEN 'Tue'
+                WHEN 3 THEN 'Wed'
+                WHEN 4 THEN 'Thu'
+                WHEN 5 THEN 'Fri'
+                WHEN 6 THEN 'Sat'
+                WHEN 0 THEN 'Sun'
+            END
+    WHERE 
+        (m.filterstatus = 'Active' OR 
+         (m.filterstatus = 'Inactive' AND DATE_TRUNC('month', m.effectivedate)::DATE >= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE))
+        AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+    ORDER BY s.associate_number, d.attendance_date, s.workday, s.start_date DESC
 ),
 PunchInOut AS (
     SELECT
@@ -346,7 +357,18 @@ END AS exception_status
     LEFT JOIN
         DynamicSchedule ds
         ON m.associatenumber = ds.associate_number
-        AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
+        AND d.attendance_date = ds.attendance_date  -- Simple join on the computed date
+        -- Match day of week
+        AND EXTRACT(DOW FROM d.attendance_date) = 
+            CASE ds.workday
+                WHEN 'Mon' THEN 1
+                WHEN 'Tue' THEN 2
+                WHEN 'Wed' THEN 3
+                WHEN 'Thu' THEN 4
+                WHEN 'Fri' THEN 5
+                WHEN 'Sat' THEN 6
+                WHEN 'Sun' THEN 0
+            END
     WHERE
         (
             (m.filterstatus = 'Active') OR
