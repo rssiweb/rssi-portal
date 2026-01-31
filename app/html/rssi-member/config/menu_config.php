@@ -327,7 +327,8 @@ class MenuConfig
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'view_shift.php' => ['title' => 'View Shift', 'show_in_menu' => true]
+                    'view_shift.php' => ['title' => 'View Shift', 'show_in_menu' => true],
+                    'edit_schedule.php' => ['title' => 'Edit Schedule', 'show_in_menu' => false]
                 ]
             ],
 

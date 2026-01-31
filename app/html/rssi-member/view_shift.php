@@ -1,171 +1,567 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
 
 validation();
 
-$currentDate = date('Y-m-d');
+// Get filter parameters
+$associate_filter = $_GET['associate'] ?? '';
+$start_date_filter = $_GET['start_date'] ?? '';
+$end_date_filter = $_GET['end_date'] ?? '';
+$day_filter = $_GET['day'] ?? '';
+$show_inactive = isset($_GET['show_inactive']) ? 1 : 0;
 
-// Get filters from GET data
-$filterStatus = isset($_GET['filter_status']) ? $_GET['filter_status'] : ['active'];
-$associateNumber = isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null;
+// Build WHERE clause
+$where_conditions = [];
+$params = [];
+$param_count = 0;
 
-// Base query to fetch data - ordered by start_date DESC to get latest first
-$query = "
-    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate, m.job_type, m.engagement
-    FROM associate_schedule s
-    INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
-    WHERE (COALESCE('$associateNumber', '') = '' OR s.associate_number = '$associateNumber')
-    ORDER BY s.associate_number, s.start_date DESC, s.timestamp DESC
-";
-
-$result = pg_query($con, $query);
-
-if (!$result) {
-    die("Error executing query: " . pg_last_error($con));
+if (!empty($associate_filter)) {
+    $param_count++;
+    $where_conditions[] = "s.associate_number = $" . $param_count;
+    $params[] = $associate_filter;
 }
 
-$data = [];
-while ($row = pg_fetch_assoc($result)) {
-    $associateNumber = $row['associate_number'];
-    $startDate = $row['start_date'];
-    $reportingTime = $row['reporting_time'];
-    $exitTime = $row['exit_time'];
-    $filterStatusDB = $row['filterstatus'];
-    $effectiveDate = $row['effectivedate'];
-    $workdays = $row['workdays'] ?? ''; // Handle null workdays
-
-    if (!isset($data[$associateNumber])) {
-        $data[$associateNumber] = [];
-    }
-
-    $entry = [
-        'associate_number' => $associateNumber,
-        'fullname' => $row['fullname'],
-        'job_type' => $row['job_type'],
-        'engagement' => $row['engagement'],
-        'start_date' => $startDate,
-        'end_date' => null, // Will be set dynamically
-        'reporting_time' => $reportingTime,
-        'exit_time' => $exitTime,
-        'timestamp' => $row['timestamp'],
-        'submittedby' => $row['submittedby'],
-        'filterstatus' => $filterStatusDB,
-        'effectivedate' => $effectiveDate,
-        'workdays' => $workdays,
-    ];
-
-    // Get the previous entry for comparison (which is actually the next chronological entry)
-    $previousEntryIndex = count($data[$associateNumber]) - 1;
-    if ($previousEntryIndex >= 0) {
-        $previousEntry = &$data[$associateNumber][$previousEntryIndex];
-
-        // Check if the timing changes
-        if (
-            $previousEntry['reporting_time'] === $reportingTime &&
-            $previousEntry['exit_time'] === $exitTime &&
-            $previousEntry['workdays'] === $workdays
-        ) {
-            // Extend the previous entry's start_date to cover this one
-            // Since we're processing in reverse chronological order
-            continue;
-        } else {
-            // Set the current entry's end_date to the day before the next entry's start_date
-            $entry['end_date'] = date('Y-m-d', strtotime($previousEntry['start_date'] . ' -1 day'));
-        }
-    }
-
-    // Add the new entry
-    $data[$associateNumber][] = $entry;
+if (!empty($start_date_filter)) {
+    $param_count++;
+    $where_conditions[] = "s.start_date >= $" . $param_count;
+    $params[] = $start_date_filter;
 }
 
-// Finalize end_date for the first entry (latest) in each group
-foreach ($data as $associateNumber => &$entries) {
-    if (count($entries) > 0) {
-        // The first entry is the most recent one
-        $firstEntry = &$entries[0];
-        if (empty($firstEntry['end_date'])) {
-            // If no end_date set, it's the current schedule - set to current date or effective date
-            $firstEntry['end_date'] = !empty($firstEntry['effectivedate']) ?
-                $firstEntry['effectivedate'] : $currentDate;
-        }
+if (!empty($end_date_filter)) {
+    $param_count++;
+    $where_conditions[] = "s.start_date <= $" . $param_count;
+    $params[] = $end_date_filter;
+}
 
-        // Ensure all entries have valid end_dates
-        foreach ($entries as &$entry) {
-            if (empty($entry['end_date'])) {
-                $entry['end_date'] = $currentDate;
-            }
-        }
+if (!empty($day_filter)) {
+    $param_count++;
+    $where_conditions[] = "s.workday = $" . $param_count;
+    $params[] = $day_filter;
+}
+
+$where_sql = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
+
+// First, get the latest dates for each workday for all associates
+$latest_dates_query = "SELECT associate_number, workday, MAX(start_date) as latest_date
+                       FROM associate_schedule_v2 
+                       GROUP BY associate_number, workday";
+$latest_dates_result = pg_query($con, $latest_dates_query);
+
+// Create a lookup array for latest dates
+$latest_dates_lookup = [];
+while ($row = pg_fetch_assoc($latest_dates_result)) {
+    $key = $row['associate_number'] . '_' . $row['workday'];
+    $latest_dates_lookup[$key] = $row['latest_date'];
+}
+
+// Always grouped view
+$data_query = "SELECT 
+    s.associate_number,
+    a.fullname,
+    a.position,
+    a.engagement,
+    TO_CHAR(s.reporting_time, 'HH12:MI AM') AS formatted_start,
+    TO_CHAR(s.exit_time, 'HH12:MI AM') AS formatted_end,
+    MIN(s.start_date) AS start_date,
+    MAX(s.start_date) AS end_date,
+    TO_CHAR(MIN(s.start_date), 'DD-Mon-YYYY') AS formatted_start_date,
+    TO_CHAR(MAX(s.start_date), 'DD-Mon-YYYY') AS formatted_end_date,
+    STRING_AGG(s.workday, ',' ORDER BY 
+        CASE s.workday
+            WHEN 'Mon' THEN 1
+            WHEN 'Tue' THEN 2
+            WHEN 'Wed' THEN 3
+            WHEN 'Thu' THEN 4
+            WHEN 'Fri' THEN 5
+            WHEN 'Sat' THEN 6
+            WHEN 'Sun' THEN 7
+        END) AS workdays,
+    COUNT(*) AS total_schedules,
+    COUNT(DISTINCT s.workday) AS day_count,
+    MAX(s.updated_at) as last_updated,
+    TO_CHAR(MAX(s.updated_at), 'DD-Mon-YYYY HH12:MI AM') AS formatted_updated,
+    STRING_AGG(s.id, ',') as schedule_ids,
+    STRING_AGG(s.start_date || '||' || s.workday, ',') as date_day_pairs
+FROM associate_schedule_v2 s
+LEFT JOIN rssimyaccount_members a 
+    ON s.associate_number = a.associatenumber
+$where_sql
+GROUP BY
+    s.associate_number,
+    a.fullname,
+    a.position,
+    a.engagement,
+    s.reporting_time,
+    s.exit_time
+ORDER BY s.associate_number, MIN(s.start_date)";
+
+// Execute query
+if (!empty($params)) {
+    $data_result = pg_query_params($con, $data_query, $params);
+} else {
+    $data_result = pg_query($con, $data_query);
+}
+
+// Get statistics - we need to calculate based on actual active status
+$stats_query = "SELECT 
+                COUNT(*) as total_schedules,
+                COUNT(DISTINCT associate_number) as unique_associates
+                FROM associate_schedule_v2";
+$stats_result = pg_query($con, $stats_query);
+$stats = $stats_result ? pg_fetch_assoc($stats_result) : ['total_schedules' => 0, 'unique_associates' => 0];
+
+// Calculate active/inactive counts based on latest date logic
+$active_count = 0;
+$inactive_count = 0;
+$temp_result = pg_query($con, "SELECT * FROM associate_schedule_v2");
+while ($row = pg_fetch_assoc($temp_result)) {
+    $key = $row['associate_number'] . '_' . $row['workday'];
+    $latest_date = $latest_dates_lookup[$key] ?? null;
+
+    if ($latest_date && $row['start_date'] == $latest_date) {
+        $active_count++;
+    } else {
+        $inactive_count++;
     }
 }
 
-// Filter the results based on selected statuses
-if (!empty($filterStatus)) {
-    foreach ($data as $associateNumber => &$entries) {
-        $entries = array_filter($entries, function ($entry) use ($filterStatus, $currentDate) {
-            $isActive =
-                empty($entry['end_date']) ||
-                strtotime($entry['end_date']) >= strtotime($currentDate);
-            $status = $isActive ? 'active' : 'history';
-            return in_array($status, $filterStatus);
-        });
-    }
-    // Remove associates with no matching entries
-    $data = array_filter($data);
-}
+$stats['active_schedules'] = $active_count;
+$stats['inactive_schedules'] = $inactive_count;
 ?>
 
 <!doctype html>
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'AW-11316670180');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
+    <title>Shift Schedule Viewer</title>
 
-
-    <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-
-    <!-- Template Main CSS File -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .stats-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .day-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 2px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        .status-badge-active {
+            background-color: #d1e7dd !important;
+            color: #0f5132 !important;
+        }
+
+        .status-badge-inactive {
+            background-color: #f8d7da !important;
+            color: #842029 !important;
+        }
+
+        .status-badge-mixed {
+            background-color: #fff3cd !important;
+            color: #664d03 !important;
+        }
+
+        .time-slot {
+            font-weight: 600;
+            color: #0d6efd;
+        }
+
+        .inactive-row {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .associate-name {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .associate-id {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .shift-duration {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
-    <!-- Include Select2 JS -->
+</head>
+
+<body>
+    <?php include 'includes/header.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
+
+    <main id="main" class="main">
+        <div class="pagetitle">
+            <h1><?php echo getPageTitle(); ?></h1>
+            <?php echo generateDynamicBreadcrumb(); ?>
+        </div><!-- End Page Title -->
+
+        <section class="section">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Total Schedules</h6>
+                                        <h3 class="mb-0"><?php echo $stats['total_schedules']; ?></h3>
+                                    </div>
+                                    <i class="bi bi-calendar3" style="font-size: 1.5rem; color: #3498db;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Active Schedules</h6>
+                                        <h3 class="mb-0"><?php echo $stats['active_schedules']; ?></h3>
+                                    </div>
+                                    <i class="bi bi-check-circle" style="font-size: 1.5rem; color: #27ae60;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Inactive Schedules</h6>
+                                        <h3 class="mb-0"><?php echo $stats['inactive_schedules']; ?></h3>
+                                    </div>
+                                    <i class="bi bi-x-circle" style="font-size: 1.5rem; color: #e74c3c;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Unique Associates</h6>
+                                        <h3 class="mb-0"><?php echo $stats['unique_associates']; ?></h3>
+                                    </div>
+                                    <i class="bi bi-people" style="font-size: 1.5rem; color: #9b59b6;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters Section -->
+                    <div class="filter-section">
+                        <form method="GET" action="" id="filter-form">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Associate</label>
+                                    <input type="hidden" class="form-control" id="associate-filter" name="associate"
+                                        value="<?php echo htmlspecialchars($associate_filter); ?>">
+                                    <select class="form-control select2" id="associate-select">
+                                        <option value=""></option>
+                                        <?php if (!empty($associate_filter)):
+                                            $assoc_query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = $1";
+                                            $assoc_result = pg_query_params($con, $assoc_query, [$associate_filter]);
+                                            $assoc_name = pg_fetch_result($assoc_result, 0, 0) ?? $associate_filter;
+                                        ?>
+                                            <option value="<?php echo htmlspecialchars($associate_filter); ?>" selected>
+                                                <?php echo htmlspecialchars($associate_filter . ' - ' . $assoc_name); ?>
+                                            </option>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" class="form-control" name="start_date"
+                                        value="<?php echo htmlspecialchars($start_date_filter); ?>">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" class="form-control" name="end_date"
+                                        value="<?php echo htmlspecialchars($end_date_filter); ?>">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Day</label>
+                                    <select class="form-select" name="day">
+                                        <option value="">All Days</option>
+                                        <option value="Mon" <?php echo $day_filter == 'Mon' ? 'selected' : ''; ?>>Monday</option>
+                                        <option value="Tue" <?php echo $day_filter == 'Tue' ? 'selected' : ''; ?>>Tuesday</option>
+                                        <option value="Wed" <?php echo $day_filter == 'Wed' ? 'selected' : ''; ?>>Wednesday</option>
+                                        <option value="Thu" <?php echo $day_filter == 'Thu' ? 'selected' : ''; ?>>Thursday</option>
+                                        <option value="Fri" <?php echo $day_filter == 'Fri' ? 'selected' : ''; ?>>Friday</option>
+                                        <option value="Sat" <?php echo $day_filter == 'Sat' ? 'selected' : ''; ?>>Saturday</option>
+                                        <option value="Sun" <?php echo $day_filter == 'Sun' ? 'selected' : ''; ?>>Sunday</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" name="show_inactive"
+                                            value="1" id="showInactive" <?php echo $show_inactive ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="showInactive">
+                                            Show Inactive Schedules
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-filter"></i> Apply Filters
+                                    </button>
+                                    <a href="view_shift.php" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </a>
+                                    <button type="button" class="btn btn-success" onclick="exportToCSV()">
+                                        <i class="bi bi-download"></i> Export CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Schedule Table -->
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="table-id">
+                                <thead>
+                                    <tr>
+                                        <th>Associate</th>
+                                        <th>Working Days</th>
+                                        <th>Shift Time</th>
+                                        <th>Date Range</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if ($data_result && pg_num_rows($data_result) > 0): ?>
+                                        <?php while ($row = pg_fetch_assoc($data_result)):
+                                            // Parse the date-day pairs to determine which schedules in this group are active
+                                            $date_day_pairs = explode(',', $row['date_day_pairs'] ?? '');
+                                            $active_in_group = 0;
+                                            $total_in_group = count($date_day_pairs);
+
+                                            foreach ($date_day_pairs as $pair) {
+                                                list($date_str, $workday) = explode('||', $pair);
+                                                $date = date('Y-m-d', strtotime($date_str));
+                                                $key = $row['associate_number'] . '_' . $workday;
+                                                $latest_date = $latest_dates_lookup[$key] ?? null;
+
+                                                if ($latest_date && $date == $latest_date) {
+                                                    $active_in_group++;
+                                                }
+                                            }
+
+                                            $all_active = ($active_in_group == $total_in_group);
+                                            $some_active = ($active_in_group > 0 && $active_in_group < $total_in_group);
+                                            $none_active = ($active_in_group == 0);
+
+                                            $is_inactive = $none_active;
+
+                                            // Calculate duration
+                                            $start_time = $row['formatted_start'];
+                                            $end_time = $row['formatted_end'];
+
+                                            // Convert time strings to DateTime objects
+                                            $start = DateTime::createFromFormat('h:i A', $start_time);
+                                            $end = DateTime::createFromFormat('h:i A', $end_time);
+
+                                            if ($start && $end) {
+                                                if ($end < $start) {
+                                                    $end->modify('+1 day');
+                                                }
+                                                $interval = $start->diff($end);
+                                                $duration = $interval->h . 'h ' . $interval->i . 'm';
+                                            } else {
+                                                $duration = 'N/A';
+                                            }
+
+                                            // Skip if showing inactive is off and this group has no active schedules
+                                            if (!$show_inactive && $none_active) {
+                                                continue;
+                                            }
+                                        ?>
+                                            <tr class="<?php echo $none_active ? 'inactive-row' : ''; ?>">
+                                                <td>
+                                                    <div class="associate-name"><?php echo htmlspecialchars($row['fullname'] ?? 'N/A'); ?></div>
+                                                    <div class="associate-id">ID: <?php echo htmlspecialchars($row['associate_number']); ?></div>
+                                                    <small class="text-muted"><?php echo htmlspecialchars($row['position'] ?? ''); ?></small>
+                                                </td>
+
+                                                <td>
+                                                    <?php
+                                                    $workdays = explode(',', $row['workdays'] ?? '');
+                                                    foreach ($workdays as $day):
+                                                        $day = trim($day);
+                                                        if (!empty($day)):
+                                                    ?>
+                                                            <span class="day-badge"><?php echo $day; ?></span>
+                                                    <?php
+                                                        endif;
+                                                    endforeach;
+                                                    ?>
+                                                    <div class="text-muted mt-1"><?php echo $row['day_count'] ?? '0'; ?> days</div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="time-slot"><?php echo $row['formatted_start']; ?> - <?php echo $row['formatted_end']; ?></div>
+                                                    <div class="shift-duration"><?php echo $duration; ?></div>
+                                                </td>
+
+                                                <td>
+                                                    <div><?php echo $row['formatted_start_date']; ?></div>
+                                                    <?php if ($row['formatted_start_date'] != $row['formatted_end_date']): ?>
+                                                        <div class="text-muted">to <?php echo $row['formatted_end_date']; ?></div>
+                                                    <?php endif; ?>
+                                                    <div class="text-muted"><?php echo $row['total_schedules'] ?? '1'; ?> schedules</div>
+                                                </td>
+
+                                                <td>
+                                                    <?php if ($all_active): ?>
+                                                        <span class="day-badge status-badge-active">All Active</span>
+                                                        <br><small class="text-muted"><?php echo $active_in_group; ?>/<?php echo $total_in_group; ?> active</small>
+                                                    <?php elseif ($some_active): ?>
+                                                        <span class="day-badge status-badge-mixed">Some Active</span>
+                                                        <br><small class="text-muted"><?php echo $active_in_group; ?>/<?php echo $total_in_group; ?> active</small>
+                                                    <?php else: ?>
+                                                        <span class="day-badge status-badge-inactive">All Inactive</span>
+                                                        <br><small class="text-muted"><?php echo $active_in_group; ?>/<?php echo $total_in_group; ?> active</small>
+                                                    <?php endif; ?>
+                                                </td>
+
+                                                <td>
+                                                    <small class="text-muted">
+                                                        <?php echo $row['formatted_updated'] ?? 'N/A'; ?>
+                                                    </small>
+                                                </td>
+
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary"
+                                                            onclick="viewGroupDetails('<?php echo $row['associate_number']; ?>', 
+                                                                                      '<?php echo $row['formatted_start']; ?>', 
+                                                                                      '<?php echo $row['formatted_end']; ?>')"
+                                                            title="View All Schedules in This Group">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endwhile; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5">
+                                                <i class="bi bi-calendar-x" style="font-size: 3rem; color: #95a5a6;"></i>
+                                                <h5 class="mt-3">No schedules found</h5>
+                                                <p class="text-muted">Try adjusting your filters or create new schedules.</p>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Grouped View:</strong> Showing schedules with same shift timings grouped together.
+                            Click "View" to see all individual schedules in this group.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Viewing Group Schedules -->
+    <div class="modal fade" id="groupScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Schedule Group Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="group-schedule-details">
+                    Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for associate numbers
-            $('#associate_number').select2({
+            // Initialize Select2 for associate search
+            $('#associate-select').select2({
                 ajax: {
                     url: 'fetch_associates.php',
                     dataType: 'json',
@@ -177,165 +573,89 @@ if (!empty($filterStatus)) {
                     },
                     processResults: function(data) {
                         return {
-                            results: data.results
+                            results: data.results || []
                         };
                     },
                     cache: true
                 },
                 minimumInputLength: 2,
-                placeholder: 'Select associate(s)',
+                placeholder: 'Search associate...',
                 allowClear: true,
-                multiple: false
+                theme: 'bootstrap-5'
+            }).on('select2:select', function(e) {
+                $('#associate-filter').val(e.params.data.id);
+            }).on('select2:clear', function() {
+                $('#associate-filter').val('');
             });
         });
+
+        function viewGroupDetails(associateNumber, startTime, endTime) {
+            $('#group-schedule-details').html('<div class="text-center p-4"><div class="spinner-border" role="status"></div><p class="mt-2">Loading group schedules...</p></div>');
+            var modal = new bootstrap.Modal(document.getElementById('groupScheduleModal'));
+            modal.show();
+
+            $.ajax({
+                url: 'get_schedule_details.php',
+                method: 'GET',
+                data: {
+                    associate_number: associateNumber,
+                    start_time: startTime,
+                    end_time: endTime
+                },
+                success: function(response) {
+                    $('#group-schedule-details').html(response);
+                },
+                error: function() {
+                    $('#group-schedule-details').html('<div class="alert alert-danger">Error loading group schedules.</div>');
+                }
+            });
+        }
+
+        function exportToCSV() {
+            let csv = [];
+            let rows = document.querySelectorAll("table tr");
+
+            // Add headers
+            let headers = [];
+            document.querySelectorAll("table thead th").forEach(th => {
+                headers.push('"' + th.innerText.replace(/"/g, '""') + '"');
+            });
+            csv.push(headers.join(","));
+
+            // Add data rows
+            for (let i = 1; i < rows.length; i++) {
+                let row = [],
+                    cols = rows[i].querySelectorAll("td");
+                if (cols.length === 0) continue;
+
+                for (let j = 0; j < cols.length; j++) {
+                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                }
+                csv.push(row.join(","));
+            }
+
+            // Download CSV
+            let csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "shift_schedules_" + new Date().toISOString().slice(0, 10) + ".csv");
+            document.body.appendChild(link);
+            link.click();
+        }
     </script>
-</head>
-
-<body>
-    <?php include 'includes/header.php'; ?>
-    <?php include 'inactive_session_expire_check.php'; ?>
-
-    <main id="main" class="main">
-
-        <div class="pagetitle">
-            <h1><?php echo getPageTitle(); ?></h1>
-            <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
-
-        <section class="section dashboard">
-            <div class="row">
-
-                <!-- Reports -->
-                <div class="col-12">
-                    <div class="card">
-
-                        <div class="card-body">
-                            <br>
-                            <div class="container">
-                                <form method="GET" action="" class="filter-form d-flex flex-wrap" style="gap: 10px;">
-                                    <!-- Associate Number Input -->
-                                    <div class="col-md-3 col-lg-2">
-                                        <div class="form-group">
-                                            <select class="form-control" id="associate_number" name="associate_number" required>
-                                                <?php if (!empty($associateNumber)): ?>
-                                                    <option value="<?= isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null ?>" selected><?= isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null ?></option>
-                                                <?php endif; ?>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Status Multiselect Dropdown -->
-                                    <div class="form-group">
-                                        <select class="form-select" style="min-width: 200px;" id="filter_status" name="filter_status[]" multiple>
-                                            <option value="active" <?php echo in_array('active', $_GET['filter_status'] ?? ['active']) ? 'selected' : ''; ?>>Active</option>
-                                            <option value="history" <?php echo in_array('history', $_GET['filter_status'] ?? []) ? 'selected' : ''; ?>>History</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Submit Button -->
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Filter
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table id="scheduleTable" class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Associate Number</th>
-                                            <th>Associate Name</th>
-                                            <th>Association Type</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Reporting Time</th>
-                                            <th>Exit Time</th>
-                                            <th>Work Days</th>
-                                            <th>Working Hours</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($data as $associateRows): ?>
-                                            <?php foreach ($associateRows as $row): ?>
-                                                <?php
-                                                // Determine if this is an active record
-                                                $isActive =
-                                                    empty($row['end_date']) ||
-                                                    strtotime($row['end_date']) >= strtotime($currentDate);
-                                                $rowClass = $isActive ? 'table-success' : '';
-                                                ?>
-                                                <tr class="<?php echo $rowClass; ?>">
-                                                    <td><?php echo htmlspecialchars($row['associate_number']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['fullname']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['job_type']); ?> -<?php echo htmlspecialchars($row['engagement']); ?></td>
-                                                    <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $endDate = $row['end_date'];
-                                                        if ($endDate && $endDate != $currentDate) {
-                                                            echo date("d/m/Y", strtotime($endDate));
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                    <td><?php echo date("h:i A", strtotime($row['reporting_time'])); ?></td>
-                                                    <td><?php echo date("h:i A", strtotime($row['exit_time'])); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['workdays']); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $exit_time = $row['exit_time'];
-                                                        $reporting_time = $row['reporting_time'];
-
-                                                        $exit_seconds = strtotime($exit_time);
-                                                        $reporting_seconds = strtotime($reporting_time);
-
-                                                        if ($exit_seconds !== false && $reporting_seconds !== false) {
-                                                            $duration = $exit_seconds - $reporting_seconds;
-                                                            $hours = floor($duration / 3600);
-                                                            $minutes = floor(($duration % 3600) / 60);
-                                                            echo htmlspecialchars($hours . 'h ' . $minutes . 'm');
-                                                        } else {
-                                                            echo 'Invalid time format';
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main><!-- End #main -->
-
-    <!-- Bootstrap JS and Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-
     <script>
         $(document).ready(function() {
-            // Initialize DataTables
-            $('#scheduleTable').DataTable({
-                order: [], // Disable initial sorting
-                columnDefs: [{
-                        targets: [2, 3, 4, 5, 6, 7, 8],
-                        orderable: false
-                    } // Disable sorting on all columns except first two
-                ]
-            });
-
-            // Initialize Select2 for status filter
-            $('#filter_status').select2({
-                placeholder: "Select status",
-                allowClear: true
-            });
+            <?php if ($data_result && pg_num_rows($data_result) > 0): ?>
+                $('#table-id').DataTable({
+                    order: [],
+                    columnDefs: [{
+                            orderable: false,
+                            targets: 6
+                        } // Actions column
+                    ]
+                });
+            <?php endif; ?>
         });
     </script>
 </body>
