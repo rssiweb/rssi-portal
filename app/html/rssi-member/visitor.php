@@ -653,7 +653,7 @@ if (!$phoneNumber) {
     </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
-        const scriptURL = 'payment-api.php'
+        const scriptURL = 'api/visit-us.php'
         const form = document.getElementById('visitreviewform')
         form.addEventListener('submit', e => {
             e.preventDefault()

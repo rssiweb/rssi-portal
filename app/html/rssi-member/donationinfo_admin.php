@@ -452,26 +452,29 @@ if ($searchField !== '' || $fyear !== '') {
   <script>
     var data = <?php echo json_encode($resultArr) ?>;
     //For form submission - to update Remarks
-    const scriptURL = 'payment-api.php'
+    const scriptURL = 'api/donation.php'
 
-    const form = document.getElementById('donation_review')
+    const form = document.getElementById('donation_review');
+
     form.addEventListener('submit', e => {
-      e.preventDefault()
+      e.preventDefault();
+
       fetch(scriptURL, {
           method: 'POST',
-          body: new FormData(document.getElementById('donation_review'))
+          body: new FormData(form)
         })
-        .then(response => response.text())
+        .then(response => response.json()) // parse JSON
         .then(result => {
-          if (result === 'success') {
-            alert("Record has been updated.");
+          if (result.status === 'success') {
+            alert('Record has been updated.');
             location.reload();
           } else {
-            alert("Error updating record. Please try again later or contact support.");
+            alert(result.message || 'Error updating record. Please try again later.');
           }
         })
         .catch(error => {
-          console.error('Error!', error.message);
+          console.error('Error!', error);
+          alert('Something went wrong. Please try again later.');
         });
     });
 
