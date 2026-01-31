@@ -90,30 +90,29 @@ employee_workdays AS (
     LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
+    -- UPDATED: Get the latest schedule for each date from associate_schedule_v2
     LEFT JOIN LATERAL (
-        SELECT s.workdays
-        FROM associate_schedule s
+        SELECT s.workday, s.start_date AS schedule_start
+        FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
+        -- Match day of week
+        AND s.workday = 
+            CASE DATE_PART('dow', h.attendance_date)
+                WHEN 1 THEN 'Mon'
+                WHEN 2 THEN 'Tue'
+                WHEN 3 THEN 'Wed'
+                WHEN 4 THEN 'Thu'
+                WHEN 5 THEN 'Fri'
+                WHEN 6 THEN 'Sat'
+                WHEN 0 THEN 'Sun'
+            END
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
     WHERE 
-        -- If schedule exists, check if day is in workdays
-        (sched.workdays IS NOT NULL AND 
-         CASE 
-             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
-             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
-             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
-             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
-             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
-             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
-             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
-         END)
-        OR
-        -- If no schedule exists, use default logic
-        (sched.workdays IS NULL AND 
-         (DATE_PART('dow', h.attendance_date) != 0 OR w.is_workday IS NOT NULL)) -- Exclude Sundays unless they are marked as workdays
+        -- UPDATED: Only count workdays if a schedule exists for that day OR it's an exceptional workday
+        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber
 ),
@@ -139,30 +138,29 @@ others_workdays AS (
     LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
+    -- UPDATED: Get the latest schedule for each date from associate_schedule_v2
     LEFT JOIN LATERAL (
-        SELECT s.workdays
-        FROM associate_schedule s
+        SELECT s.workday, s.start_date AS schedule_start
+        FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
+        -- Match day of week
+        AND s.workday = 
+            CASE DATE_PART('dow', h.attendance_date)
+                WHEN 1 THEN 'Mon'
+                WHEN 2 THEN 'Tue'
+                WHEN 3 THEN 'Wed'
+                WHEN 4 THEN 'Thu'
+                WHEN 5 THEN 'Fri'
+                WHEN 6 THEN 'Sat'
+                WHEN 0 THEN 'Sun'
+            END
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
     WHERE 
-        -- If schedule exists, check if day is in workdays
-        (sched.workdays IS NOT NULL AND 
-         CASE 
-             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
-             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
-             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
-             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
-             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
-             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
-             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
-         END)
-        OR
-        -- If no schedule exists, use default logic
-        (sched.workdays IS NULL AND 
-         (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 OR w.is_workday IS NOT NULL)) -- Monday to Thursday
+        -- UPDATED: Only count workdays if a schedule exists for that day OR it's an exceptional workday
+        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber
 ),
@@ -198,10 +196,10 @@ DynamicSchedule AS (
                 ELSE CURRENT_DATE
             END
         ) AS end_date
-    FROM associate_schedule s
+    FROM associate_schedule_v2 s  -- CHANGED: from associate_schedule to associate_schedule_v2
     INNER JOIN rssimyaccount_members m
         ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
+    ORDER BY s.associate_number, s.start_date, s.created_at DESC
 ),
 PunchInOut AS (
     SELECT
@@ -369,9 +367,9 @@ attendance_data AS (
                                 AND e.status = 'Approved'
                                 AND e.exception_type = 'entry'
                                 AND e.sub_exception_type = 'missed-entry'
-                                AND d.attendance_date = DATE(e.start_date_time)
-                                LIMIT 1
-                            ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
+                            AND d.attendance_date = DATE(e.start_date_time)
+                            LIMIT 1
+                        ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
                     -- If it's on time (or earlier), status should be NULL (not late)
                     ELSE NULL
                 END
@@ -447,12 +445,34 @@ SELECT
     m.position,
     m.phone,
     (
-        SELECT s.workdays 
-        FROM associate_schedule s 
-        WHERE s.associate_number = m.associatenumber
-        AND s.start_date <= '$endDate'::date
-        ORDER BY s.start_date DESC
-        LIMIT 1
+        -- FIXED: Get ALL distinct workdays from schedules that apply in this month
+        -- First get distinct workdays with their order, then aggregate
+        SELECT STRING_AGG(s.workday, ', ')
+        FROM (
+            SELECT DISTINCT s.workday,
+                CASE s.workday
+                    WHEN 'Mon' THEN 1
+                    WHEN 'Tue' THEN 2
+                    WHEN 'Wed' THEN 3
+                    WHEN 'Thu' THEN 4
+                    WHEN 'Fri' THEN 5
+                    WHEN 'Sat' THEN 6
+                    WHEN 'Sun' THEN 7
+                END AS day_order
+            FROM associate_schedule_v2 s 
+            WHERE s.associate_number = m.associatenumber
+            AND s.start_date <= '$endDate'::date
+            -- Get schedules that would apply for any date in the month
+            AND NOT EXISTS (
+                -- Exclude schedules that are superseded by later schedules for the same workday
+                SELECT 1 FROM associate_schedule_v2 s2
+                WHERE s2.associate_number = s.associate_number
+                AND s2.workday = s.workday
+                AND s2.start_date > s.start_date
+                AND s2.start_date <= '$endDate'::date
+            )
+            ORDER BY day_order
+        ) AS s
     ) AS current_schedule,
     CASE 
     WHEN m.engagement = 'Employee' THEN 
@@ -464,7 +484,7 @@ SELECT
         (SELECT workdays_others  
          FROM others_workdays  
          WHERE others_workdays.associatenumber = m.associatenumber)
-END AS work_schedule,
+    END AS work_schedule,
     h.holiday_dates, -- Corrected line
     (SELECT total_sundays FROM sunday_count) AS total_sundays,
     COUNT(*) FILTER (WHERE punch_in IS NOT NULL AND punch_out IS NOT NULL) AS days_worked,
@@ -535,7 +555,7 @@ $associateNumberCount = count($uniqueAssociateNumbers);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -899,8 +919,8 @@ $associateNumberCount = count($uniqueAssociateNumbers);
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

@@ -117,11 +117,23 @@ employee_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             )
+    -- Get the latest schedule for each date
     LEFT JOIN LATERAL (
-        SELECT s.workdays, s.start_date AS schedule_start
-        FROM associate_schedule s
+        SELECT s.workday, s.start_date AS schedule_start
+        FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
+        -- Match day of week
+        AND s.workday = 
+            CASE DATE_PART('dow', h.attendance_date)
+                WHEN 1 THEN 'Mon'
+                WHEN 2 THEN 'Tue'
+                WHEN 3 THEN 'Wed'
+                WHEN 4 THEN 'Thu'
+                WHEN 5 THEN 'Fri'
+                WHEN 6 THEN 'Sat'
+                WHEN 0 THEN 'Sun'
+            END
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
@@ -129,21 +141,11 @@ employee_workdays AS (
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        -- If schedule exists, check if day is in workdays
-        (sched.workdays IS NOT NULL AND 
-         CASE 
-             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
-             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
-             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
-             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
-             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
-             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
-             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
-         END)
-        OR
-        -- If no schedule exists, use default logic (Mon-Fri for employees)
-        (sched.workdays IS NULL AND 
-         (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 5 OR w.is_workday IS NOT NULL))
+        -- CHANGED: Only count workdays if:
+        -- 1. A schedule exists for that day (sched.workday IS NOT NULL)
+        -- 2. OR it's an exceptional workday (w.is_workday IS NOT NULL)
+        -- REMOVED: The default Monday-Friday logic
+        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber
 ),
@@ -167,11 +169,23 @@ others_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             )
+    -- Get the latest schedule for each date
     LEFT JOIN LATERAL (
-        SELECT s.workdays, s.start_date AS schedule_start
-        FROM associate_schedule s
+        SELECT s.workday, s.start_date AS schedule_start
+        FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
+        -- Match day of week
+        AND s.workday = 
+            CASE DATE_PART('dow', h.attendance_date)
+                WHEN 1 THEN 'Mon'
+                WHEN 2 THEN 'Tue'
+                WHEN 3 THEN 'Wed'
+                WHEN 4 THEN 'Thu'
+                WHEN 5 THEN 'Fri'
+                WHEN 6 THEN 'Sat'
+                WHEN 0 THEN 'Sun'
+            END
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
@@ -179,21 +193,8 @@ others_workdays AS (
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        -- If schedule exists, check if day is in workdays
-        (sched.workdays IS NOT NULL AND 
-         CASE 
-             WHEN DATE_PART('dow', h.attendance_date) = 0 THEN sched.workdays LIKE '%Sun%'
-             WHEN DATE_PART('dow', h.attendance_date) = 1 THEN sched.workdays LIKE '%Mon%'
-             WHEN DATE_PART('dow', h.attendance_date) = 2 THEN sched.workdays LIKE '%Tue%'
-             WHEN DATE_PART('dow', h.attendance_date) = 3 THEN sched.workdays LIKE '%Wed%'
-             WHEN DATE_PART('dow', h.attendance_date) = 4 THEN sched.workdays LIKE '%Thu%'
-             WHEN DATE_PART('dow', h.attendance_date) = 5 THEN sched.workdays LIKE '%Fri%'
-             WHEN DATE_PART('dow', h.attendance_date) = 6 THEN sched.workdays LIKE '%Sat%'
-         END)
-        OR
-        -- If no schedule exists, use default logic (Mon-Thu for others)
-        (sched.workdays IS NULL AND 
-         (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 OR w.is_workday IS NOT NULL))
+        -- CHANGED: Same logic - only count scheduled or exceptional workdays
+        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber
 ),
@@ -229,10 +230,10 @@ DynamicSchedule AS (
                 ELSE CURRENT_DATE
             END
         ) AS end_date
-    FROM associate_schedule s
+    FROM associate_schedule_v2 s  -- CHANGED: from associate_schedule to associate_schedule_v2
     INNER JOIN rssimyaccount_members m
         ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
+    ORDER BY s.associate_number, s.start_date, s.created_at DESC
 ),
 PunchInOut AS (
     SELECT
