@@ -637,7 +637,6 @@ class MenuConfig
                 'pages' => [
                     'student.php' => ['title' => 'RSSI Student', 'show_in_menu' => true],
                     'admission_admin.php' => ['title' => 'Admission Admin', 'show_in_menu' => false],
-                    'fees.php' => ['title' => 'Fees', 'show_in_menu' => false],
                     'sps.php' => ['title' => 'SPS', 'show_in_menu' => false]
                 ]
             ],
