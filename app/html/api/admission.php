@@ -129,7 +129,7 @@ try {
     CONCAT(
       RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),
       LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'),
-      LPAD(nextval('student_number_seq')::text, 4, '0')
+      LPAD(nextval('global_entity_seq')::text, 4, '0')
     ),
     $26,$27,$28
     )

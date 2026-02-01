@@ -107,7 +107,7 @@ $timestamp = date('Y-m-d H:i:s');
 $q = "
 SELECT CONCAT(
     TO_CHAR(CURRENT_DATE, 'YYMM'),                       -- Year + Month
-    LPAD(NEXTVAL('application_seq')::text, 4, '0'),     -- Sequence padded to 4 digits
+    LPAD(NEXTVAL('global_entity_seq')::text, 4, '0'),     -- Sequence padded to 4 digits
     LPAD(FLOOR(RANDOM() * 10000)::int::text, 4, '0')    -- Random 4-digit padding to reach 12 digits
 ) AS application_number;
   ";

@@ -175,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 CONCAT(
                 RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),     -- Current Year (2 digits)
                 LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'), -- Current Month (2 digits)
-                LPAD(NEXTVAL('associate_seq')::text, 3, '0')        -- Sequence starting from 676
+                LPAD(NEXTVAL('global_entity_seq')::text, 3, '0')        -- Sequence
             ) AS associatenumber;
             college_name,
             enrollment_number
