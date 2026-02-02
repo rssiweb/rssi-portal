@@ -21,7 +21,7 @@ validation();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Bootstrap 5.3 CSS -->
@@ -94,19 +94,96 @@ validation();
             text-align: center;
         }
 
-        .match-item {
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .match-item:hover {
-            background-color: #f8f9fa;
-        }
-
         .spinner-text {
             display: inline-flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .profile-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e9ecef;
+        }
+
+        .profile-photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            border: 2px solid #e9ecef;
+        }
+
+        .match-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px !important;
+        }
+
+        .person-info {
+            flex: 1;
+        }
+
+        .person-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .selected-person-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e9ecef;
+        }
+
+        .selected-photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border: 2px solid #e9ecef;
+        }
+
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+
+        .selected-item:hover {
+            background-color: #f0f2f5;
+            border-color: #dee2e6;
+        }
+
+        .person-photo {
+            flex-shrink: 0;
+        }
+
+        .badge-sm {
+            font-size: 0.7em;
+            padding: 0.25em 0.5em;
         }
     </style>
 </head>
@@ -229,300 +306,444 @@ validation();
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
+        // Global variables
+        let selectedPersons = [];
+        let latitude, longitude; // Declare globally
+
         function getLocation() {
             return new Promise((resolve, reject) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        position => {
-                            latitude = position.coords.latitude; // Store latitude in the variable
-                            longitude = position.coords.longitude; // Store longitude in the variable
-                            resolve(); // Resolve the promise when location is retrieved
-                        },
-                        error => {
-                            alert("Error getting location: " + error.message);
-                            reject(error); // Reject the promise on error
-                        }
-                    );
-                } else {
-                    alert("Geolocation is not supported by this browser.");
-                    reject(new Error("Geolocation not supported"));
+                if (!navigator.geolocation) {
+                    reject(new Error("Geolocation is not supported by this browser."));
+                    return;
                 }
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        latitude = position.coords.latitude;
+                        longitude = position.coords.longitude;
+                        resolve({
+                            latitude,
+                            longitude
+                        });
+                    },
+                    error => {
+                        const errorMessages = {
+                            1: "Permission denied",
+                            2: "Position unavailable",
+                            3: "Request timeout"
+                        };
+                        const message = errorMessages[error.code] || "Unknown error";
+                        reject(new Error(message));
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
             });
         }
-    </script>
 
-    <script>
-        $(document).ready(function() {
-            // Array to store selected persons
-            let selectedPersons = [];
+        // Utility functions
+        function getInitials(name) {
+            if (!name) return '';
+            const nameParts = name.trim().split(' ');
+            const firstInitial = nameParts[0].charAt(0);
+            const secondInitial = nameParts[1] ? nameParts[1].charAt(0) :
+                (nameParts[0].length > 1 ? nameParts[0].charAt(1) : '');
+            return (firstInitial + secondInitial).toUpperCase();
+        }
 
-            // Set default punch in time to current time
+        function getPhotoUrl(person) {
+            return person.type === 'student' ?
+                (person.photourl || person.photo || '') :
+                (person.photo || person.photourl || '');
+        }
+
+        function getStatusBadgeClass(filterstatus) {
+            switch (filterstatus) {
+                case 'Inactive':
+                    return 'bg-danger';
+                case 'Pending':
+                    return 'bg-warning';
+                default:
+                    return 'bg-success';
+            }
+        }
+
+        function getTypeBadgeInfo(type) {
+            return {
+                class: type === 'student' ? 'bg-info' : 'bg-primary',
+                text: type === 'student' ? 'Student' : 'Associate'
+            };
+        }
+
+        function handleImageError(img, initials, size = 40) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'profile-photo-placeholder';
+            placeholder.style.width = `${size}px`;
+            placeholder.style.height = `${size}px`;
+            placeholder.style.fontSize = `${size/3}px`;
+            placeholder.textContent = initials;
+
+            img.parentNode.replaceChild(placeholder, img);
+        }
+
+        function getPersonIdentifier(person) {
+            return `${person.type}_${person.id}`;
+        }
+
+        function setCurrentDateTime() {
             const now = new Date();
             const timezoneOffset = now.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(now - timezoneOffset)).toISOString().slice(0, 16);
-            $('#punchInTime').val(localISOTime);
+            return new Date(now - timezoneOffset).toISOString().slice(0, 16);
+        }
 
-            // Add person to list
-            $('#addPerson').click(function() {
-                const searchTerm = $('#personSearch').val().trim();
-
-                if (!searchTerm) {
-                    alert('Please enter a name or ID to search');
-                    return;
-                }
-
-                const addBtn = $(this);
-                const btnText = addBtn.find('span');
-                // Save original text
-                const originalText = btnText.text();
-
-                // Update to loading state
-                addBtn.prop('disabled', true);
-                btnText.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Searching');
-
-                $.ajax({
-                    url: 'search_person.php',
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {
-                        search_term: searchTerm
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            if (response.matches.length === 1) {
-                                // Single match - add directly
-                                addToAttendanceList(response.matches[0]);
-                            } else if (response.matches.length > 1) {
-                                // Multiple matches - show selection modal
-                                showSelectionModal(response.matches);
-                            } else {
-                                alert('No matching person found');
-                            }
-                        } else {
-                            alert(response.message || 'Person not found or not eligible for Remote Attendance');
-                        }
-                    },
-                    error: function() {
-                        alert('Error searching for person. Please try again.');
-                    },
-                    complete: function() {
-                        btnText.html('<i class="bi bi-plus-lg me-1"></i> Add');
-                        addBtn.prop('disabled', false);
-                        $('#personSearch').val('');
-                    }
-                });
-            });
-
-            // Show selection modal - CORRECTED VERSION
-            function showSelectionModal(matches) {
-                const list = $('#matchesList');
-                list.empty();
-
-                matches.forEach(person => {
-                    const item = $(`
-            <a href="#" class="list-group-item list-group-item-action match-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${person.name}</strong>
-                        ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
-                        <div class="text-muted small">ID: ${person.id}</div>
-                    </div>
-                    <span class="badge ${person.filterstatus === 'Active' ? 'bg-success' : 'bg-danger'}">
-                        ${person.filterstatus}
-                    </span>
-                </div>
-            </a>
-        `);
-                    item.data('person', person);
-                    list.append(item);
-                });
-
-                // SINGLE event handler binding
-                list.off('click', '.match-item').on('click', '.match-item', function(e) {
-                    e.preventDefault();
-                    const person = $(this).data('person');
-                    if (!addToAttendanceList(person)) {
-                        alert(`${person.name} (ID: ${person.id}) is already in the list`);
-                    } else {
-                        $('#selectionModal').modal('hide');
-                    }
-                });
-
-                $('#selectionModal').modal('show');
-            }
-
-            // Add person to attendance list - CORRECTED VERSION
-            function addToAttendanceList(person) {
-                const personId = `${person.type}_${person.id}`;
-
-                // Debug: Log what we're checking against
-                console.log('Checking:', personId, 'against', selectedPersons.map(p => p.id));
-
-                if (!selectedPersons.some(p => p.id === personId)) {
-                    selectedPersons.push({
-                        id: personId,
-                        name: person.name,
-                        identifier: person.id,
-                        type: person.type,
-                        filterstatus: person.filterstatus,
-                        class: person.class || ''
-                    });
-                    updateSelectedList();
-                    return true;
-                }
-                return false;
-            }
-
-            // Remove person from list
-            $(document).on('click', '.remove-item', function() {
-                const personId = $(this).data('id');
-                selectedPersons = selectedPersons.filter(p => p.id !== personId);
-                updateSelectedList();
-            });
-
-            // Update the selected persons list
-            function updateSelectedList() {
-                const list = $('#selectedPersonsList');
-                const noSelection = $('#noSelectionMessage');
-
-                list.empty();
-
-                if (selectedPersons.length === 0) {
-                    noSelection.show();
-                } else {
-                    noSelection.hide();
-                    selectedPersons.forEach(person => {
-                        list.append(`
-                            <div class="selected-item">
-                                <div>
-                                    <strong>${person.name}</strong>
-                                    ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
-                                    <div class="text-muted small">ID: ${person.identifier} (${person.filterstatus})</div>
-                                </div>
-                                <span class="remove-item" data-id="${person.id}">
-                                    <i class="bi bi-x-circle-fill"></i>
-                                </span>
-                            </div>
-                        `);
-                    });
-                }
-
-                $('#selectedCount').text(selectedPersons.length);
-                $('#selectedPersons').val(JSON.stringify(selectedPersons));
-            }
-
-            // Form submission
-            $('#attendanceForm').on('submit', async function(e) {
-                e.preventDefault();
-
-                if (selectedPersons.length === 0) {
-                    alert('Please add at least one person to the attendance list');
-                    return;
-                }
-
-                const punchInTime = $('#punchInTime').val();
-                if (!punchInTime) {
-                    alert('Please select a valid punch in time');
-                    return;
-                }
-
-                if (confirm(`Confirm attendance for ${selectedPersons.length} persons?`)) {
-                    try {
-                        // First get location
-                        await getLocation(); // This will populate latitude/longitude variables
-
-                        // Then submit attendance with location data
-                        await submitAttendance();
-                    } catch (error) {
-                        if (error.message === "Geolocation not supported" ||
-                            error.message.includes("Error getting location")) {
-                            // If geolocation fails, submit without it
-                            if (confirm("Location access was denied or not supported. Submit without location data?")) {
-                                await submitAttendance(false);
-                            }
-                        } else {
-                            alert("Error: " + error.message);
-                        }
-                    }
-                }
-            });
-
-            async function submitAttendance(includeLocation = true) {
-                const remarks = $('#remarks').val();
-                const punchInTime = $('#punchInTime').val();
-                const recordedBy = '<?php echo $associatenumber; ?>';
-                const submitBtn = $('#submitAttendance');
-                const btnText = submitBtn.html();
-
-                // Prepare data with optional location
-                const data = {
-                    persons: selectedPersons.map(p => p.id),
-                    remarks: remarks,
-                    recorded_by: recordedBy,
-                    punch_in_time: punchInTime
-                };
-
-                if (includeLocation && typeof latitude !== 'undefined' && typeof longitude !== 'undefined') {
-                    data.latitude = latitude;
-                    data.longitude = longitude;
-                }
-
-                try {
-                    submitBtn.prop('disabled', true)
-                        .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...');
-
-                    const response = await $.ajax({
-                        url: 'submit_manual_attendance.php',
-                        method: 'POST',
-                        contentType: 'application/json',
-                        dataType: 'json',
-                        data: JSON.stringify(data)
-                    });
-
-                    if (response.success) {
-                        alert(`Attendance recorded successfully for ${response.count} persons`);
-                        selectedPersons = [];
-                        updateSelectedList();
-                        $('#remarks').val('');
-                        // Reset punch in time to current time
-                        const now = new Date();
-                        const timezoneOffset = now.getTimezoneOffset() * 60000;
-                        const localISOTime = (new Date(now - timezoneOffset)).toISOString().slice(0, 16);
-                        $('#punchInTime').val(localISOTime);
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                } catch (error) {
-                    alert('Failed to submit attendance. Please try again. Error: ' +
-                        (error.responseJSON?.message || error.statusText || error));
-                } finally {
-                    submitBtn.prop('disabled', false).html(btnText);
-                }
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        function setDateInputLimits() {
             const input = document.getElementById("punchInTime");
             const now = new Date();
-
-            // Format YYYY-MM-DD
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
 
-            const today = `${year}-${month}-${day}T00:00`;
-            const tomorrow = `${year}-${month}-${day}T23:59`;
+            input.min = `${year}-${month}-${day}T00:00`;
+            input.max = `${year}-${month}-${day}T23:59`;
+        }
 
-            // Set min and max so only current date is allowed
-            input.setAttribute("min", today);
-            input.setAttribute("max", tomorrow);
+        // Person-related functions
+        function isPersonAlreadySelected(personId) {
+            return selectedPersons.some(p => p.id === personId);
+        }
+
+        function addToAttendanceList(person) {
+            const personId = getPersonIdentifier(person);
+
+            if (isPersonAlreadySelected(personId)) {
+                return false;
+            }
+
+            selectedPersons.push({
+                id: personId,
+                name: person.name,
+                identifier: person.id,
+                type: person.type,
+                filterstatus: person.filterstatus,
+                class: person.class || '',
+                photourl: person.photourl || '',
+                photo: person.photo || ''
+            });
+
+            updateSelectedList();
+            return true;
+        }
+
+        function removePerson(personId) {
+            selectedPersons = selectedPersons.filter(p => p.id !== personId);
+            updateSelectedList();
+        }
+
+        // UI update functions
+        function updateSelectedList() {
+            const list = $('#selectedPersonsList');
+            const noSelection = $('#noSelectionMessage');
+
+            list.empty();
+
+            // ALWAYS update count & hidden input
+            $('#selectedCount').text(selectedPersons.length);
+            $('#selectedPersons').val(JSON.stringify(selectedPersons));
+
+            if (selectedPersons.length === 0) {
+                noSelection.show();
+                return;
+            }
+
+            noSelection.hide();
+
+            selectedPersons.forEach(person => {
+                const photoUrl = getPhotoUrl(person);
+                const initials = getInitials(person.name);
+                const statusBadgeClass = getStatusBadgeClass(person.filterstatus);
+                const typeBadgeInfo = getTypeBadgeInfo(person.type);
+
+                let photoHtml;
+                if (photoUrl) {
+                    photoHtml = `
+                    <img src="${photoUrl}" 
+                         alt="${person.name}" 
+                         class="selected-person-photo" 
+                         onerror="handleImageError(this, '${initials}', 40)">`;
+                } else {
+                    photoHtml = `<div class="selected-photo-placeholder">${initials}</div>`;
+                }
+
+                list.append(`
+                <div class="selected-item">
+                    <div class="d-flex align-items-center">
+                        <div class="person-photo me-3">
+                            ${photoHtml}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <strong class="me-2">${person.name}</strong>
+                                ${person.class ? `<span class="text-muted">${person.class}</span>` : ''}
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted small me-2">ID: ${person.identifier}</span>
+                                <span class="badge ${statusBadgeClass} badge-sm me-2">${person.filterstatus}</span>
+                                <span class="badge ${typeBadgeInfo.class} badge-sm">${typeBadgeInfo.text}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link p-0 remove-item" data-id="${person.id}" title="Remove">
+                        <i class="bi bi-x-circle-fill text-danger"></i>
+                    </button>
+                </div>
+            `);
+            });
+
+            $('#selectedCount').text(selectedPersons.length);
+            $('#selectedPersons').val(JSON.stringify(selectedPersons));
+        }
+
+        function showSelectionModal(matches) {
+            const list = $('#matchesList');
+            list.empty();
+
+            matches.forEach(person => {
+                const photoUrl = getPhotoUrl(person);
+                const initials = getInitials(person.name);
+                const typeBadgeInfo = getTypeBadgeInfo(person.type);
+                const statusBadgeClass = getStatusBadgeClass(person.filterstatus);
+
+                let photoHtml;
+                if (photoUrl) {
+                    photoHtml = `<img src="${photoUrl}" alt="${person.name}" class="profile-photo" onerror="handleImageError(this, '${initials}')">`;
+                } else {
+                    photoHtml = `<div class="profile-photo-placeholder">${initials}</div>`;
+                }
+
+                const item = $(`
+                <a href="#" class="list-group-item list-group-item-action match-item">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            ${photoHtml}
+                        </div>
+                        <div class="person-info">
+                            <div class="person-details">
+                                <strong>${person.name}</strong>
+                                ${person.class ? `<span class="text-muted ms-2">${person.class}</span>` : ''}
+                                <div class="text-muted small">
+                                    ID: ${person.id} 
+                                    <span class="badge ${statusBadgeClass} ms-2">
+                                        ${person.filterstatus}
+                                    </span>
+                                    <span class="badge ${typeBadgeInfo.class} ms-2">
+                                        ${typeBadgeInfo.text}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `);
+
+                item.data('person', person);
+                list.append(item);
+            });
+
+            // Event delegation for better performance
+            list.off('click', '.match-item').on('click', '.match-item', function(e) {
+                e.preventDefault();
+                const person = $(this).data('person');
+
+                if (!addToAttendanceList(person)) {
+                    alert(`${person.name} (ID: ${person.id}) is already in the list`);
+                } else {
+                    $('#selectionModal').modal('hide');
+                }
+            });
+
+            $('#selectionModal').modal('show');
+        }
+
+        // AJAX functions
+        function searchPerson(searchTerm) {
+            return $.ajax({
+                url: 'search_person.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    search_term: searchTerm
+                }
+            });
+        }
+
+        async function submitAttendanceData(data) {
+            return $.ajax({
+                url: 'submit_manual_attendance.php',
+                method: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify(data)
+            });
+        }
+
+        // Event handlers
+        async function handleAddPerson() {
+            const searchTerm = $('#personSearch').val().trim();
+            const addBtn = $('#addPerson');
+            const btnText = addBtn.find('span');
+
+            if (!searchTerm) {
+                alert('Please enter a name or ID to search');
+                return;
+            }
+
+            // Save original state
+            const originalHtml = btnText.html();
+            addBtn.prop('disabled', true);
+            btnText.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Searching');
+
+            try {
+                const response = await searchPerson(searchTerm);
+
+                if (response.success) {
+                    if (response.matches.length === 1) {
+                        addToAttendanceList(response.matches[0]);
+                    } else if (response.matches.length > 1) {
+                        showSelectionModal(response.matches);
+                    } else {
+                        alert('No matching person found');
+                    }
+                } else {
+                    alert(response.message || 'Person not found or not eligible for Remote Attendance');
+                }
+            } catch (error) {
+                alert('Error searching for person. Please try again.');
+                console.error('Search error:', error);
+            } finally {
+                // Restore button state
+                btnText.html(originalHtml);
+                addBtn.prop('disabled', false);
+                $('#personSearch').val('');
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            if (selectedPersons.length === 0) {
+                alert('Please add at least one person to the attendance list');
+                return;
+            }
+
+            const punchInTime = $('#punchInTime').val();
+            if (!punchInTime) {
+                alert('Please select a valid punch in time');
+                return;
+            }
+
+            if (!confirm(`Confirm attendance for ${selectedPersons.length} person(s)?`)) {
+                return;
+            }
+
+            try {
+                await getLocation();
+                await submitAttendance();
+            } catch (error) {
+                if (error.message === "Geolocation not supported" ||
+                    error.message.includes("Permission denied")) {
+                    const proceed = confirm("Location access was denied or not supported. Submit without location data?");
+                    if (proceed) {
+                        await submitAttendance(false);
+                    }
+                } else {
+                    alert("Error: " + error.message);
+                }
+            }
+        }
+
+        async function submitAttendance(includeLocation = true) {
+            const remarks = $('#remarks').val();
+            const punchInTime = $('#punchInTime').val();
+            const recordedBy = '<?php echo $associatenumber; ?>';
+            const submitBtn = $('#submitAttendance');
+
+            // Save original state
+            const originalHtml = submitBtn.html();
+            submitBtn.prop('disabled', true)
+                .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...');
+
+            // Prepare data
+            const data = {
+                persons: selectedPersons.map(p => p.id),
+                remarks: remarks,
+                recorded_by: recordedBy,
+                punch_in_time: punchInTime
+            };
+
+            if (includeLocation && latitude !== undefined && longitude !== undefined) {
+                data.latitude = latitude;
+                data.longitude = longitude;
+            }
+
+            try {
+                const response = await submitAttendanceData(data);
+
+                if (response.success) {
+                    alert(`Attendance recorded successfully for ${response.count} person(s)`);
+                    resetForm();
+                } else {
+                    throw new Error(response.message || 'Unknown error');
+                }
+            } catch (error) {
+                const errorMessage = error.responseJSON?.message || error.statusText || error.message;
+                alert('Failed to submit attendance. Please try again. Error: ' + errorMessage);
+            } finally {
+                // Restore button state
+                submitBtn.prop('disabled', false).html(originalHtml);
+            }
+        }
+
+        function resetForm() {
+            selectedPersons = [];
+            updateSelectedList();
+            $('#remarks').val('');
+            $('#punchInTime').val(setCurrentDateTime());
+        }
+
+        // Main initialization
+        $(document).ready(function() {
+            // Set up initial values
+            $('#punchInTime').val(setCurrentDateTime());
+            setDateInputLimits();
+
+            // Event bindings
+            $('#addPerson').click(handleAddPerson);
+            $('#attendanceForm').on('submit', handleFormSubmit);
+
+            // Event delegation for remove buttons
+            $(document).on('click', '.remove-item', function() {
+                const personId = $(this).data('id');
+                removePerson(personId);
+            });
+
+            // Enter key support for search
+            $('#personSearch').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    handleAddPerson();
+                }
+            });
         });
+
+        // Initialize date limits when DOM is loaded
+        document.addEventListener("DOMContentLoaded", setDateInputLimits);
     </script>
+
 </body>
 
 </html>
