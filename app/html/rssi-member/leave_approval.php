@@ -246,7 +246,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -854,8 +854,8 @@ $resultArr = $result ? pg_fetch_all($result) : [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         // Calendar functionality
@@ -1261,6 +1261,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                         <th>Period</th>
                         <th>Days</th>
                         <th>Status</th>
+                        <th>Reviewed By</th>
                         <th>Remarks</th>
                     </tr>
                 </thead>
@@ -1278,6 +1279,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 <td>${formatDateForDisplay(event.fromdate)} - ${formatDateForDisplay(event.todate)}</td>
                 <td>${event.days}</td>
                 <td><span class="${statusClass} fw-bold">${event.status}</span></td>
+                <td>${event.reviewer_name}</td>
                 <td>${event.comment || '-'}</td>
             </tr>`;
                 });

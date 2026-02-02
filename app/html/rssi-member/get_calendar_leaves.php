@@ -89,12 +89,12 @@ if ($leaves) {
         $to_date = $leave['todate_formatted'] ?: $leave['todate'];
         $leave_days = floatval($leave['days']); // Convert to float to handle decimals
         $status = $leave['status'];
-        
+
         // Calculate total days in this leave period
         $start_timestamp = strtotime($from_date);
         $end_timestamp = strtotime($to_date);
         $total_leave_days = ($end_timestamp - $start_timestamp) / (60 * 60 * 24) + 1;
-        
+
         // If it's a single day leave with decimal days (like 0.5), use the original value
         if ($total_leave_days == 1 && $leave_days < 1) {
             $days_per_calendar_day = $leave_days;
@@ -102,19 +102,19 @@ if ($leaves) {
             // For multi-day leaves, distribute the total days evenly across calendar days
             $days_per_calendar_day = $leave_days / $total_leave_days;
         }
-        
+
         $has_leave_in_target_month = false;
-        
+
         // Loop through each day from fromdate to todate (inclusive)
         $current_timestamp = $start_timestamp;
         while ($current_timestamp <= $end_timestamp) {
             $date_str = date('Y-m-d', $current_timestamp);
             $current_month = date('n', $current_timestamp); // PHP month (1-12)
             $current_year = date('Y', $current_timestamp);
-            
+
             // Check if this day falls within the target month
             $is_in_target_month = ($current_month == $targetMonthPHP && $current_year == $targetYear);
-            
+
             if (!isset($calendar_data[$date_str])) {
                 $calendar_data[$date_str] = [];
             }
@@ -128,17 +128,18 @@ if ($leaves) {
                 'todate' => $to_date,
                 'days' => $leave_days,
                 'comment' => $leave['comment'],
+                'reviewer_name' => $leave['reviewer_name'],
                 'shift' => $leave['shift'] ?? '',
                 'days_this_date' => $days_per_calendar_day // Add this for accurate counting
             ];
-            
+
             // Only count statistics for days in the target month
             if ($is_in_target_month) {
                 $has_leave_in_target_month = true;
-                
+
                 // Add to total days (with decimal values)
                 $stats['total_days'] += $days_per_calendar_day;
-                
+
                 // Add to status-specific totals
                 if ($status === 'Approved') {
                     $stats['approved_days'] += $days_per_calendar_day;
@@ -148,17 +149,17 @@ if ($leaves) {
                     $stats['rejected_days'] += $days_per_calendar_day;
                 }
             }
-            
+
             // Move to next day
             $current_timestamp = strtotime('+1 day', $current_timestamp);
         }
-        
+
         // Count this application if it affects the target month
         if ($has_leave_in_target_month) {
             $stats['total_applications']++;
         }
     }
-    
+
     // For backward compatibility (but keep as decimals)
     $stats['total_leaves'] = $stats['total_days'];
     $stats['approved'] = $stats['approved_days'];
@@ -173,4 +174,3 @@ echo json_encode([
     'target_month' => $targetMonthPHP,
     'target_year' => $targetYear
 ]);
-?>
