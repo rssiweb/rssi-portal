@@ -345,6 +345,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     <meta name="description" content="Phoenix Portal dashboard and internal management system.">
     <meta name="author" content="RSSI NGO">
     <meta name="robots" content="index, follow">
+    <!-- Open Graph -->
+    <meta property="og:title" content="My Account - Phoenix Portal">
+    <meta property="og:description" content="Phoenix Portal dashboard and internal management system.">
+    <meta property="og:image" content="https://rssi.in/img/og_image.png">
+    <meta property="og:url" content="https://login.rssi.in/rssi-member/index.php">
+    <meta property="og:type" content="website">
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
