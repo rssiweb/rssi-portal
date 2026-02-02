@@ -820,15 +820,15 @@ class MenuConfig
         $path = parse_url($url, PHP_URL_PATH);
         $pageName = basename($path);
 
-        if (empty($pageName) || $pageName === '/') {
+        // Format page name for standard pages only
+        $pageName = strtok($pageName, '?');
+        $pageName = pathinfo($pageName, PATHINFO_FILENAME);
+        $pageName = str_replace(['-', '_'], ' ', $pageName);
+        $pageName = ucwords($pageName);
+
+        // Fallback safety (optional but recommended)
+        if ($pageName === '') {
             $pageName = 'Dashboard';
-        } else if ($pageName === 'index.php') {
-            $pageName = 'My Account';
-        } else {
-            $pageName = strtok($pageName, '?');
-            $pageName = pathinfo($pageName, PATHINFO_FILENAME);
-            $pageName = str_replace(['-', '_'], ' ', $pageName);
-            $pageName = ucwords($pageName);
         }
 
         self::$pageData['default'] = [

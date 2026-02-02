@@ -341,6 +341,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <title>My Account - Phoenix Portal</title>
+    <meta name="description" content="Phoenix Portal dashboard and internal management system.">
+    <meta name="author" content="RSSI NGO">
+    <meta name="robots" content="index, follow"> -->
     <?php include 'includes/meta.php' ?>
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
