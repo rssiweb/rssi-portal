@@ -193,7 +193,7 @@ error_log("Stats result: " . print_r($stats, true));
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -963,7 +963,7 @@ error_log("Stats result: " . print_r($stats, true));
                 // Initialize DataTables only if resultArr is not empty
                 $('#verification-table').DataTable({
                     "order": [
-                        [4, "desc"]
+                        [4, "asc"]
                     ], // Sort by verification date descending
                     "pageLength": 25,
                     "responsive": true,

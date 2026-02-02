@@ -22,7 +22,7 @@ $scan_mode = isset($_GET['scan']) ? true : false;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
+    <?php include 'includes/meta.php' ?>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Bootstrap 5 -->
