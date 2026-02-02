@@ -14,53 +14,39 @@ header('Content-Type: application/json');
 
 $searchTerm = trim($_POST['search_term'] ?? '');
 
-// 🔒 Basic validation
-if ($searchTerm === '' || strlen($searchTerm) < 2) {
+if ($searchTerm === '') {
     echo json_encode([
         'success' => false,
-        'message' => 'Please enter at least 2 characters'
+        'message' => 'Please enter an ID or name'
     ]);
     exit;
 }
 
-$isIdSearch = ctype_digit($searchTerm);
 $results = [];
 
 try {
 
-    /* =======================
-       STUDENT SEARCH
-    ======================== */
+    /* =====================
+       STUDENTS
+    ====================== */
 
-    if ($isIdSearch) {
-        // Fast ID search
-        $studentQuery = "
-            SELECT 
-                student_id AS id,
-                studentname AS name,
-                class,
-                filterstatus,
-                photourl
-            FROM rssimyprofile_student
-            WHERE student_id = $1
-            LIMIT 5
-        ";
-        $studentParams = [$searchTerm];
-    } else {
-        // Prefix name search (indexed, fast)
-        $studentQuery = "
-            SELECT 
-                student_id AS id,
-                studentname AS name,
-                class,
-                filterstatus,
-                photourl
-            FROM rssimyprofile_student
-            WHERE studentname ILIKE $1
-            LIMIT 5
-        ";
-        $studentParams = [$searchTerm . '%'];
-    }
+    $studentQuery = "
+        SELECT
+            student_id AS id,
+            studentname AS name,
+            class,
+            filterstatus,
+            photourl
+        FROM public.rssimyprofile_student
+        WHERE student_id = $1
+           OR studentname ILIKE $2
+        LIMIT 5
+    ";
+
+    $studentParams = [
+        $searchTerm,
+        $searchTerm . '%'
+    ];
 
     $studentResult = pg_query_params($con, $studentQuery, $studentParams);
 
@@ -68,42 +54,32 @@ try {
         $results[] = array_merge($row, ['type' => 'student']);
     }
 
-    /* =======================
-       ASSOCIATE SEARCH
-       (Only if needed)
-    ======================== */
+    /* =====================
+       ASSOCIATES
+    ====================== */
 
     if (count($results) < 10) {
 
-        if ($isIdSearch) {
-            $associateQuery = "
-                SELECT 
-                    associatenumber AS id,
-                    fullname AS name,
-                    filterstatus,
-                    photo
-                FROM rssimyaccount_members
-                WHERE associatenumber = $1
-                  AND filterstatus = 'Active'
-                  AND class != 'Offline'
-                LIMIT 5
-            ";
-            $associateParams = [$searchTerm];
-        } else {
-            $associateQuery = "
-                SELECT 
-                    associatenumber AS id,
-                    fullname AS name,
-                    filterstatus,
-                    photo
-                FROM rssimyaccount_members
-                WHERE fullname ILIKE $1
-                  AND filterstatus = 'Active'
-                  AND class != 'Offline'
-                LIMIT 5
-            ";
-            $associateParams = [$searchTerm . '%'];
-        }
+        $associateQuery = "
+            SELECT
+                associatenumber AS id,
+                fullname AS name,
+                filterstatus,
+                photo
+            FROM public.rssimyaccount_members
+            WHERE (
+                    associatenumber = $1
+                 OR fullname ILIKE $2
+                  )
+              AND filterstatus = 'Active'
+              AND class != 'Offline'
+            LIMIT 5
+        ";
+
+        $associateParams = [
+            $searchTerm,
+            $searchTerm . '%'
+        ];
 
         $associateResult = pg_query_params($con, $associateQuery, $associateParams);
 
@@ -113,9 +89,9 @@ try {
         }
     }
 
-    /* =======================
+    /* =====================
        RESPONSE
-    ======================== */
+    ====================== */
 
     if (!empty($results)) {
         echo json_encode([
@@ -126,12 +102,12 @@ try {
         echo json_encode([
             'success' => false,
             'message' =>
-            'No matching active student or associate found. Please verify the ID or name.'
+            'No matching active student or associate found'
         ]);
     }
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred. Please try again.'
+        'message' => 'Database error occurred'
     ]);
 }
