@@ -45,7 +45,7 @@ try {
 
     $studentParams = [
         $searchTerm,
-        $searchTerm . '%'
+        '%' . $searchTerm . '%'
     ];
 
     $studentResult = pg_query_params($con, $studentQuery, $studentParams);
@@ -78,7 +78,7 @@ try {
 
         $associateParams = [
             $searchTerm,
-            $searchTerm . '%'
+            '%' . $searchTerm . '%'
         ];
 
         $associateResult = pg_query_params($con, $associateQuery, $associateParams);
