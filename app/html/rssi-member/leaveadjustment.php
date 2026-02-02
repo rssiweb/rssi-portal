@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
-
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -12,136 +10,149 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-
 include("../../util/email.php");
 
-@$now = date('Y-m-d H:i:s');
-if ($role == "Admin" && $filterstatus == 'Active') {
-    if (@$_POST['form-type'] == "leaveadj") {
-        @$leaveadjustmentid = 'RSD' . time();
-        @$adj_applicantid = strtoupper($_POST['adj_applicantid']);
-        @$adj_fromdate = $_POST['adj_fromdate'];
-        @$adj_todate = $_POST['adj_todate'];
-        @$day = round((strtotime($_POST['adj_todate']) - strtotime($_POST['adj_fromdate'])) / (60 * 60 * 24) + 1);
-        @$adj_leavetype = $_POST['adj_leavetype'];
-        @$adj_day = $_POST['adj_day'];
-        @$adj_reason = $_POST['adj_reason'];
-        @$adj_academicyear = $_POST['adj_academicyear'];
-        @$adj_appliedby = $associatenumber;
-        @$adj_appliedby_name = $fullname;
+date_default_timezone_set('Asia/Kolkata');
+$now = date('Y-m-d H:i:s');
 
-        if ($leaveadjustmentid != "") {
+// Handle form submission for leave adjustment
+if ($role == "Admin" && $filterstatus == 'Active' && isset($_POST['form-type']) && $_POST['form-type'] == "leaveadj") {
+    $leaveadjustmentid = 'RSD' . time();
+    $adj_applicantid = strtoupper($_POST['adj_applicantid']);
+    $adj_leavetype = $_POST['adj_leavetype'];
+    $adj_reason = $_POST['adj_reason'];
+    $adj_academicyear = $_POST['adj_academicyear'];
+    $adj_appliedby = $associatenumber;
+    $adj_appliedby_name = $fullname;
 
-            if ($adj_fromdate != "" && $adj_todate != "") {
+    $day = 0;
+    $adj_fromdate = null;
+    $adj_todate = null;
 
-                $leaveadjustment = "INSERT INTO leaveadjustment (adj_regdate,leaveadjustmentid,adj_applicantid,adj_fromdate,adj_todate,adj_reason,adj_leavetype,adj_appliedby,adj_academicyear,adj_day,adj_appliedby_name) VALUES ('$now','$leaveadjustmentid','$adj_applicantid','$adj_fromdate','$adj_todate','$adj_reason','$adj_leavetype','$adj_appliedby','$adj_academicyear','$day','$adj_appliedby_name')";
-            } else {
-                $leaveadjustment = "INSERT INTO leaveadjustment (adj_regdate,leaveadjustmentid,adj_applicantid,adj_reason,adj_leavetype,adj_appliedby,adj_academicyear,adj_day,adj_appliedby_name) VALUES ('$now','$leaveadjustmentid','$adj_applicantid','$adj_reason','$adj_leavetype','$adj_appliedby','$adj_academicyear','$adj_day','$adj_appliedby_name')";
-            }
-            $result = pg_query($con, $leaveadjustment);
-            $cmdtuples = pg_affected_rows($result);
+    // Handle different types of adjustments
+    if (!empty($_POST['adj_day'])) {
+        // Adjustment with direct day count
+        $adj_day = $_POST['adj_day'];
+        $day = $adj_day;
+    } else if (!empty($_POST['adj_fromdate']) && !empty($_POST['adj_todate'])) {
+        // Adjustment with date range
+        $adj_fromdate = $_POST['adj_fromdate'];
+        $adj_todate = $_POST['adj_todate'];
+        $day = round((strtotime($adj_todate) - strtotime($adj_fromdate)) / (60 * 60 * 24) + 1);
+        $adj_day = $day;
+    }
 
+    // Insert leave adjustment record
+    if ($adj_fromdate && $adj_todate) {
+        $sql = "INSERT INTO leaveadjustment (adj_regdate, leaveadjustmentid, adj_applicantid, adj_fromdate, adj_todate, adj_reason, adj_leavetype, adj_appliedby, adj_academicyear, adj_day, adj_appliedby_name) 
+                VALUES ('$now', '$leaveadjustmentid', '$adj_applicantid', '$adj_fromdate', '$adj_todate', '$adj_reason', '$adj_leavetype', '$adj_appliedby', '$adj_academicyear', '$day', '$adj_appliedby_name')";
+    } else {
+        $sql = "INSERT INTO leaveadjustment (adj_regdate, leaveadjustmentid, adj_applicantid, adj_reason, adj_leavetype, adj_appliedby, adj_academicyear, adj_day, adj_appliedby_name) 
+                VALUES ('$now', '$leaveadjustmentid', '$adj_applicantid', '$adj_reason', '$adj_leavetype', '$adj_appliedby', '$adj_academicyear', '$day', '$adj_appliedby_name')";
+    }
 
-            $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$adj_applicantid'");
-            @$nameassociate = pg_fetch_result($resultt, 0, 0);
-            @$emailassociate = pg_fetch_result($resultt, 0, 1);
+    $result = pg_query($con, $sql);
+    $cmdtuples = pg_affected_rows($result);
 
-            $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$adj_applicantid'");
-            @$namestudent = pg_fetch_result($resulttt, 0, 0);
-            @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+    // Send email notification if successful
+    if ($cmdtuples == 1) {
+        // Get applicant details
+        $query = "SELECT fullname, email FROM rssimyaccount_members WHERE associatenumber = '$adj_applicantid'
+                 UNION ALL
+                 SELECT studentname, emailaddress FROM rssimyprofile_student WHERE student_id = '$adj_applicantid'";
+        $res = pg_query($con, $query);
 
-            $emailfullname = $nameassociate . $namestudent;
-            $emailemail = $emailassociate . $emailstudent;
+        if ($row = pg_fetch_assoc($res)) {
+            $emailfullname = $row['fullname'] ?? $row['studentname'] ?? '';
+            $emailemail = $row['email'] ?? $row['emailaddress'] ?? '';
 
-            $emailadj_fromdate = "undefined";
-            $emailadj_todate = "undefined";
-            $emailadj_day = "undefined";
-            if (@$cmdtuples == 1 && $adj_day == "") {
+            if (!empty($emailemail)) {
+                $emailadj_fromdate = $adj_fromdate ? date("d/m/Y", strtotime($adj_fromdate)) : "N/A";
+                $emailadj_todate = $adj_todate ? date("d/m/Y", strtotime($adj_todate)) : "N/A";
 
-                $emailadj_fromdate = @date("d/m/Y", strtotime($adj_fromdate));
-                $emailadj_todate = @date("d/m/Y", strtotime($adj_todate));
-                $emailadj_day = $day;
-            }
-            if (@$cmdtuples == 1 && $adj_day != "") {
-
-                $emailadj_fromdate = null;
-                $emailadj_todate = null;
-                $emailadj_day = $adj_day;
-            }
-
-
-            if (@$cmdtuples == 1 && $emailemail != "") {
                 sendEmail("leaveadjustment", array(
                     "leaveadjustmentid" => $leaveadjustmentid,
                     "adj_applicantid" => $adj_applicantid,
                     "adj_applicantname" => $emailfullname,
                     "adj_fromdate" => $emailadj_fromdate,
                     "adj_todate" => $emailadj_todate,
-                    "adj_day" => $emailadj_day,
+                    "adj_day" => $day,
                     "adj_leavetype" => $adj_leavetype,
-                    "now" => @date("d/m/Y g:i a", strtotime($now)),
+                    "now" => date("d/m/Y g:i a", strtotime($now)),
                     "adj_appliedby" => $adj_appliedby,
                     "adj_reason" => $adj_reason,
-                ), $emailemail, False);
+                ), $emailemail, false);
             }
         }
     }
 }
 
-@$id = $_GET['leaveadjustmentid'];
-@$appid = strtoupper($_GET['adj_applicantid_search']);
-@$adj_academicyear_search = $_GET['adj_academicyear_search'];
-@$is_user = $_GET['is_user'];
+// Determine current academic year for filtering
+$current_year = date('Y');
+$current_month = date('m');
+if ($current_month == 1 || $current_month == 2 || $current_month == 3) {
+    $current_academic_year = ($current_year - 1) . '-' . $current_year;
+} else {
+    $current_academic_year = $current_year . '-' . ($current_year + 1);
+}
 
-date_default_timezone_set('Asia/Kolkata');
-// $date = date('Y-d-m h:i:s');
+// Handle search parameters
+$id = isset($_GET['leaveadjustmentid']) ? $_GET['leaveadjustmentid'] : null;
+$appid = isset($_GET['adj_applicantid_search']) ? strtoupper($_GET['adj_applicantid_search']) : null;
+$adj_academicyear_search = isset($_GET['adj_academicyear_search']) ? $_GET['adj_academicyear_search'] : $current_academic_year;
+$is_user = isset($_GET['is_user']) ? $_GET['is_user'] : 0;
 
+// Build query based on user role and search parameters
+$query = "SELECT la.*, 
+                 fac.associatenumber, fac.fullname, fac.email, fac.phone,
+                 stu.student_id, stu.studentname, stu.emailaddress, stu.contact
+          FROM leaveadjustment la
+          LEFT JOIN rssimyaccount_members fac ON la.adj_applicantid = fac.associatenumber
+          LEFT JOIN rssimyprofile_student stu ON la.adj_applicantid = stu.student_id
+          WHERE 1=1";
+
+// Apply filters based on user role
 if ($role == "Admin" && $filterstatus == 'Active') {
 
-    if ($appid != null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE adj_applicantid='$appid' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
-    } else if ($id != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE leaveadjustmentid='$id' order by adj_regdate desc");
-    } else {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id order by adj_regdate desc");
-    }
-} else {
+    // ALWAYS restrict to academic year
+    $query .= " AND la.adj_academicyear = '$adj_academicyear_search'";
 
-    if ($id == null && $adj_academicyear_search == null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id where adj_applicantid='$associatenumber' order by adj_regdate desc");
-    } else if ($id == null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id  WHERE adj_applicantid='$associatenumber' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
-    } else if ($id != null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE adj_applicantid='$associatenumber' AND leaveadjustmentid='$id' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
+    if ($is_user && $id) {
+        $query .= " AND la.leaveadjustmentid = '$id'";
+    }
+
+    if ($appid) {
+        $query .= " AND la.adj_applicantid = '$appid'";
     }
 }
 
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+$query .= " ORDER BY la.adj_regdate DESC";
 
-$resultArr = pg_fetch_all($result);
+$result = pg_query($con, $query);
+$resultArr = pg_fetch_all($result) ?: [];
 ?>
 
 <!doctype html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -189,11 +200,17 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
 </head>
 
 <body>
-<?php include 'includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">
@@ -251,20 +268,31 @@ $resultArr = pg_fetch_all($result);
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                             </span>
                                             <span class="input-help">
-                                                <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" max="" onchange="cal();" required>
-                                                <small id="passwordHelpBlock_from" class="form-text text-muted">From*</small>
+                                                <input type="date"
+                                                    class="form-control"
+                                                    name="adj_fromdate"
+                                                    id="adj_fromdate"
+                                                    onchange="cal()"
+                                                    required>
+                                                <small class="form-text text-muted">From*</small>
                                             </span>
+
                                             <span class="input-help">
-                                                <input type="date" class="form-control" name="adj_todate" id="adj_todate" min="" onchange="cal();" required>
-                                                <small id="passwordHelpBlock_to" class="form-text text-muted">To*</small>
+                                                <input type="date"
+                                                    class="form-control"
+                                                    name="adj_todate"
+                                                    id="adj_todate"
+                                                    required>
+                                                <small class="form-text text-muted">To*</small>
                                             </span>
+
                                             <span class="input-help">
                                                 <input type="number" name="adj_day" id='adj_day' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
                                                 <small id="passwordHelpBlock_dayadjusted" class="form-text text-muted">No of day adjusted*</small>
                                             </span>
                                             <span class="input-help">
                                                 <select name="adj_leavetype" id="adj_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option disabled selected hidden>Types of Leave</option>
+                                                    <option value="" disabled selected hidden>Types of Leave</option>
                                                     <option value="Sick Leave">Sick Leave</option>
                                                     <option value="Casual Leave">Casual Leave</option>
                                                     <option value="Leave Without Pay">Leave Without Pay</option>
@@ -274,7 +302,7 @@ $resultArr = pg_fetch_all($result);
                                             </span>
                                             <span class="input-help">
                                                 <select name="adj_academicyear" id="adj_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option disabled selected hidden>Academic Year</option>
+                                                    <option value="" disabled selected hidden>Academic Year</option>
                                                 </select>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
                                             </span>
@@ -295,81 +323,6 @@ $resultArr = pg_fetch_all($result);
                                         </div>
 
                                     </form>
-                                    <script>
-                                        if ($('#is_users').not(':checked').length > 0) {
-
-                                            document.getElementById("adj_day").disabled = true;
-                                            $('#adj_day').get(0).type = 'hidden';
-                                            document.getElementById("passwordHelpBlock_dayadjusted").classList.add("d-none");
-
-                                            document.getElementById("adj_fromdate").disabled = false;
-                                            document.getElementById("adj_todate").disabled = false;
-                                            $('#adj_fromdate').get(0).type = 'date';
-                                            $('#adj_todate').get(0).type = 'date';
-                                            document.getElementById("passwordHelpBlock_from").classList.remove("d-none");
-                                            document.getElementById("passwordHelpBlock_to").classList.remove("d-none");
-
-                                        } else {
-
-                                            document.getElementById("adj_day").disabled = false;
-                                            $('#adj_day').get(0).type = 'number';
-                                            document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("d-none");
-                                            document.getElementById("adj_fromdate").disabled = true;
-                                            document.getElementById("adj_todate").disabled = true;
-                                            $('#adj_fromdate').get(0).type = 'hidden';
-                                            $('#adj_todate').get(0).type = 'hidden';
-                                            document.getElementById("passwordHelpBlock_from").classList.add("d-none");
-                                            document.getElementById("passwordHelpBlock_to").classList.add("d-none");
-
-                                        }
-
-                                        const checkboxs = document.getElementById('is_users');
-
-                                        checkboxs.addEventListener('change', (event) => {
-                                            if (event.target.checked) {
-                                                document.getElementById("adj_day").disabled = false;
-                                                $('#adj_day').get(0).type = 'number';
-                                                document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("d-none");
-                                                document.getElementById("adj_fromdate").disabled = true;
-                                                document.getElementById("adj_todate").disabled = true;
-                                                $('#adj_fromdate').get(0).type = 'hidden';
-                                                $('#adj_todate').get(0).type = 'hidden';
-                                                document.getElementById("passwordHelpBlock_from").classList.add("d-none");
-                                                document.getElementById("passwordHelpBlock_to").classList.add("d-none");
-                                            } else {
-                                                document.getElementById("adj_day").disabled = true;
-                                                $('#adj_day').get(0).type = 'hidden';
-                                                document.getElementById("passwordHelpBlock_dayadjusted").classList.add("d-none");
-                                                document.getElementById("adj_fromdate").disabled = false;
-                                                document.getElementById("adj_todate").disabled = false;
-                                                $('#adj_fromdate').get(0).type = 'date';
-                                                $('#adj_todate').get(0).type = 'date';
-                                                document.getElementById("passwordHelpBlock_from").classList.remove("d-none");
-                                                document.getElementById("passwordHelpBlock_to").classList.remove("d-none");
-                                            }
-                                        })
-
-                                        function cal() {
-                                            if (document.getElementById("adj_todate") || document.getElementById("adj_fromdate")) {
-                                                document.getElementById("adj_todate").min = document.getElementById("adj_fromdate").value;
-                                                document.getElementById("adj_fromdate").max = document.getElementById("adj_todate").value;
-                                            }
-                                        }
-                                    </script>
-                                    <script>
-                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                            var currentYear = new Date().getFullYear() - 1;
-                                        <?php } else { ?>
-                                            var currentYear = new Date().getFullYear();
-                                        <?php } ?>
-                                        for (var i = 0; i < 5; i++) {
-                                            var next = currentYear + 1;
-                                            var year = currentYear + '-' + next;
-                                            //next.toString().slice(-2)
-                                            $('#adj_academicyear').append(new Option(year, year));
-                                            currentYear--;
-                                        }
-                                    </script>
                                 <?php } ?>
                                 <table class="table" style="margin-top: 2%;">
                                     <thead>
@@ -389,7 +342,7 @@ $resultArr = pg_fetch_all($result);
                                                             <?php } ?>
                                                             <select name="adj_academicyear_search" id="adj_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                                                 <?php if ($adj_academicyear_search == null) { ?>
-                                                                    <option disabled selected hidden>Academic Year</option>
+                                                                    <option value="" disabled selected hidden>Academic Year</option>
                                                                 <?php
                                                                 } else { ?>
                                                                     <option hidden selected><?php echo $adj_academicyear_search ?></option>
@@ -458,257 +411,142 @@ $resultArr = pg_fetch_all($result);
                                         </tr>
                                     </tbody>
                                 </table>
+                                <div class="table-responsive">
+                                    <table class="table" id="table-id">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Leave adjustment id</th>
+                                                <th scope="col">Applicant ID</th>
+                                                <th scope="col">Recorded on</th>
+                                                <th scope="col">Adjusted on</th>
+                                                <th scope="col">No of day(s) adjusted</th>
+                                                <th scope="col">Adjusted Leave Type</th>
+                                                <th scope="col">Academic year</th>
+                                                <th scope="col">Reviewer</th>
+                                                <th scope="col">Remarks</th>
 
-                                <div class="col" style="display: inline-block; width:100%; text-align:right;">
-                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                                </div>
+                                                <?php if ($role === "Admin" && $filterstatus === 'Active') : ?>
+                                                    <th scope="col"></th>
+                                                <?php endif; ?>
+                                            </tr>
+                                        </thead>
 
-                                <?php echo '
-                    <p>Select Number Of Rows</p>
-                    <div class="form-group">
-                        <select class="form-select" name="state" id="maxRows">
-                            <option value="5000">Show ALL Rows</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="70">70</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                                <th scope="col">Leave adjustment id</th>
-                                <th scope="col">Applicant ID</th>
-                                <th scope="col">Applied on</th>
-                                <th scope="col">Adjusted on</th>
-                                <th scope="col">No of day(s) adjusted</th>
-                                <th scope="col">Adjusted Leave Type</th>
-                                <th scope="col">Reviewer</th>
-                                <th scope="col" width="15%">Remarks</th>' ?>
-                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
-                                    <?php echo '<th scope="col"></th>' ?>
-                                <?php } ?>
-                                </tr>
-                                <?php echo '</thead>' ?>
-                                <?php if (sizeof($resultArr) > 0) { ?>
-                                    <?php
-                                    echo '<tbody>';
-                                    foreach ($resultArr as $array) {
-                                        echo '<tr>'
-                                    ?>
-                                        <?php
-                                        echo '<td>' . $array['leaveadjustmentid'] . '</td>
-                                <td>' . $array['adj_applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['adj_regdate'])) . '</td>' ?>
-                                        <?php if ($array['adj_fromdate'] != "" && $array['adj_todate'] != "") { ?>
-                                            <?php echo '<td>' .  @date("d/m/Y", strtotime($array['adj_fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['adj_todate'])) . '</td>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '<td></td>' ?>
-                                        <?php } ?>
+                                        <tbody>
+                                            <?php if (!empty($resultArr)) : ?>
 
-                                        <?php echo '<td>' . $array['adj_day'] . '</td>
-                                <td>' . $array['adj_leavetype'] . '/' . $array['adj_academicyear'] . '</td>
-                                <td>' . $array['adj_appliedby'] . '<br>' . $array['adj_appliedby_name'] . '</td>
-                                <td>' . $array['adj_reason'] . '</td>' ?>
+                                                <?php foreach ($resultArr as $array) : ?>
+                                                    <tr>
+                                                        <td><?= $array['leaveadjustmentid']; ?></td>
 
-                                        <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
+                                                        <td>
+                                                            <?= $array['adj_applicantid']; ?><br>
+                                                            <?= $array['fullname'] . $array['studentname']; ?>
+                                                        </td>
 
-                                            <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
-                                                <?php echo '<td><a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['adj_applicantid'] . '),%0A%0AYour ' . $array['adj_day'] . ' day(s) ' . $array['adj_leavetype'] . ' has been adjusted in the system. Please check your registered email for more details.%0A%0AYou can always check your leave adjustment details from My Account>Leave>Leave adjustment. For further information, you may contact your HR.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
-                                            <?php } else { ?>
-                                                <?php echo '<td><i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                            <?php } ?>
+                                                        <td>
+                                                            <?= date("d/m/Y g:i a", strtotime($array['adj_regdate'])); ?>
+                                                        </td>
 
-                                            <?php echo '&nbsp;&nbsp;<form name="leaveadjdelete_' . $array['leaveadjustmentid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                    <input type="hidden" name="form-type" type="text" value="leaveadjdelete">
-                                    <input type="hidden" name="leaveadjdeleteid" id="leaveadjdeleteid" type="text" value="' . $array['leaveadjustmentid'] . '">
+                                                        <td>
+                                                            <?php if (!empty($array['adj_fromdate']) && !empty($array['adj_todate'])) : ?>
+                                                                <?= date("d/m/Y", strtotime($array['adj_fromdate'])); ?>
+                                                                —
+                                                                <?= date("d/m/Y", strtotime($array['adj_todate'])); ?>
+                                                            <?php endif; ?>
+                                                        </td>
 
-                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveadjustmentid'] . '"><i class="bi bi-x-lg"></i></button>
-                                </form></td>' ?>
-                                        <?php } ?>
-                                    <?php } ?>
-                                <?php
-                                } else if ($id == null && $adj_academicyear_search == null) {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">Please select Filter value.</td>
-                                    </tr>
-                                <?php
-                                } else {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">No record was found for the selected filter value.</td>
-                                    </tr>
-                                <?php }
+                                                        <td><?= $array['adj_day']; ?></td>
 
-                                echo '</tbody>
+                                                        <td>
+                                                            <?= $array['adj_leavetype']; ?>
+                                                        </td>
+                                                        <td><?= $array['adj_academicyear']; ?></td>
+
+                                                        <td>
+                                                            <?= $array['adj_appliedby']; ?><br>
+                                                            <?= $array['adj_appliedby_name']; ?>
+                                                        </td>
+
+                                                        <td><?= $array['adj_reason']; ?></td>
+
+                                                        <?php if ($role === "Admin" && $filterstatus === 'Active') : ?>
+                                                            <td class="text-center">
+                                                                <div class="dropdown">
+                                                                    <button
+                                                                        class="btn btn-sm"
+                                                                        type="button"
+                                                                        data-bs-toggle="dropdown"
+                                                                        aria-expanded="false"
+                                                                        style="border:none;background:none;"
+                                                                        title="More options">
+                                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                                    </button>
+
+                                                                    <ul class="dropdown-menu dropdown-menu-end">
+
+                                                                        <!-- WhatsApp Option -->
+                                                                        <?php if (!empty($array['phone']) || !empty($array['contact'])) : ?>
+                                                                            <li>
+                                                                                <a
+                                                                                    class="dropdown-item"
+                                                                                    href="https://api.whatsapp.com/send?phone=91<?= $array['phone'] . $array['contact']; ?>&text=Dear <?= $array['fullname'] . $array['studentname']; ?> (<?= $array['adj_applicantid']; ?>),%0A%0AYour <?= $array['adj_day']; ?> day(s) <?= $array['adj_leavetype']; ?> has been adjusted in the system.%0A%0A--RSSI"
+                                                                                    target="_blank">
+                                                                                    <i class="bi bi-whatsapp me-2 text-success"></i> Send WhatsApp
+                                                                                </a>
+                                                                            </li>
+                                                                        <?php else : ?>
+                                                                            <li>
+                                                                                <span class="dropdown-item text-muted">
+                                                                                    <i class="bi bi-whatsapp me-2"></i> WhatsApp not available
+                                                                                </span>
+                                                                            </li>
+                                                                        <?php endif; ?>
+
+                                                                        <li>
+                                                                            <hr class="dropdown-divider">
+                                                                        </li>
+
+                                                                        <!-- Delete Option -->
+                                                                        <!-- <li>
+                                                                            <form
+                                                                                name="leaveadjdelete_<?= $array['leaveadjustmentid']; ?>"
+                                                                                method="POST"
+                                                                                onsubmit="return validateForm();">
+                                                                                <input type="hidden" name="form-type" value="leaveadjdelete">
+                                                                                <input type="hidden" name="leaveadjdeleteid" value="<?= $array['leaveadjustmentid']; ?>">
+
+                                                                                <button
+                                                                                    type="submit"
+                                                                                    class="dropdown-item text-danger">
+                                                                                    <i class="bi bi-x-lg me-2"></i> Delete
+                                                                                </button>
+                                                                            </form>
+                                                                        </li> -->
+
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        <?php endif; ?>
+                                                    </tr>
+                                                <?php endforeach; ?>
+
+                                            <?php elseif ($id === null && $adj_academicyear_search === null) : ?>
+                                                <tr>
+                                                    <td colspan="9">Please select Filter value.</td>
+                                                </tr>
+                                            <?php else : ?>
+                                                <tr>
+                                                    <td colspan="9">No record was found for the selected filter value.</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
                                     </table>
-                                    </div>';
-                                ?>
-                                <!-- Start Pagination -->
-                                <div class="pagination-container">
-                                    <nav>
-                                        <ul class="pagination">
-                                            <li class="page-item" data-page="prev">
-                                                <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                            </li>
-                                            <!-- Here the JS Function Will Add the Rows -->
-                                            <li class="page-item">
-                                                <button class="page-link pagination-button">1</button>
-                                            </li>
-                                            <li class="page-item">
-                                                <button class="page-link pagination-button">2</button>
-                                            </li>
-                                            <li class="page-item">
-                                                <button class="page-link pagination-button">3</button>
-                                            </li>
-                                            <li class="page-item" data-page="next" id="prev">
-                                                <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                            </li>
-                                        </ul>
-                                    </nav>
                                 </div>
-
-                                <script>
-                                    getPagination('#table-id');
-
-                                    function getPagination(table) {
-                                        var lastPage = 1;
-
-                                        $('#maxRows').on('change', function(evt) {
-                                            lastPage = 1;
-                                            $('.pagination').find('li').slice(1, -1).remove();
-                                            var trnum = 0;
-                                            var maxRows = parseInt($(this).val());
-
-                                            if (maxRows == 5000) {
-                                                $('.pagination').hide();
-                                            } else {
-                                                $('.pagination').show();
-                                            }
-
-                                            var totalRows = $(table + ' tbody tr').length;
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trnum++;
-                                                if (trnum > maxRows) {
-                                                    $(this).hide();
-                                                }
-                                                if (trnum <= maxRows) {
-                                                    $(this).show();
-                                                }
-                                            });
-
-                                            if (totalRows > maxRows) {
-                                                var pagenum = Math.ceil(totalRows / maxRows);
-                                                for (var i = 1; i <= pagenum; i++) {
-                                                    $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                                }
-                                            }
-
-                                            $('.pagination [data-page="1"]').addClass('active');
-                                            $('.pagination li').on('click', function(evt) {
-                                                evt.stopImmediatePropagation();
-                                                evt.preventDefault();
-                                                var pageNum = $(this).attr('data-page');
-
-                                                var maxRows = parseInt($('#maxRows').val());
-
-                                                if (pageNum == 'prev') {
-                                                    if (lastPage == 1) {
-                                                        return;
-                                                    }
-                                                    pageNum = --lastPage;
-                                                }
-                                                if (pageNum == 'next') {
-                                                    if (lastPage == $('.pagination li').length - 2) {
-                                                        return;
-                                                    }
-                                                    pageNum = ++lastPage;
-                                                }
-
-                                                lastPage = pageNum;
-                                                var trIndex = 0;
-                                                $('.pagination li').removeClass('active');
-                                                $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                                limitPagging();
-                                                $(table + ' tr:gt(0)').each(function() {
-                                                    trIndex++;
-                                                    if (
-                                                        trIndex > maxRows * pageNum ||
-                                                        trIndex <= maxRows * pageNum - maxRows
-                                                    ) {
-                                                        $(this).hide();
-                                                    } else {
-                                                        $(this).show();
-                                                    }
-                                                });
-                                            });
-                                            limitPagging();
-                                        }).val(5).change();
-                                    }
-
-                                    function limitPagging() {
-                                        if ($('.pagination li').length > 7) {
-                                            if ($('.pagination li.active').attr('data-page') <= 3) {
-                                                $('.pagination li.page-item:gt(5)').hide();
-                                                $('.pagination li.page-item:lt(5)').show();
-                                                $('.pagination [data-page="next"]').show();
-                                            }
-                                            if ($('.pagination li.active').attr('data-page') > 3) {
-                                                $('.pagination li.page-item').hide();
-                                                $('.pagination [data-page="next"]').show();
-                                                var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                                for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                    $('.pagination [data-page="' + i + '"]').show();
-                                                }
-                                            }
-                                        }
-                                    }
-                                </script>
-
-                                <script>
-                                    var data = <?php echo json_encode($resultArr) ?>;
-                                    const scriptURL = 'payment-api.php'
-
-                                    function validateForm() {
-                                        if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-
-                                            data.forEach(item => {
-                                                const form = document.forms['leaveadjdelete_' + item.leaveadjustmentid]
-                                                form.addEventListener('submit', e => {
-                                                    e.preventDefault()
-                                                    fetch(scriptURL, {
-                                                            method: 'POST',
-                                                            body: new FormData(document.forms['leaveadjdelete_' + item.leaveadjustmentid])
-                                                        })
-                                                        .then(response =>
-                                                            alert("Record has been deleted.") +
-                                                            location.reload()
-                                                        )
-                                                        .catch(error => console.error('Error!', error.message))
-                                                })
-
-                                                console.log(item)
-                                            })
-                                        } else {
-                                            alert("Record has NOT been deleted.");
-                                            return false;
-                                        }
-                                    }
-                                </script>
-
-
                             </div>
-                        </div>
-                    </div><!-- End Reports -->
+                        </div><!-- End Reports -->
+                    </div>
                 </div>
+            </div>
         </section>
 
     </main><!-- End #main -->
@@ -719,8 +557,129 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        if ($('#is_users').not(':checked').length > 0) {
+
+            document.getElementById("adj_day").disabled = true;
+            $('#adj_day').get(0).type = 'hidden';
+            document.getElementById("passwordHelpBlock_dayadjusted").classList.add("d-none");
+
+            document.getElementById("adj_fromdate").disabled = false;
+            document.getElementById("adj_todate").disabled = false;
+            $('#adj_fromdate').get(0).type = 'date';
+            $('#adj_todate').get(0).type = 'date';
+            document.getElementById("passwordHelpBlock_from").classList.remove("d-none");
+            document.getElementById("passwordHelpBlock_to").classList.remove("d-none");
+
+        } else {
+
+            document.getElementById("adj_day").disabled = false;
+            $('#adj_day').get(0).type = 'number';
+            document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("d-none");
+            document.getElementById("adj_fromdate").disabled = true;
+            document.getElementById("adj_todate").disabled = true;
+            $('#adj_fromdate').get(0).type = 'hidden';
+            $('#adj_todate').get(0).type = 'hidden';
+            document.getElementById("passwordHelpBlock_from").classList.add("d-none");
+            document.getElementById("passwordHelpBlock_to").classList.add("d-none");
+
+        }
+
+        const checkboxs = document.getElementById('is_users');
+
+        checkboxs.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                document.getElementById("adj_day").disabled = false;
+                $('#adj_day').get(0).type = 'number';
+                document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("d-none");
+                document.getElementById("adj_fromdate").disabled = true;
+                document.getElementById("adj_todate").disabled = true;
+                $('#adj_fromdate').get(0).type = 'hidden';
+                $('#adj_todate').get(0).type = 'hidden';
+                document.getElementById("passwordHelpBlock_from").classList.add("d-none");
+                document.getElementById("passwordHelpBlock_to").classList.add("d-none");
+            } else {
+                document.getElementById("adj_day").disabled = true;
+                $('#adj_day').get(0).type = 'hidden';
+                document.getElementById("passwordHelpBlock_dayadjusted").classList.add("d-none");
+                document.getElementById("adj_fromdate").disabled = false;
+                document.getElementById("adj_todate").disabled = false;
+                $('#adj_fromdate').get(0).type = 'date';
+                $('#adj_todate').get(0).type = 'date';
+                document.getElementById("passwordHelpBlock_from").classList.remove("d-none");
+                document.getElementById("passwordHelpBlock_to").classList.remove("d-none");
+            }
+        })
+    </script>
+    <script>
+        function cal() {
+            const from = document.getElementById("adj_fromdate").value;
+            const to = document.getElementById("adj_todate");
+
+            if (from) {
+                to.min = from;
+            }
+        }
+    </script>
+
+    <script>
+        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+            var currentYear = new Date().getFullYear() - 1;
+        <?php } else { ?>
+            var currentYear = new Date().getFullYear();
+        <?php } ?>
+        for (var i = 0; i < 5; i++) {
+            var next = currentYear + 1;
+            var year = currentYear + '-' + next;
+            //next.toString().slice(-2)
+            $('#adj_academicyear').append(new Option(year, year));
+            currentYear--;
+        }
+    </script>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        const scriptURL = 'payment-api.php'
+
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+
+                data.forEach(item => {
+                    const form = document.forms['leaveadjdelete_' + item.leaveadjustmentid]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['leaveadjdelete_' + item.leaveadjustmentid])
+                            })
+                            .then(response =>
+                                alert("Record has been deleted.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
+                    })
+
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
+    </script>
+    <?php if (!empty($resultArr)) : ?>
+        <script>
+            $(document).ready(function() {
+                $('#table-id').DataTable({
+                    order: [], // no initial sorting
+                    columnDefs: [{
+                        orderable: false,
+                        targets: -1 // last column
+                    }]
+                });
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
 

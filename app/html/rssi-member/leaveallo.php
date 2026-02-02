@@ -144,7 +144,7 @@ $resultArr = pg_fetch_all($result);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -219,129 +219,131 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-                            <div class="container">
-                                <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
-                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>ERROR: Oops, something wasn't right.</span>
-                                    </div>
-                                <?php } else if (@$cmdtuples == 1) { ?>
-                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2-circle"></i>
-                                        <span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
-                                    </div>
-                                    <script>
-                                        if (window.history.replaceState) {
-                                            window.history.replaceState(null, null, window.location.href);
-                                        }
-                                    </script>
-                                <?php } ?>
+                            <!-- <div class="container"> -->
+                            <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
+                                <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: Oops, something wasn't right.</span>
+                                </div>
+                            <?php } else if (@$cmdtuples == 1) { ?>
+                                <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
+                                </div>
+                                <script>
+                                    if (window.history.replaceState) {
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                </script>
+                            <?php } ?>
 
 
-                                <!-- <section style="padding: 2%;"> -->
-                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
-                                    <p>Allocate Leave</p>
+                            <!-- <section style="padding: 2%;"> -->
+                            <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
+                                <p>Allocate Leave</p>
 
-                                    <form autocomplete="off" name="leaveallocation" id="leaveallocation" action="leaveallo.php" method="POST" class="mb-5">
-                                        <div class="form-group" style="display: inline-block;">
-
-                                            <input type="hidden" name="form-type" type="text" value="leaveallocation">
-
-                                            <span class="input-help">
-                                                <input type="text" name="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['allo_applicantid']; ?>" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <input type="number" name="allo_daycount" id='allo_daycount' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                                                <small id="passwordHelpBlock_allo_daycount" class="form-text text-muted">Allocated day*</small>
-                                            </span>
-                                            <span class="input-help">
-                                                <select name="allo_leavetype" id="allo_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option disabled selected hidden>Types of Leave</option>
-                                                    <option value="Sick Leave">Sick Leave</option>
-                                                    <option value="Casual Leave">Casual Leave</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Leave Type*</small>
-                                            </span>
-                                            <span class="input-help">
-                                                <select name="allo_academicyear" id="allo_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option disabled selected hidden>Academic Year</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <textarea type="text" name="allo_remarks" class="form-control" placeholder="Remarks" value=""></textarea>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
-                                            </span>
-                                        </div>
-                                        <div class="col2 left" style="display: inline-block;">
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Add Leave</button>
-
-                                        </div>
-
-                                    </form>
-                                <?php } ?>
-                                <form action="" method="GET" class="mb-2">
+                                <form autocomplete="off" name="leaveallocation" id="leaveallocation" action="leaveallo.php" method="POST" class="mb-5">
                                     <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-                                            <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
-                                            <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
-                                                <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>" required>
-                                            <?php } ?>
-                                            <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
-                                                <?php if ($allo_academicyear == null) { ?>
-                                                    <option disabled selected hidden>Academic Year</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option hidden selected><?php echo $allo_academicyear ?></option>
-                                                <?php }
-                                                ?>
+
+                                        <input type="hidden" name="form-type" type="text" value="leaveallocation">
+
+                                        <span class="input-help">
+                                            <input type="text" name="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['allo_applicantid']; ?>" required>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
+                                        </span>
+
+                                        <span class="input-help">
+                                            <input type="number" name="allo_daycount" id='allo_daycount' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                            <small id="passwordHelpBlock_allo_daycount" class="form-text text-muted">Allocated day*</small>
+                                        </span>
+                                        <span class="input-help">
+                                            <select name="allo_leavetype" id="allo_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
+                                                <option value="" disabled selected hidden>Types of Leave</option>
+                                                <option value="Sick Leave">Sick Leave</option>
+                                                <option value="Casual Leave">Casual Leave</option>
                                             </select>
-                                        </div>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Leave Type*</small>
+                                        </span>
+                                        <span class="input-help">
+                                            <select name="allo_academicyear" id="allo_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
+                                                <option value="" disabled selected hidden>Academic Year</option>
+                                            </select>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
+                                        </span>
+
+                                        <span class="input-help">
+                                            <textarea type="text" name="allo_remarks" class="form-control" placeholder="Remarks" value=""></textarea>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                        </span>
                                     </div>
                                     <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Add Leave</button>
+
                                     </div>
-                                    <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
-                                        <div id="filter-checks" class="mt-2">
-                                            <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                            <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
-                                        </div>
-                                    <?php } ?>
+
                                 </form>
+                            <?php } ?>
+                            <form action="" method="GET" class="mb-2">
+                                <div class="form-group" style="display: inline-block;">
+                                    <div class="col2" style="display: inline-block;">
+                                        <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
+                                        <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
+                                            <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
+                                        <?php } ?>
+                                        <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                            <?php if ($allo_academicyear == null) { ?>
+                                                <option value="" disabled selected hidden>Academic Year</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $allo_academicyear ?></option>
+                                            <?php }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                                </div>
+                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
+                                    <div id="filter-checks" class="mt-2">
+                                        <input class="form-check-input" type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                        <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
+                                    </div>
+                                <?php } ?>
+                            </form>
 
-                                <div class="table-responsive">
-                                    <table class="table" id="table-id">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Leave allocation id</th>
-                                                <th scope="col">Applicant ID</th>
-                                                <th scope="col">Applied on</th>
-                                                <th scope="col">Allocated day(s)</th>
-                                                <th scope="col">Allocated Leave Type</th>
-                                                <th scope="col" width="15%">Remarks</th>
-                                                <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Leave allocation id</th>
+                                            <th scope="col">Applicant ID</th>
+                                            <th scope="col">Allocated on</th>
+                                            <th scope="col">Allocated day(s)</th>
+                                            <th scope="col">Allocated Leave Type</th>
+                                            <th scope="col">Academic year</th>
+                                            <th scope="col">Remarks</th>
+                                            <!-- <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>
                                                     <th scope="col"></th>
-                                                <?php endif; ?>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php if (sizeof($resultArr) > 0): ?>
-                                                <?php foreach ($resultArr as $array): ?>
-                                                    <tr>
-                                                        <td><?php echo $array['leaveallocationid']; ?></td>
-                                                        <td><?php echo $array['allo_applicantid']; ?><br><?php echo $array['fullname'] . $array['studentname']; ?></td>
-                                                        <td><?php echo date("d/m/Y g:i a", strtotime($array['allo_date'])); ?></td>
-                                                        <td><?php echo $array['allo_daycount']; ?></td>
-                                                        <td><?php echo $array['allo_leavetype'] . '/' . $array['allo_academicyear']; ?></td>
-                                                        <td><?php echo $array['allo_remarks']; ?></td>
+                                                <?php endif; ?> -->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (sizeof($resultArr) > 0): ?>
+                                            <?php foreach ($resultArr as $array): ?>
+                                                <tr>
+                                                    <td><?php echo $array['leaveallocationid']; ?></td>
+                                                    <td><?php echo $array['allo_applicantid']; ?><br><?php echo $array['fullname'] . $array['studentname']; ?></td>
+                                                    <td><?php echo date("d/m/Y g:i a", strtotime($array['allo_date'])); ?></td>
+                                                    <td><?php echo $array['allo_daycount']; ?></td>
+                                                    <td><?php echo $array['allo_leavetype']; ?></td>
+                                                    <td><?php echo $array['allo_academicyear']; ?></td>
+                                                    <td><?php echo $array['allo_remarks']; ?></td>
 
-                                                        <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>
+                                                    <!-- <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>
                                                             <td>
                                                                 <form name="leaveallodelete_<?php echo $array['leaveallocationid']; ?>" action="#" method="POST" style="display: inline-block;">
                                                                     <input type="hidden" name="form-type" value="leaveallodelete">
@@ -349,22 +351,22 @@ $resultArr = pg_fetch_all($result);
                                                                     <button type="submit" onclick="validateForm()" style="background: none; border: none; padding: 0; cursor: pointer;" title="Delete <?php echo $array['leaveallocationid']; ?>"><i class="bi bi-x-lg"></i></button>
                                                                 </form>
                                                             </td>
-                                                        <?php endif; ?>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            <?php elseif ($id == null && $allo_academicyear == null): ?>
-                                                <tr>
-                                                    <td colspan="7">Please select Filter value.</td>
+                                                        <?php endif; ?> -->
                                                 </tr>
-                                            <?php else: ?>
-                                                <tr>
-                                                    <td colspan="7">No record was found for the selected filter value.</td>
-                                                </tr>
-                                            <?php endif; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            <?php endforeach; ?>
+                                        <?php elseif ($id == null && $allo_academicyear == null): ?>
+                                            <tr>
+                                                <td colspan="7">Please select Filter value.</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="7">No record was found for the selected filter value.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
                             </div>
+                            <!-- </div> -->
                         </div>
                     </div><!-- End Reports -->
                 </div>
@@ -378,8 +380,8 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
         const scriptURL = 'payment-api.php'
