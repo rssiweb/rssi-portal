@@ -55,12 +55,18 @@ if (!empty($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
 
         // Fetch applicant details (faculty and student)
         $resultt  = pg_query($con, "SELECT fullname, email FROM rssimyaccount_members WHERE associatenumber='$applicantid'");
-        $nameassociate  = $resultt ? pg_fetch_result($resultt, 0, 0) : '';
-        $emailassociate = $resultt ? pg_fetch_result($resultt, 0, 1) : '';
+        $nameassociate = $emailassociate = '';
+        if ($resultt && pg_num_rows($resultt) > 0) {
+            $nameassociate  = pg_fetch_result($resultt, 0, 0);
+            $emailassociate = pg_fetch_result($resultt, 0, 1);
+        }
 
         $resulttt  = pg_query($con, "SELECT studentname, emailaddress FROM rssimyprofile_student WHERE student_id='$applicantid'");
-        $namestudent  = $resulttt ? pg_fetch_result($resulttt, 0, 0) : '';
-        $emailstudent = $resulttt ? pg_fetch_result($resulttt, 0, 1) : '';
+        $namestudent = $emailstudent = '';
+        if ($resulttt && pg_num_rows($resulttt) > 0) {
+            $namestudent  = pg_fetch_result($resulttt, 0, 0);
+            $emailstudent = pg_fetch_result($resulttt, 0, 1);
+        }
 
         $applicantname = $nameassociate . $namestudent;
         $email = $emailassociate . $emailstudent;
@@ -143,7 +149,7 @@ $resultArr = pg_fetch_all($result);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -307,12 +313,22 @@ $resultArr = pg_fetch_all($result);
                                             <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                         </span>
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="fromdate" id="fromdate" max="" onchange="cal();" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">From</small>
+                                            <input type="date"
+                                                class="form-control"
+                                                name="fromdate"
+                                                id="fromdate"
+                                                onchange="setToMin()"
+                                                required>
+                                            <small class="form-text text-muted">From</small>
                                         </span>
+
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="todate" id="todate" min="" onchange="cal();" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">To</small>
+                                            <input type="date"
+                                                class="form-control"
+                                                name="todate"
+                                                id="todate"
+                                                required>
+                                            <small class="form-text text-muted">To</small>
                                         </span>
                                         <span class="input-help">
                                             <select name="typeofleave" id="typeofleave" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
@@ -348,9 +364,9 @@ $resultArr = pg_fetch_all($result);
                                 </form>
 
                                 <script>
-                                    function cal() {
-                                        document.getElementById("todate").min = document.getElementById("fromdate").value;
-                                        document.getElementById("fromdate").max = document.getElementById("todate").value;
+                                    function setToMin() {
+                                        const from = document.getElementById("fromdate").value;
+                                        document.getElementById("todate").min = from;
                                     }
                                 </script>
 
@@ -520,8 +536,8 @@ $resultArr = pg_fetch_all($result);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
 </body>
 
