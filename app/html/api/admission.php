@@ -167,9 +167,12 @@ try {
     $caste
   ];
 
-  pg_query_params($con, $studentSQL, $studentParams);
-  // Execute insert and get student_id in one line
-  $student_id = pg_fetch_result(pg_query_params($con, $studentSQL, $studentParams), 0, 'student_id');
+  // Execute student insert and get the returned student_id
+  $result = pg_query_params($con, $studentSQL, $studentParams);
+  if (!$result) {
+    throw new Exception("Failed to insert student record: " . pg_last_error($con));
+  }
+  $student_id = pg_fetch_result($result, 0, 'student_id');
 
   // Now upload files only AFTER DB insert
   $doc_student_photo = uploadOrNull('student-photo', '1R1jZmG7xUxX_oaNJaT9gu68IV77zCbg9', "photo_$student_name");
