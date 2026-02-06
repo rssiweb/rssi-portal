@@ -186,8 +186,7 @@ if ($searchField !== '' || $fyear !== '') {
               <br>
               <div class="row">
                 <div class="col">
-                  Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                  <br>Total donated amount:&nbsp;<p class="badge bg-secondary"><?php echo $totalDonatedAmount ?></p>
+                  <p>Total Donation Received (Approved Amount):&nbsp;<?php echo $totalDonatedAmount ?></p>
                 </div>
                 <div class="col text-end">
                   <a href="old_donationinfo_admin.php">Donation till June 23 >></a>
@@ -231,7 +230,8 @@ if ($searchField !== '' || $fyear !== '') {
                 <table class="table" id="table-id">
                   <thead>
                     <tr>
-                      <th scope="col">Date</th>
+                      <th scope="col">Submission Date</th>
+                      <th scope="col">Bank Receipt Date</th>
                       <th scope="col">Name</th>
                       <th scope="col">FY</th>
                       <th scope="col">Transaction id</th>
@@ -247,7 +247,12 @@ if ($searchField !== '' || $fyear !== '') {
                     <?php if ($resultArr != null): ?>
                       <?php foreach ($resultArr as $array): ?>
                         <tr>
-                          <td><?= date("d/m/Y", strtotime($array['timestamp'])) ?></td>
+                          <td><?= date("d/m/Y h:i A", strtotime($array['timestamp'])) ?></td>
+                          <td>
+                            <?= !empty($array['donation_received_date'])
+                              ? date("d/m/Y", strtotime($array['donation_received_date']))
+                              : '-' ?>
+                          </td>
                           <td>
                             <?= $array['fullname'] ?><br>
                             <?= $array['tel'] ?><br>
@@ -385,6 +390,18 @@ if ($searchField !== '' || $fyear !== '') {
             <input type="hidden" name="donationid" id="donationid" readonly>
 
             <div class="mb-3">
+              <label for="donation_received_date" class="form-label">
+                Donation Received Date
+              </label>
+              <input
+                type="date"
+                name="donation_received_date"
+                id="donation_received_date"
+                class="form-control"
+                required>
+            </div>
+
+            <div class="mb-3">
               <label for="reviewer_status" class="form-label">Status</label>
               <select name="reviewer_status" id="reviewer_status" class="form-select" required>
                 <option value="" disabled selected hidden>Select status</option>
@@ -400,7 +417,10 @@ if ($searchField !== '' || $fyear !== '') {
               <small id="passwordHelpBlock" class="form-text text-muted">Reviewer remarks</small>
             </div>
 
-            <button type="submit" id="donationupdate" class="btn btn-danger btn-sm">Update</button>
+            <button type="submit" id="donationupdate" class="btn btn-danger btn-sm">
+              <span id="submitText">Update</span>
+              <span id="submitSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
           </form>
           <div class="text-end p-2" style="font-size: small; font-style: italic; color: #A2A2A2;">
             Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
@@ -428,6 +448,7 @@ if ($searchField !== '' || $fyear !== '') {
       document.getElementById("donationid").value = mydata["donationid"];
       document.getElementById("reviewer_status").value = mydata["status"] || '';
       document.getElementById("reviewer_remarks").value = mydata["reviewer_remarks"] || '';
+      document.getElementById("donation_received_date").value = mydata["donation_received_date"] || '';
       document.querySelector(".reviewedby").innerHTML = mydata["reviewedby"] || '';
       document.querySelector(".reviewedon").innerHTML = mydata["reviewedon"] || '';
 
@@ -451,32 +472,62 @@ if ($searchField !== '' || $fyear !== '') {
   <!-- Script to handle form submission and email sending -->
   <script>
     var data = <?php echo json_encode($resultArr) ?>;
-    //For form submission - to update Remarks
-    const scriptURL = 'api/donation.php'
-
+    const scriptURL = '/api/donation.php';
     const form = document.getElementById('donation_review');
+    const submitBtn = document.getElementById('donationupdate');
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
 
     form.addEventListener('submit', e => {
       e.preventDefault();
+
+      // Disable button and show spinner
+      submitBtn.disabled = true;
+      submitText.textContent = 'Updating...';
+      submitSpinner.classList.remove('d-none');
 
       fetch(scriptURL, {
           method: 'POST',
           body: new FormData(form)
         })
-        .then(response => response.json()) // parse JSON
+        .then(response => response.json())
         .then(result => {
           if (result.status === 'success') {
+            // Change button to show "Submitted" and hide spinner
+            submitText.textContent = 'Submitted';
+            submitSpinner.classList.add('d-none');
+
+            // Optional: Change button style to indicate success
+            submitBtn.classList.remove('btn-danger');
+            submitBtn.classList.add('btn-success');
+
             alert('Record has been updated.');
-            location.reload();
+
+            location.reload(); // Reload immediately
+            return; // Exit early
           } else {
             alert(result.message || 'Error updating record. Please try again later.');
+            // Re-enable button on error
+            resetSubmitButton();
           }
         })
         .catch(error => {
           console.error('Error!', error);
           alert('Something went wrong. Please try again later.');
+          // Re-enable button on error
+          resetSubmitButton();
         });
     });
+
+    // Function to reset button state
+    function resetSubmitButton() {
+      submitBtn.disabled = false;
+      submitText.textContent = 'Update';
+      submitSpinner.classList.add('d-none');
+      // Reset button color if it was changed
+      submitBtn.classList.remove('btn-success');
+      submitBtn.classList.add('btn-danger');
+    }
 
     data.forEach(item => {
       const formId = 'email-form-' + item.donationid

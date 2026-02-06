@@ -12,9 +12,7 @@ header("Content-Disposition: attachment; filename={$export_type}_$today.csv");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-if ($export_type == "fees") {
-  fees_export();
-} else if ($export_type == "donation") {
+if ($export_type == "donation") {
   donation_export();
 } else if ($export_type == "student") {
   student_export();
@@ -34,124 +32,6 @@ if ($export_type == "fees") {
   paydetails_export();
 }
 
-function fees_export()
-{
-  global $con;
-  @$id = $_POST['id'];
-  @$status = $_POST['status'];
-  @$section = $_POST['section'];
-  @$sections = $_POST['sections'];
-  @$stid = $_POST['stid'];
-
-
-  if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections')");
-
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') AND pstatus='transferred'");
-  }
-
-
-  if (($section == 'ALL' || $section == null) && ($status != null && $status != 'ALL')) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND pstatus='transferred'");
-  }
-
-  if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == null)) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE feeyear=$id AND student.category='$section' order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND student.category='$section'");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND student.category='$section' AND pstatus='transferred'");
-  }
-
-  if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE feeyear=$id order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND pstatus='transferred'");
-  }
-
-  if ($stid != null && $status == null && $section == null && $id == null) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE fees.studentid='$stid' order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE fees.studentid='$stid'");
-
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE fees.studentid='$stid' AND pstatus='transferred'");
-  }
-
-  if ($stid == null && $status == null && $section == null && $id == null) {
-    $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
-  }
-
-  if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-  }
-
-  $resultArr = pg_fetch_all($result);
-
-  echo 'Fees collection date,ID,F Name,Category,Month,Amount,Collected by,Status' . "\n";
-
-  foreach ($resultArr as $array) {
-
-    echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . ',' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0, $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
-  }
-}
-
 function donation_export()
 {
   global $con;
@@ -161,27 +41,36 @@ function donation_export()
   function fetchData($con, $searchField, $fyear)
   {
     $query = "SELECT
-      pd.*,
-      ud.*,
-      CASE 
-          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
-          ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
-      END || '-' ||
-      CASE 
-          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
-          ELSE EXTRACT(YEAR FROM pd.timestamp)
-      END AS financial_year
-      FROM donation_paymentdata AS pd
-      LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
-      WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
-            (((CASE 
+    pd.*,
+    ud.*,
+    CASE 
+        WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+        ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+    END || '-' ||
+    CASE 
+        WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+        ELSE EXTRACT(YEAR FROM pd.timestamp)
+    END AS financial_year
+    FROM donation_paymentdata AS pd
+    LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+    WHERE (
+        (
+            pd.donationid LIKE '%' || $1 || '%' OR
+            pd.tel LIKE '%' || $1 || '%'
+        ) OR $1 IS NULL
+    ) AND (
+        (
+            CASE 
                 WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
                 ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
             END || '-' ||
             CASE 
                 WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
                 ELSE EXTRACT(YEAR FROM pd.timestamp)
-            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) ORDER BY pd.timestamp DESC";
+            END
+        ) = $2 OR $2 IS NULL
+    ) AND status='Approved'
+    ORDER BY pd.timestamp DESC";
 
     $params = array();
     if ($searchField !== '') {
