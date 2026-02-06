@@ -115,9 +115,9 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php' ?>
+  <?php include 'includes/meta.php' ?>
 
-  
+
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -225,9 +225,9 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
   <main id="main" class="main">
 
     <div class="pagetitle">
-            <h1><?php echo getPageTitle(); ?></h1>
-            <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+      <h1><?php echo getPageTitle(); ?></h1>
+      <?php echo generateDynamicBreadcrumb(); ?>
+    </div><!-- End Page Title -->
 
     <section class="section dashboard">
       <div class="row">
@@ -558,75 +558,197 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
                 <!-- Reimbursement Details Modal -->
                 <div class="modal fade" id="myModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Details</h1>
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Details - <span id="claimNumber"></span></h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
 
+                        <!-- Claim Status Badge -->
                         <div style="width:100%; text-align:right">
                           <p id="status_details" class="badge"></p>
                         </div>
 
+                        <!-- Basic Claim Information Section -->
+                        <div class="card mb-3">
+                          <div class="card-header bg-light">
+                            <h6 class="mb-0">Claim Information</h6>
+                          </div>
+                          <div class="card-body">
+                            <div class="row">
+                              <!-- Left Column -->
+                              <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                  <tr>
+                                    <td style="width: 40%"><strong>Claim Number:</strong></td>
+                                    <td><span class="reimbid"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Claimant ID:</strong></td>
+                                    <td><span class="registrationid"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Claimant Name:</strong></td>
+                                    <td><span class="fullname studentname"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td><span class="email emailaddress"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td><span class="phone contact"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Registered On:</strong></td>
+                                    <td><span class="timestamp"></span></td>
+                                  </tr>
+                                </table>
+                              </div>
+
+                              <!-- Right Column -->
+                              <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                  <tr>
+                                    <td style="width: 40%"><strong>Academic Year:</strong></td>
+                                    <td><span class="year"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Claim Head:</strong></td>
+                                    <td><span class="selectclaimheadfromthelistbelow"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Claim Details:</strong></td>
+                                    <td><span class="claimheaddetails"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Bill Date:</strong></td>
+                                    <td><span class="billdate"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Claimed Amount:</strong></td>
+                                    <td><span class="totalbillamount"></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Approved Amount:</strong></td>
+                                    <td><span class="approvedamount"></span></td>
+                                  </tr>
+                                </table>
+                              </div>
+                            </div>
+
+                            <!-- Additional Information Row -->
+                            <div class="row mt-2">
+                              <div class="col-12">
+                                <table class="table table-sm table-borderless">
+                                  <tr>
+                                    <td style="width: 15%"><strong>Description:</strong></td>
+                                    <td><span class="remarks"></span></td>
+                                  </tr>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         <?php if ($role != "Admin") { ?>
-                          <p>
-                            Transaction id: <span class="transactionid"></span><br>
-                            HR Remarks: <span class="mediremarks"></span><br>
-                          </p>
+                          <!-- Non-Admin View -->
+                          <div class="card mb-3">
+                            <div class="card-header bg-light">
+                              <h6 class="mb-0">Processing Information</h6>
+                            </div>
+                            <div class="card-body">
+                              <table class="table table-sm table-borderless">
+                                <tr>
+                                  <td style="width: 30%"><strong>Transaction ID:</strong></td>
+                                  <td><span class="transactionid"></span></td>
+                                </tr>
+                                <tr>
+                                  <td><strong>HR Remarks:</strong></td>
+                                  <td><span class="mediremarks"></span></td>
+                                </tr>
+                                <tr>
+                                  <td><strong>Transfer Date:</strong></td>
+                                  <td><span class="transfereddate"></span></td>
+                                </tr>
+                                <tr>
+                                  <td><strong>Closed On:</strong></td>
+                                  <td><span class="closedon"></span></td>
+                                </tr>
+                              </table>
+                            </div>
+                          </div>
                         <?php } ?>
 
                         <?php if ($role == "Admin") { ?>
-                          <form id="claimreviewform" name="claimreviewform" action="#" method="POST">
-                            <input type="hidden" name="form-type" value="claimreviewform" readonly>
-                            <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-                            <input type="hidden" name="reviewer_name" id="reviewer_name" value="<?php echo $fullname ?>" readonly>
-                            <input type="hidden" name="reimbid" id="reimbid" readonly>
-
-                            <div class="mb-3">
-                              <select name="claimstatus" id="claimstatus" class="form-select" required>
-                                <option value="" disabled selected>Select Status</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Claim settled">Claim settled</option>
-                                <option value="Under review">Under review</option>
-                                <option value="Rejected">Rejected</option>
-                              </select>
-                              <small class="form-text text-muted">Claim status <span style="color:red">*</span></small>
+                          <!-- Admin Update Form -->
+                          <div class="card">
+                            <div class="card-header bg-light">
+                              <h6 class="mb-0">Update Claim Status</h6>
                             </div>
+                            <div class="card-body">
+                              <form id="claimreviewform" name="claimreviewform" action="#" method="POST">
+                                <input type="hidden" name="form-type" value="claimreviewform" readonly>
+                                <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
+                                <input type="hidden" name="reviewer_name" id="reviewer_name" value="<?php echo $fullname ?>" readonly>
+                                <input type="hidden" name="reimbid" id="reimbid" readonly>
 
-                            <div class="mb-3">
-                              <input type="number" name="approvedamount" id="approvedamount" class="form-control" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                              <small class="form-text text-muted">Approved amount <span style="color:red">*</span></small>
+                                <div class="row mb-3">
+                                  <div class="col-md-6">
+                                    <label for="claimstatus" class="form-label">Claim Status <span class="text-danger">*</span></label>
+                                    <select name="claimstatus" id="claimstatus" class="form-select" required>
+                                      <option value="" disabled selected>Select Status</option>
+                                      <option value="Approved">Approved</option>
+                                      <option value="Claim settled">Claim settled</option>
+                                      <option value="Under review">Under review</option>
+                                      <option value="Rejected">Rejected</option>
+                                    </select>
+                                  </div>
+                                  <div class="col-md-6">
+                                    <label for="approvedamount" class="form-label">Approved Amount (₹) <span class="text-danger">*</span></label>
+                                    <input type="number" name="approvedamount" id="approvedamount" class="form-control" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                  </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                  <div class="col-md-6">
+                                    <label for="transactionid" class="form-label">Transaction ID <span class="text-danger">*</span></label>
+                                    <input type="text" name="transactionid" id="transactionid" class="form-control" placeholder="Transaction id" required>
+                                  </div>
+                                  <div class="col-md-6">
+                                    <label for="transfereddate" class="form-label">Transfer Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="transfereddate" id="transfereddate" class="form-control" required>
+                                  </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                  <div class="col-md-12">
+                                    <label for="mediremarks" class="form-label">HR Remarks</label>
+                                    <textarea name="mediremarks" id="mediremarks" class="form-control" placeholder="Enter remarks here..." rows="3"></textarea>
+                                  </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                  <div class="col-md-6">
+                                    <label for="closedon" class="form-label">Closed On</label>
+                                    <input type="date" name="closedon" id="closedon" class="form-control">
+                                  </div>
+                                </div>
+
+                                <button type="submit" id="claimupdate" class="btn btn-danger">Update Claim</button>
+                              </form>
                             </div>
-
-                            <div class="mb-3">
-                              <input type="text" name="transactionid" id="transactionid" class="form-control" placeholder="Transaction id" required>
-                              <small class="form-text text-muted">Transaction id <span style="color:red">*</span></small>
-                            </div>
-
-                            <div class="mb-3">
-                              <input type="date" name="transfereddate" id="transfereddate" class="form-control" required>
-                              <small class="form-text text-muted">Transfer Date <span style="color:red">*</span></small>
-                            </div>
-
-                            <div class="mb-3">
-                              <textarea name="mediremarks" id="mediremarks" class="form-control" placeholder="HR remarks"></textarea>
-                              <small class="form-text text-muted">HR remarks</small>
-                            </div>
-
-                            <div class="mb-3">
-                              <input type="date" name="closedon" id="closedon" class="form-control">
-                              <small class="form-text text-muted">Closed on</small>
-                            </div>
-
-                            <button type="submit" id="claimupdate" class="btn btn-danger btn-sm">Update</button>
-                          </form>
+                          </div>
                         <?php } ?>
 
-                        <p style="font-size:small; text-align:right; font-style:italic; color:#A2A2A2;">
-                          Updated by: <span class="reviewer_name"></span> (<span class="reviewer_id"></span>) on <span class="updatedon"></span>
-                        </p>
+                        <!-- Updated By Information -->
+                        <div class="mt-3 text-end">
+                          <p style="font-size:small; font-style:italic; color:#6c757d;">
+                            Updated by: <span class="reviewer_name"></span> (<span class="reviewer_id"></span>) on <span class="updatedon"></span>
+                          </p>
+                        </div>
 
                       </div>
                       <div class="modal-footer">
@@ -672,65 +794,130 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                     var mydata = data.find(item => item.reimbid == id);
                     if (!mydata) return;
 
-                    // Populate spans and inputs
+                    // EXTRACT THE VALUES FROM mydata FIRST
+                    var claimantName = mydata["fullname"] || mydata["studentname"] || "N/A";
+                    var email = mydata["email"] || mydata["emailaddress"] || "N/A";
+                    var phone = mydata["phone"] || mydata["contact"] || "N/A";
+
+                    // Get the elements
+                    var nameElements = document.querySelectorAll('.fullname, .studentname');
+                    var emailElements = document.querySelectorAll('.email, .emailaddress');
+                    var phoneElements = document.querySelectorAll('.phone, .contact');
+
+                    // Set modal title with claim number
+                    document.getElementById("claimNumber").textContent = mydata["reimbid"];
+
+                    // Populate all data fields
                     Object.keys(mydata).forEach(key => {
+                      // For elements with class names matching database fields
                       var elems = document.getElementsByClassName(key);
-                      if (elems.length > 0) {
-                        elems[0].innerHTML = mydata[key];
+                      for (var i = 0; i < elems.length; i++) {
+                        var value = mydata[key];
+
+                        // Format date fields
+                        if (key.includes('date') || key.includes('timestamp') || key.includes('transfereddate') || key.includes('closedon')) {
+                          if (value) {
+                            var date = new Date(value);
+                            if (!isNaN(date.getTime())) {
+                              value = date.toLocaleDateString('en-GB'); // Format as dd/mm/yyyy
+                            }
+                          }
+                        }
+
+                        // For timestamp specifically, include time
+                        if (key === 'timestamp' && value) {
+                          var date = new Date(mydata[key]);
+                          if (!isNaN(date.getTime())) {
+                            value = date.toLocaleString('en-GB', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            });
+                          }
+                        }
+
+                        elems[i].textContent = value || 'N/A';
                       }
                     });
 
-                    document.getElementById("status_details").textContent = mydata["reimbid"];
+                    // NOW POPULATE THE CLAIMANT INFO ELEMENTS
+                    nameElements.forEach(function(element) {
+                      element.textContent = claimantName; // This is now defined
+                    });
+
+                    emailElements.forEach(function(element) {
+                      element.textContent = email; // This is now defined
+                    });
+
+                    phoneElements.forEach(function(element) {
+                      element.textContent = phone; // This is now defined
+                    });
+
+                    // Set claim status badge
+                    document.getElementById("status_details").textContent = mydata["claimstatus"] || "Pending";
                     var statusDetails = document.getElementById("status_details");
-                    statusDetails.classList.remove("bg-success", "bg-danger", "bg-secondary");
+                    statusDetails.className = "badge";
 
                     if (mydata["claimstatus"] === "Claim settled") {
                       statusDetails.classList.add("bg-success");
                     } else if (mydata["claimstatus"] === "Rejected") {
                       statusDetails.classList.add("bg-danger");
+                    } else if (mydata["claimstatus"] === "Approved") {
+                      statusDetails.classList.add("bg-success");
+                    } else if (mydata["claimstatus"] === "Under review") {
+                      statusDetails.classList.add("bg-warning");
                     } else {
                       statusDetails.classList.add("bg-secondary");
                     }
 
-                    document.getElementById("reimbid").value = mydata["reimbid"] || "";
-                    document.getElementById("claimstatus").value = mydata["claimstatus"] || "";
-                    document.getElementById("mediremarks").value = mydata["mediremarks"] || "";
-                    document.getElementById("approvedamount").value = mydata["approvedamount"] || "";
-                    document.getElementById("transactionid").value = mydata["transactionid"] || "";
-                    document.getElementById("transfereddate").value = mydata["transfereddate"] || "";
-                    document.getElementById("closedon").value = mydata["closedon"] || "";
+                    // Set form values for admin
+                    if (document.getElementById("reimbid")) {
+                      document.getElementById("reimbid").value = mydata["reimbid"] || "";
+                      document.getElementById("claimstatus").value = mydata["claimstatus"] || "";
+                      document.getElementById("mediremarks").value = mydata["mediremarks"] || "";
+                      document.getElementById("approvedamount").value = mydata["approvedamount"] || "";
+                      document.getElementById("transactionid").value = mydata["transactionid"] || "";
+                      document.getElementById("transfereddate").value = mydata["transfereddate"] || "";
+                      document.getElementById("closedon").value = mydata["closedon"] || "";
 
-                    function updateFieldStatus() {
-                      const claimStatus = document.getElementById('claimstatus').value;
-                      const approved = document.getElementById("approvedamount");
-                      const transaction = document.getElementById("transactionid");
-                      const transfered = document.getElementById("transfereddate");
+                      function updateFieldStatus() {
+                        const claimStatus = document.getElementById('claimstatus').value;
+                        const approved = document.getElementById("approvedamount");
+                        const transaction = document.getElementById("transactionid");
+                        const transfered = document.getElementById("transfereddate");
 
-                      if (claimStatus === "" || claimStatus === "Rejected" || claimStatus === "Under review") {
-                        approved.disabled = true;
-                        transaction.disabled = true;
-                        transfered.disabled = true;
-                      } else if (claimStatus === "Approved") {
-                        approved.disabled = false;
-                        transaction.disabled = true;
-                        transfered.disabled = true;
-                      } else if (claimStatus === "Claim settled") {
-                        approved.disabled = false;
-                        transaction.disabled = false;
-                        transfered.disabled = false;
+                        if (claimStatus === "" || claimStatus === "Rejected" || claimStatus === "Under review") {
+                          approved.disabled = true;
+                          transaction.disabled = true;
+                          transfered.disabled = true;
+                        } else if (claimStatus === "Approved") {
+                          approved.disabled = false;
+                          transaction.disabled = true;
+                          transfered.disabled = true;
+                        } else if (claimStatus === "Claim settled") {
+                          approved.disabled = false;
+                          transaction.disabled = false;
+                          transfered.disabled = false;
+                        }
+                      }
+
+                      document.getElementById('claimstatus').addEventListener('change', updateFieldStatus);
+                      updateFieldStatus();
+
+                      const updateButton = document.getElementById("claimupdate");
+                      if (mydata["claimstatus"] == 'Claim settled' || mydata["claimstatus"] == 'Rejected') {
+                        updateButton.disabled = true;
+                        updateButton.textContent = "Claim Already Processed";
+                      } else {
+                        updateButton.disabled = false;
+                        updateButton.textContent = "Update Claim";
                       }
                     }
 
-                    document.getElementById('claimstatus').addEventListener('change', updateFieldStatus);
-                    updateFieldStatus();
-
-                    const updateButton = document.getElementById("claimupdate");
-                    if (mydata["claimstatus"] == 'Claim settled' || mydata["claimstatus"] == 'Rejected') {
-                      updateButton.disabled = true;
-                    } else {
-                      updateButton.disabled = false;
-                    }
-
+                    // Show the modal
                     var modalEl = document.getElementById('myModal');
                     var modal = new bootstrap.Modal(modalEl);
                     modal.show();
@@ -824,8 +1011,8 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-  
+  <script src="../assets_new/js/main.js"></script>
+
   <script>
     $(document).ready(function() {
       // Check if resultArr is empty
