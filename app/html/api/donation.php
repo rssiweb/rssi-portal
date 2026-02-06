@@ -229,7 +229,7 @@ if ($formtype === "donation_review") {
 
   $reviewer_id       = $_POST['reviewer_id'] ?? null;
   $donationid        = $_POST['donationid'] ?? null;
-  $donation_received_date = $_POST['donation_received_date'] ?? null;
+  $bank_receipt_date = $_POST['bank_receipt_date'] ?? null;
   $reviewer_status   = $_POST['reviewer_status'] ?? null;
   $reviewer_remarks  = $_POST['reviewer_remarks'] ?? null;
   $now               = date('Y-m-d H:i:s');
@@ -244,7 +244,7 @@ if ($formtype === "donation_review") {
             status = $2,
             reviewer_remarks = $3,
             reviewedon = $4,
-            donation_received_date = $5
+            bank_receipt_date = $5
         WHERE donationid = $6
     ";
 
@@ -253,7 +253,7 @@ if ($formtype === "donation_review") {
     $reviewer_status,
     $reviewer_remarks,
     $now,
-    $donation_received_date,
+    $bank_receipt_date,
     $donationid
   ]);
 

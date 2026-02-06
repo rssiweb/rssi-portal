@@ -249,8 +249,8 @@ if ($searchField !== '' || $fyear !== '') {
                         <tr>
                           <td><?= date("d/m/Y h:i A", strtotime($array['timestamp'])) ?></td>
                           <td>
-                            <?= !empty($array['donation_received_date'])
-                              ? date("d/m/Y", strtotime($array['donation_received_date']))
+                            <?= !empty($array['bank_receipt_date'])
+                              ? date("d/m/Y", strtotime($array['bank_receipt_date']))
                               : '-' ?>
                           </td>
                           <td>
@@ -390,13 +390,13 @@ if ($searchField !== '' || $fyear !== '') {
             <input type="hidden" name="donationid" id="donationid" readonly>
 
             <div class="mb-3">
-              <label for="donation_received_date" class="form-label">
-                Donation Received Date
+              <label for="bank_receipt_date" class="form-label">
+                Bank Receipt Date
               </label>
               <input
                 type="date"
-                name="donation_received_date"
-                id="donation_received_date"
+                name="bank_receipt_date"
+                id="bank_receipt_date"
                 class="form-control"
                 required>
             </div>
@@ -448,7 +448,7 @@ if ($searchField !== '' || $fyear !== '') {
       document.getElementById("donationid").value = mydata["donationid"];
       document.getElementById("reviewer_status").value = mydata["status"] || '';
       document.getElementById("reviewer_remarks").value = mydata["reviewer_remarks"] || '';
-      document.getElementById("donation_received_date").value = mydata["donation_received_date"] || '';
+      document.getElementById("bank_receipt_date").value = mydata["bank_receipt_date"] || '';
       document.querySelector(".reviewedby").innerHTML = mydata["reviewedby"] || '';
       document.querySelector(".reviewedon").innerHTML = mydata["reviewedon"] || '';
 
