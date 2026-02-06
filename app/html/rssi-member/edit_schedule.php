@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Day</label>
-                                        <select class="form-control" name="workday" required>
+                                        <select class="form-select" name="workday" required>
                                             <option value="Mon" <?php echo $schedule['workday'] == 'Mon' ? 'selected' : ''; ?>>Monday</option>
                                             <option value="Tue" <?php echo $schedule['workday'] == 'Tue' ? 'selected' : ''; ?>>Tuesday</option>
                                             <option value="Wed" <?php echo $schedule['workday'] == 'Wed' ? 'selected' : ''; ?>>Wednesday</option>

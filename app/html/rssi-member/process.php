@@ -138,35 +138,53 @@ if (@$_POST['form-type'] == "appraisee_response") {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+
+            $('.associate-select').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            isActive: true
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Select associate number',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+
 </head>
 
 <body>
-    <?php if (@$goalsheetid != null && @$cmdtuples == 0) { ?>
-
-        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
-            Oops, something went wrong! We were unable to generate the goal sheet for associate number <?php echo $appraisee_associatenumber ?>. Please try again later or contact support for assistance.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php } else if (@$cmdtuples == 1) { ?>
-
-        <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
-            Congratulations! The goal sheet for associate number <?php echo $appraisee_associatenumber ?> has been generated successfully. The unique goal sheet ID is <?php echo $goalsheetid ?>.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <script>
-            if (window.history.replaceState) {
-                window.history.replaceState(null, null, window.location.href);
-            }
-        </script>
-    <?php } ?>
     <?php include 'includes/header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
@@ -186,6 +204,24 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
                         <div class="card-body">
                             <div class="container mt-5">
+                                <?php if (@$goalsheetid != null && @$cmdtuples == 0) { ?>
+
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                        Oops, something went wrong! We were unable to generate the goal sheet for associate number <?php echo $appraisee_associatenumber ?>. Please try again later or contact support for assistance.
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                <?php } else if (@$cmdtuples == 1) { ?>
+
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                        Congratulations! The goal sheet for associate number <?php echo $appraisee_associatenumber ?> has been generated successfully. The unique goal sheet ID is <?php echo $goalsheetid ?>.
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
+                                <?php } ?>
                                 <form method="GET" action="" id="searchForm">
                                     <div class="form-group mb-3">
                                         <label for="role_search" class="form-label">Role:</label>
@@ -255,31 +291,70 @@ if (@$_POST['form-type'] == "appraisee_response") {
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6">
+
+                                                    <!-- Appraisee -->
                                                     <div class="form-group mb-3">
-                                                        <label for="appraisee_associate_number" class="form-label">Appraisee Associate Number:</label>
-                                                        <input type="text" class="form-control" name="appraisee_associate_number" required>
-                                                        <div id="appraisee_associate_number_help" class="form-text">Please enter the unique associate number of the appraisee.</div>
+                                                        <label for="appraisee_associate_number" class="form-label">
+                                                            Appraisee Associate Number:
+                                                        </label>
+                                                        <select class="form-select associate-select"
+                                                            id="appraisee_associate_number"
+                                                            name="appraisee_associate_number"
+                                                            required>
+                                                        </select>
+                                                        <div class="form-text">
+                                                            Please select the associate number of the appraisee.
+                                                        </div>
                                                     </div>
 
+                                                    <!-- Immediate Manager -->
                                                     <div class="form-group mb-3">
-                                                        <label for="manager1_associatenumber" class="form-label">Immediate Manager Associate Number:</label>
-                                                        <input type="text" class="form-control" name="manager1_associatenumber">
-                                                        <div id="manager1_associatenumber_help" class="form-text">Please enter the unique associate number of the immediate manager.</div>
+                                                        <label for="manager1_associatenumber" class="form-label">
+                                                            Immediate Manager Associate Number:
+                                                        </label>
+                                                        <select class="form-select associate-select"
+                                                            id="manager1_associatenumber"
+                                                            name="manager1_associatenumber">
+                                                        </select>
+                                                        <div class="form-text">
+                                                            Please select the associate number of the immediate manager.
+                                                        </div>
                                                     </div>
+
                                                 </div>
 
                                                 <div class="col-md-6">
+
+                                                    <!-- Manager -->
                                                     <div class="form-group mb-3">
-                                                        <label for="manager_associate_number" class="form-label">Manager Associate Number:</label>
-                                                        <input type="text" class="form-control" name="manager_associate_number" required>
-                                                        <div id="manager_associate_number_help" class="form-text">Please enter the unique associate number of the manager.</div>
+                                                        <label for="manager_associate_number" class="form-label">
+                                                            Manager Associate Number:
+                                                        </label>
+                                                        <select class="form-select associate-select"
+                                                            id="manager_associate_number"
+                                                            name="manager_associate_number"
+                                                            required>
+                                                        </select>
+                                                        <div class="form-text">
+                                                            Please select the associate number of the manager.
+                                                        </div>
                                                     </div>
 
+                                                    <!-- Reviewer -->
                                                     <div class="form-group mb-3">
-                                                        <label for="reviewer_associate_number" class="form-label">Reviewer Associate Number:</label>
-                                                        <input type="text" class="form-control" name="reviewer_associate_number" required>
-                                                        <div id="reviewer_associate_number_help" class="form-text">Please enter the unique associate number of the reviewer.</div>
+                                                        <label for="reviewer_associate_number" class="form-label">
+                                                            Reviewer Associate Number:
+                                                        </label>
+                                                        <select class="form-select associate-select"
+                                                            id="reviewer_associate_number"
+                                                            name="reviewer_associate_number"
+                                                            required>
+                                                        </select>
+                                                        <div class="form-text">
+                                                            Please select the associate number of the reviewer.
+                                                        </div>
                                                     </div>
+
                                                 </div>
                                             </div>
 
@@ -552,13 +627,10 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Bootstrap JS -->
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         function checkAssociateNumbers() {

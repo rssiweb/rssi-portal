@@ -131,8 +131,8 @@ function displayTDs($array)
     </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <?php include 'includes/meta.php' ?>
 
-    
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -273,7 +273,7 @@ function displayTDs($array)
                                 <?php
                                 if ($role == 'Admin') { ?>
                                     <div class="col" style="display: inline-block; width:100%; text-align:right">
-                                        <span class="noticea"><a href="process.php"  title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                                        <span class="noticea"><a href="process.php" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
                                     </div>
                                 <?php } ?>
 
@@ -380,7 +380,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -472,7 +472,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -565,7 +565,7 @@ function displayTDs($array)
                                                                     </td>
                                                                     <td>
                                                                         <span class="noticea">
-                                                                            <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>"  class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                                         </span>
                                                                     </td>
 
@@ -681,8 +681,8 @@ function displayTDs($array)
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
 </body>
 
