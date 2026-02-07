@@ -3095,6 +3095,78 @@ function getStudentVerificationBadge($linkedStudents)
             });
         }
     </script>
+    <script>
+        // Bootstrap-styled scroll-to-top button
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create button
+            const scrollBtn = document.createElement('button');
+            scrollBtn.id = 'scrollToTop';
+            scrollBtn.className = 'btn btn-primary shadow';
+            scrollBtn.innerHTML = '<i class="bi bi-chevron-up fs-5"></i>';
+            scrollBtn.title = 'Back to top';
+            scrollBtn.setAttribute('aria-label', 'Scroll to top');
+
+            // Apply styles
+            Object.assign(scrollBtn.style, {
+                position: 'fixed',
+                bottom: '25px',
+                right: '25px',
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                display: 'none',
+                zIndex: '1000',
+                padding: '0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: '0.9',
+                transition: 'all 0.3s ease'
+            });
+
+            // Hover effects
+            scrollBtn.addEventListener('mouseenter', () => {
+                scrollBtn.style.opacity = '1';
+                scrollBtn.style.transform = 'scale(1.1)';
+            });
+
+            scrollBtn.addEventListener('mouseleave', () => {
+                scrollBtn.style.opacity = '0.9';
+                scrollBtn.style.transform = 'scale(1)';
+            });
+
+            // Add to page
+            document.body.appendChild(scrollBtn);
+
+            // Show/hide logic
+            function checkScroll() {
+                if (window.scrollY > 200) {
+                    scrollBtn.style.display = 'flex';
+                    setTimeout(() => {
+                        scrollBtn.style.opacity = '0.9';
+                    }, 10);
+                } else {
+                    scrollBtn.style.opacity = '0';
+                    setTimeout(() => {
+                        if (scrollBtn.style.opacity === '0') {
+                            scrollBtn.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            }
+
+            // Smooth scroll
+            scrollBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Listen for scroll
+            window.addEventListener('scroll', checkScroll);
+            checkScroll(); // Initial check
+        });
+    </script>
 </body>
 
 </html>
