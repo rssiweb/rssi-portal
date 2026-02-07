@@ -26,67 +26,49 @@ $results = [];
 
 try {
 
-    /* =====================
-       STUDENTS
-    ====================== */
-
-    $studentQuery = "
+    $query = "
+    SELECT *
+    FROM (
         SELECT
             student_id AS id,
             studentname AS name,
             class,
             filterstatus,
-            photourl
+            photourl AS photo,
+            'student' AS type
         FROM public.rssimyprofile_student
         WHERE student_id = $1
            OR studentname ILIKE $2
-        LIMIT 5
-    ";
 
-    $studentParams = [
+        UNION ALL
+
+        SELECT
+            associatenumber AS id,
+            fullname AS name,
+            '' AS class,
+            filterstatus,
+            photo,
+            'associate' AS type
+        FROM public.rssimyaccount_members
+        WHERE (
+                associatenumber = $1
+             OR fullname ILIKE $2
+              )
+          AND (class = 'Online' OR class = 'Hybrid')
+    ) t
+    ORDER BY
+        CASE WHEN filterstatus = 'Active' THEN 1 ELSE 2 END,
+        name
+";
+    $params = [
         $searchTerm,
         '%' . $searchTerm . '%'
     ];
 
-    $studentResult = pg_query_params($con, $studentQuery, $studentParams);
+    $result = pg_query_params($con, $query, $params);
 
-    while ($row = pg_fetch_assoc($studentResult)) {
-        $results[] = array_merge($row, ['type' => 'student']);
-    }
-
-    /* =====================
-       ASSOCIATES
-    ====================== */
-
-    if (count($results) < 10) {
-
-        $associateQuery = "
-            SELECT
-                associatenumber AS id,
-                fullname AS name,
-                filterstatus,
-                photo
-            FROM public.rssimyaccount_members
-            WHERE (
-                    associatenumber = $1
-                 OR fullname ILIKE $2
-                  )
-              AND filterstatus = 'Active'
-              AND class != 'Offline'
-            LIMIT 5
-        ";
-
-        $associateParams = [
-            $searchTerm,
-            '%' . $searchTerm . '%'
-        ];
-
-        $associateResult = pg_query_params($con, $associateQuery, $associateParams);
-
-        while ($row = pg_fetch_assoc($associateResult)) {
-            $row['class'] = '';
-            $results[] = array_merge($row, ['type' => 'associate']);
-        }
+    while ($row = pg_fetch_assoc($result)) {
+        $results[] = $row;
     }
 
     /* =====================
