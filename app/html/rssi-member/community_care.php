@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include(__DIR__ . "/../image_functions.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -352,7 +353,7 @@ function getStudentVerificationBadge($linkedStudents)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -469,60 +470,6 @@ function getStudentVerificationBadge($linkedStudents)
 
         .export-btn {
             border-radius: 20px;
-        }
-    </style>
-    <style>
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1050;
-            background: #0d6efd;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            padding: 8px 12px;
-            font-size: 24px;
-        }
-
-        @media (max-width: 767.98px) {
-            .menu-toggle {
-                display: block;
-            }
-
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: -100%;
-                height: 100vh;
-                width: 250px;
-                transition: left 0.3s ease;
-                z-index: 1040;
-            }
-
-            .sidebar.show {
-                left: 0;
-            }
-
-            .sidebar::after {
-                content: '';
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: -1;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-            }
-
-            .sidebar.show::after {
-                opacity: 1;
-                pointer-events: auto;
-            }
         }
     </style>
 </head>
@@ -729,34 +676,28 @@ function getStudentVerificationBadge($linkedStudents)
                                                                     <td>
                                                                         <?php if (!empty($row['profile_photo'])): ?>
                                                                             <?php
-                                                                            // Extract file ID from Google Drive URL
-                                                                            preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $row['profile_photo'], $matches);
-                                                                            $file_id = $matches[1] ?? null;
-
-                                                                            if ($file_id):
-                                                                                $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                                                            // Process the Google Drive URL to proxy URL
+                                                                            $processedUrl = processImageUrl($row['profile_photo']);
                                                                             ?>
-                                                                                <div class="drive-photo-preview"
-                                                                                    data-toggle="tooltip"
-                                                                                    title="Click to view full photo"
-                                                                                    onclick="showPhotoModal('<?= $preview_url ?>')">
-                                                                                    <iframe src="<?= $preview_url ?>"
-                                                                                        width="40"
-                                                                                        height="40"
-                                                                                        frameborder="0"
-                                                                                        style="border-radius: 50%;"
-                                                                                        allow="autoplay">
-                                                                                    </iframe>
-                                                                                </div>
-                                                                            <?php else: ?>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40" class="avatar me-2" style="border-radius: 50%;">
-                                                                                </div>
-                                                                            <?php endif; ?>
+                                                                            <img
+                                                                                src="<?= $processedUrl ?>"
+                                                                                width="40"
+                                                                                height="40"
+                                                                                class="avatar"
+                                                                                alt="<?= htmlspecialchars($row['name']) ?> profile photo"
+                                                                                style="border-radius: 50%; object-fit: cover; cursor: pointer;"
+                                                                                loading="lazy"
+                                                                                data-bs-toggle="tooltip"
+                                                                                title="Click to view full photo"
+                                                                                onclick="showPhotoModal('<?= $processedUrl ?>')">
                                                                         <?php else: ?>
-                                                                            <div class="d-flex align-items-center">
-                                                                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40" class="avatar me-2" style="border-radius: 50%;">
-                                                                            </div>
+                                                                            <img
+                                                                                src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40"
+                                                                                width="40"
+                                                                                height="40"
+                                                                                class="avatar"
+                                                                                alt="<?= htmlspecialchars($row['name']) ?> avatar"
+                                                                                style="border-radius: 50%;">
                                                                         <?php endif; ?>
                                                                     </td>
                                                                     <td>
@@ -2904,45 +2845,6 @@ function getStudentVerificationBadge($linkedStudents)
             // Set minimum date for appointment (today)
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('appointmentDate').min = today;
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Create menu toggle button
-            const toggleButton = document.createElement('button');
-            toggleButton.className = 'menu-toggle';
-            toggleButton.innerHTML = '<i class="bi bi-list"></i>';
-            document.body.appendChild(toggleButton);
-
-            // Get sidebar element
-            const sidebar = document.querySelector('.sidebar');
-
-            // Toggle menu function
-            function toggleMenu() {
-                sidebar.classList.toggle('show');
-            }
-
-            // Add click event to toggle button
-            toggleButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleMenu();
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (sidebar.classList.contains('show') &&
-                    !sidebar.contains(e.target) &&
-                    e.target !== toggleButton) {
-                    toggleMenu();
-                }
-            });
-
-            // Close menu on resize if viewport changes to desktop
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768 && sidebar.classList.contains('show')) {
-                    toggleMenu();
-                }
-            });
         });
     </script>
 </body>
