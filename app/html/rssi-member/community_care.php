@@ -472,6 +472,103 @@ function getStudentVerificationBadge($linkedStudents)
             border-radius: 20px;
         }
     </style>
+    <style>
+        /* Menu toggle button - FIXED VERSION */
+        .menu-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 99999 !important;
+            /* Very high z-index */
+            background: var(--primary-color) !important;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: #0d6efd !important;
+            transform: scale(1.05);
+        }
+
+        /* Sidebar overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+
+            /* Hide toggle button on desktop */
+            .menu-toggle,
+            .sidebar-overlay {
+                display: none !important;
+            }
+
+            /* Ensure sidebar is visible on desktop */
+            .sidebar {
+                left: 0 !important;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+
+            /* Show toggle button only on mobile */
+            .menu-toggle {
+                display: flex !important;
+            }
+
+            /* Mobile sidebar */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -300px;
+                width: 280px;
+                height: 100vh;
+                z-index: 10000;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+                box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            /* Adjust main content for mobile */
+            .col-md-9.ms-sm-auto.col-lg-10.px-md-4.py-4 {
+                margin-left: 0 !important;
+                padding-top: 70px !important;
+                /* Make space for toggle button */
+            }
+
+            /* Make sure content is visible */
+            .main-content {
+                position: relative;
+                z-index: 1;
+            }
+        }
+
+        /* Ensure Bootstrap doesn't override our styles */
+        .btn.menu-toggle {
+            padding: 0 !important;
+            line-height: 1 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -2845,6 +2942,97 @@ function getStudentVerificationBadge($linkedStudents)
             // Set minimum date for appointment (today)
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('appointmentDate').min = today;
+        });
+    </script>
+    <script>
+        // Menu Toggle Functionality - SIMPLIFIED VERSION
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing menu toggle...');
+
+            // Get sidebar element
+            const sidebar = document.querySelector('.sidebar');
+            console.log('Sidebar found:', !!sidebar);
+
+            // Create menu toggle button
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'menu-toggle btn btn-primary';
+            toggleButton.setAttribute('type', 'button');
+            toggleButton.setAttribute('aria-label', 'Toggle menu');
+            toggleButton.innerHTML = '<i class="bi bi-list"></i>';
+
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+
+            // Append elements to body
+            document.body.appendChild(toggleButton);
+            document.body.appendChild(overlay);
+
+            console.log('Menu toggle button added:', toggleButton);
+
+            // Toggle menu function
+            function toggleMenu(show) {
+                const shouldShow = show !== undefined ? show : !sidebar.classList.contains('show');
+
+                if (shouldShow) {
+                    sidebar.classList.add('show');
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    toggleButton.innerHTML = '<i class="bi bi-x-lg"></i>';
+                } else {
+                    sidebar.classList.remove('show');
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                    toggleButton.innerHTML = '<i class="bi bi-list"></i>';
+                }
+            }
+
+            // Click events
+            toggleButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            overlay.addEventListener('click', function() {
+                toggleMenu(false);
+            });
+
+            // Close menu when clicking on a nav link (optional)
+            sidebar.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    toggleMenu(false);
+                });
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                    toggleMenu(false);
+                }
+            });
+
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    console.log('Window resized to:', window.innerWidth);
+                    if (window.innerWidth >= 768) {
+                        // On desktop, ensure sidebar is visible
+                        toggleMenu(false);
+                        document.body.style.overflow = '';
+                    }
+                }, 150);
+            });
+
+            // Initial state for mobile
+            if (window.innerWidth < 768) {
+                console.log('Initial mobile view detected');
+                toggleButton.style.display = 'flex';
+            }
+
+            // Debug helper - add border to see button location
+            // toggleButton.style.border = '2px solid red'; // Remove after testing
         });
     </script>
 </body>
