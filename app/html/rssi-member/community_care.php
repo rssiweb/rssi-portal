@@ -781,12 +781,13 @@ function getStudentVerificationBadge($linkedStudents)
                                                                                 width="40"
                                                                                 height="40"
                                                                                 class="avatar"
-                                                                                alt="<?= htmlspecialchars($row['name']) ?> profile photo"
+                                                                                alt="<?= htmlspecialchars($row['name']) ?>"
                                                                                 style="border-radius: 50%; object-fit: cover; cursor: pointer;"
                                                                                 loading="lazy"
                                                                                 data-bs-toggle="tooltip"
                                                                                 title="Click to view full photo"
-                                                                                onclick="showPhotoModal('<?= $processedUrl ?>')">
+                                                                                onclick="showPhotoModal('<?= addslashes($processedUrl) ?>')"
+                                                                                onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random'">
                                                                         <?php else: ?>
                                                                             <img
                                                                                 src="https://ui-avatars.com/api/?name=<?= urlencode($row['name']) ?>&background=random&size=40"
@@ -3034,6 +3035,65 @@ function getStudentVerificationBadge($linkedStudents)
             // Debug helper - add border to see button location
             // toggleButton.style.border = '2px solid red'; // Remove after testing
         });
+    </script>
+    <script>
+        // Ultra-simple, always-working version
+        function showPhotoModal(imageUrl) {
+            // Create basic modal structure
+            const modalId = 'simplePhotoModal_' + Date.now();
+
+            const modalHTML = `
+    <div class="modal fade" id="${modalId}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Profile Photo</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-2" style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
+                    <div id="spinner_${modalId}" style="position: absolute;">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                    <img id="image_${modalId}" style="max-width: 100%; max-height: 60vh; display: none;">
+                </div>
+                <div class="modal-footer p-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            const modalEl = document.getElementById(modalId);
+            const spinnerEl = document.getElementById('spinner_' + modalId);
+            const imageEl = document.getElementById('image_' + modalId);
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            // Load image
+            imageEl.onload = function() {
+                spinnerEl.style.display = 'none';
+                this.style.display = 'block';
+            };
+
+            imageEl.onerror = function() {
+                spinnerEl.style.display = 'none';
+                this.style.display = 'block';
+                this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%23dc3545" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+                this.alt = 'Image failed to load';
+            };
+
+            imageEl.src = imageUrl;
+
+            // Remove modal from DOM when closed
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                setTimeout(() => {
+                    modalEl.remove();
+                }, 300);
+            });
+        }
     </script>
 </body>
 
