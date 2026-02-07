@@ -50,12 +50,12 @@ try {
             photo,
             'associate' AS type
         FROM public.rssimyaccount_members
-        WHERE (
-                associatenumber = $1
-             OR fullname ILIKE $2
-              )
-          AND associatenumber = $3
-          AND (class = 'Online' OR class = 'Hybrid')
+        WHERE associatenumber = $3
+  AND (
+        associatenumber = $1
+     OR fullname ILIKE $2
+      )
+  AND (class = 'Online' OR class = 'Hybrid')
     ) t
     ORDER BY
         CASE WHEN filterstatus = 'Active' THEN 1 ELSE 2 END,
