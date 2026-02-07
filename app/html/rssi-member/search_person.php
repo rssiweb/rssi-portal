@@ -54,6 +54,7 @@ try {
                 associatenumber = $1
              OR fullname ILIKE $2
               )
+          AND associatenumber = $3
           AND (class = 'Online' OR class = 'Hybrid')
     ) t
     ORDER BY
@@ -62,7 +63,8 @@ try {
 ";
     $params = [
         $searchTerm,
-        '%' . $searchTerm . '%'
+        '%' . $searchTerm . '%',
+        $associatenumber
     ];
 
     $result = pg_query_params($con, $query, $params);
