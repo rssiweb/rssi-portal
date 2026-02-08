@@ -139,7 +139,11 @@ if ($formtype === "donation_form") {
     $fullName         = $_POST['fullName'] ?? null;
     $email            = $_POST['email'] ?? null;
     $contactNumberNew = $_POST['contactNumberNew'] ?? null;
-    $idNumber         = $_POST['idNumber'] ?? null;
+    function emptyToNull($value)
+    {
+      return ($value === '' || $value === null) ? null : $value;
+    }
+    $idNumber = emptyToNull($_POST['idNumber'] ?? null);
     $postalAddress    = !empty($_POST['postalAddress'])
       ? htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8')
       : null;
