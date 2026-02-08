@@ -401,13 +401,15 @@ $requests = pg_fetch_all($result) ?: [];
                                 <h5 class="card-title">Payment Requests</h5>
                                 <div class="export-btn-container">
                                     <form method="POST" style="display: inline;">
-                                        <!-- Pass all current filter parameters as hidden fields -->
                                         <input type="hidden" name="export" value="csv">
                                         <input type="hidden" name="academic_year" value="<?php echo htmlspecialchars($selectedAcademicYear); ?>">
                                         <input type="hidden" name="request_number" value="<?php echo isset($_GET['request_number']) ? htmlspecialchars($_GET['request_number']) : ''; ?>">
                                         <input type="hidden" name="status" value="<?php echo isset($_GET['status']) ? htmlspecialchars($_GET['status']) : ''; ?>">
                                         <input type="hidden" name="vendor_name" value="<?php echo isset($_GET['vendor_name']) ? htmlspecialchars($_GET['vendor_name']) : ''; ?>">
-                                        <button type="submit" class="btn btn-success">
+
+                                        <button type="submit" class="btn btn-success"
+                                            <?php echo empty($requests) ? 'disabled style="cursor: not-allowed; opacity: 0.65;"' : ''; ?>
+                                            title="<?php echo empty($requests) ? 'No data available to export' : 'Export current data to CSV'; ?>">
                                             <i class="bi bi-filetype-csv"></i> Export CSV
                                         </button>
                                     </form>
