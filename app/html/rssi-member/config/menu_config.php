@@ -248,8 +248,7 @@ class MenuConfig
                 'sidebar_id' => 'claims',
                 'pages' => [
                     'reimbursement.php' => ['title' => 'Reimbursement', 'show_in_menu' => true],
-                    'reimbursementstatus.php' => ['title' => 'Reimbursement Status', 'show_in_menu' => false],
-                    'third_party_submission.php' => ['title' => 'Third Party Payment Submission', 'show_in_menu' => true]
+                    'reimbursementstatus.php' => ['title' => 'Reimbursement Status', 'show_in_menu' => false]
                 ]
             ],
 

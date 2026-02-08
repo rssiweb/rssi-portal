@@ -62,6 +62,110 @@ if (isset($_GET['vendor_name']) && !empty($_GET['vendor_name'])) {
     $params[] = '%' . $_GET['vendor_name'] . '%';
 }
 
+// Handle CSV Export
+if (isset($_POST['export']) && $_POST['export'] == 'csv') {
+    // Use the same filters already applied
+    $exportQuery = "SELECT 
+                    tp.request_number,
+                    v.vendor_name,
+                    v.contact_number as vendor_contact,
+                    v.email as vendor_email,
+                    tp.invoice_number,
+                    TO_CHAR(tp.invoice_date, 'DD-MM-YYYY') as invoice_date,
+                    tp.amount,
+                    tp.purpose,
+                    tp.academic_year,
+                    tp.category,
+                    tp.submitted_by,
+                    TO_CHAR(tp.submission_date, 'DD-MM-YYYY HH24:MI') as submission_date,
+                    tp.status,
+                    TO_CHAR(tp.payment_date, 'DD-MM-YYYY') as payment_date,
+                    tp.transaction_id,
+                    tp.payment_mode,
+                    tp.bank_reference,
+                    tp.payment_status,
+                    v.gst_number,
+                    v.bank_account_no,
+                    v.bank_name,
+                    v.ifsc_code
+                  FROM third_party_payments tp
+                  LEFT JOIN third_party_vendors v ON tp.vendor_id = v.vendor_id
+                  $whereClause 
+                  ORDER BY tp.submission_date DESC";
+
+    $exportResult = pg_query_params($con, $exportQuery, $params);
+    $exportData = pg_fetch_all($exportResult) ?: [];
+
+    if (!empty($exportData)) {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="third_party_payments_' . date('Y-m-d_H-i-s') . '.csv"');
+
+        $output = fopen('php://output', 'w');
+        fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+
+        $headers = [
+            'Request Number',
+            'Vendor Name',
+            'Vendor Contact',
+            'Vendor Email',
+            'Invoice Number',
+            'Invoice Date',
+            'Amount (₹)',
+            'Purpose',
+            'Academic Year',
+            'Category',
+            'Submitted By',
+            'Submission Date',
+            'Status',
+            'Payment Date',
+            'Transaction ID',
+            'Payment Mode',
+            'Bank Reference',
+            'Payment Status',
+            'GST Number',
+            'Bank Account',
+            'Bank Name',
+            'IFSC Code'
+        ];
+
+        fputcsv($output, $headers);
+
+        foreach ($exportData as $row) {
+            fputcsv($output, [
+                $row['request_number'],
+                $row['vendor_name'],
+                $row['vendor_contact'] ?? '',
+                $row['vendor_email'] ?? '',
+                $row['invoice_number'],
+                $row['invoice_date'],
+                $row['amount'],
+                $row['purpose'],
+                $row['academic_year'],
+                $row['category'] ?? '',
+                $row['submitted_by'],
+                $row['submission_date'],
+                $row['status'],
+                $row['payment_date'] ?? '',
+                $row['transaction_id'] ?? '',
+                $row['payment_mode'] ?? '',
+                $row['bank_reference'] ?? '',
+                $row['payment_status'] ?? '',
+                $row['gst_number'] ?? '',
+                $row['bank_account_no'] ?? '',
+                $row['bank_name'] ?? '',
+                $row['ifsc_code'] ?? ''
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    } else {
+        $_SESSION['error_message'] = "No data found to export.";
+        header("Location: third_party_processing.php");
+        exit;
+    }
+}
+
 // Handle payment update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $id = $_POST['payment_id'];
@@ -293,8 +397,22 @@ $requests = pg_fetch_all($result) ?: [];
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Payment Requests</h5>
-
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title">Payment Requests</h5>
+                                <div class="export-btn-container">
+                                    <form method="POST" style="display: inline;">
+                                        <!-- Pass all current filter parameters as hidden fields -->
+                                        <input type="hidden" name="export" value="csv">
+                                        <input type="hidden" name="academic_year" value="<?php echo htmlspecialchars($selectedAcademicYear); ?>">
+                                        <input type="hidden" name="request_number" value="<?php echo isset($_GET['request_number']) ? htmlspecialchars($_GET['request_number']) : ''; ?>">
+                                        <input type="hidden" name="status" value="<?php echo isset($_GET['status']) ? htmlspecialchars($_GET['status']) : ''; ?>">
+                                        <input type="hidden" name="vendor_name" value="<?php echo isset($_GET['vendor_name']) ? htmlspecialchars($_GET['vendor_name']) : ''; ?>">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-filetype-csv"></i> Export CSV
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-hover" id="paymentTable">
                                     <thead>
@@ -332,16 +450,29 @@ $requests = pg_fetch_all($result) ?: [];
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-primary"
-                                                            data-bs-toggle="modal" data-bs-target="#viewModal<?php echo $req['id']; ?>">
-                                                            <i class="bi bi-eye"></i> View
-                                                        </button>
-                                                        <?php if ($req['status'] == 'Pending' || $req['status'] == 'Approved'): ?>
-                                                            <button type="button" class="btn btn-sm btn-success"
-                                                                data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $req['id']; ?>">
-                                                                <i class="bi bi-cash-coin"></i> Update Payment
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="bi bi-three-dots-vertical"></i>
                                                             </button>
-                                                        <?php endif; ?>
+                                                            <ul class="dropdown-menu">
+                                                                <li>
+                                                                    <button type="button" class="dropdown-item"
+                                                                        data-bs-toggle="modal" data-bs-target="#viewModal<?php echo $req['id']; ?>">
+                                                                        <i class="bi bi-eye me-2"></i> View Details
+                                                                    </button>
+                                                                </li>
+                                                                <?php if ($req['status'] == 'Pending' || $req['status'] == 'Approved'): ?>
+                                                                    <li>
+                                                                        <button type="button" class="dropdown-item"
+                                                                            data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $req['id']; ?>">
+                                                                            <i class="bi bi-cash-coin me-2"></i> Update Payment
+                                                                        </button>
+                                                                    </li>
+                                                                <?php endif; ?>
+                                                                <!-- You can add more actions here if needed -->
+                                                            </ul>
+                                                        </div>
                                                     </td>
                                                 </tr>
 
