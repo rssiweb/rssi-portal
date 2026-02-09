@@ -547,7 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-md-6">
                                     <label for="bill_document" class="form-label">Upload Bill/Invoice</label>
                                     <input type="file" class="form-control" id="bill_document" name="bill_document"
-                                        accept=".pdf,.jpg,.jpeg,.png" required>
+                                        accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)" required>
                                     <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
                                 </div>
 
@@ -574,6 +574,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
 
     <!-- REQUIRED FIELD STAR SCRIPT -->
     <script>

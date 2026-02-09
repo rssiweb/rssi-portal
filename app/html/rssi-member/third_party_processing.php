@@ -706,7 +706,7 @@ $requests = pg_fetch_all($result) ?: [];
                                                                     <div class="mb-3">
                                                                         <label class="form-label">Upload Payment Proof</label>
                                                                         <input type="file" class="form-control" name="payment_proof"
-                                                                            accept=".pdf,.jpg,.jpeg,.png">
+                                                                            accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)">
                                                                         <small class="text-muted">Max 5MB. PDF, JPG, PNG formats only.</small>
                                                                     </div>
                                                                 </div>
@@ -739,6 +739,7 @@ $requests = pg_fetch_all($result) ?: [];
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
     <script>
         <?php if (!empty($requests)) : ?>
             $(document).ready(function() {
