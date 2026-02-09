@@ -482,44 +482,9 @@ $totalUnpaid = $totals['total_unpaid'] ?? 0;
                                 </div>
                             </div>
 
-                            <!-- Summary Cards Row - Placed AFTER the title/button row -->
-                            <div class="row mb-4">
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card info-card border-start border-4 border-primary">
-                                        <div class="card-body">
-                                            <h5 class="card-title text-muted">Total Submitted</h5>
-                                            <div class="pt-2">
-                                                <h3 class="fw-bold text-primary">₹<?php echo number_format($totalSubmitted, 2); ?></h3>
-                                                <span class="text-muted small">Total bill amount submitted</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card info-card border-start border-4 border-success">
-                                        <div class="card-body">
-                                            <h5 class="card-title text-muted">Total Paid</h5>
-                                            <div class="pt-2">
-                                                <h3 class="fw-bold text-success">₹<?php echo number_format($totalPaid, 2); ?></h3>
-                                                <span class="text-muted small">Amount successfully paid</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card info-card border-start border-4 border-danger">
-                                        <div class="card-body">
-                                            <h5 class="card-title text-muted">Total Unpaid</h5>
-                                            <div class="pt-2">
-                                                <h3 class="fw-bold text-danger">₹<?php echo number_format($totalUnpaid, 2); ?></h3>
-                                                <span class="text-muted small">Pending for payment</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Summary Row -->
+                            <p>Amount successfully paid: <?php echo number_format($totalPaid, 2); ?></p>
+                            <p>Pending for payment: <?php echo number_format($totalUnpaid, 2); ?></p>
                             <div class="table-responsive">
                                 <table class="table table-hover" id="paymentTable">
                                     <thead>
