@@ -282,7 +282,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Upload to Google Drive
             $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
-            include("../../util/drive.php");
 
             $billDocumentPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
 

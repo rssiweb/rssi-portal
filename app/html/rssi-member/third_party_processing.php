@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -233,7 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
 
             // Upload to Google Drive
             $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
-            include("../../util/drive.php");
 
             // Get the uploaded file path from Google Drive
             $paymentProofPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
