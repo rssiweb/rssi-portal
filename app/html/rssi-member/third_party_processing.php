@@ -483,7 +483,7 @@ $totalUnpaid = $totals['total_unpaid'] ?? 0;
                             </div>
 
                             <!-- Summary Row -->
-                            <p>Amount successfully paid: <?php echo number_format($totalPaid, 2); ?></p>
+                            <p>Amount paid: <?php echo number_format($totalPaid, 2); ?></p>
                             <p>Pending for payment: <?php echo number_format($totalUnpaid, 2); ?></p>
                             <div class="table-responsive">
                                 <table class="table table-hover" id="paymentTable">
