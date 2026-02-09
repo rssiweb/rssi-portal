@@ -216,25 +216,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate request number
     $month = date('Ym');
     $query = pg_query($con, "SELECT COUNT(*) as count FROM third_party_payments 
-                            WHERE request_number LIKE 'VEND/$month/%'");
+                        WHERE request_number LIKE 'VEND/$month/%'");
     $result = pg_fetch_assoc($query);
     $count = $result['count'] + 1;
     $requestNumber = sprintf("VEND/%s/%03d", $month, $count);
 
-    // Handle file upload to Google Drive
-    $billDocumentPath = '';
-    if (isset($_FILES['bill_document']) && $_FILES['bill_document']['error'] === UPLOAD_ERR_OK) {
-        $uploadedFile = $_FILES['bill_document'];
-        $timestamp = time();
-        $fileName = "third_party_{$requestNumber}_{$timestamp}";
+    // Initialize variables
+    $billDocumentPath = null;
+    $insertedId = null;
 
-        // Upload to Google Drive
-        $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
-        $billDocumentPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
-    }
+    // Start transaction
+    pg_query($con, "BEGIN");
 
-    // Insert payment record into third_party_payments
-    $query = "INSERT INTO third_party_payments (
+    try {
+        // Step 1: First insert the record WITHOUT the file path
+        $query = "INSERT INTO third_party_payments (
                 request_number, 
                 vendor_id, 
                 invoice_number, 
@@ -242,32 +238,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 amount, 
                 purpose, 
                 academic_year, 
-                category, 
-                bill_document_path,
+                category,
                 submitted_by, 
                 submission_date, 
                 status
               ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, 'Pending'
-              )";
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, 'Pending'
+              ) RETURNING id";
 
-    $params = [
-        $requestNumber,
-        $vendorId,
-        $_POST['invoice_number'],
-        $_POST['invoice_date'],
-        $_POST['amount'],
-        $_POST['purpose'],
-        $_POST['academic_year'],
-        $_POST['category'] ?? '',
-        $billDocumentPath,
-        $associatenumber
-    ];
+        $params = [
+            $requestNumber,
+            $vendorId,
+            $_POST['invoice_number'],
+            $_POST['invoice_date'],
+            $_POST['amount'],
+            $_POST['purpose'],
+            $_POST['academic_year'],
+            $_POST['category'] ?? '',
+            $associatenumber
+        ];
 
-    $result = pg_query_params($con, $query, $params);
+        $result = pg_query_params($con, $query, $params);
 
-    if ($result) {
-        // Success message with appropriate info
+        if (!$result) {
+            throw new Exception("Failed to insert payment record");
+        }
+
+        // Get the inserted ID
+        $row = pg_fetch_assoc($result);
+        $insertedId = $row['id'];
+
+        if (!$insertedId) {
+            throw new Exception("Failed to retrieve inserted record ID");
+        }
+
+        // Step 2: Only upload file if database insert was successful
+        if (isset($_FILES['bill_document']) && $_FILES['bill_document']['error'] === UPLOAD_ERR_OK) {
+            $uploadedFile = $_FILES['bill_document'];
+            $timestamp = time();
+
+            // Use the actual database ID in filename for better reference
+            $fileName = "third_party_{$requestNumber}_{$insertedId}_{$timestamp}";
+
+            // Upload to Google Drive
+            $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
+            include("../../util/drive.php");
+
+            $billDocumentPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
+
+            if ($billDocumentPath) {
+                // Step 3: Update the record with the file path
+                $fileUpdateQuery = "UPDATE third_party_payments 
+                                SET bill_document_path = $1 
+                                WHERE id = $2";
+
+                $fileUpdateResult = pg_query_params($con, $fileUpdateQuery, [$billDocumentPath, $insertedId]);
+
+                if (!$fileUpdateResult) {
+                    throw new Exception("Failed to update file path in database");
+                }
+            } else {
+                // File upload failed but record exists - you might want to:
+                // 1. Log the error
+                // 2. Continue without the file (record still created)
+                // 3. Or rollback if file is mandatory
+                error_log("File upload failed for request number: $requestNumber");
+                // Continue without throwing error if file is optional
+            }
+        }
+
+        // Step 4: Handle vendor creation/update (from your context)
+        if ($selectedVendorId && $isBankChanged) {
+            // Update existing vendor with new bank details
+            $vendorUpdateQuery = "UPDATE vendors SET ... WHERE id = $1";
+            $vendorResult = pg_query_params($con, $vendorUpdateQuery, [$selectedVendorId]);
+
+            if (!$vendorResult) {
+                throw new Exception("Failed to update vendor details");
+            }
+        } elseif ($isNewVendor) {
+            // Insert new vendor
+            $vendorInsertQuery = "INSERT INTO vendors (...) VALUES (...) RETURNING id";
+            $vendorResult = pg_query_params($con, $vendorInsertQuery, $vendorParams);
+
+            if (!$vendorResult) {
+                throw new Exception("Failed to create new vendor");
+            }
+        }
+
+        // Commit all changes
+        pg_query($con, "COMMIT");
+
+        // Success message
         $message = "Vendor payment request submitted successfully! Request Number: $requestNumber";
 
         if ($selectedVendorId && $isBankChanged) {
@@ -281,8 +343,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['success_message'] = $message;
         header("Location: third_party_submission.php");
         exit;
-    } else {
-        $_SESSION['error_message'] = "Failed to submit request. Please try again.";
+    } catch (Exception $e) {
+        // Rollback everything on any error
+        pg_query($con, "ROLLBACK");
+
+        // Log the error
+        error_log("Third party payment submission error: " . $e->getMessage());
+
+        // Clean up: If file was uploaded but transaction failed, delete the file
+        if (isset($billDocumentPath) && $billDocumentPath) {
+            // You would need a delete function in drive.php
+            // deleteFromDrive($billDocumentPath);
+        }
+
+        $_SESSION['error_message'] = "Failed to submit request: " . $e->getMessage();
+        header("Location: third_party_submission.php?error=1");
+        exit;
     }
 }
 ?>

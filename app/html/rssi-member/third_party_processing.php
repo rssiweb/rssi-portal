@@ -175,60 +175,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $bankReference = $_POST['bank_reference'];
     $paymentStatus = $_POST['payment_status'];
     $status = $_POST['status'];
-
-    // Handle payment proof upload
-    $paymentProofPath = '';
-    if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
-        $uploadedFile = $_FILES['payment_proof'];
-        $timestamp = time();
-        $fileName = "payment_proof_{$id}_{$timestamp}";
-
-        // Upload to Google Drive
-        $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
-        include("../../util/drive.php");
-        $paymentProofPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
-    }
-
-    $updateQuery = "
-UPDATE third_party_payments SET 
-    payment_date = $1,
-    transaction_id = $2,
-    payment_mode = $3,
-    bank_reference = $4,
-    payment_status = $5,
-    status = $6::varchar,
-    payment_proof_path = COALESCE($7, payment_proof_path),
-    closed_date = CASE 
-        WHEN $6::varchar = 'Closed' THEN CURRENT_TIMESTAMP 
-        ELSE NULL 
-    END,
-    closed_by = CASE 
-        WHEN $6::varchar = 'Closed' THEN $8 
-        ELSE NULL 
-    END
-WHERE id = $9
-";
-
-    $updateParams = [
-        $paymentDate,
-        $transactionId,
-        $paymentMode,
-        $bankReference,
-        $paymentStatus,
-        $status,
-        $paymentProofPath ?: null,
-        $associatenumber,
-        $id
-    ];
-
-    $result = pg_query_params($con, $updateQuery, $updateParams);
-
-    if ($result) {
+    
+    // Initialize paymentProofPath as null
+    $paymentProofPath = null;
+    
+    // Start transaction for atomic operations
+    pg_query($con, "BEGIN");
+    
+    try {
+        // Step 1: First update the database WITHOUT the file path
+        $updateQuery = "
+        UPDATE third_party_payments SET 
+            payment_date = $1,
+            transaction_id = $2,
+            payment_mode = $3,
+            bank_reference = $4,
+            payment_status = $5,
+            status = $6::varchar,
+            closed_date = CASE 
+                WHEN $6::varchar = 'Closed' THEN CURRENT_TIMESTAMP 
+                ELSE NULL 
+            END,
+            closed_by = CASE 
+                WHEN $6::varchar = 'Closed' THEN $7 
+                ELSE NULL 
+            END
+        WHERE id = $8
+        RETURNING id, payment_proof_path";
+        
+        $updateParams = [
+            $paymentDate,
+            $transactionId,
+            $paymentMode,
+            $bankReference,
+            $paymentStatus,
+            $status,
+            $associatenumber,
+            $id
+        ];
+        
+        $result = pg_query_params($con, $updateQuery, $updateParams);
+        
+        if (!$result) {
+            throw new Exception("Database update failed");
+        }
+        
+        $row = pg_fetch_assoc($result);
+        if (!$row) {
+            throw new Exception("No payment record found with ID: $id");
+        }
+        
+        // Step 2: Only upload file if database update was successful
+        if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
+            $uploadedFile = $_FILES['payment_proof'];
+            $timestamp = time();
+            $fileName = "payment_proof_{$id}_{$timestamp}";
+            
+            // Upload to Google Drive
+            $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
+            include("../../util/drive.php");
+            
+            // Get the uploaded file path from Google Drive
+            $paymentProofPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
+            
+            if (!$paymentProofPath) {
+                throw new Exception("Failed to upload file to Google Drive");
+            }
+            
+            // Step 3: Update the database with the file path
+            $fileUpdateQuery = "
+            UPDATE third_party_payments 
+            SET payment_proof_path = $1 
+            WHERE id = $2";
+            
+            $fileUpdateResult = pg_query_params($con, $fileUpdateQuery, [$paymentProofPath, $id]);
+            
+            if (!$fileUpdateResult) {
+                // If file path update fails, we should try to delete the uploaded file
+                // (You would need a delete function in your drive.php)
+                throw new Exception("Failed to update file path in database");
+            }
+        }
+        
+        // Commit transaction
+        pg_query($con, "COMMIT");
+        
         $_SESSION['success_message'] = "Payment details updated successfully!";
         header("Location: third_party_processing.php");
         exit;
-    } else {
-        $_SESSION['error_message'] = "Failed to update payment details.";
+        
+    } catch (Exception $e) {
+        // Rollback transaction on any error
+        pg_query($con, "ROLLBACK");
+        
+        // Log the error (consider using a proper logging mechanism)
+        error_log("Payment update error: " . $e->getMessage());
+        
+        $_SESSION['error_message'] = "Failed to update payment details: " . $e->getMessage();
+        
+        // You might want to redirect back to the form with error message
+        header("Location: third_party_processing.php?error=1");
+        exit;
     }
 }
 
@@ -250,6 +297,25 @@ $query = "SELECT
 
 $result = pg_query_params($con, $query, $params);
 $requests = pg_fetch_all($result) ?: [];
+
+// Calculate totals based on filter criteria
+$totalQuery = "SELECT 
+                SUM(CASE WHEN tp.status != 'Rejected' THEN tp.amount ELSE 0 END) as total_submitted,
+                SUM(CASE WHEN tp.payment_status = 'Success' AND tp.status IN ('Paid', 'Closed') THEN tp.amount ELSE 0 END) as total_paid,
+                SUM(CASE WHEN (tp.payment_status IS NULL OR tp.payment_status != 'Success' OR tp.status NOT IN ('Paid', 'Closed')) 
+                          AND tp.status != 'Rejected' 
+                     THEN tp.amount ELSE 0 END) as total_unpaid
+              FROM third_party_payments tp
+              LEFT JOIN third_party_vendors v ON tp.vendor_id = v.vendor_id
+              $whereClause";
+
+$totalResult = pg_query_params($con, $totalQuery, $params);
+$totals = pg_fetch_assoc($totalResult) ?: ['total_submitted' => 0, 'total_paid' => 0, 'total_unpaid' => 0];
+
+// Format totals
+$totalSubmitted = $totals['total_submitted'] ?? 0;
+$totalPaid = $totals['total_paid'] ?? 0;
+$totalUnpaid = $totals['total_unpaid'] ?? 0;
 ?>
 
 <!doctype html>
@@ -397,6 +463,7 @@ $requests = pg_fetch_all($result) ?: [];
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
+                            <!-- Title and Export Button Row -->
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="card-title">Payment Requests</h5>
                                 <div class="export-btn-container">
@@ -413,6 +480,45 @@ $requests = pg_fetch_all($result) ?: [];
                                             <i class="bi bi-filetype-csv"></i> Export CSV
                                         </button>
                                     </form>
+                                </div>
+                            </div>
+
+                            <!-- Summary Cards Row - Placed AFTER the title/button row -->
+                            <div class="row mb-4">
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card info-card border-start border-4 border-primary">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-muted">Total Submitted</h5>
+                                            <div class="pt-2">
+                                                <h3 class="fw-bold text-primary">₹<?php echo number_format($totalSubmitted, 2); ?></h3>
+                                                <span class="text-muted small">Total bill amount submitted</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card info-card border-start border-4 border-success">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-muted">Total Paid</h5>
+                                            <div class="pt-2">
+                                                <h3 class="fw-bold text-success">₹<?php echo number_format($totalPaid, 2); ?></h3>
+                                                <span class="text-muted small">Amount successfully paid</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card info-card border-start border-4 border-danger">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-muted">Total Unpaid</h5>
+                                            <div class="pt-2">
+                                                <h3 class="fw-bold text-danger">₹<?php echo number_format($totalUnpaid, 2); ?></h3>
+                                                <span class="text-muted small">Pending for payment</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="table-responsive">
