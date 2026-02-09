@@ -175,13 +175,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $bankReference = $_POST['bank_reference'];
     $paymentStatus = $_POST['payment_status'];
     $status = $_POST['status'];
-    
+
     // Initialize paymentProofPath as null
     $paymentProofPath = null;
-    
+
     // Start transaction for atomic operations
     pg_query($con, "BEGIN");
-    
+
     try {
         // Step 1: First update the database WITHOUT the file path
         $updateQuery = "
@@ -202,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
             END
         WHERE id = $8
         RETURNING id, payment_proof_path";
-        
+
         $updateParams = [
             $paymentDate,
             $transactionId,
@@ -213,66 +213,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
             $associatenumber,
             $id
         ];
-        
+
         $result = pg_query_params($con, $updateQuery, $updateParams);
-        
+
         if (!$result) {
             throw new Exception("Database update failed");
         }
-        
+
         $row = pg_fetch_assoc($result);
         if (!$row) {
             throw new Exception("No payment record found with ID: $id");
         }
-        
+
         // Step 2: Only upload file if database update was successful
         if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
             $uploadedFile = $_FILES['payment_proof'];
             $timestamp = time();
             $fileName = "payment_proof_{$id}_{$timestamp}";
-            
+
             // Upload to Google Drive
             $driveFolderId = "1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC";
             include("../../util/drive.php");
-            
+
             // Get the uploaded file path from Google Drive
             $paymentProofPath = uploadeToDrive($uploadedFile, $driveFolderId, $fileName);
-            
+
             if (!$paymentProofPath) {
                 throw new Exception("Failed to upload file to Google Drive");
             }
-            
+
             // Step 3: Update the database with the file path
             $fileUpdateQuery = "
             UPDATE third_party_payments 
             SET payment_proof_path = $1 
             WHERE id = $2";
-            
+
             $fileUpdateResult = pg_query_params($con, $fileUpdateQuery, [$paymentProofPath, $id]);
-            
+
             if (!$fileUpdateResult) {
                 // If file path update fails, we should try to delete the uploaded file
                 // (You would need a delete function in your drive.php)
                 throw new Exception("Failed to update file path in database");
             }
         }
-        
+
         // Commit transaction
         pg_query($con, "COMMIT");
-        
+
         $_SESSION['success_message'] = "Payment details updated successfully!";
         header("Location: third_party_processing.php");
         exit;
-        
     } catch (Exception $e) {
         // Rollback transaction on any error
         pg_query($con, "ROLLBACK");
-        
+
         // Log the error (consider using a proper logging mechanism)
         error_log("Payment update error: " . $e->getMessage());
-        
+
         $_SESSION['error_message'] = "Failed to update payment details: " . $e->getMessage();
-        
+
         // You might want to redirect back to the form with error message
         header("Location: third_party_processing.php?error=1");
         exit;
@@ -852,6 +851,10 @@ $totalUnpaid = $totals['total_unpaid'] ?? 0;
                 $('#paymentTable').DataTable({
                     "order": [],
                     "pageLength": 25,
+                    "columnDefs": [{
+                        "orderable": false,
+                        "targets": -1 // last column
+                    }],
                     "language": {
                         "search": "Search:",
                         "lengthMenu": "Show _MENU_ entries",
