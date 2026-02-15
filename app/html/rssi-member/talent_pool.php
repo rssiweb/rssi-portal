@@ -46,49 +46,74 @@ $query = "SELECT *,
 
 $conditions = [];
 
-// Application number or name filter
+/**
+ * PRIORITY 1:
+ * If Application Number or Name is searched,
+ * ignore ALL other filters.
+ */
 if (!empty($filter_application_number)) {
-    $search = pg_escape_string($con, $filter_application_number);
-    $conditions[] = "(application_number ILIKE '%$search%' OR applicant_name ILIKE '%$search%')";
-} // Interview date range filter (covers both tech and HR interviews)
-else if (!empty($filter_interview_date_range)) {
-    // Parse the date range string (format: "YYYY-MM-DD to YYYY-MM-DD")
-    $date_parts = explode(' to ', $filter_interview_date_range);
-    if (count($date_parts) == 2) {
-        $interview_start_date = pg_escape_string($con, trim($date_parts[0]));
-        $interview_end_date = pg_escape_string($con, trim($date_parts[1]));
-        $interview_end_date = $interview_end_date . ' 23:59:59';
 
-        // Add condition for either tech_interview_schedule OR hr_interview_schedule within the range
-        $conditions[] = "(
-            (tech_interview_schedule::date >= '$interview_start_date' AND tech_interview_schedule::date <= '$interview_end_date')
-            OR 
-            (hr_interview_schedule::date >= '$interview_start_date' AND hr_interview_schedule::date <= '$interview_end_date')
-        )";
-    }
+    $search = pg_escape_string($con, $filter_application_number);
+
+    $conditions[] = "(
+        application_number ILIKE '%$search%' 
+        OR applicant_name ILIKE '%$search%'
+    )";
 } else {
-    // Status filter
+
+    /**
+     * Apply Interview Date Range Filter (if provided)
+     */
+    if (!empty($filter_interview_date_range)) {
+
+        $date_parts = explode(' to ', $filter_interview_date_range);
+
+        if (count($date_parts) == 2) {
+
+            $interview_start_date = pg_escape_string($con, trim($date_parts[0]));
+            $interview_end_date   = pg_escape_string($con, trim($date_parts[1]));
+
+            $conditions[] = "(
+                (tech_interview_schedule::date BETWEEN '$interview_start_date' AND '$interview_end_date')
+                OR
+                (hr_interview_schedule::date BETWEEN '$interview_start_date' AND '$interview_end_date')
+            )";
+        }
+    }
+
+    /**
+     * Apply Status Filter
+     */
     if (!empty($filter_status)) {
+
         $statuses = array_map(function ($status) use ($con) {
             return pg_escape_string($con, $status);
         }, $filter_status);
-        $conditions[] = "application_status IN ('" . implode("', '", $statuses) . "')";
+
+        $conditions[] = "application_status IN ('" . implode("','", $statuses) . "')";
     }
 
-    // Date filter (only if ignore_date is not checked)
+    /**
+     * Apply Date Filter (only if ignore_date is NOT checked)
+     */
     if (!$ignore_date && !empty($filter_from_date) && !empty($filter_to_date)) {
+
         $from_date = pg_escape_string($con, $filter_from_date);
-        $to_date = pg_escape_string($con, $filter_to_date);
-        $to_date = $to_date . ' 23:59:59';
+        $to_date   = pg_escape_string($con, $filter_to_date);
 
         if ($from_date <= $to_date) {
-            $conditions[] = "timestamp::date >= '$from_date' AND timestamp::date <= '$to_date'";
+            $conditions[] = "timestamp::date BETWEEN '$from_date' AND '$to_date'";
         }
     }
 }
 
+/**
+ * Always ensure is_active = true
+ */
+$query .= " WHERE is_active = true";
+
 if (!empty($conditions)) {
-    $query .= " WHERE is_active=true AND " . implode(" AND ", $conditions);
+    $query .= " AND " . implode(" AND ", $conditions);
 }
 
 $query .= " ORDER BY timestamp DESC";
@@ -121,7 +146,7 @@ $resultArr = pg_fetch_all($result);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -540,13 +565,13 @@ $resultArr = pg_fetch_all($result);
 
     <script>
         $(document).ready(function() {
-            // Check if resultArr is empty
             <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
                 $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
+                    "order": [], // Disable initial sorting
+                    "columnDefs": [{
+                        "orderable": false,
+                        "targets": [-1, -2, -3] // Last 3 columns
+                    }]
                 });
             <?php endif; ?>
         });
