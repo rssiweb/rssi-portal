@@ -304,25 +304,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("File upload failed for request number: $requestNumber");
                 // Continue without throwing error if file is optional
             }
-        }
-
-        // Step 4: Handle vendor creation/update (from your context)
-        if ($selectedVendorId && $isBankChanged) {
-            // Update existing vendor with new bank details
-            $vendorUpdateQuery = "UPDATE vendors SET ... WHERE id = $1";
-            $vendorResult = pg_query_params($con, $vendorUpdateQuery, [$selectedVendorId]);
-
-            if (!$vendorResult) {
-                throw new Exception("Failed to update vendor details");
-            }
-        } elseif ($isNewVendor) {
-            // Insert new vendor
-            $vendorInsertQuery = "INSERT INTO vendors (...) VALUES (...) RETURNING id";
-            $vendorResult = pg_query_params($con, $vendorInsertQuery, $vendorParams);
-
-            if (!$vendorResult) {
-                throw new Exception("Failed to create new vendor");
-            }
+        } else {
+            // No file uploaded or upload error
+            error_log("No file uploaded or upload error for request number: $requestNumber");
+            // Continue without throwing error if file is optional
         }
 
         // Commit all changes
