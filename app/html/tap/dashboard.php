@@ -12,95 +12,201 @@ if (!isLoggedIn("tid")) {
 
 validation();
 
-// SQL query to fetch current application status
-$sql = "SELECT application_status, tech_interview_schedule, hr_interview_schedule,photo_verification,identity_verification,supporting_document,timestamp FROM signup WHERE application_number='$application_number'";
+// Fetch application data
+$sql = "SELECT application_status,
+               tech_interview_schedule,
+               hr_interview_schedule,
+               skip_tech_interview,
+               skip_hr_interview,
+               timestamp
+        FROM signup
+        WHERE application_number='$application_number'";
+
 $result = pg_query($con, $sql);
 $data = pg_fetch_assoc($result);
 
 if (!$data) {
-  echo "An error occurred.
-";
+  echo "An error occurred.";
   exit;
 }
 
 $application_status = $data['application_status'];
 
-function getStatus($application_status, $conditions, $completedStatus, $defaultStatus)
-{
-  // Loop through the status conditions
-  foreach ($conditions as $status => $valid_statuses) {
-    // Check if the application status exists in the valid status array
-    if (in_array($application_status, $valid_statuses)) {
-      return $status;  // Return the matching status type
-    }
-  }
-  return $defaultStatus;  // Return default if no match is found
-}
+/* --------------------------------------------------
+   STEP 1: Define Workflow Steps (1–9)
+---------------------------------------------------*/
 
-$workflow = [
-  "Application Submission" => [
-    "status" => "Completed",
-    "remarks" => !empty($data['timestamp'])
-      ? "Application submitted on " . date('d/m/Y h:i A', strtotime($data['timestamp']))
-      : "Application submission timestamp not available",
-  ],
-  "Photo Verification" => [
-    "status" => ($data['photo_verification'] == 'Approved') ? "Completed" :
-      getStatus($application_status, [
-        "Completed" => ["Photo Verification Completed", "Identity Verification Completed", "Identity Verification Failed", "Technical Interview Scheduled", "Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "No-Show", "Offer Extended", "Offer Not Extended"],
-        "Photo Verification Failed" => ["Photo Verification Failed"],
-      ], "Pending", "Pending"),
-    "remarks" => "",
-  ],
-  "Identity Verification" => [
-    "status" => (empty($data['identity_verification']) && !empty($data['supporting_document'])) ? "Identity verification document submitted" :
-      getStatus($application_status, [
-        "Completed" => ["Identity Verification Completed", "Technical Interview Scheduled", "Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "No-Show", "Offer Extended", "Offer Not Extended"],
-        "Identity Verification Document Submitted" => ["Identity verification document submitted"],
-        "Identity Verification Failed" => ["Identity Verification Failed"],
-      ], "Pending", "Pending"),
-    "remarks" => "",
-  ],
-  "Interview Scheduling" => [
-    "status" => !empty($data['tech_interview_schedule']) ? "Completed" : "Pending",
-    "remarks" => !empty($data['tech_interview_schedule'])
-      ? "Scheduled for " . date('d/m/Y h:i A', strtotime($data['tech_interview_schedule']))
-      : "",
-  ],
-  "Interview" => [
-    "status" => getStatus($application_status, [
-      "Completed" => array_merge(
-        ["Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "Offer Extended", "Offer Not Extended"],
-        !empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : []
-      ),
-      "Technical Interview No-Show" => empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : [],
-    ], "Pending", "Pending"),
-    "remarks" => "",
-  ],
-  "HR Interview Scheduling" => [
-    "status" => !empty($data['hr_interview_schedule']) ? "Completed" : "Pending",
-    "remarks" => !empty($data['hr_interview_schedule'])
-      ? "Scheduled for " . date('d/m/Y h:i A', strtotime($data['hr_interview_schedule']))
-      : "",
-  ],
-  "HR Interview" => [
-    "status" => getStatus($application_status, [
-      "Completed" => ["Recommended", "Not Recommended", "On Hold", "Offer Extended", "Offer Not Extended"],
-      "HR Interview No-Show" => !empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : [],
-    ], "Pending", "Pending"),
-    "remarks" => "",
-  ],
-  "Issuance of Offer Letter" => [
-    "status" => $application_status === "Offer Extended" ? "Offer Extended" : ($application_status === "Offer Not Extended" ? "Offer Not Extended" : "Pending"),
-    "remarks" => "",
-  ],
-  "Issuance of Joining Letter" => [
-    "status" => "Pending",
-    "remarks" => "",
-  ],
+$steps = [
+  1 => "Application Submission",
+  2 => "Photo Verification",
+  3 => "Identity Verification",
+  4 => "Interview Scheduling",
+  5 => "Interview",
+  6 => "HR Interview Scheduling",
+  7 => "HR Interview",
+  8 => "Issuance of Offer Letter",
+  9 => "Issuance of Joining Letter",
 ];
 
+/* --------------------------------------------------
+   STEP 2: Map Application Status to Step Number
+---------------------------------------------------*/
+
+$statusStepMap = [
+
+  /* -------------------------------
+     1️⃣ Application Submission
+  --------------------------------*/
+  "Application Submitted" => 1,
+  "Application Re-Submitted" => 1,
+
+  /* -------------------------------
+     2️⃣ Photo Verification
+  --------------------------------*/
+  "Photo Verification Completed" => 2,
+  "Photo Verification Failed" => 2,
+
+  /* -------------------------------
+     3️⃣ Identity Verification
+  --------------------------------*/
+  "Identity verification document submitted" => 3,
+  "Identity Verification Completed" => 3,
+  "Identity Verification Failed" => 3,
+
+  /* -------------------------------
+     4️⃣ Technical Interview Scheduling
+  --------------------------------*/
+  "Technical Interview Scheduled" => 4,
+
+  /* -------------------------------
+     5️⃣ Technical Interview
+  --------------------------------*/
+  "Technical Interview Completed" => 5,
+  "No-Show" => 5, // If no HR scheduled yet, still step 5
+
+  /* -------------------------------
+     6️⃣ HR Interview Scheduling
+  --------------------------------*/
+  "HR Interview Scheduled" => 6,
+
+  /* -------------------------------
+     7️⃣ HR Interview Outcome
+  --------------------------------*/
+  "Recommended" => 7,
+  "Not Recommended" => 7,
+  "On Hold" => 7,
+
+  /* -------------------------------
+     8️⃣ Offer Letter
+  --------------------------------*/
+  "Offer Extended" => 8,
+  "Offer Not Extended" => 8,
+
+  /* -------------------------------
+     9️⃣ Joining Letter
+  --------------------------------*/
+  "Joined" => 9,
+];
+
+/* --------------------------------------------------
+   STEP 3: Detect Current Step
+---------------------------------------------------*/
+
+$currentStep = $statusStepMap[$application_status] ?? 1;
+
+/* --------------------------------------------------
+   STEP 4: Generate Workflow Dynamically
+---------------------------------------------------*/
+
+$workflow = [];
+
+foreach ($steps as $stepNumber => $stepTitle) {
+
+  /* -------- SKIP LOGIC -------- */
+
+  // Skip Technical Interview
+  if ($stepTitle == "Interview" && $data['skip_tech_interview'] === 't') {
+    $workflow[$stepTitle] = [
+      "status" => "Not Required",
+      "remarks" => ""
+    ];
+    continue;
+  }
+
+  // Skip HR Interview
+  if (($stepTitle == "HR Interview Scheduling" || $stepTitle == "HR Interview")
+    && $data['skip_hr_interview'] === 't'
+  ) {
+
+    $workflow[$stepTitle] = [
+      "status" => "Not Required",
+      "remarks" => ""
+    ];
+    continue;
+  }
+
+  /* -------- PROGRESS LOGIC -------- */
+
+  if ($stepNumber < $currentStep) {
+    $status = "Completed";
+  } elseif ($stepNumber == $currentStep) {
+    $status = "Current";
+  } else {
+    $status = "Pending";
+  }
+
+  /* -------- REMARKS LOGIC -------- */
+
+  $remarks = "";
+
+  // Application Submission timestamp
+  if ($stepTitle == "Application Submission" && !empty($data['timestamp'])) {
+    $remarks = "Submitted on " . date('d/m/Y h:i A', strtotime($data['timestamp']));
+  }
+
+  // Technical Interview Scheduling
+  if ($stepTitle == "Interview Scheduling" && !empty($data['tech_interview_schedule'])) {
+    $remarks = "Scheduled for " . date('d/m/Y h:i A', strtotime($data['tech_interview_schedule']));
+  }
+
+  // technical Interview actual result in remarks
+  if ($stepTitle == "Interview" && in_array($application_status, [
+    "Technical Interview Completed",
+    "No-Show"
+  ])) {
+    $remarks = $application_status;
+  }
+
+  // HR Interview Scheduling
+  if ($stepTitle == "HR Interview Scheduling" && !empty($data['hr_interview_schedule'])) {
+    $remarks = "Scheduled for " . date('d/m/Y h:i A', strtotime($data['hr_interview_schedule']));
+  }
+
+  // HR Interview actual result in remarks
+  if ($stepTitle == "HR Interview" && in_array($application_status, [
+    "Recommended",
+    "Not Recommended",
+    "On Hold"
+  ])) {
+    $remarks = "Result: " . $application_status;
+  }
+
+  // Offer Letter actual result in remarks
+  if ($stepTitle == "Issuance of Offer Letter" && in_array($application_status, [
+    "Offer Extended",
+    "Offer Not Extended"
+  ])) {
+    $remarks = $application_status;
+  }
+
+  $workflow[$stepTitle] = [
+    "status" => $status,
+    "remarks" => $remarks
+  ];
+}
+
 ?>
+
 <!doctype html>
 <html lang="en">
 
@@ -140,6 +246,18 @@ $workflow = [
       policyLink: 'https://www.rssi.in/disclaimer'
     });
   </script>
+  <style>
+    .green-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: #28a745;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -182,7 +300,12 @@ $workflow = [
                     <?php foreach ($workflow as $step => $details): ?>
                       <tr>
                         <td><?= htmlspecialchars($step) ?></td>
-                        <td><?= htmlspecialchars($details['status']) ?></td>
+                        <td>
+                          <?php if ($details['status'] === "Current"): ?>
+                            <span class="green-dot"></span>
+                          <?php endif; ?>
+                          <?= htmlspecialchars($details['status']) ?>
+                        </td>
                         <td><?= htmlspecialchars($details['remarks']) ?></td>
                       </tr>
                     <?php endforeach; ?>
