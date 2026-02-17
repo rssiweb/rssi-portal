@@ -61,12 +61,30 @@ while ($row = pg_fetch_assoc($latest_dates_result)) {
     $latest_dates_lookup[$key] = $row['latest_date'];
 }
 
+// Get all associate status info (effectivedate, filterstatus)
+$associate_status_query = "SELECT associatenumber, effectivedate, filterstatus 
+                          FROM rssimyaccount_members 
+                          WHERE filterstatus = 'Inactive' 
+                          AND effectivedate <= CURRENT_DATE";
+$associate_status_result = pg_query($con, $associate_status_query);
+
+// Create lookup array for inactive associates
+$inactive_associates = [];
+while ($row = pg_fetch_assoc($associate_status_result)) {
+    $inactive_associates[$row['associatenumber']] = [
+        'effectivedate' => $row['effectivedate'],
+        'filterstatus' => $row['filterstatus']
+    ];
+}
+
 // Always grouped view
 $data_query = "SELECT 
     s.associate_number,
     a.fullname,
     a.position,
     a.engagement,
+    a.effectivedate,
+    a.filterstatus,
     TO_CHAR(s.reporting_time, 'HH12:MI AM') AS formatted_start,
     TO_CHAR(s.exit_time, 'HH12:MI AM') AS formatted_end,
     MIN(s.start_date) AS start_date,
@@ -98,6 +116,8 @@ GROUP BY
     a.fullname,
     a.position,
     a.engagement,
+    a.effectivedate,
+    a.filterstatus,
     s.reporting_time,
     s.exit_time
 ORDER BY s.associate_number, MIN(s.start_date)";
@@ -109,7 +129,7 @@ if (!empty($params)) {
     $data_result = pg_query($con, $data_query);
 }
 
-// Get statistics - we need to calculate based on actual active status
+// Get statistics - we need to calculate based on actual active status including associate status
 $stats_query = "SELECT 
                 COUNT(*) as total_schedules,
                 COUNT(DISTINCT associate_number) as unique_associates
@@ -117,15 +137,28 @@ $stats_query = "SELECT
 $stats_result = pg_query($con, $stats_query);
 $stats = $stats_result ? pg_fetch_assoc($stats_result) : ['total_schedules' => 0, 'unique_associates' => 0];
 
-// Calculate active/inactive counts based on latest date logic
+// Calculate active/inactive counts based on latest date logic AND associate status
 $active_count = 0;
 $inactive_count = 0;
-$temp_result = pg_query($con, "SELECT * FROM associate_schedule_v2");
+$temp_result = pg_query($con, "SELECT s.*, a.filterstatus, a.effectivedate 
+                               FROM associate_schedule_v2 s
+                               LEFT JOIN rssimyaccount_members a ON s.associate_number = a.associatenumber");
 while ($row = pg_fetch_assoc($temp_result)) {
     $key = $row['associate_number'] . '_' . $row['workday'];
     $latest_date = $latest_dates_lookup[$key] ?? null;
 
-    if ($latest_date && $row['start_date'] == $latest_date) {
+    // Check if associate is inactive based on effectivedate and filterstatus
+    $is_associate_inactive = false;
+    if (!empty($row['filterstatus']) && $row['filterstatus'] == 'Inactive' && !empty($row['effectivedate'])) {
+        $effective_date = strtotime($row['effectivedate']);
+        $current_date = strtotime(date('Y-m-d'));
+        if ($effective_date <= $current_date) {
+            $is_associate_inactive = true;
+        }
+    }
+
+    // A schedule is active if it's the latest version AND the associate is active
+    if ($latest_date && $row['start_date'] == $latest_date && !$is_associate_inactive) {
         $active_count++;
     } else {
         $inactive_count++;
@@ -404,6 +437,16 @@ $stats['inactive_schedules'] = $inactive_count;
                                 <tbody>
                                     <?php if ($data_result && pg_num_rows($data_result) > 0): ?>
                                         <?php while ($row = pg_fetch_assoc($data_result)):
+                                            // Check if associate is inactive based on effectivedate and filterstatus
+                                            $is_associate_inactive = false;
+                                            if (!empty($row['filterstatus']) && $row['filterstatus'] == 'Inactive' && !empty($row['effectivedate'])) {
+                                                $effective_date = strtotime($row['effectivedate']);
+                                                $current_date = strtotime(date('Y-m-d'));
+                                                if ($effective_date <= $current_date) {
+                                                    $is_associate_inactive = true;
+                                                }
+                                            }
+
                                             // Parse the date-day pairs to determine which schedules in this group are active
                                             $date_day_pairs = explode(',', $row['date_day_pairs'] ?? '');
                                             $active_in_group = 0;
@@ -415,16 +458,22 @@ $stats['inactive_schedules'] = $inactive_count;
                                                 $key = $row['associate_number'] . '_' . $workday;
                                                 $latest_date = $latest_dates_lookup[$key] ?? null;
 
-                                                if ($latest_date && $date == $latest_date) {
+                                                // A schedule is active only if it's the latest AND associate is active
+                                                if ($latest_date && $date == $latest_date && !$is_associate_inactive) {
                                                     $active_in_group++;
                                                 }
                                             }
 
-                                            $all_active = ($active_in_group == $total_in_group);
+                                            $all_active = ($active_in_group == $total_in_group && !$is_associate_inactive);
                                             $some_active = ($active_in_group > 0 && $active_in_group < $total_in_group);
                                             $none_active = ($active_in_group == 0);
 
-                                            $is_inactive = $none_active;
+                                            $is_inactive = $none_active || $is_associate_inactive;
+
+                                            // Skip if showing inactive is off and this group has no active schedules
+                                            if (!$show_inactive && ($none_active || $is_associate_inactive)) {
+                                                continue;
+                                            }
 
                                             // Calculate duration
                                             $start_time = $row['formatted_start'];
@@ -443,17 +492,23 @@ $stats['inactive_schedules'] = $inactive_count;
                                             } else {
                                                 $duration = 'N/A';
                                             }
-
-                                            // Skip if showing inactive is off and this group has no active schedules
-                                            if (!$show_inactive && $none_active) {
-                                                continue;
-                                            }
                                         ?>
-                                            <tr class="<?php echo $none_active ? 'inactive-row' : ''; ?>">
+                                            <tr class="<?php echo ($none_active || $is_associate_inactive) ? 'inactive-row' : ''; ?>">
                                                 <td>
-                                                    <div class="associate-name"><?php echo htmlspecialchars($row['fullname'] ?? 'N/A'); ?></div>
+                                                    <div class="associate-name">
+                                                        <?php echo htmlspecialchars($row['fullname'] ?? 'N/A'); ?>
+                                                        <?php if ($is_associate_inactive): ?>
+                                                            <span class="badge bg-danger ms-2">Inactive Associate</span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                     <div class="associate-id">ID: <?php echo htmlspecialchars($row['associate_number']); ?></div>
                                                     <small class="text-muted"><?php echo htmlspecialchars($row['position'] ?? ''); ?></small>
+                                                    <?php if ($is_associate_inactive): ?>
+                                                        <br><small class="text-danger">
+                                                            <i class="bi bi-person-x"></i>
+                                                            Inactive since <?php echo date('d-M-Y', strtotime($row['effectivedate'])); ?>
+                                                        </small>
+                                                    <?php endif; ?>
                                                 </td>
 
                                                 <td>
@@ -485,7 +540,10 @@ $stats['inactive_schedules'] = $inactive_count;
                                                 </td>
 
                                                 <td>
-                                                    <?php if ($all_active): ?>
+                                                    <?php if ($is_associate_inactive): ?>
+                                                        <span class="day-badge status-badge-inactive">Associate Inactive</span>
+                                                        <br><small class="text-muted">All schedules inactive</small>
+                                                    <?php elseif ($all_active): ?>
                                                         <span class="day-badge status-badge-active">All Active</span>
                                                         <br><small class="text-muted"><?php echo $active_in_group; ?>/<?php echo $total_in_group; ?> active</small>
                                                     <?php elseif ($some_active): ?>
@@ -507,9 +565,11 @@ $stats['inactive_schedules'] = $inactive_count;
                                                     <div class="btn-group btn-group-sm">
                                                         <button class="btn btn-outline-primary"
                                                             onclick="viewGroupDetails('<?php echo $row['associate_number']; ?>', 
-                                                                                      '<?php echo $row['formatted_start']; ?>', 
-                                                                                      '<?php echo $row['formatted_end']; ?>')"
-                                                            title="View All Schedules in This Group">
+                                                                  '<?php echo $row['formatted_start']; ?>', 
+                                                                  '<?php echo $row['formatted_end']; ?>',
+                                                                  <?php echo $is_associate_inactive ? 'true' : 'false'; ?>)"
+                                                            title="View All Schedules in This Group"
+                                                            <?php echo $is_associate_inactive ? 'disabled' : ''; ?>>
                                                             <i class="bi bi-eye"></i> View
                                                         </button>
                                                     </div>
@@ -528,15 +588,8 @@ $stats['inactive_schedules'] = $inactive_count;
                                 </tbody>
                             </table>
                         </div>
-
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Grouped View:</strong> Showing schedules with same shift timings grouped together.
-                            Click "View" to see all individual schedules in this group.
-                        </div>
                     </div>
                 </div>
-            </div>
         </section>
     </main>
 
@@ -589,7 +642,12 @@ $stats['inactive_schedules'] = $inactive_count;
             });
         });
 
-        function viewGroupDetails(associateNumber, startTime, endTime) {
+        function viewGroupDetails(associateNumber, startTime, endTime, isAssociateInactive) {
+            if (isAssociateInactive) {
+                alert('Cannot view details for inactive associate');
+                return;
+            }
+
             $('#group-schedule-details').html('<div class="text-center p-4"><div class="spinner-border" role="status"></div><p class="mt-2">Loading group schedules...</p></div>');
             var modal = new bootstrap.Modal(document.getElementById('groupScheduleModal'));
             modal.show();
