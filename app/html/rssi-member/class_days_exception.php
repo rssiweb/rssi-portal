@@ -449,7 +449,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                 },
                 placeholder: 'Search by category',
                 width: '100%',
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 multiple: true
             });
 
@@ -469,7 +469,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                 },
                 placeholder: 'Search by class',
                 width: '100%',
-                minimumInputLength: 2,
+                minimumInputLength: 1,
                 multiple: true
             });
         });
