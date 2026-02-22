@@ -14,7 +14,7 @@ validation();
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category = pg_escape_string($con, $_POST['category']);
-    $workdays = pg_escape_string($con, $_POST['workdays']);
+    $class_days = pg_escape_string($con, $_POST['class_days']);
     $effectiveFrom = pg_escape_string($con, $_POST['effective_from']);
 
     // Begin transaction
@@ -27,28 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     pg_query($con, $updateQuery);
 
     // Insert new record
-    $insertQuery = "INSERT INTO student_class_days (category, workdays, effective_from)
-                    VALUES ('$category', '$workdays', '$effectiveFrom')";
+    $insertQuery = "INSERT INTO student_class_days (category, class_days, effective_from)
+                    VALUES ('$category', '$class_days', '$effectiveFrom')";
     $result = pg_query($con, $insertQuery);
 
     if ($result) {
         pg_query($con, "COMMIT");
-        $_SESSION['success_message'] = "Workdays updated successfully!";
+        $_SESSION['success_message'] = "Class days updated successfully!";
     } else {
         pg_query($con, "ROLLBACK");
-        $_SESSION['error_message'] = "Failed to update workdays: " . pg_last_error($con);
+        $_SESSION['error_message'] = "Failed to update class days: " . pg_last_error($con);
     }
 
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
-// Fetch current workday settings
+// Fetch current class days settings
 $query = "SELECT * FROM student_class_days ORDER BY category, effective_from DESC";
 $result = pg_query($con, $query);
-$workdaySettings = pg_fetch_all($result);
+$classDaysSettings = pg_fetch_all($result);
 
-// Fetch active workday settings
+// Fetch active class days settings
 $activeQuery = "SELECT * FROM student_class_days WHERE effective_to IS NULL ORDER BY category";
 $activeResult = pg_query($con, $activeQuery);
 $activeSettings = pg_fetch_all($activeResult);
@@ -58,7 +58,9 @@ $activeSettings = pg_fetch_all($activeResult);
 <html>
 
 <head>
-    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/meta.php' ?>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
@@ -135,34 +137,34 @@ $activeSettings = pg_fetch_all($activeResult);
                                         <div class="col-md-12">
                                             <label class="form-label">Class Days</label><br>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="mon" name="workdays[]" value="Mon">
+                                                <input class="form-check-input" type="checkbox" id="mon" name="class_days[]" value="Mon">
                                                 <label for="mon">Mon</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="tue" name="workdays[]" value="Tue">
+                                                <input class="form-check-input" type="checkbox" id="tue" name="class_days[]" value="Tue">
                                                 <label for="tue">Tue</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="wed" name="workdays[]" value="Wed">
+                                                <input class="form-check-input" type="checkbox" id="wed" name="class_days[]" value="Wed">
                                                 <label for="wed">Wed</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="thu" name="workdays[]" value="Thu">
+                                                <input class="form-check-input" type="checkbox" id="thu" name="class_days[]" value="Thu">
                                                 <label for="thu">Thu</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="fri" name="workdays[]" value="Fri">
+                                                <input class="form-check-input" type="checkbox" id="fri" name="class_days[]" value="Fri">
                                                 <label for="fri">Fri</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="sat" name="workdays[]" value="Sat">
+                                                <input class="form-check-input" type="checkbox" id="sat" name="class_days[]" value="Sat">
                                                 <label for="sat">Sat</label>
                                             </div>
                                             <div class="day-checkbox">
-                                                <input class="form-check-input" type="checkbox" id="sun" name="workdays[]" value="Sun">
+                                                <input class="form-check-input" type="checkbox" id="sun" name="class_days[]" value="Sun">
                                                 <label for="sun">Sun</label>
                                             </div>
-                                            <input type="hidden" id="workdays" name="workdays">
+                                            <input type="hidden" id="class_days" name="class_days">
                                         </div>
                                     </div>
 
@@ -197,13 +199,13 @@ $activeSettings = pg_fetch_all($activeResult);
                                         <thead>
                                             <tr>
                                                 <th>Category</th>
-                                                <th>Workdays</th>
+                                                <th>Class Days</th>
                                                 <th>Effective From</th>
                                                 <th>Effective To</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($workdaySettings as $setting): ?>
+                                            <?php foreach ($classDaysSettings as $setting): ?>
                                                 <tr>
                                                     <td><?= htmlspecialchars($setting['category']) ?></td>
                                                     <td><?= htmlspecialchars($setting['class_days']) ?></td>
@@ -226,17 +228,17 @@ $activeSettings = pg_fetch_all($activeResult);
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         // Set today's date as default for effective_from
         document.getElementById('effective_from').valueAsDate = new Date();
 
-        // Handle workdays checkbox to hidden field
-        const checkboxes = document.querySelectorAll('input[name="workdays[]"]');
-        const hiddenField = document.getElementById('workdays');
+        // Handle class_days checkbox to hidden field
+        const checkboxes = document.querySelectorAll('input[name="class_days[]"]');
+        const hiddenField = document.getElementById('class_days');
 
-        function updateWorkdays() {
+        function updateClassDays() {
             const selectedDays = Array.from(checkboxes)
                 .filter(checkbox => checkbox.checked)
                 .map(checkbox => checkbox.value)
@@ -245,7 +247,7 @@ $activeSettings = pg_fetch_all($activeResult);
         }
 
         checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateWorkdays);
+            checkbox.addEventListener('change', updateClassDays);
         });
     </script>
 </body>
