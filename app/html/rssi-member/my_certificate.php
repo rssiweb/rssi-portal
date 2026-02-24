@@ -19,23 +19,26 @@ include("../../util/email.php");
 <?php if ($role == 'Admin') {
 
     if ($_POST) {
-        @$certificate_no = 'RSC' . time();
-        @$awarded_to_id = strtoupper($_POST['awarded_to_id'] ?? "na");
-        @$badge_name = $_POST['badge_name'];
-        @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
-        @$template_code = $_POST['template_code'];
-        @$certificate_url = $_POST['certificate_url'];
-        @$nominatedby = $_POST['nominatedby'];;
+        $certificate_no = 'RSC' . time();
+        $awarded_to_id = strtoupper($_POST['awarded_to_id'] ?? "na");
+        $badge_name = $_POST['badge_name'];
+        $comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
+        $template_code = $_POST['template_code'];
+        $nominatedby = $_POST['nominatedby'];;
 
-        @$awarded_to_name = $_POST['out_name'];
-        @$out_phone = $_POST['out_phone'];
-        @$out_email = $_POST['out_email'];
-        @$out_scode = $_POST['out_scode'];
-        @$out_flag = $_POST['is_users'] ?? 0;
-        @$uploadedFile = $_FILES['certificate_url'];
+        $awarded_to_name = $_POST['out_name'] ?? null;
+        $out_phone       = $_POST['out_phone'] ?? null;
+        $out_email       = $_POST['out_email'] ?? null;
+        $out_scode       = $_POST['out_scode'] ?? null;
+        $out_flag = $_POST['is_users'] ?? 0;
+        $uploadedFile = $_FILES['certificate_url'];
         $pdf_certificate = isset($_POST['pdf_certificate']) ? true : null;
+        // Gems handling (insert only if provided, allow 0)
+        $gems = (isset($_POST['gems']) && $_POST['gems'] !== '')
+            ? (int) $_POST['gems']
+            : null;
 
-        @$now = date('Y-m-d H:i:s');
+        $now = date('Y-m-d H:i:s');
 
         if ($certificate_no != "") {
             // send uploaded file to drive
@@ -72,6 +75,7 @@ include("../../util/email.php");
                 "out_flag" => $out_flag,
                 "pdf_certificate" => $pdf_certificate,
                 "template_code" => $template_code,
+                "gems" => $gems, // Gems included
             ];
 
             // Initialize arrays for dynamic query construction
@@ -107,16 +111,46 @@ include("../../util/email.php");
                 die("No valid data to insert.");
             }
 
-            $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$awarded_to_id'");
-            @$nameassociate = pg_fetch_result($resultt, 0, 0);
-            @$emailassociate = pg_fetch_result($resultt, 0, 1);
+            // Initialize variables
+            $nameassociate = null;
+            $emailassociate = null;
+            $namestudent = null;
+            $emailstudent = null;
 
-            $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$awarded_to_id'");
-            @$namestudent = pg_fetch_result($resulttt, 0, 0);
-            @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+            // Fetch associate details
+            $resultt = pg_query_params(
+                $con,
+                "SELECT fullname, email FROM rssimyaccount_members WHERE associatenumber = $1",
+                [$awarded_to_id]
+            );
 
-            $fullname_nominee = $nameassociate . $namestudent . $awarded_to_name;
-            $email_nominee = $emailassociate . $emailstudent . $out_email;
+            if ($resultt && pg_num_rows($resultt) > 0) {
+                $row = pg_fetch_assoc($resultt);
+                $nameassociate = $row['fullname'] ?? null;
+                $emailassociate = $row['email'] ?? null;
+            }
+
+            // Fetch student details
+            $resulttt = pg_query_params(
+                $con,
+                "SELECT studentname, emailaddress FROM rssimyprofile_student WHERE student_id = $1",
+                [$awarded_to_id]
+            );
+
+            if ($resulttt && pg_num_rows($resulttt) > 0) {
+                $row = pg_fetch_assoc($resulttt);
+                $namestudent = $row['studentname'] ?? null;
+                $emailstudent = $row['emailaddress'] ?? null;
+            }
+
+            // Final nominee details (priority based)
+            $fullname_nominee = $nameassociate
+                ?? $namestudent
+                ?? $awarded_to_name;
+
+            $email_nominee = $emailassociate
+                ?? $emailstudent
+                ?? $out_email;
 
             if ($badge_name == 'Offer Letter') {
                 $emailtemplate = 'offerletter';
@@ -446,7 +480,7 @@ $resultArr = pg_fetch_all($result);
                                             <small id="charCount" class="form-text text-muted">0/500 characters used</small>
                                         </div>
                                         <div class="input-help">
-                                            <input type="number" name="gems" class="form-control" placeholder="Gems" min="1">
+                                            <input type="number" name="gems" id="gems" class="form-control" placeholder="Gems" min="1">
                                             <small id="passwordHelpBlock" class="form-text text-muted">Gems</small>
                                         </div>
                                         <div class="input-help">
