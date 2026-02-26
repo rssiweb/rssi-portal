@@ -103,6 +103,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Handle search filters
+$search_name = isset($_GET['search_name']) ? trim($_GET['search_name']) : '';
+$date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
+$date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
+$filter_event_type = isset($_GET['filter_event_type']) ? trim($_GET['filter_event_type']) : '';
+
+// Build filter conditions for count query
+$count_params = [];
+$count_conditions = [];
+
+if (!empty($search_name)) {
+    $count_conditions[] = "e.event_name ILIKE $" . (count($count_params) + 1);
+    $count_params[] = '%' . $search_name . '%';
+}
+
+if (!empty($date_from)) {
+    $count_conditions[] = "e.event_date >= $" . (count($count_params) + 1);
+    $count_params[] = $date_from;
+}
+
+if (!empty($date_to)) {
+    $count_conditions[] = "e.event_date <= $" . (count($count_params) + 1);
+    $count_params[] = $date_to;
+}
+
+if (!empty($filter_event_type)) {
+    $count_conditions[] = "e.event_type = $" . (count($count_params) + 1);
+    $count_params[] = $filter_event_type;
+}
+
+$count_where_clause = !empty($count_conditions) ? "WHERE " . implode(" AND ", $count_conditions) : "";
+
+// Get total count for pagination
+$count_sql = "
+    SELECT COUNT(*) as total 
+    FROM internal_events e
+    LEFT JOIN event_types et ON e.event_type = et.id
+    $count_where_clause
+";
+
+if (!empty($count_params)) {
+    $count_result = pg_query_params($con, $count_sql, $count_params);
+} else {
+    $count_result = pg_query($con, $count_sql);
+}
+
+$total_records = 0;
+if ($count_result) {
+    $total_records = pg_fetch_result($count_result, 0, 'total');
+}
+
+// Pagination
+$limit = 10;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page - 1) * $limit;
+$total_pages = ceil($total_records / $limit);
+
+// Build filter conditions for main query
+$query_params = [];
+$query_conditions = [];
+
+if (!empty($search_name)) {
+    $query_conditions[] = "e.event_name ILIKE $" . (count($query_params) + 1);
+    $query_params[] = '%' . $search_name . '%';
+}
+
+if (!empty($date_from)) {
+    $query_conditions[] = "e.event_date >= $" . (count($query_params) + 1);
+    $query_params[] = $date_from;
+}
+
+if (!empty($date_to)) {
+    $query_conditions[] = "e.event_date <= $" . (count($query_params) + 1);
+    $query_params[] = $date_to;
+}
+
+if (!empty($filter_event_type)) {
+    $query_conditions[] = "e.event_type = $" . (count($query_params) + 1);
+    $query_params[] = $filter_event_type;
+}
+
+$query_where_clause = !empty($query_conditions) ? "WHERE " . implode(" AND ", $query_conditions) : "";
+
+// Build the main query
+$recent_events_sql = "
+    SELECT 
+        e.*, 
+        u.fullname,
+        et.display_name AS event_type_name
+    FROM internal_events e
+    LEFT JOIN rssimyaccount_members u 
+        ON e.created_by = u.associatenumber
+    LEFT JOIN event_types et
+        ON e.event_type = et.id
+    $query_where_clause
+    ORDER BY e.event_date DESC, e.created_at DESC
+";
+
+// Add LIMIT and OFFSET with proper parameter placeholders
+if (!empty($query_params)) {
+    // If we have filter parameters, add LIMIT and OFFSET with next parameter numbers
+    $recent_events_sql .= " LIMIT $" . (count($query_params) + 1) . " OFFSET $" . (count($query_params) + 2);
+    $query_params[] = $limit;
+    $query_params[] = $offset;
+
+    $recent_events_result = pg_query_params($con, $recent_events_sql, $query_params);
+} else {
+    // No filters, just use LIMIT and OFFSET as parameters 1 and 2
+    $recent_events_sql .= " LIMIT $1 OFFSET $2";
+    $recent_events_result = pg_query_params($con, $recent_events_sql, [$limit, $offset]);
+}
+
+// Check if query failed
+if (!$recent_events_result) {
+    error_log("Recent events query failed: " . pg_last_error($con));
+    $recent_events_result = null;
+}
 ?>
 
 <!doctype html>
@@ -123,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -175,6 +293,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .time-input-group .form-control {
             height: 38px;
+        }
+
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .active-filter-badge {
+            background-color: #e7f3ff;
+            border-radius: 20px;
+            padding: 5px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-size: 0.9em;
+        }
+
+        .active-filter-badge .remove-filter {
+            color: #666;
+            margin-left: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .active-filter-badge .remove-filter:hover {
+            color: #dc3545;
         }
     </style>
 </head>
@@ -322,10 +479,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <!-- Recent Events Section -->
+                    <!-- Recent Events Section with Filters -->
                     <div class="card mt-4">
                         <div class="card-body">
                             <h5 class="card-title">Recent Events</h5>
+
+                            <!-- Filter Section -->
+                            <div class="filter-section">
+                                <form method="GET" action="" class="row g-3" id="filterForm">
+                                    <div class="col-md-4">
+                                        <label for="search_name" class="form-label">Search by Event Name</label>
+                                        <input type="text" class="form-control" id="search_name" name="search_name"
+                                            value="<?php echo htmlspecialchars($search_name); ?>"
+                                            placeholder="Enter event name...">
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label for="date_from" class="form-label">Date From</label>
+                                        <input type="text" class="form-control flatpickr-date" id="date_from" name="date_from"
+                                            value="<?php echo htmlspecialchars($date_from); ?>"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label for="date_to" class="form-label">Date To</label>
+                                        <input type="text" class="form-control flatpickr-date" id="date_to" name="date_to"
+                                            value="<?php echo htmlspecialchars($date_to); ?>"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label for="filter_event_type" class="form-label">Event Type</label>
+                                        <select class="form-select" id="filter_event_type" name="filter_event_type">
+                                            <option value="">All Types</option>
+                                            <?php foreach ($event_types as $type_value => $display_name): ?>
+                                                <option value="<?php echo htmlspecialchars($type_value); ?>"
+                                                    <?php echo $filter_event_type == $type_value ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($display_name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search"></i> Apply Filters
+                                        </button>
+                                        <a href="?" class="btn btn-outline-secondary">
+                                            <i class="bi bi-x-circle"></i> Clear Filters
+                                        </a>
+                                    </div>
+                                </form>
+
+                                <!-- Active Filters Display -->
+                                <?php if (!empty($search_name) || !empty($date_from) || !empty($date_to) || !empty($filter_event_type)): ?>
+                                    <div class="mt-3">
+                                        <strong>Active Filters:</strong>
+                                        <div class="mt-2">
+                                            <?php if (!empty($search_name)): ?>
+                                                <span class="active-filter-badge">
+                                                    Name: <?php echo htmlspecialchars($search_name); ?>
+                                                    <a href="?<?php
+                                                                $params = $_GET;
+                                                                unset($params['search_name']);
+                                                                unset($params['page']);
+                                                                echo http_build_query($params);
+                                                                ?>" class="remove-filter" title="Remove this filter">×</a>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($date_from)): ?>
+                                                <span class="active-filter-badge">
+                                                    From: <?php echo htmlspecialchars($date_from); ?>
+                                                    <a href="?<?php
+                                                                $params = $_GET;
+                                                                unset($params['date_from']);
+                                                                unset($params['page']);
+                                                                echo http_build_query($params);
+                                                                ?>" class="remove-filter" title="Remove this filter">×</a>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($date_to)): ?>
+                                                <span class="active-filter-badge">
+                                                    To: <?php echo htmlspecialchars($date_to); ?>
+                                                    <a href="?<?php
+                                                                $params = $_GET;
+                                                                unset($params['date_to']);
+                                                                unset($params['page']);
+                                                                echo http_build_query($params);
+                                                                ?>" class="remove-filter" title="Remove this filter">×</a>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($filter_event_type)): ?>
+                                                <span class="active-filter-badge">
+                                                    Type: <?php echo htmlspecialchars($event_types[$filter_event_type] ?? $filter_event_type); ?>
+                                                    <a href="?<?php
+                                                                $params = $_GET;
+                                                                unset($params['filter_event_type']);
+                                                                unset($params['page']);
+                                                                echo http_build_query($params);
+                                                                ?>" class="remove-filter" title="Remove this filter">×</a>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Results count -->
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    Showing <?php echo ($recent_events_result && pg_num_rows($recent_events_result) > 0) ? pg_num_rows($recent_events_result) : 0; ?> of <?php echo $total_records; ?> events
+                                </small>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -340,23 +609,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </thead>
                                     <tbody>
                                         <?php
-                                        // Fetch recent events with event type display name
-                                        $recent_events_sql = "
-                                            SELECT 
-                                                e.*, 
-                                                u.fullname,
-                                                et.display_name AS event_type_name
-                                            FROM internal_events e
-                                            LEFT JOIN rssimyaccount_members u 
-                                                ON e.created_by = u.associatenumber
-                                            LEFT JOIN event_types et
-                                                ON e.event_type = et.id
-                                            ORDER BY e.event_date DESC, e.created_at DESC
-                                            LIMIT 10
-                                        ";
-
-                                        $recent_events_result = pg_query($con, $recent_events_sql);
-
                                         if ($recent_events_result && pg_num_rows($recent_events_result) > 0) {
                                             while ($event = pg_fetch_assoc($recent_events_result)) {
 
@@ -402,12 +654,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php
                                             }
                                         } else {
-                                            echo '<tr><td colspan="6" class="text-center">No events found. Create your first event!</td></tr>';
+                                            echo '<tr><td colspan="6" class="text-center">No events found matching your criteria.</td></tr>';
                                         }
                                         ?>
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Pagination - Only show if there are events and more than one page -->
+                            <?php if ($total_records > 0 && $total_pages > 1): ?>
+                                <div class="pagination-container">
+                                    <nav aria-label="Event pagination">
+                                        <ul class="pagination">
+                                            <?php
+                                            // Build query string for pagination links
+                                            $query_params = $_GET;
+                                            unset($query_params['page']);
+                                            $base_url = '?' . http_build_query($query_params) . '&page=';
+                                            ?>
+
+                                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                                <a class="page-link" href="<?php echo $base_url . ($page - 1); ?>" tabindex="-1">Previous</a>
+                                            </li>
+
+                                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                                                    <a class="page-link" href="<?php echo $base_url . $i; ?>"><?php echo $i; ?></a>
+                                                </li>
+                                            <?php endfor; ?>
+
+                                            <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
+                                                <a class="page-link" href="<?php echo $base_url . ($page + 1); ?>">Next</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -427,10 +709,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Date picker
+            // Date picker for event creation
             flatpickr(".flatpickr-date", {
                 dateFormat: "Y-m-d",
-                minDate: "today",
                 allowInput: true
             });
 
@@ -438,8 +719,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flatpickr(".flatpickr-time", {
                 enableTime: true,
                 noCalendar: true,
-                dateFormat: "h:i K", // 12-hour with AM/PM
-                time_24hr: false, // Important: false for 12-hour
+                dateFormat: "h:i K",
+                time_24hr: false,
                 minuteIncrement: 5
             });
 
@@ -450,31 +731,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             function toggleTimeFields() {
                 if (fullDayCheckbox.checked) {
                     timeFieldsContainer.style.display = 'none';
-                    // DON'T clear time values - just hide them
-                    // This way they still get submitted
                 } else {
                     timeFieldsContainer.style.display = 'block';
                 }
             }
 
             fullDayCheckbox.addEventListener('change', toggleTimeFields);
-            toggleTimeFields(); // Initial call
+            toggleTimeFields();
 
-            // Form validation
-            // (function() {
-            //     'use strict'
-            //     var forms = document.querySelectorAll('.needs-validation')
-            //     Array.prototype.slice.call(forms)
-            //         .forEach(function(form) {
-            //             form.addEventListener('submit', function(event) {
-            //                 if (!form.checkValidity()) {
-            //                     event.preventDefault()
-            //                     event.stopPropagation()
-            //                 }
-            //                 form.classList.add('was-validated')
-            //             }, false)
-            //         })
-            // })();
+            // Date range validation for filters
+            const dateFromInput = document.getElementById('date_from');
+            const dateToInput = document.getElementById('date_to');
+
+            if (dateFromInput && dateToInput) {
+                const dateFrom = flatpickr("#date_from", {
+                    dateFormat: "Y-m-d",
+                    allowInput: true,
+                    onChange: function(selectedDates, dateStr) {
+                        if (dateStr) {
+                            dateTo.set('minDate', dateStr);
+                        }
+                    }
+                });
+
+                const dateTo = flatpickr("#date_to", {
+                    dateFormat: "Y-m-d",
+                    allowInput: true,
+                    onChange: function(selectedDates, dateStr) {
+                        if (dateStr) {
+                            dateFrom.set('maxDate', dateStr);
+                        }
+                    }
+                });
+
+                // Set initial constraints
+                if (dateFromInput.value) {
+                    dateTo.set('minDate', dateFromInput.value);
+                }
+                if (dateToInput.value) {
+                    dateFrom.set('maxDate', dateToInput.value);
+                }
+            }
+
+            // Form validation before submit
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    const fromDate = document.getElementById('date_from').value;
+                    const toDate = document.getElementById('date_to').value;
+
+                    if (fromDate && toDate) {
+                        if (fromDate > toDate) {
+                            e.preventDefault();
+                            alert('Error: "Date From" cannot be after "Date To". Please adjust your dates.');
+                            return false;
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>
