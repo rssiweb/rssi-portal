@@ -702,7 +702,7 @@ function calculateRanksWithTies($students)
                         AND $2 BETWEEN min_percentage AND max_percentage
                         LIMIT 1
                     ";
-                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, $percentage]);
+                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, round($percentage)]);
 
                     if ($grade_result && pg_num_rows($grade_result) > 0) {
                         $grade_row = pg_fetch_assoc($grade_result);
@@ -807,7 +807,7 @@ function calculateRanksWithTies($students)
                         <th colspan="2">Full Marks</th>
                         <th colspan="2">Marks Obtained</th>
                         <th>Total Marks Obtained</th>
-                        <th>Positional grade</th>
+                        <th>Grade</th>
                     </tr>
                     <tr>
                         <th></th>
@@ -819,8 +819,12 @@ function calculateRanksWithTies($students)
                     </tr>
 
                     <?php foreach ($ordered_marks_data as $row) {
-                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
-                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
+                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : (is_numeric($row['written_marks'])
+                            ? round($row['written_marks'])
+                            : null);
+                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : (is_numeric($row['viva_marks'])
+                            ? round($row['viva_marks'])
+                            : null);
                         $total_marks = 0;
 
                         if ($row['written_attendance_status'] == 'A' && $row['viva_attendance_status'] != 'A') {
@@ -832,6 +836,29 @@ function calculateRanksWithTies($students)
                         } else {
                             $total_marks = 0;
                         } // Calculate total marks
+
+                        // Calculate subject percentage and fetch grade
+                        $subject_total_full = $row['full_marks_written'] + $row['full_marks_viva'];
+                        $subject_percentage = ($subject_total_full > 0) ? ($total_marks / $subject_total_full) * 100 : 0;
+
+                        // Fetch grade for this subject based on its percentage
+                        $subject_grade = "";
+
+                        if ($rule_id !== null && $subject_total_full > 0 && !in_array($total_marks, ['A', 0])) {
+                            $subject_grade_query = "
+            SELECT grade
+            FROM grade_rule_details
+            WHERE rule_id = $1
+            AND $2 BETWEEN min_percentage AND max_percentage
+            LIMIT 1
+        ";
+                            $subject_grade_result = pg_query_params($con, $subject_grade_query, [$rule_id, $subject_percentage]);
+
+                            if ($subject_grade_result && pg_num_rows($subject_grade_result) > 0) {
+                                $subject_grade_row = pg_fetch_assoc($subject_grade_result);
+                                $subject_grade = $subject_grade_row['grade'];
+                            }
+                        }
                         echo "<tr>
                 <td>" . $row['subject'] . "</td>
                 <td>" . $row['full_marks_viva'] . "</td>
@@ -839,6 +866,7 @@ function calculateRanksWithTies($students)
                 <td>" . $viva_marks . "</td>
                 <td>" . $written_marks . "</td>
                 <td>" . $total_marks . "</td>
+                <td>" . $subject_grade . "</td>
                 <!--<td>" . $row['written_attendance_status'] . "</td>-->
                 <!--<td>" . $row['viva_attendance_status'] . "</td>-->
             </tr>";
@@ -950,10 +978,18 @@ function calculateRanksWithTies($students)
                                 <?php
                                 $range_texts = [];
                                 foreach ($grade_ranges as $range) {
+
+                                    $min = round($range['min_percentage']);
+                                    $max = floor($range['max_percentage']);
+
                                     if (strtolower($range['description']) == 'fail') {
-                                        $range_texts[] = $range['grade'] . " (Below " . ceil($range['max_percentage']) . "%) - " . $range['description'];
+                                        $range_texts[] = $range['grade'] .
+                                            " (Below " . ($max + 1) . "%) - " .
+                                            $range['description'];
                                     } else {
-                                        $range_texts[] = $range['grade'] . " (" . $range['min_percentage'] . "-" . $range['max_percentage'] . "%) - " . $range['description'];
+                                        $range_texts[] = $range['grade'] .
+                                            " (" . $min . "-" . $max . "%) - " .
+                                            $range['description'];
                                     }
                                 }
                                 echo implode(' | ', $range_texts);
