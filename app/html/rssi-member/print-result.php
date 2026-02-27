@@ -929,6 +929,41 @@ function calculateRanksWithTies($students)
                         </tr>
                     </table>
                     <?php
+                    // Fetch grade ranges for display
+                    if ($rule_id !== null) {
+                        $grade_ranges_query = "
+        SELECT grade, description, min_percentage, max_percentage
+        FROM grade_rule_details
+        WHERE rule_id = $1
+        ORDER BY min_percentage DESC
+    ";
+                        $grade_ranges_result = pg_query_params($con, $grade_ranges_query, [$rule_id]);
+
+                        if ($grade_ranges_result && pg_num_rows($grade_ranges_result) > 0) {
+                            $grade_ranges = [];
+                            while ($row = pg_fetch_assoc($grade_ranges_result)) {
+                                $grade_ranges[] = $row;
+                            }
+                    ?>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                <strong>Grading Scale:</strong>
+                                <?php
+                                $range_texts = [];
+                                foreach ($grade_ranges as $range) {
+                                    if (strtolower($range['description']) == 'fail') {
+                                        $range_texts[] = $range['grade'] . " (Below " . ($range['max_percentage'] + 1) . "%) - " . $range['description'];
+                                    } else {
+                                        $range_texts[] = $range['grade'] . " (" . $range['min_percentage'] . "-" . $range['max_percentage'] . "%) - " . $range['description'];
+                                    }
+                                }
+                                echo implode(' | ', $range_texts);
+                                ?>
+                            </div>
+                    <?php
+                        }
+                    }
+                    ?>
+                    <?php
                     // Find the passing percentage
                     $passing_query = "
                         SELECT min_percentage 
@@ -949,7 +984,7 @@ function calculateRanksWithTies($students)
 
                     <div class="report-footer visible-print-block" style="text-align: right;">
                         <p>A - Absent denotes that the student was absent during the exam for that particular subject.</p>
-                        <p>Minimum passing marks: <?php echo $passing_percentage ?? 'N/A'; ?></p>
+                        <!-- <p>Minimum passing marks: <?php echo $passing_percentage ?? 'N/A'; ?></p> -->
                     </div>
                 <?php }
         } elseif ($exam_type == "" && $student_id == "") {
