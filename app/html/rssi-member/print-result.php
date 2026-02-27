@@ -702,7 +702,7 @@ function calculateRanksWithTies($students)
                         AND $2 BETWEEN min_percentage AND max_percentage
                         LIMIT 1
                     ";
-                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, round($percentage)]);
+                    $grade_result = pg_query_params($con, $grade_query, [$rule_id, $percentage]);
 
                     if ($grade_result && pg_num_rows($grade_result) > 0) {
                         $grade_row = pg_fetch_assoc($grade_result);
@@ -819,12 +819,8 @@ function calculateRanksWithTies($students)
                     </tr>
 
                     <?php foreach ($ordered_marks_data as $row) {
-                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : (is_numeric($row['written_marks'])
-                            ? round($row['written_marks'])
-                            : null);
-                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : (is_numeric($row['viva_marks'])
-                            ? round($row['viva_marks'])
-                            : null);
+                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
+                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
                         $total_marks = 0;
 
                         if ($row['written_attendance_status'] == 'A' && $row['viva_attendance_status'] != 'A') {
