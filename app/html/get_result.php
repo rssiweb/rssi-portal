@@ -39,15 +39,15 @@ function isAllowedAccess()
         || $is_allowed_referer;
 }
 
-if (!isAllowedAccess()) {
-    http_response_code(403);
-    echo '<div class="alert alert-danger text-center">
-            <h4>Access Denied</h4>
-            <p>Please use the official student result portal to access your results.</p>
-            <p><a href="https://rssi.in/result-portal" class="btn btn-primary">Go to Result Portal</a></p>
-          </div>';
-    exit;
-}
+// if (!isAllowedAccess()) {
+//     http_response_code(403);
+//     echo '<div class="alert alert-danger text-center">
+//             <h4>Access Denied</h4>
+//             <p>Please use the official student result portal to access your results.</p>
+//             <p><a href="https://rssi.in/result-portal" class="btn btn-primary">Go to Result Portal</a></p>
+//           </div>';
+//     exit;
+// }
 
 // Set initial values from GET parameters
 $student_id = $_GET['student_id'] ?? '';
