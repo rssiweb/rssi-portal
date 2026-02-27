@@ -951,7 +951,7 @@ function calculateRanksWithTies($students)
                                 $range_texts = [];
                                 foreach ($grade_ranges as $range) {
                                     if (strtolower($range['description']) == 'fail') {
-                                        $range_texts[] = $range['grade'] . " (Below " . ($range['max_percentage'] + 1) . "%) - " . $range['description'];
+                                        $range_texts[] = $range['grade'] . " (Below " . ceil($range['max_percentage']) . "%) - " . $range['description'];
                                     } else {
                                         $range_texts[] = $range['grade'] . " (" . $range['min_percentage'] . "-" . $range['max_percentage'] . "%) - " . $range['description'];
                                     }
