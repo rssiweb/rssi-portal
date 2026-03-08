@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $deliverable_texts = $_POST['deliverable_text'] ?? [];
             $deliverable_types = $_POST['deliverable_type'] ?? [];
 
-            for ($i = 0; $i < count($task_names); $i++) {
+            for ($i = 0; $i < count($task_names ?? []); $i++) {
                 if (empty($task_names[$i])) continue;
 
                 // Handle deliverable based on type
@@ -88,23 +88,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Create new task
                 $insert_query = "INSERT INTO tasks (
                     task_name, priority, owner_associatenumber, status, 
-                    estimated_hours, start_date, end_date, milestone, 
-                    deliverables, rate, notes, created_by
+                    estimated_hours, start_date, end_date,
+                    deliverables, notes, created_by
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
                 ) RETURNING task_id";
 
+                $estimated = $estimated_hours[$i] ?? null;
+                $start = $start_dates[$i] ?? null;
+                $end = $end_dates[$i] ?? null;
+
                 $params = [
-                    $task_names[$i],
+                    $task_names[$i] ?? null,
                     $priorities[$i] ?? 'P3',
                     $owner_associatenumber,
-                    'Not started', // Default status
-                    $estimated_hours[$i] ?: null,
-                    $start_dates[$i] ?: null,
-                    $end_dates[$i] ?: null,
-                    $milestones[$i] ?? '',
-                    $deliverable_link,
-                    $rates[$i] ?: null,
+                    'Not started',
+                    $estimated !== '' ? $estimated : null,
+                    $start !== '' ? $start : null,
+                    $end !== '' ? $end : null,
+                    $deliverable_link ?? null,
                     $notes[$i] ?? '',
                     $associatenumber
                 ];
@@ -128,34 +130,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'update_status') {
             // Handle deliverable upload for EOD update
             $deliverable_link = null;
-            if (isset($_FILES['eod_deliverables']) && $_FILES['eod_deliverables']['error'][0] != 4) {
-                $uploaded_files = [];
-                foreach ($_FILES['eod_deliverables']['tmp_name'] as $key => $tmp_name) {
-                    if ($_FILES['eod_deliverables']['error'][$key] == 0) {
-                        $file = [
-                            'name' => $_FILES['eod_deliverables']['name'][$key],
-                            'type' => $_FILES['eod_deliverables']['type'][$key],
-                            'tmp_name' => $tmp_name,
-                            'error' => $_FILES['eod_deliverables']['error'][$key],
-                            'size' => $_FILES['eod_deliverables']['size'][$key]
-                        ];
-                        $link = handleDeliverableUpload($file, $_POST['task_id'], $associatenumber);
-                        if ($link) {
-                            $uploaded_files[] = $link;
+
+            // Check if it's file or text deliverable
+            if (isset($_POST['eod_deliverable_type']) && $_POST['eod_deliverable_type'] === 'file') {
+                // File upload
+                if (isset($_FILES['eod_deliverables']) && $_FILES['eod_deliverables']['error'][0] != 4) {
+                    $uploaded_files = [];
+                    foreach ($_FILES['eod_deliverables']['tmp_name'] as $key => $tmp_name) {
+                        if ($_FILES['eod_deliverables']['error'][$key] == 0) {
+                            $file = [
+                                'name' => $_FILES['eod_deliverables']['name'][$key],
+                                'type' => $_FILES['eod_deliverables']['type'][$key],
+                                'tmp_name' => $tmp_name,
+                                'error' => $_FILES['eod_deliverables']['error'][$key],
+                                'size' => $_FILES['eod_deliverables']['size'][$key]
+                            ];
+                            $link = handleDeliverableUpload($file, $_POST['task_id'], $associatenumber);
+                            if ($link) {
+                                $uploaded_files[] = $link;
+                            }
                         }
                     }
+                    $deliverable_link = !empty($uploaded_files) ? implode(',', $uploaded_files) : null;
                 }
-                $deliverable_link = !empty($uploaded_files) ? implode(',', $uploaded_files) : null;
+            } else {
+                // Text deliverable
+                $deliverable_link = $_POST['eod_deliverable_text'] ?? null;
             }
 
             // Update task status
             $update_query = "UPDATE tasks SET 
                 status = $1, 
-                updated_by = $2, 
+                milestone = COALESCE($2, milestone),
+                rate = COALESCE($3, rate),
+                updated_by = $4, 
                 updated_date = CURRENT_TIMESTAMP 
-                WHERE task_id = $3";
+                WHERE task_id = $5";
 
-            $params = [$_POST['status'], $associatenumber, $_POST['task_id']];
+            $params = [
+                $_POST['status'],
+                $_POST['milestone'] ?: null,
+                $_POST['rate'] ?: null,
+                $associatenumber,
+                $_POST['task_id']
+            ];
             pg_query_params($con, $update_query, $params);
 
             // Add comment with deliverables
@@ -229,7 +247,7 @@ if ($is_admin && $view_all === 'all') {
                        LEFT JOIN task_comments tc ON t.task_id = tc.task_id AND tc.comment_date = '$filter_date'
                        WHERE (t.start_date <= '$filter_date' OR t.start_date IS NULL)
                        AND (t.end_date >= '$filter_date' OR t.end_date IS NULL)
-                       GROUP BY t.owner_associatenumber, rm.firstname, rm.lastname
+                       GROUP BY t.owner_associatenumber, rm.fullname
                        ORDER BY owner_name";
 } else {
     $analytics_query = "SELECT 
@@ -405,15 +423,15 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
 
         .task-row {
             background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
             border-left: 4px solid #dee2e6;
         }
 
         .total-hours-badge {
-            font-size: 1.1rem;
-            padding: 8px 15px;
+            font-size: 1rem;
+            padding: 6px 12px;
             background-color: #e9ecef;
             border-radius: 20px;
         }
@@ -429,6 +447,60 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
 
         .rating-stars .star-empty {
             color: #e4e5e9;
+        }
+
+        /* Make charts smaller */
+        .chart-container {
+            height: 200px !important;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            max-height: 200px;
+            width: 100% !important;
+        }
+
+        /* Compact task row styling */
+        .compact-label {
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+            color: #6c757d;
+        }
+
+        .compact-field {
+            font-size: 0.85rem;
+        }
+
+        .task-row .row {
+            margin-right: -5px;
+            margin-left: -5px;
+        }
+
+        .task-row .col,
+        .task-row [class*="col-"] {
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+
+        .task-row .form-control,
+        .task-row .form-select {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            height: auto;
+        }
+
+        .task-row .btn-sm {
+            padding: 0.15rem 0.3rem;
+            font-size: 0.75rem;
+        }
+
+        .deliverable-type-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .deliverable-type-group select {
+            flex: 1;
         }
     </style>
 </head>
@@ -520,27 +592,31 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                     </div>
                 </div>
 
-                <!-- Status Breakdown Chart -->
+                <!-- Status Breakdown Chart - Made smaller -->
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Status Breakdown</h5>
-                            <canvas id="statusChart"></canvas>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hours Distribution -->
+                <!-- Hours Distribution - Made smaller -->
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Hours Distribution</h5>
-                            <canvas id="hoursChart"></canvas>
+                            <div class="chart-container">
+                                <canvas id="hoursChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Create Task Section (for admins) -->
+                <!-- Create Task Section (for admins) - Compact row style -->
                 <?php if ($is_admin): ?>
                     <div class="col-12">
                         <div class="card">
@@ -548,7 +624,7 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                                 <h5 class="card-title">Create New Tasks</h5>
 
                                 <!-- Associate Selection -->
-                                <div class="row mb-4">
+                                <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Select Associate *</label>
                                         <select class="form-control associate-select" id="associateSelect" style="width: 100%;">
@@ -562,18 +638,18 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                                     </div>
                                 </div>
 
-                                <!-- Tasks Container -->
+                                <!-- Tasks Container - Now with compact row style -->
                                 <div id="tasksContainer">
                                     <!-- Tasks will be added here dynamically -->
                                 </div>
 
                                 <!-- Add Task Button -->
-                                <div class="row mt-3">
+                                <div class="row mt-2">
                                     <div class="col-12">
-                                        <button type="button" class="btn btn-success" id="addTaskBtn" disabled>
-                                            <i class="bi bi-plus-circle"></i> Add Task
+                                        <button type="button" class="btn btn-success btn-sm" id="addTaskBtn" disabled>
+                                            <i class="bi bi-plus-circle"></i> Add Task Row
                                         </button>
-                                        <button type="button" class="btn btn-primary" id="saveAllTasksBtn" disabled>
+                                        <button type="button" class="btn btn-primary btn-sm" id="saveAllTasksBtn" disabled>
                                             <i class="bi bi-save"></i> Save All Tasks
                                         </button>
                                     </div>
@@ -681,7 +757,9 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                                                                 data-bs-target="#updateStatusModal"
                                                                 data-task-id="<?php echo $task['task_id']; ?>"
                                                                 data-task-name="<?php echo htmlspecialchars($task['task_name']); ?>"
-                                                                data-current-status="<?php echo $task['status']; ?>">
+                                                                data-current-status="<?php echo $task['status']; ?>"
+                                                                data-current-milestone="<?php echo htmlspecialchars($task['milestone'] ?? ''); ?>"
+                                                                data-current-rate="<?php echo $task['rate'] ?? ''; ?>">
                                                                 Update
                                                             </button>
                                                         </td>
@@ -698,7 +776,7 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
             </div>
         </section>
 
-        <!-- Update Status Modal -->
+        <!-- Update Status Modal - Enhanced with Milestone, Rating, and Deliverable Type -->
         <div class="modal fade" id="updateStatusModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -729,11 +807,46 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
 
                             <div class="mb-3">
                                 <label class="form-label">EOD Comment/Update</label>
-                                <textarea class="form-control" name="comment_text" rows="3" required></textarea>
+                                <textarea class="form-control" name="comment_text" rows="2" required></textarea>
                             </div>
 
+                            <!-- Milestone Field -->
                             <div class="mb-3">
-                                <label class="form-label">Upload Deliverables (if any)</label>
+                                <label class="form-label">Milestone</label>
+                                <input type="text" class="form-control" name="milestone" id="milestoneField" placeholder="Enter milestone achieved">
+                            </div>
+
+                            <!-- Rating (0-5) Field -->
+                            <div class="mb-3">
+                                <label class="form-label">Rating (0-5)</label>
+                                <select class="form-select" name="rate" id="rateField">
+                                    <option value="">No rating</option>
+                                    <option value="1">1 - Poor</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="5">5 - Excellent</option>
+                                </select>
+                            </div>
+
+                            <!-- Deliverable Type and Upload Section -->
+                            <div class="mb-3">
+                                <label class="form-label">Deliverable Type</label>
+                                <select class="form-select" name="eod_deliverable_type" id="eodDeliverableType">
+                                    <option value="text">Text</option>
+                                    <option value="file">File Upload</option>
+                                </select>
+                            </div>
+
+                            <!-- Text Deliverable Container -->
+                            <div class="mb-3" id="eodTextDeliverableContainer">
+                                <label class="form-label">Deliverable Description</label>
+                                <textarea class="form-control" name="eod_deliverable_text" rows="2" placeholder="Enter deliverable description"></textarea>
+                            </div>
+
+                            <!-- File Deliverable Container -->
+                            <div class="mb-3" id="eodFileDeliverableContainer" style="display: none;">
+                                <label class="form-label">Upload Deliverables</label>
                                 <input type="file" class="form-control" name="eod_deliverables[]" multiple>
                                 <small class="text-muted">Upload any files related to today's work</small>
                             </div>
@@ -818,7 +931,7 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                 $('#saveAllTasksBtn').prop('disabled', !selected || taskCounter === 0);
             });
 
-            // Add Task button click handler
+            // Add Task button click handler - Compact row style
             $('#addTaskBtn').click(function() {
                 const associateId = $('#associateSelect').val();
                 if (!associateId) {
@@ -830,74 +943,64 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                 const taskId = 'task_' + taskCounter;
                 const taskHtml = `
                     <div class="task-row" id="${taskId}">
-                        <div class="row g-3">
-                            <div class="col-md-12 text-end">
+                        <div class="row g-1 align-items-center">
+                            <div class="col-md-12 text-end mb-1">
                                 <button type="button" class="btn btn-sm btn-danger remove-task" data-task-id="${taskId}">
                                     <i class="bi bi-trash"></i> Remove
                                 </button>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Task Name *</label>
-                                <input type="text" class="form-control task-name" name="task_name[]" required>
-                            </div>
                             <div class="col-md-2">
-                                <label class="form-label">Priority</label>
-                                <select class="form-select task-priority" name="priority[]">
-                                    <option value="P0">P0 - Critical</option>
-                                    <option value="P1">P1 - High</option>
-                                    <option value="P2">P2 - Medium-High</option>
-                                    <option value="P3" selected>P3 - Medium</option>
-                                    <option value="P4">P4 - Medium-Low</option>
-                                    <option value="P5">P5 - Low</option>
-                                    <option value="P6">P6 - Very Low</option>
-                                    <option value="P7">P7 - Backlog</option>
+                                <div class="compact-label">Task Name *</div>
+                                <input type="text" class="form-control compact-field task-name" name="task_name[]" required placeholder="Task name">
+                            </div>
+                            <div class="col-md-1">
+                                <div class="compact-label">Priority</div>
+                                <select class="form-select compact-field task-priority" name="priority[]">
+                                    <option value="P0">P0</option>
+                                    <option value="P1">P1</option>
+                                    <option value="P2">P2</option>
+                                    <option value="P3" selected>P3</option>
+                                    <option value="P4">P4</option>
+                                    <option value="P5">P5</option>
+                                    <option value="P6">P6</option>
+                                    <option value="P7">P7</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Est. Hours *</label>
-                                <input type="number" step="0.5" class="form-control task-hours" name="estimated_hours[]" required onchange="updateTotalHours()">
+                            <div class="col-md-1">
+                                <div class="compact-label">Est. Hrs *</div>
+                                <input type="number" step="0.5" class="form-control compact-field task-hours" name="estimated_hours[]" required onchange="updateTotalHours()" placeholder="0.0">
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control task-start-date" name="start_date[]">
+                            <div class="col-md-1">
+                                <div class="compact-label">Start</div>
+                                <input type="date" class="form-control compact-field" name="start_date[]">
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control task-end-date" name="end_date[]">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Milestone</label>
-                                <input type="text" class="form-control" name="milestone[]">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Deliverable Type</label>
-                                <select class="form-select deliverable-type" name="deliverable_type[]" onchange="toggleDeliverableInput(this, '${taskId}')">
-                                    <option value="text">Text</option>
-                                    <option value="file">File Upload</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 deliverable-container" id="${taskId}_deliverable">
-                                <label class="form-label">Deliverable</label>
-                                <input type="text" class="form-control" name="deliverable_text[]" placeholder="Enter deliverable details">
-                            </div>
-                            <div class="col-md-3" style="display: none;" id="${taskId}_file_container">
-                                <label class="form-label">Upload Files</label>
-                                <input type="file" class="form-control" name="deliverables[${taskCounter}][]" multiple disabled>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Rating (0-5)</label>
-                                <select class="form-select task-rate" name="rate[]">
-                                    <option value="">No rating</option>
-                                    <option value="1">1 - Poor</option>
-                                    <option value="2">2 - Fair</option>
-                                    <option value="3">3 - Good</option>
-                                    <option value="4">4 - Very Good</option>
-                                    <option value="5">5 - Excellent</option>
-                                </select>
+                            <div class="col-md-1">
+                                <div class="compact-label">End</div>
+                                <input type="date" class="form-control compact-field" name="end_date[]">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Notes</label>
-                                <textarea class="form-control" name="notes[]" rows="1"></textarea>
+                                <div class="compact-label">Ref Doc</div>
+                                <div class="deliverable-type-group">
+                                    <select class="form-select compact-field deliverable-type" name="deliverable_type[]" onchange="toggleDeliverableInput(this, '${taskId}')">
+                                        <option value="text">Text</option>
+                                        <option value="file">File</option>
+                                    </select>
+                                    <div class="deliverable-container flex-grow-1">
+    
+                                        <div id="${taskId}_text_container">
+                                            <input type="text" class="form-control compact-field" name="deliverable_text[]" placeholder="Ref doc">
+                                        </div>
+
+                                        <div id="${taskId}_file_container" style="display:none;">
+                                            <input type="file" class="form-control compact-field" name="deliverables[${taskCounter}][]" multiple disabled>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="compact-label">Notes</div>
+                                <input type="text" class="form-control compact-field" name="notes[]" placeholder="Notes">
                             </div>
                         </div>
                     </div>
@@ -922,7 +1025,8 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
             // Toggle deliverable input type
             window.toggleDeliverableInput = function(select, taskId) {
                 const type = $(select).val();
-                const textContainer = $('#' + taskId + '_deliverable');
+
+                const textContainer = $('#' + taskId + '_text_container');
                 const fileContainer = $('#' + taskId + '_file_container');
 
                 if (type === 'text') {
@@ -985,19 +1089,13 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                     const name = $(this).attr('name');
                     if (name) {
                         if ($(this).attr('type') === 'file') {
-                            // Handle file inputs separately
-                            const files = $(this)[0].files;
-                            for (let i = 0; i < files.length; i++) {
-                                const fileInput = $('<input type="file" name="' + name + '" style="display:none;">');
-                                form.append(fileInput);
-                                // Note: Due to security restrictions, we can't programmatically set file inputs
-                                // This will need to be handled by the form submission
-                            }
+                            // For file inputs, we need to append the actual file input
+                            const clone = $(this).clone();
+                            clone.css('display', 'none');
+                            form.append(clone);
                         } else {
                             const value = $(this).val();
-                            if (value) {
-                                form.append('<input type="hidden" name="' + name + '" value="' + value + '">');
-                            }
+                            form.append('<input type="hidden" name="' + name + '" value="' + (value ?? '') + '">');
                         }
                     }
                 });
@@ -1007,20 +1105,47 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                 form.submit();
             });
 
-            // Update Status Modal - Set task details
+            // Update Status Modal - Set task details with milestone and rating
             $('#updateStatusModal').on('show.bs.modal', function(event) {
                 var button = $(event.relatedTarget);
                 var taskId = button.data('task-id');
                 var taskName = button.data('task-name');
                 var currentStatus = button.data('current-status');
+                var currentMilestone = button.data('current-milestone') || '';
+                var currentRate = button.data('current-rate') || '';
 
                 var modal = $(this);
                 modal.find('#taskId').val(taskId);
                 modal.find('#taskNameDisplay').text(taskName);
                 modal.find('#currentStatus').val(currentStatus);
+                modal.find('#milestoneField').val(currentMilestone);
+                modal.find('#rateField').val(currentRate);
+
+                // Reset deliverable containers
+                modal.find('#eodTextDeliverableContainer').show();
+                modal.find('#eodFileDeliverableContainer').hide();
+                modal.find('#eodDeliverableType').val('text');
+                modal.find('textarea[name="eod_deliverable_text"]').val('');
+                modal.find('input[name="eod_deliverables[]"]').val('');
             });
 
-            // Charts
+            // Toggle EOD deliverable containers
+            $('#eodDeliverableType').on('change', function() {
+                const type = $(this).val();
+                if (type === 'text') {
+                    $('#eodTextDeliverableContainer').show();
+                    $('#eodFileDeliverableContainer').hide();
+                    $('#eodFileDeliverableContainer input').prop('disabled', true);
+                    $('#eodTextDeliverableContainer textarea').prop('disabled', false);
+                } else {
+                    $('#eodTextDeliverableContainer').hide();
+                    $('#eodFileDeliverableContainer').show();
+                    $('#eodTextDeliverableContainer textarea').prop('disabled', true);
+                    $('#eodFileDeliverableContainer input').prop('disabled', false);
+                }
+            });
+
+            // Charts - with reduced height
             <?php if (!empty($status_breakdown)): ?>
                 // Status Chart
                 var ctx1 = document.getElementById('statusChart').getContext('2d');
@@ -1053,9 +1178,16 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 10,
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             }
                         }
                     }
@@ -1082,6 +1214,7 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -1089,6 +1222,11 @@ $status_breakdown = $status_result ? pg_fetch_all($status_result) : [];
                                     display: true,
                                     text: 'Hours'
                                 }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
                             }
                         }
                     }
