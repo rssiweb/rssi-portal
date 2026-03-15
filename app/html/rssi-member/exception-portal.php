@@ -34,6 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $startDate = $startDateTime ? substr($startDateTime, 0, 10) : null;
     $endDate = $endDateTime ? substr($endDateTime, 0, 10) : null;
 
+    // Get the exception date (either start or end date)
+    $exceptionDate = $startDate ? $startDate : $endDate;
+
     // Check for existing non-rejected requests with same parameters on same date(s)
     $checkSql = "SELECT status FROM exception_requests 
                 WHERE submitted_by = '$submittedBy' 
@@ -117,12 +120,14 @@ if ($result && pg_num_rows($result) > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -222,7 +227,205 @@ if ($result && pg_num_rows($result) > 0) {
     </main>
     <!-- End #main -->
 
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
+
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Function to check exception count for the month
+        async function checkExceptionCount(exceptionDate) {
+            const associateNumber = "<?php echo $associatenumber; ?>";
+
+            if (!exceptionDate) return true;
+
+            try {
+                const response = await fetch(`get_exception_count.php?associate=${associateNumber}&date=${exceptionDate}`);
+                const data = await response.json();
+
+                if (data.count >= 3) {
+                    const result = await Swal.fire({
+                        title: 'Exception Count Exceeded',
+                        html: `You already have <strong>${data.count}</strong> approved/pending exception requests for this month.<br><br>The maximum allowed is 3 exceptions per month.<br><br>Do you still want to submit this exception for review?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, submit anyway',
+                        cancelButtonText: 'No, cancel'
+                    });
+
+                    return result.isConfirmed;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error checking exception count:', error);
+                return true;
+            }
+        }
+
+        // Function to check if exception date is within 3 calendar days
+        function checkExceptionDateValidity(exceptionDate) {
+            if (!exceptionDate) return {
+                valid: true,
+                message: ''
+            };
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const exception = new Date(exceptionDate);
+            exception.setHours(0, 0, 0, 0);
+
+            // Calculate difference in days
+            const diffTime = today - exception;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Allow exceptions only for today and past dates within 3 days
+            if (diffDays > 3) {
+                const formattedDate = exception.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                return {
+                    valid: false,
+                    message: `You are trying to apply for an exception on ${formattedDate}, which is more than 3 calendar days ago. Exceptions must be applied within 3 calendar days of the exception date.`
+                };
+            }
+
+            // Don't allow future dates
+            if (diffDays < 0) {
+                return {
+                    valid: false,
+                    message: 'Cannot apply for exceptions on future dates.'
+                };
+            }
+
+            return {
+                valid: true,
+                message: ''
+            };
+        }
+
+        // Override form submission
+        document.getElementById('exception').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const exceptionType = document.getElementById('exceptionType').value;
+            const subExceptionType = document.getElementById('subExceptionType').value;
+            const startDateTime = document.getElementById('startDateTime').value;
+            const endDateTime = document.getElementById('endDateTime').value;
+
+            // Get the exception date (either start or end date)
+            const exceptionDate = startDateTime ? startDateTime.split('T')[0] : (endDateTime ? endDateTime.split('T')[0] : null);
+
+            // First check: Date validity (must be within 3 calendar days)
+            if (exceptionDate) {
+                const dateValidation = checkExceptionDateValidity(exceptionDate);
+                if (!dateValidation.valid) {
+                    await Swal.fire({
+                        title: 'Invalid Exception Date',
+                        text: dateValidation.message,
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return;
+                }
+            }
+
+            // Second check: Exception count for the month
+            const canProceed = await checkExceptionCount(exceptionDate);
+
+            if (canProceed) {
+                // Show loading modal
+                showLoadingModal();
+                // Submit the form
+                this.submit();
+            }
+        });
+
+        // Add validation for date-time inputs to prevent future dates
+        document.getElementById('startDateTime').addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate > today) {
+                Swal.fire({
+                    title: 'Invalid Date',
+                    text: 'Cannot select future dates for exceptions.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6'
+                });
+                this.value = '';
+            }
+        });
+
+        document.getElementById('endDateTime').addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate > today) {
+                Swal.fire({
+                    title: 'Invalid Date',
+                    text: 'Cannot select future dates for exceptions.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6'
+                });
+                this.value = '';
+            }
+        });
+
         function toggleDateTimeFields() {
             const exceptionType = document.getElementById('exceptionType').value;
             const startDateTimeField = document.getElementById('startDateTimeField');
@@ -336,7 +539,12 @@ if ($result && pg_num_rows($result) > 0) {
                     const selectedStartDateTime = new Date(selectedStartTime);
                     const selectedStartMinutes = timeToMinutes(selectedStartTime.split('T')[1]);
                     if (selectedStartMinutes > reportingTimeThreshold) {
-                        alert(`You are applying for a late-entry exception on ${formatDate(selectedStartTime.split('T')[0])} at ${formatMinutesToTime(selectedStartMinutes)}, which is more than 1 hour after your actual reporting time of ${formattedReportingTimeThreshold}. Please apply for leave through the leave portal.`);
+                        Swal.fire({
+                            title: 'Late Entry Warning',
+                            text: `You are applying for a late-entry exception on ${formatDate(selectedStartTime.split('T')[0])} at ${formatMinutesToTime(selectedStartMinutes)}, which is more than 1 hour after your actual reporting time of ${formattedReportingTimeThreshold}. Please apply for leave through the leave portal.`,
+                            icon: 'warning',
+                            confirmButtonColor: '#3085d6'
+                        });
                         document.getElementById('startDateTime').value = ''; // Clear the selected time
                     }
                 }
@@ -345,7 +553,12 @@ if ($result && pg_num_rows($result) > 0) {
                     const selectedEndDateTime = new Date(selectedEndTime);
                     const selectedEndMinutes = timeToMinutes(selectedEndTime.split('T')[1]);
                     if (selectedEndMinutes < exitTimeThreshold) {
-                        alert(`You are applying for an early-exit exception on ${formatDate(selectedEndTime.split('T')[0])} at ${formatMinutesToTime(selectedEndMinutes)}, which is more than 1 hour before your actual exit time of ${formattedExitTimeThreshold}. Please apply for leave through the leave portal.`);
+                        Swal.fire({
+                            title: 'Early Exit Warning',
+                            text: `You are applying for an early-exit exception on ${formatDate(selectedEndTime.split('T')[0])} at ${formatMinutesToTime(selectedEndMinutes)}, which is more than 1 hour before your actual exit time of ${formattedExitTimeThreshold}. Please apply for leave through the leave portal.`,
+                            icon: 'warning',
+                            confirmButtonColor: '#3085d6'
+                        });
                         document.getElementById('endDateTime').value = ''; // Clear the selected time
                     }
                 }
@@ -353,69 +566,6 @@ if ($result && pg_num_rows($result) > 0) {
         });
     </script>
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
-    <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
-    <!-- Add this script at the end of the HTML body -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <!-- Bootstrap Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p id="loadingMessage">Submission in progress.
-                            Please do not close or reload this page.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
-        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        // Add event listener to intercept Escape key press
-        document.body.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                // Prevent default behavior of Escape key
-                event.preventDefault();
-            }
-        });
-    </script>
-    <script>
-        // Function to show loading modal
-        function showLoadingModal() {
-            $('#myModal').modal('show');
-        }
-
-        // Function to hide loading modal
-        function hideLoadingModal() {
-            $('#myModal').modal('hide');
-        }
-
-        // Add event listener to form submission
-        document.getElementById('exception').addEventListener('submit', function(event) {
-            // Show loading modal when form is submitted
-            showLoadingModal();
-        });
-
-        // Optional: Close loading modal when the page is fully loaded
-        window.addEventListener('load', function() {
-            // Hide loading modal
-            hideLoadingModal();
-        });
-    </script>
     <script>
         $(document).ready(function() {
             $('input, select, textarea').each(function() {
