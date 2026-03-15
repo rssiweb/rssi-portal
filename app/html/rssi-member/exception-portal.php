@@ -311,7 +311,7 @@ if ($result && pg_num_rows($result) > 0) {
             }
         }
 
-        // Function to check if exception date is within 3 calendar days
+        // Function to check if exception date is within allowed window
         function checkExceptionDateValidity(exceptionDate) {
             if (!exceptionDate) return {
                 valid: true,
@@ -325,12 +325,45 @@ if ($result && pg_num_rows($result) > 0) {
             exception.setHours(0, 0, 0, 0);
 
             // Calculate difference in days
-            const diffTime = today - exception;
+            const diffTime = exception - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // Allow exceptions only for today and past dates within 3 days
-            if (diffDays > 3) {
-                const formattedDate = exception.toLocaleDateString('en-GB', {
+            // Format dates for display
+            const formattedExceptionDate = exception.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            const formattedToday = today.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            // CASE 1: Future dates are allowed (diffDays > 0)
+            if (diffDays > 0) {
+                return {
+                    valid: true,
+                    message: ''
+                };
+            }
+
+            // CASE 2: Past dates - check if within 3 days (including today)
+            // diffDays will be negative for past dates
+            const daysPast = Math.abs(diffDays);
+
+            if (daysPast <= 3) {
+                // Allowed: today (0 days past) or up to 3 days past
+                return {
+                    valid: true,
+                    message: ''
+                };
+            } else {
+                // Not allowed: more than 3 days past
+                const lastAllowedDate = new Date(today);
+                lastAllowedDate.setDate(today.getDate() - 3);
+                const formattedLastAllowed = lastAllowedDate.toLocaleDateString('en-GB', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
@@ -338,37 +371,68 @@ if ($result && pg_num_rows($result) > 0) {
 
                 return {
                     valid: false,
-                    message: `You are trying to apply for an exception on ${formattedDate}, which is more than 3 calendar days ago. Exceptions must be applied within 3 calendar days of the exception date.`
+                    message: `You are trying to apply for an exception on ${formattedExceptionDate}. Exceptions must be applied within 3 calendar days of the exception date.`
                 };
             }
-
-            // Don't allow future dates
-            if (diffDays < 0) {
-                return {
-                    valid: false,
-                    message: 'Cannot apply for exceptions on future dates.'
-                };
-            }
-
-            return {
-                valid: true,
-                message: ''
-            };
         }
 
+        // Update the date input validation
+        document.getElementById('startDateTime').addEventListener('change', function() {
+            const exceptionDate = this.value.split('T')[0];
+            const validation = checkExceptionDateValidity(exceptionDate);
+
+            if (!validation.valid) {
+                Swal.fire({
+                    title: 'Invalid Exception Date',
+                    text: validation.message,
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6'
+                });
+                this.value = '';
+            }
+        });
+
+        document.getElementById('endDateTime').addEventListener('change', function() {
+            const exceptionDate = this.value.split('T')[0];
+            const validation = checkExceptionDateValidity(exceptionDate);
+
+            if (!validation.valid) {
+                Swal.fire({
+                    title: 'Invalid Exception Date',
+                    text: validation.message,
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6'
+                });
+                this.value = '';
+            }
+        });
+
+        // Override form submission
         // Override form submission
         document.getElementById('exception').addEventListener('submit', async function(event) {
             event.preventDefault();
 
+            const submitBtn = document.getElementById('submit_button');
             const exceptionType = document.getElementById('exceptionType').value;
             const subExceptionType = document.getElementById('subExceptionType').value;
             const startDateTime = document.getElementById('startDateTime').value;
             const endDateTime = document.getElementById('endDateTime').value;
 
+            // Basic validation
+            if (!exceptionType || !subExceptionType || !reason.value.trim()) {
+                Swal.fire({
+                    title: 'Incomplete Form',
+                    text: 'Please fill in all required fields.',
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6'
+                });
+                return;
+            }
+
             // Get the exception date (either start or end date)
             const exceptionDate = startDateTime ? startDateTime.split('T')[0] : (endDateTime ? endDateTime.split('T')[0] : null);
 
-            // First check: Date validity (must be within 3 calendar days)
+            // First check: Date validity (must be within rules)
             if (exceptionDate) {
                 const dateValidation = checkExceptionDateValidity(exceptionDate);
                 if (!dateValidation.valid) {
@@ -382,47 +446,40 @@ if ($result && pg_num_rows($result) > 0) {
                 }
             }
 
-            // Second check: Exception count for the month
-            const canProceed = await checkExceptionCount(exceptionDate);
+            // Show loading state on button
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Checking...';
+            submitBtn.disabled = true;
 
-            if (canProceed) {
-                // Show loading modal
-                showLoadingModal();
-                // Submit the form
-                this.submit();
-            }
-        });
+            try {
+                // Second check: Exception count for the month
+                const canProceed = await checkExceptionCount(exceptionDate);
 
-        // Add validation for date-time inputs to prevent future dates
-        document.getElementById('startDateTime').addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+                if (canProceed) {
+                    // Restore button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
 
-            if (selectedDate > today) {
+                    // Show loading modal
+                    showLoadingModal();
+                    // Submit the form
+                    this.submit();
+                } else {
+                    // Restore button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+
                 Swal.fire({
-                    title: 'Invalid Date',
-                    text: 'Cannot select future dates for exceptions.',
+                    title: 'Error',
+                    text: 'An error occurred while checking. Please try again.',
                     icon: 'error',
                     confirmButtonColor: '#3085d6'
                 });
-                this.value = '';
-            }
-        });
-
-        document.getElementById('endDateTime').addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (selectedDate > today) {
-                Swal.fire({
-                    title: 'Invalid Date',
-                    text: 'Cannot select future dates for exceptions.',
-                    icon: 'error',
-                    confirmButtonColor: '#3085d6'
-                });
-                this.value = '';
             }
         });
 
