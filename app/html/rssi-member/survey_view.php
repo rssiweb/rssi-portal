@@ -1409,7 +1409,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                 minute: '2-digit',
                                 second: '2-digit',
                                 hour12: true
-                            }).replace('am', 'AM').replace('pm', 'PM');
+                            });
                             const addedBy = remarkObj.added_by || 'Unknown';
 
                             remarksHtml += `
