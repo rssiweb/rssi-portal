@@ -1400,20 +1400,29 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                         remarks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                         remarks.forEach((remarkObj, index) => {
-                            const timestamp = new Date(remarkObj.timestamp).toLocaleString();
+                            // Format the timestamp in DD/MM/YYYY with AM/PM
+                            const formattedDate = new Date(remarkObj.timestamp).toLocaleString('en-GB', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                            }).replace('am', 'AM').replace('pm', 'PM');
                             const addedBy = remarkObj.added_by || 'Unknown';
 
                             remarksHtml += `
-                                <div class="remark-item mb-3 pb-2 ${index < remarks.length - 1 ? 'border-bottom' : ''}">
-                                    <div class="remark-content">
-                                        <p class="mb-1">${escapeHtml(remarkObj.remark)}</p>
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock me-1"></i>${timestamp} 
-                                            <i class="bi bi-person me-1 ms-2"></i>${escapeHtml(addedBy)}
-                                        </small>
-                                    </div>
-                                </div>
-                            `;
+                        <div class="remark-item mb-3 pb-2 ${index < remarks.length - 1 ? 'border-bottom' : ''}">
+                            <div class="remark-content">
+                                <p class="mb-1">${escapeHtml(remarkObj.remark)}</p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>${formattedDate} 
+                                    <i class="bi bi-person me-1 ms-2"></i>${escapeHtml(addedBy)}
+                                </small>
+                            </div>
+                        </div>
+                    `;
                         });
 
                         container.html(remarksHtml);
