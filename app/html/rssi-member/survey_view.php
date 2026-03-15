@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType'])) {
         $date_from = $_POST['date_from'] ?? '';
         $date_to = $_POST['date_to'] ?? '';
         $surveyor_filter = $_POST['surveyor_filter'] ?? 'all';
+        $remarks_date_from = $_POST['remarks_date_from'] ?? '';
+        $remarks_date_to = $_POST['remarks_date_to'] ?? '';
 
         // Build WHERE clause based on search mode
         $where_conditions = [];
@@ -70,6 +72,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType'])) {
                 $param_count++;
                 $where_conditions[] = "s.surveyor_id = $" . $param_count;
                 $params[] = $surveyor_filter;
+            }
+
+            // Add remarks date range filter
+            if (!empty($remarks_date_from) || !empty($remarks_date_to)) {
+                $remarks_conditions = [];
+
+                // Subquery to check if any remark timestamp falls within the range
+                $remarks_subquery = "EXISTS (
+                    SELECT 1 FROM json_array_elements(sd.remarks::json) AS remark
+                    WHERE ";
+
+                $sub_params = [];
+                $sub_count = 0;
+
+                if (!empty($remarks_date_from)) {
+                    $sub_count++;
+                    $remarks_conditions[] = "(remark->>'timestamp')::timestamp >= $" . ($param_count + $sub_count);
+                    $sub_params[] = $remarks_date_from . ' 00:00:00';
+                }
+
+                if (!empty($remarks_date_to)) {
+                    $sub_count++;
+                    $remarks_conditions[] = "(remark->>'timestamp')::timestamp <= $" . ($param_count + $sub_count);
+                    $sub_params[] = $remarks_date_to . ' 23:59:59';
+                }
+
+                $remarks_subquery .= implode(" AND ", $remarks_conditions);
+                $remarks_subquery .= ")";
+
+                $where_conditions[] = $remarks_subquery;
+
+                // Add subquery parameters to main params
+                foreach ($sub_params as $sub_param) {
+                    $param_count++;
+                    $params[] = $sub_param;
+                }
             }
         }
 
@@ -157,90 +195,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType'])) {
             ]);
         }
         exit;
-    }
-}
+    } elseif ($_POST['formType'] === 'update_status') {
+        // Handle AJAX status update
+        $id = $_POST['id'];
+        $status = $_POST['status'];
+        $new_remark = $_POST['remark'] ?? '';
 
-// Handle status and remarks update action
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'update_status') {
-    $id = $_POST['id'];
-    $status = $_POST['status'];
-    $new_remark = $_POST['remark'] ?? '';
-
-    // Get current user's fullname from rssimyaccount_members table
-    $current_user_fullname = 'Unknown';
-    if (isset($_SESSION['aid'])) {
-        $user_query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = $1";
-        $user_result = pg_query_params($con, $user_query, array($associatenumber));
-        if ($user_result && pg_num_rows($user_result) > 0) {
-            $user_row = pg_fetch_assoc($user_result);
-            $current_user_fullname = $user_row['fullname'];
-        }
-    }
-
-    // Get existing remarks
-    $get_remarks_query = "SELECT remarks FROM student_data WHERE id = $1";
-    $get_remarks_result = pg_query_params($con, $get_remarks_query, array($id));
-
-    $remarks_array = [];
-    if ($get_remarks_result && pg_num_rows($get_remarks_result) > 0) {
-        $row = pg_fetch_assoc($get_remarks_result);
-        $existing_remarks = $row['remarks'];
-
-        if (!empty($existing_remarks)) {
-            // Try to decode existing remarks as JSON
-            $decoded_remarks = json_decode($existing_remarks, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_remarks)) {
-                $remarks_array = $decoded_remarks;
-            } else {
-                // If not JSON, convert existing remark to new format
-                $remarks_array[] = [
-                    'remark' => $existing_remarks,
-                    'timestamp' => date('Y-m-d H:i:s'),
-                    'added_by' => $current_user_fullname
-                ];
+        // Get current user's fullname
+        $current_user_fullname = 'Unknown';
+        if (isset($_SESSION['aid'])) {
+            $user_query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = $1";
+            $user_result = pg_query_params($con, $user_query, array($associatenumber));
+            if ($user_result && pg_num_rows($user_result) > 0) {
+                $user_row = pg_fetch_assoc($user_result);
+                $current_user_fullname = $user_row['fullname'];
             }
         }
-    }
 
-    // Add new remark if provided
-    if (!empty($new_remark)) {
-        $remarks_array[] = [
-            'remark' => $new_remark,
-            'timestamp' => date('Y-m-d H:i:s'),
-            'added_by' => $current_user_fullname
-        ];
-    }
+        // Get existing remarks
+        $get_remarks_query = "SELECT remarks FROM student_data WHERE id = $1";
+        $get_remarks_result = pg_query_params($con, $get_remarks_query, array($id));
 
-    // Update database
-    $query = "UPDATE student_data SET status = $1, remarks = $2 WHERE id = $3";
-    $result = pg_query_params($con, $query, array(
-        $status,
-        json_encode($remarks_array),
-        $id
-    ));
+        $remarks_array = [];
+        if ($get_remarks_result && pg_num_rows($get_remarks_result) > 0) {
+            $row = pg_fetch_assoc($get_remarks_result);
+            $existing_remarks = $row['remarks'];
 
-    if ($result) {
-        $_SESSION['success_message'] = "Status and remarks updated successfully!";
-    } else {
-        $_SESSION['error_message'] = "Failed to update status and remarks!";
-    }
-
-    // Check if it's an AJAX request
-    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        // Return JSON response for AJAX
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => $result ? true : false,
-            'message' => $result ? 'Status and remarks updated successfully!' : 'Failed to update status and remarks!'
-        ]);
-        exit;
-    } else {
-        // Preserve filter parameters in redirect
-        $filter_params = '';
-        if (isset($_POST['current_filters'])) {
-            $filter_params = '&' . $_POST['current_filters'];
+            if (!empty($existing_remarks)) {
+                // Try to decode existing remarks as JSON
+                $decoded_remarks = json_decode($existing_remarks, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_remarks)) {
+                    $remarks_array = $decoded_remarks;
+                } else {
+                    // If not JSON, convert existing remark to new format
+                    $remarks_array[] = [
+                        'remark' => $existing_remarks,
+                        'timestamp' => date('Y-m-d H:i:s'),
+                        'added_by' => $current_user_fullname
+                    ];
+                }
+            }
         }
-        header("Location: " . $_SERVER['PHP_SELF'] . "?" . parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY));
+
+        // Add new remark if provided
+        if (!empty($new_remark)) {
+            $remarks_array[] = [
+                'remark' => $new_remark,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'added_by' => $current_user_fullname
+            ];
+        }
+
+        // Update database
+        $query = "UPDATE student_data SET status = $1, remarks = $2 WHERE id = $3";
+        $result = pg_query_params($con, $query, array(
+            $status,
+            json_encode($remarks_array),
+            $id
+        ));
+
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Status and remarks updated successfully!'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to update status and remarks!'
+            ]);
+        }
         exit;
     }
 }
@@ -258,7 +282,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -400,6 +423,25 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             margin-bottom: 5px;
             word-wrap: break-word;
         }
+
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .filter-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        tr.table-success {
+            background-color: #d1e7dd !important;
+            transition: background-color 0.5s ease;
+        }
     </style>
 </head>
 
@@ -419,21 +461,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     <div class="card">
                         <div class="card-body mt-3">
                             <!-- Success/Error Messages -->
-                            <?php if (isset($_SESSION['success_message'])): ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <?php echo $_SESSION['success_message']; ?>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                                <?php unset($_SESSION['success_message']); ?>
-                            <?php endif; ?>
-
-                            <?php if (isset($_SESSION['error_message'])): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <?php echo $_SESSION['error_message']; ?>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                                <?php unset($_SESSION['error_message']); ?>
-                            <?php endif; ?>
+                            <div id="alertContainer"></div>
 
                             <!-- Add progress loader HTML -->
                             <div id="pageOverlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
@@ -444,66 +472,84 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             </div>
 
                             <!-- Filters -->
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <form id="filterForm" class="mb-3" onsubmit="handleFormSubmit(event)">
-                                        <div class="row filter-row">
-                                            <div class="col-md-3">
-                                                <label for="status" class="form-label">Status</label>
-                                                <select class="form-select" id="status" name="status">
-                                                    <option value="all" selected>All Status</option>
-
-                                                    <!-- Inquiry Stage -->
-                                                    <option value="Came for Inquiry">Came for Inquiry</option>
-                                                    <option value="Telephonic Inquiry">Telephonic Inquiry</option>
-
-                                                    <!-- Follow-up Stage -->
-                                                    <option value="Follow-up Pending">Follow-up Pending</option>
-                                                    <option value="Follow-up Done">Follow-up Done</option>
-
-                                                    <!-- Interest Stage -->
-                                                    <option value="Interested - Decision Pending">Interested - Decision Pending</option>
-
-                                                    <!-- Enrollment Stage -->
-                                                    <option value="Enrollment Initiated">Enrollment Initiated</option>
-                                                    <option value="Enrollment Completed">Enrollment Completed</option>
-
-                                                    <!-- Non-conversion Stage -->
-                                                    <option value="No Show">No Show</option>
-                                                    <option value="Not Interested">Not Interested</option>
-                                                    <option value="Not Reachable">Not Reachable</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="surveyor_filter" class="form-label">Surveyor</label>
-                                                <select class="form-select" id="surveyor_filter" name="surveyor_filter">
-                                                    <option value="all" selected>All Surveyors</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="date_range" class="form-label">Date Range</label>
-                                                <input type="text" class="form-control" id="date_range" name="date_range" placeholder="Select date range">
+                            <div class="filter-section">
+                                <div class="filter-title">Main Filters</div>
+                                <form id="filterForm" class="mb-3" onsubmit="handleFormSubmit(event)">
+                                    <div class="row filter-row">
+                                        <div class="col-md-3">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="all" selected>All Status</option>
+                                                <!-- Inquiry Stage -->
+                                                <option value="Came for Inquiry">Came for Inquiry</option>
+                                                <option value="Telephonic Inquiry">Telephonic Inquiry</option>
+                                                <!-- Follow-up Stage -->
+                                                <option value="Follow-up Pending">Follow-up Pending</option>
+                                                <option value="Follow-up Done">Follow-up Done</option>
+                                                <!-- Interest Stage -->
+                                                <option value="Interested - Decision Pending">Interested - Decision Pending</option>
+                                                <!-- Enrollment Stage -->
+                                                <option value="Enrollment Initiated">Enrollment Initiated</option>
+                                                <option value="Enrollment Completed">Enrollment Completed</option>
+                                                <!-- Non-conversion Stage -->
+                                                <option value="No Show">No Show</option>
+                                                <option value="Not Interested">Not Interested</option>
+                                                <option value="Not Reachable">Not Reachable</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="surveyor_filter" class="form-label">Surveyor</label>
+                                            <select class="form-select" id="surveyor_filter" name="surveyor_filter">
+                                                <option value="all" selected>All Surveyors</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="date_range" class="form-label">Survey Date Range</label>
+                                            <input type="text" class="form-control" id="date_range" name="date_range" placeholder="Select survey date range">
+                                        </div>
+                                    </div>
+                                    <div class="row filter-row">
+                                        <div class="col-md-8">
+                                            <label for="search" class="form-label">Search</label>
+                                            <input type="text" class="form-control" id="search" name="search" placeholder="Search by name, contact, parent name, family ID, address, surveyor...">
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end mt-3 mt-md-0">
+                                            <button type="button" id="applyFilters" class="btn btn-primary me-2">Apply Filters</button>
+                                            <button type="button" id="resetFilters" class="btn btn-outline-secondary">Reset</button>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-1 mb-1">
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="toggleSearchMode">
+                                                <label class="form-check-label" for="toggleSearchMode">Enable Search Mode (ignores status filter)</label>
                                             </div>
                                         </div>
-                                        <div class="row filter-row">
-                                            <div class="col-md-8">
-                                                <label for="search" class="form-label">Search</label>
-                                                <input type="text" class="form-control" id="search" name="search" placeholder="Search by name, contact, parent name, family ID, address, surveyor...">
-                                            </div>
-                                            <div class="col-md-4 d-flex align-items-end mt-3 mt-md-0">
-                                                <button type="button" id="applyFilters" class="btn btn-primary me-2">Apply Filters</button>
-                                                <button type="button" id="resetFilters" class="btn btn-outline-secondary">Reset</button>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-1 mb-1">
-                                            <div class="col-md-12">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="toggleSearchMode">
-                                                    <label class="form-check-label" for="toggleSearchMode">Enable Search Mode (ignores status filter)</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Remarks Date Range Filter -->
+                            <div class="filter-section">
+                                <div class="filter-title">Filter by Remarks Date (When action was taken)</div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="remarks_date_from" class="form-label">From Date</label>
+                                        <input type="date" class="form-control" id="remarks_date_from" name="remarks_date_from">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="remarks_date_to" class="form-label">To Date</label>
+                                        <input type="date" class="form-control" id="remarks_date_to" name="remarks_date_to">
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <button type="button" id="applyRemarksFilter" class="btn btn-info me-2">Apply Remarks Filter</button>
+                                        <button type="button" id="clearRemarksFilter" class="btn btn-outline-secondary">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <small class="text-muted">This filter shows records where any remark was added within the selected date range.</small>
+                                    </div>
                                 </div>
                             </div>
 
@@ -587,10 +633,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     <h5 class="modal-title" id="updateStatusModalLabel">Update Status & Remarks</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="" id="updateStatusForm">
-                    <input type="hidden" name="action" value="update_status">
+                <form id="updateStatusForm">
+                    <input type="hidden" name="formType" value="update_status">
                     <input type="hidden" name="id" id="updateStatusStudentId">
-                    <input type="hidden" name="current_filters" id="currentFilters">
 
                     <div class="modal-body">
                         <div class="row">
@@ -744,13 +789,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
     <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
-
-    <!-- Add daterangepicker CSS and JS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         let offset = 0;
@@ -760,7 +799,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             search_term: '',
             date_from: '',
             date_to: '',
-            surveyor_filter: 'all'
+            surveyor_filter: 'all',
+            remarks_date_from: '',
+            remarks_date_to: ''
         };
         let totalFilteredRecords = 0;
         let currentOffset = 0;
@@ -776,8 +817,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             const searchField = $('#search');
             const applyFiltersBtn = $('#applyFilters');
             const resetFiltersBtn = $('#resetFilters');
+            const remarksDateFrom = $('#remarks_date_from');
+            const remarksDateTo = $('#remarks_date_to');
+            const applyRemarksFilter = $('#applyRemarksFilter');
+            const clearRemarksFilter = $('#clearRemarksFilter');
 
-            // Initialize date range picker
+            // Initialize date range picker for survey dates
             $('#date_range').daterangepicker({
                 autoUpdateInput: false,
                 locale: {
@@ -786,7 +831,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 }
             });
 
-            // Handle date range selection
+            // Handle survey date range selection
             $('#date_range').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
                 currentDateRange = $(this).val();
@@ -796,12 +841,34 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 currentFilters.date_to = picker.endDate.format('YYYY-MM-DD');
             });
 
-            // Handle date range clear
+            // Handle survey date range clear
             $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
                 currentDateRange = '';
                 currentFilters.date_from = '';
                 currentFilters.date_to = '';
+            });
+
+            // Apply remarks filter
+            applyRemarksFilter.click(function() {
+                currentFilters.remarks_date_from = remarksDateFrom.val();
+                currentFilters.remarks_date_to = remarksDateTo.val();
+
+                if (!currentFilters.remarks_date_from && !currentFilters.remarks_date_to) {
+                    showAlert('Please select at least one date for remarks filter', 'warning');
+                    return;
+                }
+
+                applyFilters();
+            });
+
+            // Clear remarks filter
+            clearRemarksFilter.click(function() {
+                remarksDateFrom.val('');
+                remarksDateTo.val('');
+                currentFilters.remarks_date_from = '';
+                currentFilters.remarks_date_to = '';
+                applyFilters();
             });
 
             // Read URL parameters first
@@ -822,7 +889,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             search_term: currentFilters.search_term,
                             date_from: '',
                             date_to: '',
-                            surveyor_filter: 'all'
+                            surveyor_filter: 'all',
+                            remarks_date_from: currentFilters.remarks_date_from,
+                            remarks_date_to: currentFilters.remarks_date_to
                         };
                         currentDateRange = '';
                     }
@@ -842,7 +911,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             search_term: '',
                             date_from: '',
                             date_to: '',
-                            surveyor_filter: 'all'
+                            surveyor_filter: 'all',
+                            remarks_date_from: currentFilters.remarks_date_from,
+                            remarks_date_to: currentFilters.remarks_date_to
                         };
                         currentDateRange = '';
                     }
@@ -899,21 +970,33 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     currentFilters.search_term = urlParams.get('search');
                 }
 
-                // In the readURLParameters function:
+                // Read remarks date filters
+                if (urlParams.has('remarks_date_from')) {
+                    $('#remarks_date_from').val(urlParams.get('remarks_date_from'));
+                    currentFilters.remarks_date_from = urlParams.get('remarks_date_from');
+                }
+
+                if (urlParams.has('remarks_date_to')) {
+                    $('#remarks_date_to').val(urlParams.get('remarks_date_to'));
+                    currentFilters.remarks_date_to = urlParams.get('remarks_date_to');
+                }
+
                 if (urlParams.has('search_mode')) {
                     const searchMode = urlParams.get('search_mode') === '1';
                     $('#toggleSearchMode').prop('checked', searchMode);
-                    toggleSearchMode(true); // Pass true to preserve filters
+                    toggleSearchMode(true);
                 }
             }
+
             // Handle browser back/forward buttons
             window.addEventListener('popstate', function() {
                 readURLParameters();
                 applyFilters();
             });
-            // In the initial state setup:
+
+            // Initial state setup
             $('#toggleSearchMode').prop('checked', false);
-            toggleSearchMode(true); // Pass true to preserve filters
+            toggleSearchMode(true);
 
             // On checkbox change - only update UI, don't apply filters automatically
             toggleSearch.change(function() {
@@ -922,13 +1005,13 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             // Handle Enter key in search field
             searchField.keypress(function(event) {
-                if (event.which === 13) { // Enter key
+                if (event.which === 13) {
                     event.preventDefault();
                     applyFilters();
                 }
             });
 
-            // Handle form submit (for Enter key in any field)
+            // Handle form submit
             $('#filterForm').on('submit', function(event) {
                 event.preventDefault();
                 applyFilters();
@@ -937,28 +1020,34 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             // Handle reset filters
             resetFiltersBtn.click(function() {
-                // First, update currentFilters to 'all'
-                currentFilters.surveyor_filter = 'all';
-                currentFilters.status_filter = 'all';
-                currentFilters.search_term = '';
-                currentFilters.date_from = '';
-                currentFilters.date_to = '';
+                // Reset all filters
+                currentFilters = {
+                    status_filter: 'all',
+                    search_term: '',
+                    date_from: '',
+                    date_to: '',
+                    surveyor_filter: 'all',
+                    remarks_date_from: '',
+                    remarks_date_to: ''
+                };
                 currentDateRange = '';
 
-                // Then update the URL immediately with the correct values
-                updateURLParameters();
-
-                // Now reset the UI elements
+                // Reset UI elements
                 $('#status').val('all');
                 $('#date_range').val('');
                 $('#search').val('');
+                $('#remarks_date_from').val('');
+                $('#remarks_date_to').val('');
                 $('#toggleSearchMode').prop('checked', false);
 
-                // CRITICAL: Properly reset Select2 to "all"
+                // Reset Select2
                 $('#surveyor_filter').val('all').trigger('change');
 
                 // Update UI state
                 toggleSearchMode();
+
+                // Update URL
+                updateURLParameters();
 
                 // Apply reset filters
                 applyFilters();
@@ -966,11 +1055,10 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
             // Handle Select2 clear event
             $('#surveyor_filter').on('select2:clear', function() {
-                // When Select2 is cleared, ensure the value is set to 'all'
                 $(this).val('all').trigger('change');
             });
 
-            // Also handle change event to catch manual clearing
+            // Handle change event for Select2
             $('#surveyor_filter').on('change', function() {
                 const currentValue = $(this).val();
                 if (!currentValue || currentValue === '' || (Array.isArray(currentValue) && currentValue.length === 0)) {
@@ -992,12 +1080,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             // Records per load change
             $("#recordsPerLoad").change(() => {
                 fetchRecords(true);
-            });
-
-            // Set current filters in hidden field when modal opens
-            $('#updateStatusModal').on('show.bs.modal', function() {
-                const currentParams = new URLSearchParams(window.location.search);
-                $('#currentFilters').val(currentParams.toString());
             });
         });
 
@@ -1027,7 +1109,9 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                     date_from: currentFilters.date_from,
                     date_to: currentFilters.date_to,
                     surveyor_filter: currentFilters.surveyor_filter,
-                    search_mode: $('#toggleSearchMode').is(':checked')
+                    search_mode: $('#toggleSearchMode').is(':checked'),
+                    remarks_date_from: currentFilters.remarks_date_from,
+                    remarks_date_to: currentFilters.remarks_date_to
                 });
 
                 const data = JSON.parse(response);
@@ -1102,7 +1186,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                             $('#loadMoreBtn').hide();
                         }
 
-                        // Update records info with proper showing X of Y format
+                        // Update records info
                         updateRecordsInfo();
                     } else if (reset) {
                         tbody.html('<tr><td colspan="15" class="text-center">No records found</td></tr>');
@@ -1179,7 +1263,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         function applyFilters() {
             const searchMode = $('#toggleSearchMode').is(':checked');
 
-            // Parse date range if it exists in the single field
+            // Parse date range if it exists
             let dateFrom = currentFilters.date_from;
             let dateTo = currentFilters.date_to;
 
@@ -1191,22 +1275,25 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 }
             }
 
-            // CRITICAL FIX: Ensure Select2 value is properly captured
+            // Get surveyor filter value
             let surveyorFilterValue = $('#surveyor_filter').val();
-
-            // If Select2 is cleared/empty, set to 'all'
             if (!surveyorFilterValue || surveyorFilterValue === '' || surveyorFilterValue.length === 0) {
                 surveyorFilterValue = 'all';
-                // Also update the Select2 display to show "All Surveyors"
                 $('#surveyor_filter').val('all').trigger('change');
             }
+
+            // Preserve remarks date filters
+            const remarksDateFrom = currentFilters.remarks_date_from;
+            const remarksDateTo = currentFilters.remarks_date_to;
 
             currentFilters = {
                 status_filter: searchMode ? 'all' : $('#status').val(),
                 search_term: $('#search').val(),
                 date_from: searchMode ? '' : dateFrom,
                 date_to: searchMode ? '' : dateTo,
-                surveyor_filter: searchMode ? 'all' : surveyorFilterValue
+                surveyor_filter: searchMode ? 'all' : surveyorFilterValue,
+                remarks_date_from: remarksDateFrom,
+                remarks_date_to: remarksDateTo
             };
 
             // Reset the offset and total when filters change
@@ -1214,7 +1301,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             currentOffset = 0;
             totalFilteredRecords = 0;
 
-            // Update URL parameters without reloading page
+            // Update URL parameters
             updateURLParameters();
 
             fetchRecords(true);
@@ -1223,7 +1310,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         function updateURLParameters() {
             const params = new URLSearchParams();
 
-            // Ensure all values are properly set, especially for Select2
             const surveyorValue = currentFilters.surveyor_filter === 'all' ? 'all' : currentFilters.surveyor_filter;
 
             params.set('status', currentFilters.status_filter);
@@ -1233,6 +1319,14 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             params.set('date_range', currentDateRange);
             params.set('surveyor', surveyorValue);
             params.set('search_mode', $('#toggleSearchMode').is(':checked') ? '1' : '0');
+
+            // Add remarks date filters to URL
+            if (currentFilters.remarks_date_from) {
+                params.set('remarks_date_from', currentFilters.remarks_date_from);
+            }
+            if (currentFilters.remarks_date_to) {
+                params.set('remarks_date_to', currentFilters.remarks_date_to);
+            }
 
             const newUrl = window.location.pathname + '?' + params.toString();
             window.history.pushState({}, '', newUrl);
@@ -1334,58 +1428,92 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             });
         }
 
-        function handleStatusUpdateSubmit(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById('updateStatusSubmitBtn');
-            const submitText = submitBtn.querySelector('.submit-text');
-            const loadingSpinner = submitBtn.querySelector('.loading-spinner');
+        // Handle AJAX form submission for status update
+        $(document).ready(function() {
+            $('#updateStatusForm').on('submit', function(e) {
+                e.preventDefault();
 
-            submitText.style.display = 'none';
-            loadingSpinner.style.display = 'inline';
-            submitBtn.disabled = true;
+                const submitBtn = $('#updateStatusSubmitBtn');
+                const submitText = submitBtn.find('.submit-text');
+                const loadingSpinner = submitBtn.find('.loading-spinner');
 
-            const form = event.target;
-            const formData = new FormData(form);
+                submitText.hide();
+                loadingSpinner.show();
+                submitBtn.prop('disabled', true);
 
-            fetch('', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                const formData = $(this).serialize();
+                const studentId = $('#updateStatusStudentId').val();
+                const newStatus = $('#statusSelect').val();
+                const newRemark = $('#remarkText').val();
+
+                $.ajax({
+                    url: '',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#updateStatusModal').modal('hide');
+                            showAlert(response.message, 'success');
+
+                            // Update only the specific row that was modified
+                            updateSpecificRow(studentId, newStatus, newRemark);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        showAlert('Error updating status. Please try again.', 'danger');
+                    },
+                    complete: function() {
+                        submitText.show();
+                        loadingSpinner.hide();
+                        submitBtn.prop('disabled', false);
                     }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        $('#updateStatusModal').modal('hide');
-                        // Reload with current filters preserved
-                        fetchRecords(true);
-                        // Show success message
-                        showAlert('Status and remarks updated successfully!', 'success');
-                    } else {
-                        throw new Error(data.message || 'Update failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    submitText.style.display = 'inline';
-                    loadingSpinner.style.display = 'none';
-                    submitBtn.disabled = false;
-                    alert('Error updating status: ' + error.message);
                 });
+            });
+        });
 
-            return false;
+        // Function to update only the specific row that was modified
+        function updateSpecificRow(studentId, newStatus, newRemark) {
+            // Find the row with this student ID
+            const row = $(`tr[data-student-id="${studentId}"]`);
+
+            if (row.length) {
+                // Update the status cell
+                const statusCell = row.find('td:nth-child(14)');
+                statusCell.text(newStatus);
+
+                // Update the data-status attribute
+                row.attr('data-status', newStatus);
+
+                // Optionally, show a small indicator that the row was updated
+                row.addClass('table-success');
+                setTimeout(() => {
+                    row.removeClass('table-success');
+                }, 2000);
+
+                // Update the count of records shown (optional - you might want to keep it as is)
+                // No need to reload the entire table or reset pagination
+            } else {
+                // If row not found in current view, just refresh the current page
+                // This handles cases where the updated record might have moved out of current view
+                // due to status change affecting filters
+                const currentOffset = offset;
+                fetchRecords(true);
+                offset = currentOffset; // Restore the offset
+            }
         }
 
         function showAlert(message, type) {
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
             const alertHtml = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             `;
-            $('.card-body').prepend(alertHtml);
+            $('#alertContainer').html(alertHtml);
 
             // Auto dismiss after 5 seconds
             setTimeout(() => {
@@ -1398,7 +1526,6 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             const exportText = exportBtn.querySelector('.export-text');
             const exportLoading = exportBtn.querySelector('.export-loading');
 
-            // Show loading state
             exportText.style.display = 'none';
             exportLoading.style.display = 'inline';
             exportBtn.disabled = true;
@@ -1412,9 +1539,15 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             params.append('surveyor', currentFilters.surveyor_filter);
             params.append('search_mode', $('#toggleSearchMode').is(':checked') ? '1' : '0');
 
+            if (currentFilters.remarks_date_from) {
+                params.append('remarks_date_from', currentFilters.remarks_date_from);
+            }
+            if (currentFilters.remarks_date_to) {
+                params.append('remarks_date_to', currentFilters.remarks_date_to);
+            }
+
             window.location.href = 'export_students.php?' + params.toString();
 
-            // Reset button state after a delay (in case download doesn't start)
             setTimeout(() => {
                 exportText.style.display = 'inline';
                 exportLoading.style.display = 'none';
@@ -1422,23 +1555,12 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             }, 5000);
         }
 
-        // Add event listener for the update status form
-        document.addEventListener('DOMContentLoaded', function() {
-            const updateStatusForm = document.getElementById('updateStatusForm');
-            if (updateStatusForm) {
-                updateStatusForm.addEventListener('submit', handleStatusUpdateSubmit);
-            }
-
-            const updateStatusModal = document.getElementById('updateStatusModal');
-            updateStatusModal.addEventListener('hidden.bs.modal', function() {
-                const submitBtn = document.getElementById('updateStatusSubmitBtn');
-                const submitText = submitBtn.querySelector('.submit-text');
-                const loadingSpinner = submitBtn.querySelector('.loading-spinner');
-
-                submitText.style.display = 'inline';
-                loadingSpinner.style.display = 'none';
-                submitBtn.disabled = false;
-            });
+        // Reset modal state when closed
+        $('#updateStatusModal').on('hidden.bs.modal', function() {
+            const submitBtn = $('#updateStatusSubmitBtn');
+            submitBtn.find('.submit-text').show();
+            submitBtn.find('.loading-spinner').hide();
+            submitBtn.prop('disabled', false);
         });
     </script>
     <script>
@@ -1464,9 +1586,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                 minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
                 allowClear: true,
-                // multiple: true
             }).on('select2:clear', function() {
-                // Ensure value is set to 'all' when cleared
                 $(this).val('all').trigger('change');
             });
 
@@ -1480,12 +1600,11 @@ $total_records = pg_fetch_result($count_result, 0, 0);
 
                     // If still not showing, manually create option
                     if ($('#surveyor_filter').val() !== surveyorValue) {
-                        const displayText = surveyorValue; // You might want to fetch the name
+                        const displayText = surveyorValue;
                         const option = new Option(displayText, surveyorValue, true, true);
                         $('#surveyor_filter').append(option).trigger('change');
                     }
                 } else {
-                    // Ensure it's set to 'all' if not specified or explicitly 'all'
                     $('#surveyor_filter').val('all').trigger('change');
                 }
             }, 500);
