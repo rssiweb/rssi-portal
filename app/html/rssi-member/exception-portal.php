@@ -371,8 +371,7 @@ if ($result && pg_num_rows($result) > 0) {
 
                 return {
                     valid: false,
-                    // message: `The selected date (${formattedExceptionDate}) is more than 3 days in the past. The earliest allowed date for exception requests is ${formattedLastAllowed}. Please select a valid date.`
-                    message: `The selected date (${formattedExceptionDate}) is outside the allowed exception request window. Exception requests must be submitted within 3 calendar days of the exception date. Please select a valid date. If you require further assistance, please contact HR.`
+                    message: `The selected date (${formattedExceptionDate}) is outside the allowed exception request window. Exception requests must be submitted within 3 calendar days of the exception date.`
                 };
             }
         }
