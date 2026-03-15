@@ -211,69 +211,12 @@ for ($i = 0; $i < 5; $i++) {
     $academic_years[$year] = $year . '-' . ($year + 1);
 }
 
-// Academic year filter condition
-$academic_year_condition = "";
-$selected_tab = isset($_GET['tab']) ? $_GET['tab'] : 'active';
-$academic_year_filter_applied = isset($_GET['academic_year']);
-
-if ($selected_tab != 'archive') {
-    // For active and admin tabs, always filter by academic year
-    $start_date = $selected_academic_year . '-04-01';
-    $end_date = ($selected_academic_year + 1) . '-03-31';
-    $academic_year_condition = "AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
-}
-
-// Get records based on status
-$active_where = "pa.is_closed = FALSE AND (pa.system_process_completed = FALSE OR pa.system_process_completed IS NULL) $academic_year_condition";
-$archive_where = "pa.is_closed = TRUE";
-
-// Apply academic year filter to archive (same as other tabs)
-if ($selected_tab == 'archive') {
-    $start_date = $selected_academic_year . '-04-01';
-    $end_date = ($selected_academic_year + 1) . '-03-31';
-    $archive_where .= " AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
-}
-
-// Update the count query for archive to match the same conditions
-$tabs['archive']['count'] = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where"), 0, 0);
-
-$admin_where = "pa.is_closed = FALSE AND pa.system_process_completed = TRUE $academic_year_condition";
-
-if ($user_role != 'Admin') {
-    $admin_where .= " AND FALSE"; // Non-admins shouldn't see admin tab
-}
-
-// Pagination settings
-$records_per_page = 3;
-$current_page = isset($_GET['archive_page']) ? (int)$_GET['archive_page'] : 1;
-if ($current_page < 1) {
-    $current_page = 1;
-}
-
-$tabs = [
-    'active' => [
-        'name' => 'Active',
-        'where' => $active_where,
-        'count' => pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $active_where"), 0, 0)
-    ],
-    'admin' => [
-        'name' => 'Admin Workflow',
-        'where' => $admin_where,
-        'count' => pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $admin_where"), 0, 0)
-    ],
-    'archive' => [
-        'name' => 'Archive',
-        'where' => $archive_where,
-        'count' => pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where"), 0, 0)
-    ]
-];
-
-$selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $_GET['tab'] : 'active';
-
 // Check if we're loading archive content via AJAX
 if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
+    $records_per_page = 3;
     $current_page = isset($_GET['archive_page']) ? (int)$_GET['archive_page'] : 1;
     $offset = ($current_page - 1) * $records_per_page;
+    $search_term = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
 
     // Get the selected academic year from the request
     $selected_academic_year = isset($_GET['academic_year']) ? intval($_GET['academic_year']) : $academic_year;
@@ -283,6 +226,11 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
     $start_date = $selected_academic_year . '-04-01';
     $end_date = ($selected_academic_year + 1) . '-03-31';
     $archive_where .= " AND pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
+
+    // Add search condition if provided
+    if (!empty($search_term)) {
+        $archive_where .= " AND (pa.name ILIKE '%$search_term%' OR pa.mobile ILIKE '%$search_term%')";
+    }
 
     $query = "SELECT pa.*, sc.class_name, sc.value, 
              creator.fullname as created_by_name,
@@ -297,7 +245,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
 
     $result = pg_query($con, $query);
 
-    // Get total count for pagination (using the same WHERE conditions)
+    // Get total count for pagination
     $count_query = "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where";
     $total_records = pg_fetch_result(pg_query($con, $count_query), 0, 0);
     $total_pages = ceil($total_records / $records_per_page);
@@ -428,6 +376,38 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
         echo '</ul>';
         echo '</nav>';
     }
+    exit;
+}
+
+// New AJAX handler for updating counts
+if (isset($_GET['ajax']) && $_GET['ajax'] == 'get_counts') {
+    $selected_academic_year = isset($_GET['academic_year']) ? intval($_GET['academic_year']) : $academic_year;
+
+    // Calculate date ranges
+    $start_date = $selected_academic_year . '-04-01';
+    $end_date = ($selected_academic_year + 1) . '-03-31';
+    $date_condition = "pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
+
+    // Build WHERE conditions
+    $active_where = "pa.is_closed = FALSE AND (pa.system_process_completed = FALSE OR pa.system_process_completed IS NULL) AND $date_condition";
+    $admin_where = "pa.is_closed = FALSE AND pa.system_process_completed = TRUE AND $date_condition";
+    $archive_where = "pa.is_closed = TRUE AND $date_condition";
+
+    if ($user_role != 'Admin') {
+        $admin_where .= " AND FALSE";
+    }
+
+    // Get counts
+    $active_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $active_where"), 0, 0);
+    $admin_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $admin_where"), 0, 0);
+    $archive_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where"), 0, 0);
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'active' => $active_count,
+        'admin' => $admin_count,
+        'archive' => $archive_count
+    ]);
     exit;
 }
 
@@ -584,13 +564,11 @@ if (isset($_GET['edit'])) {
                 <button type="submit" name="update_record" class="btn btn-primary">Update Record</button>
             </div>
         </form>
-<?php
+    <?php
     }
     exit;
 }
-?>
 
-<?php
 // Check if we're loading view details via AJAX
 if (isset($_GET['view'])) {
     $record_id = intval($_GET['view']);
@@ -606,7 +584,7 @@ if (isset($_GET['view'])) {
     $result = pg_query_params($con, $query, [$record_id]);
 
     if ($row = pg_fetch_assoc($result)) {
-?>
+    ?>
         <div class="view-details">
             <div class="row mb-3">
                 <div class="col-md-6">
@@ -744,6 +722,55 @@ if (isset($_GET['view'])) {
     }
     exit;
 }
+
+// Pagination settings (only for main page)
+$records_per_page = 3;
+$current_page = isset($_GET['archive_page']) ? (int)$_GET['archive_page'] : 1;
+if ($current_page < 1) {
+    $current_page = 1;
+}
+
+// Academic year filter condition for main page
+$selected_tab = isset($_GET['tab']) ? $_GET['tab'] : 'active';
+
+// Calculate date ranges for academic year filter (apply to all tabs)
+$start_date = $selected_academic_year . '-04-01';
+$end_date = ($selected_academic_year + 1) . '-03-31';
+$date_condition = "pa.created_at BETWEEN '$start_date' AND '$end_date 23:59:59'";
+
+// Build WHERE conditions for each tab
+$active_where = "pa.is_closed = FALSE AND (pa.system_process_completed = FALSE OR pa.system_process_completed IS NULL) AND $date_condition";
+$admin_where = "pa.is_closed = FALSE AND pa.system_process_completed = TRUE AND $date_condition";
+$archive_where = "pa.is_closed = TRUE AND $date_condition";
+
+if ($user_role != 'Admin') {
+    $admin_where .= " AND FALSE"; // Non-admins shouldn't see admin tab
+}
+
+// Calculate counts AFTER all where conditions are set
+$active_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $active_where"), 0, 0);
+$admin_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $admin_where"), 0, 0);
+$archive_count = pg_fetch_result(pg_query($con, "SELECT COUNT(*) FROM parent_admissions pa WHERE $archive_where"), 0, 0);
+
+$tabs = [
+    'active' => [
+        'name' => 'Active',
+        'where' => $active_where,
+        'count' => $active_count
+    ],
+    'admin' => [
+        'name' => 'Admin Workflow',
+        'where' => $admin_where,
+        'count' => $admin_count
+    ],
+    'archive' => [
+        'name' => 'Archive',
+        'where' => $archive_where,
+        'count' => $archive_count
+    ]
+];
+
+$selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $_GET['tab'] : 'active';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -752,7 +779,7 @@ if (isset($_GET['view'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -828,6 +855,10 @@ if (isset($_GET['view'])) {
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
+        }
+
+        .search-box {
+            max-width: 300px;
         }
     </style>
 </head>
@@ -1021,7 +1052,7 @@ if (isset($_GET['view'])) {
                                                     data-bs-target="#<?= $tab_id ?>"
                                                     type="button" role="tab">
                                                     <?= $tab['name'] ?>
-                                                    <span class="badge bg-<?= $tab_id == 'active' ? 'warning' : ($tab_id == 'admin' ? 'primary' : 'secondary') ?> ms-1">
+                                                    <span class="badge bg-<?= $tab_id == 'active' ? 'warning' : ($tab_id == 'admin' ? 'primary' : 'secondary') ?> ms-1 count-badge" id="<?= $tab_id ?>-count">
                                                         <?= $tab['count'] ?>
                                                     </span>
                                                 </button>
@@ -1030,14 +1061,19 @@ if (isset($_GET['view'])) {
                                     <?php endforeach; ?>
                                 </ul>
 
-                                <!-- In the HTML, remove the disabled attribute from the academic year filter -->
-                                <div class="d-flex align-items-center">
-                                    <label for="academic_year" class="form-label me-2 mb-0">Academic Year:</label>
-                                    <select class="form-select form-select-sm" id="academic_year" style="width: 120px;">
-                                        <?php foreach ($academic_years as $year => $label): ?>
-                                            <option value="<?= $year ?>" <?= $year == $selected_academic_year ? 'selected' : '' ?>><?= $label ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center">
+                                        <label for="academic_year" class="form-label me-2 mb-0">Academic Year:</label>
+                                        <select class="form-select form-select-sm" id="academic_year" style="width: 120px;">
+                                            <?php foreach ($academic_years as $year => $label): ?>
+                                                <option value="<?= $year ?>" <?= $year == $selected_academic_year ? 'selected' : '' ?>><?= $label ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <!-- Search box for archive tab (will be shown/hidden via JavaScript) -->
+                                    <div class="search-box" id="archiveSearchContainer" style="<?= $selected_tab == 'archive' ? 'display: block;' : 'display: none;' ?>">
+                                        <input type="text" class="form-control form-control-sm" id="archiveSearch" placeholder="Search by name or mobile...">
+                                    </div>
                                 </div>
                             </div>
 
@@ -1231,10 +1267,10 @@ if (isset($_GET['view'])) {
             </div>
         </div>
     </div>
-
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         // Main form field handlers
         function setupFormFieldHandlers() {
@@ -1262,55 +1298,7 @@ if (isset($_GET['view'])) {
         function handleVisitTypeChange() {
             const admissionFields = document.getElementById('admissionFields');
             const isAdmission = this.value === 'taking admission';
-
-            // Toggle visibility
             admissionFields.style.display = isAdmission ? 'block' : 'none';
-
-            // List of all admission-related fields
-            const admissionFieldsList = [
-                'family_member_count', 'monthly_income', 'fees_submission_date',
-                'total_fee', 'deposited_amount', 'due_amount', 'fees_month',
-                'payment_mode', 'transaction_id'
-            ];
-
-            // Handle field requirements and reset values
-            admissionFieldsList.forEach(field => {
-                const element = document.getElementById(field);
-                if (!element) return;
-
-                // Set required status for relevant fields
-                const requiredFields = [
-                    'family_member_count', 'monthly_income', 'fees_submission_date',
-                    'total_fee', 'deposited_amount', 'fees_month', 'payment_mode'
-                ];
-
-                if (requiredFields.includes(field)) {
-                    element.required = isAdmission;
-                }
-
-                // Reset values when switching to inquiry
-                if (!isAdmission) {
-                    if (element.tagName === 'SELECT') {
-                        element.selectedIndex = 0;
-                    } else {
-                        element.value = '';
-                    }
-
-                    // Special handling for payment mode
-                    if (field === 'payment_mode') {
-                        document.getElementById('transactionIdField').style.display = 'none';
-                        document.getElementById('transaction_id').required = false;
-                    }
-                }
-            });
-
-            // Recalculate due amount if needed
-            if (isAdmission) {
-                calculateDue();
-            } else {
-                const dueAmountField = document.getElementById('due_amount');
-                if (dueAmountField) dueAmountField.value = '';
-            }
         }
 
         function handlePaymentModeChange() {
@@ -1327,14 +1315,23 @@ if (isset($_GET['view'])) {
         }
 
         function calculateDue() {
-            try {
-                const totalFee = parseFloat(document.getElementById('total_fee').value) || 0;
-                const deposited = parseFloat(document.getElementById('deposited_amount').value) || 0;
-                const due = totalFee - deposited;
-                document.getElementById('due_amount').value = due.toFixed(2);
-            } catch (error) {
-                console.error('Error calculating due amount:', error);
-            }
+            const totalFee = parseFloat(document.getElementById('total_fee').value) || 0;
+            const deposited = parseFloat(document.getElementById('deposited_amount').value) || 0;
+            const due = totalFee - deposited;
+            document.getElementById('due_amount').value = due.toFixed(2);
+        }
+
+        // Function to update all tab counts
+        function updateTabCounts(academicYear) {
+            fetch(`<?= $_SERVER['PHP_SELF'] ?>?ajax=get_counts&academic_year=${academicYear}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update all count badges
+                    document.getElementById('active-count').textContent = data.active;
+                    document.getElementById('admin-count').textContent = data.admin;
+                    document.getElementById('archive-count').textContent = data.archive;
+                })
+                .catch(error => console.error('Error updating counts:', error));
         }
 
         // Tab and academic year handling
@@ -1355,11 +1352,14 @@ if (isset($_GET['view'])) {
             const tabName = event.target.getAttribute('data-bs-target').replace('#', '');
             const academicYear = document.getElementById('academic_year').value;
 
+            // Show/hide search box based on tab
+            document.getElementById('archiveSearchContainer').style.display = tabName === 'archive' ? 'block' : 'none';
+
             updateUrlParameter('tab', tabName);
             updateUrlParameter('academic_year', academicYear);
 
             if (tabName === 'archive') {
-                loadArchiveContent();
+                loadArchiveContent(1);
             } else {
                 window.location.search = new URLSearchParams({
                     tab: tabName,
@@ -1373,31 +1373,37 @@ if (isset($_GET['view'])) {
             const currentTab = urlParams.get('tab') || 'active';
             const academicYear = this.value;
 
+            // Update URL
             updateUrlParameter('academic_year', academicYear);
 
+            // Update counts for all tabs
+            updateTabCounts(academicYear);
+
             if (currentTab === 'archive') {
+                // Reload archive content with new academic year
                 loadArchiveContent(1);
+                // Clear search when changing academic year
+                document.getElementById('archiveSearch').value = '';
             } else {
-                window.location.search = new URLSearchParams({
-                    tab: currentTab,
-                    academic_year: academicYear
-                }).toString();
+                // For other tabs, reload the page
+                window.location.href = window.location.pathname + '?tab=' + currentTab + '&academic_year=' + academicYear;
             }
         }
 
-        // Archive content loading
+        // Archive content loading with search
         function loadArchiveContent(page = 1) {
             const archiveContent = document.getElementById('archiveContent');
+            const searchTerm = document.getElementById('archiveSearch').value;
             if (!archiveContent) return;
 
             archiveContent.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading archive records...</p>
                 </div>
-                <p class="mt-2">Loading archive records...</p>
-            </div>
-        `;
+            `;
 
             const academicYear = document.getElementById('academic_year').value;
 
@@ -1405,9 +1411,20 @@ if (isset($_GET['view'])) {
             const url = new URL(window.location);
             url.searchParams.set('archive_page', page);
             url.searchParams.set('academic_year', academicYear);
+            url.searchParams.set('tab', 'archive');
+            if (searchTerm) {
+                url.searchParams.set('search', searchTerm);
+            } else {
+                url.searchParams.delete('search');
+            }
             window.history.pushState({}, '', url);
 
-            fetch(`<?= $_SERVER['PHP_SELF'] ?>?ajax=archive&archive_page=${page}&academic_year=${academicYear}`)
+            let fetchUrl = `<?= $_SERVER['PHP_SELF'] ?>?ajax=archive&archive_page=${page}&academic_year=${academicYear}`;
+            if (searchTerm) {
+                fetchUrl += `&search=${encodeURIComponent(searchTerm)}`;
+            }
+
+            fetch(fetchUrl)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.text();
@@ -1418,10 +1435,10 @@ if (isset($_GET['view'])) {
                 .catch(error => {
                     console.error('Error loading archive data:', error);
                     archiveContent.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading archive data. Please try again.
-                    </div>
-                `;
+                        <div class="alert alert-danger">
+                            Error loading archive data. Please try again.
+                        </div>
+                    `;
                 });
         }
 
@@ -1430,18 +1447,33 @@ if (isset($_GET['view'])) {
             return false;
         }
 
+        // Search functionality
+        let searchTimeout;
+
+        function setupSearchHandler() {
+            const searchInput = document.getElementById('archiveSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        loadArchiveContent(1);
+                    }, 500); // Debounce search
+                });
+            }
+        }
+
         // Modal loading functions
         function loadEditForm(recordId) {
             const editModalBody = document.getElementById('editModalBody');
             if (!editModalBody) return;
 
             editModalBody.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
             fetch(`<?= $_SERVER['PHP_SELF'] ?>?edit=${recordId}`)
                 .then(response => {
@@ -1450,17 +1482,14 @@ if (isset($_GET['view'])) {
                 })
                 .then(data => {
                     editModalBody.innerHTML = data;
-                    if (typeof calculateEditDue === 'function') {
-                        calculateEditDue();
-                    }
                 })
                 .catch(error => {
                     console.error('Error loading edit form:', error);
                     editModalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading form. Please try again.
-                    </div>
-                `;
+                        <div class="alert alert-danger">
+                            Error loading form. Please try again.
+                        </div>
+                    `;
                 });
         }
 
@@ -1469,12 +1498,12 @@ if (isset($_GET['view'])) {
             if (!viewModalBody) return;
 
             viewModalBody.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
             fetch(`<?= $_SERVER['PHP_SELF'] ?>?view=${recordId}`)
                 .then(response => {
@@ -1487,10 +1516,10 @@ if (isset($_GET['view'])) {
                 .catch(error => {
                     console.error('Error loading details:', error);
                     viewModalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading details. Please try again.
-                    </div>
-                `;
+                        <div class="alert alert-danger">
+                            Error loading details. Please try again.
+                        </div>
+                    `;
                 });
         }
 
@@ -1514,117 +1543,23 @@ if (isset($_GET['view'])) {
         document.addEventListener('DOMContentLoaded', function() {
             setupFormFieldHandlers();
             setupTabHandlers();
+            setupSearchHandler();
 
+            // Load archive content if on archive tab
             if (window.location.href.includes('tab=archive')) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const archivePage = urlParams.get('archive_page') || 1;
+                const searchTerm = urlParams.get('search') || '';
+                if (searchTerm) {
+                    document.getElementById('archiveSearch').value = searchTerm;
+                }
                 loadArchiveContent(archivePage);
             }
         });
     </script>
     <script>
+        // Additional handlers for edit modal
         document.addEventListener('DOMContentLoaded', function() {
-            // Function to update required fields based on current form state
-            function updateRequiredFields() {
-                const isAdmission = document.getElementById('edit_visit_type')?.value === 'taking admission';
-                const isOnlinePayment = document.getElementById('edit_payment_mode')?.value === 'online';
-
-                const admissionFields = [
-                    'edit_family_member_count',
-                    'edit_monthly_income',
-                    'edit_fees_submission_date',
-                    'edit_total_fee',
-                    'edit_deposited_amount',
-                    'edit_fees_month',
-                    'edit_payment_mode'
-                ];
-
-                // Update required status for all admission fields
-                admissionFields.forEach(field => {
-                    const element = document.getElementById(field);
-                    if (element) {
-                        element.required = isAdmission;
-                    }
-                });
-
-                // Special handling for transaction ID
-                const transactionIdField = document.getElementById('edit_transaction_id');
-                if (transactionIdField) {
-                    transactionIdField.required = isAdmission && isOnlinePayment;
-                }
-            }
-
-            // Delegate events for the edit modal
-            document.addEventListener('change', function(e) {
-                // Handle visit type change
-                if (e.target && e.target.id === 'edit_visit_type') {
-                    const admissionFields = document.getElementById('editAdmissionFields');
-                    const isAdmission = e.target.value === 'taking admission';
-
-                    // Toggle visibility
-                    admissionFields.style.display = isAdmission ? 'block' : 'none';
-
-                    // List of all admission-related fields to reset
-                    const admissionFieldsList = [
-                        'edit_family_member_count',
-                        'edit_monthly_income',
-                        'edit_fees_submission_date',
-                        'edit_total_fee',
-                        'edit_deposited_amount',
-                        'edit_due_amount',
-                        'edit_fees_month',
-                        'edit_payment_mode',
-                        'edit_transaction_id'
-                    ];
-
-                    // Reset fields when switching to inquiry
-                    if (!isAdmission) {
-                        admissionFieldsList.forEach(field => {
-                            const element = document.getElementById(field);
-                            if (element) {
-                                if (element.tagName === 'SELECT') {
-                                    element.selectedIndex = 0;
-                                } else {
-                                    element.value = '';
-                                }
-                            }
-                        });
-
-                        // Hide transaction ID field
-                        document.getElementById('editTransactionIdField').style.display = 'none';
-                    }
-
-                    // Update required fields
-                    updateRequiredFields();
-                }
-
-                // Handle payment mode change
-                if (e.target && e.target.id === 'edit_payment_mode') {
-                    const transactionIdField = document.getElementById('editTransactionIdField');
-                    const showTransactionId = e.target.value === 'online';
-                    transactionIdField.style.display = showTransactionId ? 'block' : 'none';
-
-                    // Clear transaction ID if not online
-                    if (!showTransactionId) {
-                        document.getElementById('edit_transaction_id').value = '';
-                    }
-
-                    // Update required fields
-                    updateRequiredFields();
-                }
-            });
-
-            // Update required fields on any input change
-            document.addEventListener('input', function(e) {
-                // For calculation fields
-                if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
-                    calculateEditDue();
-                }
-
-                // Update required status for any field change
-                updateRequiredFields();
-            });
-
             function calculateEditDue() {
                 const totalFee = parseFloat(document.getElementById('edit_total_fee')?.value) || 0;
                 const deposited = parseFloat(document.getElementById('edit_deposited_amount')?.value) || 0;
@@ -1633,41 +1568,26 @@ if (isset($_GET['view'])) {
                 if (dueField) dueField.value = due.toFixed(2);
             }
 
-            // Form submission validation - modified to use browser's native validation
-            document.getElementById('editModal')?.addEventListener('submit', function(e) {
-                updateRequiredFields(); // Final check before submission
+            // Delegate events for the edit modal
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.id === 'edit_visit_type') {
+                    const admissionFields = document.getElementById('editAdmissionFields');
+                    admissionFields.style.display = e.target.value === 'taking admission' ? 'block' : 'none';
+                }
 
-                const form = this.querySelector('form');
-                if (form) {
-                    // First remove any previously prevented submissions
-                    form.addEventListener('submit', function(submitEvent) {
-                        submitEvent.preventDefault();
-                        submitEvent.stopPropagation();
-                    }, {
-                        once: true
-                    });
-
-                    // Trigger browser validation
-                    if (!form.checkValidity()) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        form.reportValidity(); // This forces the browser to show validation messages
-
-                        // Find and focus first invalid field
-                        const firstInvalid = form.querySelector(':invalid');
-                        if (firstInvalid) {
-                            firstInvalid.focus();
-                        }
+                if (e.target && e.target.id === 'edit_payment_mode') {
+                    const transactionIdField = document.getElementById('editTransactionIdField');
+                    transactionIdField.style.display = e.target.value === 'online' ? 'block' : 'none';
+                    if (e.target.value !== 'online') {
+                        document.getElementById('edit_transaction_id').value = '';
                     }
                 }
             });
 
-            // Initialize when modal opens
-            document.getElementById('editModal')?.addEventListener('shown.bs.modal', function() {
-                if (typeof calculateEditDue === 'function') {
+            document.addEventListener('input', function(e) {
+                if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
                     calculateEditDue();
                 }
-                updateRequiredFields();
             });
         });
     </script>
