@@ -42,9 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType'])) {
         } else {
             // Filter mode - use all filters
             if ($status_filter !== 'all') {
-                $param_count++;
-                $where_conditions[] = "sd.status = $" . $param_count;
-                $params[] = $status_filter;
+                if ($status_filter === 'null') {
+                    $where_conditions[] = "sd.status IS NULL";
+                } else {
+                    $param_count++;
+                    $where_conditions[] = "sd.status = $" . $param_count;
+                    $params[] = $status_filter;
+                }
             }
 
             // Also allow search in filter mode
