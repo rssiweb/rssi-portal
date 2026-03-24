@@ -495,6 +495,8 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                                 <option value="No Show">No Show</option>
                                                 <option value="Not Interested">Not Interested</option>
                                                 <option value="Not Reachable">Not Reachable</option>
+                                                <!-- Null Status Option -->
+                                                <option value="null">No Status (Not Set)</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
