@@ -10,11 +10,6 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-if ($role !== 'Admin') {
-    header("Location: index.php");
-    exit;
-}
-
 // Process form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_fee_structure'])) {
