@@ -162,16 +162,6 @@ $resultArr = pg_fetch_all($result) ?: [];
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
     <style>
         .x-btn:focus,
         .button:focus,
@@ -274,7 +264,7 @@ $resultArr = pg_fetch_all($result) ?: [];
                                                     id="adj_fromdate"
                                                     onchange="cal()"
                                                     required>
-                                                <small class="form-text text-muted">From*</small>
+                                                <small id="passwordHelpBlock_from" class="form-text text-muted">From*</small>
                                             </span>
 
                                             <span class="input-help">
@@ -283,7 +273,7 @@ $resultArr = pg_fetch_all($result) ?: [];
                                                     name="adj_todate"
                                                     id="adj_todate"
                                                     required>
-                                                <small class="form-text text-muted">To*</small>
+                                                <small id="passwordHelpBlock_to" class="form-text text-muted">To*</small>
                                             </span>
 
                                             <span class="input-help">
