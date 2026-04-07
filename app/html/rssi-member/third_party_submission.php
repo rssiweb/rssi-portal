@@ -607,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-md-6">
                                     <label for="bill_document" class="form-label">Upload Bill/Invoice</label>
                                     <input type="file" class="form-control" id="bill_document" name="bill_document"
-                                        accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)" required>
+                                        accept=".pdf,.jpg,.jpeg,.png" onchange="compressImageBeforeUpload(this)">
                                     <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
                                 </div>
 

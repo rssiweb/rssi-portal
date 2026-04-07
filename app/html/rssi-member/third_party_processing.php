@@ -492,6 +492,7 @@ $totalUnpaid = $totals['total_unpaid'] ?? 0;
                                             <th>Request No.</th>
                                             <th>Vendor Name</th>
                                             <th>Invoice No.</th>
+                                            <th>Payment Date</th>
                                             <th>Amount</th>
                                             <th>Academic Year</th>
                                             <th>Submitted Date</th>
@@ -513,6 +514,13 @@ $totalUnpaid = $totals['total_unpaid'] ?? 0;
                                                     <td><?php echo htmlspecialchars($req['request_number']); ?></td>
                                                     <td><?php echo htmlspecialchars($req['vendor_name']); ?></td>
                                                     <td><?php echo htmlspecialchars($req['invoice_number']); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        echo isset($req['payment_date']) && $req['payment_date']
+                                                            ? date('d-m-Y', strtotime($req['payment_date']))
+                                                            : '';
+                                                        ?>
+                                                    </td>
                                                     <td>₹<?php echo number_format($req['amount'], 2); ?></td>
                                                     <td><?php echo htmlspecialchars($req['academic_year']); ?></td>
                                                     <td><?php echo date('d-m-Y', strtotime($req['submission_date'])); ?></td>
