@@ -655,14 +655,14 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                                         <option value="Telephonic Inquiry">Telephonic Inquiry</option>
                                         <!-- Follow-up Stage -->
                                         <option value="Follow-up Pending">Follow-up Pending</option>
-                                        <option value="Follow-up Done">Follow-up Done</option>
+                                        <!-- <option value="Follow-up Done">Follow-up Done</option> -->
                                         <!-- Interest Stage -->
                                         <option value="Interested - Decision Pending">Interested - Decision Pending</option>
                                         <!-- Enrollment Stage -->
-                                        <option value="Enrollment Initiated">Enrollment Initiated</option>
+                                        <!-- <option value="Enrollment Initiated">Enrollment Initiated</option> -->
                                         <option value="Enrollment Completed">Enrollment Completed</option>
                                         <!-- Non-conversion Stage -->
-                                        <option value="No Show">No Show</option>
+                                        <!-- <option value="No Show">No Show</option> -->
                                         <option value="Not Interested">Not Interested</option>
                                         <option value="Not Reachable">Not Reachable</option>
                                     </select>
