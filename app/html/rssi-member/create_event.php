@@ -37,6 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $event_end_time = null;
     $reporting_time = null;
 
+    // Handle class selection (multiple classes)
+    $applicable_classes = null;
+    if (isset($_POST['applicable_classes']) && !empty($_POST['applicable_classes'])) {
+        $classes_array = $_POST['applicable_classes'];
+        // Sanitize each class value
+        $sanitized_classes = array_map(function ($class) use ($con) {
+            return pg_escape_string($con, trim($class));
+        }, $classes_array);
+        $applicable_classes = '{' . implode(',', $sanitized_classes) . '}'; // PostgreSQL array format
+    }
+
     // ALWAYS check for time fields, regardless of is_full_day
     if (!empty($_POST['event_start_time'])) {
         $time_str = trim($_POST['event_start_time']);
@@ -74,8 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $insert_sql = "INSERT INTO internal_events (
             event_name, event_date, event_type, is_full_day, 
             event_start_time, event_end_time, reporting_time, 
-            location, description, created_by, updated_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
+            location, description, created_by, updated_by, applicable_classes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
 
         $params = [
             $event_name,
@@ -88,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $location,
             $description,
             $created_by,
-            $created_by
+            $created_by,
+            $applicable_classes
         ];
 
         $result = pg_query_params($con, $insert_sql, $params);
@@ -261,6 +273,10 @@ if (!$recent_events_result) {
         });
     </script>
 
+    <!-- Select2 CSS and JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
     <style>
         .required-field::after {
             content: " *";
@@ -402,6 +418,13 @@ if (!$recent_events_result) {
                                         <input type="text" class="form-control" id="location" name="location"
                                             value=""
                                             maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground" required>
+                                    </div>
+                                    <!-- Applicable Classes -->
+                                    <div class="col-md-6">
+                                        <label for="applicable_classes" class="form-label">Applicable Classes</label>
+                                        <select class="form-control" id="applicable_classes" name="applicable_classes[]" multiple="multiple">
+                                        </select>
+                                        <small class="form-text text-muted">Start typing to search and select classes (optional)</small>
                                     </div>
 
                                     <!-- Full Day Event -->
@@ -600,6 +623,7 @@ if (!$recent_events_result) {
                                     <thead>
                                         <tr>
                                             <th>Event Name</th>
+                                            <th>Applicable Classes</th>
                                             <th>Date</th>
                                             <th>Type</th>
                                             <th>Location</th>
@@ -631,6 +655,31 @@ if (!$recent_events_result) {
                                                                 <?= substr(htmlspecialchars($event['description']), 0, 50) . '...'; ?>
                                                             </small>
                                                         <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        if (!empty($event['applicable_classes'])) {
+                                                            // Parse PostgreSQL array format
+                                                            $classes_str = trim($event['applicable_classes'], '{}');
+
+                                                            if (!empty($classes_str)) {
+                                                                // Split by comma, but be careful with quoted values
+                                                                $classes = str_getcsv($classes_str);
+
+                                                                // Remove quotes if present
+                                                                $classes = array_map(function ($class) {
+                                                                    return trim($class, '"');
+                                                                }, $classes);
+
+                                                                // Display as comma-separated list
+                                                                echo htmlspecialchars(implode(', ', $classes));
+                                                            } else {
+                                                                echo '<small class="text-muted">All Classes</small>';
+                                                            }
+                                                        } else {
+                                                            echo '<small class="text-muted">All Classes</small>';
+                                                        }
+                                                        ?>
                                                     </td>
                                                     <td>
                                                         <?= date('d M Y', strtotime($event['event_date'])); ?>
@@ -703,6 +752,9 @@ if (!$recent_events_result) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script src="../assets_new/js/text-refiner.js?v=1.2.0"></script>
@@ -788,6 +840,49 @@ if (!$recent_events_result) {
                         }
                     }
                 });
+            }
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 with AJAX for classes
+            $('#applicable_classes').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search for classes...',
+                allowClear: true,
+                closeOnSelect: false,
+                width: '100%',
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 300, // Wait 300ms before making the request
+                    data: function(params) {
+                        return {
+                            q: params.term || '' // Search term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1, // Minimum characters to start searching
+                templateResult: formatClassResult, // Optional: custom formatting
+                templateSelection: formatClassSelection // Optional: custom formatting
+            });
+
+            // Optional: Custom formatting functions
+            function formatClassResult(classItem) {
+                if (classItem.loading) {
+                    return classItem.text;
+                }
+                return classItem.text;
+            }
+
+            function formatClassSelection(classItem) {
+                return classItem.text || classItem.id;
             }
         });
     </script>

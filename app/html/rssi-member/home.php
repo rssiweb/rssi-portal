@@ -144,9 +144,9 @@ if (!function_exists('makeClickableLinks')) {
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php' ?>
+  <?php include 'includes/meta.php' ?>
 
-  
+
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -1706,6 +1706,12 @@ if (!function_exists('makeClickableLinks')) {
                       <i class="bi bi-geo-alt me-1"></i> ${event.location}
                     </div>
                   ` : ''}
+
+                  ${event.applicable_classes ? `
+    <div class="col-12 mb-1">
+        <i class="bi bi-people me-1"></i> ${event.applicable_classes.replace(/[{}]/g, '').split(',').join(', ')}
+    </div>
+` : ''}
                   
                   ${event.is_full_day ? `
                     <div class="col-12 mb-1">

@@ -79,7 +79,8 @@ try {
                 'created_at' => $row['created_at'],
                 'updated_by' => $row['updated_by'],
                 'updated_by_name' => $row['updated_by_name'],
-                'updated_at' => $row['updated_at']
+                'updated_at' => $row['updated_at'],
+                'applicable_classes' => $row['applicable_classes']
             ];
 
             // Add time fields if not full day

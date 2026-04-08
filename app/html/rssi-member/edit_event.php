@@ -78,6 +78,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $event_end_time = null;
     $reporting_time = null;
 
+    // Handle class selection (multiple classes)
+    $applicable_classes = null;
+    if (isset($_POST['applicable_classes']) && !empty($_POST['applicable_classes'])) {
+        $classes_array = $_POST['applicable_classes'];
+        // Sanitize each class value
+        $sanitized_classes = array_map(function ($class) use ($con) {
+            return pg_escape_string($con, trim($class));
+        }, $classes_array);
+        $applicable_classes = '{' . implode(',', $sanitized_classes) . '}'; // PostgreSQL array format
+    }
+
     // ALWAYS check for time fields, regardless of is_full_day
     if (!empty($_POST['event_start_time'])) {
         $time_str = trim($_POST['event_start_time']);
@@ -130,8 +141,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 location = $8, 
                 description = $9, 
                 updated_by = $10, 
+                applicable_classes = $11,
                 updated_at = CURRENT_TIMESTAMP
-                WHERE id = $11";
+                WHERE id = $12";
 
             $params = [
                 $event_name,
@@ -144,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $location,
                 $description,
                 $updated_by,
+                $applicable_classes,
                 $event_id
             ];
 
@@ -181,6 +194,20 @@ if ($event['reporting_time']) {
 } else {
     $event['reporting_time_display'] = '';
 }
+
+// Format classes for display
+$classes_display = '';
+if (!empty($event['applicable_classes'])) {
+    // Handle PostgreSQL array format
+    $classes_str = trim($event['applicable_classes'], '{}');
+    if (!empty($classes_str)) {
+        $class_items = explode(',', $classes_str);
+        $class_items = array_map(function ($class) {
+            return trim($class, '"');
+        }, $class_items);
+        $classes_display = '<span class="badge bg-info me-1">' . implode('</span> <span class="badge bg-info me-1">', array_map('htmlspecialchars', $class_items)) . '</span>';
+    }
+}
 ?>
 
 <!doctype html>
@@ -201,7 +228,7 @@ if ($event['reporting_time']) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -220,6 +247,12 @@ if ($event['reporting_time']) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
         .required-field::after {
@@ -292,6 +325,10 @@ if ($event['reporting_time']) {
                                 <div class="col-md-8">
                                     <h5 class="card-title">Event Information</h5>
                                     <p class="mb-1"><strong>Event ID:</strong> #<?php echo $event['id']; ?></p>
+                                    <!-- Add this after the Created On line -->
+                                    <?php if ($classes_display): ?>
+                                        <p class="mb-0 mt-2"><strong>Applicable Classes:</strong> <?php echo $classes_display; ?></p>
+                                    <?php endif; ?>
                                     <p class="mb-1"><strong>Created By:</strong> <?php echo htmlspecialchars($event['creator_name'] ?: 'User ' . $event['created_by']); ?></p>
                                     <p class="mb-1"><strong>Created On:</strong> <?php echo date('d M Y, h:i A', strtotime($event['created_at'])); ?></p>
                                     <?php if ($event['updated_at'] && $event['updated_at'] != $event['created_at']): ?>
@@ -364,6 +401,13 @@ if ($event['reporting_time']) {
                                         <input type="text" class="form-control" id="location" name="location"
                                             value="<?php echo htmlspecialchars($_POST['location'] ?? $event['location'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                             maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground">
+                                    </div>
+                                    <!-- Applicable Classes -->
+                                    <div class="col-md-12">
+                                        <label for="applicable_classes" class="form-label">Applicable Classes</label>
+                                        <select class="form-control" id="applicable_classes" name="applicable_classes[]" multiple="multiple">
+                                        </select>
+                                        <small class="form-text text-muted">Start typing to search and select classes that this event applies to (optional)</small>
                                     </div>
 
                                     <!-- Full Day Event -->
@@ -575,6 +619,100 @@ if ($event['reporting_time']) {
                 formChanged = false;
                 // Allow the form to submit normally
             });
+        });
+    </script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 with AJAX for classes
+            $('#applicable_classes').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search for classes...',
+                allowClear: true,
+                closeOnSelect: false,
+                width: '100%',
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return {
+                            q: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            // Load existing selected classes for this event
+            <?php
+            // Get the selected classes from the event
+            $selected_classes = [];
+            if (!empty($event['applicable_classes'])) {
+                // Handle PostgreSQL array format
+                $classes_str = trim($event['applicable_classes'], '{}');
+                if (!empty($classes_str)) {
+                    $selected_classes = explode(',', $classes_str);
+                    // Remove quotes if present
+                    $selected_classes = array_map(function ($class) {
+                        return trim($class, '"');
+                    }, $selected_classes);
+                }
+            }
+            ?>
+
+            var selectedClasses = <?php echo json_encode($selected_classes); ?>;
+
+            // Load each selected class and add to Select2
+            if (selectedClasses.length > 0) {
+                $.each(selectedClasses, function(index, classId) {
+                    // Fetch the class details
+                    $.ajax({
+                        url: 'fetch_class.php',
+                        data: {
+                            q: classId
+                        },
+                        async: false,
+                        success: function(data) {
+                            if (data.results && data.results.length > 0) {
+                                // Check if the class exists in the results
+                                var found = false;
+                                $.each(data.results, function(i, result) {
+                                    if (result.id == classId) {
+                                        var option = new Option(result.text, result.id, true, true);
+                                        $('#applicable_classes').append(option).trigger('change');
+                                        found = true;
+                                        return false; // break the loop
+                                    }
+                                });
+
+                                // If not found in search results, create option manually
+                                if (!found) {
+                                    var option = new Option(classId, classId, true, true);
+                                    $('#applicable_classes').append(option).trigger('change');
+                                }
+                            } else {
+                                // Create option with just the ID if no results
+                                var option = new Option(classId, classId, true, true);
+                                $('#applicable_classes').append(option).trigger('change');
+                            }
+                        },
+                        error: function() {
+                            // Fallback - create option with just the ID
+                            var option = new Option(classId, classId, true, true);
+                            $('#applicable_classes').append(option).trigger('change');
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>
