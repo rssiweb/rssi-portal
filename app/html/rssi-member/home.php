@@ -555,6 +555,9 @@ if (!function_exists('makeClickableLinks')) {
       border-radius: 50%;
     }
   </style>
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -922,6 +925,8 @@ if (!function_exists('makeClickableLinks')) {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
   <!-- JavaScript Library Files -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Select2 JS (after jQuery) -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
@@ -953,10 +958,19 @@ if (!function_exists('makeClickableLinks')) {
         </div>
         <div class="modal-body">
           <form method="POST" action="create_post.php" enctype="multipart/form-data" id="eventForm">
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <label for="event_name" class="form-label required-field">Event Name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="event_name" name="event_name"
                 placeholder="Enter event name (e.g., Annual Conference 2024)" required>
+            </div> -->
+
+            <!-- Event Selection - Select2 Dropdown (replaces Event Name field) -->
+            <div class="mb-3">
+              <label for="event_name" class="form-label required-field">Event Name <span class="text-danger">*</span></label>
+              <select class="form-control" id="event_name" name="event_name" required style="width: 100%;">
+                <option value="">Search for an event...</option>
+              </select>
+              <div class="form-text">Start typing event name, ID, or date to search</div>
             </div>
 
             <!-- Rich Text Editor - NEW FORMAT -->
@@ -1891,6 +1905,102 @@ if (!function_exists('makeClickableLinks')) {
         }
       });
     });
+  </script>
+  <script>
+    $(document).ready(function() {
+      // Initialize Select2 for event selection
+      $('#event_name').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search for an event...',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#editEventModal'),
+        ajax: {
+          url: '/../date_details_api.php',
+          dataType: 'json',
+          delay: 300,
+          data: function(params) {
+            return {
+              search: params.term || ''
+            };
+          },
+          processResults: function(data) {
+            if (data.results && Array.isArray(data.results)) {
+              return {
+                results: data.results
+              };
+            }
+            return {
+              results: []
+            };
+          },
+          cache: true
+        },
+        minimumInputLength: 1,
+        templateResult: formatEventResult,
+        templateSelection: formatEventSelection
+      });
+
+      // When event is selected, show details (optional)
+      $('#event_name').on('select2:select', function(e) {
+        var data = e.params.data;
+        displaySelectedEventDetails(data);
+      });
+
+      // Clear details when event is cleared
+      $('#event_name').on('select2:clearing', function() {
+        clearEventDetails();
+      });
+    });
+
+    // Format for dropdown items - shows: event_id - event_name (date)
+    function formatEventResult(event) {
+      if (event.loading) {
+        return event.text;
+      }
+
+      // Format: ID - Event Name (Date)
+      var displayText = event.id + ' - ' + event.event_name + ' (' + event.formatted_date + ')';
+
+      var $container = $(
+        '<div>' +
+        '<strong>' + escapeHtml(displayText) + '</strong><br>' +
+        '<small class="text-muted">' +
+        '<i class="bi bi-geo-alt"></i> ' + escapeHtml(event.location || 'Location TBD') +
+        '</small>' +
+        '</div>'
+      );
+      return $container;
+    }
+
+    // Format for selected item - shows: event_id - event name
+    function formatEventSelection(event) {
+      if (!event.id) return event.text;
+      return event.id + ' - ' + event.event_name;
+    }
+
+    // Display selected event details (optional)
+    function displaySelectedEventDetails(event) {
+      $('#selectedEventDate').text(event.formatted_date);
+      $('#selectedEventLocation').text(event.location || 'Not specified');
+      $('#selectedEventDetails').show();
+    }
+
+    // Clear event details
+    function clearEventDetails() {
+      $('#selectedEventDetails').hide();
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
   </script>
 </body>
 
