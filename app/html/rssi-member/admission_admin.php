@@ -923,7 +923,7 @@ foreach ($card_access_levels as $card => $required_level) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -2195,6 +2195,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                             <option value="LG2-C" <?php echo $array['category'] == 'LG2-C' ? 'selected' : ''; ?>>LG2-C</option>
                                                                                             <option value="LG3" <?php echo $array['category'] == 'LG3' ? 'selected' : ''; ?>>LG3</option>
                                                                                             <option value="LG4" <?php echo $array['category'] == 'LG4' ? 'selected' : ''; ?>>LG4</option>
+                                                                                            <option value="LGX-U" <?php echo $array['category'] == 'LGX-U' ? 'selected' : ''; ?>>LGX-U</option>
                                                                                         </select>
                                                                                     <?php endif; ?>
                                                                                 </td>
@@ -2503,8 +2504,8 @@ foreach ($card_access_levels as $card => $required_level) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <script src="../assets_new/js/image-compressor-200kb.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         // Mobile menu setup (similar to HRMS)

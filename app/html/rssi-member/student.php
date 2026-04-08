@@ -555,7 +555,7 @@ function formatContact($role, $contact)
                     <select name="get_category" id="get_category" class="form-select">
                       <option value="" disabled selected hidden>Select Category</option>
                       <?php
-                      $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'Undefined'];
+                      $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'LGX-U', 'Undefined'];
                       foreach ($categories as $cat) {
                         $selected = ($category == $cat) ? 'selected' : '';
                         echo "<option value=\"$cat\" $selected>$cat</option>";
