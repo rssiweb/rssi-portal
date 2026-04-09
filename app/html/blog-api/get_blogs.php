@@ -14,6 +14,7 @@ $category = isset($_GET['category']) ? pg_escape_string($con, $_GET['category'])
 $tag = isset($_GET['tag']) ? pg_escape_string($con, $_GET['tag']) : null;
 $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : null;
 $is_featured = isset($_GET['is_featured']) ? pg_escape_string($con, $_GET['is_featured']) : null;
+$is_success_story = isset($_GET['is_success_story']) ? pg_escape_string($con, $_GET['is_success_story']) : null;
 
 // Build query
 $where = "WHERE status = 'published'";
@@ -30,6 +31,12 @@ if ($is_featured) {
     $paramCount++;
     $where .= " AND is_featured = $" . $paramCount;
     $params[] = $is_featured;
+}
+
+if ($is_success_story) {
+    $paramCount++;
+    $where .= " AND is_success_story = $" . $paramCount;
+    $params[] = $is_success_story;
 }
 
 if ($tag) {
