@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+require_once __DIR__ . "/../blog-api/google-auth/config.php";
 header('Content-Type: application/json');
 include(__DIR__ . "/../image_functions.php");
 
