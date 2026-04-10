@@ -70,7 +70,8 @@ function getCurrentUser()
             'name' => $_SESSION['user_name'],
             'email' => $_SESSION['user_email'],
             'picture' => $_SESSION['user_picture'] ?? null,
-            'google_id' => $_SESSION['google_id']
+            'google_id' => $_SESSION['google_id'],
+            'is_admin' => $_SESSION['is_admin'] ?? false
         ];
     }
     return null;

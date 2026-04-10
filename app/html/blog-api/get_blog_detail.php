@@ -18,6 +18,8 @@ if (!$slug && !$id) {
 
 $where = $id ? "id = $1" : "slug = $1";
 $param = $id ? [$id] : [$slug];
+$currentUserId = $_SESSION['user_id'] ?? null;
+$is_admin = $_SESSION['is_admin'] ?? false;
 
 // Get post
 $sql = "SELECT *, bp.id, bu.name AS author_name, bu.profile_picture AS author_photo FROM blog_posts bp
@@ -123,5 +125,7 @@ echo json_encode([
     'post' => $post,
     'likes' => $likes,
     'comments' => $comments,
-    'related_posts' => $related_posts
+    'related_posts' => $related_posts,
+    'current_user_id' => $currentUserId,
+    'is_admin' => $is_admin
 ]);
