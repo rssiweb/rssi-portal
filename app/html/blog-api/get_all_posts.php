@@ -91,7 +91,8 @@ try {
             'published_by' => $row['published_by'],
             'rejection_reason' => $row['rejection_reason'],
             'is_rejected' => $row['is_rejected'],
-            'is_featured' => $row['is_featured']
+            'is_featured' => $row['is_featured'],
+            'is_success_story' => $row['is_success_story']
         ];
         
         // Calculate a default reading time if not set
