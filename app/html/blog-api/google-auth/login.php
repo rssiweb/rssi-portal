@@ -42,7 +42,7 @@ if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 // Check if user exists in database
-$sql = "SELECT id, name, email, profile_picture, google_id FROM blog_users WHERE google_id = $1 OR email = $2 LIMIT 1";
+$sql = "SELECT id, name, email, profile_picture, google_id,is_admin FROM blog_users WHERE google_id = $1 OR email = $2 LIMIT 1";
 $result = pg_query_params($con, $sql, [$googleId, $email]);
 
 if (!$result) {
@@ -115,6 +115,7 @@ $_SESSION['user_email'] = $email;
 $_SESSION['user_picture'] = $picture;
 $_SESSION['logged_in'] = true;
 $_SESSION['login_time'] = time();
+$_SESSION['is_admin'] = $row['is_admin'] ?? false;
 
 // Set session cookie with secure parameters
 // setcookie(session_name(), session_id(), [
@@ -134,6 +135,7 @@ echo json_encode([
         'name' => $name,
         'email' => $email,
         'picture' => $picture,
-        'google_id' => $googleId
+        'google_id' => $googleId,
+        'is_admin' => $_SESSION['is_admin'] ?? false
     ]
 ]);
