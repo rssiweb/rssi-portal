@@ -11,6 +11,8 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 $slug = isset($_GET['slug']) ? pg_escape_string($con, $_GET['slug']) : '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+$isAdmin = isset($_GET['is_admin']) && ($_GET['is_admin'] === 'true' || $_GET['is_admin'] === '1');
 
 if (!$slug && !$id) {
     echo json_encode(['success' => false, 'message' => 'Post identifier required']);
@@ -19,12 +21,41 @@ if (!$slug && !$id) {
 
 $where = $id ? "id = $1" : "slug = $1";
 $param = $id ? [$id] : [$slug];
-$currentUserId = $_SESSION['user_id'] ?? null;
-$is_admin = $_SESSION['is_admin'] ?? false;
 
-// Get post
-$sql = "SELECT *, bp.id, bu.name AS author_name, bu.profile_picture AS author_photo FROM blog_posts bp
-LEFT JOIN blog_users bu ON bp.author_id = bu.id WHERE $where AND status = 'published'";
+// Check if user is admin or author
+$isAuthorOrAdmin = false;
+
+if ($userId) {
+    // First, check if this user is the author of the post
+    $checkSql = "SELECT author_id FROM blog_posts WHERE $where";
+    $checkResult = pg_query_params($con, $checkSql, $param);
+
+    if ($checkResult && pg_num_rows($checkResult) > 0) {
+        $postData = pg_fetch_assoc($checkResult);
+        $authorId = $postData['author_id'];
+
+        // User is author or admin
+        if ($userId == $authorId || $isAdmin === true) {
+            $isAuthorOrAdmin = true;
+        }
+    }
+}
+
+// Choose query based on user type
+if ($isAuthorOrAdmin) {
+    // Query for Admin or Author - shows all posts (including drafts)
+    $sql = "SELECT *, bp.id, bu.name AS author_name, bu.profile_picture AS author_photo 
+            FROM blog_posts bp
+            LEFT JOIN blog_users bu ON bp.author_id = bu.id 
+            WHERE $where";
+} else {
+    // Query for Guest or regular user - shows only published posts
+    $sql = "SELECT *, bp.id, bu.name AS author_name, bu.profile_picture AS author_photo 
+            FROM blog_posts bp
+            LEFT JOIN blog_users bu ON bp.author_id = bu.id 
+            WHERE $where AND status = 'published'";
+}
+
 $result = pg_query_params($con, $sql, $param);
 
 if (!$result || pg_num_rows($result) === 0) {
@@ -127,6 +158,6 @@ echo json_encode([
     'likes' => $likes,
     'comments' => $comments,
     'related_posts' => $related_posts,
-    'current_user_id' => $currentUserId,
-    'is_admin' => $is_admin
+    'current_user_id' => $userId,
+    'is_admin' => $isAdmin
 ]);
