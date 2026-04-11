@@ -177,13 +177,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['formType'])) {
                 // Try to decode as JSON (new format)
                 $decoded_remarks = json_decode($remarks, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_remarks)) {
+                    // For each remark, fetch the profile photo of the person who added it
+                    foreach ($decoded_remarks as &$remark_item) {
+                        if (isset($remark_item['added_by'])) {
+                            // Query to get profile photo and fullname from rssimyaccount_members
+                            $profile_query = "SELECT fullname, photo FROM rssimyaccount_members WHERE fullname = $1 LIMIT 1";
+                            $profile_result = pg_query_params($con, $profile_query, array($remark_item['added_by']));
+
+                            if ($profile_result && pg_num_rows($profile_result) > 0) {
+                                $profile_row = pg_fetch_assoc($profile_result);
+                                $remark_item['photo'] = $profile_row['photo'];
+                                $remark_item['added_by'] = $profile_row['fullname']; // Ensure correct name
+                            } else {
+                                $remark_item['photo'] = '';
+                            }
+                        } else {
+                            $remark_item['photo'] = '';
+                        }
+                    }
                     $remarks_data = $decoded_remarks;
                 } else {
                     // If not JSON, treat as single remark with current timestamp
+                    $current_user_fullname = $_SESSION['fullname'] ?? 'System';
+
+                    // Get profile photo for current user
+                    $profile_query = "SELECT photo FROM rssimyaccount_members WHERE fullname = $1 LIMIT 1";
+                    $profile_result = pg_query_params($con, $profile_query, array($current_user_fullname));
+                    $photo = '';
+                    if ($profile_result && pg_num_rows($profile_result) > 0) {
+                        $profile_row = pg_fetch_assoc($profile_result);
+                        $photo = $profile_row['photo'];
+                    }
+
                     $remarks_data[] = [
                         'remark' => $remarks,
                         'timestamp' => date('Y-m-d H:i:s'),
-                        'added_by' => $_SESSION['fullname'] ?? 'System'
+                        'added_by' => $current_user_fullname,
+                        'photo' => $photo
                     ];
                 }
             }
@@ -445,6 +475,113 @@ $total_records = pg_fetch_result($count_result, 0, 0);
         tr.table-success {
             background-color: #d1e7dd !important;
             transition: background-color 0.5s ease;
+        }
+    </style>
+    <style>
+        /* Facebook-style comments */
+        .fb-comment-item {
+            transition: background-color 0.2s ease;
+        }
+
+        .fb-comment-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .fb-comment-avatar {
+            flex-shrink: 0;
+        }
+
+        .fb-avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .fb-avatar-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .fb-comment-header {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .fb-comment-author {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 14px;
+        }
+
+        .fb-comment-time {
+            font-size: 12px;
+            color: #65676b;
+        }
+
+        .fb-comment-text {
+            font-size: 14px;
+            color: #1a1a1a;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        /* Different avatar background colors for variety */
+        .fb-avatar-initials[data-color="0"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .fb-avatar-initials[data-color="1"] {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .fb-avatar-initials[data-color="2"] {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .fb-avatar-initials[data-color="3"] {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .fb-avatar-initials[data-color="4"] {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .fb-avatar-initials[data-color="5"] {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+
+        /* Like button and actions (optional) */
+        .fb-comment-actions {
+            margin-top: 4px;
+        }
+
+        .fb-comment-action-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .fb-comment-action-btn:hover {
+            background-color: #f0f2f5;
+            color: #1a1a1a;
         }
     </style>
 </head>
@@ -1387,6 +1524,7 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             }
         }
 
+        // Update the loadRemarks function to include profile photo URL
         function loadRemarks(studentId, containerId) {
             const container = $('#' + containerId);
             container.html('<div class="text-muted text-center">Loading remarks...</div>');
@@ -1406,26 +1544,34 @@ $total_records = pg_fetch_result($count_result, 0, 0);
                         remarks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                         remarks.forEach((remarkObj, index) => {
-                            // Format the timestamp in DD/MM/YYYY with AM/PM
                             const formattedDate = new Date(remarkObj.timestamp).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                second: '2-digit',
                                 hour12: true
                             });
                             const addedBy = remarkObj.added_by || 'Unknown';
+                            const profilePhoto = remarkObj.photo || '';
+                            const userInitials = getInitials(addedBy);
 
                             remarksHtml += `
-                        <div class="remark-item mb-3 pb-2 ${index < remarks.length - 1 ? 'border-bottom' : ''}">
-                            <div class="remark-content">
-                                <p class="mb-1">${escapeHtml(remarkObj.remark)}</p>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock me-1"></i>${formattedDate} 
-                                    <i class="bi bi-person me-1 ms-2"></i>${escapeHtml(addedBy)}
-                                </small>
+                        <div class="fb-comment-item ${index < remarks.length - 1 ? 'border-bottom' : ''}" style="display: flex; gap: 12px; margin-bottom: 16px; padding-bottom: 12px;">
+                            <div class="fb-comment-avatar">
+                                ${profilePhoto ? 
+                                    `<img src="${escapeHtml(profilePhoto)}" alt="${escapeHtml(addedBy)}" class="fb-avatar-img" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML = '<div class=\\'fb-avatar-initials\\'>${userInitials}</div>'">` : 
+                                    `<div class="fb-avatar-initials">${userInitials}</div>`
+                                }
+                            </div>
+                            <div class="fb-comment-content" style="flex: 1;">
+                                <div class="fb-comment-header">
+                                    <strong class="fb-comment-author">${escapeHtml(addedBy)}</strong>
+                                    <span class="fb-comment-time">${formattedDate}</span>
+                                </div>
+                                <div class="fb-comment-text">
+                                    <p class="mb-1">${escapeHtml(remarkObj.remark)}</p>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1441,6 +1587,14 @@ $total_records = pg_fetch_result($count_result, 0, 0);
             }).fail(function() {
                 container.html('<div class="text-danger text-center">Error loading remarks</div>');
             });
+        }
+
+        // Helper function to get initials from name
+        function getInitials(name) {
+            if (!name) return '?';
+            const nameParts = name.trim().split(' ');
+            if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+            return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
         }
 
         // Handle AJAX form submission for status update
