@@ -658,6 +658,14 @@ class MenuConfig
                 ]
             ],
 
+            'student_application_upload' => [
+                'section' => 'Work',
+                'sidebar_id' => 'work',
+                'pages' => [
+                    'student_application_upload.php' => ['title' => 'Student Application Upload', 'show_in_menu' => true]
+                ]
+            ],
+
             'student_attrition' => [
                 'section' => 'Work',
                 'sidebar_id' => 'work',
