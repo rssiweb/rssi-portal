@@ -695,42 +695,42 @@ if ($current_month >= 4) {
             const sectionId = `student_section_${studentCounter}_${Date.now()}`;
 
             const sectionHtml = `
-            <div id="${sectionId}" class="student-section">
-                <div class="student-header">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5><i class="bi bi-person-badge"></i> Student ${studentCounter}</h5>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <button type="button" class="btn btn-sm btn-danger" onclick="removeStudentSection('${sectionId}')">
-                                <i class="bi bi-trash"></i> Remove Student
-                            </button>
-                        </div>
+        <div id="${sectionId}" class="student-section">
+            <div class="student-header">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5><i class="bi bi-person-badge"></i> Student ${studentCounter}</h5>
                     </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Select Student *</label>
-                        <select class="form-select student-select" data-section="${sectionId}" required>
-                            <option value="">Search for student...</option>
-                        </select>
-                        <input type="hidden" class="student-id" value="">
-                        <input type="hidden" class="student-name" value="">
+                    <div class="col-md-4 text-end">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeStudentSection('${sectionId}')">
+                            <i class="bi bi-trash"></i> Remove Student
+                        </button>
                     </div>
-                </div>
-                
-                <div id="${sectionId}_files_container">
-                    <!-- Application rows will be added here -->
-                </div>
-                
-                <div class="text-center mt-3">
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addFileRow('${sectionId}')">
-                        <i class="bi bi-plus-circle"></i> Add File
-                    </button>
                 </div>
             </div>
-        `;
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Select Student *</label>
+                    <select class="form-select student-select" data-section="${sectionId}" required>
+                        <option value="">Search for student...</option>
+                    </select>
+                    <input type="hidden" class="student-id" value="">
+                    <input type="hidden" class="student-name" value="">
+                </div>
+            </div>
+            
+            <div id="${sectionId}_files_container">
+                <!-- Application rows will be added here -->
+            </div>
+            
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-sm btn-primary" onclick="addFileRow('${sectionId}')">
+                    <i class="bi bi-plus-circle"></i> Add File
+                </button>
+            </div>
+        </div>
+    `;
 
             $('#studentsContainer').append(sectionHtml);
 
@@ -782,63 +782,65 @@ if ($current_month >= 4) {
             const containerId = `${sectionId}_files_container`;
 
             const rowHtml = `
-            <div id="${rowId}" class="application-row">
-                <i class="bi bi-trash delete-row" onclick="deleteFileRow('${rowId}')"></i>
-                <div class="row">
-                    <div class="col-md-12 mb-2">
-                        <small class="text-muted">
-                            <i class="bi bi-hash"></i> Application #: <span class="application-number-badge">Pending</span>
-                        </small>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Document Type *</label>
-                        <select class="form-select doc-type" data-row="${rowId}" required>
-                            <option value="">Select Document Type</option>
-                            <option value="Form 1A">Form 1A</option>
-                            <option value="Form 1B">Form 1B</option>
-                            <option value="Retention Form">Retention Form</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3 custom-doc-name" style="display: none;">
-                        <label class="form-label">Document Name *</label>
-                        <input type="text" class="form-control" placeholder="Enter document name">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="file-upload-area" onclick="triggerFileUpload('${rowId}')">
-                            <i class="bi bi-cloud-upload fs-1"></i>
-                            <p class="mb-0">Click to upload file</p>
-                            <small class="text-muted">PDF, JPG, PNG (Max 10MB)</small>
-                        </div>
-                        <input type="file" id="file_${rowId}" class="d-none" accept=".pdf,.jpg,.jpeg,.png">
-                        <div class="uploaded-file-info" style="display: none;">
-                            <i class="bi bi-check-circle-fill text-success"></i> 
-                            <span class="file-name"></span>
-                            <a href="#" class="file-link ms-2" target="_blank">View</a>
-                        </div>
-                        <input type="hidden" class="application-id" value="">
-                    </div>
+        <div id="${rowId}" class="application-row">
+            <i class="bi bi-trash delete-row" onclick="deleteFileRow('${rowId}')"></i>
+            <div class="row">
+                <div class="col-md-12 mb-2">
+                    <small class="text-muted">
+                        <i class="bi bi-hash"></i> Application #: <span class="application-number-badge">Pending</span>
+                    </small>
                 </div>
             </div>
-        `;
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Document Type *</label>
+                    <select class="form-select doc-type" data-row="${rowId}" required>
+                        <option value="">Select Document Type</option>
+                        <option value="Form 1A">Form 1A</option>
+                        <option value="Form 1B">Form 1B</option>
+                        <option value="Retention Form">Retention Form</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3 custom-doc-name" style="display: none;">
+                    <label class="form-label">Document Name *</label>
+                    <input type="text" class="form-control" placeholder="Enter document name">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="file-upload-area" onclick="triggerFileUpload('${rowId}')">
+                        <i class="bi bi-cloud-upload fs-1"></i>
+                        <p class="mb-0">Click to upload file</p>
+                        <small class="text-muted">PDF, JPG, PNG (Max 10MB)</small>
+                    </div>
+                    <input type="file" id="file_${rowId}" class="d-none" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="uploaded-file-info" style="display: none;">
+                        <i class="bi bi-check-circle-fill text-success"></i> 
+                        <span class="file-name"></span>
+                        <a href="#" class="file-link ms-2" target="_blank">View</a>
+                    </div>
+                    <input type="hidden" class="application-id" value="">
+                </div>
+            </div>
+        </div>
+    `;
 
             $(`#${containerId}`).append(rowHtml);
 
             // Store row info
-            allApplicationRows.push({
+            const rowData = {
                 rowId: rowId,
                 sectionId: sectionId,
                 applicationId: null,
                 studentId: $(`#${sectionId} .student-id`).val(),
-                studentName: $(`#${sectionId} .student-name`).val()
-            });
+                studentName: $(`#${sectionId} .student-name`).val(),
+                isUploaded: false
+            };
+            allApplicationRows.push(rowData);
 
-            // Handle document type change - save immediately
-            $(`#${rowId} .doc-type`).change(function() {
+            // Handle document type change - Just store the selection, NO database insert
+            $(`#${rowId} .doc-type`).off('change').on('change', function() {
                 const customDiv = $(`#${rowId} .custom-doc-name`);
                 const selectedValue = $(this).val();
 
@@ -848,35 +850,20 @@ if ($current_month >= 4) {
                 } else {
                     customDiv.hide();
                     customDiv.find('input').prop('required', false);
-                    // Save immediately when document type is selected
-                    saveOrUpdateDraftRow(rowId, sectionId);
                 }
             });
 
-            // Handle custom document name input - save on blur
-            $(`#${rowId} .custom-doc-name input`).on('blur', function() {
-                if ($(`#${rowId} .doc-type`).val() === 'Other') {
-                    saveOrUpdateDraftRow(rowId, sectionId);
-                }
-            });
-
-            // Handle file upload - direct without delay
+            // Handle file upload
             $(`#file_${rowId}`).off('change').on('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    uploadFileForRow(rowId, file);
+                    uploadFileAndCreateRow(rowId, file);
                 }
             });
-
-            // If student is already selected, we're ready for document type selection
-            const studentId = $(`#${sectionId} .student-id`).val();
-            if (studentId) {
-                console.log('Student selected, waiting for document type');
-            }
         }
 
         function triggerFileUpload(rowId) {
-            // Check if document type is selected before allowing file upload
+            // Check if document type is selected
             const docType = $(`#${rowId} .doc-type`).val();
 
             if (!docType) {
@@ -893,29 +880,17 @@ if ($current_month >= 4) {
                 return;
             }
 
-            // Get or create application ID
-            const appId = $(`#${rowId} .application-id`).val();
-
-            if (appId) {
-                // Application exists, just open file dialog
-                $(`#file_${rowId}`).click();
-            } else {
-                // Need to create draft first - do it synchronously with a loading indicator
-                const uploadArea = $(`#${rowId} .file-upload-area`);
-                const originalHtml = uploadArea.html();
-                uploadArea.html('<i class="bi bi-arrow-repeat spin"></i><p>Preparing...</p>');
-
-                // Save draft first, then open file dialog
-                saveOrUpdateDraftRow(rowId, sectionId, function(success) {
-                    uploadArea.html(originalHtml);
-                    if (success) {
-                        // Small delay to ensure database is updated, then open file dialog
-                        setTimeout(function() {
-                            $(`#file_${rowId}`).click();
-                        }, 100);
-                    }
-                });
+            // Check if "Other" document type requires custom name
+            if (docType === 'Other') {
+                const customName = $(`#${rowId} .custom-doc-name input`).val();
+                if (!customName) {
+                    showAlert('Please enter document name', 'warning');
+                    return;
+                }
             }
+
+            // Open file dialog
+            $(`#file_${rowId}`).click();
         }
 
         function getSectionIdFromRow(rowId) {
@@ -925,40 +900,28 @@ if ($current_month >= 4) {
             return sectionId;
         }
 
-        function saveOrUpdateDraftRow(rowId, sectionId, callback) {
+        function uploadFileAndCreateRow(rowId, file) {
+            const sectionId = getSectionIdFromRow(rowId);
             const studentId = $(`#${sectionId} .student-id`).val();
             const studentName = $(`#${sectionId} .student-name`).val();
             const docType = $(`#${rowId} .doc-type`).val();
-            const existingAppId = $(`#${rowId} .application-id`).val();
-
-            if (!studentId) {
-                showAlert('Please select a student first', 'warning');
-                if (callback) callback(false);
-                return;
-            }
-
-            if (!docType) {
-                showAlert('Please select document type', 'warning');
-                if (callback) callback(false);
-                return;
-            }
 
             let customDocName = '';
             if (docType === 'Other') {
                 customDocName = $(`#${rowId} .custom-doc-name input`).val();
-                if (!customDocName) {
-                    showAlert('Please enter document name', 'warning');
-                    if (callback) callback(false);
-                    return;
-                }
             }
+
+            // First, create the draft row in database
+            const uploadArea = $(`#${rowId} .file-upload-area`);
+            const originalHtml = uploadArea.html();
+            uploadArea.html('<i class="bi bi-arrow-repeat spin"></i><p>Creating draft...</p>');
 
             $.ajax({
                 url: '',
                 type: 'POST',
                 data: {
                     action: 'save_draft_row',
-                    application_id: existingAppId,
+                    application_id: null,
                     student_id: studentId,
                     student_name: studentName,
                     document_type: docType,
@@ -967,37 +930,30 @@ if ($current_month >= 4) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        $(`#${rowId} .application-id`).val(response.application_id);
+                        const appId = response.application_id;
+                        $(`#${rowId} .application-id`).val(appId);
 
-                        // Update the stored row info
+                        // Update stored row info
                         const rowIndex = allApplicationRows.findIndex(r => r.rowId === rowId);
                         if (rowIndex !== -1) {
-                            allApplicationRows[rowIndex].applicationId = response.application_id;
+                            allApplicationRows[rowIndex].applicationId = appId;
                         }
 
-                        $(`#${rowId}`).css('border-color', '#28a745');
-
-                        if (callback) callback(true);
+                        // Now upload the file to this draft
+                        uploadFileToExistingRow(rowId, file, appId);
                     } else {
-                        showAlert('Error: ' + response.message, 'danger');
-                        if (callback) callback(false);
+                        uploadArea.html(originalHtml);
+                        showAlert('Error creating draft: ' + response.message, 'danger');
                     }
                 },
                 error: function() {
-                    showAlert('Error saving draft', 'danger');
-                    if (callback) callback(false);
+                    uploadArea.html(originalHtml);
+                    showAlert('Error creating draft', 'danger');
                 }
             });
         }
 
-        function uploadFileForRow(rowId, file) {
-            const appId = $(`#${rowId} .application-id`).val();
-
-            if (!appId) {
-                showAlert('Please save the draft first', 'warning');
-                return;
-            }
-
+        function uploadFileToExistingRow(rowId, file, appId) {
             const formData = new FormData();
             formData.append('action', 'upload_file');
             formData.append('application_id', appId);
@@ -1005,7 +961,7 @@ if ($current_month >= 4) {
 
             const uploadArea = $(`#${rowId} .file-upload-area`);
             const originalHtml = uploadArea.html();
-            uploadArea.html('<i class="bi bi-arrow-repeat spin"></i><p>Uploading...</p>');
+            uploadArea.html('<i class="bi bi-arrow-repeat spin"></i><p>Uploading file...</p>');
 
             $.ajax({
                 url: '',
@@ -1022,17 +978,42 @@ if ($current_month >= 4) {
                         fileInfo.show();
                         uploadArea.hide();
                         $(`#${rowId}`).css('border-color', '#28a745');
+
+                        // Update row data
+                        const rowIndex = allApplicationRows.findIndex(r => r.rowId === rowId);
+                        if (rowIndex !== -1) {
+                            allApplicationRows[rowIndex].isUploaded = true;
+                        }
+
                         showAlert('File uploaded successfully!', 'success');
                     } else {
                         uploadArea.html(originalHtml);
                         showAlert('Upload failed: ' + response.message, 'danger');
+                        // If upload fails, delete the draft
+                        deleteDraftRow(appId, rowId);
                     }
                 },
                 error: function() {
                     uploadArea.html(originalHtml);
                     showAlert('Upload failed. Please try again.', 'danger');
+                    // If upload fails, delete the draft
+                    deleteDraftRow(appId, rowId);
                 }
             });
+        }
+
+        function deleteDraftRow(appId, rowId) {
+            if (appId) {
+                $.ajax({
+                    url: '',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_row',
+                        application_id: appId
+                    },
+                    dataType: 'json'
+                });
+            }
         }
 
         function updateStudentForAllRows(sectionId, studentId, studentName) {
@@ -1243,42 +1224,42 @@ if ($current_month >= 4) {
 
                         response.applications.forEach(function(app) {
                             const appHtml = `
-                            <div class="submitted-card border rounded p-3 mb-3">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <small class="text-muted">Application Number</small><br>
-                                        <strong class="text-primary">${escapeHtml(app.application_number)}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <small class="text-muted">Student ID</small><br>
-                                        <strong>${escapeHtml(app.student_id)}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <small class="text-muted">Student Name</small><br>
-                                        <strong>${escapeHtml(app.student_name)}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <small class="text-muted">Submitted Date</small><br>
-                                        <strong>${new Date(app.submitted_at).toLocaleString()}</strong>
-                                    </div>
+                        <div class="submitted-card border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <small class="text-muted">Application Number</small><br>
+                                    <strong class="text-primary">${escapeHtml(app.application_number)}</strong>
                                 </div>
-                                <div class="row mt-2">
-                                    <div class="col-md-4">
-                                        <small class="text-muted">Document Type</small><br>
-                                        <span class="badge bg-info">${escapeHtml(app.document_type)}</span>
-                                        ${app.custom_document_name ? '<br><small>' + escapeHtml(app.custom_document_name) + '</small>' : ''}
-                                    </div>
-                                    <div class="col-md-4">
-                                        <small class="text-muted">Uploaded By</small><br>
-                                        ${escapeHtml(app.uploaded_by_name)}
-                                    </div>
-                                    <div class="col-md-4">
-                                        <small class="text-muted">Document</small><br>
-                                        ${app.file_path ? `<a href="${app.file_path}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Document</a>` : 'No file'}
-                                    </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Student ID</small><br>
+                                    <strong>${escapeHtml(app.student_id)}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Student Name</small><br>
+                                    <strong>${escapeHtml(app.student_name)}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Submitted Date</small><br>
+                                    <strong>${new Date(app.submitted_at).toLocaleString()}</strong>
                                 </div>
                             </div>
-                        `;
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Document Type</small><br>
+                                    <span class="badge bg-info">${escapeHtml(app.document_type)}</span>
+                                    ${app.custom_document_name ? '<br><small>' + escapeHtml(app.custom_document_name) + '</small>' : ''}
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Uploaded By</small><br>
+                                    ${escapeHtml(app.uploaded_by_name)}
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Document</small><br>
+                                    ${app.file_path ? `<a href="${app.file_path}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Document</a>` : 'No file'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
                             $('#submittedApplicationsList').append(appHtml);
                         });
 
@@ -1309,12 +1290,12 @@ if ($current_month >= 4) {
 
         function showAlert(message, type) {
             const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3" style="z-index: 9999; min-width: 300px; z-index: 10000;" role="alert">
-                <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3" style="z-index: 9999; min-width: 300px; z-index: 10000;" role="alert">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
             $('body').append(alertHtml);
             setTimeout(() => {
                 $('.alert').fadeOut('slow', function() {
