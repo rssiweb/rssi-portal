@@ -13,6 +13,40 @@ validation();
 date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
 
+// Handle POST form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['form-type']) && $_POST['form-type'] === 'visitreviewform') {
+        // Process the visit review form
+        $visitid = pg_escape_string($con, $_POST['visitid']);
+        $visitbranch = pg_escape_string($con, $_POST['visitbranch']);
+        $visitstartdatetime = pg_escape_string($con, $_POST['visitstartdatetime']);
+        $visitenddate = pg_escape_string($con, $_POST['visitenddate']);
+        $visitstatus = pg_escape_string($con, $_POST['visitstatus']);
+        $hrremarks = pg_escape_string($con, $_POST['hrremarks']);
+        $reviewer_id = pg_escape_string($con, $_POST['reviewer_id']);
+
+        $updateQuery = "UPDATE visitor_visitdata SET 
+                        visitbranch = '$visitbranch',
+                        visitstartdatetime = '$visitstartdatetime',
+                        visitenddate = '$visitenddate',
+                        visitstatus = '$visitstatus',
+                        remarks = '$hrremarks',
+                        visitstatusupdatedby = '$reviewer_id',
+                        visitstatusupdatedon = NOW()
+                        WHERE visitid = '$visitid'";
+
+        $result = pg_query($con, $updateQuery);
+
+        if ($result) {
+            echo "<script>alert('Record has been updated.'); window.location.href = window.location.pathname;</script>";
+            exit;
+        } else {
+            echo "<script>alert('Error updating record: " . pg_last_error($con) . "');</script>";
+        }
+        exit;
+    }
+}
+
 // Retrieve form parameters
 $visitid = isset($_GET['visitid']) ? trim($_GET['visitid']) : '';
 $contact = isset($_GET['contact']) ? trim($_GET['contact']) : '';
@@ -81,8 +115,7 @@ if (!empty($visitid) || !empty($contact) || !empty($date_from) || !empty($date_t
     // If all filter parameters are empty, set an empty result array
     $resultArr = [];
 }
-?>
-<?php
+
 // Function to fetch phone number by position
 function getPhoneByPosition($con, $position)
 {
@@ -127,8 +160,6 @@ if (!$phoneNumber) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -153,7 +184,6 @@ if (!$phoneNumber) {
         .col2 {
             display: inline-block;
             vertical-align: top;
-            /* Align the col2 elements to the top */
         }
 
         #passwordHelpBlock {
@@ -171,17 +201,14 @@ if (!$phoneNumber) {
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
-                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
                             <br>
-                            <!-- Show alert if neither contact is found, but continue execution -->
                             <?php if (!$phoneNumber) {
                                 echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">
                                 <i class="bi bi-exclamation-triangle-fill"></i> No active Centre Incharge or Chief HR Officer contact found.
@@ -244,7 +271,6 @@ if (!$phoneNumber) {
                                             <th scope="col">Visitor details</th>
                                             <th scope="col">Visit date from</th>
                                             <th scope="col">Visit date to</th>
-                                            <!--<th scope="col">Identity proof</th>-->
                                             <th scope="col">Photo</th>
                                             <th scope="col">Purpose of visit</th>
                                             <th scope="col">Branch name</th>
@@ -259,22 +285,16 @@ if (!$phoneNumber) {
                                     echo '<tr><td>' ?>
                                     <?php echo $array['visitid'] ?>
                                     <?php echo '</td>
-                                <td>' . $array['fullname'] . '<br>' . $array['tel'] . '<br>' . $array['email'] . '</td>
-                                <td>' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '</td>
-                                
-                                <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>' ?>
+                                    <td>' . $array['fullname'] . '<br>' . $array['tel'] . '<br>' . $array['email'] . '</td>
+                                    <td>' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '</td>
+                                    <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>' ?>
                                     <td>
                                         <?php
-                                        // Assuming $array['photo'] contains the URL
                                         if (!empty($array['photo'])) {
-                                            // Extracting the file ID from the URL
                                             $urlParts = parse_url($array['photo']);
                                             $pathParts = explode('/', $urlParts['path']);
                                             $fileId = $pathParts[3];
-
-                                            // Generating the preview URL for iframe
                                             $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
-
                                             echo '<iframe src="' . $previewUrl . '" width="50" height="50" frameborder="0" allow="autoplay"></iframe>';
                                         }
                                         ?>
@@ -287,7 +307,7 @@ if (!$phoneNumber) {
 
                                     <!-- Modal for each row -->
                                     <div class="modal fade" id="detailsModal<?php echo $array['visitid']; ?>" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-scrollable modal-lg"> <!-- Changed to modal-lg for better preview -->
+                                        <div class="modal-dialog modal-dialog-scrollable modal-lg">
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title" id="detailsModalLabel">Visit Details #<?php echo $array['visitid']; ?></h5>
@@ -300,7 +320,6 @@ if (!$phoneNumber) {
                                                             <p><strong>Name:</strong> <?php echo $array['fullname']; ?></p>
                                                             <p><strong>Phone:</strong> <?php echo $array['tel']; ?></p>
                                                             <p><strong>Email:</strong> <?php echo $array['email']; ?></p>
-
                                                             <?php if (!empty($array['photo'])): ?>
                                                                 <div class="mt-3">
                                                                     <h6 class="fw-bold">Visitor Photo</h6>
@@ -324,7 +343,6 @@ if (!$phoneNumber) {
                                                             <p><strong>Enrollment Number:</strong> <?php echo $array['enrollmentnumber']; ?></p>
                                                             <p><strong>Institute Name:</strong> <?php echo $array['institutename']; ?></p>
                                                             <p><strong>Additional Services:</strong> <?= !empty($array['additional_services']) ? htmlspecialchars($array['additional_services']) : 'None'; ?></p>
-
                                                             <?php if (!empty($array['instituteid'])): ?>
                                                                 <div class="mt-3">
                                                                     <h6 class="fw-bold">Institute ID Card</h6>
@@ -360,17 +378,26 @@ if (!$phoneNumber) {
                                     </div>
                                     </td>
                                     <td><?php echo $array['visitbranch'] ?></td>
-
                                     <?php if ($array['visitstatus'] == 'Approved' && $array['visitenddate'] >= $today) { ?>
-                                        <?php echo '<td><p class="badge bg-success">approved</p></td>' ?>
+                                        <td>
+                                            <p class="badge bg-success">approved</p>
+                                        </td>
                                     <?php } else if ($array['visitstatus'] == 'Rejected') { ?>
-                                        <?php echo '<td><p class="badge bg-danger">rejected</p></td>' ?>
+                                        <td>
+                                            <p class="badge bg-danger">rejected</p>
+                                        </td>
                                     <?php } else if ($array['visitstatus'] == null && $array['visitenddate'] >= $today) { ?>
-                                        <?php echo '<td><p class="badge bg-secondary">under review</p></td>' ?>
+                                        <td>
+                                            <p class="badge bg-secondary">under review</p>
+                                        </td>
                                     <?php } else if ($array['visitstatus'] != 'Visited' && $array['visitenddate'] < $today) { ?>
-                                        <?php echo '<td><p class="badge bg-secondary">expired</p></td>' ?>
+                                        <td>
+                                            <p class="badge bg-secondary">expired</p>
+                                        </td>
                                     <?php } else if ($array['visitstatus'] == 'Visited') { ?>
-                                        <?php echo '<td><p class="badge bg-warning">visited</p></td>' ?>
+                                        <td>
+                                            <p class="badge bg-warning">visited</p>
+                                        </td>
                                     <?php } ?>
 
                                 <?php
@@ -397,8 +424,8 @@ if (!$phoneNumber) {
 
                                         if (@$array['email'] != null && @$array['visitstatus'] != null) {
                                             echo '<li>
-                                                    <form action="#" name="email-form-' . $array['visitid'] . '" method="POST">
-                                                        <input type="hidden" name="template" type="text" value="';
+                                                    <form action="#" name="email-form-' . $array['visitid'] . '" method="POST" class="email-form">
+                                                        <input type="hidden" name="template" value="';
                                             if (@$array['visitstatus'] == 'Approved') {
                                                 echo 'visitapprove';
                                             } else if (@$array['visitstatus'] == 'Rejected') {
@@ -407,13 +434,13 @@ if (!$phoneNumber) {
                                                 echo 'visited';
                                             }
                                             echo '">
-                                                        <input type="hidden" name="data[visitid]" type="text" value="' . $array['visitid'] . '">
-                                                        <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . '">
-                                                        <input type="hidden" name="data[visitstartdatetime]" type="text" value="' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '">
-                                                        <input type="hidden" name="data[visitenddate]" type="text" value="' . date("d/m/Y", strtotime($array['visitenddate'])) . '">
-                                                        <input type="hidden" name="data[visitstatus]" type="text" value="' . @strtoupper($array['visitstatus']) . '">
-                                                        <input type="hidden" name="email" type="text" value="' . @$array['email'] . '">
-                                                        <input type="hidden" name="data[remarks]" type="text" value="' . @$array['remarks'] . '">
+                                                        <input type="hidden" name="data[visitid]" value="' . $array['visitid'] . '">
+                                                        <input type="hidden" name="data[fullname]" value="' . $array['fullname'] . '">
+                                                        <input type="hidden" name="data[visitstartdatetime]" value="' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . '">
+                                                        <input type="hidden" name="data[visitenddate]" value="' . date("d/m/Y", strtotime($array['visitenddate'])) . '">
+                                                        <input type="hidden" name="data[visitstatus]" value="' . @strtoupper($array['visitstatus']) . '">
+                                                        <input type="hidden" name="email" value="' . @$array['email'] . '">
+                                                        <input type="hidden" name="data[remarks]" value="' . @$array['remarks'] . '">
                                                         <button type="submit" class="dropdown-item"><i class="bi bi-envelope-at me-2"></i>Send Email</button>
                                                     </form>
                                                 </li>';
@@ -424,7 +451,7 @@ if (!$phoneNumber) {
                                     </div>
                                     </td>';
                                 } ?>
-                                </tr>
+                                </tbody>
                             <?php } else if ($visitid == null && $contact == null && $date_from == null && $date_to == null) {
                             ?>
                                 <tr>
@@ -444,11 +471,11 @@ if (!$phoneNumber) {
                             ?>
                         </div>
                     </div>
-                </div><!-- End Reports -->
+                </div>
             </div>
         </section>
 
-    </main><!-- End #main -->
+    </main>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
             class="bi bi-arrow-up-short"></i></a>
@@ -461,15 +488,12 @@ if (!$phoneNumber) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
-
-    <!--------------- POP-UP BOX ------------
--------------------------------------->
     <style>
         .modal {
             background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
         }
     </style>
+
     <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -486,43 +510,31 @@ if (!$phoneNumber) {
                         </p>
                     </div>
                     <?php if ($role == "Admin") { ?>
-                        <form id="visitreviewform" name="visitreviewform" action="#" method="POST" class="row g-3">
-
-                            <input type="hidden" class="form-control" name="form-type" type="text" value="visitreviewform"
-                                readonly>
-                            <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text"
-                                value="<?php echo $associatenumber ?>" readonly>
-                            <input type="hidden" class="form-control" name="visitid" id="visitid" type="text" value=""
-                                readonly>
-
+                        <form id="visitreviewform" name="visitreviewform" action="" method="POST" class="row g-3">
+                            <input type="hidden" name="form-type" value="visitreviewform" readonly>
+                            <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
+                            <input type="hidden" name="visitid" id="visitid" value="" readonly>
                             <div class="col-md-3">
                                 <div class="input-help">
                                     <select class="form-select" id="visitbranch" name="visitbranch" required>
                                         <option value disabled selected>Select Branch</option>
                                         <option value="Gomti Nagar, Lucknow">Gomti Nagar, Lucknow</option>
                                     </select>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Which branch do you want to
-                                        visit?<span style="color:red">*</span></small>
+                                    <small class="form-text text-muted">Which branch do you want to visit?<span style="color:red">*</span></small>
                                 </div>
                             </div>
-
                             <div class="col-md-3">
                                 <div class="input-help">
-                                    <input type="datetime-local" class="form-control" id="visitstartdatetime"
-                                        name="visitstartdatetime" required>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit start date<span
-                                            style="color:red">*</span></small>
+                                    <input type="datetime-local" class="form-control" id="visitstartdatetime" name="visitstartdatetime" required>
+                                    <small class="form-text text-muted">Visit start date<span style="color:red">*</span></small>
                                 </div>
                             </div>
-
                             <div class="col-md-3">
                                 <div class="input-help">
                                     <input type="date" class="form-control" id="visitenddate" name="visitenddate" required>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit end date<span
-                                            style="color:red">*</span></small>
+                                    <small class="form-text text-muted">Visit end date<span style="color:red">*</span></small>
                                 </div>
                             </div>
-
                             <div class="col-md-3">
                                 <div class="input-help">
                                     <select name="visitstatus" id="visitstatus" class="form-select" required>
@@ -532,157 +544,174 @@ if (!$phoneNumber) {
                                         <option value="Visited">Visited</option>
                                         <option value="Duplicate entry">Duplicate entry</option>
                                     </select>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit status<span
-                                            style="color:red">*</span></small>
+                                    <small class="form-text text-muted">Visit status<span style="color:red">*</span></small>
                                 </div>
                             </div>
-
                             <div class="col-md-6">
                                 <div class="input-help">
-                                    <textarea type="text" name="hrremarks" id="hrremarks" class="form-control"
-                                        placeholder="HR remarks" required></textarea>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks<span
-                                            style="color:red">*</span></small>
+                                    <textarea name="hrremarks" id="hrremarks" class="form-control" placeholder="HR remarks" required></textarea>
+                                    <small class="form-text text-muted">HR remarks<span style="color:red">*</span></small>
                                 </div>
                             </div>
-
                             <div class="col-md-3">
                                 <button type="submit" id="visitupdate" class="btn btn-danger btn-sm">Update</button>
                             </div>
                         </form>
-
                     <?php } ?>
-                    <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span
-                            class="visitstatusupdatedby"></span> on <span class="visitstatusupdatedon"></span>
+                    <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="visitstatusupdatedby"></span> on <span class="visitstatusupdatedon"></span>
                     <div class="modal-footer">
-                        <button type="button" id="closedetails-footer" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        var data = <?php echo json_encode($resultArr) ?>
 
-        // Get the modal
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
         var modal = document.getElementById("myModal");
-        var closedetails = [
-            document.getElementById("closedetails-header"),
-            document.getElementById("closedetails-footer")
-        ];
+        var closeHeader = document.getElementById("closedetails-header");
+        var closeFooter = document.getElementById("closedetails-footer");
 
         function showDetails(id) {
-            var mydata = undefined
-            data.forEach(item => {
+            var mydata = null;
+            data.forEach(function(item) {
                 if (item["visitid"] == id) {
                     mydata = item;
                 }
-            })
+            });
 
-            var keys = Object.keys(mydata)
-            keys.forEach(key => {
-                var span = modal.getElementsByClassName(key)
-                if (span.length > 0)
-                    span[0].innerHTML = mydata[key];
-            })
+            if (!mydata) return;
+
+            var keys = Object.keys(mydata);
+            keys.forEach(function(key) {
+                var spans = modal.getElementsByClassName(key);
+                if (spans.length > 0) {
+                    spans[0].innerHTML = mydata[key];
+                }
+            });
+
             modal.style.display = "block";
 
-            // Update status_details content with the visitid value
-            var statusDetailsElement = document.getElementById("status_details");
-            if (statusDetailsElement) {
-                statusDetailsElement.textContent = mydata["visitid"];
+            var profile = document.getElementById("visitid");
+            if (profile) profile.value = mydata["visitid"];
+
+            var branchSelect = document.getElementById("visitbranch");
+            if (branchSelect && mydata["visitbranch"] !== null) {
+                branchSelect.value = mydata["visitbranch"];
+            } else if (branchSelect) {
+                branchSelect.value = "";
             }
 
-            var profile = document.getElementById("visitid")
-            profile.value = mydata["visitid"]
-
-            if (mydata["visitbranch"] !== null) {
-                profile = document.getElementById("visitbranch")
-                profile.value = mydata["visitbranch"]
-            } else {
-                profile = document.getElementById("visitbranch")
-                profile.value = ""
+            var startDateInput = document.getElementById("visitstartdatetime");
+            if (startDateInput && mydata["visitstartdatetime"] !== null) {
+                startDateInput.value = mydata["visitstartdatetime"];
+            } else if (startDateInput) {
+                startDateInput.value = "";
             }
 
-            if (mydata["visitstartdatetime"] !== null) {
-                profile = document.getElementById("visitstartdatetime")
-                profile.value = mydata["visitstartdatetime"]
-            } else {
-                profile = document.getElementById("visitstartdatetime")
-                profile.value = ""
+            var endDateInput = document.getElementById("visitenddate");
+            if (endDateInput && mydata["visitenddate"] !== null) {
+                endDateInput.value = mydata["visitenddate"];
+            } else if (endDateInput) {
+                endDateInput.value = "";
             }
 
-            if (mydata["visitenddate"] !== null) {
-                profile = document.getElementById("visitenddate")
-                profile.value = mydata["visitenddate"]
-            } else {
-                profile = document.getElementById("visitenddate")
-                profile.value = ""
+            var statusSelect = document.getElementById("visitstatus");
+            if (statusSelect && mydata["visitstatus"] !== null) {
+                statusSelect.value = mydata["visitstatus"];
+            } else if (statusSelect) {
+                statusSelect.value = "";
             }
 
-            if (mydata["visitstatus"] !== null) {
-                profile = document.getElementById("visitstatus")
-                profile.value = mydata["visitstatus"]
-            } else {
-                profile = document.getElementById("visitstatus")
-                profile.value = ""
-            }
-            if (mydata["remarks"] !== null) {
-                profile = document.getElementById("hrremarks")
-                profile.value = mydata["remarks"]
-            } else {
-                profile = document.getElementById("hrremarks")
-                profile.value = ""
+            var remarksTextarea = document.getElementById("hrremarks");
+            if (remarksTextarea && mydata["remarks"] !== null) {
+                remarksTextarea.value = mydata["remarks"];
+            } else if (remarksTextarea) {
+                remarksTextarea.value = "";
             }
 
-            if (mydata["visitstatus"] == 'Visited' || mydata["visitstatus"] == 'Rejected') {
-                document.getElementById("visitupdate").disabled = true;
-            } else {
-                document.getElementById("visitupdate").disabled = false;
+            var updateBtn = document.getElementById("visitupdate");
+            if (updateBtn) {
+                if (mydata["visitstatus"] == 'Visited' || mydata["visitstatus"] == 'Rejected') {
+                    updateBtn.disabled = true;
+                } else {
+                    updateBtn.disabled = false;
+                }
             }
         }
-        closedetails.forEach(function(element) {
-            element.addEventListener("click", closeModal);
-        });
 
         function closeModal() {
-            var modal1 = document.getElementById("myModal");
-            modal1.style.display = "none";
+            if (modal) {
+                modal.style.display = "none";
+            }
         }
-    </script>
-    <script>
-        var data = <?php echo json_encode($resultArr) ?>;
-        const scriptURL = 'api/visit-us.php'
-        const form = document.getElementById('visitreviewform')
-        form.addEventListener('submit', e => {
-            e.preventDefault()
-            fetch(scriptURL, {
-                    method: 'POST',
-                    body: new FormData(document.getElementById('visitreviewform'))
-                })
-                .then(response =>
-                    alert("Record has been updated.") +
-                    location.reload()
-                )
-                .catch(error => console.error('Error!', error.message))
-        })
 
-        data.forEach(item => {
-            const formId = 'email-form-' + item.visitid
-            const form = document.forms[formId]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
+        if (closeHeader) closeHeader.addEventListener("click", closeModal);
+        if (closeFooter) closeFooter.addEventListener("click", closeModal);
+
+        // Handle visit review form submission
+        var reviewForm = document.getElementById('visitreviewform');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var formData = new FormData(reviewForm);
+                fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(function(response) {
+                        return response.text();
+                    })
+                    .then(function() {
+                        alert("Record has been updated.");
+                        location.reload();
+                    })
+                    .catch(function(error) {
+                        console.error('Error!', error.message);
+                        alert("Error updating record. Please try again.");
+                    });
+            });
+        }
+
+        // Handle email form submissions - FIXED: No nested loop!
+        // This runs once and attaches one event listener per form
+        document.querySelectorAll('.email-form').forEach(function(emailForm, index) {
+            // Create a unique handler function
+            var emailHandler = function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent any other handlers
+
+                var formData = new FormData(emailForm);
+
+                // You can check what's being sent
+                var email = emailForm.querySelector('input[name="email"]').value;
+                console.log("Sending email to:", email);
+
                 fetch('mailer.php', {
                         method: 'POST',
-                        body: new FormData(document.forms[formId])
+                        body: formData
                     })
-                    .then(response =>
-                        alert("Email has been sent.")
-                    )
-                    .catch(error => console.error('Error!', error.message))
-            })
-        })
+                    .then(function(response) {
+                        return response.text();
+                    })
+                    .then(function(data) {
+                        alert("Email has been sent to " + email);
+                        console.log("Email sent successfully");
+                    })
+                    .catch(function(error) {
+                        console.error('Error!', error.message);
+                        alert("Error sending email. Please try again.");
+                    });
+            };
+
+            // Remove any existing listener first
+            emailForm.removeEventListener('submit', emailForm._emailHandler);
+            // Store the handler reference
+            emailForm._emailHandler = emailHandler;
+            // Add the listener
+            emailForm.addEventListener('submit', emailHandler);
+        });
     </script>
     <script>
         <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
@@ -693,8 +722,9 @@ if (!$phoneNumber) {
         for (var i = 0; i < 5; i++) {
             var next = currentYear + 1;
             var year = currentYear + '-' + next;
-            //next.toString().slice(-2)
-            $('#ayear').append(new Option(year, year));
+            if ($('#ayear').length) {
+                $('#ayear').append(new Option(year, year));
+            }
             currentYear--;
         }
     </script>
