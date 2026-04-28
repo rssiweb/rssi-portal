@@ -910,7 +910,7 @@ if (!empty($statusCondition)) {
                                                         <div class="col-md-3">
                                                             <label class="form-label">Amount (₹)</label>
                                                             <input type="number" name="amount" class="form-control"
-                                                                step="0.01" min="0" required>
+                                                                step="0.01" required>
                                                         </div>
                                                     </div>
                                                     <div class="row mb-3">
