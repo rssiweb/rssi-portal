@@ -9,11 +9,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($role !== 'Admin') {
-    header("Location: index.php");
-    exit;
-}
-
 // Initialize variables
 $success = false;
 $message = '';
