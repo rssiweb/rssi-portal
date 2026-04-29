@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_fee'])) {
         $remarks = $_POST['remarks'];
 
         // Validate amount
-        if (!is_numeric($amount) || $amount <= 0) {
+        if (!is_numeric($amount)) {
             $message = 'Amount must be a positive number.';
         } else {
             // Validate dates
