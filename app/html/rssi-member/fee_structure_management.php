@@ -376,7 +376,7 @@ if (!empty($statusCondition)) {
         JOIN rssimyprofile_student s ON ssf.student_id = s.student_id
         JOIN fee_categories fc ON ssf.category_id = fc.id
         WHERE $statusCondition
-        ORDER BY s.class, s.studentname, fc.category_name, ssf.effective_from DESC";
+        ORDER BY ssf.id DESC";
 
     $result = pg_query($con, $studentFeesQuery);
     $studentFees = $result ? pg_fetch_all($result) : [];
@@ -1128,7 +1128,7 @@ if (!empty($statusCondition)) {
                                                                                     <?php endif; ?>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <?= htmlspecialchars($fee['remarks']) ?>
+                                                                                    <?= htmlspecialchars($fee['remarks'] ?? 'No remarks') ?>
                                                                                 </td>
                                                                                 <td>
                                                                                     <?php if ($isActive): ?>
