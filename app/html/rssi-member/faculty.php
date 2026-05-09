@@ -19,6 +19,7 @@ $date = date('Y-m-d H:i:s');
 // Retrieve POST values safely
 $id = isset($_POST['get_id']) ? $_POST['get_id'] : null;
 $aaid = isset($_POST['get_aaid']) ? strtoupper($_POST['get_aaid']) : null;
+$engagement = isset($_POST['engagement']) ? $_POST['engagement'] : null;
 $lyear = isset($_POST['adj_academicyear']) ? $_POST['adj_academicyear'] : null;
 $is_user = isset($_POST['is_user']) ? $_POST['is_user'] : null;
 
@@ -40,11 +41,23 @@ $commonJoins = "
     LEFT JOIN (SELECT exit_associate_id, exit_initiated_by, exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber = associate_exit.exit_associate_id
 ";
 
-// Build query based on input
+// Build dynamic WHERE conditions
+$whereConditions = [];
+$params = [];
+
 if (!empty($id)) {
-    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE filterstatus = '$id' ORDER BY fullname";
-} elseif (!empty($aaid)) {
-    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE associatenumber = '$aaid' ORDER BY fullname";
+    $whereConditions[] = "filterstatus = '$id'";
+}
+if (!empty($aaid)) {
+    $whereConditions[] = "associatenumber = '$aaid'";
+}
+if (!empty($engagement)) {
+    $whereConditions[] = "engagement = '$engagement'";
+}
+
+// Build the final query
+if (!empty($whereConditions)) {
+    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE " . implode(" AND ", $whereConditions) . " ORDER BY fullname";
 } else {
     $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber IS NULL";
 }
@@ -80,7 +93,7 @@ $resultArr = pg_fetch_all($result);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -245,6 +258,20 @@ $resultArr = pg_fetch_all($result);
                                             </select>
                                         </div>
                                     </div>
+                                    <!-- NEW: Engagement Dropdown -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <div class="form-group">
+                                            <label for="engagement" class="form-label">Engagement</label>
+                                            <select name="engagement" id="engagement" class="form-select">
+                                                <option value="">All Engagements</option>
+                                                <option value="Employee" <?php echo (isset($_POST['engagement']) && $_POST['engagement'] == 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                                <option value="Intern" <?php echo (isset($_POST['engagement']) && $_POST['engagement'] == 'Intern') ? 'selected' : ''; ?>>Intern</option>
+                                                <option value="Member" <?php echo (isset($_POST['engagement']) && $_POST['engagement'] == 'Member') ? 'selected' : ''; ?>>Member</option>
+                                                <option value="Volunteer" <?php echo (isset($_POST['engagement']) && $_POST['engagement'] == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
+                                                <!-- Add more options based on your actual engagement values -->
+                                            </select>
+                                        </div>
+                                    </div>
 
                                     <!-- Academic Year Dropdown -->
                                     <div class="col-md-3 col-lg-2">
@@ -296,11 +323,13 @@ $resultArr = pg_fetch_all($result);
 
                                     document.getElementById("get_id").disabled = false;
                                     document.getElementById("get_aaid").disabled = true;
+                                    document.getElementById("engagement").disabled = false;
 
                                 } else {
 
                                     document.getElementById("get_id").disabled = true;
                                     document.getElementById("get_aaid").disabled = false;
+                                    document.getElementById("engagement").disabled = true;
 
                                 }
 
@@ -310,9 +339,11 @@ $resultArr = pg_fetch_all($result);
                                     if (event.target.checked) {
                                         document.getElementById("get_id").disabled = true;
                                         document.getElementById("get_aaid").disabled = false;
+                                        document.getElementById("engagement").disabled = true;
                                     } else {
                                         document.getElementById("get_id").disabled = false;
                                         document.getElementById("get_aaid").disabled = true;
+                                        document.getElementById("engagement").disabled = false;
                                     }
                                 })
                             </script>
