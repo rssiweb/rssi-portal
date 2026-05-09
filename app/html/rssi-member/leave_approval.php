@@ -162,6 +162,10 @@ $applicant_id = $_POST['applicant_id'] ?? '';
 $leave_id = $_POST['leave_id'] ?? '';
 $enable_leave_id = isset($_POST['enable_leave_id']); // Check if checkbox was checked
 
+// Date range filters
+$date_from = $_POST['date_from'] ?? '';
+$date_to = $_POST['date_to'] ?? '';
+
 // Build query for TABLE VIEW
 $where_conditions = [];
 
@@ -173,6 +177,25 @@ if ($enable_leave_id && !empty($leave_id)) {
 else {
     // Always apply academic year filter in normal mode
     $where_conditions[] = "l.lyear = '$lyear'";
+
+    // Date range filter - checks if leave date range overlaps with selected range
+    if (!empty($date_from) && !empty($date_to)) {
+        // Convert to proper date format if needed
+        $date_from = date('Y-m-d', strtotime($date_from));
+        $date_to = date('Y-m-d', strtotime($date_to));
+        
+        // Check if the leave period overlaps with the selected date range
+        // This will show leaves that have any day falling within the selected range
+        $where_conditions[] = "(l.fromdate <= '$date_to' AND l.todate >= '$date_from')";
+    } elseif (!empty($date_from)) {
+        // Only from date provided - show leaves starting from this date
+        $date_from = date('Y-m-d', strtotime($date_from));
+        $where_conditions[] = "l.todate >= '$date_from'";
+    } elseif (!empty($date_to)) {
+        // Only to date provided - show leaves up to this date
+        $date_to = date('Y-m-d', strtotime($date_to));
+        $where_conditions[] = "l.fromdate <= '$date_to'";
+    }
 
     // Status filter
     if (!empty($status_filter)) {
@@ -533,7 +556,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                             <!-- TABLE VIEW SECTION -->
                             <div id="table-view-section">
                                 <div class="row align-items-center">
-                                    <div class="col-md-9">
+                                    <div class="col-md-12">
                                         <form action="" method="POST" class="mb-3">
                                             <div class="form-group d-inline-block">
                                                 <div class="col2 d-inline-block">
@@ -575,8 +598,13 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                                         <option value="Leave Without Pay" <?php echo $type_filter == 'Leave Without Pay' ? 'selected' : ''; ?>>Leave Without Pay</option>
                                                         <option value="Adjustment Leave" <?php echo $type_filter == 'Adjustment Leave' ? 'selected' : ''; ?>>Adjustment Leave</option>
                                                     </select>
+                                                    <input type="date" name="date_from" id="date_from" class="form-control d-inline-block" style="width:max-content;"
+                                                        placeholder="From Date" value="<?php echo $_POST['date_from'] ?? ''; ?>">
+                                                    <input type="date" name="date_to" id="date_to" class="form-control d-inline-block" style="width:max-content;"
+                                                        placeholder="To Date" value="<?php echo $_POST['date_to'] ?? ''; ?>">
                                                 </div>
                                             </div>
+
                                             <div class="col2 left mb-3 d-inline-block">
                                                 <button type="submit" name="search_by_id" class="btn btn-primary">
                                                     <i class="bi bi-filter"></i>&nbsp;Search
@@ -594,7 +622,7 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                                         </form>
                                     </div>
 
-                                    <div class="col-md-3 text-end">
+                                    <div class="col-md-12 text-end">
                                         <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
                                     </div>
                                 </div>
@@ -1403,6 +1431,8 @@ $resultArr = $result ? pg_fetch_all($result) : [];
             const lyearSelect = document.getElementById('lyear');
             const statusFilterSelect = document.getElementById('status_filter');
             const typeFilterSelect = document.getElementById('type_filter');
+            const dateFromInput = document.getElementById('date_from');
+            const dateToInput = document.getElementById('date_to');
 
             function toggleFilters() {
                 const isLeaveIdEnabled = enableLeaveIdCheckbox.checked;
@@ -1415,6 +1445,8 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                 lyearSelect.disabled = isLeaveIdEnabled;
                 statusFilterSelect.disabled = isLeaveIdEnabled;
                 typeFilterSelect.disabled = isLeaveIdEnabled;
+                dateFromInput.disabled = isLeaveIdEnabled;
+                dateToInput.disabled = isLeaveIdEnabled;
 
                 // Clear other filters when Leave ID is enabled
                 if (isLeaveIdEnabled) {
@@ -1422,6 +1454,8 @@ $resultArr = $result ? pg_fetch_all($result) : [];
                     // Don't clear lyear as it's required
                     statusFilterSelect.value = '';
                     typeFilterSelect.value = '';
+                    dateFromInput.value = '';
+                    dateToInput.value = '';
                 }
             }
 
