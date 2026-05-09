@@ -116,80 +116,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "No fields to update.";
         exit;
     }
+    // Initialize variables
+    $update_query = null;
+    $result_insert_query = null;
 
-    // Construct the dynamic UPDATE query
-    $update_query = "UPDATE signup SET " . implode(", ", $updates) . " WHERE application_number = '$application_number'";
-    if (isset($_POST['offer_extended'])) {
+    if (!isset($_POST['offer_extended'])) {
+        // Construct the dynamic UPDATE query
+        $update_query = "UPDATE signup SET " . implode(", ", $updates) . " WHERE application_number = '$application_number'";
+    } else {
         // Retrieve the offer_extended value
         $offer_extended = $_POST['offer_extended'];
 
-        // Conditional insert into rssimyaccount_members if offer_extended is 'Yes'
         if ($offer_extended === 'Yes') {
+
+            // Start transaction
+            pg_query($con, "BEGIN");
+
             $insert_query = "
-            INSERT INTO rssimyaccount_members (
-                fullname,
-                email,
-                basebranch,
-                gender,
-                dateofbirth,
-                currentaddress,
-                permanentaddress,
-                workexperience,
-                nationalidentifier,
-                applicationnumber,
-                position,
-                engagement,
-                phone,
-                identifier,
-                raw_photo,
-                filterstatus,
-                iddoc,
-                eduq,
-                mjorsub,
-                approvedby,
-                associatenumber,
-                college_name,
-                enrollment_number
-            )
-            SELECT 
-                applicant_name AS fullname,
-                email,
-                branch AS basebranch,
-                gender,
-                date_of_birth AS dateofbirth,
-                postal_address AS currentaddress,
-                permanent_address AS permanentaddress,
-                work_experience AS workexperience,
-                identifier_number AS nationalidentifier,
-                application_number AS applicationnumber,
-                post_select AS position,
-                association AS engagement,
-                telephone AS phone,
-                identifier,
-                applicant_photo AS raw_photo,
-                'In Progress' AS filterstatus,
-                supporting_document AS iddoc,
-                education_qualification AS eduq,
-                specialization AS mjorsub,
-                '$associatenumber' AS approvedby,
-                CONCAT(
-                RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),     -- Current Year (2 digits)
-                LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'), -- Current Month (2 digits)
-                LPAD(NEXTVAL('global_entity_seq')::text, 3, '0')        -- Sequence
+        INSERT INTO rssimyaccount_members (
+            fullname, email, basebranch, gender, dateofbirth,
+            currentaddress, permanentaddress, workexperience,
+            nationalidentifier, applicationnumber, position,
+            engagement, phone, identifier, raw_photo, filterstatus,
+            iddoc, eduq, mjorsub, approvedby, associatenumber,
+            college_name, enrollment_number
+        )
+        SELECT 
+            applicant_name, email, branch, gender, date_of_birth,
+            postal_address, permanent_address, work_experience,
+            identifier_number, application_number, post_select,
+            association, telephone, identifier, applicant_photo,
+            'In Progress', supporting_document, education_qualification,
+            specialization, '$associatenumber',
+            CONCAT(
+                RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),
+                LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'),
+                LPAD(RIGHT(NEXTVAL('global_entity_seq')::text, 3), 3, '0')
             ) AS associatenumber,
-            college_name,
-            enrollment_number
-            FROM signup 
-            WHERE application_number = '$application_number';
-            ";
-            // Execute the query (assuming you have a database connection $con)
+            college_name, enrollment_number
+        FROM signup 
+        WHERE application_number = '$application_number'
+        RETURNING associatenumber;";
+
             $result_insert_query = pg_query($con, $insert_query);
+
+            if ($result_insert_query && pg_affected_rows($result_insert_query) > 0) {
+                // Insert succeeded, now update signup
+                $update_query = "UPDATE signup SET " . implode(", ", $updates) . " WHERE application_number = '$application_number'";
+                $update_result = pg_query($con, $update_query);
+
+                if ($update_result && pg_affected_rows($update_result) > 0) {
+                    pg_query($con, "COMMIT");
+                    $cmdtuples = pg_affected_rows($update_result);
+                    $insert_success = true;
+                } else {
+                    pg_query($con, "ROLLBACK");
+                    echo '<script>alert("Error updating signup table.");</script>';
+                    exit;
+                }
+            } else {
+                pg_query($con, "ROLLBACK");
+                echo '<script>alert("Error: ' . addslashes(pg_last_error($con)) . '");</script>';
+                exit;
+            }
+        } elseif ($offer_extended === 'No') {
+            $update_query = "UPDATE signup SET " . implode(", ", $updates) . " WHERE application_number = '$application_number'";
         }
     }
 
-    // Execute the query
-    $update_result = pg_query($con, $update_query);
-    $cmdtuples = pg_affected_rows($update_result);
+    // Only execute if update_query is defined
+    if ($update_query) {
+        $update_result = pg_query($con, $update_query);
+        $cmdtuples = pg_affected_rows($update_result);
+    }
 
     if (isset($_POST['photo_verification'])) {
         // Check if the query was successful
