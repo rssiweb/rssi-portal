@@ -1753,6 +1753,16 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
             window.open(url, '_blank');
         });
     </script>
+    <script>
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // months are 0-based
+
+        const currentMonth = `${year}-${month}`;
+
+        document.getElementById("concessionFromMonth").setAttribute("min", currentMonth);
+        document.getElementById("concessionUntilMonth").setAttribute("min", currentMonth);
+    </script>
 </body>
 
 </html>
