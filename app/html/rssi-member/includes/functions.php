@@ -7,6 +7,31 @@ function getPageTitle()
     return MenuConfig::getCurrentPageData()['title'];
 }
 
+function getHrmsPendingCount()
+{
+    return MenuConfig::getHrmsPendingCount();
+}
+
+function getStudentPendingCount()
+{
+    return MenuConfig::getStudentPendingCount();
+}
+
+function getPostPendingCount()
+{
+    return MenuConfig::getPostPendingCount();
+}
+
+function getIexplorePendingCount()
+{
+    return MenuConfig::getIexplorePendingCount();
+}
+
+function getTotalPendingWorklistCount()
+{
+    return MenuConfig::getTotalPendingWorklistCount();
+}
+
 // Breadcrumb
 function generateDynamicBreadcrumb()
 {

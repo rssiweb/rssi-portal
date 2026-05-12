@@ -9,6 +9,103 @@ class MenuConfig
     private static $publicPagesCache = null; // NEW: Cache for pages with no true access for any role
     private static $allPagesInDB = null; // NEW: Cache for all pages that exist in DB
 
+    public static function getHrmsPendingCount()
+    {
+        global $con;
+
+        $query = "
+        WITH latest_submissions AS (
+            SELECT 
+                w.associatenumber,
+                w.fieldname,
+                MAX(w.workflow_id) as latest_workflow_id
+            FROM hrms_workflow w
+            GROUP BY w.associatenumber, w.fieldname
+        )
+        SELECT COUNT(*) as count
+        FROM hrms_workflow w
+        JOIN latest_submissions ls ON 
+            w.associatenumber = ls.associatenumber AND 
+            w.fieldname = ls.fieldname AND
+            w.workflow_id = ls.latest_workflow_id
+        WHERE w.reviewer_status = 'Pending'
+    ";
+
+        $result = pg_query($con, $query);
+        if ($result) {
+            $row = pg_fetch_assoc($result);
+            return (int)$row['count'];
+        }
+        return 0;
+    }
+
+    public static function getStudentPendingCount()
+    {
+        global $con;
+
+        $query = "SELECT COUNT(*) as count 
+              FROM student_profile_update_workflow 
+              WHERE reviewer_status = 'Pending'";
+
+        $result = pg_query($con, $query);
+        if ($result) {
+            $row = pg_fetch_assoc($result);
+            return (int)$row['count'];
+        }
+        return 0;
+    }
+
+    public static function getPostPendingCount()
+    {
+        global $con;
+
+        $query = "SELECT COUNT(*) as count FROM events WHERE review_status IS NULL";
+
+        $result = pg_query($con, $query);
+        if ($result) {
+            $row = pg_fetch_assoc($result);
+            return (int)$row['count'];
+        }
+        return 0;
+    }
+
+    public static function getIexplorePendingCount()
+    {
+        global $con;
+
+        $query = "
+        WITH ranked_submissions AS (
+            SELECT 
+                e.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY e.course_id, e.associate_number 
+                    ORDER BY e.submission_time DESC
+                ) as rn
+            FROM external_exam_scores e
+        ),
+        latest_pending_submissions AS (
+            SELECT * FROM ranked_submissions 
+            WHERE rn = 1 AND (status IS NULL OR status = 'pending')
+        )
+        SELECT COUNT(*) as count FROM latest_pending_submissions
+    ";
+
+        $result = pg_query($con, $query);
+        if ($result) {
+            $row = pg_fetch_assoc($result);
+            return (int)$row['count'];
+        }
+        return 0;
+    }
+
+    public static function getTotalPendingWorklistCount()
+    {
+        return self::getHrmsPendingCount() +
+            self::getStudentPendingCount() +
+            self::getPostPendingCount() +
+            self::getIexplorePendingCount();
+    }
+
     private static function init()
     {
         if (self::$pageData !== null) return;
