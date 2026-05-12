@@ -290,6 +290,7 @@ $fields_requiring_approval = [
     'studentname',
     'dateofbirth',
     'contact',
+    'student_photo_raw'
 ];
 
 // Handle form submission
