@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-include("../../util/login_util.php");
+include("../../util/login_util_tap.php");
+include("../../util/email.php");
 include("../../util/drive.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("tid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -13,7 +13,7 @@ if (!isLoggedIn("aid")) {
 validation();
 
 // Get application_number from your existing source
-$application_number = isset($_GET['application_number']) ? $_GET['application_number'] : '12345';
+// $application_number = isset($_GET['application_number']) ? $_GET['application_number'] : '12345';
 
 // Handle the video upload to Google Drive (EXACT same pattern as onboarding photo)
 $upload_status = '';
@@ -101,7 +101,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php'; ?>
+    <!-- <?php include 'includes/meta.php'; ?> -->
+    <title>Interview Video Recorder (IVR)</title>
 
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -123,29 +124,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         .video-panel {
             flex: 1;
             min-width: 380px;
-        }
-
-        .question-card {
-            background: #f8f9ff;
-            border-left: 4px solid #0d6efd;
-            margin-bottom: 0.8rem;
-            padding: 0.8rem 1.2rem;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .question-card:hover {
-            background: #e8ecf5;
-            transform: translateX(3px);
-        }
-
-        .question-number {
-            font-weight: 700;
-            color: #0d6efd;
-            margin-right: 10px;
-            display: inline-block;
-            width: 28px;
         }
 
         .video-tv-frame {
@@ -268,17 +246,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             }
         }
     </style>
+    <!-- Questions List - with proper CSS counters -->
+    <style>
+        .questions-list-modern {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+            counter-reset: q-counter;
+        }
+
+        .questions-list-modern li {
+            counter-increment: q-counter;
+            margin-bottom: 1.25rem;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            border: 1px solid #edf2f7;
+            transition: all 0.2s ease;
+        }
+
+        .questions-list-modern li:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .question-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background-color: #eef2ff;
+            color: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .question-number::before {
+            content: counter(q-counter);
+        }
+
+        .warning-note {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #dc2626;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .warning-note i {
+            font-size: 0.7rem;
+        }
+    </style>
 </head>
 
 <body>
-    <?php include 'includes/header.php'; ?>
+    <?php include 'header.php'; ?>
     <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Virtual Interview Portal</h1>
-            <?php echo generateDynamicBreadcrumb(); ?>
-        </div>
+            <h1>Interview Video Recorder (IVR)</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item">Interview Video Recorder (IVR)</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
         <section class="section dashboard">
             <div class="row">
@@ -311,7 +350,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                             <div class="interview-header">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                                     <div>
-                                        <h2 class="mb-2"><i class="bi bi-camera-reels-fill me-2"></i>Online Interview Assessment</h2>
+                                        <h2 class="mb-2"><i class="bi bi-camera-reels-fill me-2"></i>Interview Video Recorder (IVR)</h2>
                                         <p class="mb-0">Please answer all questions in sequence within 1 minute.</p>
                                     </div>
                                     <div class="mt-2 mt-sm-0">
@@ -324,17 +363,120 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                             </div>
 
                             <div class="interview-layout">
-                                <!-- LEFT PANEL: Questions -->
-                                <div class="questions-panel">
-                                    <h5 class="mb-3"><i class="bi bi-question-circle-fill text-primary"></i> Questions to Answer</h5>
-                                    <div class="question-card"><span class="question-number">1.</span> Introduce yourself.</div>
-                                    <div class="question-card"><span class="question-number">2.</span> What do you know about RSSI NGO and its key projects?</div>
-                                    <div class="question-card"><span class="question-number">3.</span> Which shift are you most comfortable with: Pre-primary (11am-3pm) or Primary (2:30pm-6:30pm)?</div>
-                                    <div class="question-card"><span class="question-number">4.</span> Are you aware that the internship requires a minimum commitment of 1 month, 4 days/week, 4 hours/day?</div>
-                                    <div class="question-card"><span class="question-number">5.</span> What is your expected joining date?</div>
-                                    <div class="question-card"><span class="question-number">6.</span> Would you be able to relocate to Lucknow for the 1-month duration?</div>
-                                    <div class="question-card"><span class="question-number">7.</span> Which language(s) are you comfortable with? Are you comfortable teaching in Hindi?</div>
-                                    <div class="question-card"><span class="question-number">8.</span> Are you comfortable visiting students' homes and interacting with parents?</div>
+                                <!-- LEFT PANEL: Questions - Modern Fresh Formal Design (Fixed Counter) -->
+                                <div class="questions-panel" style="max-height: 560px; overflow-y: auto; padding-right: 6px;">
+
+                                    <!-- Header -->
+                                    <div class="d-flex align-items-center gap-2 mb-4 pb-1 border-bottom border-2" style="border-color: #e9ecef !important;">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                            <i class="bi bi-question-circle-fill text-primary" style="font-size: 1.3rem;"></i>
+                                        </div>
+                                        <h5 class="fw-semibold mb-0" style="letter-spacing: -0.2px; color: #1e2a3e;">Questions to Answer</h5>
+                                        <span class="ms-auto badge bg-light text-dark rounded-pill fw-normal">8 questions</span>
+                                    </div>
+
+                                    <!-- Instructions Box -->
+                                    <div class="mb-4 p-3 rounded-4" style="background: linear-gradient(135deg, #f8faff 0%, #f0f4fe 100%); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 16px;">
+                                        <div class="d-flex gap-2 align-items-start">
+                                            <i class="bi bi-info-circle-fill text-primary mt-1" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <span class="fw-semibold" style="color: #1e40af;">Before you begin</span>
+                                                <ul class="mt-2 mb-0 ps-3" style="font-size: 0.82rem; color: #2c3e50; line-height: 1.5;">
+                                                    <li>Answer all 8 questions in sequence within <strong>1 minute</strong></li>
+                                                    <li>Ensure a quiet, well-lit environment - speak clearly and look at the camera</li>
+                                                    <li>You can retake the video before submitting</li>
+                                                    <li>Your video will be stored securely in Google Drive after submission</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <ul class="questions-list-modern">
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Introduce yourself.</strong>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">What do you know about RSSI NGO and its key projects?</strong>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Preferred shift: Pre-primary (11am–3pm) / Primary (2:30pm–6:30pm)?</strong>
+                                                    <div class="warning-note">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> Final allocation is subject to business requirements and operational feasibility.
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Are you aware that the internship requires a minimum commitment of 1 month, with a schedule of 4 days/week, 4 hours/day? Will you be able to manage this?</strong>
+                                                    <div class="warning-note">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">What is your expected joining date?</strong>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Would you be able to relocate to Lucknow for the 1-month duration of the internship?</strong>
+                                                    <div class="warning-note">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> There is no provision for remote work or hybrid arrangements for this internship. Candidates must be able to work on-site in Lucknow for the entire duration of the internship.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Which language(s) are you comfortable with? Are you comfortable teaching in Hindi as the primary medium of instruction?</strong>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <div class="d-flex gap-3">
+                                                <div class="question-number"></div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-weight: 600;">Are you comfortable visiting students' homes and interacting with their parents to understand their lifestyle and challenges for your case study?</strong>
+                                                    <div class="warning-note">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> This internship involves fieldwork that requires visiting students' homes and engaging with their parents to gain insights into their lifestyle and challenges. Candidates must be comfortable with this aspect of the role.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
                                 </div>
 
                                 <!-- RIGHT PANEL: Video Recording -->
