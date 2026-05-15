@@ -245,9 +245,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                 flex-direction: column;
             }
         }
-    </style>
-    <!-- Questions List - with proper CSS counters -->
-    <style>
+
         .questions-list-modern {
             list-style: none;
             padding-left: 0;
@@ -286,20 +284,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 
         .question-number::before {
             content: counter(q-counter);
-        }
-
-        .warning-note {
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #dc2626;
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .warning-note i {
-            font-size: 0.7rem;
         }
     </style>
 </head>
@@ -350,7 +334,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                             <div class="interview-header">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                                     <div>
-                                        <h2 class="mb-2"><i class="bi bi-camera-reels-fill me-2"></i>Interview Video Recorder (IVR)</h2>
+                                        <!-- <h2 class="mb-2"><i class="bi bi-camera-reels-fill me-2"></i>Interview Video Recorder (IVR)</h2> -->
                                         <p class="mb-0">Please answer all questions in sequence within 1 minute.</p>
                                     </div>
                                     <div class="mt-2 mt-sm-0">
@@ -397,6 +381,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 <div class="question-number"></div>
                                                 <div>
                                                     <strong style="color: #0f172a; font-weight: 600;">Introduce yourself.</strong>
+                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        Show the front and back of your Aadhar Card, holding each side in the frame for 5 seconds. Ensure both your face and the document are clearly visible in the frame.
+                                                    </div>
                                                 </div>
                                             </div>
                                         </li>
@@ -415,9 +402,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 <div class="question-number"></div>
                                                 <div>
                                                     <strong style="color: #0f172a; font-weight: 600;">Preferred shift: Pre-primary (11am–3pm) / Primary (2:30pm–6:30pm)?</strong>
-                                                    <div class="warning-note">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i> Final allocation is subject to business requirements and operational feasibility.
-
+                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        Final allocation is subject to business requirements and operational feasibility.
                                                     </div>
                                                 </div>
                                             </div>
@@ -428,8 +414,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 <div class="question-number"></div>
                                                 <div>
                                                     <strong style="color: #0f172a; font-weight: 600;">Are you aware that the internship requires a minimum commitment of 1 month, with a schedule of 4 days/week, 4 hours/day? Will you be able to manage this?</strong>
-                                                    <div class="warning-note">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i> If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
+                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
                                                     </div>
                                                 </div>
                                             </div>
@@ -449,8 +435,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 <div class="question-number"></div>
                                                 <div>
                                                     <strong style="color: #0f172a; font-weight: 600;">Would you be able to relocate to Lucknow for the 1-month duration of the internship?</strong>
-                                                    <div class="warning-note">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i> There is no provision for remote work or hybrid arrangements for this internship. Candidates must be able to work on-site in Lucknow for the entire duration of the internship.
+                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        There is no provision for remote work or hybrid arrangements for this internship. Candidates must be able to work on-site in Lucknow for the entire duration of the internship.
                                                     </div>
                                                 </div>
                                             </div>
@@ -470,8 +456,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 <div class="question-number"></div>
                                                 <div>
                                                     <strong style="color: #0f172a; font-weight: 600;">Are you comfortable visiting students' homes and interacting with their parents to understand their lifestyle and challenges for your case study?</strong>
-                                                    <div class="warning-note">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i> This internship involves fieldwork that requires visiting students' homes and engaging with their parents to gain insights into their lifestyle and challenges. Candidates must be comfortable with this aspect of the role.
+                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        This internship involves fieldwork that requires visiting students' homes and engaging with their parents to gain insights into their lifestyle and challenges. Candidates must be comfortable with this aspect of the role.
                                                     </div>
                                                 </div>
                                             </div>
