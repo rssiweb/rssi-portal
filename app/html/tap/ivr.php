@@ -63,16 +63,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             $upload_status = 'success';
             $uploaded_file_link = $drive_response;
 
+            // Fetch user details from signup table using application_number
+            $user_query = "SELECT applicant_name, email FROM signup WHERE application_number = $1";
+            $user_result = pg_query_params($con, $user_query, array($app_num));
+
+            $applicant_name = '';
+            $applicant_email = '';
+
+            if ($user_result && pg_num_rows($user_result) > 0) {
+                $user_data = pg_fetch_assoc($user_result);
+                $applicant_name = $user_data['applicant_name'];
+                $applicant_email = $user_data['email'];
+            }
+
             // Store in vrc table
             $now = date('Y-m-d H:i:s');
 
             $query = "INSERT INTO vrc (application_number, drive_file_link, timestamp) 
-                      VALUES ($1, $2, $3)";
+                      VALUES ($1, $2, $3)
+                       RETURNING id";
             $result = pg_query_params($con, $query, array($app_num, $uploaded_file_link, $now));
+            $row = pg_fetch_assoc($result);
+            $inserted_id = $row['id'];
 
             if (!$result) {
                 $upload_status = 'error';
                 $error_message = 'Database insert failed: ' . pg_last_error($con);
+            } else {
+                // Send email notification to the applicant
+                if (!empty($applicant_email)) {
+                    $email_sent = sendEmail("interview_video_submission", array(
+                        "reference_number" => $inserted_id,
+                        "application_number" => $app_num,
+                        "applicant_name" => $applicant_name,
+                        "drive_file_link" => $uploaded_file_link,
+                        "submission_date" => date("d/m/Y g:i a", strtotime($now))
+                    ), $applicant_email);
+
+                    // Optional: Log if email sending fails (for debugging)
+                    if (!$email_sent) {
+                        error_log("Failed to send interview video submission email to: " . $applicant_email);
+                    }
+                }
             }
         } else {
             $upload_status = 'error';
@@ -314,7 +346,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                                     <i class="bi bi-check-circle-fill"></i>
                                     <strong>Success!</strong> Your interview video has been submitted successfully!
-                                    <br><small>Drive Link: <a href="<?php echo $uploaded_file_link; ?>" target="_blank"><?php echo $uploaded_file_link; ?></a></small>
+                                    <!-- <br><small>Drive Link: <a href="<?php echo $uploaded_file_link; ?>" target="_blank"><?php echo $uploaded_file_link; ?></a></small> -->
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                                 <script>
@@ -520,6 +552,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
+
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('interviewForm').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
+        });
+    </script>
 
     <script>
         const liveVideo = document.getElementById('liveVideo');
