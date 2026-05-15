@@ -26,89 +26,110 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $video_base64 = isset($_POST['video_base64']) ? $_POST['video_base64'] : '';
 
     if (!empty($video_base64) && $video_base64 != 'data:,') {
-        // Convert base64 to file - same as onboarding
-        $base64_string = $video_base64;
 
-        // Remove the data:video/webm;base64, prefix (same as onboarding)
-        if (strpos($base64_string, ',') !== false) {
-            list(, $base64_string) = explode(',', $base64_string);
-        }
+        // Step 1: First insert into database to reserve the record
+        $now = date('Y-m-d H:i:s');
 
-        // Decode base64 string
-        $video_data = base64_decode($base64_string);
+        // Insert placeholder record with NULL drive_file_link first
+        $insert_query = "INSERT INTO vrc (application_number, drive_file_link, timestamp) 
+                         VALUES ($1, NULL, $2)
+                         RETURNING id";
+        $insert_result = pg_query_params($con, $insert_query, array($app_num, $now));
 
-        // Create a temporary file
-        $temp_file = tempnam(sys_get_temp_dir(), 'interview_video_');
-        file_put_contents($temp_file, $video_data);
-
-        // Create file object for Google Drive upload (EXACT same as onboarding)
-        $file_array = [
-            'name' => 'interview_video_' . $app_num . '_' . time() . '.webm',
-            'type' => 'video/webm',
-            'tmp_name' => $temp_file,
-            'error' => 0,
-            'size' => filesize($temp_file)
-        ];
-
-        // Upload to Google Drive - uploadeToDrive returns the FILE ID directly (string)
-        $filename = "interview_video_" . $app_num . "_" . time();
-        $parent_folder_id = '1f7c9h0_k7_Biatgh4XrAhas8wxXuWW3V'; // Your folder ID
-        $drive_response = uploadeToDrive($file_array, $parent_folder_id, $filename);
-
-        // Clean up temporary file
-        unlink($temp_file);
-
-        // Check if upload was successful - uploadeToDrive returns file ID string or false
-        if ($drive_response && is_string($drive_response)) {
-            $upload_status = 'success';
-            $uploaded_file_link = $drive_response;
-
-            // Fetch user details from signup table using application_number
-            $user_query = "SELECT applicant_name, email FROM signup WHERE application_number = $1";
-            $user_result = pg_query_params($con, $user_query, array($app_num));
-
-            $applicant_name = '';
-            $applicant_email = '';
-
-            if ($user_result && pg_num_rows($user_result) > 0) {
-                $user_data = pg_fetch_assoc($user_result);
-                $applicant_name = $user_data['applicant_name'];
-                $applicant_email = $user_data['email'];
-            }
-
-            // Store in vrc table
-            $now = date('Y-m-d H:i:s');
-
-            $query = "INSERT INTO vrc (application_number, drive_file_link, timestamp) 
-                      VALUES ($1, $2, $3)
-                       RETURNING id";
-            $result = pg_query_params($con, $query, array($app_num, $uploaded_file_link, $now));
-            $row = pg_fetch_assoc($result);
+        if (!$insert_result) {
+            $upload_status = 'error';
+            $error_message = 'Database initialization failed: ' . pg_last_error($con);
+        } else {
+            $row = pg_fetch_assoc($insert_result);
             $inserted_id = $row['id'];
 
-            if (!$result) {
-                $upload_status = 'error';
-                $error_message = 'Database insert failed: ' . pg_last_error($con);
-            } else {
-                // Send email notification to the applicant
-                if (!empty($applicant_email)) {
-                    $email_sent = sendEmail("interview_video_submission", array(
-                        "reference_number" => $inserted_id,
-                        "application_number" => $app_num,
-                        "applicant_name" => $applicant_name,
-                        "drive_file_link" => $uploaded_file_link,
-                        "submission_date" => date("d/m/Y g:i a", strtotime($now))
-                    ), $applicant_email);
+            // Step 2: Now process and upload the video to Google Drive
+            // Convert base64 to file - same as onboarding
+            $base64_string = $video_base64;
 
-                    // Optional: Log if email sending fails (for debugging)
-                    if (!$email_sent) {
-                        error_log("Failed to send interview video submission email to: " . $applicant_email);
-                    }
-                }
+            // Remove the data:video/webm;base64, prefix (same as onboarding)
+            if (strpos($base64_string, ',') !== false) {
+                list(, $base64_string) = explode(',', $base64_string);
             }
-        } else {
-            $upload_status = 'error';
-            $error_message = 'Drive upload failed - no file ID returned';
+
+            // Decode base64 string
+            $video_data = base64_decode($base64_string);
+
+            // Create a temporary file
+            $temp_file = tempnam(sys_get_temp_dir(), 'interview_video_');
+            file_put_contents($temp_file, $video_data);
+
+            // Create file object for Google Drive upload (EXACT same as onboarding)
+            $file_array = [
+                'name' => 'interview_video_' . $app_num . '_' . time() . '.webm',
+                'type' => 'video/webm',
+                'tmp_name' => $temp_file,
+                'error' => 0,
+                'size' => filesize($temp_file)
+            ];
+
+            // Upload to Google Drive - uploadeToDrive returns the FILE ID directly (string)
+            $filename = "interview_video_" . $app_num . "_" . time();
+            $parent_folder_id = '1f7c9h0_k7_Biatgh4XrAhas8wxXuWW3V'; // Your folder ID
+            $drive_response = uploadeToDrive($file_array, $parent_folder_id, $filename);
+
+            // Clean up temporary file
+            unlink($temp_file);
+
+            // Step 3: Check if upload was successful
+            if ($drive_response && is_string($drive_response)) {
+                // Update the existing record with the Drive file link
+                $update_query = "UPDATE vrc SET drive_file_link = $1 WHERE id = $2";
+                $update_result = pg_query_params($con, $update_query, array($drive_response, $inserted_id));
+
+                if ($update_result) {
+                    $upload_status = 'success';
+                    $uploaded_file_link = $drive_response;
+
+                    // Fetch user details from signup table using application_number
+                    $user_query = "SELECT applicant_name, email FROM signup WHERE application_number = $1";
+                    $user_result = pg_query_params($con, $user_query, array($app_num));
+
+                    $applicant_name = '';
+                    $applicant_email = '';
+
+                    if ($user_result && pg_num_rows($user_result) > 0) {
+                        $user_data = pg_fetch_assoc($user_result);
+                        $applicant_name = $user_data['applicant_name'];
+                        $applicant_email = $user_data['email'];
+                    }
+
+                    // Send email notification to the applicant
+                    if (!empty($applicant_email)) {
+                        $email_sent = sendEmail("interview_video_submission", array(
+                            "reference_number" => $inserted_id,
+                            "application_number" => $app_num,
+                            "applicant_name" => $applicant_name,
+                            "drive_file_link" => $drive_response,
+                            "submission_date" => date("d/m/Y g:i a", strtotime($now))
+                        ), $applicant_email);
+
+                        // Optional: Log if email sending fails (for debugging)
+                        if (!$email_sent) {
+                            error_log("Failed to send interview video submission email to: " . $applicant_email);
+                        }
+                    }
+                } else {
+                    // Drive upload succeeded but database update failed
+                    // Note: The file is already uploaded to Drive, but we couldn't update the record
+                    $upload_status = 'error';
+                    $error_message = 'Database update failed after Drive upload. Please contact support. Record ID: ' . $inserted_id;
+                    // Log this critical error for manual review
+                    error_log("CRITICAL: Drive file uploaded but database update failed. Record ID: $inserted_id, Drive File ID: $drive_response");
+                }
+            } else {
+                // Drive upload failed - delete the placeholder database record to avoid empty records
+                $delete_query = "DELETE FROM vrc WHERE id = $1";
+                $delete_result = pg_query_params($con, $delete_query, array($inserted_id));
+
+                $upload_status = 'error';
+                $error_message = 'Drive upload failed - no file ID returned. Record has been removed.';
+            }
         }
     } else {
         $upload_status = 'error';
@@ -142,6 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <style>
+        /* Your existing styles remain the same */
         .interview-layout {
             display: flex;
             flex-wrap: wrap;
@@ -346,15 +368,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                                     <i class="bi bi-check-circle-fill"></i>
                                     <strong>Success!</strong> Your interview video has been submitted successfully!
-                                    <!-- <br><small>Drive Link: <a href="<?php echo $uploaded_file_link; ?>" target="_blank"><?php echo $uploaded_file_link; ?></a></small> -->
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                                 <script>
                                     if (window.history.replaceState) {
-                                        // Update the URL without causing a page reload or resubmission
                                         window.history.replaceState(null, null, window.location.href);
                                     }
-                                </script>;
+                                </script>
                             <?php elseif ($upload_status == 'error'): ?>
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -366,7 +386,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                             <div class="interview-header">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                                     <div>
-                                        <!-- <h2 class="mb-2"><i class="bi bi-camera-reels-fill me-2"></i>Interview Video Recorder (IVR)</h2> -->
                                         <p class="mb-0">Please answer all questions in sequence within 1 minute.</p>
                                     </div>
                                     <div class="mt-2 mt-sm-0">
@@ -378,10 +397,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                 </div>
                             </div>
 
+                            <!-- Rest of your HTML remains the same -->
                             <div class="interview-layout">
-                                <!-- LEFT PANEL: Questions - Modern Fresh Formal Design (Fixed Counter) -->
+                                <!-- LEFT PANEL: Questions -->
                                 <div class="questions-panel" style="max-height: 560px; overflow-y: auto; padding-right: 6px;">
-
                                     <!-- Header -->
                                     <div class="d-flex align-items-center gap-2 mb-4 pb-1 border-bottom border-2" style="border-color: #e9ecef !important;">
                                         <div class="rounded-circle bg-primary bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
@@ -408,6 +427,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                     </div>
 
                                     <ul class="questions-list-modern">
+                                        <!-- Your existing questions list -->
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -419,7 +439,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -428,7 +447,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -440,7 +458,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -452,7 +469,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -461,7 +477,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -473,7 +488,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -482,7 +496,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                                 </div>
                                             </div>
                                         </li>
-
                                         <li>
                                             <div class="d-flex gap-3">
                                                 <div class="question-number"></div>
@@ -823,7 +836,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                 return;
             }
             uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading to Google Drive...';
+            uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
         });
 
         window.addEventListener('load', () => {
