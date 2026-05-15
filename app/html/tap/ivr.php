@@ -12,9 +12,6 @@ if (!isLoggedIn("tid")) {
 
 validation();
 
-// Get application_number from your existing source
-// $application_number = isset($_GET['application_number']) ? $_GET['application_number'] : '12345';
-
 // Handle the video upload to Google Drive (EXACT same pattern as onboarding photo)
 $upload_status = '';
 $uploaded_file_link = '';
@@ -134,6 +131,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     } else {
         $upload_status = 'error';
         $error_message = 'No video data received';
+    }
+}
+
+// Check if user has already submitted a video
+$has_submitted_video = false;
+$video_status = null;
+$can_proceed = true;
+$online_interview_initiated = false;
+$message = '';
+
+// Get application_number from session or wherever you store it
+// Assuming you have $application_number from your existing source
+if (isset($application_number) && !empty($application_number)) {
+    $check_query = "SELECT 
+    vrc.drive_file_link,
+    vrc.status,
+    vrc.timestamp,
+    signup.online_interview_initiated
+FROM signup
+LEFT JOIN vrc 
+    ON signup.application_number = vrc.application_number
+    WHERE signup.application_number = $1 ORDER BY timestamp DESC LIMIT 1";
+    $check_result = pg_query_params($con, $check_query, array($application_number));
+
+    if ($check_result && pg_num_rows($check_result) > 0) {
+        $existing_record = pg_fetch_assoc($check_result);
+        $has_submitted_video = true;
+        $video_status = $existing_record['status'];
+        $submission_time = $existing_record['timestamp'];
+        $online_interview_initiated = $existing_record['online_interview_initiated'];
+
+        // Check if status is 'rejected' - allow to proceed
+        if ($video_status === 'rejected' || $video_status === null) {
+            $can_proceed = true;
+        } else {
+            // Status is pending, approved, or any other status - don't allow new submission
+            $can_proceed = false;
+        }
+
+        // Check if status is 'true' - allow to proceed
+        if ($online_interview_initiated === 't' && $online_interview_initiated !== null) {
+            $online_interview_initiated = true;
+        } else {
+            // Status is pending, approved, or any other status - don't allow new submission
+            $online_interview_initiated = false;
+        }
     }
 }
 ?>
@@ -382,180 +425,225 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             <?php endif; ?>
-
-                            <div class="interview-header">
-                                <div class="d-flex flex-wrap justify-content-between align-items-center">
-                                    <div>
-                                        <p class="mb-0">Please answer all questions in sequence within 1 minute.</p>
-                                    </div>
-                                    <div class="mt-2 mt-sm-0">
-                                        <span class="app-badge">
-                                            <i class="bi bi-hash"></i> Application Number:
-                                            <strong><?php echo htmlspecialchars($application_number); ?></strong>
-                                        </span>
+                            <?php if ($online_interview_initiated): ?>
+                                <div class="interview-header">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                        <div>
+                                            <p class="mb-0">Please answer all questions in sequence within 1 minute.</p>
+                                        </div>
+                                        <div class="mt-2 mt-sm-0">
+                                            <span class="app-badge">
+                                                <i class="bi bi-hash"></i> Application Number:
+                                                <strong><?php echo htmlspecialchars($application_number); ?></strong>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Rest of your HTML remains the same -->
-                            <div class="interview-layout">
-                                <!-- LEFT PANEL: Questions -->
-                                <div class="questions-panel" style="max-height: 560px; overflow-y: auto; padding-right: 6px;">
-                                    <!-- Header -->
-                                    <div class="d-flex align-items-center gap-2 mb-4 pb-1 border-bottom border-2" style="border-color: #e9ecef !important;">
-                                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                                            <i class="bi bi-question-circle-fill text-primary" style="font-size: 1.3rem;"></i>
+                                <!-- Rest of your HTML remains the same -->
+                                <div class="interview-layout">
+                                    <!-- LEFT PANEL: Questions -->
+                                    <div class="questions-panel" style="max-height: 560px; overflow-y: auto; padding-right: 6px;">
+                                        <!-- Header -->
+                                        <div class="d-flex align-items-center gap-2 mb-4 pb-1 border-bottom border-2" style="border-color: #e9ecef !important;">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                                <i class="bi bi-question-circle-fill text-primary" style="font-size: 1.3rem;"></i>
+                                            </div>
+                                            <h5 class="fw-semibold mb-0" style="letter-spacing: -0.2px; color: #1e2a3e;">Questions to Answer</h5>
+                                            <span class="ms-auto badge bg-light text-dark rounded-pill fw-normal">8 questions</span>
                                         </div>
-                                        <h5 class="fw-semibold mb-0" style="letter-spacing: -0.2px; color: #1e2a3e;">Questions to Answer</h5>
-                                        <span class="ms-auto badge bg-light text-dark rounded-pill fw-normal">8 questions</span>
+
+                                        <!-- Instructions Box -->
+                                        <div class="mb-4 p-3 rounded-4" style="background: linear-gradient(135deg, #f8faff 0%, #f0f4fe 100%); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 16px;">
+                                            <div class="d-flex gap-2 align-items-start">
+                                                <i class="bi bi-info-circle-fill text-primary mt-1" style="font-size: 1.1rem;"></i>
+                                                <div>
+                                                    <span class="fw-semibold" style="color: #1e40af;">Before you begin</span>
+                                                    <ul class="mt-2 mb-0 ps-3" style="font-size: 0.82rem; color: #2c3e50; line-height: 1.5;">
+                                                        <li>Answer all 8 questions in sequence within <strong>1 minute</strong></li>
+                                                        <li>Ensure a quiet, well-lit environment - speak clearly and look at the camera</li>
+                                                        <li>You can retake the video before submitting</li>
+                                                        <li>Your video will be stored securely in Google Drive after submission</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <ul class="questions-list-modern">
+                                            <!-- Your existing questions list -->
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Introduce yourself.</strong>
+                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                            Show the front and back of your Aadhar Card, holding each side in the frame for 5 seconds. Ensure both your face and the document are clearly visible in the frame.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">What do you know about RSSI NGO and its key projects?</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Preferred shift: Pre-primary (11am–3pm) / Primary (2:30pm–6:30pm)?</strong>
+                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                            Final allocation is subject to business requirements and operational feasibility.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Are you aware that the internship requires a minimum commitment of 1 month, with a schedule of 4 days/week, 4 hours/day? Will you be able to manage this?</strong>
+                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                            If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">What is your expected joining date?</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Would you be able to relocate to Lucknow for the 1-month duration of the internship?</strong>
+                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                            There is no provision for remote work or hybrid arrangements for this internship. Candidates must be able to work on-site in Lucknow for the entire duration of the internship.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Which language(s) are you comfortable with? Are you comfortable teaching in Hindi as the primary medium of instruction?</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="d-flex gap-3">
+                                                    <div class="question-number"></div>
+                                                    <div>
+                                                        <strong style="color: #0f172a; font-weight: 600;">Are you comfortable visiting students' homes and interacting with their parents to understand their lifestyle and challenges for your case study?</strong>
+                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                            This internship involves fieldwork that requires visiting students' homes and engaging with their parents to gain insights into their lifestyle and challenges. Candidates must be comfortable with this aspect of the role.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
                                     </div>
 
-                                    <!-- Instructions Box -->
-                                    <div class="mb-4 p-3 rounded-4" style="background: linear-gradient(135deg, #f8faff 0%, #f0f4fe 100%); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 16px;">
-                                        <div class="d-flex gap-2 align-items-start">
-                                            <i class="bi bi-info-circle-fill text-primary mt-1" style="font-size: 1.1rem;"></i>
-                                            <div>
-                                                <span class="fw-semibold" style="color: #1e40af;">Before you begin</span>
-                                                <ul class="mt-2 mb-0 ps-3" style="font-size: 0.82rem; color: #2c3e50; line-height: 1.5;">
-                                                    <li>Answer all 8 questions in sequence within <strong>1 minute</strong></li>
-                                                    <li>Ensure a quiet, well-lit environment - speak clearly and look at the camera</li>
-                                                    <li>You can retake the video before submitting</li>
-                                                    <li>Your video will be stored securely in Google Drive after submission</li>
-                                                </ul>
+                                    <!-- RIGHT PANEL: Video Recording -->
+                                    <div class="video-panel">
+                                        <h5 class="mb-3"><i class="bi bi-camera-video-fill text-primary"></i> Record Your Response</h5>
+
+                                        <?php if (!$can_proceed): ?>
+                                            <!-- Show message when video already submitted and not rejected -->
+                                            <div class="alert alert-secondary text-center p-5" style="border-radius: 20px;">
+                                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                                                <h4 class="mt-3">Submission Complete</h4>
+                                                <p>Your interview video has already been submitted on <?php echo htmlspecialchars($submission_time); ?>.</p>
+                                                <p class="mb-0 text-muted">Thank you for your participation!</p>
                                             </div>
-                                        </div>
+                                        <?php else: ?>
+                                            <!-- Show video recording interface -->
+
+                                            <form method="POST" id="interviewForm">
+                                                <input type="hidden" name="action" value="upload_interview_video">
+                                                <input type="hidden" name="application_number" value="<?php echo htmlspecialchars($application_number); ?>">
+                                                <input type="hidden" name="video_base64" id="videoBase64Data" value="">
+
+                                                <div class="video-tv-frame">
+                                                    <div class="video-screen">
+                                                        <video id="liveVideo" class="video-stream" autoplay muted playsinline style="display: none;"></video>
+                                                        <video id="previewVideo" class="video-stream" controls style="display: none;"></video>
+                                                    </div>
+                                                    <div class="tv-stand"></div>
+
+                                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                                                        <div class="camera-toggle-switch">
+                                                            <input type="checkbox" class="toggle-switch" id="cameraToggle">
+                                                            <label class="toggle-label text-dark mb-0 fw-semibold" for="cameraToggle" style="font-size:0.8rem;">Camera On/Off</label>
+                                                        </div>
+                                                        <div id="timerDisplay" class="timer-badge"><i class="bi bi-stopwatch"></i> 01:00</div>
+                                                    </div>
+
+                                                    <div class="recording-btn-group d-flex flex-wrap gap-2 justify-content-center mt-3">
+                                                        <button type="button" class="btn btn-success" id="startRecordBtn" disabled><i class="bi bi-record-circle"></i> Record</button>
+                                                        <button type="button" class="btn btn-danger" id="stopRecordBtn" disabled><i class="bi bi-stop-circle"></i> Stop</button>
+                                                        <button type="button" class="btn btn-outline-secondary" id="retakeBtn" hidden><i class="bi bi-arrow-repeat"></i> Retake</button>
+                                                    </div>
+
+                                                    <div class="text-center mt-2">
+                                                        <span id="videoStatusText" class="badge bg-light text-dark p-2"><i class="bi bi-info-circle"></i> Turn on camera to start</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-4">
+                                                    <button type="submit" id="uploadToDriveBtn" class="btn submit-drive-btn text-white" disabled>
+                                                        <i class="bi bi-cloud-upload-fill"></i> Upload Interview Video
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
-
-                                    <ul class="questions-list-modern">
-                                        <!-- Your existing questions list -->
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Introduce yourself.</strong>
-                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
-                                                        Show the front and back of your Aadhar Card, holding each side in the frame for 5 seconds. Ensure both your face and the document are clearly visible in the frame.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">What do you know about RSSI NGO and its key projects?</strong>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Preferred shift: Pre-primary (11am–3pm) / Primary (2:30pm–6:30pm)?</strong>
-                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
-                                                        Final allocation is subject to business requirements and operational feasibility.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Are you aware that the internship requires a minimum commitment of 1 month, with a schedule of 4 days/week, 4 hours/day? Will you be able to manage this?</strong>
-                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
-                                                        If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">What is your expected joining date?</strong>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Would you be able to relocate to Lucknow for the 1-month duration of the internship?</strong>
-                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
-                                                        There is no provision for remote work or hybrid arrangements for this internship. Candidates must be able to work on-site in Lucknow for the entire duration of the internship.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Which language(s) are you comfortable with? Are you comfortable teaching in Hindi as the primary medium of instruction?</strong>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="d-flex gap-3">
-                                                <div class="question-number"></div>
-                                                <div>
-                                                    <strong style="color: #0f172a; font-weight: 600;">Are you comfortable visiting students' homes and interacting with their parents to understand their lifestyle and challenges for your case study?</strong>
-                                                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
-                                                        This internship involves fieldwork that requires visiting students' homes and engaging with their parents to gain insights into their lifestyle and challenges. Candidates must be comfortable with this aspect of the role.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
                                 </div>
+                            <?php endif; ?>
+                            <?php if (!$online_interview_initiated): ?>
+                                <div class="alert alert-info alert-dismissible fade show mt-4" role="alert" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+                                    <div class="d-flex gap-3">
+                                        <div class="flex-shrink-0">
+                                            <i class="bi bi-info-circle-fill" style="font-size: 2rem; color: #0dcaf0;"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="alert-heading mb-2" style="color: #055160;">
+                                                <i class="bi bi-camera-video-off me-2"></i>Online Interview Not Initiated
+                                            </h5>
+                                            <p class="mb-2">Your online interview process has not been initiated yet.</p>
 
-                                <!-- RIGHT PANEL: Video Recording -->
-                                <div class="video-panel">
-                                    <h5 class="mb-3"><i class="bi bi-camera-video-fill text-primary"></i> Record Your Response</h5>
-
-                                    <form method="POST" id="interviewForm">
-                                        <input type="hidden" name="action" value="upload_interview_video">
-                                        <input type="hidden" name="application_number" value="<?php echo htmlspecialchars($application_number); ?>">
-                                        <input type="hidden" name="video_base64" id="videoBase64Data" value="">
-
-                                        <div class="video-tv-frame">
-                                            <div class="video-screen">
-                                                <video id="liveVideo" class="video-stream" autoplay muted playsinline style="display: none;"></video>
-                                                <video id="previewVideo" class="video-stream" controls style="display: none;"></video>
-                                            </div>
-                                            <div class="tv-stand"></div>
-
-                                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                                                <div class="camera-toggle-switch">
-                                                    <input type="checkbox" class="toggle-switch" id="cameraToggle">
-                                                    <label class="toggle-label text-dark mb-0 fw-semibold" for="cameraToggle" style="font-size:0.8rem;">Camera On/Off</label>
-                                                </div>
-                                                <div id="timerDisplay" class="timer-badge"><i class="bi bi-stopwatch"></i> 01:00</div>
+                                            <div class="mt-3 p-3 rounded" style="background: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.2);">
+                                                <h6 class="mb-2" style="color: #055160;">
+                                                    <i class="bi bi-info-square me-1"></i> For Outstation Students:
+                                                </h6>
+                                                <p class="mb-2">If you are an outstation student (i.e., your current location is outside Lucknow), you may opt for an online interview by submitting a college letter or a valid college ID.</p>
+                                                <p class="mb-0"><strong>Note:</strong> Your college must be located outside Lucknow, and you must be an actively enrolled student there.</p>
                                             </div>
 
-                                            <div class="recording-btn-group d-flex flex-wrap gap-2 justify-content-center mt-3">
-                                                <button type="button" class="btn btn-success" id="startRecordBtn" disabled><i class="bi bi-record-circle"></i> Record</button>
-                                                <button type="button" class="btn btn-danger" id="stopRecordBtn" disabled><i class="bi bi-stop-circle"></i> Stop</button>
-                                                <button type="button" class="btn btn-outline-secondary" id="retakeBtn" hidden><i class="bi bi-arrow-repeat"></i> Retake</button>
-                                            </div>
-
-                                            <div class="text-center mt-2">
-                                                <span id="videoStatusText" class="badge bg-light text-dark p-2"><i class="bi bi-info-circle"></i> Turn on camera to start</span>
+                                            <div class="mt-3">
+                                                <!-- <i class="bi bi-envelope me-1"></i> -->
+                                                Please send an email to <strong>info@rssi.in</strong> mentioning your request.
+                                                Once your online interview process is initiated, you will receive a confirmation email, and the interview video recording option will become available on this portal.
                                             </div>
                                         </div>
-
-                                        <div class="mt-4">
-                                            <button type="submit" id="uploadToDriveBtn" class="btn submit-drive-btn text-white" disabled>
-                                                <i class="bi bi-cloud-upload-fill"></i> Upload Interview Video
-                                            </button>
-                                        </div>
-                                    </form>
+                                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
+                                    </div>
                                 </div>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
+            </div>
+            </div>
             </div>
         </section>
     </main>

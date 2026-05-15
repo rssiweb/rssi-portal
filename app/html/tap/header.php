@@ -153,6 +153,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link collapsed" id="ivrLink" href="ivr.php">
+        <span>Interview Video Recorder (IVR)</span>
+      </a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link collapsed" id="assessment" href="assessment.php">
         <span>Assessment</span>
       </a>
@@ -233,4 +238,5 @@
   toggleCollapsedClass('identity_verification.php', 'indentityVerification');
   toggleCollapsedClass('document_verification.php', 'documentVerification');
   toggleCollapsedClass('assessment.php', 'assessment');
+  toggleCollapsedClass('ivr.php', 'ivrLink');
 </script>
