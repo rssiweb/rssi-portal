@@ -154,7 +154,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link collapsed" id="ivrLink" href="ivr.php">
-        <span>Interview Video Recorder (IVR)</span>
+        <span>Online Interview</span>
       </a>
     </li>
     <li class="nav-item">

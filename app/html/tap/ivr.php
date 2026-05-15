@@ -619,23 +619,42 @@ LEFT JOIN vrc
                                             <h5 class="alert-heading mb-2" style="color: #055160;">
                                                 <i class="bi bi-camera-video-off me-2"></i>Online Interview Not Initiated
                                             </h5>
-                                            <p class="mb-2">Your online interview process has not been initiated yet.</p>
+
+                                            <p class="mb-3">Your online interview process has not been initiated yet.</p>
+
+                                            <div class="mt-3 p-3 rounded" style="background: rgba(25, 135, 84, 0.05); border: 1px solid rgba(25, 135, 84, 0.2);">
+                                                <h6 class="mb-2" style="color: #198754;">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Who is eligible for online interview?
+                                                </h6>
+                                                <p class="mb-0">Online interviews are available <strong>only for Internship/Volunteer positions</strong> if you meet <strong>ALL</strong> of these conditions:</p>
+                                                <ul class="mt-2 mb-0">
+                                                    <li>Currently enrolled in a course/diploma/degree program</li>
+                                                    <li>Institution/college/university is located outside the preferred branch location</li>
+                                                    <li>Candidate is residing outside the preferred branch location (outstation candidate)</li>
+                                                </ul>
+                                            </div>
 
                                             <div class="mt-3 p-3 rounded" style="background: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.2);">
                                                 <h6 class="mb-2" style="color: #055160;">
-                                                    <i class="bi bi-info-square me-1"></i> For Outstation Students:
+                                                    How to request online interview:
                                                 </h6>
-                                                <p class="mb-2">If you are an outstation student (i.e., your current location is outside Lucknow), you may opt for an online interview by submitting a college letter or a valid college ID.</p>
-                                                <p class="mb-0"><strong>Note:</strong> Your college must be located outside Lucknow, and you must be an actively enrolled student there.</p>
+                                                <p class="mb-1">Send an email to info@rssi.in with the following details/documents:</p>
+                                                <ul class="mb-0">
+                                                    <li>Your application number</li>
+                                                    <li>College letter OR valid college ID card as proof that your institution is outside the preferred branch location</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="mt-3 alert alert-light mb-0 p-2" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.2);">
+                                                <strong>Next Step:</strong> Once initiated, you'll receive a confirmation email and the video recording option will appear here.
                                             </div>
 
                                             <div class="mt-3">
-                                                <!-- <i class="bi bi-envelope me-1"></i> -->
-                                                Please send an email to <strong>info@rssi.in</strong> mentioning your request.
-                                                Once your online interview process is initiated, you will receive a confirmation email, and the interview video recording option will become available on this portal.
+                                                <small class="text-danger">
+                                                    <strong>Important Note:</strong> Candidates residing in the preferred branch location or studying at an institution located in the preferred branch location are not eligible for an online interview. Such candidates are required to appear for an in-person interview at the respective office/branch.
+                                                </small>
                                             </div>
                                         </div>
-                                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
                                     </div>
                                 </div>
                             <?php endif; ?>
