@@ -50,7 +50,7 @@ if (!$has_filters) {
     $where_conditions[] = "(status = 'pending' OR status IS NULL)";
 } else {
     // Filters are applied - show all except rejected
-    $where_conditions[] = "(status IS NULL OR status != 'rejected')";
+    $where_conditions[] = "1=1"; // This essentially means no status filter in subquery
 }
 
 // Handle date range from the single input field
