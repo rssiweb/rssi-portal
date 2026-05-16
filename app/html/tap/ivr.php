@@ -211,16 +211,45 @@ LEFT JOIN vrc
             display: flex;
             flex-wrap: wrap;
             gap: 1.5rem;
+            align-items: flex-start;
+            /* Align panels at the top */
         }
 
         .questions-panel {
             flex: 1;
             min-width: 280px;
+            max-height: 70vh;
+            /* Responsive height */
+            overflow-y: auto;
+            padding-right: 6px;
+            position: sticky;
+            top: 20px;
+            /* Sticky on scroll */
         }
 
         .video-panel {
             flex: 1;
             min-width: 380px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            /* Prevent stretching */
+        }
+
+        /* For mobile devices */
+        @media (max-width: 768px) {
+            .interview-layout {
+                flex-direction: column;
+            }
+
+            .questions-panel,
+            .video-panel {
+                position: static;
+                /* Remove sticky on mobile */
+                max-height: none;
+                /* Remove height limit on mobile */
+                min-width: auto;
+            }
         }
 
         .video-tv-frame {
@@ -443,7 +472,7 @@ LEFT JOIN vrc
                                 <!-- Rest of your HTML remains the same -->
                                 <div class="interview-layout">
                                     <!-- LEFT PANEL: Questions -->
-                                    <div class="questions-panel" style="max-height: 560px; overflow-y: auto; padding-right: 6px;">
+                                    <div class="questions-panel">
                                         <!-- Header -->
                                         <div class="d-flex align-items-center gap-2 mb-4 pb-1 border-bottom border-2" style="border-color: #e9ecef !important;">
                                             <div class="rounded-circle bg-primary bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
@@ -506,7 +535,7 @@ LEFT JOIN vrc
                                                     <div class="question-number"></div>
                                                     <div>
                                                         <strong style="color: #0f172a; font-weight: 600;">Are you aware that the internship requires a minimum commitment of 1 month, with a schedule of 4 days/week, 4 hours/day? Will you be able to manage this?</strong>
-                                                        <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem; color: #6c757d;">
+                                                        <div class="mt-2 pt-2 border-top text-danger" style="font-size: 0.7rem;">
                                                             If you are a student of UPES, the minimum internship duration is 2 months, with a commitment of 4 days per week and 4 hours per day.
                                                         </div>
                                                     </div>
