@@ -28,10 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $now = date('Y-m-d H:i:s');
 
         // Insert placeholder record with NULL drive_file_link first
-        $insert_query = "INSERT INTO vrc (application_number, drive_file_link, timestamp) 
-                         VALUES ($1, NULL, $2)
+        $insert_query = "INSERT INTO vrc (application_number, drive_file_link, timestamp, status) 
+                         VALUES ($1, NULL, $2, $3)
                          RETURNING id";
-        $insert_result = pg_query_params($con, $insert_query, array($app_num, $now));
+        $insert_result = pg_query_params($con, $insert_query, array($app_num, $now, 'pending'));
 
         if (!$insert_result) {
             $upload_status = 'error';
@@ -163,7 +163,7 @@ LEFT JOIN vrc
         $online_interview_initiated = $existing_record['online_interview_initiated'];
 
         // Check if status is 'rejected' - allow to proceed
-        if ($video_status === 'rejected' || $video_status === null) {
+        if ($video_status === 'rejected' || $video_status !== 'pending') {
             $can_proceed = true;
         } else {
             // Status is pending, approved, or any other status - don't allow new submission

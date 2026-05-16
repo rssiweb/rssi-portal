@@ -18,27 +18,52 @@ if (!$con) {
 
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
-    $unique_id = pg_escape_string($con, $_POST['unique_id']);
+    $id = pg_escape_string($con, $_POST['id']);
     $status = pg_escape_string($con, $_POST['status']);
     $remarks = pg_escape_string($con, $_POST['remarks']);
-    $reviewed_by = $_SESSION['associatenumber'] ?? 'Unknown';
+    $reviewed_by = $associatenumber ?? 'Unknown';
     $reviewed_on = date('Y-m-d H:i:s');
 
-    $update_query = "UPDATE vrc SET status = '$status', reviewed_by = '$reviewed_by', reviewed_on = '$reviewed_on', remarks = '$remarks' WHERE unique_id = '$unique_id'";
-    $update_result = pg_query($con, $update_query);
+    if (!empty($id)) {
+        $update_query = "UPDATE vrc SET status = '$status', reviewed_by = '$reviewed_by', reviewed_on = '$reviewed_on', remarks = '$remarks' WHERE id = '$id'";
+        $update_result = pg_query($con, $update_query);
 
-    if (!$update_result) {
-        $error_message = "Error updating status: " . pg_last_error($con);
+        if (!$update_result) {
+            $error_message = "Error updating status: " . pg_last_error($con);
+        } else {
+            $success_message = "Status updated successfully!";
+        }
     } else {
-        $success_message = "Status updated successfully!";
+        $error_message = "Error: No ID provided for update.";
     }
 }
 
 // Build query with filters
+// Default: Show only pending and new entries (status IS NULL)
 $where_conditions = [];
-$where_conditions[] = "(status IS NULL OR status != 'rejected')";
 
-// Get unique latest entry per application_number with applicant name from signup table
+// Check if user has applied any filters
+$has_filters = isset($_GET['date_range']) || isset($_GET['search_id']) || isset($_GET['status_filter']) || isset($_GET['search_by_id']);
+
+if (!$has_filters) {
+    // No filters applied - show only pending by default
+    $where_conditions[] = "(status = 'pending' OR status IS NULL)";
+} else {
+    // Filters are applied - show all except rejected
+    $where_conditions[] = "(status IS NULL OR status != 'rejected')";
+}
+
+// Handle date range from the single input field
+if (!empty($_GET['date_range'])) {
+    $date_parts = explode(' to ', $_GET['date_range']);
+    $start_date = $date_parts[0];
+    $end_date = $date_parts[1] ?? $date_parts[0];
+} else {
+    $start_date = date('Y-m-d', strtotime('-1 month'));
+    $end_date = date('Y-m-d');
+}
+
+// Start building the subquery
 $subquery = "SELECT DISTINCT ON (vrc.application_number) 
                 vrc.*, 
                 signup.applicant_name as name 
@@ -47,7 +72,11 @@ $subquery = "SELECT DISTINCT ON (vrc.application_number)
              WHERE " . implode(" AND ", $where_conditions) . " 
              ORDER BY vrc.application_number, vrc.timestamp DESC";
 
-$main_query = "SELECT * FROM ($subquery) AS latest_entries ORDER BY latest_entries.timestamp DESC";
+// Start building the main query
+$main_query = "SELECT * FROM ($subquery) AS latest_entries";
+
+// Build WHERE conditions for the main query
+$main_where_conditions = [];
 
 // Check which search mode is active
 $search_by_id_mode = (isset($_GET['search_by_id']) && $_GET['search_by_id'] == '1');
@@ -55,25 +84,37 @@ $search_by_id_mode = (isset($_GET['search_by_id']) && $_GET['search_by_id'] == '
 if ($search_by_id_mode && !empty($_GET['search_id'])) {
     // Search by ID mode
     $search_id = pg_escape_string($con, $_GET['search_id']);
-    $main_query = "SELECT * FROM ($subquery) AS latest_entries 
-                   WHERE latest_entries.unique_id ILIKE '%$search_id%' 
-                      OR latest_entries.application_number ILIKE '%$search_id%' 
-                   ORDER BY latest_entries.timestamp DESC";
-} elseif (!$search_by_id_mode && !empty($_GET['start_date']) && !empty($_GET['end_date'])) {
+    $main_where_conditions[] = "(CAST(latest_entries.id AS TEXT) ILIKE '%$search_id%' OR latest_entries.application_number ILIKE '%$search_id%')";
+} elseif (!$search_by_id_mode && !empty($_GET['date_range'])) {
     // Search by date range mode
-    $start_date = pg_escape_string($con, $_GET['start_date']);
-    $end_date = pg_escape_string($con, $_GET['end_date']);
-    $main_query = "SELECT * FROM ($subquery) AS latest_entries 
-                   WHERE latest_entries.timestamp::date BETWEEN '$start_date' AND '$end_date' 
-                   ORDER BY latest_entries.timestamp DESC";
-} else {
-    // Default: Show last 1 month
+    $start_date = pg_escape_string($con, $start_date);
+    $end_date = pg_escape_string($con, $end_date);
+    $main_where_conditions[] = "latest_entries.timestamp::date BETWEEN '$start_date' AND '$end_date'";
+} elseif (!$has_filters) {
+    // Default: Show last 1 month but only for pending entries
     $default_start = date('Y-m-d', strtotime('-1 month'));
     $default_end = date('Y-m-d');
-    $main_query = "SELECT * FROM ($subquery) AS latest_entries 
-                   WHERE latest_entries.timestamp::date BETWEEN '$default_start' AND '$default_end' 
-                   ORDER BY latest_entries.timestamp DESC";
+    $main_where_conditions[] = "latest_entries.timestamp::date BETWEEN '$default_start' AND '$default_end'";
 }
+
+// Apply status filter if selected (only when user explicitly chooses a status)
+$status_filter = isset($_GET['status_filter']) && !empty($_GET['status_filter']) && $_GET['status_filter'] !== 'all'
+    ? $_GET['status_filter'] : '';
+
+if (!empty($status_filter)) {
+    $main_where_conditions[] = "latest_entries.status = '$status_filter'";
+}
+
+// Add WHERE clause if there are conditions
+if (count($main_where_conditions) > 0) {
+    $main_query .= " WHERE " . implode(" AND ", $main_where_conditions);
+}
+
+// Add ORDER BY
+$main_query .= " ORDER BY latest_entries.timestamp DESC";
+
+// For debugging - uncomment to see the query
+// echo "<pre>$main_query</pre>";
 
 $result = pg_query($con, $main_query);
 
@@ -127,6 +168,11 @@ if (!$result) {
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
+    <!-- Add to head -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
     <style>
         .status-pending {
             color: orange;
@@ -174,6 +220,11 @@ if (!$result) {
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                                     <?php echo $success_message; ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
                                 </div>
                             <?php endif; ?>
 
@@ -187,7 +238,6 @@ if (!$result) {
                             <!-- Filter Section -->
                             <div class="filter-section">
                                 <form method="GET" action="" id="filterForm">
-                                    <!-- First Row: Search inputs (both visible, but one disabled based on checkbox) -->
                                     <div class="row">
                                         <div class="col-md-3">
                                             <label for="search_id" class="form-label">Search by ID / Application Number</label>
@@ -197,21 +247,25 @@ if (!$result) {
                                                 disabled>
                                         </div>
                                         <div class="col-md-3">
-                                            <label for="start_date" class="form-label">Start Date</label>
-                                            <input type="date" class="form-control" id="start_date" name="start_date"
-                                                value="<?php echo isset($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : date('Y-m-d', strtotime('-1 month')); ?>">
+                                            <label for="date_range" class="form-label">Date Range</label>
+                                            <input type="text" class="form-control" id="date_range" name="date_range"
+                                                value="<?php echo isset($_GET['date_range']) ? htmlspecialchars($_GET['date_range']) : ''; ?>"
+                                                placeholder="Select date range">
                                         </div>
                                         <div class="col-md-3">
-                                            <label for="end_date" class="form-label">End Date</label>
-                                            <input type="date" class="form-control" id="end_date" name="end_date"
-                                                value="<?php echo isset($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : date('Y-m-d'); ?>">
+                                            <label for="status_filter" class="form-label">Status</label>
+                                            <select class="form-select" id="status_filter" name="status_filter">
+                                                <option value="all">All Status</option>
+                                                <option value="pending" <?php echo (isset($_GET['status_filter']) && $_GET['status_filter'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
+                                                <option value="approved" <?php echo (isset($_GET['status_filter']) && $_GET['status_filter'] == 'approved') ? 'selected' : ''; ?>>Approved</option>
+                                                <option value="rejected" <?php echo (isset($_GET['status_filter']) && $_GET['status_filter'] == 'rejected') ? 'selected' : ''; ?>>Rejected</option>
+                                            </select>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button type="submit" class="btn btn-primary w-100">Search</button>
                                         </div>
                                     </div>
 
-                                    <!-- Second Row: Single checkbox to toggle between ID and Date search -->
                                     <div class="row mt-3">
                                         <div class="col-12">
                                             <div class="form-check">
@@ -224,7 +278,7 @@ if (!$result) {
                                         </div>
                                     </div>
 
-                                    <?php if (isset($_GET['search_id']) || isset($_GET['start_date'])): ?>
+                                    <?php if (isset($_GET['search_id']) || isset($_GET['date_range']) || isset($_GET['status_filter'])): ?>
                                         <div class="row mt-3">
                                             <div class="col-12">
                                                 <a href="?" class="btn btn-secondary btn-sm">Clear All Filters</a>
@@ -239,7 +293,7 @@ if (!$result) {
                                     <table id="vrcTable" class="table">
                                         <thead>
                                             <tr>
-                                                <th>Unique ID</th>
+                                                <th>ID</th>
                                                 <th>Submitted on</th>
                                                 <th>Application Number</th>
                                                 <th>Name</th>
@@ -300,8 +354,8 @@ if (!$result) {
                                                     <td><?php echo htmlspecialchars($row['remarks'] ?? '-'); ?></td>
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#statusModal"
-                                                            data-unique-id="<?php echo htmlspecialchars($row['id']); ?>"
-                                                            data-status="<?php echo htmlspecialchars($current_status); ?>"
+                                                            data-id="<?php echo htmlspecialchars($row['id']); ?>"
+                                                            data-status="<?php echo htmlspecialchars($row['status'] ?? 'pending'); ?>"
                                                             data-remarks="<?php echo htmlspecialchars($row['remarks'] ?? ''); ?>">
                                                             Update Status
                                                         </button>
@@ -334,7 +388,7 @@ if (!$result) {
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="action" value="update_status">
-                        <input type="hidden" name="unique_id" id="modal_unique_id">
+                        <input type="hidden" name="id" id="modal_id">
 
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
@@ -384,31 +438,47 @@ if (!$result) {
                 });
             <?php endif; ?>
 
+            // Initialize Date Range Picker
+            $('#date_range').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'YYYY-MM-DD'
+                },
+                startDate: moment().subtract(1, 'month'),
+                endDate: moment()
+            });
+
+            $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+
             // Handle checkbox toggle - Enable/Disable fields based on checkbox state
             function toggleSearchFields() {
                 var isIdSearchMode = $('#toggleSearchCheckbox').is(':checked');
 
                 if (isIdSearchMode) {
-                    // ID Search Mode: Enable ID field, Disable Date fields
+                    // ID Search Mode: Enable ID field, Disable Date Range and Status fields
                     $('#search_id').prop('disabled', false);
-                    $('#start_date').prop('disabled', true);
-                    $('#end_date').prop('disabled', true);
-                    // Clear date values when switching to ID mode
-                    $('#start_date').val('');
-                    $('#end_date').val('');
+                    $('#date_range').prop('disabled', true);
+                    $('#status_filter').prop('disabled', true);
+                    // Clear date and status values when switching to ID mode
+                    $('#date_range').val('');
+                    $('#status_filter').val('all');
                 } else {
-                    // Date Range Mode: Disable ID field, Enable Date fields
+                    // Date Range Mode: Disable ID field, Enable Date Range and Status fields
                     $('#search_id').prop('disabled', true);
-                    $('#start_date').prop('disabled', false);
-                    $('#end_date').prop('disabled', false);
+                    $('#date_range').prop('disabled', false);
+                    $('#status_filter').prop('disabled', false);
                     // Set default date range if empty
-                    if (!$('#start_date').val()) {
-                        var oneMonthAgo = new Date();
-                        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                        $('#start_date').val(oneMonthAgo.toISOString().split('T')[0]);
-                    }
-                    if (!$('#end_date').val()) {
-                        $('#end_date').val(new Date().toISOString().split('T')[0]);
+                    if (!$('#date_range').val()) {
+                        var startDate = moment().subtract(1, 'month');
+                        var endDate = moment();
+                        $('#date_range').val(startDate.format('YYYY-MM-DD') + ' to ' + endDate.format('YYYY-MM-DD'));
                     }
                     // Clear ID value when switching to date mode
                     $('#search_id').val('');
@@ -423,27 +493,28 @@ if (!$result) {
                 toggleSearchFields();
             });
 
-            // Optional: Clear ID value when submitting in date mode
+            // Clear appropriate fields when submitting based on mode
             $('#filterForm').on('submit', function() {
                 if (!$('#toggleSearchCheckbox').is(':checked')) {
                     // If in date mode, clear ID field before submit
                     $('#search_id').val('');
                 } else {
-                    // If in ID mode, clear date fields before submit
-                    $('#start_date').val('');
-                    $('#end_date').val('');
+                    // If in ID mode, clear date field before submit
+                    $('#date_range').val('');
+                    // Also reset status to 'all' when in ID mode
+                    $('#status_filter').val('all');
                 }
             });
 
             // Populate modal with data
             $('#statusModal').on('show.bs.modal', function(event) {
                 var button = $(event.relatedTarget);
-                var uniqueId = button.data('unique-id');
+                var id = button.data('id');
                 var currentStatus = button.data('status');
                 var currentRemarks = button.data('remarks');
 
                 var modal = $(this);
-                modal.find('#modal_unique_id').val(uniqueId);
+                modal.find('#modal_id').val(id);
                 modal.find('#status').val(currentStatus);
                 modal.find('#remarks').val(currentRemarks);
             });
