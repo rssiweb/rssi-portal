@@ -195,6 +195,26 @@ if (!$result) {
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-data-message i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+
+        .no-data-message h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .no-data-message p {
+            color: #6c757d;
+        }
     </style>
 </head>
 
@@ -307,6 +327,12 @@ if (!$result) {
                                         </thead>
                                         <tbody>
                                             <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                <?php
+                                                $status_class = '';
+                                                if ($row['status'] == 'pending') $status_class = 'status-pending';
+                                                elseif ($row['status'] == 'approved') $status_class = 'status-approved';
+                                                elseif ($row['status'] == 'rejected') $status_class = 'status-rejected';
+                                                ?>
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($row['id']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['timestamp']); ?></td>
@@ -348,7 +374,7 @@ if (!$result) {
 
                                                         <?php endif; ?>
                                                     </td>
-                                                    <td><?php echo htmlspecialchars($row['status'] ?? '-'); ?></td>
+                                                    <td class="<?php echo $status_class; ?>"><?php echo htmlspecialchars($row['status'] ?? '-'); ?></td>
                                                     <td><?php echo htmlspecialchars($row['reviewed_by'] ?? '-'); ?></td>
                                                     <td><?php echo htmlspecialchars($row['reviewed_on'] ?? '-'); ?></td>
                                                     <td><?php echo htmlspecialchars($row['remarks'] ?? '-'); ?></td>
@@ -366,7 +392,24 @@ if (!$result) {
                                     </table>
                                 </div>
                             <?php else: ?>
-                                <div class="alert alert-info">No interviews found matching the criteria.</div>
+                                <?php if (!$has_filters): ?>
+                                    <!-- No filters applied and no data found - Show "no pending interviews" message -->
+                                    <div class="no-data-message">
+                                        <i class="bi bi-check-circle"></i>
+                                        <h4>No Pending Interviews</h4>
+                                        <p>All interviews have been reviewed. Great job!</p>
+                                        <p class="text-muted">To view all interviews, use the filters above.</p>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Filters applied but no data found - Show "no results for filters" message -->
+                                    <div class="no-data-message">
+                                        <i class="bi bi-search"></i>
+                                        <h4>No Interviews Found</h4>
+                                        <p>No interviews match your search criteria.</p>
+                                        <p class="text-muted">Try adjusting your filters or clearing them to see more results.</p>
+                                        <a href="?" class="btn btn-primary btn-sm mt-3">Clear All Filters</a>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                         </div>

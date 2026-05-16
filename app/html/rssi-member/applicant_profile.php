@@ -68,9 +68,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if (isset($_POST['online_interview_initiated']) && $_POST['online_interview_initiated'] === 'on') {
-        $online_interview_initiated = pg_escape_string($con, $_POST['online_interview_initiated']);
+    // Handle online_interview_initiated checkbox (1 when checked, 0 when unchecked via hidden field)
+    if (isset($_POST['online_interview_initiated'])) {
+        // Checkbox is checked
         $updates[] = "online_interview_initiated = TRUE";
+    } elseif (isset($_POST['online_interview_initiated_hidden']) && $_POST['online_interview_initiated_hidden'] == '0') {
+        // Hidden field indicates checkbox was present but unchecked
+        $updates[] = "online_interview_initiated = FALSE";
     }
 
     if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule'])) {
@@ -756,20 +760,22 @@ $isFormDisabled = null;
                                                                 <label for="online_interview_initiated">Online Interview Initiated:</label>
                                                             </td>
                                                             <td>
+                                                                <input type="hidden" name="online_interview_initiated_hidden" value="0">
                                                                 <input type="checkbox"
                                                                     class="form-check-input"
                                                                     id="online_interview_initiated"
                                                                     name="online_interview_initiated"
+                                                                    value="1"
                                                                     <?php
                                                                     // Enable checkbox only for eligible statuses
                                                                     if (in_array($array['application_status'], ['Technical Interview Scheduled', 'HR Interview Scheduled'])) {
 
                                                                         // Check checkbox if already initiated
-                                                                        echo ($array['online_interview_initiated'] == true) ? 'checked' : '';
+                                                                        echo ($array['online_interview_initiated'] == 't') ? 'checked' : '';
                                                                     } else {
 
                                                                         // Disable for all other statuses
-                                                                        echo ($array['online_interview_initiated'] == true) ? 'checked disabled' : 'disabled';
+                                                                        echo ($array['online_interview_initiated'] == 't') ? 'checked disabled' : 'disabled';
                                                                     }
                                                                     ?>>
 

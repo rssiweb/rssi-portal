@@ -545,6 +545,14 @@ class MenuConfig
                 ]
             ],
 
+            'online_interview' => [
+                'section' => 'People Plus',
+                'sidebar_id' => 'peoplePlus',
+                'pages' => [
+                    'ivr_dashboard.php' => ['title' => 'Online Interview', 'show_in_menu' => true]
+                ]
+            ],
+
             'rtet' => [
                 'section' => 'People Plus',
                 'sidebar_id' => 'peoplePlus',
