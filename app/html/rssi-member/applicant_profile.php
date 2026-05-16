@@ -240,10 +240,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     }
-    if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule'])) {
+    // Case 1: Tech interview scheduled WITHOUT online interview initiated
+    if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule']) && !isset($_POST['online_interview_initiated'])) {
+        // Your existing code for when online interview is NOT initiated
         if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show == false)) {
             if ($applicant_email != "") {
-
                 // Determine template based on association and post
                 if ($association == "Volunteer" || $association == "Intern") {
                     $template = "tap_pi_schedule";
@@ -260,6 +261,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "applicant_name"          => $applicant_name,
                     "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule)),
                     "post_select"             => $post_select
+                ), $applicant_email, false);
+            }
+        }
+    }
+
+    // Case 2: Tech interview scheduled WITH online interview initiated
+    if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule']) && isset($_POST['online_interview_initiated']) && $_POST['online_interview_initiated'] == '1') {
+        if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show == false)) {
+            if ($applicant_email != "") {
+
+                // Send email with dynamic values - maybe add online meeting link
+                sendEmail("tap_pi_schedule_online", array(
+                    "application_number"      => $application_number,
+                    "applicant_name"          => $applicant_name,
+                    "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule)),
                 ), $applicant_email, false);
             }
         }
@@ -755,56 +771,49 @@ $isFormDisabled = null;
                                                                 <small id="identity-help" class="form-text text-muted">Approve or reject the identity verification status.</small>
                                                             </td>
                                                         </tr>
-                                                        <tr>
-                                                            <td>
-                                                                <label for="online_interview_initiated">Online Interview Initiated:</label>
-                                                            </td>
-                                                            <td>
-                                                                <input type="hidden" name="online_interview_initiated_hidden" value="0">
-                                                                <input type="checkbox"
-                                                                    class="form-check-input"
-                                                                    id="online_interview_initiated"
-                                                                    name="online_interview_initiated"
-                                                                    value="1"
-                                                                    <?php
-                                                                    // Enable checkbox only for eligible statuses
-                                                                    if (in_array($array['application_status'], ['Technical Interview Scheduled', 'HR Interview Scheduled'])) {
 
-                                                                        // Check checkbox if already initiated
-                                                                        echo ($array['online_interview_initiated'] == 't') ? 'checked' : '';
-                                                                    } else {
-
-                                                                        // Disable for all other statuses
-                                                                        echo ($array['online_interview_initiated'] == 't') ? 'checked disabled' : 'disabled';
-                                                                    }
-                                                                    ?>>
-
-                                                                <small class="form-text text-muted">
-                                                                    Check to initiate the online interview process.
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-
-                                                        <!-- Technical Interview Schedule -->
+                                                        <!-- Technical Interview Schedule & Online Interview Initiated (Merged) -->
                                                         <tr>
                                                             <td>
                                                                 <label for="tech_interview_schedule">Schedule Technical Interview:</label>
                                                             </td>
                                                             <td class="d-flex align-items-center">
+                                                                <?php
+                                                                // Common condition for disabling both fields
+                                                                $shouldDisable = (!empty($array['tech_interview_schedule']) || $array['application_status'] != 'Identity Verification Completed' || !empty($array['hr_interview_schedule']));
+                                                                $isInitiated = ($array['online_interview_initiated'] == 't');
+                                                                ?>
+
                                                                 <input type="datetime-local" class="form-control me-2" id="tech_interview_schedule" name="tech_interview_schedule"
                                                                     value="<?php echo htmlspecialchars($array['tech_interview_schedule'] ?? ''); ?>"
-                                                                    <?php
-                                                                    // Disable if already scheduled or HR interview is scheduled
-                                                                    if (!empty($array['tech_interview_schedule']) || $array['application_status'] != 'Identity Verification Completed' || !empty($array['hr_interview_schedule'])) {
-                                                                        echo 'disabled';
-                                                                    }
-                                                                    ?>>
+                                                                    <?php echo $shouldDisable ? 'disabled' : ''; ?>>
+
+                                                                <div class="form-check form-check-inline ms-2">
+                                                                    <input type="hidden" name="online_interview_initiated_hidden" value="0">
+                                                                    <input type="checkbox"
+                                                                        class="form-check-input"
+                                                                        id="online_interview_initiated"
+                                                                        name="online_interview_initiated"
+                                                                        value="1"
+                                                                        <?php
+                                                                        echo $shouldDisable ? ' disabled' : '';  // Space before disabled
+                                                                        // Only add 'checked' if NOT disabled AND initiated, OR if initiated but we want to show it (remove this condition if you don't want to show checked when disabled)
+                                                                        if ($isInitiated) {
+                                                                            echo ' checked';  // Space before checked
+                                                                        }
+                                                                        ?>>
+                                                                    <label class="form-check-label" for="online_interview_initiated">
+                                                                        <small class="form-text text-muted">Initiate Online Interview</small>
+                                                                    </label>
+                                                                </div>
+
                                                                 <?php if ($array['application_status'] === 'Technical Interview Scheduled'): ?>
-                                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="enableField('tech_interview_schedule')">
+                                                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="enableBothFields()">
                                                                         <i class="bi bi-pencil-square"></i>
                                                                     </button>
-                                                                    <small id="tech-help" class="form-text text-muted ms-2">Select the date and time for the technical interview.</small>
                                                                 <?php endif; ?>
+
+                                                                <small id="tech-help" class="form-text text-muted ms-2">Select the date and time for the technical interview.</small>
                                                             </td>
                                                         </tr>
 
@@ -1039,6 +1048,21 @@ $isFormDisabled = null;
         });
     </script>
     <script>
+        function enableBothFields() {
+            const dateField = document.getElementById('tech_interview_schedule');
+            const checkboxField = document.getElementById('online_interview_initiated');
+
+            if (dateField) {
+                dateField.disabled = false;
+                dateField.focus();
+            }
+
+            if (checkboxField) {
+                checkboxField.disabled = false;
+            }
+        }
+
+        // Keep the original enableField function for other fields if needed
         function enableField(fieldId) {
             const field = document.getElementById(fieldId);
             if (field) {
