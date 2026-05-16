@@ -275,7 +275,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 sendEmail("tap_pi_schedule_online", array(
                     "application_number"      => $application_number,
                     "applicant_name"          => $applicant_name,
-                    "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule)),
+                    "tech_interview_schedule" => date("d/m/Y", strtotime($tech_interview_schedule)),
                 ), $applicant_email, false);
             }
         }
