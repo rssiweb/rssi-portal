@@ -68,6 +68,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    if (isset($_POST['online_interview_initiated']) && $_POST['online_interview_initiated'] === 'on') {
+        $online_interview_initiated = pg_escape_string($con, $_POST['online_interview_initiated']);
+        $updates[] = "online_interview_initiated = TRUE";
+    }
+
     if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule'])) {
         $tech_interview_schedule = pg_escape_string($con, $_POST['tech_interview_schedule']);
         $updates[] = "tech_interview_schedule = '$tech_interview_schedule'";
@@ -744,6 +749,33 @@ $isFormDisabled = null;
                                                                     <option value="Rejected" <?php echo ($array['identity_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
                                                                 </select>
                                                                 <small id="identity-help" class="form-text text-muted">Approve or reject the identity verification status.</small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="online_interview_initiated">Online Interview Initiated:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox"
+                                                                    class="form-check-input"
+                                                                    id="online_interview_initiated"
+                                                                    name="online_interview_initiated"
+                                                                    <?php
+                                                                    // Enable checkbox only for eligible statuses
+                                                                    if (in_array($array['application_status'], ['Technical Interview Scheduled', 'HR Interview Scheduled'])) {
+
+                                                                        // Check checkbox if already initiated
+                                                                        echo ($array['online_interview_initiated'] == true) ? 'checked' : '';
+                                                                    } else {
+
+                                                                        // Disable for all other statuses
+                                                                        echo ($array['online_interview_initiated'] == true) ? 'checked disabled' : 'disabled';
+                                                                    }
+                                                                    ?>>
+
+                                                                <small class="form-text text-muted">
+                                                                    Check to initiate the online interview process.
+                                                                </small>
                                                             </td>
                                                         </tr>
 

@@ -391,7 +391,7 @@ LEFT JOIN vrc
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Interview Video Recorder (IVR)</h1>
+            <h1>Online Interview</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
