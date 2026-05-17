@@ -406,6 +406,8 @@ $resultArr = pg_fetch_all($result);
                                                 . "Please note that the interview process typically takes around 1.5 hours. However, in certain unforeseen circumstances, it may take longer.\n\n"
                                                 . "We look forward to meeting you.";
 
+                                            $message10 = "Your application has progressed to the online interview stage. Please check your registered email for further details.";
+
                                             // Generate WhatsApp links
                                             $link1 = getWhatsAppLink($array, $message1);
                                             $link2 = getWhatsAppLink($array, $message2);
@@ -416,6 +418,23 @@ $resultArr = pg_fetch_all($result);
                                             $link7 = getWhatsAppLink($array, $message7);
                                             $link8 = getWhatsAppLink($array, $message8);
                                             $link9 = getWhatsAppLink($array, $message9);
+                                            $link10 = getWhatsAppLink($array, $message10);
+
+                                            // Define the conditions and corresponding titles and links
+                                            $links = [
+                                                "Photo Verification Failed" => ["link" => $link2, "title" => "Photo Rejected"],
+                                                "Reminder" => ["link" => $link1, "title" => "Reminder to complete identity verification"],
+                                                "Identity Verification Failed" => ["link" => $link3, "title" => "Verification Rejected"],
+                                                "Identity Verification Completed" => ["link" => $link4, "title" => "Verification Approved"],
+                                                "Technical Interview Completed" => ["link" => $link8, "title" => "Interview Feedback"],
+                                                "HR Interview Scheduled" => ["link" => $link6, "title" => "HR Interview Scheduled"],
+                                                "Interview Reminder" => ["link" => $link9, "title" => "Interview Reminder"],
+                                                "Offer Extended" => ["link" => $link7, "title" => "Offer Extended"],
+                                            ];
+
+                                            // Get today's date for comparison
+                                            $today = date('Y-m-d');
+
                                         ?>
                                             <tr>
                                                 <td><?php
@@ -478,57 +497,68 @@ $resultArr = pg_fetch_all($result);
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Define the conditions and corresponding titles and links
-                                                    $links = [
-                                                        "Photo Verification Failed" => ["link" => $link2, "title" => "Photo Rejected"],
-                                                        "Reminder" => ["link" => $link1, "title" => "Reminder to complete identity verification"],
-                                                        "Identity Verification Failed" => ["link" => $link3, "title" => "Verification Rejected"],
-                                                        "Identity Verification Completed" => ["link" => $link4, "title" => "Verification Approved"],
-                                                        "Technical Interview Scheduled" => ["link" => $link5, "title" => "Interview Scheduled"],
-                                                        "Technical Interview Completed" => ["link" => $link8, "title" => "Interview Feedback"],
-                                                        "HR Interview Scheduled" => ["link" => $link6, "title" => "HR Interview Scheduled"],
-                                                        "Interview Reminder" => ["link" => $link9, "title" => "Interview Reminder"],
-                                                        "Offer Extended" => ["link" => $link7, "title" => "Offer Extended"]
-                                                    ];
+                                                    // Flag to track if a link has been displayed
+                                                    $linkDisplayed = false;
 
-                                                    // Get today's date for comparison
-                                                    $today = date('Y-m-d');
+                                                    // Check for Technical Interview Scheduled first (highest priority)
+                                                    if ($array['application_status'] == 'Technical Interview Scheduled' && !$linkDisplayed) {
+                                                        // Check if online_interview_initiated is true
+                                                        if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
+                                                            // Show Online Interview Initiated link
+                                                            echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
+                                                        } else {
+                                                            // Show regular Interview Scheduled link
+                                                            echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
+                                                        }
+                                                        $linkDisplayed = true;
+                                                    }
 
-                                                    // Variable to track if space should be added before the next "Send" link
-                                                    $previousSendDisplayed = false;
+                                                    // Check for Interview Reminder
+                                                    if (!$linkDisplayed && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                        echo '<a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
 
-                                                    // Check conditions and display the respective text links
-                                                    foreach ($links as $status => $data) {
-                                                        // Check if the "Reminder" link should be displayed
-                                                        if ($status == "Reminder" && (empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && $array['application_status'] != 'Identity verification document submitted'))) {
-                                                            // Add space if the previous link was "Send"
-                                                            if ($previousSendDisplayed) {
-                                                                echo ' '; // Add a space between links
-                                                            }
-                                                            // Display reminder link with "Send" text
-                                                            echo '<a href="' . $data['link'] . '" target="_blank" title="' . $data['title'] . '" class="send-link">Send</a>';
-                                                            $previousSendDisplayed = true;
-                                                        }
-                                                        // Check if the "Interview Reminder" link should be displayed
-                                                        elseif ($status == "Interview Reminder" && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
-                                                            // Add space if the previous link was "Send"
-                                                            if ($previousSendDisplayed) {
-                                                                echo ' '; // Add a space between links
-                                                            }
-                                                            // If the interview is scheduled for today, show the reminder message
-                                                            echo '<a href="' . $data['link'] . '" target="_blank" title="' . $data['title'] . '" class="send-link">Send</a>';
-                                                            $previousSendDisplayed = true;
-                                                        }
-                                                        // Check for other application status
-                                                        elseif ($array['application_status'] == $status && $status != "Interview Reminder") {
-                                                            // Add space if the previous link was "Send"
-                                                            if ($previousSendDisplayed) {
-                                                                echo ' '; // Add a space between links
-                                                            }
-                                                            // Display other links except "Interview Reminder"
-                                                            echo '<a href="' . $data['link'] . '" target="_blank" title="' . $data['title'] . '" class="send-link">Send</a>';
-                                                            $previousSendDisplayed = true;
-                                                        }
+                                                    // Check for Reminder condition
+                                                    if (!$linkDisplayed && (empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && $array['application_status'] != 'Identity verification document submitted'))) {
+                                                        echo '<a href="' . $link1 . '" target="_blank" title="Reminder to complete identity verification" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for Photo Verification Failed
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Photo Verification Failed') {
+                                                        echo '<a href="' . $link2 . '" target="_blank" title="Photo Rejected" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for Identity Verification Failed
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Failed') {
+                                                        echo '<a href="' . $link3 . '" target="_blank" title="Verification Rejected" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for Identity Verification Completed
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Completed') {
+                                                        echo '<a href="' . $link4 . '" target="_blank" title="Verification Approved" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for Technical Interview Completed
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Technical Interview Completed') {
+                                                        echo '<a href="' . $link8 . '" target="_blank" title="Interview Feedback" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for HR Interview Scheduled
+                                                    if (!$linkDisplayed && $array['application_status'] == 'HR Interview Scheduled') {
+                                                        echo '<a href="' . $link6 . '" target="_blank" title="HR Interview Scheduled" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // Check for Offer Extended
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Offer Extended') {
+                                                        echo '<a href="' . $link7 . '" target="_blank" title="Offer Extended" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
                                                     }
                                                     ?>
                                                 </td>
