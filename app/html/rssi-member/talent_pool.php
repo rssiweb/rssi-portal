@@ -408,6 +408,10 @@ $resultArr = pg_fetch_all($result);
 
                                             $message10 = "Your application has progressed to the online interview stage. Please check your registered email for further details.";
 
+                                            $message11 = "This is a reminder that the last date for submission of your documents and online interview video is " . (!empty($array['tech_interview_schedule']) && $array['tech_interview_schedule'] !== null
+                                                ? (new DateTime($array['tech_interview_schedule']))->format('d/m/Y')
+                                                : 'not scheduled yet') . ". Please ensure that you complete the submission at the earliest to avoid any inconvenience. If you have already submitted the required documents and video, please disregard this message.";
+
                                             // Generate WhatsApp links
                                             $link1 = getWhatsAppLink($array, $message1);
                                             $link2 = getWhatsAppLink($array, $message2);
@@ -419,6 +423,7 @@ $resultArr = pg_fetch_all($result);
                                             $link8 = getWhatsAppLink($array, $message8);
                                             $link9 = getWhatsAppLink($array, $message9);
                                             $link10 = getWhatsAppLink($array, $message10);
+                                            $link11 = getWhatsAppLink($array, $message11); // Same message as message11 for online interview reminder
 
                                             // Define the conditions and corresponding titles and links
                                             $links = [
@@ -428,7 +433,6 @@ $resultArr = pg_fetch_all($result);
                                                 "Identity Verification Completed" => ["link" => $link4, "title" => "Verification Approved"],
                                                 "Technical Interview Completed" => ["link" => $link8, "title" => "Interview Feedback"],
                                                 "HR Interview Scheduled" => ["link" => $link6, "title" => "HR Interview Scheduled"],
-                                                "Interview Reminder" => ["link" => $link9, "title" => "Interview Reminder"],
                                                 "Offer Extended" => ["link" => $link7, "title" => "Offer Extended"],
                                             ];
 
@@ -504,22 +508,49 @@ $resultArr = pg_fetch_all($result);
                                                     if ($array['application_status'] == 'Technical Interview Scheduled' && !$linkDisplayed) {
                                                         // Check if online_interview_initiated is true
                                                         if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
-                                                            // Show Online Interview Initiated link
+                                                            // Show Online Interview Initiated link (message10)
                                                             echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
+
+                                                            // Also check if today is the interview date - show reminder link (message11)
+                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                                echo ' <a href="' . $link11 . '" target="_blank" title="Online Interview Reminder" class="send-link">Reminder</a>';
+                                                            }
                                                         } else {
-                                                            // Show regular Interview Scheduled link
+                                                            // Show regular Interview Scheduled link (message5)
                                                             echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
+
+                                                            // Also check if today is the interview date - show reminder link (message9)
+                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                                echo ' <a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Reminder</a>';
+                                                            }
                                                         }
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Interview Reminder
+                                                    // If the interview is not in "Technical Interview Scheduled" status but has a schedule for today
+                                                    // This handles cases where the status might have changed but interview is still today
                                                     if (!$linkDisplayed && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
-                                                        echo '<a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Send</a>';
+
+                                                        // For online interviews
+                                                        if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
+                                                            // Show the online interview link (message10) if status allows
+                                                            if ($array['application_status'] == 'Technical Interview Scheduled') {
+                                                                echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
+                                                            }
+                                                            echo ' <a href="' . $link11 . '" target="_blank" title="Online Interview Reminder" class="send-link">Reminder</a>';
+                                                        }
+                                                        // For regular/in-person interviews
+                                                        else {
+                                                            // Show the regular interview link (message5) if status allows
+                                                            if ($array['application_status'] == 'Technical Interview Scheduled') {
+                                                                echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
+                                                            }
+                                                            echo ' <a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Reminder</a>';
+                                                        }
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Reminder condition
+                                                    // Check for Reminder condition (identity verification reminder)
                                                     if (!$linkDisplayed && (empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && $array['application_status'] != 'Identity verification document submitted'))) {
                                                         echo '<a href="' . $link1 . '" target="_blank" title="Reminder to complete identity verification" class="send-link">Send</a>';
                                                         $linkDisplayed = true;
