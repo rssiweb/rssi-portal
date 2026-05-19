@@ -161,15 +161,20 @@ LEFT JOIN vrc
         $video_status = $existing_record['status'];
         $submission_time = $existing_record['timestamp'];
         $online_interview_initiated = $existing_record['online_interview_initiated'];
+        $drive_file_link = $existing_record['drive_file_link'];
 
-        // Check if status is 'rejected' - allow to proceed
-        if ($video_status === 'rejected' || $video_status !== 'pending') {
+        // Allow if no file was uploaded successfully
+        if (empty($drive_file_link) || $drive_file_link === "NULL") {
             $can_proceed = true;
-        } else {
-            // Status is pending, approved, or any other status - don't allow new submission
+        }
+        // If file exists and status is pending, do not allow
+        elseif ($video_status === 'pending') {
             $can_proceed = false;
         }
-
+        // For rejected or any other status, allow
+        else {
+            $can_proceed = true;
+        }
         // Check if status is 'true' - allow to proceed
         if ($online_interview_initiated === 't' && $online_interview_initiated !== null) {
             $online_interview_initiated = true;
