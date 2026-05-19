@@ -504,14 +504,32 @@ $resultArr = pg_fetch_all($result);
                                                     // Flag to track if a link has been displayed
                                                     $linkDisplayed = false;
 
-                                                    // Check for Technical Interview Scheduled first (highest priority)
-                                                    if ($array['application_status'] == 'Technical Interview Scheduled' && !$linkDisplayed) {
+                                                    // PRIORITY 1: Check for Technical Interview Completed (highest priority)
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Technical Interview Completed') {
+                                                        echo '<a href="' . $link8 . '" target="_blank" title="Interview Feedback" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // PRIORITY 2: Check for HR Interview Scheduled
+                                                    if (!$linkDisplayed && $array['application_status'] == 'HR Interview Scheduled') {
+                                                        echo '<a href="' . $link6 . '" target="_blank" title="HR Interview Scheduled" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // PRIORITY 3: Check for Offer Extended
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Offer Extended') {
+                                                        echo '<a href="' . $link7 . '" target="_blank" title="Offer Extended" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
+                                                    // PRIORITY 4: Check for Technical Interview Scheduled
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Technical Interview Scheduled') {
                                                         // Check if online_interview_initiated is true
                                                         if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
                                                             // Show Online Interview Initiated link (message10)
                                                             echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
 
-                                                            // Also check if today is the interview date - show reminder link (message11)
+                                                            // Check if today is the interview date - show reminder link (message11)
                                                             if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
                                                                 echo ' <a href="' . $link11 . '" target="_blank" title="Online Interview Reminder" class="send-link">Reminder</a>';
                                                             }
@@ -519,7 +537,7 @@ $resultArr = pg_fetch_all($result);
                                                             // Show regular Interview Scheduled link (message5)
                                                             echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
 
-                                                            // Also check if today is the interview date - show reminder link (message9)
+                                                            // Check if today is the interview date - show reminder link (message9)
                                                             if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
                                                                 echo ' <a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Reminder</a>';
                                                             }
@@ -527,21 +545,15 @@ $resultArr = pg_fetch_all($result);
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // If the interview is not in "Technical Interview Scheduled" status but has a schedule for today
-                                                    // This handles cases where the status might have changed but interview is still today
+                                                    // PRIORITY 5: Interview date is today but status is not "Technical Interview Scheduled"
                                                     if (!$linkDisplayed && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
-
                                                         // For online interviews
                                                         if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
-                                                            // Show the online interview link (message10) if status allows
                                                             if ($array['application_status'] == 'Technical Interview Scheduled') {
                                                                 echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
                                                             }
                                                             echo ' <a href="' . $link11 . '" target="_blank" title="Online Interview Reminder" class="send-link">Reminder</a>';
-                                                        }
-                                                        // For regular/in-person interviews
-                                                        else {
-                                                            // Show the regular interview link (message5) if status allows
+                                                        } else {
                                                             if ($array['application_status'] == 'Technical Interview Scheduled') {
                                                                 echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
                                                             }
@@ -550,45 +562,27 @@ $resultArr = pg_fetch_all($result);
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Reminder condition (identity verification reminder)
+                                                    // PRIORITY 6: Reminder for identity verification
                                                     if (!$linkDisplayed && (empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && $array['application_status'] != 'Identity verification document submitted'))) {
                                                         echo '<a href="' . $link1 . '" target="_blank" title="Reminder to complete identity verification" class="send-link">Send</a>';
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Photo Verification Failed
+                                                    // PRIORITY 7: Photo Verification Failed
                                                     if (!$linkDisplayed && $array['application_status'] == 'Photo Verification Failed') {
                                                         echo '<a href="' . $link2 . '" target="_blank" title="Photo Rejected" class="send-link">Send</a>';
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Identity Verification Failed
+                                                    // PRIORITY 8: Identity Verification Failed
                                                     if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Failed') {
                                                         echo '<a href="' . $link3 . '" target="_blank" title="Verification Rejected" class="send-link">Send</a>';
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // Check for Identity Verification Completed
+                                                    // PRIORITY 9: Identity Verification Completed
                                                     if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Completed') {
                                                         echo '<a href="' . $link4 . '" target="_blank" title="Verification Approved" class="send-link">Send</a>';
-                                                        $linkDisplayed = true;
-                                                    }
-
-                                                    // Check for Technical Interview Completed
-                                                    if (!$linkDisplayed && $array['application_status'] == 'Technical Interview Completed') {
-                                                        echo '<a href="' . $link8 . '" target="_blank" title="Interview Feedback" class="send-link">Send</a>';
-                                                        $linkDisplayed = true;
-                                                    }
-
-                                                    // Check for HR Interview Scheduled
-                                                    if (!$linkDisplayed && $array['application_status'] == 'HR Interview Scheduled') {
-                                                        echo '<a href="' . $link6 . '" target="_blank" title="HR Interview Scheduled" class="send-link">Send</a>';
-                                                        $linkDisplayed = true;
-                                                    }
-
-                                                    // Check for Offer Extended
-                                                    if (!$linkDisplayed && $array['application_status'] == 'Offer Extended') {
-                                                        echo '<a href="' . $link7 . '" target="_blank" title="Offer Extended" class="send-link">Send</a>';
                                                         $linkDisplayed = true;
                                                     }
                                                     ?>
