@@ -20,106 +20,106 @@ $error_message = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'upload_interview_video') {
 
     $app_num = isset($_POST['application_number']) ? $_POST['application_number'] : 'NA';
-    $video_base64 = isset($_POST['video_base64']) ? $_POST['video_base64'] : '';
 
-    if (!empty($video_base64) && $video_base64 != 'data:,') {
+    // Check if video file was uploaded via multipart/form-data
+    if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] === UPLOAD_ERR_OK) {
 
-        // Step 1: Process the video FIRST (without database insertion)
-        $base64_string = $video_base64;
+        $uploaded_file = $_FILES['video_file'];
 
-        if (strpos($base64_string, ',') !== false) {
-            list(, $base64_string) = explode(',', $base64_string);
-        }
+        // Validate file type
+        $allowed_types = ['video/webm', 'video/mp4', 'video/x-msvideo'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $uploaded_file['tmp_name']);
+        finfo_close($finfo);
 
-        $video_data = base64_decode($base64_string);
+        if (!in_array($mime_type, $allowed_types)) {
+            $upload_status = 'error';
+            $error_message = 'Invalid video format. Please upload webm or mp4 format.';
+        } else {
+            // Prepare file array for Drive upload function
+            $file_array = [
+                'name' => $uploaded_file['name'],
+                'type' => $uploaded_file['type'],
+                'tmp_name' => $uploaded_file['tmp_name'],
+                'error' => $uploaded_file['error'],
+                'size' => $uploaded_file['size']
+            ];
 
-        // Create a temporary file
-        $temp_file = tempnam(sys_get_temp_dir(), 'interview_video_');
-        file_put_contents($temp_file, $video_data);
+            $filename = pathinfo($uploaded_file['name'], PATHINFO_FILENAME);
+            $parent_folder_id = '1f7c9h0_k7_Biatgh4XrAhas8wxXuWW3V';
 
-        $file_array = [
-            'name' => 'interview_video_' . $app_num . '_' . time() . '.webm',
-            'type' => 'video/webm',
-            'tmp_name' => $temp_file,
-            'error' => 0,
-            'size' => filesize($temp_file)
-        ];
+            // Upload to Google Drive
+            $drive_response = uploadeToDrive($file_array, $parent_folder_id, $filename);
 
-        $filename = "interview_video_" . $app_num . "_" . time();
-        $parent_folder_id = '1f7c9h0_k7_Biatgh4XrAhas8wxXuWW3V';
+            // Check if Drive upload succeeded
+            if ($drive_response && is_string($drive_response)) {
+                $now = date('Y-m-d H:i:s');
 
-        // Try Drive upload first
-        $drive_response = uploadeToDrive($file_array, $parent_folder_id, $filename);
+                // Use transaction to ensure atomic operation
+                pg_query($con, "BEGIN");
 
-        // Clean up temporary file
-        unlink($temp_file);
+                // Insert record with the Drive file link directly
+                $insert_query = "INSERT INTO vrc (application_number, drive_file_link, timestamp, status) 
+                                 VALUES ($1, $2, $3, 'pending')
+                                 RETURNING id";
+                $insert_result = pg_query_params($con, $insert_query, array($app_num, $drive_response, $now));
 
-        // Step 2: Only create database record if Drive upload succeeded
-        if ($drive_response && is_string($drive_response)) {
-            $now = date('Y-m-d H:i:s');
+                if ($insert_result) {
+                    $row = pg_fetch_assoc($insert_result);
+                    $inserted_id = $row['id'];
+                    pg_query($con, "COMMIT");
 
-            // Use transaction to ensure atomic operation
-            pg_query($con, "BEGIN");
+                    $upload_status = 'success';
+                    $uploaded_file_link = $drive_response;
 
-            // Insert record with the Drive file link directly
-            $insert_query = "INSERT INTO vrc (application_number, drive_file_link, timestamp, status) 
-                             VALUES ($1, $2, $3, 'pending')
-                             RETURNING id";
-            $insert_result = pg_query_params($con, $insert_query, array($app_num, $drive_response, $now));
+                    // Send email notification (do this after successful DB insert)
+                    try {
+                        $user_query = "SELECT applicant_name, email FROM signup WHERE application_number = $1";
+                        $user_result = pg_query_params($con, $user_query, array($app_num));
 
-            if ($insert_result) {
-                $row = pg_fetch_assoc($insert_result);
-                $inserted_id = $row['id'];
-                pg_query($con, "COMMIT");
+                        $applicant_name = '';
+                        $applicant_email = '';
 
-                $upload_status = 'success';
-                $uploaded_file_link = $drive_response;
-
-                // Send email notification (do this after successful DB insert)
-                // Wrap in try-catch to prevent email failure from breaking the process
-                try {
-                    $user_query = "SELECT applicant_name, email FROM signup WHERE application_number = $1";
-                    $user_result = pg_query_params($con, $user_query, array($app_num));
-
-                    $applicant_name = '';
-                    $applicant_email = '';
-
-                    if ($user_result && pg_num_rows($user_result) > 0) {
-                        $user_data = pg_fetch_assoc($user_result);
-                        $applicant_name = $user_data['applicant_name'];
-                        $applicant_email = $user_data['email'];
-                    }
-
-                    if (!empty($applicant_email)) {
-                        $email_sent = sendEmail("interview_video_submission", array(
-                            "reference_number" => $inserted_id,
-                            "application_number" => $app_num,
-                            "applicant_name" => $applicant_name,
-                            "drive_file_link" => $drive_response,
-                            "submission_date" => date("d/m/Y g:i a", strtotime($now))
-                        ), $applicant_email);
-
-                        if (!$email_sent) {
-                            error_log("Failed to send interview video submission email to: " . $applicant_email);
+                        if ($user_result && pg_num_rows($user_result) > 0) {
+                            $user_data = pg_fetch_assoc($user_result);
+                            $applicant_name = $user_data['applicant_name'];
+                            $applicant_email = $user_data['email'];
                         }
+
+                        if (!empty($applicant_email)) {
+                            $email_sent = sendEmail("interview_video_submission", array(
+                                "reference_number" => $inserted_id,
+                                "application_number" => $app_num,
+                                "applicant_name" => $applicant_name,
+                                "drive_file_link" => $drive_response,
+                                "submission_date" => date("d/m/Y g:i a", strtotime($now))
+                            ), $applicant_email);
+
+                            if (!$email_sent) {
+                                error_log("Failed to send interview video submission email to: " . $applicant_email);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log("Email notification failed: " . $e->getMessage());
                     }
-                } catch (Exception $e) {
-                    // Log but don't fail the submission
-                    error_log("Email notification failed: " . $e->getMessage());
+                } else {
+                    pg_query($con, "ROLLBACK");
+                    $upload_status = 'error';
+                    $error_message = 'Database insertion failed. Please contact support.';
+                    error_log("Database insert failed after successful Drive upload. App Num: $app_num, Drive File ID: $drive_response");
                 }
             } else {
-                pg_query($con, "ROLLBACK");
                 $upload_status = 'error';
-                $error_message = 'Database insertion failed. Please contact support.';
-                error_log("Database insert failed after successful Drive upload. App Num: $app_num, Drive File ID: $drive_response");
+                $error_message = 'Drive upload failed - video not saved. Please try again.';
+                error_log("Drive upload failed for App Num: $app_num");
             }
-        } else {
-            $upload_status = 'error';
-            $error_message = 'Drive upload failed - video not saved. Please try again.';
         }
     } else {
         $upload_status = 'error';
-        $error_message = 'No video data received';
+        $error_message = 'No video file received. Please try again.';
+        if (isset($_FILES['video_file']['error'])) {
+            error_log("File upload error code: " . $_FILES['video_file']['error']);
+        }
     }
 }
 
@@ -591,7 +591,7 @@ LEFT JOIN vrc
                                         <?php else: ?>
                                             <!-- Show video recording interface -->
 
-                                            <form method="POST" id="interviewForm">
+                                            <form method="POST" id="interviewForm" enctype="multipart/form-data">
                                                 <input type="hidden" name="action" value="upload_interview_video">
                                                 <input type="hidden" name="application_number" value="<?php echo htmlspecialchars($application_number); ?>">
                                                 <input type="hidden" name="video_base64" id="videoBase64Data" value="">
@@ -877,14 +877,15 @@ LEFT JOIN vrc
                     previewVideo.src = vidUrl;
                     previewVideo.controls = true;
 
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        recordedBase64 = reader.result;
-                        videoBase64Input.value = recordedBase64;
-                        uploadBtn.disabled = false;
-                        videoStatusSpan.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Video recorded! Ready to upload.';
-                    };
-                    reader.readAsDataURL(blob);
+                    // NEW APPROACH: Create FormData and store the blob for direct upload
+                    recordedBase64 = null; // We won't use base64 anymore
+                    videoBase64Input.value = ''; // Clear the base64 input
+
+                    // Store the blob in a global variable for form submission
+                    window.recordedVideoBlob = blob;
+
+                    uploadBtn.disabled = false;
+                    videoStatusSpan.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Video recorded! Ready to upload.';
 
                     retakeBtn.hidden = false;
                     startBtn.disabled = true;
@@ -959,14 +960,42 @@ LEFT JOIN vrc
             }
         });
 
-        interviewForm.addEventListener('submit', function(e) {
-            if (!recordedBase64) {
-                e.preventDefault();
+        interviewForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Always prevent default, we'll handle manually
+
+            if (!window.recordedVideoBlob) {
                 alert('Please record your video response first');
                 return;
             }
+
+            // Show loading modal
+            showLoadingModal();
+
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+
+            // Create FormData object
+            const formData = new FormData();
+            const appNumber = document.querySelector('input[name="application_number"]').value;
+            formData.append('action', 'upload_interview_video');
+            formData.append('application_number', appNumber);
+            formData.append('video_file', window.recordedVideoBlob, `interview_video_${appNumber}_${Date.now()}.webm`);
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Reload the page to show success/error message
+                window.location.reload();
+            } catch (error) {
+                console.error('Upload failed:', error);
+                alert('Upload failed. Please try again.');
+                hideLoadingModal();
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Upload Interview Video';
+            }
         });
 
         window.addEventListener('load', () => {
