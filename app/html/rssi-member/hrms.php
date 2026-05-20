@@ -287,6 +287,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+
+        // ===== ADD THIS NEW BLOCK HERE =====
+        // Special handling for 'role' field - update associate_roles table when role changes
+        if ($role === 'Admin' && isset($_POST['role']) && $_POST['role'] !== $current_data['role']) {
+            $new_role_name = pg_escape_string($con, trim($_POST['role']));
+            $associate_number = $search_id;
+            $assigned_by = $associatenumber; // Current admin's associate number
+            $effective_from = date('Y-m-d'); // Current date
+
+            // Get the role_id from roles table
+            $role_query = "SELECT id FROM roles WHERE role_name = $1 AND is_active = true";
+            $role_result = pg_query_params($con, $role_query, [$new_role_name]);
+
+            if ($role_result && pg_num_rows($role_result) > 0) {
+                $role_row = pg_fetch_assoc($role_result);
+                $role_id = $role_row['id'];
+
+                // First, expire any existing active role (set effective_to to yesterday)
+                $expire_query = "UPDATE associate_roles 
+                         SET effective_to = CURRENT_DATE - INTERVAL '1 day'
+                         WHERE associatenumber = $1 
+                         AND effective_to IS NULL";
+                pg_query_params($con, $expire_query, [$associate_number]);
+
+                // Insert the new role assignment
+                $insert_query = "INSERT INTO associate_roles (associatenumber, role_id, assigned_by, effective_from) 
+                         VALUES ($1, $2, $3, $4)";
+                $insert_result = pg_query_params($con, $insert_query, [
+                    $associate_number,
+                    $role_id,
+                    $assigned_by,
+                    $effective_from
+                ]);
+
+                if (!$insert_result) {
+                    // Log error but don't block the main update
+                    error_log("Failed to insert associate_role for $associate_number: " . pg_last_error($con));
+                }
+            }
+        }
+        // ===== END OF NEW BLOCK =====
+
+
         // Handle unauthorized updates
         if (!empty($unauthorized_updates)) {
             $unauthorized_list = implode(", ", $unauthorized_updates);
