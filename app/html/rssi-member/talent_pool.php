@@ -562,6 +562,12 @@ $resultArr = pg_fetch_all($result);
                                                         $linkDisplayed = true;
                                                     }
 
+                                                    // PRIORITY 8: Identity Verification Failed
+                                                    if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Failed') {
+                                                        echo '<a href="' . $link3 . '" target="_blank" title="Verification Rejected" class="send-link">Send</a>';
+                                                        $linkDisplayed = true;
+                                                    }
+
                                                     // PRIORITY 6: Reminder for identity verification
                                                     if (!$linkDisplayed && (empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && $array['application_status'] != 'Identity verification document submitted'))) {
                                                         echo '<a href="' . $link1 . '" target="_blank" title="Reminder to complete identity verification" class="send-link">Send</a>';
@@ -574,11 +580,7 @@ $resultArr = pg_fetch_all($result);
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    // PRIORITY 8: Identity Verification Failed
-                                                    if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Failed') {
-                                                        echo '<a href="' . $link3 . '" target="_blank" title="Verification Rejected" class="send-link">Send</a>';
-                                                        $linkDisplayed = true;
-                                                    }
+                                                    
 
                                                     // PRIORITY 9: Identity Verification Completed
                                                     if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Completed') {
