@@ -530,7 +530,7 @@ $resultArr = pg_fetch_all($result);
                                                             echo '<a href="' . $link10 . '" target="_blank" title="Online Interview Initiated" class="send-link">Send</a>';
 
                                                             // Check if today is the interview date - show reminder link (message11)
-                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && (empty($array['no_show']) || $array['no_show'] == 'f')) {
                                                                 echo ' <a href="' . $link11 . '" target="_blank" title="Online Interview Reminder" class="send-link">Reminder</a>';
                                                             }
                                                         } else {
@@ -538,7 +538,7 @@ $resultArr = pg_fetch_all($result);
                                                             echo '<a href="' . $link5 . '" target="_blank" title="Interview Scheduled" class="send-link">Send</a>';
 
                                                             // Check if today is the interview date - show reminder link (message9)
-                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                            if (!empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && (empty($array['no_show']) || $array['no_show'] == 'f')) {
                                                                 echo ' <a href="' . $link9 . '" target="_blank" title="Interview Reminder" class="send-link">Reminder</a>';
                                                             }
                                                         }
@@ -546,7 +546,7 @@ $resultArr = pg_fetch_all($result);
                                                     }
 
                                                     // PRIORITY 5: Interview date is today but status is not "Technical Interview Scheduled"
-                                                    if (!$linkDisplayed && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
+                                                    if (!$linkDisplayed && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && (empty($array['no_show']) || $array['no_show'] == 'f')) {
                                                         // For online interviews
                                                         if (!empty($array['online_interview_initiated']) && $array['online_interview_initiated'] == 't') {
                                                             if ($array['application_status'] == 'Technical Interview Scheduled') {
@@ -580,7 +580,7 @@ $resultArr = pg_fetch_all($result);
                                                         $linkDisplayed = true;
                                                     }
 
-                                                    
+
 
                                                     // PRIORITY 9: Identity Verification Completed
                                                     if (!$linkDisplayed && $array['application_status'] == 'Identity Verification Completed') {
