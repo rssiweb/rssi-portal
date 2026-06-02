@@ -35,10 +35,25 @@ WITH LatestAttempts AS (
         wbt w ON ws.courseid = w.courseid
     GROUP BY 
         ws.associatenumber, ws.courseid
+),
+-- Get the latest COMPLETED attempt (passed) to track expiration
+LatestCompletedAttempt AS (
+    SELECT 
+        ws.associatenumber,
+        ws.courseid,
+        MAX(ws.timestamp) AS last_completed_timestamp
+    FROM 
+        wbt_status ws
+    JOIN 
+        wbt w ON ws.courseid = w.courseid
+    WHERE 
+        ROUND(ws.f_score * 100, 2) >= w.passingmarks
+    GROUP BY 
+        ws.associatenumber, ws.courseid
 )
 SELECT 
     ws.associatenumber,
-    ram.fullname, -- Fetch fullname from rssimyaccount_members
+    ram.fullname,
     ws.timestamp AS completed_on,
     w.courseid,
     w.coursename,
@@ -47,31 +62,36 @@ SELECT
         WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
         ELSE 'Incomplete'
     END AS status,
+    -- Original expiration based on the last completed (passed) attempt
     CASE 
-        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 
-            TO_CHAR(ws.timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
+        WHEN lca.last_completed_timestamp IS NOT NULL THEN 
+            TO_CHAR(lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
         ELSE NULL
     END AS valid_upto,
     CASE 
-        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN
+        WHEN lca.last_completed_timestamp IS NOT NULL THEN
             CASE 
-                WHEN ws.timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
+                WHEN lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
                 ELSE 'Expired'
             END
         ELSE NULL
-    END AS additional_status
+    END AS certificate_status,
+    lca.last_completed_timestamp AS last_passed_date
 FROM 
     wbt_status ws
 JOIN 
     LatestAttempts la ON ws.associatenumber = la.associatenumber 
                       AND ws.courseid = la.courseid 
                       AND ws.timestamp = la.latest_timestamp
+LEFT JOIN 
+    LatestCompletedAttempt lca ON ws.associatenumber = lca.associatenumber 
+                                AND ws.courseid = lca.courseid
 JOIN 
     wbt w ON ws.courseid = w.courseid
 JOIN 
-    rssimyaccount_members ram ON ws.associatenumber = ram.associatenumber -- Join with rssimyaccount_members
+    rssimyaccount_members ram ON ws.associatenumber = ram.associatenumber
 WHERE 
-    1=1"; // Start with a true condition to allow dynamic WHERE clauses
+    1=1";
 
 // Add filters dynamically based on user input (only for Admin users)
 $params = [];
@@ -90,7 +110,12 @@ if ($role === 'Admin') {
     }
     if ($selectedCourseStatus) {
         if ($selectedCourseStatus === 'Active' || $selectedCourseStatus === 'Expired') {
-            $query .= " AND ws.timestamp + (w.validity || ' years')::INTERVAL " . ($selectedCourseStatus === 'Active' ? ">" : "<=") . " NOW()";
+            $query .= " AND EXISTS (
+                SELECT 1 FROM LatestCompletedAttempt lca2 
+                WHERE lca2.associatenumber = ws.associatenumber 
+                AND lca2.courseid = ws.courseid
+                AND lca2.last_completed_timestamp + (w.validity || ' years')::INTERVAL " . ($selectedCourseStatus === 'Active' ? ">" : "<=") . " NOW()
+            )";
         } elseif ($selectedCourseStatus === 'Incomplete') {
             $query .= " AND ROUND(ws.f_score * 100, 2) < w.passingmarks";
         }
@@ -155,8 +180,6 @@ if ($role === 'Admin') {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -188,37 +211,35 @@ if ($role === 'Admin') {
     <script>
         $(document).ready(function() {
             // Fetch Associates
-            // Initialize Select2 for associatenumber dropdown
             $('#associatenumber').select2({
                 ajax: {
-                    url: 'fetch_associates.php', // Path to the PHP script
+                    url: 'fetch_associates.php',
                     dataType: 'json',
-                    delay: 250, // Delay in milliseconds before sending the request
+                    delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term // Search term
+                            q: params.term
                         };
                     },
                     processResults: function(data) {
-                        // Map the results to the format expected by Select2
                         return {
                             results: data.results
                         };
                     },
-                    cache: true // Cache results for better performance
+                    cache: true
                 },
-                minimumInputLength: 1 // Require at least 1 character to start searching
+                minimumInputLength: 1
             });
 
             // Fetch Courses
             $('#course').select2({
                 ajax: {
-                    url: 'fetch_courses.php', // Create this file to fetch courses
+                    url: 'fetch_courses.php',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term // Search term
+                            q: params.term
                         };
                     },
                     processResults: function(data) {
@@ -232,6 +253,37 @@ if ($role === 'Admin') {
             });
         });
     </script>
+
+    <style>
+        .certificate-status {
+            font-size: 0.9em;
+        }
+
+        .certificate-status small {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.85em;
+        }
+
+        .text-active {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .text-expired {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .text-warning-info {
+            color: #856404;
+        }
+
+        .badge-incomplete {
+            background-color: #ffc107;
+            color: #856404;
+        }
+    </style>
 </head>
 
 <body>
@@ -243,12 +295,11 @@ if ($role === 'Admin') {
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
 
-                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
 
@@ -264,9 +315,8 @@ if ($role === 'Admin') {
                                                 <select class="form-control select2" id="associatenumber" name="associatenumber">
                                                     <option value="">Select Associate</option>
                                                     <?php if ($selectedAssociate): ?>
-                                                        <!-- Pre-select the selected associate if it exists -->
                                                         <option value="<?= htmlspecialchars($selectedAssociate) ?>" selected>
-                                                            <?= htmlspecialchars($selectedAssociate) ?> <!-- You can fetch and display the associate's name here if needed -->
+                                                            <?= htmlspecialchars($selectedAssociate) ?>
                                                         </option>
                                                     <?php endif; ?>
                                                 </select>
@@ -277,9 +327,8 @@ if ($role === 'Admin') {
                                                 <select class="form-control select2" id="course" name="course">
                                                     <option value="">Select Course</option>
                                                     <?php if ($selectedCourse): ?>
-                                                        <!-- Pre-select the selected course if it exists -->
                                                         <option value="<?= htmlspecialchars($selectedCourse) ?>" selected>
-                                                            <?= htmlspecialchars($selectedCourse) ?> <!-- You can fetch and display the course name here if needed -->
+                                                            <?= htmlspecialchars($selectedCourse) ?>
                                                         </option>
                                                     <?php endif; ?>
                                                 </select>
@@ -296,40 +345,38 @@ if ($role === 'Admin') {
                                                 </select>
                                             </div>
                                             <div class="col-md-3 mb-3">
-                                                <label for="course_status" class="form-label">Course Status</label>
+                                                <label for="course_status" class="form-label">Certificate Status</label>
                                                 <select class="form-select" id="course_status" name="course_status">
                                                     <option value="">Select Status</option>
                                                     <option value="Active" <?= ($selectedCourseStatus == 'Active') ? 'selected' : '' ?>>Active</option>
                                                     <option value="Expired" <?= ($selectedCourseStatus == 'Expired') ? 'selected' : '' ?>>Expired</option>
-                                                    <option value="Incomplete" <?= ($selectedCourseStatus == 'Incomplete') ? 'selected' : '' ?>>Incomplete</option>
+                                                    <option value="Incomplete" <?= ($selectedCourseStatus == 'Incomplete') ? 'selected' : '' ?>>No Certificate (Failed)</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                                <!-- Reset Button -->
                                                 <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
                                             </div>
                                         </div>
                                     </form>
                                 <?php endif; ?>
-                                <!-- Data Table -->
+
                                 <?php if ($data): ?>
                                     <div class="table-responsive">
                                         <table id="coursesTable" class="table">
                                             <thead>
                                                 <tr>
                                                     <?php if ($role === 'Admin'): ?>
-                                                        <th>Associate Number</th>
+                                                        <th>Associate</th>
                                                         <th>Name</th>
                                                     <?php endif; ?>
                                                     <th>Attempt Date</th>
-                                                    <th>Course ID</th>
-                                                    <th>Course Name</th>
+                                                    <th>Course</th>
                                                     <th>Score</th>
                                                     <th>Status</th>
-                                                    <th>Valid Upto</th>
+                                                    <th>Valid Until</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -340,22 +387,61 @@ if ($role === 'Admin') {
                                                             <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                         <?php endif; ?>
                                                         <td><?= date('d/m/Y h:i A', strtotime($row['completed_on'])) ?></td>
-                                                        <td><?= htmlspecialchars($row['courseid']) ?></td>
-                                                        <td><?= htmlspecialchars($row['coursename']) ?></td>
+                                                        <td>
+                                                            <?= htmlspecialchars($row['coursename']) ?><br>
+                                                            <small class="text-muted">ID: <?= htmlspecialchars($row['courseid']) ?></small>
+                                                        </td>
                                                         <td><?= htmlspecialchars($row['score_percentage']) ?>%</td>
                                                         <td>
                                                             <?php if ($row['status'] === 'Incomplete'): ?>
-                                                                Incomplete
-                                                            <?php elseif ($row['status'] === 'Completed' && $row['additional_status'] === 'Active'): ?>
-                                                                Active
-                                                            <?php elseif ($row['status'] === 'Completed' && $row['additional_status'] === 'Expired'): ?>
-                                                                Expired
+                                                                <?php if (!empty($row['valid_upto']) && $row['certificate_status'] == 'Expired'): ?>
+                                                                    <span class="badge bg-danger">Expired</span>
+                                                                <?php else: ?>
+                                                                    <span class="badge badge-incomplete">❌ Failed Attempt</span>
+                                                                <?php endif; ?>
+                                                            <?php else: ?>
+                                                                <?php if ($row['certificate_status'] == 'Active'): ?>
+                                                                    <span class="badge bg-success">Active</span>
+                                                                <?php else: ?>
+                                                                    <span class="badge bg-danger">Expired</span>
+                                                                <?php endif; ?>
                                                             <?php endif; ?>
                                                         </td>
+                                                        <?php
+                                                        // Calculate if certificate is about to expire (within 30 days)
+                                                        $isAboutToExpire = false;
+                                                        if (!empty($row['valid_upto'])) {
+                                                            $currentDate = new DateTime();
+                                                            $expiryDateObj = new DateTime($row['valid_upto']);
+                                                            $daysUntilExpiry = $currentDate->diff($expiryDateObj)->days;
+
+                                                            // Only show "About to Expire" if certificate is active and within 30 days of expiry
+                                                            if ($row['certificate_status'] == 'Active' && $daysUntilExpiry <= 30 && $expiryDateObj > $currentDate) {
+                                                                $isAboutToExpire = true;
+                                                            }
+                                                        }
+                                                        ?>
                                                         <td>
-                                                            <?php if ($row['status'] === 'Completed'): ?>
-                                                                <?= date('d/m/Y h:i A', strtotime($row['valid_upto'])) ?>
-                                                            <?php endif; ?>
+                                                            <?php
+                                                            // Only proceed if there's a valid_upto date (certificate exists)
+                                                            if (!empty($row['valid_upto'])) {
+                                                                $validDate = date('d/m/Y', strtotime($row['valid_upto']));
+                                                                // Certificate is expired if status is 'Expired' OR if it's a completed attempt with date in past
+                                                                $isExpired = ($row['certificate_status'] == 'Expired') ||
+                                                                    ($row['status'] === 'Completed' && strtotime($row['valid_upto']) < time());
+                                                                echo '<span class="' . ($isExpired ? 'text-danger' : '') . '">' . $validDate . '</span>';
+
+                                                                // Add about to expire indicator with tooltip
+                                                                if ($isAboutToExpire && !$isExpired) {
+                                                                    $daysLeft = $currentDate->diff($expiryDateObj)->days;
+                                                                    $tooltipMessage = "⚠️ Certificate will expire in {$daysLeft} days! Last successful completion: " . date('d/m/Y', strtotime($row['last_passed_date'])) . ". Please retake the course before " . date('d/m/Y', strtotime($row['valid_upto'])) . " to maintain compliance and avoid any certification gaps.";
+                                                                    echo ' <span class="badge bg-warning text-dark" style="font-size: 0.7rem; cursor: help;" data-bs-toggle="tooltip" data-bs-html="true" title="' . htmlspecialchars($tooltipMessage) . '"><i class="bi bi-exclamation-triangle"></i></span>';
+                                                                }
+                                                            } else {
+                                                                // No certificate exists
+                                                                echo '<span class="text-muted">No certificate issued yet</span>';
+                                                            }
+                                                            ?>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -363,24 +449,20 @@ if ($role === 'Admin') {
                                         </table>
                                     </div>
                                 <?php elseif ($role === 'Admin' && $isFilterSelected): ?>
-                                    <!-- Show "No records found" message only for Admin users when filters are applied -->
-                                    <p class="text-danger">No records found for the selected filters.</p>
+                                    <div class="alert alert-warning">No records found for the selected filters.</div>
                                 <?php elseif ($role === 'Admin'): ?>
-                                    <!-- Show "Please select at least one filter" message only for Admin users when no filters are selected -->
-                                    <p class="text-danger">Please select at least one filter to view results.</p>
+                                    <div class="alert alert-info">Please select at least one filter to view results.</div>
                                 <?php else: ?>
-                                    <!-- Show a generic message for non-Admin users if no data is found -->
-                                    <p class="text-danger">No records found.</p>
+                                    <div class="alert alert-warning">No records found.</div>
                                 <?php endif; ?>
                             </div>
-
                         </div>
                     </div>
-                </div><!-- End Reports -->
+                </div>
             </div>
         </section>
 
-    </main><!-- End #main -->
+    </main>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -388,36 +470,29 @@ if ($role === 'Admin') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Check if resultArr is empty
             <?php if (!empty($result)) : ?>
-                // Initialize DataTables only if resultArr is not empty
                 $('#coursesTable').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
+                    "order": [],
+                    "pageLength": 25,
+                    "language": {
+                        "emptyTable": "No data available"
+                    }
                 });
             <?php endif; ?>
         });
-    </script>
-    <script>
+
+        // Reset Filters Button
         $(document).ready(function() {
-            // Reset Filters Button
             $('#resetFilters').on('click', function() {
-                // Reset form fields
-                $('#associatenumber').val('').trigger('change'); // Clear Select2 dropdown
-                $('#course').val('').trigger('change'); // Clear Select2 dropdown
-                $('#associate_status').val(''); // Clear associate status dropdown
-                $('#course_status').val(''); // Clear course status dropdown
-
-                // Option 1: Reload the page to reset everything
-                window.location.href = window.location.pathname; // Reload the page without query parameters
-
-                // Option 2: Reset the table (if you don't want to reload the page)
-                // fetchAndDisplayData(); // Call a function to fetch and display all data
+                $('#associatenumber').val('').trigger('change');
+                $('#course').val('').trigger('change');
+                $('#associate_status').val('');
+                $('#course_status').val('');
+                window.location.href = window.location.pathname;
             });
         });
     </script>
