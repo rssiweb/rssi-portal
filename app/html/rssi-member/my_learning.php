@@ -13,102 +13,175 @@ validation();
 // Initialize $data as an empty array
 $data = [];
 
-// Handle the filter submission (only for Admin users)
-$selectedAssociate = ($role === 'Admin') ? ($_POST['associatenumber'] ?? null) : null;
-$selectedCourse = ($role === 'Admin') ? ($_POST['course'] ?? null) : null;
-$selectedAssociateStatus = ($role === 'Admin') ? ($_POST['associate_status'] ?? null) : null;
-$selectedCourseStatus = ($role === 'Admin') ? ($_POST['course_status'] ?? null) : null;
+// Check user type
+$isAdmin = ($role === 'Admin');
+$isOfflineManager = ($role === 'Offline Manager');
+$isRegularNonAdmin = (!$isAdmin && !$isOfflineManager);
 
-// Check if any filter is selected (only for Admin users)
-$isFilterSelected = ($role === 'Admin') ? ($selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus) : false;
+// Handle filters based on user type
+if ($isAdmin) {
+    // Admin: all filters
+    $selectedAssociate = ($_POST['associatenumber'] ?? null);
+    $selectedCourse = ($_POST['course'] ?? null);
+    $selectedAssociateStatus = ($_POST['associate_status'] ?? null);
+    $selectedCourseStatus = ($_POST['course_status'] ?? null);
+    $isFilterSelected = ($selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus);
+    $searchByCourseForActive = false;
+} elseif ($isOfflineManager) {
+    // Offline Manager: associate filter and course filter with checkbox
+    $selectedAssociate = ($_POST['associatenumber'] ?? null);
+    $selectedCourse = ($_POST['course'] ?? null);
+    $searchByCourseForActive = isset($_POST['search_by_course']) ? true : false;
+    $selectedAssociateStatus = null;
+    $selectedCourseStatus = null;
 
-// Define the base query template
-$query = "
-WITH LatestAttempts AS (
-    SELECT 
-        ws.associatenumber,
-        ws.courseid,
-        MAX(ws.timestamp) AS latest_timestamp
-    FROM 
-        wbt_status ws
-    JOIN 
-        wbt w ON ws.courseid = w.courseid
-    GROUP BY 
-        ws.associatenumber, ws.courseid
-),
--- Get the latest COMPLETED attempt (passed) to track expiration
-LatestCompletedAttempt AS (
-    SELECT 
-        ws.associatenumber,
-        ws.courseid,
-        MAX(ws.timestamp) AS last_completed_timestamp
-    FROM 
-        wbt_status ws
-    JOIN 
-        wbt w ON ws.courseid = w.courseid
-    WHERE 
-        ROUND(ws.f_score * 100, 2) >= w.passingmarks
-    GROUP BY 
-        ws.associatenumber, ws.courseid
-)
-SELECT 
-    ws.associatenumber,
-    ram.fullname,
-    ws.timestamp AS completed_on,
-    w.courseid,
-    w.coursename,
-    ROUND(ws.f_score * 100, 2) AS score_percentage,
-    CASE 
-        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
-        ELSE 'Incomplete'
-    END AS status,
-    -- Original expiration based on the last completed (passed) attempt
-    CASE 
-        WHEN lca.last_completed_timestamp IS NOT NULL THEN 
-            TO_CHAR(lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
-        ELSE NULL
-    END AS valid_upto,
-    CASE 
-        WHEN lca.last_completed_timestamp IS NOT NULL THEN
-            CASE 
-                WHEN lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
-                ELSE 'Expired'
-            END
-        ELSE NULL
-    END AS certificate_status,
-    lca.last_completed_timestamp AS last_passed_date
-FROM 
-    wbt_status ws
-JOIN 
-    LatestAttempts la ON ws.associatenumber = la.associatenumber 
-                      AND ws.courseid = la.courseid 
-                      AND ws.timestamp = la.latest_timestamp
-LEFT JOIN 
-    LatestCompletedAttempt lca ON ws.associatenumber = lca.associatenumber 
-                                AND ws.courseid = lca.courseid
-JOIN 
-    wbt w ON ws.courseid = w.courseid
-JOIN 
-    rssimyaccount_members ram ON ws.associatenumber = ram.associatenumber
-WHERE 
-    1=1";
-
-// Add filters dynamically based on user input (only for Admin users)
-$params = [];
-if ($role === 'Admin') {
-    if ($selectedAssociate) {
-        $query .= " AND ws.associatenumber = $" . (count($params) + 1);
-        $params[] = $selectedAssociate;
+    // If search_by_course is checked, course filter is allowed
+    if ($searchByCourseForActive) {
+        $isFilterSelected = ($selectedAssociate || $selectedCourse);
+    } else {
+        $isFilterSelected = ($selectedAssociate);
+        $selectedCourse = null; // Ignore course if checkbox is not checked
     }
-    if ($selectedCourse) {
+} else {
+    // Regular Non-Admin: no filters, just show their own data
+    $selectedAssociate = null;
+    $selectedCourse = null;
+    $selectedAssociateStatus = null;
+    $selectedCourseStatus = null;
+    $searchByCourseForActive = false;
+    $isFilterSelected = true; // Always fetch data for regular non-admin
+}
+
+// Only fetch data if filters are selected (or for regular non-admin always fetch)
+if ($isFilterSelected) {
+    // Define the base query template
+    $query = "
+    WITH LatestAttempts AS (
+        SELECT 
+            ws.associatenumber,
+            ws.courseid,
+            MAX(ws.timestamp) AS latest_timestamp
+        FROM 
+            wbt_status ws
+        JOIN 
+            wbt w ON ws.courseid = w.courseid
+        GROUP BY 
+            ws.associatenumber, ws.courseid
+    ),
+    -- Get the latest COMPLETED attempt (passed) to track expiration
+    LatestCompletedAttempt AS (
+        SELECT 
+            ws.associatenumber,
+            ws.courseid,
+            MAX(ws.timestamp) AS last_completed_timestamp
+        FROM 
+            wbt_status ws
+        JOIN 
+            wbt w ON ws.courseid = w.courseid
+        WHERE 
+            ROUND(ws.f_score * 100, 2) >= w.passingmarks
+        GROUP BY 
+            ws.associatenumber, ws.courseid
+    )
+    SELECT 
+        ws.associatenumber,
+        ram.fullname,
+        ws.timestamp AS completed_on,
+        w.courseid,
+        w.coursename,
+        ROUND(ws.f_score * 100, 2) AS score_percentage,
+        CASE 
+            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
+            ELSE 'Incomplete'
+        END AS status,
+        -- Original expiration based on the last completed (passed) attempt
+        CASE 
+            WHEN lca.last_completed_timestamp IS NOT NULL THEN 
+                TO_CHAR(lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
+            ELSE NULL
+        END AS valid_upto,
+        CASE 
+            WHEN lca.last_completed_timestamp IS NOT NULL THEN
+                CASE 
+                    WHEN lca.last_completed_timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
+                    ELSE 'Expired'
+                END
+            ELSE NULL
+        END AS certificate_status,
+        lca.last_completed_timestamp AS last_passed_date
+    FROM 
+        wbt_status ws
+    JOIN 
+        LatestAttempts la ON ws.associatenumber = la.associatenumber 
+                          AND ws.courseid = la.courseid 
+                          AND ws.timestamp = la.latest_timestamp
+    LEFT JOIN 
+        LatestCompletedAttempt lca ON ws.associatenumber = lca.associatenumber 
+                                    AND ws.courseid = lca.courseid
+    JOIN 
+        wbt w ON ws.courseid = w.courseid
+    JOIN 
+        rssimyaccount_members ram ON ws.associatenumber = ram.associatenumber
+    WHERE 
+        1=1";
+
+    // Add filters dynamically based on user input
+    $params = [];
+
+    // Apply associate filter based on user type
+    if ($isAdmin) {
+        if ($selectedAssociate) {
+            $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+            $params[] = $selectedAssociate;
+        }
+    } elseif ($isOfflineManager) {
+        if ($selectedAssociate) {
+            // Check if selected associate is authorized (self or reportee)
+            $authQuery = "SELECT COUNT(*) as count FROM rssimyaccount_members WHERE associatenumber = $1 AND (associatenumber = $2 OR supervisor = $2)";
+            $authResult = pg_query_params($con, $authQuery, array($selectedAssociate, $associatenumber));
+            $authRow = pg_fetch_assoc($authResult);
+
+            if ($authRow['count'] > 0) {
+                $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+                $params[] = $selectedAssociate;
+            } else {
+                // Unauthorized - force no results
+                $query .= " AND 1=0";
+            }
+        } else {
+            // No associate selected - show only self and reportees
+            $query .= " AND (ws.associatenumber = $" . (count($params) + 1) . " OR ws.associatenumber IN (SELECT associatenumber FROM rssimyaccount_members WHERE supervisor = $" . (count($params) + 1) . "))";
+            $params[] = $associatenumber;
+        }
+
+        // If search by course for active associates is enabled, add filterstatus condition
+        if ($searchByCourseForActive && $selectedCourse && !$selectedAssociate) {
+            // Only show associates with Active status when searching by course
+            $query .= " AND ram.filterstatus = 'Active'";
+        }
+    } else {
+        // Regular non-admin - only show their own data
+        $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+        $params[] = $associatenumber;
+    }
+
+    // Apply course filter
+    if ($isAdmin && $selectedCourse) {
+        $query .= " AND w.courseid = $" . (count($params) + 1);
+        $params[] = $selectedCourse;
+    } elseif ($isOfflineManager && $searchByCourseForActive && $selectedCourse) {
         $query .= " AND w.courseid = $" . (count($params) + 1);
         $params[] = $selectedCourse;
     }
-    if ($selectedAssociateStatus) {
-        $query .= " AND EXISTS (SELECT 1 FROM rssimyaccount_members ram WHERE ram.associatenumber = ws.associatenumber AND ram.filterstatus = $" . (count($params) + 1) . ")";
+
+    // Apply associate status filter (only for Admin)
+    if ($isAdmin && $selectedAssociateStatus) {
+        $query .= " AND EXISTS (SELECT 1 FROM rssimyaccount_members ram2 WHERE ram2.associatenumber = ws.associatenumber AND ram2.filterstatus = $" . (count($params) + 1) . ")";
         $params[] = $selectedAssociateStatus;
     }
-    if ($selectedCourseStatus) {
+
+    // Apply certificate status filter (only for Admin)
+    if ($isAdmin && $selectedCourseStatus) {
         if ($selectedCourseStatus === 'Active' || $selectedCourseStatus === 'Expired') {
             $query .= " AND EXISTS (
                 SELECT 1 FROM LatestCompletedAttempt lca2 
@@ -121,41 +194,31 @@ if ($role === 'Admin') {
         }
     }
 
-    // If no filters are selected for Admin users, do not fetch any data
-    if (!$isFilterSelected) {
-        $query .= " AND 1=0"; // Force no results
-    }
-} else {
-    // For non-Admin users, restrict data to their own associatenumber
-    $query .= " AND ws.associatenumber = $" . (count($params) + 1);
-    $params[] = $associatenumber;
-}
+    // Prepare and execute the statement
+    $statementName = "fetch_data_" . md5($query);
+    $stmt = pg_prepare($con, $statementName, $query);
+    $result = pg_execute($con, $statementName, $params);
 
-// Prepare the statement
-$stmt = pg_prepare($con, "fetch_data", $query);
-
-// Execute the query with the appropriate parameters
-$result = pg_execute($con, "fetch_data", $params);
-
-// Fetch the results if the query was successful
-if ($result) {
-    while ($row = pg_fetch_assoc($result)) {
-        $data[] = $row;
+    // Fetch the results if the query was successful
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            $data[] = $row;
+        }
     }
 }
 
-// Fetch all courses for the course filter dropdown (only for Admin users)
+// Fetch all courses for the course filter dropdown (for Admin and Offline Manager)
 $courses = [];
-if ($role === 'Admin') {
-    $coursesQuery = "SELECT courseid, coursename FROM wbt";
+if ($isAdmin || $isOfflineManager) {
+    $coursesQuery = "SELECT courseid, coursename FROM wbt ORDER BY coursename";
     $coursesResult = pg_query($con, $coursesQuery);
     $courses = pg_fetch_all($coursesResult);
 }
 
-// Fetch all associate statuses for the status filter dropdown (only for Admin users)
+// Fetch all associate statuses for the status filter dropdown (only for Admin)
 $statuses = [];
-if ($role === 'Admin') {
-    $statusQuery = "SELECT DISTINCT filterstatus FROM rssimyaccount_members";
+if ($isAdmin) {
+    $statusQuery = "SELECT DISTINCT filterstatus FROM rssimyaccount_members ORDER BY filterstatus";
     $statusResult = pg_query($con, $statusQuery);
     $statuses = pg_fetch_all($statusResult);
 }
@@ -210,47 +273,128 @@ if ($role === 'Admin') {
     <!-- AJAX for Associatenumber and Course Dropdowns -->
     <script>
         $(document).ready(function() {
-            // Fetch Associates
-            $('#associatenumber').select2({
-                ajax: {
-                    url: 'fetch_associates.php',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
+            <?php if ($isAdmin || $isOfflineManager): ?>
+                // Fetch Associates with supervisor restriction for Offline Manager
+                $('#associatenumber').select2({
+                    ajax: {
+                        url: 'fetch_associates.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                restrictToSupervisor: <?php echo $isOfflineManager ? 'true' : 'false'; ?>
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results
+                            };
+                        },
+                        cache: true
                     },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1
-            });
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    placeholder: 'Select Associate'
+                });
+            <?php endif; ?>
 
-            // Fetch Courses
-            $('#course').select2({
-                ajax: {
-                    url: 'fetch_courses.php',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
+            <?php if ($isAdmin): ?>
+                // Fetch Courses for Admin
+                $('#course').select2({
+                    ajax: {
+                        url: 'fetch_courses.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        },
+                        cache: true
                     },
-                    processResults: function(data) {
-                        return {
-                            results: data
-                        };
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    placeholder: 'Select Course'
+                });
+            <?php elseif ($isOfflineManager): ?>
+                // Initialize course select2 for Offline Manager (initially disabled)
+                $('#course').select2({
+                    ajax: {
+                        url: 'fetch_courses.php',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        },
+                        cache: true
                     },
-                    cache: true
-                },
-                minimumInputLength: 1
-            });
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    placeholder: 'Select Course',
+                    disabled: true
+                });
+
+                // Handle checkbox change for Offline Manager
+                $('#search_by_course').on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $('#course').prop('disabled', false);
+                        $('#course').next('.select2-container').find('.select2-selection').css('background-color', '#ffffff');
+                    } else {
+                        $('#course').prop('disabled', true);
+                        $('#course').val(null).trigger('change');
+                        $('#course').next('.select2-container').find('.select2-selection').css('background-color', '#e9ecef');
+                    }
+                });
+
+                // Set initial state based on checkbox
+                <?php if ($searchByCourseForActive): ?>
+                    $('#search_by_course').prop('checked', true);
+                    $('#course').prop('disabled', false);
+                    $('#course').next('.select2-container').find('.select2-selection').css('background-color', '#ffffff');
+                <?php else: ?>
+                    $('#course').prop('disabled', true);
+                    $('#course').next('.select2-container').find('.select2-selection').css('background-color', '#e9ecef');
+                <?php endif; ?>
+            <?php endif; ?>
+
+            <?php if ($selectedAssociate && ($isAdmin || $isOfflineManager)): ?>
+                // Set selected associate
+                var selectedOption = new Option('<?php echo $selectedAssociate; ?>', '<?php echo $selectedAssociate; ?>', true, true);
+                $('#associatenumber').append(selectedOption).trigger('change');
+            <?php endif; ?>
+
+            <?php if ($selectedCourse && $isAdmin): ?>
+                // Set selected course for Admin
+                var selectedCourse = new Option('<?php echo $selectedCourse; ?>', '<?php echo $selectedCourse; ?>', true, true);
+                $('#course').append(selectedCourse).trigger('change');
+            <?php endif; ?>
+
+            <?php if ($selectedCourse && $isOfflineManager && $searchByCourseForActive): ?>
+                // Set selected course for Offline Manager when checkbox is checked
+                var selectedCourse = new Option('<?php echo $selectedCourse; ?>', '<?php echo $selectedCourse; ?>', true, true);
+                $('#course').append(selectedCourse).trigger('change');
+            <?php endif; ?>
+
+            <?php if ($selectedAssociateStatus && $isAdmin): ?>
+                $('#associate_status').val('<?php echo $selectedAssociateStatus; ?>').trigger('change');
+            <?php endif; ?>
+
+            <?php if ($selectedCourseStatus && $isAdmin): ?>
+                $('#course_status').val('<?php echo $selectedCourseStatus; ?>').trigger('change');
+            <?php endif; ?>
         });
     </script>
 
@@ -283,6 +427,28 @@ if ($role === 'Admin') {
             background-color: #ffc107;
             color: #856404;
         }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .checkbox-label {
+            margin-left: 10px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .select2-container--default.select2-container--disabled .select2-selection--single {
+            background-color: #e9ecef !important;
+        }
     </style>
 </head>
 
@@ -306,19 +472,15 @@ if ($role === 'Admin') {
                         <div class="card-body">
                             <br>
                             <div class="container my-5">
-                                <?php if ($role === 'Admin'): ?>
-                                    <!-- Filter Form for Admin Users -->
+                                <!-- Filter Form based on user type -->
+                                <?php if ($isAdmin): ?>
+                                    <!-- Admin: Full filters -->
                                     <form method="POST" class="mb-4">
                                         <div class="row">
                                             <div class="col-md-3 mb-3">
                                                 <label for="associatenumber" class="form-label">Associate</label>
                                                 <select class="form-control select2" id="associatenumber" name="associatenumber">
                                                     <option value="">Select Associate</option>
-                                                    <?php if ($selectedAssociate): ?>
-                                                        <option value="<?= htmlspecialchars($selectedAssociate) ?>" selected>
-                                                            <?= htmlspecialchars($selectedAssociate) ?>
-                                                        </option>
-                                                    <?php endif; ?>
                                                 </select>
                                             </div>
 
@@ -326,13 +488,9 @@ if ($role === 'Admin') {
                                                 <label for="course" class="form-label">Course</label>
                                                 <select class="form-control select2" id="course" name="course">
                                                     <option value="">Select Course</option>
-                                                    <?php if ($selectedCourse): ?>
-                                                        <option value="<?= htmlspecialchars($selectedCourse) ?>" selected>
-                                                            <?= htmlspecialchars($selectedCourse) ?>
-                                                        </option>
-                                                    <?php endif; ?>
                                                 </select>
                                             </div>
+
                                             <div class="col-md-3 mb-3">
                                                 <label for="associate_status" class="form-label">Associate Status</label>
                                                 <select class="form-select" id="associate_status" name="associate_status">
@@ -344,6 +502,7 @@ if ($role === 'Admin') {
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+
                                             <div class="col-md-3 mb-3">
                                                 <label for="course_status" class="form-label">Certificate Status</label>
                                                 <select class="form-select" id="course_status" name="course_status">
@@ -361,6 +520,45 @@ if ($role === 'Admin') {
                                             </div>
                                         </div>
                                     </form>
+
+                                <?php elseif ($isOfflineManager): ?>
+                                    <!-- Offline Manager: Associate filter with checkbox for course search -->
+                                    <form method="POST" class="mb-4">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="associatenumber" class="form-label">Associate</label>
+                                                <select class="form-control select2" id="associatenumber" name="associatenumber">
+                                                    <option value="">Select Associate</option>
+                                                </select>
+                                                <small class="text-muted">You can only view data for yourself and your reportees</small>
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="search_by_course" name="search_by_course" value="1">
+                                                    <label class="form-check-label checkbox-label" for="search_by_course">
+                                                        Search by Course for Active Associates
+                                                    </label>
+                                                </div>
+                                                <label for="course" class="form-label">Course</label>
+                                                <select class="form-control select2" id="course" name="course">
+                                                    <option value="">Select Course</option>
+                                                </select>
+                                                <div class="help-text">
+                                                    <small>Note: When searching by course, only associates with "Active" status will be included.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                                <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                <?php else: ?>
+
                                 <?php endif; ?>
 
                                 <?php if ($data): ?>
@@ -368,11 +566,9 @@ if ($role === 'Admin') {
                                         <table id="coursesTable" class="table">
                                             <thead>
                                                 <tr>
-                                                    <?php if ($role === 'Admin'): ?>
-                                                        <th>Associate</th>
-                                                        <th>Name</th>
-                                                    <?php endif; ?>
-                                                    <th>Attempt Date</th>
+                                                    <th>Associate Number</th>
+                                                    <th>Name</th>
+                                                    <th>Latest Attempt Date</th>
                                                     <th>Course</th>
                                                     <th>Score</th>
                                                     <th>Status</th>
@@ -382,10 +578,8 @@ if ($role === 'Admin') {
                                             <tbody>
                                                 <?php foreach ($data as $row): ?>
                                                     <tr>
-                                                        <?php if ($role === 'Admin'): ?>
-                                                            <td><?= htmlspecialchars($row['associatenumber']) ?></td>
-                                                            <td><?= htmlspecialchars($row['fullname']) ?></td>
-                                                        <?php endif; ?>
+                                                        <td><?= htmlspecialchars($row['associatenumber']) ?></td>
+                                                        <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                         <td><?= date('d/m/Y h:i A', strtotime($row['completed_on'])) ?></td>
                                                         <td>
                                                             <?= htmlspecialchars($row['coursename']) ?><br>
@@ -394,11 +588,7 @@ if ($role === 'Admin') {
                                                         <td><?= htmlspecialchars($row['score_percentage']) ?>%</td>
                                                         <td>
                                                             <?php if ($row['status'] === 'Incomplete'): ?>
-                                                                <?php if (!empty($row['valid_upto']) && $row['certificate_status'] == 'Expired'): ?>
-                                                                    <span class="badge bg-danger">Expired</span>
-                                                                <?php else: ?>
-                                                                    <span class="badge badge-incomplete">❌ Failed Attempt</span>
-                                                                <?php endif; ?>
+                                                                <span class="badge badge-incomplete">❌ Failed Attempt</span>
                                                             <?php else: ?>
                                                                 <?php if ($row['certificate_status'] == 'Active'): ?>
                                                                     <span class="badge bg-success">Active</span>
@@ -423,22 +613,50 @@ if ($role === 'Admin') {
                                                         ?>
                                                         <td>
                                                             <?php
-                                                            // Only proceed if there's a valid_upto date (certificate exists)
-                                                            if (!empty($row['valid_upto'])) {
+                                                            $hasCertificate = !empty($row['valid_upto']);
+                                                            $hasPreviousPass = !empty($row['last_passed_date']);
+
+                                                            if ($hasCertificate) {
                                                                 $validDate = date('d/m/Y', strtotime($row['valid_upto']));
-                                                                // Certificate is expired if status is 'Expired' OR if it's a completed attempt with date in past
                                                                 $isExpired = ($row['certificate_status'] == 'Expired') ||
                                                                     ($row['status'] === 'Completed' && strtotime($row['valid_upto']) < time());
-                                                                echo '<span class="' . ($isExpired ? 'text-danger' : '') . '">' . $validDate . '</span>';
 
-                                                                // Add about to expire indicator with tooltip
-                                                                if ($isAboutToExpire && !$isExpired) {
-                                                                    $daysLeft = $currentDate->diff($expiryDateObj)->days;
-                                                                    $tooltipMessage = "⚠️ Certificate will expire in {$daysLeft} days! Last successful completion: " . date('d/m/Y', strtotime($row['last_passed_date'])) . ". Please retake the course before " . date('d/m/Y', strtotime($row['valid_upto'])) . " to maintain compliance and avoid any certification gaps.";
-                                                                    echo ' <span class="badge bg-warning text-dark" style="font-size: 0.7rem; cursor: help;" data-bs-toggle="tooltip" data-bs-html="true" title="' . htmlspecialchars($tooltipMessage) . '"><i class="bi bi-exclamation-triangle"></i></span>';
+                                                                if ($row['status'] === 'Completed') {
+                                                                    // SUCCESSFUL ATTEMPT - Show certificate status
+                                                                    echo '<span class="' . ($isExpired ? 'text-danger' : '') . '">' . $validDate . '</span>';
+
+                                                                    if ($isAboutToExpire && !$isExpired) {
+                                                                        $daysLeft = $currentDate->diff($expiryDateObj)->days;
+                                                                        $tooltipMessage = "⚠️ Certificate will expire in {$daysLeft} days! Last successful completion: " . date('d/m/Y', strtotime($row['last_passed_date'])) . ". Please retake the course before " . date('d/m/Y', strtotime($row['valid_upto'])) . " to maintain compliance and avoid any certification gaps.";
+                                                                        echo ' <span class="badge bg-warning text-dark" style="font-size: 0.7rem; cursor: help;" data-bs-toggle="tooltip" data-bs-html="true" title="' . htmlspecialchars($tooltipMessage) . '"><i class="bi bi-exclamation-triangle"></i></span>';
+                                                                    }
+                                                                } elseif ($hasPreviousPass) {
+                                                                    // FAILED ATTEMPT but has previous success
+                                                                    $lastPassedDate = date('d/m/Y', strtotime($row['last_passed_date']));
+
+
+                                                                    if ($isExpired) {
+                                                                        // Case: Certificate expired
+                                                                        // echo '<i class="bi bi-exclamation-triangle text-danger"></i> Certificate expired';
+                                                                        echo '<span class="text-danger">' . $validDate . '</span>';
+                                                                    } else {
+                                                                        // Case: Certificate still valid
+                                                                        $daysLeft = floor((strtotime($row['valid_upto']) - time()) / 86400);
+                                                                        echo '<i class="bi bi-info-circle"></i> Certificate valid until';
+                                                                        echo '<br><strong class="text-success">' . $validDate . '</strong>';
+                                                                        if ($daysLeft <= 30) {
+                                                                            echo '<br><small class="text-warning">⚠️ Expires in ' . $daysLeft . ' days</small>';
+                                                                        }
+                                                                    }
+                                                                    echo '<div class="text-muted" style="font-size: 0.85rem;">';
+                                                                    echo '<small>Last passed: ' . $lastPassedDate . '</small>';
+                                                                    echo '</div>';
+                                                                } else {
+                                                                    // No previous success (should not happen normally)
+                                                                    echo '<span class="text-muted">No certificate issued yet</span>';
                                                                 }
                                                             } else {
-                                                                // No certificate exists
+                                                                // NEVER PASSED - No certificate at all
                                                                 echo '<span class="text-muted">No certificate issued yet</span>';
                                                             }
                                                             ?>
@@ -448,12 +666,26 @@ if ($role === 'Admin') {
                                             </tbody>
                                         </table>
                                     </div>
-                                <?php elseif ($role === 'Admin' && $isFilterSelected): ?>
-                                    <div class="alert alert-warning">No records found for the selected filters.</div>
-                                <?php elseif ($role === 'Admin'): ?>
-                                    <div class="alert alert-info">Please select at least one filter to view results.</div>
-                                <?php else: ?>
-                                    <div class="alert alert-warning">No records found.</div>
+                                <?php elseif ($isAdmin && !$isFilterSelected): ?>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        Please select at least one filter to view results.
+                                    </div>
+                                <?php elseif ($isOfflineManager && !$isFilterSelected): ?>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        Please select an Associate, or check "Search by Course" and select a Course to view results.
+                                    </div>
+                                <?php elseif (empty($data) && !$isRegularNonAdmin): ?>
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        No records found for the selected filters.
+                                    </div>
+                                <?php elseif ($isRegularNonAdmin && empty($data)): ?>
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        No records found. You may not have attempted any courses yet.
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -474,7 +706,7 @@ if ($role === 'Admin') {
 
     <script>
         $(document).ready(function() {
-            <?php if (!empty($result)) : ?>
+            <?php if (!empty($data)) : ?>
                 $('#coursesTable').DataTable({
                     "order": [],
                     "pageLength": 25,
@@ -483,15 +715,17 @@ if ($role === 'Admin') {
                     }
                 });
             <?php endif; ?>
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
 
         // Reset Filters Button
         $(document).ready(function() {
             $('#resetFilters').on('click', function() {
-                $('#associatenumber').val('').trigger('change');
-                $('#course').val('').trigger('change');
-                $('#associate_status').val('');
-                $('#course_status').val('');
                 window.location.href = window.location.pathname;
             });
         });
