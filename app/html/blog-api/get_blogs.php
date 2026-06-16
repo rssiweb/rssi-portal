@@ -76,8 +76,8 @@ if ($total > 0) {
                 FROM blog_posts bp
                 LEFT JOIN blog_users bu ON bp.author_id = bu.id
                 $where 
-                -- ORDER BY COALESCE(published_at, bp.created_at) DESC 
-                ORDER BY RANDOM()
+                ORDER BY COALESCE(published_at, bp.created_at) DESC 
+                --ORDER BY RANDOM()
                 LIMIT $" . ($paramCount + 1) . " OFFSET $" . ($paramCount + 2);
 
     $postParams = $params;
