@@ -61,6 +61,25 @@ while ($row = pg_fetch_assoc($latest_dates_result)) {
     $latest_dates_lookup[$key] = $row['latest_date'];
 }
 
+// Get the end_date for the latest version of each workday
+$end_dates_query = "SELECT s1.associate_number, s1.workday, s1.end_date
+                    FROM associate_schedule_v2 s1
+                    INNER JOIN (
+                        SELECT associate_number, workday, MAX(start_date) as latest_date
+                        FROM associate_schedule_v2
+                        GROUP BY associate_number, workday
+                    ) s2 ON s1.associate_number = s2.associate_number 
+                        AND s1.workday = s2.workday 
+                        AND s1.start_date = s2.latest_date";
+$end_dates_result = pg_query($con, $end_dates_query);
+
+// Create a lookup array for end_dates of the latest version
+$end_dates_lookup = [];
+while ($row = pg_fetch_assoc($end_dates_result)) {
+    $key = $row['associate_number'] . '_' . $row['workday'];
+    $end_dates_lookup[$key] = $row['end_date'];
+}
+
 // Get all associate status info (effectivedate, filterstatus)
 $associate_status_query = "SELECT associatenumber, effectivedate, filterstatus 
                           FROM rssimyaccount_members 
@@ -129,7 +148,7 @@ if (!empty($params)) {
     $data_result = pg_query($con, $data_query);
 }
 
-// Get statistics - we need to calculate based on actual active status including associate status
+// Get statistics - we need to calculate based on actual active status including associate status AND end_date
 $stats_query = "SELECT 
                 COUNT(*) as total_schedules,
                 COUNT(DISTINCT associate_number) as unique_associates
@@ -137,7 +156,7 @@ $stats_query = "SELECT
 $stats_result = pg_query($con, $stats_query);
 $stats = $stats_result ? pg_fetch_assoc($stats_result) : ['total_schedules' => 0, 'unique_associates' => 0];
 
-// Calculate active/inactive counts based on latest date logic AND associate status
+// Calculate active/inactive counts based on latest date logic, associate status, AND end_date
 $active_count = 0;
 $inactive_count = 0;
 $temp_result = pg_query($con, "SELECT s.*, a.filterstatus, a.effectivedate 
@@ -146,6 +165,7 @@ $temp_result = pg_query($con, "SELECT s.*, a.filterstatus, a.effectivedate
 while ($row = pg_fetch_assoc($temp_result)) {
     $key = $row['associate_number'] . '_' . $row['workday'];
     $latest_date = $latest_dates_lookup[$key] ?? null;
+    $schedule_end_date = $end_dates_lookup[$key] ?? null;
 
     // Check if associate is inactive based on effectivedate and filterstatus
     $is_associate_inactive = false;
@@ -157,8 +177,18 @@ while ($row = pg_fetch_assoc($temp_result)) {
         }
     }
 
-    // A schedule is active if it's the latest version AND the associate is active
-    if ($latest_date && $row['start_date'] == $latest_date && !$is_associate_inactive) {
+    // Check if schedule has end_date and it has passed
+    $is_schedule_expired = false;
+    if (!empty($schedule_end_date)) {
+        $end_date_timestamp = strtotime($schedule_end_date);
+        $current_date = strtotime(date('Y-m-d'));
+        if ($end_date_timestamp < $current_date) {
+            $is_schedule_expired = true;
+        }
+    }
+
+    // A schedule is active if it's the latest version AND associate is active AND not expired
+    if ($latest_date && $row['start_date'] == $latest_date && !$is_associate_inactive && !$is_schedule_expired) {
         $active_count++;
     } else {
         $inactive_count++;
@@ -457,9 +487,20 @@ $stats['inactive_schedules'] = $inactive_count;
                                                 $date = date('Y-m-d', strtotime($date_str));
                                                 $key = $row['associate_number'] . '_' . $workday;
                                                 $latest_date = $latest_dates_lookup[$key] ?? null;
+                                                $schedule_end_date = $end_dates_lookup[$key] ?? null;
 
-                                                // A schedule is active only if it's the latest AND associate is active
-                                                if ($latest_date && $date == $latest_date && !$is_associate_inactive) {
+                                                // Check if schedule has end_date and it has passed
+                                                $is_schedule_expired = false;
+                                                if (!empty($schedule_end_date)) {
+                                                    $end_date_timestamp = strtotime($schedule_end_date);
+                                                    $current_date = strtotime(date('Y-m-d'));
+                                                    if ($end_date_timestamp < $current_date) {
+                                                        $is_schedule_expired = true;
+                                                    }
+                                                }
+
+                                                // A schedule is active only if it's the latest AND associate is active AND not expired
+                                                if ($latest_date && $date == $latest_date && !$is_associate_inactive && !$is_schedule_expired) {
                                                     $active_in_group++;
                                                 }
                                             }
@@ -512,19 +553,59 @@ $stats['inactive_schedules'] = $inactive_count;
                                                 </td>
 
                                                 <td>
-                                                    <?php
-                                                    $workdays = explode(',', $row['workdays'] ?? '');
-                                                    foreach ($workdays as $day):
-                                                        $day = trim($day);
-                                                        if (!empty($day)):
-                                                    ?>
-                                                            <span class="day-badge"><?php echo $day; ?></span>
-                                                    <?php
-                                                        endif;
-                                                    endforeach;
-                                                    ?>
-                                                    <div class="text-muted mt-1"><?php echo $row['day_count'] ?? '0'; ?> days</div>
-                                                </td>
+    <?php
+    // Get all workdays and determine which are active
+    $all_workdays = explode(',', $row['workdays'] ?? '');
+    $active_days_list = [];
+    
+    // Parse the date-day pairs to determine which schedules are active
+    $date_day_pairs = explode(',', $row['date_day_pairs'] ?? '');
+    foreach ($date_day_pairs as $pair) {
+        list($date_str, $workday) = explode('||', $pair);
+        $date = date('Y-m-d', strtotime($date_str));
+        $key = $row['associate_number'] . '_' . $workday;
+        $latest_date = $latest_dates_lookup[$key] ?? null;
+        $schedule_end_date = $end_dates_lookup[$key] ?? null;
+
+        // Check if schedule has end_date and it has passed
+        $is_schedule_expired = false;
+        if (!empty($schedule_end_date)) {
+            $end_date_timestamp = strtotime($schedule_end_date);
+            $current_date = strtotime(date('Y-m-d'));
+            if ($end_date_timestamp < $current_date) {
+                $is_schedule_expired = true;
+            }
+        }
+
+        // A schedule is active only if it's the latest AND associate is active AND not expired
+        if ($latest_date && $date == $latest_date && !$is_associate_inactive && !$is_schedule_expired) {
+            if (!in_array($workday, $active_days_list)) {
+                $active_days_list[] = $workday;
+            }
+        }
+    }
+    
+    // Sort active days in correct order
+    $day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    usort($active_days_list, function($a, $b) use ($day_order) {
+        return array_search($a, $day_order) - array_search($b, $day_order);
+    });
+    
+    if (!empty($active_days_list)):
+        foreach ($active_days_list as $day):
+            $day = trim($day);
+            if (!empty($day)):
+    ?>
+                <span class="day-badge day-badge-active"><?php echo $day; ?></span>
+    <?php
+            endif;
+        endforeach;
+    else:
+    ?>
+        <span class="text-muted">No active days</span>
+    <?php endif; ?>
+    <div class="text-muted mt-1"><?php echo count($active_days_list); ?> active days</div>
+</td>
 
                                                 <td>
                                                     <div class="time-slot"><?php echo $row['formatted_start']; ?> - <?php echo $row['formatted_end']; ?></div>
@@ -565,11 +646,10 @@ $stats['inactive_schedules'] = $inactive_count;
                                                     <div class="btn-group btn-group-sm">
                                                         <button class="btn btn-outline-primary"
                                                             onclick="viewGroupDetails('<?php echo $row['associate_number']; ?>', 
-                                                                  '<?php echo $row['formatted_start']; ?>', 
-                                                                  '<?php echo $row['formatted_end']; ?>',
-                                                                  <?php echo $is_associate_inactive ? 'true' : 'false'; ?>)"
-                                                            title="View All Schedules in This Group"
-                                                            <?php echo $is_associate_inactive ? 'disabled' : ''; ?>>
+                  '<?php echo $row['formatted_start']; ?>', 
+                  '<?php echo $row['formatted_end']; ?>',
+                  <?php echo $is_associate_inactive ? 'true' : 'false'; ?>)"
+                                                            title="View All Schedules in This Group">
                                                             <i class="bi bi-eye"></i> View
                                                         </button>
                                                     </div>
@@ -643,10 +723,11 @@ $stats['inactive_schedules'] = $inactive_count;
         });
 
         function viewGroupDetails(associateNumber, startTime, endTime, isAssociateInactive) {
-            if (isAssociateInactive) {
-                alert('Cannot view details for inactive associate');
-                return;
-            }
+            // Remove the alert for inactive associates - just show the modal
+            // if (isAssociateInactive) {
+            //     alert('Cannot view details for inactive associate');
+            //     return;
+            // }
 
             $('#group-schedule-details').html('<div class="text-center p-4"><div class="spinner-border" role="status"></div><p class="mt-2">Loading group schedules...</p></div>');
             var modal = new bootstrap.Modal(document.getElementById('groupScheduleModal'));

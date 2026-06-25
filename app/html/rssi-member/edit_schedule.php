@@ -31,21 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $start_date = $_POST['start_date'] ?? '';
     $reporting_time = $_POST['reporting_time'] ?? '';
     $exit_time = $_POST['exit_time'] ?? '';
+    $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
 
     $update_query = "UPDATE associate_schedule_v2 
                     SET workday = $1, 
                         start_date = $2, 
                         reporting_time = $3, 
                         exit_time = $4,
+                        end_date = $5,
                         updated_at = CURRENT_TIMESTAMP,
-                        submitted_by = $5
-                    WHERE id = $6";
+                        submitted_by = $6
+                    WHERE id = $7";
 
     $result = pg_query_params($con, $update_query, [
         $workday,
         $start_date,
         $reporting_time,
         $exit_time,
+        $end_date,
         $associatenumber,
         $id
     ]);
@@ -74,6 +77,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <style>
+        .optional-field {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        .end-date-info {
+            background-color: #f8f9fa;
+            border-left: 3px solid #ffc107;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        .end-date-info i {
+            color: #ffc107;
+        }
+    </style>
 </head>
 
 <body>
@@ -90,6 +113,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
+                            <h5 class="card-title">Edit Schedule</h5>
+
+                            <?php if (isset($error)): ?>
+                                <div class="alert alert-danger">Error updating schedule: <?php echo htmlspecialchars($error); ?></div>
+                            <?php endif; ?>
+
                             <form method="POST">
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -128,6 +157,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
 
+                                <!-- End Date Field - Optional -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            End Date
+                                            <span class="optional-field">(Optional)</span>
+                                        </label>
+                                        <input type="date" class="form-control" name="end_date"
+                                            value="<?php echo !empty($schedule['end_date']) ? $schedule['end_date'] : ''; ?>">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle"></i>
+                                            Leave empty if this schedule should remain active indefinitely.
+                                            If set, the schedule will be considered inactive after this date.
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <?php if (!empty($schedule['end_date'])): ?>
+                                            <div class="end-date-info">
+                                                <i class="bi bi-calendar-x"></i>
+                                                <strong>Current End Date:</strong>
+                                                <?php echo date('d-M-Y', strtotime($schedule['end_date'])); ?>
+                                                <?php
+                                                $current_date = strtotime(date('Y-m-d'));
+                                                $end_date = strtotime($schedule['end_date']);
+                                                if ($end_date < $current_date):
+                                                ?>
+                                                    <span class="badge bg-danger">Expired</span>
+                                                <?php elseif ($end_date == $current_date): ?>
+                                                    <span class="badge bg-warning">Expires Today</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-info">Valid Until</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="end-date-info" style="border-left-color: #28a745;">
+                                                <i class="bi bi-infinity" style="color: #28a745;"></i>
+                                                <strong>Current Status:</strong> No end date set - Schedule is active indefinitely
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
                                 <div class="text-end">
                                     <a href="view_shift.php" class="btn btn-secondary">Cancel</a>
                                     <button type="submit" class="btn btn-primary">Update Schedule</button>
@@ -139,6 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </section>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
