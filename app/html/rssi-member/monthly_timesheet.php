@@ -90,9 +90,9 @@ employee_workdays AS (
     LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    -- UPDATED: Get the latest schedule for each date from associate_schedule_v2
+    -- Get the latest schedule for each date from associate_schedule_v2, considering end_date
     LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start
+        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
         FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
@@ -107,11 +107,13 @@ employee_workdays AS (
                 WHEN 6 THEN 'Sat'
                 WHEN 0 THEN 'Sun'
             END
+        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
     WHERE 
-        -- UPDATED: Only count workdays if a schedule exists for that day OR it's an exceptional workday
+        -- Only count workdays if a schedule exists for that day OR it's an exceptional workday
         (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber
@@ -138,9 +140,9 @@ others_workdays AS (
     LEFT JOIN 
         workday_exceptions w
         ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    -- UPDATED: Get the latest schedule for each date from associate_schedule_v2
+    -- Get the latest schedule for each date from associate_schedule_v2, considering end_date
     LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start
+        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
         FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
@@ -155,11 +157,13 @@ others_workdays AS (
                 WHEN 6 THEN 'Sat'
                 WHEN 0 THEN 'Sun'
             END
+        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
     WHERE 
-        -- UPDATED: Only count workdays if a schedule exists for that day OR it's an exceptional workday
+        -- Only count workdays if a schedule exists for that day OR it's an exceptional workday
         (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
     GROUP BY 
         m.associatenumber

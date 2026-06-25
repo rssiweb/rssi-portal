@@ -117,9 +117,9 @@ employee_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             )
-    -- Get the latest schedule for each date
+    -- Get the latest schedule for each date, considering end_date
     LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start
+        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
         FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
@@ -134,6 +134,8 @@ employee_workdays AS (
                 WHEN 6 THEN 'Sat'
                 WHEN 0 THEN 'Sun'
             END
+        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
@@ -169,9 +171,9 @@ others_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             )
-    -- Get the latest schedule for each date
+    -- Get the latest schedule for each date, considering end_date
     LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start
+        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
         FROM associate_schedule_v2 s
         WHERE s.associate_number = m.associatenumber
         AND s.start_date <= h.attendance_date
@@ -186,6 +188,8 @@ others_workdays AS (
                 WHEN 6 THEN 'Sat'
                 WHEN 0 THEN 'Sun'
             END
+        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
         ORDER BY s.start_date DESC
         LIMIT 1
     ) sched ON true
@@ -569,7 +573,7 @@ $associateNumberCount = count($uniqueAssociateNumbers);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -811,8 +815,8 @@ $associateNumberCount = count($uniqueAssociateNumbers);
         crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         const today = new Date();
         const maxMonth = today.toISOString().slice(0, 7);
