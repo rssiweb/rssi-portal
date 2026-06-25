@@ -22,23 +22,52 @@ $view_mode = isset($_GET['view']) ? $_GET['view'] : 'daily'; // 'daily' or 'year
 $compare_year = isset($_GET['compare_year']) ? intval($_GET['compare_year']) : null;
 $compare_month = isset($_GET['compare_month']) ? intval($_GET['compare_month']) : null;
 
-// Handle multiple prefixes
-$user_prefix = isset($_GET['user_prefix']) ? $_GET['user_prefix'] : ['A'];
-if (!is_array($user_prefix)) {
-    $user_prefix = [$user_prefix];
-}
+// New filter variables
+$selected_location = isset($_GET['location']) ? $_GET['location'] : '';
+$selected_user_type = isset($_GET['user_type']) ? $_GET['user_type'] : '';
 
-// Build prefix condition
-$prefix_conditions = [];
-foreach ($user_prefix as $prefix) {
-    if ($prefix === 'OTHER') {
-        $prefix_conditions[] = "(user_id NOT LIKE 'A%' AND user_id NOT LIKE 'B%')";
-    } else {
-        $escaped = pg_escape_string($con, $prefix);
-        $prefix_conditions[] = "user_id LIKE '$escaped%'";
+// Build the WHERE clause for filters using JOINS with correct column mappings
+$filter_join = '';
+$filter_where = '';
+
+// Case 1: Both location and user type are selected
+if (!empty($selected_location) && !empty($selected_user_type)) {
+    if ($selected_user_type === 'student') {
+        // Student: user_id = student_id, location = preferredbranch
+        $filter_join = "INNER JOIN rssimyprofile_student s ON a.user_id = s.student_id";
+        $filter_where = "AND s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "'";
+    } elseif ($selected_user_type === 'associate') {
+        // Associate: user_id = associatenumber, location = basebranch
+        $filter_join = "INNER JOIN rssimyaccount_members m ON a.user_id = m.associatenumber";
+        $filter_where = "AND m.basebranch = '" . pg_escape_string($con, $selected_location) . "'";
     }
 }
-$where_prefix_filter = !empty($prefix_conditions) ? 'AND (' . implode(' OR ', $prefix_conditions) . ')' : '';
+// Case 2: Only location is selected - check both tables using LEFT JOIN
+elseif (!empty($selected_location) && empty($selected_user_type)) {
+    $filter_join = "
+        LEFT JOIN rssimyprofile_student s ON a.user_id = s.student_id
+        LEFT JOIN rssimyaccount_members m ON a.user_id = m.associatenumber
+    ";
+    $filter_where = "AND (s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "' 
+                     OR m.basebranch = '" . pg_escape_string($con, $selected_location) . "')";
+}
+// Case 3: Only user type is selected
+elseif (empty($selected_location) && !empty($selected_user_type)) {
+    if ($selected_user_type === 'student') {
+        $filter_join = "INNER JOIN rssimyprofile_student s ON a.user_id = s.student_id";
+    } elseif ($selected_user_type === 'associate') {
+        $filter_join = "INNER JOIN rssimyaccount_members m ON a.user_id = m.associatenumber";
+    }
+}
+// Case 4: No filters - $filter_join and $filter_where remain empty
+
+// Get locations from office_locations table for dropdown
+$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+$locations_result = pg_query($con, $locations_query);
+$locations = [];
+while ($row = pg_fetch_assoc($locations_result)) {
+    $locations[] = $row['name'];
+}
 
 /*********************** DAILY DATA ***********************/
 $daily_data = null;
@@ -63,18 +92,26 @@ if ($view_mode === 'daily') {
     // Main query for selected period
     $daily_query = "
     SELECT 
-        DATE(punch_in) AS day,
-        EXTRACT(DAY FROM punch_in) AS day_num,
-        COUNT(DISTINCT user_id) AS daily_count
-    FROM attendance
-    WHERE EXTRACT(YEAR FROM punch_in) = $selected_year
-    AND EXTRACT(MONTH FROM punch_in) = $selected_month
-    $where_prefix_filter
-    GROUP BY DATE(punch_in), EXTRACT(DAY FROM punch_in)
-    ORDER BY DATE(punch_in)";
+        DATE(a.punch_in) AS day,
+        EXTRACT(DAY FROM a.punch_in) AS day_num,
+        COUNT(DISTINCT a.user_id) AS daily_count
+    FROM attendance a
+    $filter_join
+    WHERE EXTRACT(YEAR FROM a.punch_in) = $selected_year
+    AND EXTRACT(MONTH FROM a.punch_in) = $selected_month
+    $filter_where
+    GROUP BY DATE(a.punch_in), EXTRACT(DAY FROM a.punch_in)
+    ORDER BY DATE(a.punch_in)";
 
     $daily_result = pg_query($con, $daily_query);
-    $daily_data = pg_fetch_all($daily_result);
+
+    if (!$daily_result) {
+        $error_message = pg_last_error($con);
+        error_log("Daily Query Error: " . $error_message);
+        $daily_data = [];
+    } else {
+        $daily_data = pg_fetch_all($daily_result);
+    }
 
     // Create arrays for all days of month, initialized with null
     $all_labels = [];
@@ -94,15 +131,17 @@ if ($view_mode === 'daily') {
             $main_counts[] = $all_main_counts[$day];
         }
 
-        foreach ($daily_data as $row) {
-            $date = new DateTime($row['day']);
-            $final_daily_data[] = [
-                'date' => $date->format('M j'),
-                'day' => $date->format('D'),
-                'main_count' => $row['daily_count'],
-                'compare_count' => null,
-                'difference' => null
-            ];
+        if ($daily_data) {
+            foreach ($daily_data as $row) {
+                $date = new DateTime($row['day']);
+                $final_daily_data[] = [
+                    'date' => $date->format('M j'),
+                    'day' => $date->format('D'),
+                    'main_count' => $row['daily_count'],
+                    'compare_count' => null,
+                    'difference' => null
+                ];
+            }
         }
     }
     // CASE 2: With comparison
@@ -113,17 +152,25 @@ if ($view_mode === 'daily') {
         // Query all comparison data for the month
         $compare_query = "
         SELECT 
-            EXTRACT(DAY FROM punch_in) AS day_num,
-            COUNT(DISTINCT user_id) AS daily_count
-        FROM attendance
-        WHERE EXTRACT(YEAR FROM punch_in) = $compare_year
-        AND EXTRACT(MONTH FROM punch_in) = $compare_month
-        $where_prefix_filter
+            EXTRACT(DAY FROM a.punch_in) AS day_num,
+            COUNT(DISTINCT a.user_id) AS daily_count
+        FROM attendance a
+        $filter_join
+        WHERE EXTRACT(YEAR FROM a.punch_in) = $compare_year
+        AND EXTRACT(MONTH FROM a.punch_in) = $compare_month
+        $filter_where
         GROUP BY day_num
         ORDER BY day_num";
 
         $compare_result = pg_query($con, $compare_query);
-        $comparison_data = pg_fetch_all($compare_result);
+
+        if (!$compare_result) {
+            $error_message = pg_last_error($con);
+            error_log("Compare Query Error: " . $error_message);
+            $comparison_data = [];
+        } else {
+            $comparison_data = pg_fetch_all($compare_result);
+        }
 
         // Create array for comparison counts
         $all_compare_counts = array_fill(1, $compare_days_in_month, null);
@@ -169,28 +216,36 @@ $monthly_breakdown_data = [];
 if ($view_mode === 'yearly') {
     $yearly_query = "
     SELECT 
-        EXTRACT(YEAR FROM punch_in)::int AS year,
-        COUNT(DISTINCT user_id || '-' || DATE(punch_in)) AS total_present_days,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 1 THEN user_id || '-' || DATE(punch_in) END) AS jan,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 2 THEN user_id || '-' || DATE(punch_in) END) AS feb,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 3 THEN user_id || '-' || DATE(punch_in) END) AS mar,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 4 THEN user_id || '-' || DATE(punch_in) END) AS apr,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 5 THEN user_id || '-' || DATE(punch_in) END) AS may,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 6 THEN user_id || '-' || DATE(punch_in) END) AS jun,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 7 THEN user_id || '-' || DATE(punch_in) END) AS jul,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 8 THEN user_id || '-' || DATE(punch_in) END) AS aug,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 9 THEN user_id || '-' || DATE(punch_in) END) AS sep,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 10 THEN user_id || '-' || DATE(punch_in) END) AS oct,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 11 THEN user_id || '-' || DATE(punch_in) END) AS nov,
-        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM punch_in) = 12 THEN user_id || '-' || DATE(punch_in) END) AS dec
-    FROM attendance
-    WHERE EXTRACT(YEAR FROM punch_in) BETWEEN $start_year AND $end_year
-    $where_prefix_filter
-    GROUP BY EXTRACT(YEAR FROM punch_in)
+        EXTRACT(YEAR FROM a.punch_in)::int AS year,
+        COUNT(DISTINCT a.user_id || '-' || DATE(a.punch_in)) AS total_present_days,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 1 THEN a.user_id || '-' || DATE(a.punch_in) END) AS jan,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 2 THEN a.user_id || '-' || DATE(a.punch_in) END) AS feb,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 3 THEN a.user_id || '-' || DATE(a.punch_in) END) AS mar,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 4 THEN a.user_id || '-' || DATE(a.punch_in) END) AS apr,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 5 THEN a.user_id || '-' || DATE(a.punch_in) END) AS may,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 6 THEN a.user_id || '-' || DATE(a.punch_in) END) AS jun,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 7 THEN a.user_id || '-' || DATE(a.punch_in) END) AS jul,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 8 THEN a.user_id || '-' || DATE(a.punch_in) END) AS aug,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 9 THEN a.user_id || '-' || DATE(a.punch_in) END) AS sep,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 10 THEN a.user_id || '-' || DATE(a.punch_in) END) AS oct,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 11 THEN a.user_id || '-' || DATE(a.punch_in) END) AS nov,
+        COUNT(DISTINCT CASE WHEN EXTRACT(MONTH FROM a.punch_in) = 12 THEN a.user_id || '-' || DATE(a.punch_in) END) AS dec
+    FROM attendance a
+    $filter_join
+    WHERE EXTRACT(YEAR FROM a.punch_in) BETWEEN $start_year AND $end_year
+    $filter_where
+    GROUP BY EXTRACT(YEAR FROM a.punch_in)
     ORDER BY year DESC";
 
     $yearly_result = pg_query($con, $yearly_query);
-    $yearly_results = pg_fetch_all($yearly_result);
+
+    if (!$yearly_result) {
+        $error_message = pg_last_error($con);
+        error_log("Yearly Query Error: " . $error_message);
+        $yearly_results = [];
+    } else {
+        $yearly_results = pg_fetch_all($yearly_result);
+    }
 
     if ($yearly_results) {
         foreach ($yearly_results as $row) {
@@ -231,7 +286,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -318,6 +373,12 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
             border-radius: 5px;
             margin-bottom: 15px;
         }
+
+        .filter-help-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
     </style>
 </head>
 
@@ -341,13 +402,13 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                 <ul class="nav nav-pills view-switcher">
                                     <li class="nav-item">
                                         <a class="nav-link <?= $view_mode === 'daily' ? 'active' : '' ?>"
-                                            href="?view=daily&year=<?= $selected_year ?>&month=<?= $selected_month ?>&user_prefix[]=<?= implode('&user_prefix[]=', $user_prefix) ?>">
+                                            href="?view=daily&year=<?= $selected_year ?>&month=<?= $selected_month ?>&location=<?= urlencode($selected_location) ?>&user_type=<?= urlencode($selected_user_type) ?>">
                                             <i class="bi bi-calendar-day"></i> Daily Analysis
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link <?= $view_mode === 'yearly' ? 'active' : '' ?>"
-                                            href="?view=yearly&start_year=<?= $start_year ?>&end_year=<?= $end_year ?>&user_prefix[]=<?= implode('&user_prefix[]=', $user_prefix) ?>">
+                                            href="?view=yearly&start_year=<?= $start_year ?>&end_year=<?= $end_year ?>&location=<?= urlencode($selected_location) ?>&user_type=<?= urlencode($selected_user_type) ?>">
                                             <i class="bi bi-calendar-range"></i> Yearly Trends
                                         </a>
                                     </li>
@@ -359,7 +420,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                         <input type="hidden" name="view" value="<?= $view_mode ?>">
 
                                         <?php if ($view_mode === 'daily'): ?>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label for="year" class="form-label">Year</label>
                                                 <select class="form-select" id="year" name="year">
                                                     <?php for ($y = $min_year; $y <= $max_year; $y++): ?>
@@ -367,7 +428,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                                     <?php endfor; ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label for="month" class="form-label">Month</label>
                                                 <select class="form-select" id="month" name="month">
                                                     <?php for ($m = 1; $m <= 12; $m++): ?>
@@ -398,23 +459,54 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                                             <?php endfor; ?>
                                                         </select>
                                                     </div>
-                                                    <div class="col-md-2 d-flex align-items-end">
-                                                        <button type="submit" class="btn btn-primary me-2"><i class="bi bi-arrow-repeat"></i> Update Range</button>
-                                                    </div>
                                                 </div>
                                             </div>
                                         <?php endif; ?>
 
-                                        <div class="col-md-4">
-                                            <label for="user_prefix" class="form-label">User ID Prefix</label>
-                                            <select class="form-select" id="user_prefix" name="user_prefix[]" multiple>
-                                                <option value="A" <?= in_array('A', $user_prefix) ? 'selected' : '' ?>>Starts with A</option>
-                                                <option value="B" <?= in_array('B', $user_prefix) ? 'selected' : '' ?>>Starts with B</option>
-                                                <option value="OTHER" <?= in_array('OTHER', $user_prefix) ? 'selected' : '' ?>>Does NOT start with A or B</option>
+                                        <!-- Location Filter -->
+                                        <div class="col-md-3">
+                                            <label for="location" class="form-label">Location</label>
+                                            <select class="form-select" id="location" name="location">
+                                                <option value="">All Locations</option>
+                                                <?php foreach ($locations as $location): ?>
+                                                    <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($location) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
                                             </select>
-                                            <small>Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                                            <div class="filter-help-text">
+                                                <i class="bi bi-info-circle"></i>
+                                                <?php if ($selected_user_type === 'student'): ?>
+                                                    Filters by preferred branch
+                                                <?php elseif ($selected_user_type === 'associate'): ?>
+                                                    Filters by base branch
+                                                <?php else: ?>
+                                                    Filters by preferred branch (student) or base branch (associate)
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
+
+                                        <!-- User Type Filter -->
+                                        <div class="col-md-2">
+                                            <label for="user_type" class="form-label">User Type</label>
+                                            <select class="form-select" id="user_type" name="user_type">
+                                                <option value="">All Users</option>
+                                                <option value="student" <?= $selected_user_type === 'student' ? 'selected' : '' ?>>Student</option>
+                                                <option value="associate" <?= $selected_user_type === 'associate' ? 'selected' : '' ?>>Associate</option>
+                                            </select>
+                                            <div class="filter-help-text">
+                                                <!-- <i class="bi bi-info-circle"></i> -->
+                                                <!-- <?php if ($selected_user_type === 'student'): ?>
+                                                    Users from rssimyprofile_student
+                                                <?php elseif ($selected_user_type === 'associate'): ?>
+                                                    Users from rssimyaccount_members
+                                                <?php else: ?>
+                                                    All user types
+                                                <?php endif; ?> -->
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-1 d-flex align-items-end">
                                             <button type="submit" class="btn btn-primary me-2"><i class="bi bi-filter"></i> Apply</button>
                                         </div>
 
@@ -445,7 +537,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                                     </div>
                                                     <div class="col-md-2 d-flex align-items-end">
                                                         <button type="submit" class="btn btn-outline-primary me-2"><i class="bi bi-arrow-left-right"></i> Compare</button>
-                                                        <a href="?view=daily&year=<?= $selected_year ?>&month=<?= $selected_month ?>&user_prefix[]=<?= implode('&user_prefix[]=', $user_prefix) ?>" class="btn btn-outline-secondary">Clear</a>
+                                                        <a href="?view=daily&year=<?= $selected_year ?>&month=<?= $selected_month ?>&location=<?= urlencode($selected_location) ?>&user_type=<?= urlencode($selected_user_type) ?>" class="btn btn-outline-secondary">Clear</a>
                                                     </div>
                                                 </div>
                                             </div>
@@ -495,7 +587,14 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                         <!-- Main Chart -->
                                         <div class="card mt-4">
                                             <div class="card-header">
-                                                <h5>Daily Footfall Trend - <?= DateTime::createFromFormat('!m', $selected_month)->format('F') ?> <?= $selected_year ?></h5>
+                                                <h5>Daily Footfall Trend - <?= DateTime::createFromFormat('!m', $selected_month)->format('F') ?> <?= $selected_year ?>
+                                                    <?php if ($selected_location): ?>
+                                                        <span class="badge bg-primary ms-2">Location: <?= htmlspecialchars($selected_location) ?></span>
+                                                    <?php endif; ?>
+                                                    <?php if ($selected_user_type): ?>
+                                                        <span class="badge bg-success ms-2">Type: <?= htmlspecialchars($selected_user_type) ?></span>
+                                                    <?php endif; ?>
+                                                </h5>
                                             </div>
                                             <div class="card-body">
                                                 <div class="chart-container">
@@ -698,8 +797,8 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         // Export to Excel function
         function exportToExcel(mode) {
@@ -886,6 +985,23 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
             const startYear = document.getElementById('start_year');
             if (parseInt(this.value) < parseInt(startYear.value)) {
                 startYear.value = this.value;
+            }
+        });
+
+        // Auto-update location help text based on user type selection
+        document.getElementById('user_type')?.addEventListener('change', function() {
+            const locationHelp = document.querySelector('#location + .filter-help-text');
+            const userTypeHelp = document.querySelector('#user_type + .filter-help-text');
+
+            if (this.value === 'student') {
+                locationHelp.innerHTML = '<i class="bi bi-info-circle"></i> Filters by preferred branch';
+                // userTypeHelp.innerHTML = '<i class="bi bi-info-circle"></i> Users from rssimyprofile_student';
+            } else if (this.value === 'associate') {
+                locationHelp.innerHTML = '<i class="bi bi-info-circle"></i> Filters by base branch';
+                // userTypeHelp.innerHTML = '<i class="bi bi-info-circle"></i> Users from rssimyaccount_members';
+            } else {
+                locationHelp.innerHTML = '<i class="bi bi-info-circle"></i> Filters by preferred branch (student) or base branch (associate)';
+                // userTypeHelp.innerHTML = '<i class="bi bi-info-circle"></i> All user types';
             }
         });
     </script>
