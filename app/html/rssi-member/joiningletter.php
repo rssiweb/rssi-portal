@@ -148,7 +148,7 @@ if (!$result) {
         }
 
         .qr-image {
-            width: 180px;
+            width: 100px;
         }
 
         @media print {
@@ -305,8 +305,8 @@ if (!$result) {
                                 echo '<ul style="list-style-type: none; padding: 0;">';
                                 echo '<li><strong>Position:</strong> ' . $array['position'] . ' (' . $array['job_type'] . ')</li>';
                                 echo '<li><strong>Division:</strong> ' . $array['depb'] . '</li>';
-                                echo '<li><strong>Shift:</strong> ' . (!empty($array['shift']) ? $array['shift'] : 'Not Applicable') . '</li>';
                                 echo '<li><strong>Date of Join:</strong> ' . date('d/F/Y', strtotime($array['doj'])) . '</li>';
+                                echo '<li><strong>Shift:</strong> ' . (!empty($array['shift']) ? $array['shift'] : 'Not Applicable') . '</li>';
                                 echo '<li><strong>Reporting Time:</strong> ' . $reporting_time . '</li>';
                                 $supervisor = $array['supervisor'];
 
@@ -349,10 +349,6 @@ if (!$result) {
                                         </ol>
                                     </li>
                                 </ol>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
                                 <ol start=2>
                                     <li>
                                         <p>Please complete the mandatory web-based training within one month of your joining date. You can take multiple attempts to achieve a passing score or higher. Once you pass, you can take a screenshot for your reference. To access the training, visit the following URL: https://login.rssi.in/rssi-member/iexplore.php</p>
@@ -402,13 +398,8 @@ if (!$result) {
                                         <div class="info-title">Address</div>
                                         <div class="address">
                                             Rina Shiksha Sahayak Foundation<br> D/1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
-                                            <!-- <a href="https://maps.app.goo.gl/BNq37UdBq4bUcM7a8">Google Map</a> -->
                                             Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
                                         </div>
-                                        <!-- <div class="date-time">
-                                            <p>Reporting Date and Time:</p>
-                                            <p><?php echo date('d/F/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time"><?php echo $reporting_time ?></span></p>
-                                        </div> -->
                                     </div>
                                     <div class="right-column">
                                         <p class="qr-message">Scan the QR code to view location in Google Maps</p>
