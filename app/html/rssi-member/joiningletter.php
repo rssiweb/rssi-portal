@@ -190,7 +190,6 @@ if (!$result) {
             }
         }
     </style>
-    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -306,7 +305,22 @@ if (!$result) {
                                 echo '<ul style="list-style-type: none; padding: 0;">';
                                 echo '<li><strong>Position:</strong> ' . $array['position'] . ' (' . $array['job_type'] . ')</li>';
                                 echo '<li><strong>Division:</strong> ' . $array['depb'] . '</li>';
+                                echo '<li><strong>Shift:</strong> ' . (!empty($array['shift']) ? $array['shift'] : 'Not Applicable') . '</li>';
                                 echo '<li><strong>Date of Join:</strong> ' . date('d/F/Y', strtotime($array['doj'])) . '</li>';
+                                echo '<li><strong>Reporting Time:</strong> ' . $reporting_time . '</li>';
+                                $supervisor = $array['supervisor'];
+
+                                $query = "SELECT fullname
+                                FROM rssimyaccount_members
+                                WHERE associatenumber = $1";
+
+                                $result = pg_query_params($con, $query, array($supervisor));
+
+                                if ($row = pg_fetch_assoc($result)) {
+                                    echo '<li><strong>Report to:</strong> ' . $row['fullname'] . ' (' . $supervisor . ')</li>';
+                                } else {
+                                    echo '<li><strong>Report to:</strong> ' . $supervisor . '</li>';
+                                }
                                 echo '</ul>';
                                 ?>
                                 <br>
@@ -391,10 +405,10 @@ if (!$result) {
                                             <!-- <a href="https://maps.app.goo.gl/BNq37UdBq4bUcM7a8">Google Map</a> -->
                                             Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
                                         </div>
-                                        <div class="date-time">
+                                        <!-- <div class="date-time">
                                             <p>Reporting Date and Time:</p>
                                             <p><?php echo date('d/F/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time"><?php echo $reporting_time ?></span></p>
-                                        </div>
+                                        </div> -->
                                     </div>
                                     <div class="right-column">
                                         <p class="qr-message">Scan the QR code to view location in Google Maps</p>
