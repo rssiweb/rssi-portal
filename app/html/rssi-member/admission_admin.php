@@ -2231,6 +2231,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                             onchange="handleStatusChange(this)">
                                                                                             <option value="Active" <?php echo $array['filterstatus'] == 'Active' ? 'selected' : ''; ?>>Active</option>
                                                                                             <option value="Inactive" <?php echo $array['filterstatus'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                                                                            <option value="Invalid" <?php echo $array['filterstatus'] == 'Invalid' ? 'selected' : ''; ?>>Invalid</option>
                                                                                         </select>
                                                                                     <?php endif; ?>
                                                                                 </td>

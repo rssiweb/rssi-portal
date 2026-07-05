@@ -41,7 +41,7 @@ if ($isActive && !$isInactive) {
     $query .= " AND filterstatus = '$status'"; // Safe because we validated $status
 }
 
-$query .= " ORDER BY studentname LIMIT 10";
+$query .= " AND filterstatus != 'Invalid' ORDER BY studentname LIMIT 10";
 
 // Prepare and execute the query
 $stmt = pg_prepare($con, "fetch_students", $query);
