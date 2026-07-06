@@ -16,19 +16,33 @@ $category = $_POST['get_category'] ?? null;
 $class = $_POST['get_class'] ?? null;
 $stid = $_POST['get_stid'] ?? null;
 $searchByIdOnly = isset($_POST['search_by_id_only']);
+$selected_location = isset($_POST['get_location']) ? $_POST['get_location'] : '';
 
 // Initialize result array
 $resultArr = [];
+
+// Get locations from office_locations table for dropdown
+$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+$locations_result = pg_query($con, $locations_query);
+$locations = [];
+while ($row = pg_fetch_assoc($locations_result)) {
+    $locations[] = $row['name'];
+}
 
 // Only query if we have valid parameters
 if ($searchByIdOnly) {
   // Search by Student ID only
   if (!empty($stid)) {
-    $result = pg_query_params(
-      $con,
-      "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
-      [$stid]
-    );
+    $query = "SELECT * FROM rssimyprofile_student WHERE student_id = $1";
+    $params = [$stid];
+    
+    // Add location filter if selected
+    if (!empty($selected_location)) {
+        $query .= " AND preferredbranch = $" . (count($params) + 1);
+        $params[] = $selected_location;
+    }
+    
+    $result = pg_query_params($con, $query, $params);
     $resultArr = $result ? pg_fetch_all($result) : [];
   }
 } else {
@@ -36,9 +50,16 @@ if ($searchByIdOnly) {
   if (!empty($module) && !empty($id)) {
     $query = "SELECT * FROM rssimyprofile_student 
                  WHERE filterstatus = $1 AND module = $2";
-    $params = [$id, $module]; // Assuming filterstatus should be 'Active'
+    $params = [$id, $module];
 
     $paramCount = 3; // Start counting from 3
+
+    // Add location filter if selected
+    if (!empty($selected_location)) {
+        $query .= " AND preferredbranch = $$paramCount";
+        $params[] = $selected_location;
+        $paramCount++;
+    }
 
     if (!empty($category)) {
       $query .= " AND category = $$paramCount";
@@ -391,6 +412,7 @@ function formatContact($role, $contact)
                           value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
                         <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
                         <input type="hidden" name="search_by_id_only" value="<?= $searchByIdOnly ? '1' : '0' ?>">
+                        <input type="hidden" name="get_location" value="<?= htmlspecialchars($selected_location ?? '') ?>">
 
                         <button type="submit"
                           id="export"
@@ -577,6 +599,19 @@ function formatContact($role, $contact)
                     <small class="form-text text-muted">Class</small>
                   </div>
 
+                  <!-- Location Filter -->
+                  <div class="d-flex flex-column" style="width: max-content;">
+                    <select name="get_location" id="get_location" class="form-select">
+                      <option value="">All Locations</option>
+                      <?php foreach ($locations as $location): ?>
+                        <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($location) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <small class="form-text text-muted">Location</small>
+                  </div>
+
                   <!-- Student ID (required when checkbox checked) -->
 
                   <!-- AAID Dropdown -->
@@ -742,6 +777,7 @@ function formatContact($role, $contact)
         document.getElementById("get_id").disabled = idOnly;
         document.getElementById("get_category").disabled = idOnly;
         document.getElementById("get_class").disabled = idOnly;
+        document.getElementById("get_location").disabled = idOnly;
         stidField.disabled = !idOnly;
         stidRequired.style.display = idOnly ? 'inline' : 'none';
 

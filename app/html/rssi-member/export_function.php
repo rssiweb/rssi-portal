@@ -447,16 +447,22 @@ function student_export()
   $class = isset($_POST['get_class']) ? explode(',', $_POST['get_class']) : null;
   $stid = $_POST['get_stid'] ?? null;
   $searchByIdOnly = $_POST['search_by_id_only'] ?? '0';
+  $selected_location = $_POST['get_location'] ?? '';
 
   // Build the query based on search parameters
   if ($searchByIdOnly == '1') {
     // Search by Student ID only
     if (!empty($stid)) {
-      $result = pg_query_params(
-        $con,
-        "SELECT * FROM rssimyprofile_student WHERE student_id = $1",
-        [$stid]
-      );
+      $query = "SELECT * FROM rssimyprofile_student WHERE student_id = $1";
+      $params = [$stid];
+
+      // Add location filter if selected
+      if (!empty($selected_location)) {
+        $query .= " AND preferredbranch = $" . (count($params) + 1);
+        $params[] = $selected_location;
+      }
+
+      $result = pg_query_params($con, $query, $params);
     }
   } else {
     // Normal search (requires module and status)
@@ -466,6 +472,13 @@ function student_export()
       $params = [$id, $module];
 
       $paramCount = 3;
+
+      // Add location filter if selected
+      if (!empty($selected_location)) {
+        $query .= " AND preferredbranch = $$paramCount";
+        $params[] = $selected_location;
+        $paramCount++;
+      }
 
       if (!empty($category)) {
         $query .= " AND category = $$paramCount";
@@ -529,7 +542,8 @@ function student_export()
     'Student Aadhaar Doc',
     'Parent Aadhaar',
     'DOT',
-    'Remarks'
+    'Remarks',
+    'Location'  // Added Location column
   ]);
 
   function maskAadhar($aadhar)
@@ -571,7 +585,8 @@ function student_export()
       !empty($array['upload_aadhar_card']) ? "Yes" : "No",
       maskAadhar($array['guardianaadhar']),
       $array['effectivefrom'],
-      $array['remarks']
+      $array['remarks'],
+      $array['preferredbranch'] // Added location data
     ]);
   }
 
