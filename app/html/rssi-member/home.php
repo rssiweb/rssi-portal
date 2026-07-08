@@ -19,7 +19,7 @@ $query = "
     SELECT c.awarded_to_id, c.badge_name, c.issuedon, m.fullname, m.photo
     FROM certificate c
     LEFT JOIN rssimyaccount_members m ON c.awarded_to_id = m.associatenumber
-    WHERE c.badge_name NOT IN ('Experience Letter', 'Offer Letter', 'Joining Letter')
+    WHERE c.badge_name NOT IN ('Experience Letter', 'Offer Letter', 'Joining Letter','Employment Verification Letter')
     ORDER BY c.issuedon DESC
     LIMIT 3";
 $result = pg_query($con, $query);
