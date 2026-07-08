@@ -1048,6 +1048,7 @@ function monthly_attd_associate_export()
   @$month = $_POST['month'];
   @$associatenumber = $_POST['associateNumber'];
   @$role = $_POST['role'];
+  @$engagementFilter = $_POST['engagementFilter'];
 
   // Calculate the start and end dates of the month
   $startDate = date("Y-m-01", strtotime($month));
@@ -1064,6 +1065,12 @@ function monthly_attd_associate_export()
     }, explode(',', $_POST['selectedTeachers']));
     $teacherList = implode("','", $escapedTeachers);
     $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
+  }
+
+  // NEW: Construct the engagement condition
+  $engagementCondition = '';
+  if (!empty($engagementFilter)) {
+    $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
   }
 
   // Construct the SQL query
@@ -1351,6 +1358,7 @@ END AS exception_status
         AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
         $teacherCondition
+        $engagementCondition
         " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
 SELECT
@@ -1370,7 +1378,7 @@ SELECT
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
 -- WHERE mode = 'Offline'
-WHERE engagement IN ('Employee', 'Intern')
+-- WHERE engagement IN ('Employee', 'Intern')
 GROUP BY
     associatenumber,
     filterstatus,

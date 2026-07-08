@@ -28,7 +28,7 @@ if ($role == 'Admin') {
             FROM rssimyaccount_members 
             WHERE associatenumber IN ($placeholders) 
               AND filterstatus = 'Active' 
-              AND engagement IN ('Employee', 'Intern') OR position IN ('Intern')
+              -- AND engagement IN ('Employee', 'Intern') OR position IN ('Intern')
         ";
 
         $result = pg_query_params($con, $query, $selectedTeachers);
@@ -49,9 +49,13 @@ if ($role == 'Admin') {
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 
 $selectedTeachers = isset($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
+$engagementFilter = isset($_GET['engagement']) ? $_GET['engagement'] : '';
 ?>
 <?php
-$month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+// $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+
+// Check if month parameter is set, if not, set to empty
+$month = isset($_GET['get_month']) ? $_GET['get_month'] : '';
 
 // Calculate the start and end dates of the month
 $startDate = date("Y-m-01", strtotime($month));
@@ -70,7 +74,17 @@ if (!empty($selectedTeachers)) {
     $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
 }
 
-$query = "
+// NEW: Construct the engagement condition
+$engagementCondition = '';
+if (!empty($engagementFilter)) {
+    $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
+}
+
+// Only execute the query if month is selected
+$showData = !empty($month);
+if ($showData) {
+
+    $query = "
 WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date,
@@ -377,6 +391,7 @@ END AS exception_status
         AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
         $teacherCondition
+        $engagementCondition
         " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
 SELECT
@@ -397,7 +412,7 @@ SELECT
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
 -- WHERE mode = 'Offline'
-WHERE engagement IN ('Employee', 'Intern') OR position IN ('Intern')
+-- WHERE engagement IN ('Employee', 'Intern') OR position IN ('Intern')
 GROUP BY
     associatenumber,
     filterstatus,
@@ -418,18 +433,23 @@ ORDER BY
     attendance_date;
 ";
 
-$result = pg_query($con, $query);
+    $result = pg_query($con, $query);
 
-if (!$result) {
-    echo "Query failed.";
-    exit();
+    if (!$result) {
+        echo "Query failed.";
+        exit();
+    }
+
+    // Fetch attendance data
+    $attendanceData = pg_fetch_all($result);
+    $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
+    $associateNumberCount = count($uniqueAssociateNumbers);
+} else {
+    // Set empty data when no month is selected
+    $attendanceData = [];
+    $uniqueAssociateNumbers = [];
+    $associateNumberCount = 0;
 }
-
-// Fetch attendance data
-$attendanceData = pg_fetch_all($result);
-$uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
-$associateNumberCount = count($uniqueAssociateNumbers);
-
 
 
 ?>
@@ -456,7 +476,7 @@ $associateNumberCount = count($uniqueAssociateNumbers);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -569,6 +589,7 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                                     <input type="hidden" value="<?php echo $associatenumber ?>" name="associateNumber" />
                                     <input type="hidden" value="<?php echo $role ?>" name="role" />
                                     <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
+                                    <input type="hidden" value="<?php echo $engagementFilter ?>" name="engagementFilter" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
             padding: 0px;
@@ -606,21 +627,40 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                                                     <small class="form-text text-muted">Select Status</small>
                                                 </div>
                                             </div>
+                                            <!-- NEW: Engagement Dropdown -->
+                                            <div class="col-md-3 col-lg-2">
+                                                <div class="form-group">
+                                                    <select name="engagement" id="engagement" class="form-select">
+                                                        <option value="">All Engagements</option>
+                                                        <option value="Employee" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                                        <option value="Intern" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Intern') ? 'selected' : ''; ?>>Intern</option>
+                                                        <option value="Member" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Member') ? 'selected' : ''; ?>>Member</option>
+                                                        <option value="Volunteer" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
+                                                        <!-- Add more options based on your actual engagement values -->
+                                                    </select>
+                                                    <small class="form-text text-muted">Engagement Type</small>
+                                                </div>
+                                            </div>
 
                                             <div class="col-md-3">
                                                 <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]" multiple="multiple">
                                                     <!-- Leave empty; Select2 will load options dynamically -->
                                                 </select>
-                                                <small class="form-text text-muted">Teacher ID</small>
+                                                <small class="form-text text-muted">Associate ID</small>
                                             </div>
+
                                         <?php } ?>
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="month" name="get_month" id="get_month" class="form-control"
+                                                <!-- <input type="month" name="get_month" id="get_month" class="form-control"
                                                     placeholder="Month"
                                                     value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
-                                                <small class="form-text text-muted">Select Month</small>
+                                                <small class="form-text text-muted">Select Month</small> -->
+                                                <input type="month" name="get_month" id="get_month" class="form-control"
+                                                    placeholder="Select Month"
+                                                    value="<?php echo isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : ''; ?>">
+                                                    <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
                                         <!-- <script>
@@ -675,56 +715,65 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                                 </div>
                                 <br>
                                 <br>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Associate number</th>
-                                                <th>Name</th>
-                                                <th>Category</th>
-                                                <th>Status</th>
-                                                <th>Present</th>
-                                                <!--<th>Total Class</th>
+                                <?php if (empty($month)): ?>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-info-circle"></i> Please select a month and click Search to view attendance data.
+                                    </div>
+                                <?php elseif (empty($attendanceData)): ?>
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="bi bi-exclamation-triangle"></i> No attendance data found for the selected month.
+                                    </div>
+                                <?php else: ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Associate number</th>
+                                                    <th>Name</th>
+                                                    <th>Category</th>
+                                                    <th>Status</th>
+                                                    <th>Present</th>
+                                                    <!--<th>Total Class</th>
                                                 <th>Percentage</th> -->
 
-                                                <?php
-                                                // Generate header row with attendance dates
-                                                $dates = array_unique(array_column($attendanceData, 'attendance_date'));
-                                                foreach ($dates as $date) {
-                                                    $formattedDate = date("j", strtotime($date)); // Format the date
-                                                    echo "<th>$formattedDate (In)</th><th>$formattedDate (Out)</th>";
-                                                }
-                                                ?>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            // Process attendance data and fill the table
-                                            $currentStudent = null;
-                                            foreach ($attendanceData as $row) {
-                                                if ($currentStudent !== $row['associatenumber']) {
-                                                    if ($currentStudent !== null) {
-                                                        echo "</tr>";
+                                                    <?php
+                                                    // Generate header row with attendance dates
+                                                    $dates = array_unique(array_column($attendanceData, 'attendance_date'));
+                                                    foreach ($dates as $date) {
+                                                        $formattedDate = date("j", strtotime($date)); // Format the date
+                                                        echo "<th>$formattedDate (In)</th><th>$formattedDate (Out)</th>";
                                                     }
-                                                    echo "<tr>
+                                                    ?>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                // Process attendance data and fill the table
+                                                $currentStudent = null;
+                                                foreach ($attendanceData as $row) {
+                                                    if ($currentStudent !== $row['associatenumber']) {
+                                                        if ($currentStudent !== null) {
+                                                            echo "</tr>";
+                                                        }
+                                                        echo "<tr>
                                                             <td>{$row['associatenumber']}</td>
                                                             <td>{$row['fullname']}</td>
                                                             <td>{$row['engagement']}</td>
                                                             <td>{$row['filterstatus']}</td>
                                                             <td>{$row['attended_classes']}</td>";
-                                                    $currentStudent = $row['associatenumber'];
+                                                        $currentStudent = $row['associatenumber'];
+                                                    }
+                                                    // Convert punch in and punch out to time format
+                                                    $punchIn = $row['punch_in'] ? date("h:i A", strtotime($row['punch_in'])) : '';
+                                                    $punchOut = $row['punch_out'] && $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
+
+                                                    echo "<td>" . $punchIn . ($row['late_status'] ? " (" . $row['late_status'] . ")" : "") . ($row['exception_status'] ? " (" . $row['exception_status'] . ")" : "") . "</td><td>" . $punchOut . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : "") . "</td>";
                                                 }
-                                                // Convert punch in and punch out to time format
-                                                $punchIn = $row['punch_in'] ? date("h:i A", strtotime($row['punch_in'])) : '';
-                                                $punchOut = $row['punch_out'] && $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
-
-                                                echo "<td>" . $punchIn . ($row['late_status'] ? " (" . $row['late_status'] . ")" : "") . ($row['exception_status'] ? " (" . $row['exception_status'] . ")" : "") . "</td><td>" . $punchOut . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : "") . "</td>";
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-
+                                                ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

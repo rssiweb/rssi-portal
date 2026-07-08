@@ -472,6 +472,7 @@ $resultArr = pg_fetch_all($result);
                                                 <option>Star Of The Month</option>
                                                 <option>Star Of The Quarter</option>
                                                 <option>Volunteer Of The Quarter</option>
+                                                <option>Employment Verification Letter</option>
                                             </select>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Badge name*</small>
                                         </div>

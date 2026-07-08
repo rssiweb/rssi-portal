@@ -9,63 +9,73 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-?>
-<?php
-// Get the current date
-$currentMonth = date('m');
-$currentYear = date('Y');
 
-// Default values for start_date and end_date
-$startDate = isset($_POST['start_date']) ? $_POST['start_date'] : date('Y-m-01'); // First day of the current month
-$endDate = isset($_POST['end_date']) ? $_POST['end_date'] : date('Y-m-t');       // Last day of the current month
+// Get filter values
+$engagementFilter = isset($_GET['engagement']) ? $_GET['engagement'] : '';
+$selectedTeachers = isset($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
 
-// Get the user-provided or default month
-$month = isset($_POST['month']) ? $_POST['month'] : date('Y-m');
+// Default values for start_date and end_date - set to empty
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : '';
 
-// Check if the user provided a start and end month
-$startMonth = isset($_POST['start_month']) ? $_POST['start_month'] : null;
-$endMonth = isset($_POST['end_month']) ? $_POST['end_month'] : null;
+// Get the user-provided start and end months
+$startMonth = isset($_GET['start_month']) ? $_GET['start_month'] : '';
+$endMonth = isset($_GET['end_month']) ? $_GET['end_month'] : '';
 
-// Define the quarter ranges
-if (!$startMonth || !$endMonth) {
-    if ($currentMonth >= 4 && $currentMonth <= 7) {
-        // Quarter 1: April to July
-        $startMonth = "$currentYear-04";
-        $endMonth = "$currentYear-07";
-    } elseif ($currentMonth >= 8 && $currentMonth <= 11) {
-        // Quarter 2: August to November
-        $startMonth = "$currentYear-08";
-        $endMonth = "$currentYear-11";
-    } else {
-        // Quarter 3: December to March (spanning two years)
-        $startMonth = $currentMonth >= 12 ? "$currentYear-12" : ($currentYear - 1) . "-12";
-        $endMonth = "$currentYear-03";
+// Fetch teacher names for selected IDs (for prepopulation)
+$teachers = [];
+if (!empty($selectedTeachers)) {
+    $placeholders = implode(',', array_map(
+        fn($i) => '$' . ($i + 1),
+        array_keys($selectedTeachers)
+    ));
+
+    $teacherQuery = "
+        SELECT associatenumber, fullname 
+        FROM rssimyaccount_members 
+        WHERE associatenumber IN ($placeholders) 
+        AND filterstatus = 'Active'
+    ";
+
+    $teacherResult = pg_query_params($con, $teacherQuery, $selectedTeachers);
+    if ($teacherResult) {
+        while ($row = pg_fetch_assoc($teacherResult)) {
+            $teachers[] = $row;
+        }
+        pg_free_result($teacherResult);
     }
+}
 
-    // Adjust endMonth if it's in the future
-    $endMonthTimestamp = strtotime($endMonth . '-01');
-    $currentMonthTimestamp = strtotime(date('Y-m-01'));
-    if ($endMonthTimestamp > $currentMonthTimestamp) {
-        $endMonth = date('Y-m');
-    }
+// Only process data if both start and end months are selected
+$showData = !empty($startMonth) && !empty($endMonth);
+
+if ($showData) {
+    // Extract year and month for SQL query
+    list($startYear, $startMonthNum) = explode('-', $startMonth);
+    list($endYear, $endMonthNum) = explode('-', $endMonth);
 
     // Set the start and end dates based on the adjusted months
     $startDate = $startMonth . '-01';
     $endDate = date('Y-m-t', strtotime($endMonth . '-01'));
 
-    // Also update the month variables to match the adjusted dates
-    $startMonth = date('Y-m', strtotime($startDate));
-    $endMonth = date('Y-m', strtotime($endDate));
-}
+    // Construct the engagement condition
+    $engagementCondition = '';
+    if (!empty($engagementFilter)) {
+        $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
+    }
 
-//echo "Start Month: $startMonth, End Month: $endMonth<br>";
+    // Construct the teacher condition
+    $teacherCondition = '';
+    if (!empty($selectedTeachers)) {
+        $escapedTeachers = array_map(function ($teacher) use ($con) {
+            return pg_escape_string($con, $teacher);
+        }, $selectedTeachers);
+        $teacherList = implode("','", $escapedTeachers);
+        $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
+    }
 
-// Extract year and month for SQL query
-list($startYear, $startMonthNum) = explode('-', $startMonth);
-list($endYear, $endMonthNum) = explode('-', $endMonth);
-
-// Generate the date range dynamically in SQL
-$query = "
+    // Generate the date range dynamically in SQL
+    $query = "
     WITH date_range AS (
         SELECT generate_series(
             DATE '$startYear-$startMonthNum-01',
@@ -73,330 +83,290 @@ $query = "
             INTERVAL '1 day'
         ) AS attendance_date
     ),
-holidays_excluded AS (
-    SELECT 
-        d.attendance_date
-    FROM 
-        date_range d
-    LEFT JOIN 
-        workday_exceptions w 
-        ON d.attendance_date = w.exception_date AND w.is_workday = TRUE
-    WHERE 
-        d.attendance_date NOT IN (
-            SELECT holiday_date 
-            FROM holidays 
-            WHERE is_flexi = false
-        ) 
-        OR w.is_workday IS NOT NULL -- Include workday exceptions even if it's a holiday
-),
-sunday_count AS (
-    SELECT 
-        COUNT(*) AS total_sundays
-    FROM 
-        date_range
-    WHERE 
-        DATE_PART('dow', attendance_date) = 0 -- Sundays only
-),
-employee_workdays AS (
-    SELECT 
-        m.associatenumber,
-        COUNT(h.attendance_date) AS workdays_employee,
-        MIN(h.attendance_date) AS start_date,
-        MAX(h.attendance_date) AS end_date
-    FROM 
-        holidays_excluded h
-    INNER JOIN 
-        rssimyaccount_members m
-        ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
+    holidays_excluded AS (
+        SELECT 
+            d.attendance_date
+        FROM 
+            date_range d
+        LEFT JOIN 
+            workday_exceptions w 
+            ON d.attendance_date = w.exception_date AND w.is_workday = TRUE
+        WHERE 
+            d.attendance_date NOT IN (
+                SELECT holiday_date 
+                FROM holidays 
+                WHERE is_flexi = false
+            ) 
+            OR w.is_workday IS NOT NULL -- Include workday exceptions even if it's a holiday
+    ),
+    sunday_count AS (
+        SELECT 
+            COUNT(*) AS total_sundays
+        FROM 
+            date_range
+        WHERE 
+            DATE_PART('dow', attendance_date) = 0 -- Sundays only
+    ),
+    employee_workdays AS (
+        SELECT 
+            m.associatenumber,
+            COUNT(h.attendance_date) AS workdays_employee,
+            MIN(h.attendance_date) AS start_date,
+            MAX(h.attendance_date) AS end_date
+        FROM 
+            holidays_excluded h
+        INNER JOIN 
+            rssimyaccount_members m
+            ON h.attendance_date BETWEEN 
+                GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
+                AND 
+                LEAST(
+                    CASE 
+                        WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
+                        ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
+                    END,
+                    COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
+                )
+        -- Get the latest schedule for each date, considering end_date
+        LEFT JOIN LATERAL (
+            SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
+            FROM associate_schedule_v2 s
+            WHERE s.associate_number = m.associatenumber
+            AND s.start_date <= h.attendance_date
+            -- Match day of week
+            AND s.workday = 
+                CASE DATE_PART('dow', h.attendance_date)
+                    WHEN 1 THEN 'Mon'
+                    WHEN 2 THEN 'Tue'
+                    WHEN 3 THEN 'Wed'
+                    WHEN 4 THEN 'Thu'
+                    WHEN 5 THEN 'Fri'
+                    WHEN 6 THEN 'Sat'
+                    WHEN 0 THEN 'Sun'
+                END
+            -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+            AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
+            ORDER BY s.start_date DESC
+            LIMIT 1
+        ) sched ON true
+        LEFT JOIN 
+            workday_exceptions w
+            ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
+        WHERE 
+            (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
+        GROUP BY 
+            m.associatenumber
+    ),
+    others_workdays AS (
+        SELECT 
+            m.associatenumber,
+            COUNT(h.attendance_date) AS workdays_others,
+            MIN(h.attendance_date) AS start_date,
+            MAX(h.attendance_date) AS end_date
+        FROM 
+            holidays_excluded h
+        INNER JOIN 
+            rssimyaccount_members m
+            ON h.attendance_date BETWEEN 
+                GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
+                AND 
+                LEAST(
+                    CASE 
+                        WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
+                        ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
+                    END,
+                    COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
+                )
+        -- Get the latest schedule for each date, considering end_date
+        LEFT JOIN LATERAL (
+            SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
+            FROM associate_schedule_v2 s
+            WHERE s.associate_number = m.associatenumber
+            AND s.start_date <= h.attendance_date
+            -- Match day of week
+            AND s.workday = 
+                CASE DATE_PART('dow', h.attendance_date)
+                    WHEN 1 THEN 'Mon'
+                    WHEN 2 THEN 'Tue'
+                    WHEN 3 THEN 'Wed'
+                    WHEN 4 THEN 'Thu'
+                    WHEN 5 THEN 'Fri'
+                    WHEN 6 THEN 'Sat'
+                    WHEN 0 THEN 'Sun'
+                END
+            -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
+            AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
+            ORDER BY s.start_date DESC
+            LIMIT 1
+        ) sched ON true
+        LEFT JOIN 
+            workday_exceptions w
+            ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
+        WHERE 
+            (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
+        GROUP BY 
+            m.associatenumber
+    ),
+    holiday_dates AS (
+        SELECT 
+            m.associatenumber,
+            STRING_AGG(h.holiday_date::text, ', ') AS holiday_dates
+        FROM 
+            holidays h
+        INNER JOIN 
+            rssimyaccount_members m 
+            ON h.holiday_date BETWEEN 
+                GREATEST(m.doj, '$startDate'::date) 
             AND 
-            LEAST(
-                CASE 
-                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
-                END,
-                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            )
-    -- Get the latest schedule for each date, considering end_date
-    LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
+                LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
+        WHERE 
+            h.is_flexi = false
+        GROUP BY 
+            m.associatenumber
+    ),
+    DynamicSchedule AS (
+        SELECT
+            s.associate_number,
+            s.start_date,
+            s.reporting_time,
+            s.exit_time,
+            m.filterstatus,
+            m.effectivedate,
+            COALESCE(
+                LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+                CASE
+                    WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
+                    ELSE CURRENT_DATE
+                END
+            ) AS end_date
         FROM associate_schedule_v2 s
-        WHERE s.associate_number = m.associatenumber
-        AND s.start_date <= h.attendance_date
-        -- Match day of week
-        AND s.workday = 
-            CASE DATE_PART('dow', h.attendance_date)
-                WHEN 1 THEN 'Mon'
-                WHEN 2 THEN 'Tue'
-                WHEN 3 THEN 'Wed'
-                WHEN 4 THEN 'Thu'
-                WHEN 5 THEN 'Fri'
-                WHEN 6 THEN 'Sat'
-                WHEN 0 THEN 'Sun'
-            END
-        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
-        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
-        ORDER BY s.start_date DESC
-        LIMIT 1
-    ) sched ON true
-    LEFT JOIN 
-        workday_exceptions w
-        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    WHERE 
-        -- CHANGED: Only count workdays if:
-        -- 1. A schedule exists for that day (sched.workday IS NOT NULL)
-        -- 2. OR it's an exceptional workday (w.is_workday IS NOT NULL)
-        -- REMOVED: The default Monday-Friday logic
-        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
-    GROUP BY 
-        m.associatenumber
-),
-others_workdays AS (
-    SELECT 
-        m.associatenumber,
-        COUNT(h.attendance_date) AS workdays_others,
-        MIN(h.attendance_date) AS start_date,
-        MAX(h.attendance_date) AS end_date
-    FROM 
-        holidays_excluded h
-    INNER JOIN 
-        rssimyaccount_members m
-        ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj)
-            AND 
-            LEAST(
-                CASE 
-                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day'
-                END,
-                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            )
-    -- Get the latest schedule for each date, considering end_date
-    LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
-        FROM associate_schedule_v2 s
-        WHERE s.associate_number = m.associatenumber
-        AND s.start_date <= h.attendance_date
-        -- Match day of week
-        AND s.workday = 
-            CASE DATE_PART('dow', h.attendance_date)
-                WHEN 1 THEN 'Mon'
-                WHEN 2 THEN 'Tue'
-                WHEN 3 THEN 'Wed'
-                WHEN 4 THEN 'Thu'
-                WHEN 5 THEN 'Fri'
-                WHEN 6 THEN 'Sat'
-                WHEN 0 THEN 'Sun'
-            END
-        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
-        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
-        ORDER BY s.start_date DESC
-        LIMIT 1
-    ) sched ON true
-    LEFT JOIN 
-        workday_exceptions w
-        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    WHERE 
-        -- CHANGED: Same logic - only count scheduled or exceptional workdays
-        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
-    GROUP BY 
-        m.associatenumber
-),
-holiday_dates AS (
-    SELECT 
-        m.associatenumber,
-        STRING_AGG(h.holiday_date::text, ', ') AS holiday_dates
-    FROM 
-        holidays h
-    INNER JOIN 
-        rssimyaccount_members m 
-        ON h.holiday_date BETWEEN 
-            GREATEST(m.doj, '$startDate'::date) 
-        AND 
-            LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
-    WHERE 
-        h.is_flexi = false
-    GROUP BY 
-        m.associatenumber
-),
-DynamicSchedule AS (
-    SELECT
-        s.associate_number,
-        s.start_date,
-        s.reporting_time,
-        s.exit_time,
-        m.filterstatus,
-        m.effectivedate,
-        COALESCE(
-            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+        INNER JOIN rssimyaccount_members m
+            ON s.associate_number = m.associatenumber
+        ORDER BY s.associate_number, s.start_date, s.created_at DESC
+    ),
+    PunchInOut AS (
+        SELECT
+            a.user_id,
+            a.status,
+            DATE_TRUNC('day', a.punch_in) AS punch_date,
+            MIN(a.punch_in) AS punch_in,
             CASE
-                WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
-                ELSE CURRENT_DATE
-            END
-        ) AS end_date
-    FROM associate_schedule_v2 s  -- CHANGED: from associate_schedule to associate_schedule_v2
-    INNER JOIN rssimyaccount_members m
-        ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.created_at DESC
-),
-PunchInOut AS (
-    SELECT
-        a.user_id,
-        a.status,
-        DATE_TRUNC('day', a.punch_in) AS punch_date,
-        MIN(a.punch_in) AS punch_in,
-        CASE
-            WHEN COUNT(*) = 1 THEN NULL
-            ELSE MAX(a.punch_in)
-        END AS punch_out
-    FROM attendance a
-    GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
-),
-attendance_data AS (
-    SELECT
-        m.associatenumber,
-        m.filterstatus,
-        m.fullname,
-        m.engagement,
-        COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
-        m.effectivedate,
-        m.doj,
-        d.attendance_date,
-        
-        -- Override punch_in if missed-entry exception exists and is approved
-        COALESCE(
-            (
-                SELECT e.start_date_time
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-                LIMIT 1
-            ),
-            p.punch_in -- fallback to original punch_in if no exception
-        ) AS punch_in,
-
-        -- Handle punch_out logic similarly (using exception if available)
-        COALESCE(
-            (
-                SELECT e.end_date_time
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'exit'
-                AND d.attendance_date = DATE(e.end_date_time)
-                LIMIT 1
-            ),
-            p.punch_out
-        ) AS punch_out,
-
-        -- Attendance status logic
-        CASE
-            WHEN p.punch_in IS NOT NULL THEN 'P'
-            WHEN p.punch_in IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-            WHEN m.doj > d.attendance_date THEN NULL
-            ELSE 'A'
-        END AS attendance_status,
-
-        ds.reporting_time,
-        ds.exit_time,
-
-        -- Updated Late status logic based on the overridden punch_in
-        CASE
-        -- Leave condition
-            WHEN EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 0
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'Leave'
+                WHEN COUNT(*) = 1 THEN NULL
+                ELSE MAX(a.punch_in)
+            END AS punch_out
+        FROM attendance a
+        GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
+    ),
+    attendance_data AS (
+        SELECT
+            m.associatenumber,
+            m.filterstatus,
+            m.fullname,
+            m.engagement,
+            COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
+            m.effectivedate,
+            m.doj,
+            d.attendance_date,
             
-            -- Half-day condition
-            WHEN EXISTS (
-            SELECT 1
-            FROM leavedb_leavedb l
-            WHERE l.applicantid = m.associatenumber
-            AND l.status = 'Approved'
-            AND l.halfday = 1
-            AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            GROUP BY l.applicantid, d.attendance_date
-            HAVING COUNT(*) >= 2
-            ) THEN 'Leave'
-            
-            -- Half-day condition
-            WHEN EXISTS (
+            COALESCE(
+                (
+                    SELECT e.start_date_time
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'entry'
+                    AND e.sub_exception_type = 'missed-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                    LIMIT 1
+                ),
+                p.punch_in
+            ) AS punch_in,
+
+            COALESCE(
+                (
+                    SELECT e.end_date_time
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'exit'
+                    AND d.attendance_date = DATE(e.end_date_time)
+                    LIMIT 1
+                ),
+                p.punch_out
+            ) AS punch_out,
+
+            CASE
+                WHEN p.punch_in IS NOT NULL THEN 'P'
+                WHEN p.punch_in IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                WHEN m.doj > d.attendance_date THEN NULL
+                ELSE 'A'
+            END AS attendance_status,
+
+            ds.reporting_time,
+            ds.exit_time,
+
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 0
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                ) THEN 'Leave'
+                
+                WHEN EXISTS (
                 SELECT 1
                 FROM leavedb_leavedb l
                 WHERE l.applicantid = m.associatenumber
                 AND l.status = 'Approved'
                 AND l.halfday = 1
                 AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'HF'
-             -- Late status logic for entry exception with late-entry subcategory
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'late-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN
-                CASE
-                    -- If punch_in is within the approved exception time
-                    WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM (
-                        SELECT e.start_date_time 
-                        FROM exception_requests e 
-                        WHERE e.submitted_by = m.associatenumber
-                        AND e.status = 'Approved'
-                        AND e.exception_type = 'entry'
-                        AND e.sub_exception_type = 'late-entry'
-                        AND d.attendance_date = DATE(e.start_date_time)
-                    )::time) THEN 'Exc.'
-                    -- If punch_in is after the approved exception time
-                    WHEN p.punch_in IS NOT NULL THEN 'Exc.L'
-                    ELSE NULL
-                END
-            -- If missed-entry exception is applied, recalculate the status
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN
-                CASE
-                    -- If the overridden punch_in is late (after reporting time + 10 mins), it should be 'L'
-                    WHEN EXTRACT(EPOCH FROM COALESCE(
-                        (
-                            SELECT e.start_date_time
-                            FROM exception_requests e
+                GROUP BY l.applicantid, d.attendance_date
+                HAVING COUNT(*) >= 2
+                ) THEN 'Leave'
+                
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 1
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                ) THEN 'HF'
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'entry'
+                    AND e.sub_exception_type = 'late-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                ) THEN
+                    CASE
+                        WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM (
+                            SELECT e.start_date_time 
+                            FROM exception_requests e 
                             WHERE e.submitted_by = m.associatenumber
                             AND e.status = 'Approved'
                             AND e.exception_type = 'entry'
-                            AND e.sub_exception_type = 'missed-entry'
+                            AND e.sub_exception_type = 'late-entry'
                             AND d.attendance_date = DATE(e.start_date_time)
-                            LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
-                    -- If the overridden punch_in is within 10 mins of reporting time, it should be 'W'
-                    WHEN EXTRACT(EPOCH FROM COALESCE(
-                        (
-                            SELECT e.start_date_time
-                            FROM exception_requests e
-                            WHERE e.submitted_by = m.associatenumber
-                            AND e.status = 'Approved'
-                            AND e.exception_type = 'entry'
-                            AND e.sub_exception_type = 'missed-entry'
-                            AND d.attendance_date = DATE(e.start_date_time)
-                            LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time)
-                        AND EXTRACT(EPOCH FROM COALESCE(
+                        )::time) THEN 'Exc.'
+                        WHEN p.punch_in IS NOT NULL THEN 'Exc.L'
+                        ELSE NULL
+                    END
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'entry'
+                    AND e.sub_exception_type = 'missed-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                ) THEN
+                    CASE
+                        WHEN EXTRACT(EPOCH FROM COALESCE(
                             (
                                 SELECT e.start_date_time
                                 FROM exception_requests e
@@ -406,152 +376,172 @@ attendance_data AS (
                                 AND e.sub_exception_type = 'missed-entry'
                                 AND d.attendance_date = DATE(e.start_date_time)
                                 LIMIT 1
-                            ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
-                    -- If it's on time (or earlier), status should be NULL (not late)
-                    ELSE NULL
-                END
-            -- For regular punch-ins, apply standard lateness logic
-            WHEN p.punch_in IS NOT NULL THEN
-                CASE
-                    WHEN ds.reporting_time IS NULL THEN 'NA'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
-                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
-                    ELSE NULL
-                END
-            ELSE NULL
-        END AS late_status,
+                            ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
+                        WHEN EXTRACT(EPOCH FROM COALESCE(
+                            (
+                                SELECT e.start_date_time
+                                FROM exception_requests e
+                                WHERE e.submitted_by = m.associatenumber
+                                AND e.status = 'Approved'
+                                AND e.exception_type = 'entry'
+                                AND e.sub_exception_type = 'missed-entry'
+                                AND d.attendance_date = DATE(e.start_date_time)
+                                LIMIT 1
+                            ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time)
+                            AND EXTRACT(EPOCH FROM COALESCE(
+                                (
+                                    SELECT e.start_date_time
+                                    FROM exception_requests e
+                                    WHERE e.submitted_by = m.associatenumber
+                                    AND e.status = 'Approved'
+                                    AND e.exception_type = 'entry'
+                                    AND e.sub_exception_type = 'missed-entry'
+                                    AND d.attendance_date = DATE(e.start_date_time)
+                                    LIMIT 1
+                                ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
+                        ELSE NULL
+                    END
+                WHEN p.punch_in IS NOT NULL THEN
+                    CASE
+                        WHEN ds.reporting_time IS NULL THEN 'NA'
+                        WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
+                            AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
+                        WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
+                        ELSE NULL
+                    END
+                ELSE NULL
+            END AS late_status,
 
-        -- Exit status logic remains unchanged
-        CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'exit'
-                AND d.attendance_date = DATE(e.end_date_time)
-            ) THEN 'Exc.'
-            ELSE NULL
-        END AS exit_status,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'exit'
+                    AND d.attendance_date = DATE(e.end_date_time)
+                ) THEN 'Exc.'
+                ELSE NULL
+            END AS exit_status,
 
-        -- Status 'Exc.' for overridden punch-in time from exception
-        CASE
-    -- Show 'Exc.' if approved exception exists
-    WHEN EXISTS (
-        SELECT 1
-        FROM exception_requests e
-        WHERE e.submitted_by = m.associatenumber
-        AND e.status = 'Approved'
-        AND e.exception_type = 'entry'
-        AND e.sub_exception_type = 'missed-entry'
-        AND d.attendance_date = DATE(e.start_date_time)
-    ) THEN 
-        -- Check if ds.reporting_time is NULL, then add 'NA'
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'entry'
+                    AND e.sub_exception_type = 'missed-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                ) THEN 
+                    CASE 
+                        WHEN ds.reporting_time IS NULL THEN 'Exc.NA'
+                        ELSE 'Exc.'
+                    END
+                ELSE NULL
+            END AS exception_status
+        FROM
+            date_range d
+        CROSS JOIN
+            rssimyaccount_members m
+        LEFT JOIN
+            PunchInOut p
+            ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+        LEFT JOIN
+            DynamicSchedule ds
+            ON m.associatenumber = ds.associate_number
+            AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
+        WHERE
+            DATE_TRUNC('month', TO_DATE('$startMonth', 'YYYY-MM'))::DATE <= COALESCE(DATE_TRUNC('month', m.effectivedate)::DATE, NOW())
+            AND DATE_TRUNC('month', TO_DATE('$endMonth', 'YYYY-MM'))::DATE >= DATE_TRUNC('month', m.doj)::DATE
+            $engagementCondition
+            $teacherCondition
+            " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
+    )
+    SELECT 
+        m.associatenumber,
+        m.fullname,
+        m.engagement,
+        m.phone,
+        m.doj,
         CASE 
-            WHEN ds.reporting_time IS NULL THEN 'Exc.NA'
-            ELSE 'Exc.'
-        END
-    ELSE NULL
-END AS exception_status
-    FROM
-        date_range d
-    CROSS JOIN
+            WHEN m.engagement = 'Employee' THEN 
+                (SELECT workdays_employee 
+                 FROM employee_workdays 
+                 WHERE employee_workdays.associatenumber = m.associatenumber)
+            WHEN m.engagement = 'Member' THEN 0
+            ELSE 
+                (SELECT workdays_others  
+                 FROM others_workdays  
+                 WHERE others_workdays.associatenumber = m.associatenumber)
+        END AS work_schedule,
+        CASE 
+            WHEN m.engagement = 'Employee' THEN 
+                (SELECT start_date 
+                 FROM employee_workdays 
+                 WHERE employee_workdays.associatenumber = m.associatenumber)
+            WHEN m.engagement = 'Member' THEN NULL
+            ELSE 
+                (SELECT start_date  
+                 FROM others_workdays  
+                 WHERE others_workdays.associatenumber = m.associatenumber)
+        END AS schedule_start_date,
+        CASE 
+            WHEN m.engagement = 'Employee' THEN 
+                (SELECT end_date 
+                 FROM employee_workdays 
+                 WHERE employee_workdays.associatenumber = m.associatenumber)
+            WHEN m.engagement = 'Member' THEN NULL
+            ELSE 
+                (SELECT end_date  
+                 FROM others_workdays  
+                 WHERE others_workdays.associatenumber = m.associatenumber)
+        END AS schedule_end_date,
+        h.holiday_dates,
+        (SELECT total_sundays FROM sunday_count) AS total_sundays,
+        COUNT(*) FILTER (WHERE punch_in IS NOT NULL AND punch_out IS NOT NULL) AS days_worked,
+        COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
+        COUNT(*) FILTER (WHERE late_status = 'W') AS warning_count,
+        COUNT(*) FILTER (WHERE late_status = 'Leave') AS leave_count,
+        COUNT(*) FILTER (WHERE late_status = 'HF') AS halfday_count,
+        COUNT(*) FILTER (WHERE 
+            exception_status ILIKE '%Exc%' OR 
+            exit_status ILIKE '%Exc%' OR 
+            late_status ILIKE '%Exc%') AS exception_count
+    FROM 
+        attendance_data ad
+    JOIN 
         rssimyaccount_members m
-    LEFT JOIN
-        PunchInOut p
-        ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
-    LEFT JOIN
-        DynamicSchedule ds
-        ON m.associatenumber = ds.associate_number
-        AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
-    WHERE
-    -- Include employees whose active range overlaps with the selected range
-    DATE_TRUNC('month', TO_DATE('$startMonth', 'YYYY-MM'))::DATE <= COALESCE(DATE_TRUNC('month', m.effectivedate)::DATE, NOW())
-    AND DATE_TRUNC('month', TO_DATE('$endMonth', 'YYYY-MM'))::DATE >= DATE_TRUNC('month', m.doj)::DATE
-    -- Restrict to specific associate if role is not Admin
-    " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
-)
-SELECT 
-    m.associatenumber,
-    m.fullname,
-    m.engagement,
-    m.phone,
-    m.doj,
-    CASE 
-        WHEN m.engagement = 'Employee' THEN 
-            (SELECT workdays_employee 
-             FROM employee_workdays 
-             WHERE employee_workdays.associatenumber = m.associatenumber)
-        WHEN m.engagement = 'Member' THEN 0
-        ELSE 
-            (SELECT workdays_others  
-             FROM others_workdays  
-             WHERE others_workdays.associatenumber = m.associatenumber)
-    END AS work_schedule,
-    CASE 
-        WHEN m.engagement = 'Employee' THEN 
-            (SELECT start_date 
-             FROM employee_workdays 
-             WHERE employee_workdays.associatenumber = m.associatenumber)
-        WHEN m.engagement = 'Member' THEN NULL
-        ELSE 
-            (SELECT start_date  
-             FROM others_workdays  
-             WHERE others_workdays.associatenumber = m.associatenumber)
-    END AS schedule_start_date,
-    CASE 
-        WHEN m.engagement = 'Employee' THEN 
-            (SELECT end_date 
-             FROM employee_workdays 
-             WHERE employee_workdays.associatenumber = m.associatenumber)
-        WHEN m.engagement = 'Member' THEN NULL
-        ELSE 
-            (SELECT end_date  
-             FROM others_workdays  
-             WHERE others_workdays.associatenumber = m.associatenumber)
-    END AS schedule_end_date,
-    h.holiday_dates, -- Corrected line
-    (SELECT total_sundays FROM sunday_count) AS total_sundays,
-    COUNT(*) FILTER (WHERE punch_in IS NOT NULL AND punch_out IS NOT NULL) AS days_worked,
-    COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
-    COUNT(*) FILTER (WHERE late_status = 'W') AS warning_count,
-    COUNT(*) FILTER (WHERE late_status = 'Leave') AS leave_count,
-    COUNT(*) FILTER (WHERE late_status = 'HF') AS halfday_count,
-    COUNT(*) FILTER (WHERE 
-        exception_status ILIKE '%Exc%' OR 
-        exit_status ILIKE '%Exc%' OR 
-        late_status ILIKE '%Exc%') AS exception_count
-FROM 
-    attendance_data ad
-JOIN 
-    rssimyaccount_members m
-    ON ad.associatenumber = m.associatenumber
-LEFT JOIN 
-    holiday_dates h
-    ON ad.associatenumber = h.associatenumber -- Correcting the join condition
-WHERE 
-    mode = 'Offline'
-    AND grade!='D'
-    AND m.doj <= $1::DATE  -- Now using endDate
-GROUP BY 
-    m.associatenumber, m.fullname, m.engagement, h.holiday_dates
-ORDER BY 
-    m.associatenumber;
-";
-$result = pg_query_params($con, $query, [$endDate]);
+        ON ad.associatenumber = m.associatenumber
+    LEFT JOIN 
+        holiday_dates h
+        ON ad.associatenumber = h.associatenumber
+    WHERE 
+        mode = 'Offline'
+        AND grade!='D'
+        AND m.doj <= '$endDate'::DATE
+    GROUP BY 
+        m.associatenumber, m.fullname, m.engagement, h.holiday_dates
+    ORDER BY 
+        m.associatenumber;
+    ";
 
-if (!$result) {
-    echo "Query failed: " . pg_last_error($con);
-    exit();
+    $result = pg_query($con, $query);
+
+    if (!$result) {
+        echo "Query failed: " . pg_last_error($con);
+        exit();
+    }
+    // Fetch attendance data
+    $attendanceData = pg_fetch_all($result);
+    $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
+    $associateNumberCount = count($uniqueAssociateNumbers);
+} else {
+    // Set empty data when no months are selected
+    $attendanceData = [];
+    $uniqueAssociateNumbers = [];
+    $associateNumberCount = 0;
 }
-// Fetch attendance data
-$attendanceData = pg_fetch_all($result);
-$uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
-$associateNumberCount = count($uniqueAssociateNumbers);
-
-
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -572,8 +562,6 @@ $associateNumberCount = count($uniqueAssociateNumbers);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-
-
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -596,9 +584,50 @@ $associateNumberCount = count($uniqueAssociateNumbers);
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
-    <!-- Include jQuery UI CSS and JavaScript -->
-    <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for associate numbers
+            $('#teacher_id_viva').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Select associate(s)',
+                multiple: true,
+                width: '100%'
+            });
+
+            // Prepopulate selected values from GET
+            <?php if (!empty($_GET['teacher_id_viva'])): ?>
+                var selectedTeachers = <?php echo json_encode($_GET['teacher_id_viva']); ?>;
+                var teacherData = <?php echo json_encode($teachers); ?>;
+
+                // Add selected options
+                $.each(teacherData, function(index, teacher) {
+                    var option = new Option(teacher.associatenumber + ' - ' + teacher.fullname, teacher.associatenumber, true, true);
+                    $('#teacher_id_viva').append(option).trigger('change');
+                });
+            <?php endif; ?>
+        });
+    </script>
 
     <style>
         .blink-text {
@@ -624,44 +653,32 @@ $associateNumberCount = count($uniqueAssociateNumbers);
             border-radius: 50%;
             display: inline-block;
             margin-right: 10px;
-            /* Space between the indicator and text */
         }
 
         .status-indicator.yellow {
             background-color: #FFBF00;
-            /* Yellow color */
         }
 
         .status-indicator.green {
             background-color: #28a745;
-            /* Green color */
         }
 
         .status-indicator.red {
             background-color: #dc3545;
-            /* Red color */
         }
 
         .send-link {
             color: #888;
-            /* Light gray color for the text */
             text-decoration: none;
-            /* Remove underline */
             font-weight: normal;
-            /* Normal weight for text appearance */
             cursor: pointer;
-            /* Pointer cursor to indicate clickable */
             opacity: 0.6;
-            /* Slightly faded for inactive state */
             transition: opacity 0.3s;
-            /* Smooth transition on hover */
         }
 
         .send-link:hover {
             color: #555;
-            /* Darker gray when hovered */
             opacity: 1;
-            /* Full opacity on hover */
         }
     </style>
 </head>
@@ -687,117 +704,178 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                             <br>
                             <div class="row">
                                 <div class="col-md-8 mb-3">
-                                    Record count:&nbsp;<?php echo $associateNumberCount ?>
-                                    <!-- <p>To customize the view result, please select a filter value.</p> -->
+                                    <?php if ($showData && !empty($attendanceData)): ?>
+                                        Record count:&nbsp;<?php echo $associateNumberCount ?>
+                                    <?php endif; ?>
                                 </div>
-                                <form action="" method="POST" class="row g-2 align-items-center" id="search_form">
+                                <form action="" method="GET" class="row g-2 align-items-center" id="search_form">
                                     <div class="row">
-                                        <!-- Start Month Input -->
+                                        <?php if ($role == 'Admin') { ?>
+                                            <!-- Engagement Dropdown -->
+                                            <div class="col-md-3 col-lg-2">
+                                                <div class="form-group">
+                                                    <select name="engagement" id="engagement" class="form-select">
+                                                        <option value="">All Engagements</option>
+                                                        <option value="Employee" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                                        <option value="Intern" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Intern') ? 'selected' : ''; ?>>Intern</option>
+                                                        <option value="Member" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Member') ? 'selected' : ''; ?>>Member</option>
+                                                        <option value="Volunteer" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">Engagement Type</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Teacher ID Select2 Dropdown -->
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]" multiple="multiple">
+                                                        <!-- Leave empty; Select2 will load options dynamically -->
+                                                    </select>
+                                                    <small class="form-text text-muted">Associate ID</small>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+
+                                        <!-- Start Month Input - Empty by default -->
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <!-- <label for="start_month">Start Month</label> -->
                                                 <input type="month" name="start_month" id="start_month" class="form-control"
-                                                    value="<?php echo $startMonth; ?>">
-                                                <small class="form-text text-muted">Select Start Month</small>
+                                                    value="<?php echo isset($_GET['start_month']) ? htmlspecialchars($_GET['start_month']) : ''; ?>">
+                                                <small class="form-text text-muted">Start Month</small>
                                             </div>
                                         </div>
 
-                                        <!-- End Month Input -->
+                                        <!-- End Month Input - Empty by default -->
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <!-- <label for="end_month">End Month</label> -->
                                                 <input type="month" name="end_month" id="end_month" class="form-control"
-                                                    value="<?php echo $endMonth; ?>">
-                                                <small class="form-text text-muted">Select End Month</small>
+                                                    value="<?php echo isset($_GET['end_month']) ? htmlspecialchars($_GET['end_month']) : ''; ?>">
+                                                <small class="form-text text-muted">End Month</small>
                                             </div>
                                         </div>
 
                                         <!-- Submit Button -->
                                         <div class="col-12 col-sm-2">
-                                            <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-primary" style="outline: none;">
+                                            <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success" style="outline: none;">
                                                 <i class="bi bi-search"></i> <span id="button_text">Search</span>
                                             </button>
+                                            <!-- </div> -->
+
+                                            <?php if ($role == 'Admin'): ?>
+                                                <!-- <div class="col-12 col-sm-2"> -->
+                                                <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-secondary" style="outline: none;">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Clear
+                                                </a>
                                         </div>
+                                    <?php endif; ?>
                                     </div>
                                 </form>
 
+                                <?php if ($showData && !empty($attendanceData)): ?>
+                                    <div class="row align-items-center mt-3">
+                                        <div class="col-6">
+                                            <?php
+                                            $startDateTime = DateTime::createFromFormat('Y-m', $startMonth);
+                                            $endDateTime = DateTime::createFromFormat('Y-m', $endMonth);
+                                            if ($startDateTime !== false && $endDateTime !== false):
+                                            ?>
+                                                You are viewing data for
+                                                <span class="blink-text">
+                                                    <?= $startDateTime->format('M Y') ?> to <?= $endDateTime->format('M Y') ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
                                 <div class="table-responsive mt-5 mb-3">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <th colspan="2">Allocation Period</th>
-                                                <th colspan="5">Section A</th>
-                                                <th colspan="3">Section B</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Associate Number</th>
-                                                <th>Full Name</th>
-                                                <th>Date of Join</th>
-                                                <th>Start Date</th>
-                                                <th>End Date</th>
-                                                <th>Scheduled Workdays</th>
-                                                <th>Days Worked</th>
-                                                <th>Leave Taken</th>
-                                                <th colspan="2">Allocation Index</th>
-                                                <th>Late Count</th>
-                                                <th>Grace entry (W) Count</th>
-                                                <th>Exception Count</th>
-                                            </tr>
-
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($attendanceData as $row): ?>
+                                    <?php if (empty($startMonth) || empty($endMonth)): ?>
+                                        <div class="alert alert-info mt-3">
+                                            <h5><i class="bi bi-calendar-event"></i> Select Date Range</h5>
+                                            <p>Please select both <strong>Start Month</strong> and <strong>End Month</strong> from the dropdowns above and click <strong>"Search"</strong> to view the timesheet data.</p>
+                                        </div>
+                                    <?php elseif ($showData && empty($attendanceData)): ?>
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="bi bi-exclamation-triangle"></i> No timesheet data found for the selected date range.
+                                        </div>
+                                    <?php else: ?>
+                                        <table class="table table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo $row['associatenumber']; ?></td>
-                                                    <td><?php echo $row['fullname']; ?></td>
-                                                    <td>
-                                                        <?php
-                                                        echo isset($row['doj']) && !empty($row['doj'])
-                                                            ? date('d/m/Y', strtotime($row['doj']))
-                                                            : '';
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        echo isset($row['schedule_start_date']) && !empty($row['schedule_start_date'])
-                                                            ? date('d/m/Y', strtotime($row['schedule_start_date']))
-                                                            : '';
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        echo isset($row['schedule_end_date']) && !empty($row['schedule_end_date'])
-                                                            ? (date('Y-m-d', strtotime($row['schedule_end_date'])) === date('Y-m-d')
-                                                                ? ''
-                                                                : date('d/m/Y', strtotime($row['schedule_end_date'])))
-                                                            : '';
-                                                        ?>
-                                                    </td>
-                                                    <td><?php echo $row['work_schedule'] ?></td>
-                                                    <td><?php echo $row['days_worked'] - $row['halfday_count'] / 2 ?></td>
-                                                    <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
-                                                    <?php
-                                                    $percentage = 0;
-
-                                                    if ($row['work_schedule'] > 0) {
-                                                        $percentage = (($row['days_worked'] - $row['halfday_count'] / 2) / $row['work_schedule']) * 100;
-                                                    }
-                                                    ?>
-                                                    <td><?php echo number_format($percentage, 2) . '%'; ?></td>
-                                                    <td><?php if ($percentage !== null): ?>
-                                                            <meter id="disk_c" value="<?= strtok($percentage, '%') ?>" min="0" max="100"></meter>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td><?php echo $row['late_count']; ?></td>
-                                                    <td><?php echo $row['warning_count']; ?></td>
-                                                    <td><?php echo $row['exception_count']; ?></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <th colspan="2">Allocation Period</th>
+                                                    <th colspan="5">Section A</th>
+                                                    <th colspan="3">Section B</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                                <tr>
+                                                    <th>Associate Number</th>
+                                                    <th>Full Name</th>
+                                                    <th>Date of Join</th>
+                                                    <th>Start Date</th>
+                                                    <th>End Date</th>
+                                                    <th>Scheduled Workdays</th>
+                                                    <th>Days Worked</th>
+                                                    <th>Leave Taken</th>
+                                                    <th colspan="2">Allocation Index</th>
+                                                    <th>Late Count</th>
+                                                    <th>Grace entry (W) Count</th>
+                                                    <th>Exception Count</th>
+                                                </tr>
+
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($attendanceData as $row): ?>
+                                                    <tr>
+                                                        <td><?php echo $row['associatenumber']; ?></td>
+                                                        <td><?php echo $row['fullname']; ?></td>
+                                                        <td>
+                                                            <?php
+                                                            echo isset($row['doj']) && !empty($row['doj'])
+                                                                ? date('d/m/Y', strtotime($row['doj']))
+                                                                : '';
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php
+                                                            echo isset($row['schedule_start_date']) && !empty($row['schedule_start_date'])
+                                                                ? date('d/m/Y', strtotime($row['schedule_start_date']))
+                                                                : '';
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php
+                                                            echo isset($row['schedule_end_date']) && !empty($row['schedule_end_date'])
+                                                                ? (date('Y-m-d', strtotime($row['schedule_end_date'])) === date('Y-m-d')
+                                                                    ? ''
+                                                                    : date('d/m/Y', strtotime($row['schedule_end_date'])))
+                                                                : '';
+                                                            ?>
+                                                        </td>
+                                                        <td><?php echo $row['work_schedule'] ?></td>
+                                                        <td><?php echo $row['days_worked'] - $row['halfday_count'] / 2 ?></td>
+                                                        <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
+                                                        <?php
+                                                        $percentage = 0;
+
+                                                        if ($row['work_schedule'] > 0) {
+                                                            $percentage = (($row['days_worked'] - $row['halfday_count'] / 2) / $row['work_schedule']) * 100;
+                                                        }
+                                                        ?>
+                                                        <td><?php echo number_format($percentage, 2) . '%'; ?></td>
+                                                        <td><?php if ($percentage !== null): ?>
+                                                                <meter id="disk_c" value="<?= strtok($percentage, '%') ?>" min="0" max="100"></meter>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo $row['late_count']; ?></td>
+                                                        <td><?php echo $row['warning_count']; ?></td>
+                                                        <td><?php echo $row['exception_count']; ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -825,41 +903,51 @@ $associateNumberCount = count($uniqueAssociateNumbers);
         const endMonthInput = document.getElementById('end_month');
 
         // Set the max attribute for both inputs
-        startMonthInput.setAttribute('max', maxMonth);
-        endMonthInput.setAttribute('max', maxMonth);
+        if (startMonthInput) {
+            startMonthInput.setAttribute('max', maxMonth);
+        }
+        if (endMonthInput) {
+            endMonthInput.setAttribute('max', maxMonth);
+        }
 
         // Initialize min/max attributes if values are pre-selected
-        if (startMonthInput.value) {
+        if (startMonthInput && startMonthInput.value) {
             endMonthInput.setAttribute('min', startMonthInput.value);
         }
 
-        if (endMonthInput.value) {
+        if (endMonthInput && endMonthInput.value) {
             startMonthInput.setAttribute('max', endMonthInput.value);
         }
 
         // Update the min and max attributes based on selected start_month
-        startMonthInput.addEventListener('change', function() {
-            const selectedStartMonth = this.value;
-            endMonthInput.setAttribute('min', selectedStartMonth);
-        });
+        if (startMonthInput) {
+            startMonthInput.addEventListener('change', function() {
+                const selectedStartMonth = this.value;
+                endMonthInput.setAttribute('min', selectedStartMonth);
+            });
+        }
 
         // Update the min and max attributes based on selected end_month
-        endMonthInput.addEventListener('change', function() {
-            const selectedEndMonth = this.value;
-            startMonthInput.setAttribute('max', selectedEndMonth);
-        });
+        if (endMonthInput) {
+            endMonthInput.addEventListener('change', function() {
+                const selectedEndMonth = this.value;
+                startMonthInput.setAttribute('max', selectedEndMonth);
+            });
+        }
     </script>
     <script>
         const searchForm = document.getElementById('search_form');
         const searchButton = document.getElementById('search_by_id');
         const buttonText = document.getElementById('button_text');
 
-        searchForm.addEventListener('submit', function() {
-            // Change the button text to "Loading..."
-            buttonText.textContent = 'Loading...';
-            // Disable the button to prevent multiple submissions
-            searchButton.setAttribute('disabled', true);
-        });
+        if (searchForm) {
+            searchForm.addEventListener('submit', function() {
+                // Change the button text to "Loading..."
+                buttonText.textContent = 'Loading...';
+                // Disable the button to prevent multiple submissions
+                searchButton.setAttribute('disabled', true);
+            });
+        }
     </script>
 </body>
 

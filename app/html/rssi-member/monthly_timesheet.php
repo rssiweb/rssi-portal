@@ -16,26 +16,40 @@ $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 $selectedTeachers = isset($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
 ?>
 <?php
-$month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+// $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+$engagementFilter = isset($_GET['engagement']) ? $_GET['engagement'] : '';
 
-// Calculate the start and end dates of the month
-$startDate = date("Y-m-01", strtotime($month));
-$endDate = date("Y-m-t", strtotime($month));
+// MODIFIED: Set month to empty if not provided
+$month = isset($_GET['get_month']) ? $_GET['get_month'] : '';
 
-// Construct the ID condition
-$idCondition = $id != null ? "AND m.filterstatus = '" . pg_escape_string($con, $id) . "'" : '';
+// Only process data if month is selected
+if (!empty($month)) {
+    // Calculate the start and end dates of the month
 
-// Construct the teacher condition
-$teacherCondition = '';
-if (!empty($selectedTeachers)) {
-    $escapedTeachers = array_map(function ($teacher) use ($con) {
-        return pg_escape_string($con, $teacher);
-    }, $selectedTeachers);
-    $teacherList = implode("','", $escapedTeachers);
-    $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
-}
+    // Calculate the start and end dates of the month
+    $startDate = date("Y-m-01", strtotime($month));
+    $endDate = date("Y-m-t", strtotime($month));
 
-$query = "
+    // Construct the ID condition
+    $idCondition = $id != null ? "AND m.filterstatus = '" . pg_escape_string($con, $id) . "'" : '';
+
+    // Construct the teacher condition
+    $teacherCondition = '';
+    if (!empty($selectedTeachers)) {
+        $escapedTeachers = array_map(function ($teacher) use ($con) {
+            return pg_escape_string($con, $teacher);
+        }, $selectedTeachers);
+        $teacherList = implode("','", $escapedTeachers);
+        $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
+    }
+
+    // NEW: Construct the engagement condition
+    $engagementCondition = '';
+    if (!empty($engagementFilter)) {
+        $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
+    }
+
+    $query = "
 -- Query with updated logic for calculating scheduled workdays, considering DOJ and effective date
 WITH date_range AS (
     SELECT generate_series(
@@ -440,6 +454,7 @@ END AS exception_status
         AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         -- $idCondition
         -- $teacherCondition
+        $engagementCondition
         " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
 SELECT 
@@ -517,27 +532,31 @@ LEFT JOIN
     ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
     -- mode = 'Offline'
-    (m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern'))
-    AND grade!='D'
+    -- (m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern'))
+   -- AND 
+    grade!='D'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
     m.associatenumber, m.fullname, m.engagement, m.position, h.holiday_dates
 ORDER BY 
     m.associatenumber;
 ";
-$result = pg_query($con, $query);
+    $result = pg_query($con, $query);
 
-if (!$result) {
-    echo "Query failed: " . pg_last_error($con);
-    exit();
+    if (!$result) {
+        echo "Query failed: " . pg_last_error($con);
+        exit();
+    }
+    // Fetch attendance data
+    $attendanceData = pg_fetch_all($result);
+    $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
+    $associateNumberCount = count($uniqueAssociateNumbers);
+} else {
+    // Set empty data when no month is selected
+    $attendanceData = [];
+    $uniqueAssociateNumbers = [];
+    $associateNumberCount = 0;
 }
-// Fetch attendance data
-$attendanceData = pg_fetch_all($result);
-$uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
-$associateNumberCount = count($uniqueAssociateNumbers);
-
-
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -711,11 +730,26 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                                             </div>
                                         <?php } ?> -->
 
+                                        <!-- NEW: Engagement Dropdown -->
+                                        <div class="col-md-3 col-lg-2">
+                                            <div class="form-group">
+                                                <select name="engagement" id="engagement" class="form-select">
+                                                    <option value="">All Engagements</option>
+                                                    <option value="Employee" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                                    <option value="Intern" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Intern') ? 'selected' : ''; ?>>Intern</option>
+                                                    <option value="Member" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Member') ? 'selected' : ''; ?>>Member</option>
+                                                    <option value="Volunteer" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
+                                                    <!-- Add more options based on your actual engagement values -->
+                                                </select>
+                                                <small class="form-text text-muted">Engagement Type</small>
+                                            </div>
+                                        </div>
+
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
                                                 <input type="month" name="get_month" id="get_month" class="form-control"
-                                                    placeholder="Month"
-                                                    value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
+                                                    placeholder="Select Month"
+                                                    value="<?php echo isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : ''; ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
@@ -757,156 +791,184 @@ $associateNumberCount = count($uniqueAssociateNumbers);
                                             $dateTime = null;
                                         }
                                         ?>
-                                <!-- <div class="row align-items-center">
-                                    <div class="col-6">
-                                        <?php if ($dateTime !== null): ?>
-                                            You are viewing data for
-                                            <span class="blink-text">
-                                                <?= $dateTime->format('F Y') ?>
-                                            </span>
-                                        <?php else: ?>
-                                            Invalid month format
-                                        <?php endif; ?>
-                                    </div>
-                                </div> -->
-                                <br>
-                                <br>
-                                <div class="timesheet-header" style="text-align: center; margin-bottom: 20px;">
-                                    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Monthly Timesheet</h1>
-                                    <p style="margin: 5px 0; font-size: 16px; color: #555;">
-                                        Month: <strong><?= $dateTime->format('F') ?></strong> | Year: <strong><?= $dateTime->format('Y') ?></strong>
-                                    </p>
-                                    <?php
-                                    $dateTime = new DateTime('01-' . $dateTime->format('m-Y')); // Start of the current month
-                                    $firstDate = $dateTime->format('01-m-Y'); // First date of the month
-                                    // Check if today's month matches the month of the provided $dateTime
-                                    if ($dateTime->format('m-Y') === date('m-Y')) {
-                                        $lastDate = date('d-m-Y'); // Current date
-                                    } else {
-                                        // If not in the same month, calculate last date dynamically
-                                        $lastDate = $dateTime->modify('last day of this month')->format('d-m-Y'); // Last date of the month
-                                    }
-                                    ?>
-                                    <p style="margin: 5px 0; font-size: 16px; color: #555;">
-                                        Reporting Period: <strong><?= $firstDate ?></strong> to <strong><?= $lastDate ?></strong>
-                                    </p>
-                                    <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <td></td>
-                                                <td></td>
-                                                <th colspan="3">Section A</th>
-                                                <th colspan="3">Section B</th>
-                                                <th colspan="6">Section C</th>
-                                                <td></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Associate Number</th>
-                                                <th>Full Name</th>
-                                                <th>Work Schedule</th> <!-- New column -->
-                                                <th>Scheduled Workdays</th>
-                                                <th>Days Worked</th>
-                                                <!-- <th>Leave Taken</th>
-                                                <th>Half day Taken</th> -->
-                                                <th>Leave Taken</th>
-                                                <th>Late Count</th>
-                                                <th>Grace entry (W) Count</th>
-                                                <th>Exception Count</th>
-                                                <th>Leave Dates</th>
-                                                <th>Half day Dates</th>
-                                                <th>Late Dates</th>
-                                                <th>Grace entry (W) Dates</th>
-                                                <th>Exception Dates</th>
-                                                <th>Holiday</th>
-                                                <th></th>
-                                            </tr>
-
-                                        </thead>
-                                        <tbody>
+                                <!-- <?php if (!empty($month)): ?>
+                                    <div class="row align-items-center">
+                                        <div class="col-6">
                                             <?php
-                                            // Function to generate the WhatsApp message link
-                                            function getWhatsAppLink($row, $custom_message)
-                                            {
-                                                // Construct the message
-                                                $message = "Dear " . $row['fullname'] . " (" . $row['associatenumber'] . "),\n\n"
-                                                    . $custom_message . "\n\n"
-                                                    . "--RSSI\n\n"
-                                                    . "**This is a system generated message.";
-
-                                                // Encode the message to make it URL-safe
-                                                $encoded_message = urlencode($message);
-
-                                                // Generate and return the WhatsApp URL
-                                                return "https://api.whatsapp.com/send?phone=91" . $row['phone'] . "&text=" . $encoded_message;
-                                            }
-
-                                            // Define the custom message
-                                            $message = "You have been marked as a timesheet defaulter in the system due to one or more of the following reasons:\n\n"
-                                                . "1) Missed punch-in or punch-out.\n"
-                                                . "2) Leave taken but not applied.\n\n"
-                                                . "Please check your timesheet and ensure the following:\n"
-                                                . "- Any missed entry/exit, late entry, or early exit is updated.\n"
-                                                . "- Any leave taken is applied appropriately.\n\n"
-                                                . "Failure to make these adjustments may result in system-enforced leave as per the leave policy.";
+                                            $dateTime = DateTime::createFromFormat('Y-m', $month);
+                                            if ($dateTime !== false):
                                             ?>
-                                            <?php foreach ($attendanceData as $row): ?>
+                                                You are viewing data for
+                                                <span class="blink-text">
+                                                    <?= $dateTime->format('F Y') ?>
+                                                </span>
+                                            <?php else: ?>
+                                                Invalid month format
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?> -->
+                                <br>
+                                <br>
+                                <?php if (!empty($month) && !empty($attendanceData)): ?>
+                                    <div class="timesheet-header" style="text-align: center; margin-bottom: 20px;">
+                                        <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Monthly Timesheet</h1>
+                                        <?php
+                                        // Explode the month into year and month components
+                                        $components = explode("-", $month);
+                                        if (count($components) === 2) {
+                                            $year = $components[0];
+                                            $monthNumber = $components[1];
+                                            $dateTime = DateTime::createFromFormat('Y-m', $month);
+                                            if ($dateTime !== false) {
+                                        ?>
+                                                <p style="margin: 5px 0; font-size: 16px; color: #555;">
+                                                    Month: <strong><?= $dateTime->format('F') ?></strong> | Year: <strong><?= $dateTime->format('Y') ?></strong>
+                                                </p>
+                                                <?php
+                                                $firstDate = $dateTime->format('01-m-Y'); // First date of the month
+                                                // Check if today's month matches the month of the provided $dateTime
+                                                if ($dateTime->format('m-Y') === date('m-Y')) {
+                                                    $lastDate = date('d-m-Y'); // Current date
+                                                } else {
+                                                    // If not in the same month, calculate last date dynamically
+                                                    $lastDate = (clone $dateTime)->modify('last day of this month')->format('d-m-Y'); // Last date of the month
+                                                }
+                                                ?>
+                                                <p style="margin: 5px 0; font-size: 16px; color: #555;">
+                                                    Reporting Period: <strong><?= $firstDate ?></strong> to <strong><?= $lastDate ?></strong>
+                                                </p>
+                                        <?php
+                                            }
+                                        }
+                                        ?>
+                                        <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo $row['associatenumber'];
-                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) < $row['work_schedule']) { // Or any other status you want to check
-                                                            echo '&nbsp;<span class="status-indicator yellow"></span>';
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                    <td><?php echo $row['fullname']; ?></td>
-                                                    <td><?php echo $row['current_schedule'] ?? 'Default'; ?></td> <!-- New column -->
-                                                    <td><?php echo $row['work_schedule'] ?></td>
-                                                    <td><?php echo $row['days_worked'] - $row['halfday_count'] / 2 ?></td>
-                                                    <!-- <td><?php echo $row['leave_count']; ?></td>
-                                                    <td><?php echo $row['halfday_count']; ?></td> -->
-                                                    <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
-                                                    <td><?php echo $row['late_count']; ?></td>
-                                                    <td><?php echo $row['warning_count']; ?></td>
-                                                    <td><?php echo $row['exception_count']; ?></td>
-
-                                                    <td><?php echo !empty($row['leave_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['leave_dates']))) : ''; ?></td>
-                                                    <td><?php echo !empty($row['halfday_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['halfday_dates']))) : ''; ?></td>
-                                                    <td><?php echo !empty($row['late_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['late_dates']))) : ''; ?></td>
-
-                                                    <td><?php echo !empty($row['warning_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['warning_dates']))) : ''; ?></td>
-
-                                                    <td><?php echo !empty($row['exception_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['exception_dates']))) : ''; ?></td>
-                                                    <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
-                                                            return date('d', strtotime($date));
-                                                        }, explode(', ', $row['holiday_dates']))) : ''; ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $link = getWhatsAppLink($row, $message);
-                                                        // Set the title text dynamically
-                                                        $title = "Send WhatsApp message to " . $row['fullname'] . " (" . $row['associatenumber'] . ")";
-                                                        // Check if the "Reminder" link should be displayed
-                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) != $row['work_schedule']) {
-                                                            echo '<a href="' . $link . '" target="_blank" title="' . htmlspecialchars($title) . '" class="send-link">Send</a>';
-                                                        }
-                                                        ?>
-                                                    </td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <th colspan="3">Section A</th>
+                                                    <th colspan="3">Section B</th>
+                                                    <th colspan="6">Section C</th>
+                                                    <td></td>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                <tr>
+                                                    <th>Associate Number</th>
+                                                    <th>Full Name</th>
+                                                    <th>Work Schedule</th> <!-- New column -->
+                                                    <th>Scheduled Workdays</th>
+                                                    <th>Days Worked</th>
+                                                    <!-- <th>Leave Taken</th>
+                                                <th>Half day Taken</th> -->
+                                                    <th>Leave Taken</th>
+                                                    <th>Late Count</th>
+                                                    <th>Grace entry (W) Count</th>
+                                                    <th>Exception Count</th>
+                                                    <th>Leave Dates</th>
+                                                    <th>Half day Dates</th>
+                                                    <th>Late Dates</th>
+                                                    <th>Grace entry (W) Dates</th>
+                                                    <th>Exception Dates</th>
+                                                    <th>Holiday</th>
+                                                    <th></th>
+                                                </tr>
+
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                // Function to generate the WhatsApp message link
+                                                function getWhatsAppLink($row, $custom_message)
+                                                {
+                                                    // Construct the message
+                                                    $message = "Dear " . $row['fullname'] . " (" . $row['associatenumber'] . "),\n\n"
+                                                        . $custom_message . "\n\n"
+                                                        . "--RSSI\n\n"
+                                                        . "**This is a system generated message.";
+
+                                                    // Encode the message to make it URL-safe
+                                                    $encoded_message = urlencode($message);
+
+                                                    // Generate and return the WhatsApp URL
+                                                    return "https://api.whatsapp.com/send?phone=91" . $row['phone'] . "&text=" . $encoded_message;
+                                                }
+
+                                                // Define the custom message
+                                                $message = "You have been marked as a timesheet defaulter in the system due to one or more of the following reasons:\n\n"
+                                                    . "1) Missed punch-in or punch-out.\n"
+                                                    . "2) Leave taken but not applied.\n\n"
+                                                    . "Please check your timesheet and ensure the following:\n"
+                                                    . "- Any missed entry/exit, late entry, or early exit is updated.\n"
+                                                    . "- Any leave taken is applied appropriately.\n\n"
+                                                    . "Failure to make these adjustments may result in system-enforced leave as per the leave policy.";
+                                                ?>
+                                                <?php foreach ($attendanceData as $row): ?>
+                                                    <tr>
+                                                        <td><?php echo $row['associatenumber'];
+                                                            if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) < $row['work_schedule']) { // Or any other status you want to check
+                                                                echo '&nbsp;<span class="status-indicator yellow"></span>';
+                                                            }
+                                                            ?>
+                                                        </td>
+                                                        <td><?php echo $row['fullname']; ?></td>
+                                                        <td><?php echo $row['current_schedule'] ?? 'Default'; ?></td> <!-- New column -->
+                                                        <td><?php echo $row['work_schedule'] ?></td>
+                                                        <td><?php echo $row['days_worked'] - $row['halfday_count'] / 2 ?></td>
+                                                        <!-- <td><?php echo $row['leave_count']; ?></td>
+                                                    <td><?php echo $row['halfday_count']; ?></td> -->
+                                                        <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
+                                                        <td><?php echo $row['late_count']; ?></td>
+                                                        <td><?php echo $row['warning_count']; ?></td>
+                                                        <td><?php echo $row['exception_count']; ?></td>
+
+                                                        <td><?php echo !empty($row['leave_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['leave_dates']))) : ''; ?></td>
+                                                        <td><?php echo !empty($row['halfday_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['halfday_dates']))) : ''; ?></td>
+                                                        <td><?php echo !empty($row['late_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['late_dates']))) : ''; ?></td>
+
+                                                        <td><?php echo !empty($row['warning_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['warning_dates']))) : ''; ?></td>
+
+                                                        <td><?php echo !empty($row['exception_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['exception_dates']))) : ''; ?></td>
+                                                        <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
+                                                                return date('d', strtotime($date));
+                                                            }, explode(', ', $row['holiday_dates']))) : ''; ?></td>
+                                                        <td>
+                                                            <?php
+                                                            $link = getWhatsAppLink($row, $message);
+                                                            // Set the title text dynamically
+                                                            $title = "Send WhatsApp message to " . $row['fullname'] . " (" . $row['associatenumber'] . ")";
+                                                            // Check if the "Reminder" link should be displayed
+                                                            if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) != $row['work_schedule']) {
+                                                                echo '<a href="' . $link . '" target="_blank" title="' . htmlspecialchars($title) . '" class="send-link">Send</a>';
+                                                            }
+                                                            ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (empty($month)): ?>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-info-circle"></i> Please select a month and click Search to view attendance data.
+                                    </div>
+                                <?php elseif (empty($attendanceData)): ?>
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="bi bi-exclamation-triangle"></i> No attendance data found for the selected month.
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
