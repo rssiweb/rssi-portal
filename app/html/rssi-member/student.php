@@ -26,39 +26,39 @@ $locations_query = "SELECT name FROM office_locations WHERE is_active = true ORD
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-    $locations[] = $row['name'];
+  $locations[] = $row['name'];
 }
 
-// Only query if we have valid parameters
+// Build the query based on search type
+$query = "";
+$params = [];
+
 if ($searchByIdOnly) {
   // Search by Student ID only
   if (!empty($stid)) {
     $query = "SELECT * FROM rssimyprofile_student WHERE student_id = $1";
     $params = [$stid];
-    
+
     // Add location filter if selected
     if (!empty($selected_location)) {
-        $query .= " AND preferredbranch = $" . (count($params) + 1);
-        $params[] = $selected_location;
+      $query .= " AND preferredbranch = $" . (count($params) + 1);
+      $params[] = $selected_location;
     }
-    
-    $result = pg_query_params($con, $query, $params);
-    $resultArr = $result ? pg_fetch_all($result) : [];
   }
 } else {
   // Normal search (requires module and status)
   if (!empty($module) && !empty($id)) {
     $query = "SELECT * FROM rssimyprofile_student 
-                 WHERE filterstatus = $1 AND module = $2";
+                  WHERE filterstatus = $1 AND module = $2";
     $params = [$id, $module];
 
     $paramCount = 3; // Start counting from 3
 
     // Add location filter if selected
     if (!empty($selected_location)) {
-        $query .= " AND preferredbranch = $$paramCount";
-        $params[] = $selected_location;
-        $paramCount++;
+      $query .= " AND preferredbranch = $$paramCount";
+      $params[] = $selected_location;
+      $paramCount++;
     }
 
     if (!empty($category)) {
@@ -85,8 +85,54 @@ if ($searchByIdOnly) {
     }
 
     $query .= " ORDER BY category ASC, class ASC, studentname ASC";
-    $result = pg_query_params($con, $query, $params);
-    $resultArr = $result ? pg_fetch_all($result) : [];
+  }
+}
+
+// Execute the query if we have a valid query string
+if (!empty($query)) {
+  $result = pg_query_params($con, $query, $params);
+  $resultArr = $result ? pg_fetch_all($result) : [];
+}
+
+// Function to check form availability for a student (defined once)
+function getStudentForms($student_id, $con)
+{
+  // Check for Form 1A - get the most recent submitted one
+  $query1A = "SELECT file_path, application_number, submitted_at 
+                FROM student_applications 
+                WHERE student_id = $1 
+                AND document_type = 'Form 1A' 
+                AND status = 'submitted' 
+                ORDER BY submitted_at DESC LIMIT 1";
+  $result1A = pg_query_params($con, $query1A, array($student_id));
+  $form1A = pg_fetch_assoc($result1A);
+
+  // Check for Form 1B - get the most recent submitted one
+  $query1B = "SELECT file_path, application_number, submitted_at 
+                FROM student_applications 
+                WHERE student_id = $1 
+                AND document_type = 'Form 1B' 
+                AND status = 'submitted' 
+                ORDER BY submitted_at DESC LIMIT 1";
+  $result1B = pg_query_params($con, $query1B, array($student_id));
+  $form1B = pg_fetch_assoc($result1B);
+
+  return [
+    'form_1a' => $form1A,
+    'form_1b' => $form1B
+  ];
+}
+
+// Add form status to each student (executed only once after the query)
+if (!empty($resultArr)) {
+  foreach ($resultArr as &$student) {
+    $formStatus = getStudentForms($student['student_id'], $con);
+    $student['form_1a_available'] = $formStatus['form_1a'] ? true : false;
+    $student['form_1a_file_path'] = $formStatus['form_1a']['file_path'] ?? null;
+    $student['form_1a_app_number'] = $formStatus['form_1a']['application_number'] ?? null;
+    $student['form_1b_available'] = $formStatus['form_1b'] ? true : false;
+    $student['form_1b_file_path'] = $formStatus['form_1b']['file_path'] ?? null;
+    $student['form_1b_app_number'] = $formStatus['form_1b']['application_number'] ?? null;
   }
 }
 
@@ -200,9 +246,9 @@ function formatContact($role, $contact)
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php include 'includes/meta.php' ?>
+  <?php include 'includes/meta.php' ?>
 
-  
+
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -379,9 +425,9 @@ function formatContact($role, $contact)
   <main id="main" class="main">
 
     <div class="pagetitle">
-            <h1><?php echo getPageTitle(); ?></h1>
-            <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+      <h1><?php echo getPageTitle(); ?></h1>
+      <?php echo generateDynamicBreadcrumb(); ?>
+    </div><!-- End Page Title -->
 
     <section class="section dashboard">
       <div class="row">
@@ -657,14 +703,15 @@ function formatContact($role, $contact)
                       <th>Contact</th>
                       <th>Status</th>
                       <th>Plan</th>
-                      <th>Emergency</th>
+                      <!-- <th>Emergency</th> -->
+                      <th>Form 1A</th>
+                      <th>Form 1B</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <?php if (sizeof($resultArr) > 0) :
                       foreach ($resultArr as $array) :
-                        // $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
                         $contact = formatContact($role, $array['contact']);
                     ?>
                         <tr>
@@ -679,17 +726,57 @@ function formatContact($role, $contact)
                           <td style="white-space: unset;"><?php echo $array['class'] . '/' . $array['category']; ?></td>
                           <td style="white-space: unset;"><?php echo $array['nameoftheschool']; ?></td>
                           <td style="white-space: unset;">
-                            <?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?>
-                          </td>
-                          <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
-                          <td style="white-space: unset"><?php echo $array['type_of_admission']; ?></td>
-                          <td style="white-space: unset;">
+                            <?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?><br>
                             <?php
                             echo $array['emergency_contact_number'];
                             if (!empty($array['alternate_number'])) {
                               echo ", " . $array['alternate_number'];
                             }
                             ?>
+                          </td>
+                          <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
+                          <td style="white-space: unset"><?php echo $array['type_of_admission']; ?></td>
+                          <!-- <td style="white-space: unset;">
+                            <?php
+                            echo $array['emergency_contact_number'];
+                            if (!empty($array['alternate_number'])) {
+                              echo ", " . $array['alternate_number'];
+                            }
+                            ?>
+                          </td> -->
+                          <!-- Form 1A Column -->
+                          <td style="white-space: unset;">
+                            <?php if ($array['form_1a_available']): ?>
+                              <a href="<?= htmlspecialchars($array['form_1a_file_path']) ?>" target="_blank">
+                                Yes
+                              </a>
+                              <?php if ($array['form_1a_app_number']): ?>
+                                <br><small class="text-muted">App #: <?= htmlspecialchars($array['form_1a_app_number']) ?></small>
+                              <?php endif; ?>
+                            <?php else: ?>
+                              <span class="text-muted">No</span>
+                            <?php endif; ?>
+                          </td>
+                          <!-- Form 1B Column -->
+                          <td style="white-space: unset;">
+                            <?php
+                            // Show Form 1B only for non-LG1 students who don't have school info
+                            $showForm1B = !($array['category'] == 'LG1' || !empty($array['nameoftheschool']));
+                            if ($showForm1B):
+                            ?>
+                              <?php if ($array['form_1b_available']): ?>
+                                <a href="<?= htmlspecialchars($array['form_1b_file_path']) ?>" target="_blank">
+                                  Yes
+                                </a>
+                                <?php if ($array['form_1b_app_number']): ?>
+                                  <br><small class="text-muted">App #: <?= htmlspecialchars($array['form_1b_app_number']) ?></small>
+                                <?php endif; ?>
+                              <?php else: ?>
+                                <span class="text-muted">No</span>
+                              <?php endif; ?>
+                            <?php else: ?>
+                              <!-- <span class="text-muted">N/A</span> -->
+                            <?php endif; ?>
                           </td>
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;
                             <a href="javascript:void(0)"
@@ -703,19 +790,19 @@ function formatContact($role, $contact)
                     elseif ($module == "" && $stid == "") :
                       ?>
                       <tr>
-                        <td colspan="15">Please select a Module and Status from the dropdown menus to view the results.</td>
+                        <td colspan="17">Please select a Module and Status from the dropdown menus to view the results.</td>
                       </tr>
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid == "") :
                     ?>
                       <tr>
-                        <td colspan="15">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
+                        <td colspan="17">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
                       </tr>
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid != "") :
                     ?>
                       <tr>
-                        <td colspan="15">No record found for <?php echo $stid; ?></td>
+                        <td colspan="17">No record found for <?php echo $stid; ?></td>
                       </tr>
                     <?php endif; ?>
                   </tbody>
@@ -760,8 +847,8 @@ function formatContact($role, $contact)
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-  
+  <script src="../assets_new/js/main.js"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const searchForm = document.getElementById('searchForm');
@@ -827,11 +914,14 @@ function formatContact($role, $contact)
   </script>
   <script>
     $(document).ready(function() {
-      // Check if resultArr is empty
       <?php if (!empty($resultArr)) : ?>
-        // Initialize DataTables only if resultArr is not empty
         $('#table-id').DataTable({
           paging: false,
+          columnDefs: [{
+              orderable: false,
+              targets: [0, 15]
+            } // Disable sorting on photo, forms, and action columns
+          ]
           // other options...
         });
       <?php endif; ?>

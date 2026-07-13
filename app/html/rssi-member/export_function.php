@@ -516,6 +516,45 @@ function student_export()
     exit;
   }
 
+  // Function to check form availability for a student
+  function getStudentFormStatus($student_id, $con)
+  {
+    $forms = [
+      'form_1a' => 'No',
+      'form_1b' => 'No'
+    ];
+
+    // Check for Form 1A
+    $query1A = "SELECT COUNT(*) as count 
+                FROM student_applications 
+                WHERE student_id = $1 
+                AND document_type = 'Form 1A' 
+                AND status = 'submitted'";
+    $result1A = pg_query_params($con, $query1A, array($student_id));
+    if ($result1A) {
+      $row1A = pg_fetch_assoc($result1A);
+      if ($row1A['count'] > 0) {
+        $forms['form_1a'] = 'Yes';
+      }
+    }
+
+    // Check for Form 1B
+    $query1B = "SELECT COUNT(*) as count 
+                FROM student_applications 
+                WHERE student_id = $1 
+                AND document_type = 'Form 1B' 
+                AND status = 'submitted'";
+    $result1B = pg_query_params($con, $query1B, array($student_id));
+    if ($result1B) {
+      $row1B = pg_fetch_assoc($result1B);
+      if ($row1B['count'] > 0) {
+        $forms['form_1b'] = 'Yes';
+      }
+    }
+
+    return $forms;
+  }
+
   // Set headers for CSV download
   header('Content-Type: text/csv; charset=utf-8');
   header('Content-Disposition: attachment; filename=student_export_' . date('Y-m-d') . '.csv');
@@ -523,7 +562,7 @@ function student_export()
   // Create output stream
   $output = fopen('php://output', 'w');
 
-  // Write CSV header
+  // Write CSV header - Added Form 1A and Form 1B columns
   fputcsv($output, [
     'Student Id',
     'Name',
@@ -543,7 +582,9 @@ function student_export()
     'Parent Aadhaar',
     'DOT',
     'Remarks',
-    'Location'  // Added Location column
+    'Location',
+    'Form 1A Available',
+    'Form 1B Available'
   ]);
 
   function maskAadhar($aadhar)
@@ -567,6 +608,15 @@ function student_export()
 
   // Write data rows
   foreach ($resultArr as $array) {
+    // Get form status for this student
+    $formStatus = getStudentFormStatus($array['student_id'], $con);
+
+    // Determine if Form 1B should be shown
+    $showForm1B = !($array['category'] == 'LG1' || !empty($array['nameoftheschool']));
+
+    // Set Form 1B value based on condition
+    $form1bValue = $showForm1B ? $formStatus['form_1b'] : '';
+
     fputcsv($output, [
       $array['student_id'],
       $array['studentname'],
@@ -586,7 +636,9 @@ function student_export()
       maskAadhar($array['guardianaadhar']),
       $array['effectivefrom'],
       $array['remarks'],
-      $array['preferredbranch'] // Added location data
+      $array['preferredbranch'],
+      $formStatus['form_1a'],  // Form 1A Available
+      $form1bValue              // Form 1B Available (only if condition met)
     ]);
   }
 
