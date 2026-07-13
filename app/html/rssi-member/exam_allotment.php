@@ -66,6 +66,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $filterProvided = true;
     }
 
+    // Add class filter
+    if (!empty($_GET['class'])) {
+        $conditions[] = "EXISTS (
+            SELECT 1 FROM exam_marks_data emd2 
+            WHERE emd2.exam_id = e.exam_id 
+            AND emd2.class = $" . (count($params) + 1) . "
+        )";
+        $params[] = $_GET['class'];
+        $filterProvided = true;
+    }
+
+    // Add location filter - FIXED: Changed emd3.student to emd3.student_id
+    if (!empty($_GET['location'])) {
+        $conditions[] = "EXISTS (
+            SELECT 1 FROM exam_marks_data emd3 
+            JOIN rssimyprofile_student rps ON emd3.student_id = rps.student_id
+            WHERE emd3.exam_id = e.exam_id 
+            AND rps.preferredbranch = $" . (count($params) + 1) . "
+        )";
+        $params[] = $_GET['location'];
+        $filterProvided = true;
+    }
+
     // Check user role and apply conditions accordingly
     if ($role !== 'Admin' && $role !== 'Offline Manager') {
         // Only include conditions for regular users to see their assigned records
@@ -94,11 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         // Handle potential query error
         if (!$result) {
-            die("Error in SQL query: " . pg_last_error($con)); // Pass connection to get context of the error
+            die("Error in SQL query: " . pg_last_error($con));
         }
 
         // Fetch results
-        $results = []; // Initialize results array
+        $results = [];
         while ($row = pg_fetch_assoc($result)) {
             $results[] = $row;
         }
@@ -106,10 +129,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         pg_free_result($result);
     }
 
-    
+    // Fetch locations for dropdown
+    $locations = [];
+    $locationQuery = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+    $locationResult = pg_query($con, $locationQuery);
+    if ($locationResult) {
+        while ($row = pg_fetch_assoc($locationResult)) {
+            $locations[] = $row['name'];
+        }
+        pg_free_result($locationResult);
+    }
 }
-
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -130,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    
+
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -224,6 +254,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                 <option value="Project" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Project') ? 'selected' : ''; ?>>Project</option>
                                             </select>
                                         </div>
+
+                                        <!-- New Class Filter -->
+                                        <div class="col-md-3">
+                                            <label for="class" class="form-label">Class</label>
+                                            <select class="form-select" id="class" name="class">
+                                                <option value="" <?php echo !isset($_GET['class']) ? 'selected' : ''; ?>>All Classes</option>
+                                                <?php
+                                                // Fetch classes from school_classes table
+                                                $classQuery = "SELECT id, value, class_name FROM school_classes ORDER BY value";
+                                                $classResult = pg_query($con, $classQuery);
+                                                if ($classResult) {
+                                                    while ($classRow = pg_fetch_assoc($classResult)) {
+                                                        $selected = (isset($_GET['class']) && $_GET['class'] == $classRow['value']) ? 'selected' : '';
+                                                        echo '<option value="' . htmlspecialchars($classRow['value']) . '" ' . $selected . '>';
+                                                        echo htmlspecialchars($classRow['class_name']);
+                                                        echo '</option>';
+                                                    }
+                                                    pg_free_result($classResult);
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+
+                                        <!-- New Location Filter -->
+                                        <div class="col-md-3">
+                                            <label for="location" class="form-label">Location</label>
+                                            <select class="form-select" id="location" name="location">
+                                                <option value="" <?php echo !isset($_GET['location']) ? 'selected' : ''; ?>>All Locations</option>
+                                                <?php foreach ($locations as $location): ?>
+                                                    <option value="<?php echo htmlspecialchars($location); ?>" <?php echo (isset($_GET['location']) && $_GET['location'] == $location) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($location); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
                                         <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                                             <div class="col-md-3">
                                                 <label for="teacher_id" class="form-label">Teacher ID</label>
@@ -379,8 +445,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             $('#table-id').DataTable({
@@ -453,6 +519,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $("#academic_year").prop('disabled', false);
             $("#subject").prop('disabled', false);
             $("#teacher_id").prop('disabled', false);
+            $("#class").prop('disabled', false);
+            $("#location").prop('disabled', false);
         } else {
             // Enable input fields if checkbox is checked
             $("#exam_id").prop('disabled', false);
@@ -460,6 +528,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $("#academic_year").prop('disabled', true);
             $("#subject").prop('disabled', true);
             $("#teacher_id").prop('disabled', true);
+            $("#class").prop('disabled', true);
+            $("#location").prop('disabled', true);
         }
 
         // Add event listener to checkbox
@@ -471,6 +541,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $("#academic_year").prop('disabled', true);
                 $("#subject").prop('disabled', true);
                 $("#teacher_id").prop('disabled', true);
+                $("#class").prop('disabled', true);
+                $("#location").prop('disabled', true);
             } else {
                 // Enable input fields if checkbox is not checked
                 $("#exam_id").prop('disabled', true);
@@ -478,6 +550,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $("#academic_year").prop('disabled', false);
                 $("#subject").prop('disabled', false);
                 $("#teacher_id").prop('disabled', false);
+                $("#class").prop('disabled', false);
+                $("#location").prop('disabled', false);
             }
         });
     </script>
