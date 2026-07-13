@@ -285,6 +285,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         echo json_encode($response);
         exit;
+    } elseif ($_POST['action'] === 'reupload_file') {
+        // Reupload file for existing submitted application
+        $application_id = $_POST['application_id'];
+        $reupload_reason = pg_escape_string($con, $_POST['reupload_reason'] ?? '');
+
+        if (isset($_FILES['application_file']) && $_FILES['application_file']['error'] === UPLOAD_ERR_OK) {
+            $uploadedFile = $_FILES['application_file'];
+
+            // Get application details
+            $query = "SELECT id, student_id, student_name, application_number FROM student_applications WHERE id = $1 AND status = 'submitted'";
+            $result = pg_query_params($con, $query, array($application_id));
+
+            if ($result && pg_num_rows($result) > 0) {
+                $app_data = pg_fetch_assoc($result);
+                $filename = "application_" . $app_data['id'] . "_" . $app_data['student_id'] . "_reupload";
+                $parent = '1ZbKO3uttwNPAzjlWtvZNeqAhWxWjOXOq'; // Your Google Drive folder ID
+
+                try {
+                    // Upload new file to Drive
+                    $drive_link = uploadeToDrive($uploadedFile, $parent, $filename);
+
+                    // Update application record with new file info and track reupload
+                    $update_query = "UPDATE student_applications SET 
+                                    file_path = $1, 
+                                    original_filename = $2, 
+                                    file_size = $3, 
+                                    mime_type = $4,
+                                    reuploaded_at = CURRENT_TIMESTAMP,
+                                    reupload_reason = $5,
+                                    reupload_count = COALESCE(reupload_count, 0) + 1,
+                                    updated_at = CURRENT_TIMESTAMP
+                                    WHERE id = $6";
+
+                    $update_result = pg_query_params($con, $update_query, array(
+                        $drive_link,
+                        $uploadedFile['name'],
+                        $uploadedFile['size'],
+                        $uploadedFile['type'],
+                        $reupload_reason,
+                        $application_id
+                    ));
+
+                    if ($update_result) {
+                        $response['success'] = true;
+                        $response['drive_link'] = $drive_link;
+                        $response['message'] = 'File reuploaded successfully';
+                    } else {
+                        $response['message'] = 'Failed to update database';
+                    }
+                } catch (Exception $e) {
+                    $response['message'] = 'Failed to upload to Drive: ' . $e->getMessage();
+                }
+            } else {
+                $response['message'] = 'Application not found or not in submitted status';
+            }
+        } else {
+            $response['message'] = 'No file uploaded or upload error';
+        }
+
+        echo json_encode($response);
+        exit;
     }
 }
 
@@ -439,6 +500,24 @@ if ($current_month >= 4) {
             border-radius: 5px;
             margin-bottom: 15px;
         }
+
+        .btn-reupload {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-reupload:hover {
+            background-color: #ffb300;
+            color: #000;
+        }
+
+        .reupload-badge {
+            background-color: #ffc107;
+            color: #000;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
@@ -557,6 +636,57 @@ if ($current_month >= 4) {
             </div>
         </section>
     </main>
+
+    <!-- Reupload Modal -->
+    <div class="modal fade" id="reuploadModal" tabindex="-1" aria-labelledby="reuploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reuploadModalLabel">Reupload Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Application:</strong> <span id="reuploadAppNumber"></span><br>
+                        <strong>Student:</strong> <span id="reuploadStudentName"></span>
+                    </div>
+                    <form id="reuploadForm" enctype="multipart/form-data">
+                        <input type="hidden" id="reuploadAppId" name="application_id">
+
+                        <div class="mb-3">
+                            <label for="reuploadReason" class="form-label">Reason for Reupload <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reuploadReason" name="reupload_reason" rows="3"
+                                placeholder="Please explain why you need to reupload this document" required></textarea>
+                            <div class="invalid-feedback">Please provide a reason for reupload</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reuploadFile" class="form-label">New Document <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="reuploadFile" name="application_file"
+                                accept=".pdf,.jpg,.jpeg,.png" required>
+                            <small class="text-muted">PDF, JPG, PNG (Max 10MB)</small>
+                            <div class="invalid-feedback">Please select a file to upload</div>
+                        </div>
+                    </form>
+                    <div id="reuploadProgress" style="display: none;">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar" style="width: 100%">
+                                Uploading...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="reuploadSubmitBtn" onclick="submitReupload()">
+                        <i class="bi bi-cloud-upload"></i> Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -683,6 +813,14 @@ if ($current_month >= 4) {
             $('#loadMoreBtn').click(function() {
                 if (hasMoreSubmitted) {
                     fetchSubmittedApplications();
+                }
+            });
+
+            // Handle Enter key in reupload form
+            $('#reuploadReason, #reuploadFile').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    submitReupload();
                 }
             });
 
@@ -1223,8 +1361,14 @@ if ($current_month >= 4) {
                         }
 
                         response.applications.forEach(function(app) {
+                            const reuploadInfo = app.reupload_count > 0 ?
+                                `<br><small class="text-muted">Reuploaded: ${app.reupload_count} time(s)${app.reuploaded_at ? ' on ' + new Date(app.reuploaded_at).toLocaleString() : ''}</small>` : '';
+
+                            const reuploadReason = app.reupload_reason ?
+                                `<br><small class="text-muted">Reason: ${escapeHtml(app.reupload_reason)}</small>` : '';
+
                             const appHtml = `
-                        <div class="submitted-card border rounded p-3 mb-3">
+                        <div class="submitted-card border rounded p-3 mb-3" id="app_card_${app.id}">
                             <div class="row">
                                 <div class="col-md-3">
                                     <small class="text-muted">Application Number</small><br>
@@ -1248,6 +1392,8 @@ if ($current_month >= 4) {
                                     <small class="text-muted">Document Type</small><br>
                                     <span class="badge bg-info">${escapeHtml(app.document_type)}</span>
                                     ${app.custom_document_name ? '<br><small>' + escapeHtml(app.custom_document_name) + '</small>' : ''}
+                                    ${reuploadInfo}
+                                    ${reuploadReason}
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted">Uploaded By</small><br>
@@ -1255,7 +1401,15 @@ if ($current_month >= 4) {
                                 </div>
                                 <div class="col-md-4">
                                     <small class="text-muted">Document</small><br>
-                                    ${app.file_path ? `<a href="${app.file_path}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Document</a>` : 'No file'}
+                                    ${app.file_path ? `
+                                        <a href="${app.file_path}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Document
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-warning ms-2" 
+                                                onclick="showReuploadModal('${app.id}', '${escapeHtml(app.application_number)}', '${escapeHtml(app.student_name)}')">
+                                            <i class="bi bi-arrow-repeat"></i> Reupload
+                                        </button>
+                                    ` : 'No file'}
                                 </div>
                             </div>
                         </div>
@@ -1277,6 +1431,91 @@ if ($current_month >= 4) {
                 },
                 error: function() {
                     $('#submittedApplicationsList').html('<div class="text-center py-4 text-danger">Error loading applications</div>');
+                }
+            });
+        }
+
+        // Show reupload modal
+        function showReuploadModal(appId, appNumber, studentName) {
+            document.getElementById('reuploadAppId').value = appId;
+            document.getElementById('reuploadAppNumber').textContent = appNumber;
+            document.getElementById('reuploadStudentName').textContent = studentName;
+            document.getElementById('reuploadReason').value = '';
+            document.getElementById('reuploadFile').value = '';
+            document.getElementById('reuploadProgress').style.display = 'none';
+
+            // Remove existing validation states
+            document.getElementById('reuploadReason').classList.remove('is-invalid');
+            document.getElementById('reuploadFile').classList.remove('is-invalid');
+
+            const modal = new bootstrap.Modal(document.getElementById('reuploadModal'));
+            modal.show();
+        }
+
+        // Submit reupload
+        function submitReupload() {
+            const appId = document.getElementById('reuploadAppId').value;
+            const reason = document.getElementById('reuploadReason').value.trim();
+            const fileInput = document.getElementById('reuploadFile');
+            const file = fileInput.files[0];
+
+            // Validate
+            let isValid = true;
+
+            if (!reason) {
+                document.getElementById('reuploadReason').classList.add('is-invalid');
+                isValid = false;
+            } else {
+                document.getElementById('reuploadReason').classList.remove('is-invalid');
+            }
+
+            if (!file) {
+                document.getElementById('reuploadFile').classList.add('is-invalid');
+                isValid = false;
+            } else {
+                document.getElementById('reuploadFile').classList.remove('is-invalid');
+            }
+
+            if (!isValid) return;
+
+            // Show progress
+            document.getElementById('reuploadProgress').style.display = 'block';
+            document.getElementById('reuploadSubmitBtn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('action', 'reupload_file');
+            formData.append('application_id', appId);
+            formData.append('reupload_reason', reason);
+            formData.append('application_file', file);
+
+            $.ajax({
+                url: '',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Close modal
+                        bootstrap.Modal.getInstance(document.getElementById('reuploadModal')).hide();
+                        showAlert('Document reuploaded successfully!', 'success');
+
+                        // Refresh the submitted applications list
+                        submittedOffset = 0;
+                        hasMoreSubmitted = true;
+                        $('#submittedApplicationsList').empty();
+                        fetchSubmittedApplications();
+                    } else {
+                        showAlert('Error: ' + response.message, 'danger');
+                        document.getElementById('reuploadProgress').style.display = 'none';
+                        document.getElementById('reuploadSubmitBtn').disabled = false;
+                    }
+                },
+                error: function() {
+                    showAlert('Failed to upload. Please try again.', 'danger');
+                    document.getElementById('reuploadProgress').style.display = 'none';
+                    document.getElementById('reuploadSubmitBtn').disabled = false;
                 }
             });
         }
