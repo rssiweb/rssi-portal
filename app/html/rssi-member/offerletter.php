@@ -402,6 +402,9 @@ $documents = [
                                             <li>If you fail to serve the contract period as mentioned above, you shall be liable to pay RSSI ₹5000/- as a penalty.</li>
                                         <?php } ?>
                                         <?php if ($array['job_type'] != "Contractual" && !($isIntern) && !($isVolunteer)) { ?>
+                                            <li>
+                                                The standard probation period is one (1) month. Upon completion of the probation period, the associate's performance shall be reviewed, and the probation may be confirmed or extended based on the assessment.
+                                            </li>
                                             <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
                                             <?php if (!($isVolunteer)): ?>
                                                 <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
