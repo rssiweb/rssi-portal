@@ -193,7 +193,7 @@ if (@$_POST['form-type'] == "exam") {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -356,6 +356,7 @@ if (@$_POST['form-type'] == "exam") {
                                                     <option value="Art & Craft">Art & Craft</option>
                                                     <option value="Sulekh+Imla">Sulekh+Imla</option>
                                                     <option value="Project">Project</option>
+                                                    <option value="Bengali">Bengali</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -385,8 +386,8 @@ if (@$_POST['form-type'] == "exam") {
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Initialize Select2 for multiple selects

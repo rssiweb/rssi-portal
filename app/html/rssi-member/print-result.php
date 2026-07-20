@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             }
 
             // Define the subject sequence
-            $subject_sequence = ['Hindi', 'English', 'Mathematics', 'GK', 'Hamara Parivesh', 'Computer', 'Sulekh+Imla', 'Art & Craft'];
+            $subject_sequence = ['Bengali', 'Hindi', 'English', 'Mathematics', 'GK', 'Hamara Parivesh', 'Computer', 'Sulekh+Imla', 'Art & Craft'];
             $ordered_marks_data = [];
             $total_full_marks = 0;
             $total_obtained_marks = 0;
