@@ -116,17 +116,28 @@ $activeSettings = pg_fetch_all($activeResult);
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label for="category" class="form-label">Category</label>
+
                                             <select class="form-select" id="category" name="category" required>
                                                 <option value="">Select Category</option>
-                                                <option value="LG1">LG1</option>
-                                                <option value="LG2-A">LG2-A</option>
-                                                <option value="LG2-B">LG2-B</option>
-                                                <option value="LG2-C">LG2-C</option>
-                                                <option value="LG3">LG3</option>
-                                                <option value="LG4">LG4</option>
-                                                <!-- Add other categories as needed -->
+
+                                                <?php
+                                                $query = "SELECT category_name, category_value
+                      FROM school_categories
+                      ORDER BY category_name";
+
+                                                $result = pg_query($con, $query);
+
+                                                if ($result) {
+                                                    while ($row = pg_fetch_assoc($result)) {
+                                                        echo '<option value="' . htmlspecialchars($row['category_value']) . '">'
+                                                            . htmlspecialchars($row['category_name']) .
+                                                            '</option>';
+                                                    }
+                                                }
+                                                ?>
                                             </select>
                                         </div>
+
                                         <div class="col-md-4">
                                             <label for="effective_from" class="form-label">Effective From</label>
                                             <input type="date" class="form-control" id="effective_from" name="effective_from" required>
