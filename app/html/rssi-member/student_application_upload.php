@@ -220,28 +220,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         echo json_encode($response);
         exit;
     } elseif ($_POST['action'] === 'fetch_submitted') {
-        // Fetch submitted applications with filters
+
         $search_type = $_POST['search_type'] ?? 'student';
         $student_id = $_POST['student_id'] ?? '';
         $application_number = $_POST['application_number'] ?? '';
         $date_from = $_POST['date_from'] ?? '';
         $date_to = $_POST['date_to'] ?? '';
-        $offset = $_POST['offset'] ?? 0;
-        $limit = $_POST['limit'] ?? 20;
+        $offset = (int)($_POST['offset'] ?? 0);
+        $limit = (int)($_POST['limit'] ?? 20);
 
         $where_conditions = ["sa.status = 'submitted'"];
         $params = [];
         $param_count = 0;
 
         if ($search_type === 'application' && !empty($application_number)) {
+
             $param_count++;
             $where_conditions[] = "sa.application_number ILIKE $" . $param_count;
-            $params[] = "%$application_number%";
+            $params[] = "%{$application_number}%";
         } else {
+
             if (!empty($student_id)) {
                 $param_count++;
                 $where_conditions[] = "sa.student_id ILIKE $" . $param_count;
-                $params[] = "%$student_id%";
+                $params[] = "%{$student_id}%";
             }
 
             if (!empty($date_from)) {
@@ -259,24 +261,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         $where_clause = "WHERE " . implode(" AND ", $where_conditions);
 
-        // Get total count
-        $count_query = "SELECT COUNT(*) FROM student_applications sa $where_clause";
+        // Count latest records only
+        $count_query = "
+        SELECT COUNT(*)
+        FROM (
+            SELECT DISTINCT ON (sa.student_id, sa.document_type)
+                   sa.id
+            FROM student_applications sa
+            $where_clause
+            ORDER BY
+                sa.student_id,
+                sa.document_type,
+                sa.submitted_at DESC,
+                sa.id DESC
+        ) latest_records
+    ";
+
         $count_result = pg_query_params($con, $count_query, $params);
         $total_records = pg_fetch_result($count_result, 0, 0);
 
-        // Get paginated results with join to get teacher name
+        // Pagination
         $params[] = $limit;
         $params[] = $offset;
 
-        $query = "SELECT sa.*, rm.fullname as uploaded_by_name 
-              FROM student_applications sa
-              LEFT JOIN rssimyaccount_members rm ON sa.uploaded_by = rm.associatenumber
-              $where_clause 
-              ORDER BY sa.submitted_at DESC 
-              LIMIT $" . ($param_count + 1) . " OFFSET $" . ($param_count + 2);
+        $query = "
+        SELECT *
+        FROM (
+            SELECT DISTINCT ON (sa.student_id, sa.document_type)
+                   sa.*,
+                   rm.fullname AS uploaded_by_name
+            FROM student_applications sa
+            LEFT JOIN rssimyaccount_members rm
+                   ON rm.associatenumber = sa.uploaded_by
+            $where_clause
+            ORDER BY
+                sa.student_id,
+                sa.document_type,
+                sa.submitted_at DESC,
+                sa.id DESC
+        ) latest_docs
+        ORDER BY latest_docs.submitted_at DESC
+        LIMIT $" . ($param_count + 1) . "
+        OFFSET $" . ($param_count + 2);
 
         $result = pg_query_params($con, $query, $params);
-        $applications = pg_fetch_all($result) ?: [];
+
+        $applications = [];
+        if ($result) {
+            while ($row = pg_fetch_assoc($result)) {
+                $applications[] = $row;
+            }
+        }
 
         $response['success'] = true;
         $response['applications'] = $applications;
