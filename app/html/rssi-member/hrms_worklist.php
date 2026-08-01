@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action_type'])) 
                     // Prepare data for the existing email template
                     $emailData = [
                         "requested_by_name" => $group['name'],
-                        "requested_on" => date('d/m/Y h:i A'),
+                        "requested_on" => $group['requests'][0]['requested_on'], // Use the first request's timestamp
                         "reviewer_status" => $bulk_action,
                         "fieldname" => "Multiple Fields", // Static text
                         "oldvalue" => "", // Leave empty
