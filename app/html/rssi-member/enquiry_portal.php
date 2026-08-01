@@ -25,17 +25,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aadhar_submitted_by = $_POST['aadhar_submitted_by'] ?: null;
         $aadhar_number = $_POST['aadhar_number'] ?: null;
         $previous_school = $_POST['previous_school'] ?: null;
-        $family_member_count = $_POST['family_member_count'] ?: null;
-        $monthly_income = $_POST['monthly_income'] ?: null;
         $visit_type = $_POST['visit_type'];
-        $fees_submission_date = $_POST['fees_submission_date'] ?: null;
-        $total_fee = $_POST['total_fee'] ?: null;
-        $deposited_amount = $_POST['deposited_amount'] ?: null;
-        $due_amount = $total_fee - $deposited_amount;
-        $fees_month = $_POST['fees_month'] ?: null;
-        $payment_mode = $_POST['payment_mode'] ?: null;
-        $transaction_id = $_POST['transaction_id'] ?: null;
         $remarks = $_POST['remarks'] ?: null;
+
+        // Clear admission-specific fields if visit_type is 'inquiry'
+        if ($visit_type == 'inquiry') {
+            $family_member_count = null;
+            $monthly_income = null;
+            $fees_submission_date = null;
+            $total_fee = null;
+            $deposited_amount = null;
+            $due_amount = null;
+            $fees_month = null;
+            $payment_mode = null;
+            $transaction_id = null;
+        } else {
+            // For 'taking admission', validate required fields
+            $family_member_count = $_POST['family_member_count'] ?: null;
+            $monthly_income = $_POST['monthly_income'] ?: null;
+            $fees_submission_date = $_POST['fees_submission_date'] ?: null;
+            $total_fee = $_POST['total_fee'] ?: null;
+            $deposited_amount = $_POST['deposited_amount'] ?: null;
+            $due_amount = $total_fee - $deposited_amount;
+            $fees_month = $_POST['fees_month'] ?: null;
+            $payment_mode = $_POST['payment_mode'] ?: null;
+            $transaction_id = $_POST['transaction_id'] ?: null;
+
+            // Server-side validation for required fields
+            if (
+                empty($family_member_count) || empty($monthly_income) ||
+                empty($fees_submission_date) || empty($total_fee) ||
+                empty($deposited_amount) || empty($fees_month) ||
+                empty($payment_mode)
+            ) {
+                $_SESSION['error_message'] = "All admission fields are required when taking admission.";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+
+            // Validate transaction ID if payment mode is online
+            if ($payment_mode == 'online' && empty($transaction_id)) {
+                $_SESSION['error_message'] = "Transaction ID is required for online payment.";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+        }
 
         // Use parameterized query
         $query = "
@@ -119,17 +153,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aadhar_submitted_by = $_POST['aadhar_submitted_by'] ?: null;
         $aadhar_number = $_POST['aadhar_number'] ?: null;
         $previous_school = $_POST['previous_school'] ?: null;
-        $family_member_count = $_POST['family_member_count'] ?: null;
-        $monthly_income = $_POST['monthly_income'] ?: null;
         $visit_type = $_POST['visit_type'];
-        $fees_submission_date = $_POST['fees_submission_date'] ?: null;
-        $total_fee = $_POST['total_fee'] ?: null;
-        $deposited_amount = $_POST['deposited_amount'] ?: null;
-        $due_amount = $total_fee - $deposited_amount;
-        $fees_month = $_POST['fees_month'] ?: null;
-        $payment_mode = $_POST['payment_mode'] ?: null;
-        $transaction_id = $_POST['transaction_id'] ?: null;
         $remarks = $_POST['remarks'] ?: null;
+
+        // Clear admission-specific fields if visit_type is 'inquiry'
+        if ($visit_type == 'inquiry') {
+            $family_member_count = null;
+            $monthly_income = null;
+            $fees_submission_date = null;
+            $total_fee = null;
+            $deposited_amount = null;
+            $due_amount = null;
+            $fees_month = null;
+            $payment_mode = null;
+            $transaction_id = null;
+        } else {
+            // For 'taking admission', validate required fields
+            $family_member_count = $_POST['family_member_count'] ?: null;
+            $monthly_income = $_POST['monthly_income'] ?: null;
+            $fees_submission_date = $_POST['fees_submission_date'] ?: null;
+            $total_fee = $_POST['total_fee'] ?: null;
+            $deposited_amount = $_POST['deposited_amount'] ?: null;
+            $due_amount = $total_fee - $deposited_amount;
+            $fees_month = $_POST['fees_month'] ?: null;
+            $payment_mode = $_POST['payment_mode'] ?: null;
+            $transaction_id = $_POST['transaction_id'] ?: null;
+
+            // Server-side validation for required fields
+            if (
+                empty($family_member_count) || empty($monthly_income) ||
+                empty($fees_submission_date) || empty($total_fee) ||
+                empty($deposited_amount) || empty($fees_month) ||
+                empty($payment_mode)
+            ) {
+                $_SESSION['error_message'] = "All admission fields are required when taking admission.";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+
+            // Validate transaction ID if payment mode is online
+            if ($payment_mode == 'online' && empty($transaction_id)) {
+                $_SESSION['error_message'] = "Transaction ID is required for online payment.";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+        }
 
         $query = "
             UPDATE parent_admissions SET
@@ -492,14 +560,14 @@ if (isset($_GET['edit'])) {
                 <div class="row">
                     <div class="col-md-3">
                         <div class="mb-2">
-                            <label for="edit_family_member_count" class="form-label">Family Member Count</label>
-                            <input type="number" class="form-control" id="edit_family_member_count" name="family_member_count" min="1" value="<?= isset($row['family_member_count']) ? $row['family_member_count'] : '' ?>">
+                            <label for="edit_family_member_count" class="form-label required-field">Family Member Count</label>
+                            <input type="number" class="form-control" id="edit_family_member_count" name="family_member_count" min="1" value="<?= isset($row['family_member_count']) ? $row['family_member_count'] : '' ?>" required>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="mb-2">
-                            <label for="edit_monthly_income" class="form-label">Monthly Income (₹)</label>
-                            <input type="number" class="form-control" id="edit_monthly_income" name="monthly_income" min="0" step="0.01" value="<?= isset($row['monthly_income']) ? $row['monthly_income'] : '' ?>">
+                            <label for="edit_monthly_income" class="form-label required-field">Monthly Income (₹)</label>
+                            <input type="number" class="form-control" id="edit_monthly_income" name="monthly_income" min="0" step="0.01" value="<?= isset($row['monthly_income']) ? $row['monthly_income'] : '' ?>" required>
                         </div>
                     </div>
                 </div>
@@ -508,20 +576,20 @@ if (isset($_GET['edit'])) {
                     <div class="row">
                         <div class="col-md-3">
                             <div class="mb-2">
-                                <label for="edit_fees_submission_date" class="form-label">Date of fees submission</label>
-                                <input type="date" class="form-control" id="edit_fees_submission_date" name="fees_submission_date" value="<?= isset($row['fees_submission_date']) ? $row['fees_submission_date'] : '' ?>">
+                                <label for="edit_fees_submission_date" class="form-label required-field">Date of fees submission</label>
+                                <input type="date" class="form-control" id="edit_fees_submission_date" name="fees_submission_date" value="<?= isset($row['fees_submission_date']) ? $row['fees_submission_date'] : '' ?>" required>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-2">
-                                <label for="edit_total_fee" class="form-label">Total Fee</label>
-                                <input type="number" class="form-control" id="edit_total_fee" name="total_fee" min="0" step="0.01" value="<?= isset($row['total_fee']) ? $row['total_fee'] : '' ?>">
+                                <label for="edit_total_fee" class="form-label required-field">Total Fee</label>
+                                <input type="number" class="form-control" id="edit_total_fee" name="total_fee" min="0" step="0.01" value="<?= isset($row['total_fee']) ? $row['total_fee'] : '' ?>" required>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-2">
-                                <label for="edit_deposited_amount" class="form-label">Deposited</label>
-                                <input type="number" class="form-control" id="edit_deposited_amount" name="deposited_amount" min="0" step="0.01" value="<?= isset($row['deposited_amount']) ? $row['deposited_amount'] : '' ?>">
+                                <label for="edit_deposited_amount" class="form-label required-field">Deposited</label>
+                                <input type="number" class="form-control" id="edit_deposited_amount" name="deposited_amount" min="0" step="0.01" value="<?= isset($row['deposited_amount']) ? $row['deposited_amount'] : '' ?>" required>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -535,14 +603,14 @@ if (isset($_GET['edit'])) {
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-2">
-                                <label for="edit_fees_month" class="form-label">Fees Month</label>
-                                <input type="month" class="form-control" id="edit_fees_month" name="fees_month" placeholder="e.g., April 2023" value="<?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : '' ?>">
+                                <label for="edit_fees_month" class="form-label required-field">Fees Month</label>
+                                <input type="month" class="form-control" id="edit_fees_month" name="fees_month" placeholder="e.g., April 2023" value="<?= isset($row['fees_month']) ? htmlspecialchars($row['fees_month']) : '' ?>" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-2">
-                                <label for="edit_payment_mode" class="form-label">Payment Mode</label>
-                                <select class="form-select" id="edit_payment_mode" name="payment_mode">
+                                <label for="edit_payment_mode" class="form-label required-field">Payment Mode</label>
+                                <select class="form-select" id="edit_payment_mode" name="payment_mode" required>
                                     <option value="">Select</option>
                                     <option value="cash" <?= isset($row['payment_mode']) && $row['payment_mode'] == 'cash' ? 'selected' : '' ?>>Cash</option>
                                     <option value="online" <?= isset($row['payment_mode']) && $row['payment_mode'] == 'online' ? 'selected' : '' ?>>Online</option>
@@ -551,7 +619,7 @@ if (isset($_GET['edit'])) {
                         </div>
                         <div class="col-md-4" id="editTransactionIdField" style="<?= isset($row['payment_mode']) && $row['payment_mode'] == 'online' ? 'display: block;' : 'display: none;' ?>">
                             <div class="mb-2">
-                                <label for="edit_transaction_id" class="form-label">Transaction ID</label>
+                                <label for="edit_transaction_id" class="form-label required-field">Transaction ID</label>
                                 <input type="text" class="form-control" id="edit_transaction_id" name="transaction_id" value="<?= isset($row['transaction_id']) ? htmlspecialchars($row['transaction_id']) : '' ?>">
                             </div>
                         </div>
@@ -968,14 +1036,14 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                         <div class="row">
                                             <div class="col-md-3">
                                                 <div class="mb-2">
-                                                    <label for="family_member_count" class="form-label">Family Member Count</label>
-                                                    <input type="number" class="form-control" id="family_member_count" name="family_member_count" min="1">
+                                                    <label for="family_member_count" class="form-label required-field">Family Member Count</label>
+                                                    <input type="number" class="form-control" id="family_member_count" name="family_member_count" min="1" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="mb-2">
-                                                    <label for="monthly_income" class="form-label">Monthly Income (₹)</label>
-                                                    <input type="number" class="form-control" id="monthly_income" name="monthly_income" min="0" step="0.01">
+                                                    <label for="monthly_income" class="form-label required-field">Monthly Income (₹)</label>
+                                                    <input type="number" class="form-control" id="monthly_income" name="monthly_income" min="0" step="0.01" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -984,20 +1052,20 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                             <div class="row">
                                                 <div class="col-md-3">
                                                     <div class="mb-2">
-                                                        <label for="fees_submission_date" class="form-label">Date of fees submission</label>
-                                                        <input type="date" class="form-control" id="fees_submission_date" name="fees_submission_date">
+                                                        <label for="fees_submission_date" class="form-label required-field">Date of fees submission</label>
+                                                        <input type="date" class="form-control" id="fees_submission_date" name="fees_submission_date" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">
                                                     <div class="mb-2">
-                                                        <label for="total_fee" class="form-label">Total Fee</label>
-                                                        <input type="number" class="form-control" id="total_fee" name="total_fee" min="0" step="0.01">
+                                                        <label for="total_fee" class="form-label required-field">Total Fee</label>
+                                                        <input type="number" class="form-control" id="total_fee" name="total_fee" min="0" step="0.01" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">
                                                     <div class="mb-2">
-                                                        <label for="deposited_amount" class="form-label">Deposited</label>
-                                                        <input type="number" class="form-control" id="deposited_amount" name="deposited_amount" min="0" step="0.01">
+                                                        <label for="deposited_amount" class="form-label required-field">Deposited</label>
+                                                        <input type="number" class="form-control" id="deposited_amount" name="deposited_amount" min="0" step="0.01" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">
@@ -1011,14 +1079,14 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                             <div class="row">
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <label for="fees_month" class="form-label">Fees Month</label>
-                                                        <input type="month" class="form-control" id="fees_month" name="fees_month" placeholder="e.g., April 2023">
+                                                        <label for="fees_month" class="form-label required-field">Fees Month</label>
+                                                        <input type="month" class="form-control" id="fees_month" name="fees_month" placeholder="e.g., April 2023" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <label for="payment_mode" class="form-label">Payment Mode</label>
-                                                        <select class="form-select" id="payment_mode" name="payment_mode">
+                                                        <label for="payment_mode" class="form-label required-field">Payment Mode</label>
+                                                        <select class="form-select" id="payment_mode" name="payment_mode" required>
                                                             <option value="">Select</option>
                                                             <option value="cash">Cash</option>
                                                             <option value="online">Online</option>
@@ -1027,7 +1095,7 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                                 </div>
                                                 <div class="col-md-4" id="transactionIdField" style="display: none;">
                                                     <div class="mb-2">
-                                                        <label for="transaction_id" class="form-label">Transaction ID</label>
+                                                        <label for="transaction_id" class="form-label required-field">Transaction ID</label>
                                                         <input type="text" class="form-control" id="transaction_id" name="transaction_id">
                                                     </div>
                                                 </div>
@@ -1299,6 +1367,43 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
             const admissionFields = document.getElementById('admissionFields');
             const isAdmission = this.value === 'taking admission';
             admissionFields.style.display = isAdmission ? 'block' : 'none';
+
+            // Set required attribute for admission fields
+            const fieldsToToggle = [
+                'family_member_count',
+                'monthly_income',
+                'fees_submission_date',
+                'total_fee',
+                'deposited_amount',
+                'fees_month',
+                'payment_mode'
+            ];
+
+            fieldsToToggle.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.required = isAdmission;
+                    if (!isAdmission) {
+                        field.value = '';
+                        field.classList.remove('is-invalid');
+                    }
+                }
+            });
+
+            // Handle transaction ID separately
+            const transactionField = document.getElementById('transaction_id');
+            if (transactionField) {
+                transactionField.required = false;
+                if (!isAdmission) {
+                    transactionField.value = '';
+                }
+            }
+
+            // If payment mode is online, make transaction ID required
+            const paymentMode = document.getElementById('payment_mode');
+            if (isAdmission && paymentMode && paymentMode.value === 'online') {
+                transactionField.required = true;
+            }
         }
 
         function handlePaymentModeChange() {
@@ -1307,10 +1412,15 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
             const showTransactionId = this.value === 'online';
 
             transactionIdField.style.display = showTransactionId ? 'block' : 'none';
-            transactionIdInput.required = showTransactionId;
+
+            // Make transaction ID required only when payment mode is online AND visit type is taking admission
+            const visitType = document.getElementById('visit_type');
+            const isAdmission = visitType && visitType.value === 'taking admission';
+            transactionIdInput.required = showTransactionId && isAdmission;
 
             if (!showTransactionId) {
                 transactionIdInput.value = '';
+                transactionIdInput.classList.remove('is-invalid');
             }
         }
 
@@ -1482,6 +1592,14 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                 })
                 .then(data => {
                     editModalBody.innerHTML = data;
+                    // Check initial visit type state
+                    const visitType = document.getElementById('edit_visit_type');
+                    if (visitType) {
+                        const admissionFields = document.getElementById('editAdmissionFields');
+                        if (admissionFields) {
+                            admissionFields.style.display = visitType.value === 'taking admission' ? 'block' : 'none';
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading edit form:', error);
@@ -1556,8 +1674,7 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                 loadArchiveContent(archivePage);
             }
         });
-    </script>
-    <script>
+
         // Additional handlers for edit modal
         document.addEventListener('DOMContentLoaded', function() {
             function calculateEditDue() {
@@ -1570,16 +1687,66 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
 
             // Delegate events for the edit modal
             document.addEventListener('change', function(e) {
+                // Handle edit visit type change
                 if (e.target && e.target.id === 'edit_visit_type') {
                     const admissionFields = document.getElementById('editAdmissionFields');
-                    admissionFields.style.display = e.target.value === 'taking admission' ? 'block' : 'none';
+                    const isAdmission = e.target.value === 'taking admission';
+                    admissionFields.style.display = isAdmission ? 'block' : 'none';
+
+                    // Set required attribute for admission fields in edit modal
+                    const fieldsToToggle = [
+                        'edit_family_member_count',
+                        'edit_monthly_income',
+                        'edit_fees_submission_date',
+                        'edit_total_fee',
+                        'edit_deposited_amount',
+                        'edit_fees_month',
+                        'edit_payment_mode'
+                    ];
+
+                    fieldsToToggle.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) {
+                            field.required = isAdmission;
+                            if (!isAdmission) {
+                                field.value = '';
+                                field.classList.remove('is-invalid');
+                            }
+                        }
+                    });
+
+                    // Handle edit transaction ID separately
+                    const editTransactionField = document.getElementById('edit_transaction_id');
+                    if (editTransactionField) {
+                        editTransactionField.required = false;
+                        if (!isAdmission) {
+                            editTransactionField.value = '';
+                        }
+                    }
+
+                    // If edit payment mode is online, make edit transaction ID required
+                    const editPaymentMode = document.getElementById('edit_payment_mode');
+                    if (isAdmission && editPaymentMode && editPaymentMode.value === 'online') {
+                        editTransactionField.required = true;
+                    }
                 }
 
+                // Handle edit payment mode change
                 if (e.target && e.target.id === 'edit_payment_mode') {
                     const transactionIdField = document.getElementById('editTransactionIdField');
-                    transactionIdField.style.display = e.target.value === 'online' ? 'block' : 'none';
-                    if (e.target.value !== 'online') {
-                        document.getElementById('edit_transaction_id').value = '';
+                    const transactionIdInput = document.getElementById('edit_transaction_id');
+                    const showTransactionId = e.target.value === 'online';
+
+                    transactionIdField.style.display = showTransactionId ? 'block' : 'none';
+
+                    // Make transaction ID required only when payment mode is online AND visit type is taking admission
+                    const editVisitType = document.getElementById('edit_visit_type');
+                    const isAdmission = editVisitType && editVisitType.value === 'taking admission';
+                    transactionIdInput.required = showTransactionId && isAdmission;
+
+                    if (!showTransactionId) {
+                        transactionIdInput.value = '';
+                        transactionIdInput.classList.remove('is-invalid');
                     }
                 }
             });
