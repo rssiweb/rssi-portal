@@ -134,6 +134,7 @@ if (!empty($resultArr)) {
     $student['form_1b_file_path'] = $formStatus['form_1b']['file_path'] ?? null;
     $student['form_1b_app_number'] = $formStatus['form_1b']['application_number'] ?? null;
   }
+  unset($student);
 }
 
 // Calculate dashboard statistics
