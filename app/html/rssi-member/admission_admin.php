@@ -2081,6 +2081,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                         <option value="">Select Branch</option>
                                                                                         <option value="Lucknow" <?php echo $array['preferredbranch'] == 'Lucknow' ? 'selected' : ''; ?>>Lucknow</option>
                                                                                         <option value="West Bengal" <?php echo $array['preferredbranch'] == 'West Bengal' ? 'selected' : ''; ?>>West Bengal</option>
+                                                                                        <option value="Gurugram" <?php echo $array['preferredbranch'] == 'Gurugram' ? 'selected' : ''; ?>>Gurugram</option>
                                                                                     </select>
                                                                                 <?php endif; ?>
                                                                             </td>
