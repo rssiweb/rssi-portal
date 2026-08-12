@@ -193,7 +193,7 @@ if ($copy_source_data) {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
     <style>
         .category-header {
             background-color: #f8f9fa;

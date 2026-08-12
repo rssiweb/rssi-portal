@@ -214,7 +214,7 @@ $stats['inactive_schedules'] = $inactive_count;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
 
     <style>
         body {

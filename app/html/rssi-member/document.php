@@ -42,7 +42,7 @@ validation();
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
 
     <style>
         :root {

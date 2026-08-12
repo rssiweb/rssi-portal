@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->

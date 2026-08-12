@@ -131,7 +131,7 @@ $classlist = [
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
 </head>
 
 <body>
