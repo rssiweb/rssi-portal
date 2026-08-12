@@ -586,7 +586,7 @@ if (!function_exists('makeClickableLinks')) {
       }
 
       // Display the message
-      echo "<h2>$greeting, $firstName!!</h2>";
+      echo "<h2>$greeting, $firstName!</h2>";
       ?>
 
       <nav>
