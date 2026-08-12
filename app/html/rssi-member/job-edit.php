@@ -94,7 +94,7 @@ $createdAt = date('Y-m-d', strtotime($job['created_at']));
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
 
     <style>
         .page-header {

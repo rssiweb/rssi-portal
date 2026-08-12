@@ -293,7 +293,7 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
     <style>
         .card {
             margin-bottom: 20px;

@@ -84,7 +84,7 @@ $groups = pg_fetch_all($groups_result) ?: [];
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->

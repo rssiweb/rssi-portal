@@ -276,7 +276,7 @@ if (count($selected_associates) > 0) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->

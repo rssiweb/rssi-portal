@@ -1216,7 +1216,7 @@ foreach ($card_access_levels as $card => $required_level) {
         }
     </style>
     <!-- Template Main CSS File -->
-    <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+    <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>

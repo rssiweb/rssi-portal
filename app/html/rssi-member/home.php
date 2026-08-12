@@ -156,7 +156,7 @@ if (!function_exists('makeClickableLinks')) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
   <!-- Template Main CSS File -->
-  <link href="../assets_new/css/style.css?v=1.0.0" rel="stylesheet">
+  <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
   <!-- Quill CSS -->
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 
