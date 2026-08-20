@@ -404,12 +404,21 @@ validation();
         function setDateInputLimits() {
             const input = document.getElementById("punchInTime");
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Format yesterday's date for min
+            const year = yesterday.getFullYear();
+            const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+            const day = String(yesterday.getDate()).padStart(2, '0');
+
+            // Format today's date for max
+            const todayYear = now.getFullYear();
+            const todayMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const todayDay = String(now.getDate()).padStart(2, '0');
 
             input.min = `${year}-${month}-${day}T00:00`;
-            input.max = `${year}-${month}-${day}T23:59`;
+            input.max = `${todayYear}-${todayMonth}-${todayDay}T23:59`;
         }
 
         // Person-related functions

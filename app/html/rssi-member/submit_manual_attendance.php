@@ -36,6 +36,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Create POINT string if coordinates exist
     $gps_location = ($latitude && $longitude) ? "POINT($latitude $longitude)" : null;
 
+    // NEW: Validate punch_in_time
+    if (empty($punch_in_time)) {
+        echo json_encode(['success' => false, 'message' => 'Punch in time is required']);
+        exit;
+    }
+
+    // Convert punch_in_time to DateTime object
+    $punchDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $punch_in_time);
+    if (!$punchDateTime) {
+        echo json_encode(['success' => false, 'message' => 'Invalid punch in time format']);
+        exit;
+    }
+
+    // Check if punch time is not in the future
+    $now = new DateTime();
+    if ($punchDateTime > $now) {
+        echo json_encode(['success' => false, 'message' => 'Punch in time cannot be in the future']);
+        exit;
+    }
+
+    // NEW: Allow yesterday and today only (not older than yesterday)
+    $yesterday = new DateTime();
+    $yesterday->modify('-1 day');
+    $yesterday->setTime(0, 0, 0); // Start of yesterday
+
+    if ($punchDateTime < $yesterday) {
+        echo json_encode(['success' => false, 'message' => 'Punch in time cannot be older than yesterday']);
+        exit;
+    }
+
     if (empty($persons)) {
         echo json_encode(['success' => false, 'message' => 'No persons selected']);
         exit;
