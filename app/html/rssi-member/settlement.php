@@ -20,9 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get settlement data
 $settlementDate = $_GET['settlement_date'] ?? date('Y-m-d');
 $status = $_GET['status'] ?? 'unsettled'; // 'unsettled' or 'settled'
+$location = $_GET['location'] ?? '';
+
+// Fetch locations for dropdown
+$locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
+$locationResult = pg_query($con, $locationQuery);
+$locations = [];
+if ($locationResult) {
+    while ($row = pg_fetch_assoc($locationResult)) {
+        $locations[] = $row;
+    }
+}
 
 if ($status === 'unsettled') {
-    // Get unsettled payments
+    // Get unsettled payments with location filter
     $paymentsQuery = "
 SELECT p.*,
        COALESCE(s.studentname, m.fullname, h.name) AS student_name,
@@ -39,31 +50,84 @@ LEFT JOIN emart_orders eo ON p.id = eo.payment_id
 LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
 LEFT JOIN fee_categories fc ON fp.category_id=fc.id
 JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
-WHERE p.is_settled = FALSE
-ORDER BY p.id DESC";
+WHERE p.is_settled = FALSE";
+
+    // Add location filter if selected
+    if (!empty($location)) {
+        // Get location name from ID
+        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+        $locationNameResult = pg_query($con, $locationNameQuery);
+        $locationNameRow = pg_fetch_assoc($locationNameResult);
+        $locationName = $locationNameRow['name'];
+
+        $paymentsQuery .= " AND s.preferredbranch = '$locationName'";
+    }
+
+    $paymentsQuery .= " ORDER BY p.id DESC";
 
     $paymentsResult = pg_query($con, $paymentsQuery);
     $payments = pg_fetch_all($paymentsResult) ?? [];
 
-    // Get summary
+    // Get summary with location filter - FIXED: Added alias for payment_type
     $summaryQuery = "SELECT COUNT(*) as total_payments, 
-                            SUM(amount) as total_amount,
-                            SUM(CASE WHEN payment_type = 'cash' THEN amount ELSE 0 END) as cash_amount,
-                            SUM(CASE WHEN payment_type = 'online' THEN amount ELSE 0 END) as online_amount
-                     FROM fee_payments
-                     WHERE is_settled = FALSE";
+                            SUM(p.amount) as total_amount,
+                            SUM(CASE WHEN p.payment_type = 'cash' THEN p.amount ELSE 0 END) as cash_amount,
+                            SUM(CASE WHEN p.payment_type = 'online' THEN p.amount ELSE 0 END) as online_amount
+                     FROM fee_payments p
+                     LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+                     WHERE p.is_settled = FALSE";
+
+    // Add location filter to summary if selected
+    if (!empty($location)) {
+        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+        $locationNameResult = pg_query($con, $locationNameQuery);
+        $locationNameRow = pg_fetch_assoc($locationNameResult);
+        $locationName = $locationNameRow['name'];
+
+        $summaryQuery .= " AND s.preferredbranch = '$locationName'";
+    }
 
     $summaryResult = pg_query($con, $summaryQuery);
     $summary = pg_fetch_assoc($summaryResult);
 } else {
-    // Get settled payments
+    // Get settled payments with location filter
     $settlementsQuery = "
 SELECT s.*,
-       COALESCE(m.fullname, h.name) AS settled_by_name
+       COALESCE(m.fullname, h.name) AS settled_by_name,
+       sl.location_name
 FROM settlements s
 LEFT JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
 LEFT JOIN public_health_records h ON s.settled_by = h.id::text
-ORDER BY s.settlement_date DESC";
+LEFT JOIN (
+    SELECT DISTINCT settlement_id, STRING_AGG(DISTINCT preferredbranch, ', ') AS location_name
+    FROM (
+        SELECT sp.settlement_id, stu.preferredbranch
+        FROM settlement_payments sp
+        JOIN fee_payments fp ON sp.payment_id = fp.id
+        LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
+        WHERE stu.preferredbranch IS NOT NULL
+    ) loc_data
+    GROUP BY settlement_id
+) sl ON s.id = sl.settlement_id
+WHERE 1=1";
+
+    // Add location filter if selected
+    if (!empty($location)) {
+        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+        $locationNameResult = pg_query($con, $locationNameQuery);
+        $locationNameRow = pg_fetch_assoc($locationNameResult);
+        $locationName = $locationNameRow['name'];
+
+        $settlementsQuery .= " AND s.id IN (
+            SELECT DISTINCT sp.settlement_id
+            FROM settlement_payments sp
+            JOIN fee_payments fp ON sp.payment_id = fp.id
+            LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
+            WHERE stu.preferredbranch = '$locationName'
+        )";
+    }
+
+    $settlementsQuery .= " ORDER BY s.settlement_date DESC";
 
     $settlementsResult = pg_query($con, $settlementsQuery);
     $settlements = pg_fetch_all($settlementsResult) ?? [];
@@ -82,7 +146,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -148,15 +212,26 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                         <!-- Filters -->
                                         <form method="get" class="row g-3 mb-4 mt-4">
                                             <input type="hidden" name="page" value="settlement">
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label for="settlementDate" class="form-label">Settlement Date:</label>
                                                 <input type="date" class="form-control" name="settlement_date" value="<?= $settlementDate ?>">
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label for="status" class="form-label">Status:</label>
                                                 <select class="form-select" name="status">
                                                     <option value="unsettled" <?= $status === 'unsettled' ? 'selected' : '' ?>>Unsettled Payments</option>
                                                     <option value="settled" <?= $status === 'settled' ? 'selected' : '' ?>>Settled Payments</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="location" class="form-label">Location:</label>
+                                                <select class="form-select" name="location">
+                                                    <option value="">All Locations</option>
+                                                    <?php foreach ($locations as $loc): ?>
+                                                        <option value="<?php echo htmlspecialchars($loc['id']); ?>" <?php echo (isset($_GET['location']) && $_GET['location'] == $loc['id']) ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars($loc['name']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
@@ -325,6 +400,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                             <th>Cash Amount</th>
                                                             <th>Online Amount</th>
                                                             <th>Settled By</th>
+                                                            <th>Location(s)</th>
                                                             <th>Actions</th>
                                                         </tr>
                                                     </thead>
@@ -337,6 +413,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                                 <td>₹<?= number_format($settlement['cash_amount'], 2) ?></td>
                                                                 <td>₹<?= number_format($settlement['online_amount'], 2) ?></td>
                                                                 <td><?= htmlspecialchars($settlement['settled_by_name']) ?></td>
+                                                                <td><?= htmlspecialchars($settlement['location_name'] ?? 'N/A') ?></td>
                                                                 <td>
                                                                     <button class="btn btn-sm btn-info view-settlement" data-id="<?= $settlement['id'] ?>">
                                                                         <i class="fas fa-eye"></i> View
@@ -398,8 +475,8 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             <?php if ($status === 'unsettled'): ?>
@@ -491,7 +568,12 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 
             // Export button handler
             $("#exportSettlement").click(function() {
-                window.location.href = "export_settlement.php?status=<?= $status ?>&settlement_date=<?= $settlementDate ?>";
+                let url = "export_settlement.php?status=<?= $status ?>&settlement_date=<?= $settlementDate ?>";
+                const location = $("select[name='location']").val();
+                if (location) {
+                    url += "&location=" + encodeURIComponent(location);
+                }
+                window.location.href = url;
             });
         });
     </script>
