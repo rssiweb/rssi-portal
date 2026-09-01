@@ -44,6 +44,17 @@ $monthYear = $_GET['month_year'] ?? date('Y-m'); // e.g., 2025-02
 $category = $_GET['category'] ?? [];
 $class = $_GET['class'] ?? [];
 $studentIds = $_GET['student_ids'] ?? [];
+$location = $_GET['location'] ?? ''; // ADD THIS LINE
+
+// Fetch locations for dropdown
+$locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
+$locationResult = pg_query($con, $locationQuery);
+$locations = [];
+if ($locationResult) {
+    while ($row = pg_fetch_assoc($locationResult)) {
+        $locations[] = $row;
+    }
+}
 
 // Handle category parameter - could be string or array
 if (!is_array($category) && !empty($category)) {
@@ -71,7 +82,7 @@ $firstDayOfMonth = "$year-$monthNumber-01";
 $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
 // Check if filters are applied
-$hasFilters = !empty($class) || !empty($studentIds) || !empty($category);
+$hasFilters = !empty($class) || !empty($studentIds) || !empty($category) || !empty($location);
 
 if ($hasFilters) {
     // Get student data
@@ -108,6 +119,17 @@ if ($hasFilters) {
         }, $studentIds);
         $idList = implode("','", $escapedIds);
         $query .= " AND s.student_id IN ('$idList')";
+    }
+
+    // Add location filter if selected
+    if (!empty($location)) {
+        // Get location name from ID
+        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+        $locationNameResult = pg_query($con, $locationNameQuery);
+        $locationNameRow = pg_fetch_assoc($locationNameResult);
+        $locationName = $locationNameRow['name'];
+
+        $query .= " AND s.preferredbranch = '$locationName'";
     }
 
     $query .= " ORDER BY s.class, s.studentname";
@@ -594,6 +616,16 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
+                                                <select name="location" class="form-select">
+                                                    <option value="">All Locations</option>
+                                                    <?php foreach ($locations as $loc): ?>
+                                                        <option value="<?php echo htmlspecialchars($loc['id']); ?>" <?php echo (isset($_GET['location']) && $_GET['location'] == $loc['id']) ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars($loc['name']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
                                                 <input type="month"
                                                     name="month_year"
                                                     class="form-control"
@@ -652,13 +684,17 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                     ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-1">
-                                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
-                                            </div>
-                                            <div class="col-md-1">
-                                                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#concessionModal">
-                                                    <i class="fas fa-percentage"></i> Concession
-                                                </button>
+                                            <div class="row g-3">
+                                                <!-- All other form fields before buttons -->
+
+                                                <div class="col-md-1 ms-auto">
+                                                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#concessionModal">
+                                                        <i class="fas fa-percentage"></i> Concession
+                                                    </button>
+                                                </div>
                                             </div>
                                         </form>
 
@@ -1563,13 +1599,19 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
 
             // Get all current filter values from the form
             const status = $("select[name='status']").val();
-            const monthYear = $("input[name='month_year']").val(); // Changed to match your form
+            const monthYear = $("input[name='month_year']").val();
             const category = $("#categorySelect").val() || [];
             const classFilter = $("#classSelect").val() || [];
             const studentIds = $("#student-select").val() || [];
+            const location = $("select[name='location']").val() || ''; // ADD THIS LINE
 
             // Build export URL with all current filters
             let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month_year=${encodeURIComponent(monthYear)}`;
+
+            // Add location filter if selected
+            if (location) {
+                exportUrl += `&location=${encodeURIComponent(location)}`;
+            }
 
             // Add category filters if any are selected
             if (category.length > 0) {
