@@ -2290,7 +2290,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                     <h6>Document Links:</h6>
                                                                                     <ul>
                                                                                         <li>
-                                                                                            <a href="student-profile.php?get_id=<?php echo $array['student_id']; ?>" target="_blank">
+                                                                                            <a href="admission_form.php?get_id=<?php echo $array['student_id']; ?>" target="_blank">
                                                                                                 Admission Form
                                                                                             </a>
                                                                                         </li>

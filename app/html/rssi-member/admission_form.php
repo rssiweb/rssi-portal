@@ -33,7 +33,7 @@ if (!$result) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <style>
@@ -138,6 +138,35 @@ if (!$result) {
             /* Space between signature sections */
             display: inline-block;
         }
+
+        @media print {
+            .watermark {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 9999;
+                pointer-events: none;
+                opacity: 0.15;
+            }
+
+            .watermark img {
+                width: 80%;
+                height: auto;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-30deg);
+                max-width: 800px;
+            }
+        }
+
+        @media screen {
+            .watermark {
+                display: none;
+            }
+        }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -154,6 +183,9 @@ if (!$result) {
 
         <?php if ($resultArr) { ?>
             <?php foreach ($resultArr as $array) { ?>
+                <div class="watermark">
+                    <img src="/img/bg-removed-hd.png" alt="Watermark">
+                </div>
 
                 <table class="table" border="0">
                     <thead> <!--class="no-display"-->
@@ -202,7 +234,7 @@ if (!$result) {
                                     <span class="value student-name"><?php echo $array['studentname'] ?></span>
                                 </div>
                                 <div>
-                                    <span>Date of Birth (dd/mm/yyyy)*:</span>
+                                    <span>Date of Birth (dd/mm/yyyy):</span>
                                     <span class="value dob"><?php echo (new DateTime($array['dateofbirth']))->format('d/m/Y'); ?></span>
                                 </div>
                                 <div>
@@ -279,8 +311,8 @@ if (!$result) {
                         <tr>
                             <td>
                                 <div>
-                                    <span>Registered in system:</span>
-                                    <span class="value registered"><?php echo htmlspecialchars($array['doa'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span>Registered in system (dd/mm/yyyy):</span>
+                                    <span class="value registered"><?php echo date('d/m/Y', strtotime($array['doa'])); ?></span>
                                 </div>
                                 <br><br>
                                 <div>
