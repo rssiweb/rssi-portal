@@ -12,11 +12,24 @@ validation();
 // Initialize variables
 $module = $_POST['get_module'] ?? null;
 $id = $_POST['get_id'] ?? null;
-$category = $_POST['get_category'] ?? null;
-$class = $_POST['get_class'] ?? null;
+$category = $_POST['get_category'] ?? [];
+$class = $_POST['get_class'] ?? [];
 $stid = $_POST['get_stid'] ?? null;
 $searchByIdOnly = isset($_POST['search_by_id_only']);
 $selected_location = isset($_POST['get_location']) ? $_POST['get_location'] : '';
+
+// Ensure category and class are arrays
+if (!is_array($category) && !empty($category)) {
+  $category = [$category];
+} elseif (empty($category)) {
+  $category = [];
+}
+
+if (!is_array($class) && !empty($class)) {
+  $class = [$class];
+} elseif (empty($class)) {
+  $class = [];
+}
 
 // Initialize result array
 $resultArr = [];
@@ -61,12 +74,25 @@ if ($searchByIdOnly) {
       $paramCount++;
     }
 
+    // Add category filter (now supports multiple values)
     if (!empty($category)) {
-      $query .= " AND category = $$paramCount";
-      $params[] = $category;
-      $paramCount++;
+      if (is_array($category)) {
+        // Generate numbered placeholders for each category
+        $placeholders = [];
+        foreach ($category as $catItem) {
+          $placeholders[] = "$$paramCount";
+          $params[] = $catItem;
+          $paramCount++;
+        }
+        $query .= " AND category IN (" . implode(',', $placeholders) . ")";
+      } else {
+        $query .= " AND category = $$paramCount";
+        $params[] = $category;
+        $paramCount++;
+      }
     }
 
+    // Add class filter (now supports multiple values)
     if (!empty($class)) {
       if (is_array($class)) {
         // Generate numbered placeholders for each class
@@ -221,6 +247,8 @@ $classlist = [
   "Vocational training",
   "x"
 ];
+
+$categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'LGX-U', 'Undefined'];
 ?>
 <?php
 function formatContact($role, $contact)
@@ -378,6 +406,16 @@ function formatContact($role, $contact)
       height: 8px;
       margin-top: 5px;
     }
+
+    /* .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+    } */
+
+    /* .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+      color: white;
+    } */
   </style>
   <!-- CSS Library Files -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -414,6 +452,20 @@ function formatContact($role, $contact)
         placeholder: 'Select student',
         allowClear: true,
         width: '100%' // Ensure proper width
+      });
+
+      // Initialize Select2 for Category (multi-select)
+      $('#get_category').select2({
+        placeholder: 'Select Category(ies)',
+        allowClear: true,
+        width: '250px'
+      });
+
+      // Initialize Select2 for Class (multi-select)
+      $('#get_class').select2({
+        placeholder: 'Select Class(es)',
+        allowClear: true,
+        width: '250px'
       });
     });
   </script>
@@ -454,7 +506,8 @@ function formatContact($role, $contact)
                         <!-- Preserve search parameters -->
                         <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
                         <input type="hidden" name="get_id" value="<?= htmlspecialchars($id ?? '') ?>">
-                        <input type="hidden" name="get_category" value="<?= htmlspecialchars($category ?? '') ?>">
+                        <input type="hidden" name="get_category"
+                          value="<?= is_array($category) ? htmlspecialchars(implode(',', $category)) : htmlspecialchars($category ?? '') ?>">
                         <input type="hidden" name="get_class"
                           value="<?= is_array($class) ? htmlspecialchars(implode(',', $class)) : htmlspecialchars($class ?? '') ?>">
                         <input type="hidden" name="get_stid" value="<?= htmlspecialchars($stid ?? '') ?>">
@@ -619,27 +672,22 @@ function formatContact($role, $contact)
                     <small class="form-text text-muted">Status<span style="color:red">*</span></small>
                   </div>
 
-                  <!-- Category (optional) -->
+                  <!-- Category (optional - now multi-select) -->
                   <div class="d-flex flex-column" style="width: max-content;">
-                    <select name="get_category" id="get_category" class="form-select">
-                      <option value="" disabled selected hidden>Select Category</option>
-                      <?php
-                      $categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'LGX-U', 'Undefined'];
-                      foreach ($categories as $cat) {
-                        $selected = ($category == $cat) ? 'selected' : '';
+                    <select name="get_category[]" id="get_category" class="form-select" multiple>
+                      <?php foreach ($categories as $cat) {
+                        $selected = (in_array($cat, (array)$category)) ? 'selected' : '';
                         echo "<option value=\"$cat\" $selected>$cat</option>";
-                      }
-                      ?>
+                      } ?>
                     </select>
                     <small class="form-text text-muted">Category</small>
                   </div>
 
-                  <!-- Class (optional) -->
+                  <!-- Class (optional - now multi-select) -->
                   <div class="d-flex flex-column" style="width: max-content;">
-                    <select name="get_class[]" id="get_class" class="form-control" multiple>
-                      <option disabled hidden>Select Class</option>
+                    <select name="get_class[]" id="get_class" class="form-select" multiple>
                       <?php foreach ($classlist as $cls) {
-                        $selected = ($class && in_array($cls, (array)$class)) ? 'selected' : '';
+                        $selected = (in_array($cls, (array)$class)) ? 'selected' : '';
                         echo "<option value=\"$cls\" $selected>$cls</option>";
                       } ?>
                     </select>
@@ -658,8 +706,6 @@ function formatContact($role, $contact)
                     </select>
                     <small class="form-text text-muted">Location</small>
                   </div>
-
-                  <!-- Student ID (required when checkbox checked) -->
 
                   <!-- AAID Dropdown -->
                   <div class="col-md-3 col-lg-2">
@@ -687,7 +733,7 @@ function formatContact($role, $contact)
                 </div>
               </form>
 
-              <div class="table-responsive">
+              <div class="table-responsive mt-3">
                 <table class="table" id="table-id">
                   <thead>
                     <tr>
@@ -796,9 +842,42 @@ function formatContact($role, $contact)
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid == "") :
                     ?>
+                      <?php
+                      // Build the filter message
+                      $filters = array();
+
+                      if (!empty($module)) {
+                        $filters[] = trim($module);
+                      }
+                      if (!empty($id)) {
+                        $filters[] = trim($id);
+                      }
+                      if (!empty($category)) {
+                        $filters[] = is_array($category) ? trim(implode(', ', $category)) : trim($category);
+                      }
+                      if (!empty($class)) {
+                        $filters[] = is_array($class) ? trim(implode(', ', $class)) : trim($class);
+                      }
+                      if (!empty($selected_location)) {
+                        $filters[] = trim($selected_location);
+                      }
+
+                      // Build the message with "and" before the last item
+                      $filterMessage = '';
+                      if (!empty($filters)) {
+                        $last = array_pop($filters);
+                        if (!empty($filters)) {
+                          $filterMessage = implode(', ', $filters) . ' and ' . $last;
+                        } else {
+                          $filterMessage = $last;
+                        }
+                      }
+                      ?>
+
                       <tr>
-                        <td colspan="17">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", (is_array($class) ? implode(', ', $class) : ($class ?? ''))); ?></td>
+                        <td colspan="17">No record found for <?php echo $filterMessage; ?></td>
                       </tr>
+
                     <?php
                     elseif (sizeof($resultArr) == 0 && $stid != "") :
                     ?>
