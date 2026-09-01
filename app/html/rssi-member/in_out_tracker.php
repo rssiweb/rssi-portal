@@ -12,6 +12,17 @@ validation();
 
 $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : null;
 $date = isset($_GET['get_date']) ? $_GET['get_date'] : '';
+$location = isset($_GET['get_location']) ? $_GET['get_location'] : '';
+
+// Fetch locations for dropdown
+$locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
+$locationResult = pg_query($con, $locationQuery);
+$locations = [];
+if ($locationResult) {
+    while ($row = pg_fetch_assoc($locationResult)) {
+        $locations[] = $row;
+    }
+}
 
 $query = "
 WITH PunchInOut AS (
@@ -103,6 +114,22 @@ if (!empty($id) && !empty($date)) {
     $query .= " WHERE DATE(p.punch_in) = '$formattedTodayDate'";
 }
 
+// Add location filter if selected
+if (!empty($location)) {
+    // Get the location name based on the selected ID
+    $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+    $locationNameResult = pg_query($con, $locationNameQuery);
+    $locationNameRow = pg_fetch_assoc($locationNameResult);
+    $locationName = $locationNameRow['name'];
+
+    // Check if WHERE clause already exists
+    if (strpos($query, 'WHERE') !== false) {
+        $query .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName')";
+    } else {
+        $query .= " WHERE (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName')";
+    }
+}
+
 $query .= " ORDER BY p.punch_in DESC";
 
 // Add a variable to check if today's data is being shown
@@ -112,6 +139,9 @@ $showingTodayData = false;
 if (empty($id) && empty($date)) {
     $showingTodayData = true;
 }
+
+// Debug - echo the query
+// echo "<pre>Query: " . htmlspecialchars($query) . "</pre>";
 
 $result = pg_query($con, $query);
 
@@ -125,7 +155,7 @@ $resultArr = pg_fetch_all($result);
 // If $date is null or empty, use today's date
 $date_count = $date ? $date : date('Y-m-d');
 
-// Prepare the SQL query with placeholders
+// Build the summary query with location filter if selected
 $querycount = "SELECT
     s.category AS category,
     COUNT(DISTINCT a.user_id) AS category_count,
@@ -138,8 +168,21 @@ $querycount = "SELECT
     COUNT(DISTINCT CASE WHEN s.class IN ('4','5','6') THEN a.user_id END) AS class_4_5_6_count
 FROM attendance a
 LEFT JOIN rssimyprofile_student s ON a.user_id = s.student_id
-WHERE DATE(a.punch_in) = COALESCE($1, DATE(a.punch_in))
-GROUP BY s.category";
+LEFT JOIN rssimyaccount_members m ON a.user_id = m.associatenumber
+WHERE DATE(a.punch_in) = COALESCE($1, DATE(a.punch_in))";
+
+// Add location filter to summary if selected
+if (!empty($location)) {
+    // Get the location name based on the selected ID
+    $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
+    $locationNameResult = pg_query($con, $locationNameQuery);
+    $locationNameRow = pg_fetch_assoc($locationNameResult);
+    $locationName = $locationNameRow['name'];
+
+    $querycount .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName')";
+}
+
+$querycount .= " GROUP BY s.category";
 
 // Prepare the statement
 $stmt = pg_prepare($con, "querycount", $querycount);
@@ -184,7 +227,7 @@ if ($resultcount) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -319,6 +362,19 @@ if ($resultcount) {
                                             <small class="form-text text-muted">Select Date</small>
                                         </div>
                                     </div>
+                                    <div class="col-12 col-sm-2">
+                                        <div class="form-group">
+                                            <select name="get_location" id="get_location" class="form-select">
+                                                <option value="">All Locations</option>
+                                                <?php foreach ($locations as $loc): ?>
+                                                    <option value="<?php echo htmlspecialchars($loc['id']); ?>" <?php echo (isset($_GET['get_location']) && $_GET['get_location'] == $loc['id']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($loc['name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <small class="form-text text-muted">Select Location</small>
+                                        </div>
+                                    </div>
 
                                     <div class="col-12 col-sm-2">
                                         <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
@@ -450,8 +506,8 @@ if ($resultcount) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
