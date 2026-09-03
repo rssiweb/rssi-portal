@@ -29,17 +29,22 @@ validation();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-
+    
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- In your head section -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
+    <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
@@ -78,72 +83,16 @@ validation();
             align-items: center;
         }
 
+        /* Make loading modal appear above order confirmation modal */
         #myModal {
             z-index: 1080 !important;
+            /* Higher than order confirmation (1050) */
         }
 
+        /* Make loading modal backdrop appear just below loading modal but above order confirmation */
         #myModal+.modal-backdrop {
             z-index: 1070 !important;
-        }
-
-        .dynamic-price-badge {
-            font-size: 0.7rem;
-            background-color: #ff9800;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-
-        .fixed-price-badge {
-            font-size: 0.7rem;
-            background-color: #4caf50;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-
-        .cart-item-dynamic {
-            background-color: #fff3e0;
-            border-left: 3px solid #ff9800;
-        }
-
-        .cart-item-fixed {
-            background-color: #e8f5e9;
-            border-left: 3px solid #4caf50;
-        }
-
-        .dynamic-item-row {
-            background-color: #fff8e1;
-        }
-
-        .dynamic-item-row .unit-price-input {
-            width: 100px !important;
-        }
-
-        .dynamic-item-row .discount-input {
-            width: 70px !important;
-        }
-
-        .price-to-be-set {
-            color: #ff9800;
-            font-style: italic;
-            font-size: 0.85rem;
-        }
-
-        /* Fix for modal backdrop when removing items */
-        .modal-backdrop.show {
-            opacity: 0.5;
-        }
-
-        .modal.fade .modal-dialog {
-            transition: transform 0.3s ease-out;
-        }
-
-        .unit-number {
-            font-size: 0.75rem;
-            color: #666;
+            /* Between loading modal (1080) and order confirmation (1050) */
         }
     </style>
 </head>
@@ -156,10 +105,11 @@ validation();
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div>
+        </div><!-- End Page Title -->
 
         <section class="section dashboard">
             <div class="row">
+                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
@@ -180,7 +130,12 @@ validation();
                             </div>
                             <div class="container py-5">
                                 <div class="row">
+                                    <!-- Left Section: Empty for alignment -->
+                                    <!-- <div class="col-md-3"></div> -->
+
+                                    <!-- Middle Section: Product List -->
                                     <div class="col-md-6">
+                                        <!-- Search Box -->
                                         <div class="row mb-3">
                                             <div class="col-md-12">
                                                 <div class="input-group">
@@ -198,13 +153,16 @@ validation();
                                             </div>
                                         </div>
 
+                                        <!-- Product List Container -->
                                         <div id="productList">
                                             <!-- Products will be loaded here via AJAX -->
                                         </div>
 
+                                        <!-- Pagination Container -->
                                         <div id="paginationContainer"></div>
                                     </div>
 
+                                    <!-- Right Section: Cart Summary -->
                                     <div class="col-md-6">
                                         <div class="right-section">
                                             <h4>Cart Summary</h4>
@@ -219,13 +177,13 @@ validation();
                             </div>
                         </div>
                     </div>
-                </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </main>
+    </main><!-- End #main -->
 
     <!-- Order Confirmation Modal -->
-    <div class="modal fade" id="orderConfirmationModal" tabindex="-1" aria-labelledby="orderConfirmationModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal fade" id="orderConfirmationModal" tabindex="-1" aria-labelledby="orderConfirmationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -242,11 +200,9 @@ validation();
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
-                                                <th>Unit #</th>
+                                                <th>Quantity</th>
                                                 <th>Unit Price</th>
-                                                <th>Discount %</th>
                                                 <th>Total</th>
-                                                <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody id="orderSummaryBody">
@@ -254,9 +210,8 @@ validation();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th colspan="4" class="text-end">Total:</th>
+                                                <th colspan="3" class="text-end">Total:</th>
                                                 <th id="orderTotal">₹0</th>
-                                                <th></th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -265,6 +220,7 @@ validation();
                         </div>
 
                         <div class="row">
+                            <!-- Left Side: Beneficiary Selection -->
                             <div class="col-md-6">
                                 <label for="beneficiarySelect" class="form-label">Search and Select Beneficiaries</label>
                                 <select id="beneficiarySelect" name="beneficiaries" class="form-select js-data-ajax-multiple" multiple="multiple" required>
@@ -336,7 +292,9 @@ validation();
         </div>
     </div>
 
-    <script src="../assets_new/js/main.js"></script>
+    <!-- Template Main JS File -->
+      <script src="../assets_new/js/main.js"></script>
+  
 
     <script>
         // Global variables
@@ -345,15 +303,17 @@ validation();
         let itemsPerPage = <?php echo isset($_GET['itemsPerPage']) ? max(5, min(100, intval($_GET['itemsPerPage']))) : (isset($_SESSION['emart_items_per_page']) ? $_SESSION['emart_items_per_page'] : 5); ?>;
         let totalPages = 1;
         let cart = [];
-        let products = [];
-        let cartItemCounter = 0;
-        let isCheckoutModalOpen = false;
+        let products = []; // Store products for cart operations
 
+        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+
+            // Check URL parameters first
             const urlParams = new URLSearchParams(window.location.search);
 
             if (urlParams.has('itemsPerPage')) {
                 itemsPerPage = parseInt(urlParams.get('itemsPerPage'));
+                // Update storage to match current URL
                 sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
             } else if (sessionStorage.getItem('emartItemsPerPage')) {
                 itemsPerPage = parseInt(sessionStorage.getItem('emartItemsPerPage'));
@@ -361,9 +321,14 @@ validation();
 
             document.getElementById('itemsPerPage').value = itemsPerPage;
 
+            // Items per page change handler
             document.getElementById('itemsPerPage').addEventListener('change', function() {
                 itemsPerPage = parseInt(this.value);
+
+                // Update client-side storage
                 sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+
+                // Update server-side session via AJAX
                 fetch('update_session.php', {
                     method: 'POST',
                     headers: {
@@ -371,15 +336,19 @@ validation();
                     },
                     body: `itemsPerPage=${itemsPerPage}`
                 });
-                loadProducts(1, currentSearchTerm);
+
+                loadProducts(1, currentSearchTerm); // Reset to page 1 when changing items per page
             });
+            // Load initial products
             loadProducts(pageNumber, currentSearchTerm);
 
+            // Search button click handler
             document.getElementById('searchButton').addEventListener('click', function() {
                 const searchTerm = document.getElementById('searchInput').value.trim();
                 loadProducts(1, searchTerm);
             });
 
+            // Clear search button
             const clearSearchBtn = document.getElementById('clearSearch');
             if (clearSearchBtn) {
                 clearSearchBtn.addEventListener('click', function() {
@@ -388,6 +357,7 @@ validation();
                 });
             }
 
+            // Handle Enter key in search input
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     const searchTerm = this.value.trim();
@@ -395,6 +365,7 @@ validation();
                 }
             });
 
+            // Handle browser back/forward buttons
             window.addEventListener('popstate', function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const page = urlParams.get('page') || 1;
@@ -405,20 +376,27 @@ validation();
                     itemsPerPage = newItemsPerPage;
                     document.getElementById('itemsPerPage').value = itemsPerPage;
                 }
+
                 document.getElementById('searchInput').value = searchTerm;
                 loadProducts(page, searchTerm);
             });
         });
 
+        // Function to load products via AJAX
         function loadProducts(page = 1, searchTerm = '') {
+            // Show loading indicator
             const productList = document.getElementById('productList');
             productList.innerHTML = '<div class="text-center my-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
+            // Update URL without reloading
             updateUrl(page, searchTerm);
+
+            // Update current page and search term
             pageNumber = page;
             currentSearchTerm = searchTerm;
 
-            return fetch(`search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}&itemsPerPage=${itemsPerPage}`)
+            // Return the fetch Promise
+            return fetch(`fixed_search_products.php?page=${page}&search=${encodeURIComponent(searchTerm)}&itemsPerPage=${itemsPerPage}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -430,37 +408,40 @@ validation();
                     renderProducts(data.products);
                     totalPages = data.totalPages;
                     renderPagination();
-                    return data;
+                    return data; // Return data for chaining
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     productList.innerHTML = '<div class="alert alert-danger">Error loading products. Please try again.</div>';
-                    throw error;
+                    throw error; // Re-throw for error handling
                 });
         }
 
+        // Update URL without reloading page
         function updateUrl(page, searchTerm) {
             const urlParams = new URLSearchParams();
             if (page > 1) urlParams.set('page', page);
             if (searchTerm) urlParams.set('search', searchTerm);
-            if (itemsPerPage != 5) urlParams.set('itemsPerPage', itemsPerPage);
+            if (itemsPerPage != 5) urlParams.set('itemsPerPage', itemsPerPage); // Only include if not default
             history.pushState(null, '', urlParams.toString() ? `?${urlParams}` : window.location.pathname);
         }
 
+        // Render products to the page
         function renderProducts(products) {
             const productList = document.getElementById('productList');
             productList.innerHTML = '';
 
             if (products.length === 0) {
                 productList.innerHTML = `
-                    <div class="alert alert-info">
-                        No products found matching your search.
-                    </div>
-                `;
+            <div class="alert alert-info">
+                No products found matching your search.
+            </div>
+        `;
                 return;
             }
 
             products.forEach(product => {
+                // Find this product in the cart to get current quantity
                 const cartItem = cart.find(item => item.id === product.id);
                 const currentQuantity = cartItem ? cartItem.count : 0;
 
@@ -472,100 +453,102 @@ validation();
                 const stockStatus = product.in_stock <= 0;
                 const lowStock = product.in_stock > 0 && product.in_stock <= 5;
 
-                const priceTypeBadge = product.is_fixed_price ?
-                    '<span class="fixed-price-badge">Fixed Price</span>' :
-                    '<span class="dynamic-price-badge">Dynamic Price</span>';
-
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card mb-4 p-3 border rounded bg-white';
                 productCard.innerHTML = `
-                    <div class="d-flex">
-                        <div class="col-6 me-3" style="height: 150px;">
-                            <img src="${product.image}" alt="${product.name}" 
-                                class="img-fluid h-100 w-100 object-fit-cover rounded">
+            <div class="d-flex">
+                <!-- Product Image -->
+                <div class="col-6 me-3" style="height: 150px;">
+                    <img src="${product.image}" alt="${product.name}" 
+                        class="img-fluid h-100 w-100 object-fit-cover rounded">
+                </div>
+                
+                <!-- Product Details -->
+                <div class="flex-grow-1">
+                    <!-- Product Name -->
+                    <h5 class="mb-1">${product.name}</h5>
+                    <small class="text-muted">Product Id- ${product.id}</small>
+                    
+                    <!-- Rating -->
+                    ${product.rating > 0 ? `
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="text-warning">
+                            ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
                         </div>
-                        
-                        <div class="flex-grow-1">
-                            <h5 class="mb-1">${product.name}</h5>
-                            <small class="text-muted">Product Id- ${product.id}</small>
-                            ${priceTypeBadge}
-                            
-                            ${product.rating > 0 ? `
-                            <div class="d-flex align-items-center mb-1">
-                                <div class="text-warning">
-                                    ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
-                                </div>
-                                <small class="text-muted ms-2">${product.review_count} reviews</small>
-                            </div>
-                            ` : ''}
-                            
-                            ${product.description ? `
-                            <p class="text-muted small mb-2 text-truncate-2" 
-                            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            ${product.description}
-                            </p>
-                            ` : ''}
-                            
-                            <div class="mb-2">
-                                ${hasDiscount ? `
-                                    <span class="text-danger fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
-                                    <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
-                                    <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
-                                ` : `
-                                    <span class="fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
-                                `}
-                                <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
-                                ${!product.is_fixed_price ? '<br><small class="text-warning">Price can be set at checkout</small>' : ''}
-                            </div>
-                            
-                            ${stockStatus ? `
-                                <div class="text-danger mb-2">Out of Stock</div>
-                            ` : lowStock ? `
-                                <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
-                                <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="${currentQuantity}" 
-                                        min="0" 
-                                        max="${product.in_stock}"
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            ` : `
-                                <div class="text-success mb-2">In Stock</div>
-                                <div class="btn-quantity d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" 
-                                        id="count${product.id}" 
-                                        class="form-control mx-2 text-center stock-input" 
-                                        value="${currentQuantity}" 
-                                        min="0" 
-                                        max="${product.in_stock}"
-                                        onchange="validateQuantityInput(${product.id})"
-                                        oninput="validateQuantityInput(${product.id})"
-                                        style="width: 60px;">
-                                    <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            `}
-                        </div>
+                        <small class="text-muted ms-2">${product.review_count} reviews</small>
                     </div>
-                `;
+                    ` : ''}
+                    
+                    <!-- Description -->
+                    ${product.description ? `
+                    <p class="text-muted small mb-2 text-truncate-2" 
+                    style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    ${product.description}
+                    </p>
+                    ` : ''}
+                    
+                    <!-- Pricing -->
+                    <div class="mb-2">
+                        ${hasDiscount ? `
+                            <span class="text-danger fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
+                            <span class="text-decoration-line-through text-muted ms-2">₹${product.original_price.toFixed(2)}</span>
+                            <span class="badge bg-danger ms-2">${product.discount_percentage}% off</span>
+                        ` : `
+                            <span class="fs-5 fw-bold">₹${displayPrice < 0 ? '0.00' : displayPrice}</span>
+                        `}
+                        <span class="text-muted">for ${product.unit_quantity} ${product.unit_name}</span>
+                    </div>
+                    
+                    <!-- Stock Status -->
+                    ${stockStatus ? `
+                        <div class="text-danger mb-2">Out of Stock</div>
+                    ` : lowStock ? `
+                        <div class="text-danger mb-2">Only ${product.in_stock} left in stock</div>
+                        <div class="btn-quantity d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" 
+                                id="count${product.id}" 
+                                class="form-control mx-2 text-center stock-input" 
+                                value="${currentQuantity}" 
+                                min="0" 
+                                max="${product.in_stock}"
+                                onchange="validateQuantityInput(${product.id})"
+                                oninput="validateQuantityInput(${product.id})"
+                                style="width: 60px;">
+                            <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="text-success mb-2">In Stock</div>
+                        <div class="btn-quantity d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" 
+                                id="count${product.id}" 
+                                class="form-control mx-2 text-center stock-input" 
+                                value="${currentQuantity}" 
+                                min="0" 
+                                max="${product.in_stock}"
+                                onchange="validateQuantityInput(${product.id})"
+                                oninput="validateQuantityInput(${product.id})"
+                                style="width: 60px;">
+                            <button class="btn btn-sm btn-primary" onclick="increaseCount(${product.id})">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
                 productList.appendChild(productCard);
             });
         }
 
+        // Render pagination controls
         function renderPagination() {
             const paginationContainer = document.getElementById('paginationContainer');
             paginationContainer.innerHTML = '';
@@ -581,6 +564,7 @@ validation();
                             </a>
                         </li>`;
 
+            // Show page numbers
             for (let i = 1; i <= totalPages; i++) {
                 paginationHTML += `
                     <li class="page-item ${i === pageNumber ? 'active' : ''}">
@@ -600,7 +584,8 @@ validation();
             paginationContainer.innerHTML = paginationHTML;
         }
 
-        function updateCart(productId, productName, price, count, unitName, isFixedPrice) {
+        // Cart functions
+        function updateCart(productId, productName, price, count, unit_name) {
             const existingIndex = cart.findIndex(item => item.id === productId);
 
             if (count > 0) {
@@ -609,10 +594,7 @@ validation();
                     name: productName,
                     price: price,
                     count: count,
-                    unitName: unitName,
-                    isFixedPrice: isFixedPrice,
-                    customPrice: isFixedPrice ? null : price,
-                    discount: isFixedPrice ? null : 0
+                    unit_name: unit_name
                 };
 
                 if (existingIndex >= 0) {
@@ -626,6 +608,9 @@ validation();
 
             renderCart();
             updateCartCount();
+
+            // Trigger AJAX refresh after cart update
+            // refreshProductList();
         }
 
         function renderCart() {
@@ -633,67 +618,46 @@ validation();
             const cartTotal = document.getElementById('cartTotal');
             cartList.innerHTML = '';
             let total = 0;
-            let hasDynamicItems = false;
 
             cart.forEach((item, index) => {
                 const listItem = document.createElement('li');
-                const isFixed = item.isFixedPrice;
-                listItem.className = `list-group-item d-flex justify-content-between align-items-center ${isFixed ? 'cart-item-fixed' : 'cart-item-dynamic'}`;
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
 
-                let itemTotal = 0;
-                let priceDisplay = '';
-
-                if (isFixed) {
-                    itemTotal = item.price * item.count;
-                    total += itemTotal;
-                    priceDisplay = `₹${item.price.toFixed(2)}`;
-                } else {
-                    // For dynamic items, don't show price in cart
-                    hasDynamicItems = true;
-                    priceDisplay = `<span class="price-to-be-set">Price to be set at checkout</span>`;
-                    // Don't add to total for dynamic items in cart
-                }
+                const itemTotal = item.price * item.count;
+                total += itemTotal;
 
                 listItem.innerHTML = `
-                    <div>
-                        <div>${item.name}</div>
-                        <small class="text-muted">
-                            ${item.count} × ${priceDisplay}
-                            ${!isFixed ? ' <span class="badge bg-warning text-dark">Dynamic</span>' : ''}
-                        </small>
-                    </div>
-                    <div>
-                        ${isFixed ? `<span class="me-3">₹${itemTotal.toFixed(2)}</span>` : ''}
-                        <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${item.id})">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                `;
+            <div>
+                ${item.name} x ${item.count}
+                <span class="text-muted ms-2">(₹${item.price.toFixed(2)}/${item.unit_name})</span>
+            </div>
+            <div>
+                <span class="me-3">₹${itemTotal.toFixed(2)}</span>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
+                    <i class="bi bi-x"></i> <!-- Bootstrap Icons cross -->
+                </button>
+            </div>
+        `;
 
                 cartList.appendChild(listItem);
             });
 
-            // For dynamic items, show a note
-            if (hasDynamicItems) {
-                const noteItem = document.createElement('li');
-                noteItem.className = 'list-group-item text-warning bg-light';
-                noteItem.innerHTML = '<small><i class="bi bi-info-circle"></i> Dynamic item prices will be set at checkout</small>';
-                cartList.appendChild(noteItem);
-            }
-
             cartTotal.textContent = `₹${total.toFixed(2)}`;
         }
 
-        function removeFromCart(productId) {
-            const index = cart.findIndex(item => item.id === productId);
-            if (index >= 0) {
+        // Add this new function to handle item removal
+        function removeFromCart(index) {
+            if (index >= 0 && index < cart.length) {
                 cart.splice(index, 1);
                 renderCart();
                 updateCartCount();
+
+                // Trigger AJAX refresh
                 loadProducts();
             }
         }
 
+        // Add this function to update cart count in navbar or elsewhere
         function updateCartCount() {
             const totalItems = cart.reduce((sum, item) => sum + item.count, 0);
             const cartCountElements = document.querySelectorAll('.cart-count');
@@ -711,7 +675,7 @@ validation();
 
             if (product && currentCount < product.in_stock) {
                 countInput.value = currentCount + 1;
-                updateCart(productId, product.name, product.price, currentCount + 1, product.unit_name, product.is_fixed_price);
+                updateCart(productId, product.name, product.price, currentCount + 1, product.unit_name);
             } else if (product && currentCount >= product.in_stock) {
                 alert(`You cannot order more than ${product.in_stock} items of this product.`);
             }
@@ -725,7 +689,7 @@ validation();
             if (currentCount > 0) {
                 countInput.value = currentCount - 1;
                 if (product) {
-                    updateCart(productId, product.name, product.price, currentCount - 1, product.unit_name, product.is_fixed_price);
+                    updateCart(productId, product.name, product.price, currentCount - 1, product.unit_name);
                 }
             }
         }
@@ -749,194 +713,67 @@ validation();
                 }
 
                 countInput.value = enteredValue;
-                updateCart(productId, product.name, product.price, enteredValue, product.unit_name, product.is_fixed_price);
+                updateCart(productId, product.name, product.price, enteredValue, product.unit_name);
             }
         }
 
         function placeOrder() {
+            // Get current page and search parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageNumber = urlParams.get('page') || 1;
+            const searchTerm = urlParams.get('search') || '';
+
+            // Store current pagination settings
+            sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+            sessionStorage.setItem('emartPage', pageNumber);
+            if (currentSearchTerm) {
+                sessionStorage.setItem('emartSearch', currentSearchTerm);
+            }
+
+            // Store them in session storage to restore after order
+            sessionStorage.setItem('emartPage', pageNumber);
+            if (searchTerm) {
+                sessionStorage.setItem('emartSearch', searchTerm);
+            }
+
             if (cart.length === 0) {
                 alert('Your cart is empty!');
                 return;
             }
 
-            // Calculate total for fixed items only
-            const totalPoints = cart.reduce((sum, item) => {
-                if (item.isFixedPrice) {
-                    return sum + item.price * item.count;
-                }
-                return sum;
-            }, 0);
+            // Calculate total
+            const totalPoints = cart.reduce((sum, item) => sum + item.price * item.count, 0);
+
+            if (totalPoints < 0) {
+                alert('Invalid cart total! The total cannot be negative.');
+                return;
+            }
 
             // Prepare order summary HTML
             let orderSummary = '';
-            let calculatedTotal = 0;
-            let rowIndex = 0;
-
-            cart.forEach((item, index) => {
-                const isFixed = item.isFixedPrice;
-
-                if (isFixed) {
-                    // Fixed items - single row with quantity
-                    const itemTotal = item.price * item.count;
-                    calculatedTotal += itemTotal;
-
-                    orderSummary += `
-                        <tr id="order-row-${rowIndex}" class="fixed-item-row">
-                            <td>${item.name}</td>
-                            <td>${item.count}</td>
-                            <td><span class="fw-bold">₹${item.price.toFixed(2)}</span>
-                                <input type="hidden" class="unit-price-input" value="${item.price}" data-index="${rowIndex}">
-                            </td>
-                            <td><span class="text-muted">0%</span></td>
-                            <td class="item-total" id="item-total-${rowIndex}">₹${itemTotal.toFixed(2)}</td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCartItemFromCheckout(${rowIndex})">
-                                    <i class="bi bi-x"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    rowIndex++;
-                } else {
-                    // Dynamic items - each unit as separate row
-                    for (let unit = 1; unit <= item.count; unit++) {
-                        const unitPrice = item.price;
-                        const itemTotal = 0; // Will be calculated when user sets price
-
-                        orderSummary += `
-                            <tr id="order-row-${rowIndex}" class="dynamic-item-row">
-                                <td>${item.name}</td>
-                                <td><span class="unit-number">Unit #${unit}</span></td>
-                                <td>
-                                    <input type="number" class="form-control form-control-sm unit-price-input" 
-                                        value="${unitPrice}" 
-                                        min="0" 
-                                        step="0.01"
-                                        data-index="${rowIndex}"
-                                        onchange="updateDynamicPrice(${rowIndex})"
-                                        oninput="updateDynamicPrice(${rowIndex})"
-                                        style="width: 100px;">
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control form-control-sm discount-input" 
-                                        value="0" 
-                                        min="0" 
-                                        max="100"
-                                        data-index="${rowIndex}"
-                                        onchange="updateDynamicPrice(${rowIndex})"
-                                        oninput="updateDynamicPrice(${rowIndex})"
-                                        style="width: 70px;">
-                                </td>
-                                <td class="item-total" id="item-total-${rowIndex}">₹0.00</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCartItemFromCheckout(${rowIndex})">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                        rowIndex++;
-                    }
-                }
+            cart.forEach(item => {
+                orderSummary += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.count}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>₹${(item.price * item.count).toFixed(2)}</td>
+                    </tr>
+                `;
             });
 
+            // Populate the modal with order details
             document.getElementById('orderSummaryBody').innerHTML = orderSummary;
-            document.getElementById('orderTotal').textContent = `₹${calculatedTotal.toFixed(2)}`;
+            document.getElementById('orderTotal').textContent = `₹${totalPoints.toFixed(2)}`;
             updateFreebieOptionBasedOnTotal();
 
-            isCheckoutModalOpen = true;
-            const orderModal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'), {
-                backdrop: 'static',
-                keyboard: false
-            });
+            // Show the order confirmation modal
+            const orderModal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'));
             orderModal.show();
-
-            // Handle modal hidden event to reset state
-            document.getElementById('orderConfirmationModal').addEventListener('hidden.bs.modal', function() {
-                isCheckoutModalOpen = false;
-                // Remove any leftover backdrops
-                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-            }, {
-                once: true
-            });
-        }
-
-        function removeCartItemFromCheckout(index) {
-            if (index >= 0 && index < cart.length) {
-                cart.splice(index, 1);
-                renderCart();
-                updateCartCount();
-                // Close current modal and reopen with updated data
-                const modal = bootstrap.Modal.getInstance(document.getElementById('orderConfirmationModal'));
-                if (modal) {
-                    modal.hide();
-                    // Wait for modal to close then reopen
-                    document.getElementById('orderConfirmationModal').addEventListener('hidden.bs.modal', function() {
-                        if (cart.length > 0) {
-                            placeOrder();
-                        } else {
-                            // If cart is empty, just close
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                            document.body.classList.remove('modal-open');
-                            document.body.style.overflow = '';
-                            document.body.style.paddingRight = '';
-                        }
-                    }, {
-                        once: true
-                    });
-                }
-            }
-        }
-
-        function updateDynamicPrice(index) {
-            const row = document.getElementById(`order-row-${index}`);
-            if (!row) return;
-
-            const priceInput = row.querySelector('.unit-price-input');
-            const discountInput = row.querySelector('.discount-input');
-            const totalCell = document.getElementById(`item-total-${index}`);
-
-            let price = parseFloat(priceInput ? priceInput.value : 0) || 0;
-            const discount = parseFloat(discountInput ? discountInput.value : 0) || 0;
-
-            const discountedPrice = price * (1 - discount / 100);
-
-            // For dynamic items, each row is a separate unit
-            // We need to find which cart item and unit this corresponds to
-            // Since we're showing each unit separately, we'll store the price in a temp array
-            if (!window.dynamicPrices) {
-                window.dynamicPrices = {};
-            }
-            window.dynamicPrices[index] = {
-                price: price,
-                discount: discount,
-                finalPrice: discountedPrice
-            };
-
-            const itemTotal = discountedPrice;
-            totalCell.textContent = `₹${itemTotal.toFixed(2)}`;
-            updateOrderTotal();
-        }
-
-        function updateOrderTotal() {
-            const totalCells = document.querySelectorAll('.item-total');
-            let total = 0;
-
-            totalCells.forEach(cell => {
-                const value = parseFloat(cell.textContent.replace(/[^\d.]/g, '')) || 0;
-                total += value;
-            });
-
-            document.getElementById('orderTotal').textContent = `₹${total.toFixed(2)}`;
-            updateFreebieOptionBasedOnTotal();
-            $('#beneficiarySelect').trigger('change');
         }
 
         function updateFreebieOptionBasedOnTotal() {
-            const totalText = $('#orderTotal').text().replace(/[^\d.]/g, '');
+            const totalText = $('#orderTotal').text().replace(/[^\d.]/g, ''); // Remove ₹ or commas
             const total = parseFloat(totalText) || 0;
 
             const paymentModeSelect = $('#paymentMode');
@@ -944,21 +781,28 @@ validation();
             const cashOption = paymentModeSelect.find('option[value="cash"]');
             const onlineOption = paymentModeSelect.find('option[value="online"]');
 
+            // Reset selection whenever total changes
             paymentModeSelect.val('');
 
             if (total > 0) {
+                // Enable cash and online, disable freebie
                 cashOption.prop('disabled', false);
                 onlineOption.prop('disabled', false);
                 freebieOption.prop('disabled', true);
             } else {
+                // Disable cash and online, enable freebie
                 cashOption.prop('disabled', true);
                 onlineOption.prop('disabled', true);
                 freebieOption.prop('disabled', false);
+
+                // Auto-select freebie when total is zero
                 paymentModeSelect.val('freebie');
             }
         }
 
+        // Initialize Select2 and form handling when DOM is loaded
         $(document).ready(function() {
+            // Initialize beneficiary select2 when modal is shown
             $('#orderConfirmationModal').on('shown.bs.modal', function() {
                 $('#beneficiarySelect').select2({
                     dropdownParent: $(this),
@@ -984,20 +828,16 @@ validation();
                     width: '100%'
                 });
 
+                // Clear previous selections
                 $('#beneficiarySelect').val(null).trigger('change');
             });
 
+            // Destroy Select2 when modal is closed
             $('#orderConfirmationModal').on('hidden.bs.modal', function() {
                 $('#beneficiarySelect').select2('destroy');
-                // Clean up any lingering backdrops
-                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                // Clear dynamic prices
-                window.dynamicPrices = {};
             });
 
+            // Handle payment mode change
             $('#paymentMode').change(function() {
                 if ($(this).val() === 'online') {
                     $('#transactionIdContainer').show();
@@ -1008,15 +848,18 @@ validation();
                 }
             });
 
+            // Handle form submission using native validation
             $('#orderForm').on('submit', function(e) {
                 e.preventDefault();
 
+                // Native validation
                 if (!this.checkValidity()) {
                     e.stopPropagation();
                     this.classList.add('was-validated');
                     return;
                 }
 
+                // Custom check for Select2 (which isn't validated natively)
                 if (!$('#beneficiarySelect').val() || $('#beneficiarySelect').val().length === 0) {
                     $('#beneficiarySelect').addClass('is-invalid');
                     return;
@@ -1024,6 +867,7 @@ validation();
                     $('#beneficiarySelect').removeClass('is-invalid');
                 }
 
+                // Show loading modal
                 const loadingModal = new bootstrap.Modal(document.getElementById('myModal'), {
                     backdrop: 'static',
                     keyboard: false
@@ -1037,54 +881,20 @@ validation();
                     }
                 }, 10);
 
+                // Disable the button
                 $('#submitOrderBtn').prop('disabled', true);
 
+                // Prepare data
                 const paymentMode = $('#paymentMode').val();
                 const transactionId = paymentMode === 'online' ? $('#transactionId').val() : null;
                 const remarks = $('#remarks').val();
                 const beneficiaries = $('#beneficiarySelect').val();
 
-                // Build cart data - each dynamic unit is a separate entry
-                const cartData = [];
-                let dynamicUnitCounter = 0;
-
-                cart.forEach((item) => {
-                    if (item.isFixedPrice) {
-                        // Fixed items - aggregated
-                        cartData.push({
-                            productId: item.id,
-                            count: item.count,
-                            productPoints: item.price * item.count,
-                            customPrice: null,
-                            discount: 0,
-                            isFixedPrice: true
-                        });
-                    } else {
-                        // Dynamic items - each unit as separate entry
-                        for (let unit = 1; unit <= item.count; unit++) {
-                            // Get the price for this unit from dynamicPrices
-                            const priceKey = dynamicUnitCounter;
-                            const priceData = window.dynamicPrices ? window.dynamicPrices[priceKey] : null;
-
-                            const finalPrice = priceData ?
-                                priceData.price * (1 - priceData.discount / 100) :
-                                item.price;
-
-                            cartData.push({
-                                productId: item.id,
-                                count: 1,
-                                productPoints: finalPrice,
-                                customPrice: priceData ? priceData.price : item.price,
-                                discount: priceData ? priceData.discount : 0,
-                                isFixedPrice: false,
-                                unitNumber: unit
-                            });
-                            dynamicUnitCounter++;
-                        }
-                    }
-                });
-
-                const totalPoints = cartData.reduce((sum, item) => sum + item.productPoints, 0);
+                const cartData = cart.map(item => ({
+                    productId: item.id,
+                    count: item.count,
+                    productPoints: item.price * item.count
+                }));
 
                 const orderData = new URLSearchParams({
                     'form-type': 'orders',
@@ -1092,15 +902,14 @@ validation();
                     'fullname': "<?php echo $fullname; ?>",
                     'doj': "<?php echo $doj; ?>",
                     'email': "<?php echo $email; ?>",
-                    'totalPoints': totalPoints,
+                    'totalPoints': cart.reduce((sum, item) => sum + item.price * item.count, 0),
                     'cart': JSON.stringify(cartData),
                     'paymentMode': paymentMode,
                     'transactionId': transactionId || '',
                     'remarks': remarks,
                     'beneficiaries': JSON.stringify(beneficiaries)
                 });
-
-                fetch('process_order.php', {
+                fetch('fixed_process_order.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
@@ -1110,12 +919,6 @@ validation();
                     .then(response => response.json())
                     .then(data => {
                         loadingModal.hide();
-                        // Clean up modal backdrops
-                        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-
                         if (data.status === 'success') {
                             alert(data.message);
                             window.location.href = `order_confirmation.php?id=${data.order_id}`;
@@ -1138,25 +941,36 @@ validation();
                 });
             });
         });
-
+    </script>
+    <script>
+        // Add this inside your $(document).ready() function, after the Select2 initialization
         $('#beneficiarySelect').on('change', function() {
             const selectedBeneficiaries = $(this).val() || [];
             const beneficiaryCount = selectedBeneficiaries.length;
+
+            // Get the order total (remove currency symbol and commas)
             const orderTotalText = $('#orderTotal').text().replace(/[^\d.]/g, '');
             const orderTotal = parseFloat(orderTotalText) || 0;
+
             const warningDiv = $('#multipleBeneficiaryWarning');
 
             if (beneficiaryCount > 1) {
                 const totalCollection = orderTotal * beneficiaryCount;
+
+                // Update the warning message
                 $('#totalCollectionAmount').text(totalCollection.toFixed(2));
                 $('#orderTotalPerBeneficiary').text(orderTotal.toFixed(2));
                 $('#beneficiaryCount').text(beneficiaryCount);
+
+                // Show the warning
                 warningDiv.show();
             } else {
+                // Hide the warning if only one or zero beneficiaries selected
                 warningDiv.hide();
             }
         });
 
+        // Also trigger this when payment mode changes in case it affects the total
         $('#paymentMode').change(function() {
             $('#beneficiarySelect').trigger('change');
         });

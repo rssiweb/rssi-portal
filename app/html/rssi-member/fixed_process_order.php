@@ -29,12 +29,11 @@ try {
     $productIds = array_column($cart, 'productId');
     $productIdsString = implode(',', array_map('intval', $productIds));
 
-    // Updated query to include is_fixed_price from stock_item_price table
+    // Updated query to join with stock_item_price table
     $productQuery = "SELECT 
         i.item_id as product_id,
         i.item_name,
         p.price_per_unit as price,
-        p.is_fixed_price,
         u.unit_name,
         p.unit_quantity,
         COALESCE(SUM(sa.quantity_received), 0) - COALESCE(SUM(so.quantity_distributed), 0) AS available_stock
@@ -45,7 +44,7 @@ try {
     LEFT JOIN stock_out so ON i.item_id = so.item_distributed
     WHERE i.item_id IN ($productIdsString)
     AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-    GROUP BY i.item_id, i.item_name, p.price_per_unit, p.is_fixed_price, u.unit_name, p.unit_quantity";
+    GROUP BY i.item_id, i.item_name, p.price_per_unit, u.unit_name, p.unit_quantity";
 
     $productResult = pg_query($con, $productQuery);
     if (!$productResult) {
@@ -75,41 +74,11 @@ try {
             $stockErrors[] = "'{$product['item_name']}' - Available: $availableStock, Ordered: $requestedQuantity";
         }
 
-        // Determine the final unit price
-        $isFixedPrice = $product['is_fixed_price'] == 't' || $product['is_fixed_price'] == '1' || $product['is_fixed_price'] === true;
-        $basePrice = (float)$product['price'];
-        $customPrice = null;
-        $discountPercent = 0;
-        $finalUnitPrice = $basePrice;
-
-        if (!$isFixedPrice) {
-            // Dynamic pricing - use custom price from cart
-            if (isset($item['customPrice']) && $item['customPrice'] > 0) {
-                $customPrice = (float)$item['customPrice'];
-                $discountPercent = isset($item['discount']) ? (float)$item['discount'] : 0;
-                // Apply discount to custom price
-                $finalUnitPrice = $customPrice * (1 - $discountPercent / 100);
-            } else {
-                // Fallback to base price if no custom price provided
-                $customPrice = $basePrice;
-                $finalUnitPrice = $basePrice;
-            }
-        } else {
-            // Fixed price - use the price from database
-            $finalUnitPrice = $basePrice;
-            $customPrice = null;
-            $discountPercent = 0;
-        }
-
         // Build complete cart item with all required fields
         $completeCart[] = [
             'productId' => $item['productId'],
             'count' => $item['count'],
-            'price' => $finalUnitPrice,
-            'base_price' => $basePrice,
-            'custom_price' => $customPrice,
-            'discount_percent' => $discountPercent,
-            'is_fixed_price' => $isFixedPrice,
+            'price' => $product['price'],
             'unit_name' => $product['unit_name'],
             'unit_quantity' => $product['unit_quantity'],
             'item_name' => $product['item_name']
@@ -123,15 +92,6 @@ try {
         $errorMessage .= "\n\nPlease adjust quantities and try again.";
         throw new Exception($errorMessage);
     }
-
-    // Recalculate total amount from complete cart to ensure accuracy
-    $calculatedTotal = 0;
-    foreach ($completeCart as $item) {
-        $calculatedTotal += $item['price'] * $item['count'];
-    }
-
-    // Use the calculated total instead of the one from the form
-    $totalAmount = $calculatedTotal;
 
     foreach ($beneficiaries as $beneficiary) {
         $paymentId = null;
@@ -215,23 +175,16 @@ try {
         $orderData = pg_fetch_assoc($orderResult);
         $orderId = $orderData['order_id'];
 
-        // Insert order items with dynamic pricing fields
+        // Insert order items
         foreach ($completeCart as $item) {
-            // Convert boolean to proper PostgreSQL boolean format
-            $isFixedPriceBool = $item['is_fixed_price'] ? 'true' : 'false';
-
             $orderItemQuery = "INSERT INTO emart_order_items (
                 order_id,
                 product_id,
                 quantity,
                 unit_price,
                 unit_name,
-                unit_quantity,
-                base_price,
-                custom_price,
-                discount_percent,
-                is_fixed_price
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+                unit_quantity
+            ) VALUES ($1, $2, $3, $4, $5, $6)";
 
             $orderItemParams = [
                 $orderId,
@@ -239,11 +192,7 @@ try {
                 $item['count'],
                 $item['price'],
                 $item['unit_name'],
-                $item['unit_quantity'],
-                $item['base_price'],
-                $item['custom_price'],
-                $item['discount_percent'],
-                $isFixedPriceBool  // Use string 'true' or 'false' for PostgreSQL boolean
+                $item['unit_quantity']
             ];
 
             $orderItemResult = pg_query_params($con, $orderItemQuery, $orderItemParams);

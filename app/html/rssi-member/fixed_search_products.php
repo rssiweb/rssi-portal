@@ -24,12 +24,10 @@ if ($addStock) {
         NULL as original_price,
         i.rating,
         i.review_count,
-        sip.is_fixed_price,
         i.is_featured
     FROM stock_item i
-    LEFT JOIN stock_item_price sip ON i.item_id = sip.item_id
     WHERE 1=1
-    AND i.is_active = true";
+    AND is_active = true";
 
     if (!empty($searchTerm)) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
@@ -53,7 +51,6 @@ if ($addStock) {
         p.original_price,
         i.rating,
         i.review_count,
-        sip.is_fixed_price,
         i.is_featured
     FROM 
         stock_item i
@@ -63,9 +60,6 @@ if ($addStock) {
     LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
         AND p.unit_id = u.unit_id
         AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-    LEFT JOIN stock_item_price sip ON sip.item_id = i.item_id
-        AND sip.unit_id = u.unit_id
-        AND CURRENT_DATE BETWEEN sip.effective_start_date AND COALESCE(sip.effective_end_date, CURRENT_DATE)
     WHERE 1=1
     AND i.is_active = true";
 
@@ -83,7 +77,7 @@ if ($addStock) {
 
     $query .= " GROUP BY 
         i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
-        u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price, sip.is_fixed_price
+        u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price
     ORDER BY 
         i.is_featured DESC, i.item_name";
 }
@@ -95,7 +89,6 @@ if (!$forStockManagement && !$addStock) {
                    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
                    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
                    JOIN stock_item_unit u ON u.unit_id = sa.unit_id OR u.unit_id = so.unit
-                   LEFT JOIN stock_item_price sip ON sip.item_id = i.item_id
                    WHERE 1=1";
 
     if ($forStockManagement) {
@@ -121,14 +114,6 @@ $result = pg_query($con, $query);
 $products = [];
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
-        // Properly handle PostgreSQL boolean conversion
-        $isFixedPrice = false;
-        if (isset($row['is_fixed_price'])) {
-            if ($row['is_fixed_price'] === 't' || $row['is_fixed_price'] === '1' || $row['is_fixed_price'] === true || $row['is_fixed_price'] === 'true') {
-                $isFixedPrice = true;
-            }
-        }
-        
         $products[] = [
             'id' => (int)$row['item_id'],
             'name' => $row['item_name'],
@@ -139,13 +124,12 @@ if ($result) {
             'unit_name' => $row['unit_name'],
             'unit_id' => $row['unit_id'],
             'unit_quantity' => $row['unit_quantity'] ?? 1,
-            'in_stock' => $row['in_stock'] !== null ? (int)$row['in_stock'] : 0,
-            'soldOut' => $row['in_stock'] === null || $row['in_stock'] <= 0,
-            'discount_percentage' => (float)($row['discount_percentage'] ?? 0),
-            'rating' => (float)($row['rating'] ?? 0),
-            'review_count' => (int)($row['review_count'] ?? 0),
-            'is_featured' => $row['is_featured'] ?? false,
-            'is_fixed_price' => $isFixedPrice  // Add this field
+            'in_stock' => $row['in_stock'],
+            'soldOut' => $row['in_stock'] <= 0,
+            'discount_percentage' => (float)$row['discount_percentage'] ?? 0,
+            'rating' => (float)$row['rating'] ?? 0,
+            'review_count' => (int)$row['review_count'] ?? 0,
+            'is_featured' => $row['is_featured'] ?? false
         ];
     }
 }

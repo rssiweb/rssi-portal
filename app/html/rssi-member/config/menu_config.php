@@ -415,7 +415,8 @@ class MenuConfig
                 'section' => 'Community Supply',
                 'sidebar_id' => 'csu',
                 'pages' => [
-                    'emart.php' => ['title' => 'eMart', 'show_in_menu' => true]
+                    'emart.php' => ['title' => 'eMart', 'show_in_menu' => true],
+                    'order_confirmation.php' => ['title' => 'Order Confirmation', 'show_in_menu' => false]
                 ]
             ],
 
