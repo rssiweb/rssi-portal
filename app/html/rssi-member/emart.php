@@ -540,7 +540,7 @@ validation();
                                     </button>
                                 </div>
                             ` : `
-                                <div class="text-success mb-2">In Stock</div>
+                                <div class="text-success mb-2">In Stock (${product.in_stock} available)</div>
                                 <div class="btn-quantity d-flex align-items-center">
                                     <button class="btn btn-sm btn-outline-secondary" onclick="decreaseCount(${product.id})">
                                         <i class="bi bi-dash"></i>
