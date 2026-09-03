@@ -571,10 +571,29 @@ if ($locationResult) {
                                                     <div class="card-body">
                                                         <h5 class="card-title">Personal Information for Appointment</h5>
 
-                                                        <!-- Date of Birth -->
-                                                        <div class="mb-3">
+                                                        <!-- Date of Birth - Always visible by default -->
+                                                        <div id="dobContainer" class="mb-3">
                                                             <label for="dob" class="form-label">Date of Birth</label>
-                                                            <input type="date" class="form-control" id="dob" name="dob">
+                                                            <input type="date" class="form-control" id="dob" name="dob" onchange="setAgeFromDOB()">
+                                                            <small id="dobHelpText" class="text-muted">Age: <span id="displayAge">--</span> years</small>
+                                                        </div>
+
+                                                        <!-- Age Container - Hidden by default -->
+                                                        <div id="ageContainer" class="mb-3" style="display: none;">
+                                                            <label for="appointmentAge" class="form-label">Age</label>
+                                                            <input type="number" class="form-control" id="appointmentAge" name="appointmentAge"
+                                                                placeholder="Enter age" min="1" max="120" onchange="setDOBFromAge()">
+                                                            <small id="ageHelpText" class="text-muted">DOB: <span id="displayDOB">--</span></small>
+                                                        </div>
+
+                                                        <!-- Checkbox for age-based DOB calculation -->
+                                                        <div class="mb-3">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="dontKnowDob" onchange="toggleDobAgeFields()">
+                                                                <label class="form-check-label" for="dontKnowDob">
+                                                                    I don't know the date of birth - calculate from age
+                                                                </label>
+                                                            </div>
                                                         </div>
 
                                                         <!-- Gender -->
@@ -592,19 +611,20 @@ if ($locationResult) {
                                                         <!-- Email -->
                                                         <div class="mb-3">
                                                             <label for="email" class="form-label">Email</label>
-                                                            <input type="email" class="form-control" id="email" name="email">
+                                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address">
                                                         </div>
 
-                                                        <!-- Appointment Date -->
-                                                        <div class="mb-3">
-                                                            <label for="appointmentDate" class="form-label">Preferred Appointment Date</label>
-                                                            <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
-                                                        </div>
+                                                        <!-- Appointment Date and Time in same row -->
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="appointmentDate" class="form-label">Preferred Appointment Date</label>
+                                                                <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
+                                                            </div>
 
-                                                        <!-- Appointment Time -->
-                                                        <div class="mb-3">
-                                                            <label for="appointmentTime" class="form-label">Preferred Appointment Time</label>
-                                                            <input type="time" class="form-control" id="appointmentTime" name="appointmentTime">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="appointmentTime" class="form-label">Preferred Appointment Time</label>
+                                                                <input type="time" class="form-control" id="appointmentTime" name="appointmentTime">
+                                                            </div>
                                                         </div>
 
                                                         <!-- Profile Photo -->
@@ -1054,38 +1074,6 @@ if ($locationResult) {
             }
         }
 
-        // Function to toggle personal info section and handle required fields
-        function togglePersonalInfoSection() {
-            const bookAppointment = document.getElementById('bookAppointment').value;
-            const personalInfoSection = document.getElementById('personalInfoSection');
-
-            if (bookAppointment === 'yes') {
-                personalInfoSection.style.display = 'block';
-                // Make fields required
-                document.getElementById('dob').required = true;
-                document.getElementById('gender').required = true;
-                document.getElementById('appointmentDate').required = true;
-                document.getElementById('appointmentTime').required = true;
-            } else {
-                personalInfoSection.style.display = 'none';
-                // Remove required attribute
-                document.getElementById('dob').required = false;
-                document.getElementById('gender').required = false;
-                document.getElementById('appointmentDate').required = false;
-                document.getElementById('appointmentTime').required = false;
-                // Reset personal info fields
-                document.getElementById('dob').value = '';
-                document.getElementById('appointmentAge').value = '';
-                document.getElementById('gender').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('appointmentDate').value = '';
-                document.getElementById('appointmentTime').value = '';
-                document.getElementById('photo_data').value = '';
-                document.getElementById('profilePhoto').value = '';
-                document.getElementById('appointmentAgeDisplay').style.display = 'none';
-            }
-        }
-
         // Handle "Other" service checkbox
         document.getElementById('serviceOther').addEventListener('change', function() {
             const otherServiceInput = document.getElementById('otherService');
@@ -1273,37 +1261,50 @@ if ($locationResult) {
             // Validate appointment section if needed
             const bookAppointment = document.getElementById('bookAppointment').value;
             if (bookAppointment === 'yes') {
+                const checkbox = document.getElementById('dontKnowDob');
                 const dob = document.getElementById('dob').value;
                 const age = document.getElementById('appointmentAge').value;
                 const gender = document.getElementById('gender').value;
                 const appointmentDate = document.getElementById('appointmentDate').value;
                 const appointmentTime = document.getElementById('appointmentTime').value;
 
-                // Check if either DOB or Age is provided
-                if (!dob && !age) {
-                    alert('Please provide either Date of Birth or Age for the appointment.');
-                    return false;
+                // If checkbox is checked, age is required
+                if (checkbox.checked) {
+                    if (!age) {
+                        alert('Please enter Age to calculate Date of Birth.');
+                        document.getElementById('appointmentAge').focus();
+                        return false;
+                    }
+                } else {
+                    // If checkbox is not checked, DOB is required
+                    if (!dob) {
+                        alert('Please enter Date of Birth.');
+                        document.getElementById('dob').focus();
+                        return false;
+                    }
                 }
 
                 if (!gender) {
                     alert('Please select Gender for the appointment.');
+                    document.getElementById('gender').focus();
                     return false;
                 }
 
                 if (!appointmentDate) {
                     alert('Please select Preferred Appointment Date.');
+                    document.getElementById('appointmentDate').focus();
                     return false;
                 }
 
                 if (!appointmentTime) {
                     alert('Please select Preferred Appointment Time.');
+                    document.getElementById('appointmentTime').focus();
                     return false;
                 }
             }
 
             // Validate job seeker section if needed
             const needJobAssistance = document.getElementById('needJobAssistance').value;
-            // Update form validation in the validateForm() function
             if (needJobAssistance === 'yes') {
                 const jobSeekerRows = document.querySelectorAll('.job-seeker-row');
                 if (jobSeekerRows.length === 0) {
@@ -1442,6 +1443,166 @@ if ($locationResult) {
                     console.error('AJAX error:', error);
                 }
             });
+        }
+
+        // Function to toggle between DOB and Age fields
+        function toggleDobAgeFields() {
+            const checkbox = document.getElementById('dontKnowDob');
+            const dobContainer = document.getElementById('dobContainer');
+            const ageContainer = document.getElementById('ageContainer');
+            const dobInput = document.getElementById('dob');
+            const ageInput = document.getElementById('appointmentAge');
+            const displayAge = document.getElementById('displayAge');
+            const displayDOB = document.getElementById('displayDOB');
+
+            if (checkbox.checked) {
+                // Hide DOB, show Age - RESET DOB field and its display
+                dobContainer.style.display = 'none';
+                ageContainer.style.display = 'block';
+                dobInput.required = false;
+                dobInput.value = ''; // Reset DOB value
+                displayAge.textContent = '--'; // Reset age display
+                ageInput.required = true;
+                ageInput.value = ''; // Reset age input
+                displayDOB.textContent = '--'; // Reset DOB display
+                ageInput.focus();
+            } else {
+                // Show DOB, hide Age - RESET Age field and its display
+                dobContainer.style.display = 'block';
+                ageContainer.style.display = 'none';
+                dobInput.required = true;
+                ageInput.required = false;
+                ageInput.value = ''; // Reset age input
+                displayDOB.textContent = '--'; // Reset DOB display
+                dobInput.value = ''; // Reset DOB value
+                displayAge.textContent = '--'; // Reset age display
+                dobInput.focus();
+            }
+        }
+
+        // Function to set DOB from Age (always January 1st)
+        function setDOBFromAge() {
+            const ageInput = document.getElementById('appointmentAge');
+            const dobInput = document.getElementById('dob');
+            const checkbox = document.getElementById('dontKnowDob');
+            const displayDOB = document.getElementById('displayDOB');
+            const age = parseInt(ageInput.value);
+
+            // Only proceed if checkbox is checked and age is valid
+            if (checkbox.checked && age && age >= 1 && age <= 120) {
+                const currentYear = new Date().getFullYear();
+                const birthYear = currentYear - age;
+                const dobValue = birthYear + '-01-01'; // Always January 1st
+                dobInput.value = dobValue;
+                // Format DOB for display (DD-MM-YYYY)
+                displayDOB.textContent = '01-01-' + birthYear;
+            }
+        }
+
+        // Function to set Age from DOB
+        function setAgeFromDOB() {
+            const dobInput = document.getElementById('dob');
+            const ageInput = document.getElementById('appointmentAge');
+            const checkbox = document.getElementById('dontKnowDob');
+            const displayAge = document.getElementById('displayAge');
+
+            // If DOB is being entered and checkbox is checked, uncheck it and reset
+            if (checkbox.checked && dobInput.value) {
+                checkbox.checked = false;
+                const dobContainer = document.getElementById('dobContainer');
+                const ageContainer = document.getElementById('ageContainer');
+                dobContainer.style.display = 'block';
+                ageContainer.style.display = 'none';
+                ageInput.required = false;
+                ageInput.value = '';
+                dobInput.required = true;
+                document.getElementById('displayDOB').textContent = '--';
+            }
+
+            if (dobInput.value) {
+                const dob = new Date(dobInput.value);
+                const today = new Date();
+
+                // Check if date is valid
+                if (isNaN(dob.getTime())) {
+                    displayAge.textContent = '--';
+                    return;
+                }
+
+                // Check if date is not in the future
+                if (dob > today) {
+                    alert('Date of birth cannot be in the future.');
+                    dobInput.value = '';
+                    displayAge.textContent = '--';
+                    return;
+                }
+
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                // Adjust age if birthday hasn't occurred yet this year
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                if (age >= 0 && age <= 120) {
+                    ageInput.value = age;
+                    displayAge.textContent = age;
+                } else {
+                    displayAge.textContent = '--';
+                }
+            } else {
+                displayAge.textContent = '--';
+            }
+        }
+
+        // Function to toggle personal info section and handle required fields
+        function togglePersonalInfoSection() {
+            const bookAppointment = document.getElementById('bookAppointment').value;
+            const personalInfoSection = document.getElementById('personalInfoSection');
+
+            if (bookAppointment === 'yes') {
+                personalInfoSection.style.display = 'block';
+                // Reset to default state (DOB visible, Age hidden)
+                const checkbox = document.getElementById('dontKnowDob');
+                checkbox.checked = false;
+                document.getElementById('dobContainer').style.display = 'block';
+                document.getElementById('ageContainer').style.display = 'none';
+                document.getElementById('dob').required = true;
+                document.getElementById('appointmentAge').required = false;
+                document.getElementById('appointmentAge').value = '';
+                document.getElementById('dob').value = '';
+                document.getElementById('displayAge').textContent = '--';
+                document.getElementById('displayDOB').textContent = '--';
+
+                // Make other fields required
+                document.getElementById('gender').required = true;
+                document.getElementById('appointmentDate').required = true;
+                document.getElementById('appointmentTime').required = true;
+            } else {
+                personalInfoSection.style.display = 'none';
+                // Remove required attributes
+                document.getElementById('dob').required = false;
+                document.getElementById('appointmentAge').required = false;
+                document.getElementById('gender').required = false;
+                document.getElementById('appointmentDate').required = false;
+                document.getElementById('appointmentTime').required = false;
+
+                // Reset all fields
+                document.getElementById('dob').value = '';
+                document.getElementById('appointmentAge').value = '';
+                document.getElementById('gender').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('appointmentDate').value = '';
+                document.getElementById('appointmentTime').value = '';
+                document.getElementById('photo_data').value = '';
+                document.getElementById('profilePhoto').value = '';
+                document.getElementById('dontKnowDob').checked = false;
+                document.getElementById('dobContainer').style.display = 'block';
+                document.getElementById('ageContainer').style.display = 'none';
+                document.getElementById('displayAge').textContent = '--';
+                document.getElementById('displayDOB').textContent = '--';
+            }
         }
     </script>
 </body>
