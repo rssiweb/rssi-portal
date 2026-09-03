@@ -25,29 +25,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Start transaction
         pg_query($con, 'BEGIN');
 
-        // Retrieve common survey data
+        // Retrieve common survey data with null coalescing to avoid undefined array key warnings
         $family_id = uniqid();
-        $parentName = $_POST['parentName'];
-        $address = $_POST['address'];
-        $contact = $_POST['contact'];
-        $altcontact = $_POST['altcontact'];
-        $houseStay = $_POST['houseStay'];
-        $familyMembers = $_POST['familyMembers'];
-        $earningSource = $_POST['earningSource'];
-        $otherEarningSourceInput = $_POST['otherEarningSourceInput'];
-        $additionalInfo = $_POST['additionalInfo'];
-        $interestInAdmission = $_POST['interestInAdmission'];
+        $parentName = isset($_POST['parentName']) ? pg_escape_string($con, $_POST['parentName']) : '';
+        $address = isset($_POST['address']) ? pg_escape_string($con, $_POST['address']) : '';
+        $contact = isset($_POST['contact']) ? pg_escape_string($con, $_POST['contact']) : '';
+        $altcontact = isset($_POST['altcontact']) ? pg_escape_string($con, $_POST['altcontact']) : null;
+        $houseStay = isset($_POST['houseStay']) ? pg_escape_string($con, $_POST['houseStay']) : null;
+        $familyMembers = isset($_POST['familyMembers']) && $_POST['familyMembers'] !== '' ? (int)$_POST['familyMembers'] : null;
+        $earningSource = isset($_POST['earningSource']) ? pg_escape_string($con, $_POST['earningSource']) : null;
+        $otherEarningSourceInput = isset($_POST['otherEarningSourceInput']) ? pg_escape_string($con, $_POST['otherEarningSourceInput']) : null;
+        $additionalInfo = isset($_POST['additionalInfo']) ? pg_escape_string($con, $_POST['additionalInfo']) : null;
+        $interestInAdmission = isset($_POST['interestInAdmission']) ? pg_escape_string($con, $_POST['interestInAdmission']) : 'no';
         $surveyorId = $associatenumber;
         $timestamp = date("Y-m-d H:i:s");
 
         // Citizen services data
-        $needAssistance = $_POST['needAssistance'];
+        $needAssistance = isset($_POST['needAssistance']) ? pg_escape_string($con, $_POST['needAssistance']) : 'no';
         $servicesNeeded = isset($_POST['servicesNeeded']) ? $_POST['servicesNeeded'] : [];
-        $otherService = isset($_POST['otherService']) ? $_POST['otherService'] : null;
-        $bookAppointment = isset($_POST['bookAppointment']) ? $_POST['bookAppointment'] : 'no';
+        $otherService = isset($_POST['otherService']) ? pg_escape_string($con, $_POST['otherService']) : null;
+        $bookAppointment = isset($_POST['bookAppointment']) ? pg_escape_string($con, $_POST['bookAppointment']) : 'no';
 
         // Job assistance data
-        $needJobAssistance = isset($_POST['needJobAssistance']) ? $_POST['needJobAssistance'] : 'no';
+        $needJobAssistance = isset($_POST['needJobAssistance']) ? pg_escape_string($con, $_POST['needJobAssistance']) : 'no';
+
+        // Location ID
+        $locationId = isset($_POST['location']) && $_POST['location'] !== '' ? (int)$_POST['location'] : null;
 
         // Process "Other" service if selected
         if (in_array('Other', $servicesNeeded) && !empty($otherService)) {
@@ -58,35 +61,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $servicesNeeded[] = $otherService;
         }
 
-        // Build the SQL query for survey data insertion
+        // Build the SQL query for survey data insertion - using NULL for empty values
         $query = "INSERT INTO survey_data (
                     parent_name, address, contact, house_stay, family_members, 
                     earning_source, additional_info, surveyor_id, family_id, 
                     alt_contact, interest_in_admission, timestamp, other_earning_source_input,
-                    need_assistance, services_needed, book_appointment, need_job_assistance
+                    need_assistance, services_needed, book_appointment, need_job_assistance, location_id
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
                 )";
 
-        // Execute the query for survey data insertion
+        // Execute the query for survey data insertion with proper NULL handling
         $result = pg_query_params($con, $query, array(
-            $parentName,
-            $address,
-            $contact,
-            $houseStay,
+            !empty($parentName) ? $parentName : null,
+            !empty($address) ? $address : null,
+            !empty($contact) ? $contact : null,
+            !empty($houseStay) ? $houseStay : null,
             $familyMembers,
-            $earningSource,
-            $additionalInfo,
+            !empty($earningSource) ? $earningSource : null,
+            !empty($additionalInfo) ? $additionalInfo : null,
             $surveyorId,
             $family_id,
-            $altcontact,
-            $interestInAdmission,
+            !empty($altcontact) ? $altcontact : null,
+            !empty($interestInAdmission) ? $interestInAdmission : 'no',
             $timestamp,
-            $otherEarningSourceInput,
-            $needAssistance,
-            json_encode($servicesNeeded),
-            $bookAppointment,
-            $needJobAssistance
+            !empty($otherEarningSourceInput) ? $otherEarningSourceInput : null,
+            !empty($needAssistance) ? $needAssistance : 'no',
+            !empty($servicesNeeded) ? json_encode($servicesNeeded) : null,
+            !empty($bookAppointment) ? $bookAppointment : 'no',
+            !empty($needJobAssistance) ? $needJobAssistance : 'no',
+            $locationId
         ));
 
         // Check if the query was successful
@@ -97,12 +101,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Check if we need to create a public health record and appointment
         if ($needAssistance === 'yes' && $bookAppointment === 'yes' && !empty($servicesNeeded)) {
             // Get personal info for appointment
-            $dob = $_POST['dob'] ?? null;
-            $gender = $_POST['gender'] ?? null;
-            $email = $_POST['email'] ?? null;
-            $appointmentDate = $_POST['appointmentDate'] ?? null;
-            $appointmentTime = $_POST['appointmentTime'] ?? null;
-            $photoData = $_POST['photo_data'] ?? null;
+            $dob = isset($_POST['dob']) && !empty($_POST['dob']) ? $_POST['dob'] : null;
+
+            // If DOB is not provided but age is, calculate DOB (January 1st)
+            if (empty($dob) && isset($_POST['appointmentAge']) && !empty($_POST['appointmentAge'])) {
+                $age = (int)$_POST['appointmentAge'];
+                if ($age > 0 && $age <= 120) {
+                    $currentYear = date('Y');
+                    $birthYear = $currentYear - $age;
+                    $dob = $birthYear . '-01-01'; // Always January 1st
+                }
+            }
+
+            $gender = isset($_POST['gender']) && !empty($_POST['gender']) ? $_POST['gender'] : null;
+            $email = isset($_POST['email']) && !empty($_POST['email']) ? $_POST['email'] : null;
+            $appointmentDate = isset($_POST['appointmentDate']) && !empty($_POST['appointmentDate']) ? $_POST['appointmentDate'] : null;
+            $appointmentTime = isset($_POST['appointmentTime']) && !empty($_POST['appointmentTime']) ? $_POST['appointmentTime'] : null;
+            $photoData = isset($_POST['photo_data']) ? $_POST['photo_data'] : null;
 
             // Handle photo upload if exists
             $photoUrl = null;
@@ -139,20 +154,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $phrQuery = "INSERT INTO public_health_records (
                             contact_number, name, email, date_of_birth, 
                             gender, referral_source, profile_photo, 
-                            registration_completed, created_at
+                            registration_completed, created_at, location_id
                         ) VALUES (
-                            $1, $2, $3, $4, $5, $6, $7, true, $8
+                            $1, $2, $3, $4, $5, $6, $7, true, $8, $9
                         ) RETURNING id";
 
             $phrResult = pg_query_params($con, $phrQuery, array(
-                $contact,
-                $parentName,
-                $email,
-                $dob,
-                $gender,
+                !empty($contact) ? $contact : null,
+                !empty($parentName) ? $parentName : null,
+                !empty($email) ? $email : null,
+                !empty($dob) ? $dob : null,
+                !empty($gender) ? $gender : null,
                 'Survey',
                 $photoUrl,
-                $timestamp
+                $timestamp,
+                $locationId
             ));
 
             if (!$phrResult) {
@@ -197,26 +213,34 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
 
                 // Ensure that array keys exist before accessing them
-                $gender = isset($student['gender']) ? $student['gender'] : null;
-                $grade = isset($student['grade']) ? $student['grade'] : null;
-                $alreadyGoingSchool = isset($student['already_going_school']) ? $student['already_going_school'] : null;
-                $alreadyCoaching = isset($student['already_coaching']) ? $student['already_coaching'] : null;
+                $studentName = isset($student['name']) ? pg_escape_string($con, $student['name']) : null;
+                $studentAge = isset($student['age']) && $student['age'] !== '' ? (int)$student['age'] : null;
+                $gender = isset($student['gender']) && !empty($student['gender']) ? pg_escape_string($con, $student['gender']) : null;
+                $grade = isset($student['grade']) && !empty($student['grade']) ? pg_escape_string($con, $student['grade']) : null;
+                $alreadyGoingSchool = isset($student['already_going_school']) && !empty($student['already_going_school']) ? pg_escape_string($con, $student['already_going_school']) : null;
+                $schoolType = isset($student['school_type']) && !empty($student['school_type']) ? pg_escape_string($con, $student['school_type']) : null;
+                $alreadyCoaching = isset($student['already_coaching']) && !empty($student['already_coaching']) ? pg_escape_string($con, $student['already_coaching']) : null;
+                $coachingName = isset($student['coaching_name']) && !empty($student['coaching_name']) ? pg_escape_string($con, $student['coaching_name']) : null;
 
                 // Build the SQL query for student data insertion
-                $studentQuery = "INSERT INTO student_data (family_id, student_name, age, gender, grade, already_going_school, school_type, already_coaching, coaching_name) 
-                                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
+                $studentQuery = "INSERT INTO student_data (
+                                    family_id, student_name, age, gender, grade, 
+                                    already_going_school, school_type, already_coaching, coaching_name
+                                ) VALUES (
+                                    $1, $2, $3, $4, $5, $6, $7, $8, $9
+                                )";
 
                 // Execute the query for student data insertion
                 $studentResult = pg_query_params($con, $studentQuery, array(
                     $family_id,
-                    $student['name'],
-                    $student['age'],
+                    $studentName,
+                    $studentAge,
                     $gender,
                     $grade,
                     $alreadyGoingSchool,
-                    isset($student['school_type']) ? $student['school_type'] : null,
+                    $schoolType,
                     $alreadyCoaching,
-                    isset($student['coaching_name']) ? $student['coaching_name'] : null
+                    $coachingName
                 ));
 
                 // Check if the query was successful
@@ -236,16 +260,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     continue;
                 }
 
-                // Ensure that array keys exist before accessing them
-                $name = isset($jobSeeker['name']) ? pg_escape_string($con, $jobSeeker['name']) : null;
-                $dob = isset($jobSeeker['dob']) ? $jobSeeker['dob'] : null;
-                $email = isset($jobSeeker['email']) ? pg_escape_string($con, $jobSeeker['email']) : null;
-                $contact = isset($jobSeeker['contact']) ? pg_escape_string($con, $jobSeeker['contact']) : null;
-                $education = isset($jobSeeker['education']) ? pg_escape_string($con, $jobSeeker['education']) : null;
-                $skills = isset($jobSeeker['skills']) ? pg_escape_string($con, $jobSeeker['skills']) : null;
-                $preferences = isset($jobSeeker['preferences']) ? pg_escape_string($con, $jobSeeker['preferences']) : null;
+                // Ensure that array keys exist before accessing them with proper NULL handling
+                $name = isset($jobSeeker['name']) && !empty($jobSeeker['name']) ? pg_escape_string($con, $jobSeeker['name']) : null;
+                $dob = isset($jobSeeker['dob']) && !empty($jobSeeker['dob']) ? $jobSeeker['dob'] : null;
+                $email = isset($jobSeeker['email']) && !empty($jobSeeker['email']) ? pg_escape_string($con, $jobSeeker['email']) : null;
+                $contact = isset($jobSeeker['contact']) && !empty($jobSeeker['contact']) ? pg_escape_string($con, $jobSeeker['contact']) : null;
+                $education = isset($jobSeeker['education']) && !empty($jobSeeker['education']) ? (int)$jobSeeker['education'] : null;
+                $skills = isset($jobSeeker['skills']) && !empty($jobSeeker['skills']) ? pg_escape_string($con, $jobSeeker['skills']) : null;
+                $preferences = isset($jobSeeker['preferences']) && !empty($jobSeeker['preferences']) ? pg_escape_string($con, $jobSeeker['preferences']) : null;
 
-                // Validate required fields
+                // Validate required fields - skip if missing required data
                 if (empty($name) || empty($dob) || empty($contact) || empty($education)) {
                     continue; // Skip incomplete records
                 }
@@ -283,12 +307,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Display success message and redirect
         echo "<script>alert('Data added successfully.'); window.location.href = 'survey.php';</script>";
+        exit;
     } catch (Exception $e) {
         // Rollback transaction on error
         pg_query($con, 'ROLLBACK');
 
         // Display error message
         echo "Error: " . $e->getMessage();
+    }
+}
+
+// ---------------------------
+// Fetch locations for dropdown
+// ---------------------------
+$locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
+$locationResult = pg_query($con, $locationQuery);
+$locations = [];
+if ($locationResult) {
+    while ($row = pg_fetch_assoc($locationResult)) {
+        $locations[] = $row;
     }
 }
 ?>
@@ -312,7 +349,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -366,6 +403,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         <label for="parentName" class="form-label">Respondent Name</label>
                                                         <input type="text" class="form-control" id="parentName"
                                                             name="parentName" placeholder="Enter respondent name" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="location">Location</label>
+                                                        <select class="form-select" id="location" name="location" required>
+                                                            <option disabled selected>Select location</option>
+                                                            <?php foreach ($locations as $loc): ?>
+                                                                <option value="<?php echo $loc['id']; ?>"><?php echo $loc['name']; ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
                                                     </div>
                                                     <!-- Address -->
                                                     <div class="mb-3">
@@ -1008,23 +1054,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         }
 
-        // Function to toggle personal info section
+        // Function to toggle personal info section and handle required fields
         function togglePersonalInfoSection() {
             const bookAppointment = document.getElementById('bookAppointment').value;
             const personalInfoSection = document.getElementById('personalInfoSection');
 
             if (bookAppointment === 'yes') {
                 personalInfoSection.style.display = 'block';
+                // Make fields required
+                document.getElementById('dob').required = true;
+                document.getElementById('gender').required = true;
+                document.getElementById('appointmentDate').required = true;
+                document.getElementById('appointmentTime').required = true;
             } else {
                 personalInfoSection.style.display = 'none';
+                // Remove required attribute
+                document.getElementById('dob').required = false;
+                document.getElementById('gender').required = false;
+                document.getElementById('appointmentDate').required = false;
+                document.getElementById('appointmentTime').required = false;
                 // Reset personal info fields
                 document.getElementById('dob').value = '';
+                document.getElementById('appointmentAge').value = '';
                 document.getElementById('gender').value = '';
                 document.getElementById('email').value = '';
                 document.getElementById('appointmentDate').value = '';
                 document.getElementById('appointmentTime').value = '';
                 document.getElementById('photo_data').value = '';
                 document.getElementById('profilePhoto').value = '';
+                document.getElementById('appointmentAgeDisplay').style.display = 'none';
             }
         }
 
@@ -1212,7 +1270,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         function validateForm() {
-            // Existing validation code...
+            // Validate appointment section if needed
+            const bookAppointment = document.getElementById('bookAppointment').value;
+            if (bookAppointment === 'yes') {
+                const dob = document.getElementById('dob').value;
+                const age = document.getElementById('appointmentAge').value;
+                const gender = document.getElementById('gender').value;
+                const appointmentDate = document.getElementById('appointmentDate').value;
+                const appointmentTime = document.getElementById('appointmentTime').value;
+
+                // Check if either DOB or Age is provided
+                if (!dob && !age) {
+                    alert('Please provide either Date of Birth or Age for the appointment.');
+                    return false;
+                }
+
+                if (!gender) {
+                    alert('Please select Gender for the appointment.');
+                    return false;
+                }
+
+                if (!appointmentDate) {
+                    alert('Please select Preferred Appointment Date.');
+                    return false;
+                }
+
+                if (!appointmentTime) {
+                    alert('Please select Preferred Appointment Time.');
+                    return false;
+                }
+            }
 
             // Validate job seeker section if needed
             const needJobAssistance = document.getElementById('needJobAssistance').value;
