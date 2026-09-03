@@ -60,7 +60,8 @@ if ($addStock) {
     LEFT JOIN stock_item_price p ON p.item_id = i.item_id 
         AND p.unit_id = u.unit_id
         AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-    WHERE 1=1";
+    WHERE 1=1
+    AND i.is_active = true";
 
     // Apply access scope filter
     if ($forStockManagement) {
