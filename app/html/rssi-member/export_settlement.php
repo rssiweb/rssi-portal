@@ -28,15 +28,16 @@ if ($status === 'unsettled') {
     ]);
 
     $query = "SELECT p.id, p.collection_date, p.student_id, COALESCE(s.studentname, m.fullname, h.name) AS studentname, 
-                     s.class, s.preferredbranch AS location,
-                     p.month, p.academic_year, p.amount, p.payment_type, 
-                     p.transaction_id, c.fullname as collector_name
-              FROM fee_payments p
-              LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
-              LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
-              LEFT JOIN public_health_records h ON p.student_id = h.id::text
-              JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
-              WHERE p.is_settled = FALSE";
+                 s.class, 
+                 COALESCE(s.preferredbranch, m.basebranch) AS location,
+                 p.month, p.academic_year, p.amount, p.payment_type, 
+                 p.transaction_id, c.fullname as collector_name
+          FROM fee_payments p
+          LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+          LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
+          LEFT JOIN public_health_records h ON p.student_id = h.id::text
+          LEFT JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
+          WHERE p.is_settled = FALSE";
 
     // Add location filter if selected
     if (!empty($location)) {
@@ -46,7 +47,7 @@ if ($status === 'unsettled') {
         $locationNameRow = pg_fetch_assoc($locationNameResult);
         $locationName = $locationNameRow['name'];
 
-        $query .= " AND s.preferredbranch = '$locationName'";
+        $query .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName')";
     }
 
     $query .= " ORDER BY p.id DESC";

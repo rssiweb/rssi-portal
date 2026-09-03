@@ -49,7 +49,7 @@ LEFT JOIN public_health_records h ON p.student_id = h.id::text
 LEFT JOIN emart_orders eo ON p.id = eo.payment_id
 LEFT JOIN fee_payments fp ON eo.payment_id = fp.id
 LEFT JOIN fee_categories fc ON fp.category_id=fc.id
-JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
+LEFT JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
 WHERE p.is_settled = FALSE";
 
     // Add location filter if selected
@@ -60,7 +60,7 @@ WHERE p.is_settled = FALSE";
         $locationNameRow = pg_fetch_assoc($locationNameResult);
         $locationName = $locationNameRow['name'];
 
-        $paymentsQuery .= " AND s.preferredbranch = '$locationName'";
+        $paymentsQuery .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName' OR h.location_id = '$location')";
     }
 
     $paymentsQuery .= " ORDER BY p.id DESC";
@@ -70,12 +70,14 @@ WHERE p.is_settled = FALSE";
 
     // Get summary with location filter - FIXED: Added alias for payment_type
     $summaryQuery = "SELECT COUNT(*) as total_payments, 
-                            SUM(p.amount) as total_amount,
-                            SUM(CASE WHEN p.payment_type = 'cash' THEN p.amount ELSE 0 END) as cash_amount,
-                            SUM(CASE WHEN p.payment_type = 'online' THEN p.amount ELSE 0 END) as online_amount
-                     FROM fee_payments p
-                     LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
-                     WHERE p.is_settled = FALSE";
+                        SUM(p.amount) as total_amount,
+                        SUM(CASE WHEN p.payment_type = 'cash' THEN p.amount ELSE 0 END) as cash_amount,
+                        SUM(CASE WHEN p.payment_type = 'online' THEN p.amount ELSE 0 END) as online_amount
+                 FROM fee_payments p
+                 LEFT JOIN rssimyprofile_student s ON p.student_id = s.student_id
+                 LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
+                 LEFT JOIN public_health_records h ON p.student_id = h.id::text
+                 WHERE p.is_settled = FALSE";
 
     // Add location filter to summary if selected
     if (!empty($location)) {
@@ -84,7 +86,7 @@ WHERE p.is_settled = FALSE";
         $locationNameRow = pg_fetch_assoc($locationNameResult);
         $locationName = $locationNameRow['name'];
 
-        $summaryQuery .= " AND s.preferredbranch = '$locationName'";
+        $summaryQuery .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName' OR h.location_id = '$location')";
     }
 
     $summaryResult = pg_query($con, $summaryQuery);

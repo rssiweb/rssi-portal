@@ -13,6 +13,45 @@ if (!isLoggedIn("aid")) {
 validation();
 
 // ---------------------------
+// Helper function: Calculate DOB from age (years only)
+// ---------------------------
+function calculateDOBFromAge($years)
+{
+    // Current date
+    $now = new DateTime();
+
+    // Subtract years
+    $dob = clone $now;
+    if ($years > 0) {
+        $dob->modify("-{$years} years");
+    }
+    // Set to January 1st
+    $dob->setDate($dob->format('Y'), 1, 1);
+
+    return $dob->format('Y-m-d');
+}
+
+// ---------------------------
+// Helper function: Validate age input
+// ---------------------------
+function validateAgeInput($years)
+{
+    if ($years < 0) {
+        return ['valid' => false, 'message' => 'Age cannot be negative'];
+    }
+
+    if ($years > 120) {
+        return ['valid' => false, 'message' => 'Age cannot exceed 120 years'];
+    }
+
+    if ($years == 0) {
+        return ['valid' => false, 'message' => 'Please provide a valid age (1-120 years)'];
+    }
+
+    return ['valid' => true];
+}
+
+// ---------------------------
 // Check mobile number (AJAX)
 // ---------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_mobile'])) {
@@ -81,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['link_student'])) {
         if (pg_num_rows($inactiveResult) > 0) {
             echo json_encode([
                 'status' => 'inactive',
-                'message' => 'This student’s account is currently inactive. Please activate the student account before linking.'
+                'message' => 'This student\'s account is currently inactive. Please activate the student account before linking.'
             ]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Student ID not found in our system']);
@@ -128,7 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['link_student'])) {
 // ---------------------------
 // Verify student ID (AJAX)
 // ---------------------------
-// Add this after the mobile check endpoint
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) {
     header('Content-Type: application/json');
 
@@ -149,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) 
     if ($student['filterstatus'] !== 'Active') {
         echo json_encode([
             'status' => 'inactive',
-            'message' => 'This student’s account is currently inactive. Please activate the student account before linking.'
+            'message' => 'This student\'s account is currently inactive. Please activate the student account before linking.'
         ]);
         exit;
     }
@@ -181,96 +219,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['check_student_id'])) 
     ]);
     exit;
 }
+
 // ---------------------------
 // Handle form submission
 // ---------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     $mobile = pg_escape_string($con, $_POST['contact_number']);
-
     $name = pg_escape_string($con, $_POST['name']);
     $email = pg_escape_string($con, $_POST['email'] ?? null);
-    $dob = pg_escape_string($con, $_POST['date_of_birth']);
     $gender = pg_escape_string($con, $_POST['gender']);
     $referral = pg_escape_string($con, $_POST['referral_source']);
+    $location = pg_escape_string($con, $_POST['location'] ?? null);
 
-    // ---------------------------
-    // Handle photo upload
-    // ---------------------------
-    $photoUrl = null;
-    if (!empty($_POST['photo_data'])) {
-        $photoData = $_POST['photo_data'];
-        $photoData = str_replace('data:image/jpeg;base64,', '', $photoData);
-        $photoData = str_replace(' ', '+', $photoData);
-        $data = base64_decode($photoData);
+    // Handle DOB/Age logic
+    $dob = null;
+    $dob_from_age = false;
 
-        // Temporary file
-        $tempFileName = 'temp_profile_' . $mobile . '_' . time() . '.jpg';
-        $tempFilePath = sys_get_temp_dir() . '/' . $tempFileName;
-        file_put_contents($tempFilePath, $data);
+    // Check if DOB is provided
+    if (!empty($_POST['date_of_birth'])) {
+        $dob = pg_escape_string($con, $_POST['date_of_birth']);
+    } else {
+        // Check if age is provided
+        $age_years = isset($_POST['age_years']) ? intval($_POST['age_years']) : 0;
 
-        // Prepare file for Drive
-        $uploadedFile = [
-            'name' => 'profile_' . $mobile . '_' . time() . '.jpg',
-            'type' => 'image/jpeg',
-            'tmp_name' => $tempFilePath,
-            'error' => 0,
-            'size' => filesize($tempFilePath)
-        ];
-
-        // Google Drive folder
-        $parentFolderId = '1LtKZNkfWzxrgMTN2GSHF1O-d6AmFsLRD'; // change to actual folder ID
-        $photoUrl = uploadeToDrive($uploadedFile, $parentFolderId, 'profile_' . $mobile);
-
-        unlink($tempFilePath); // cleanup
+        // Validate age inputs
+        $ageValidation = validateAgeInput($age_years);
+        if (!$ageValidation['valid']) {
+            $error = $ageValidation['message'];
+        } else {
+            // Calculate DOB from age (using January 1st)
+            $dob = calculateDOBFromAge($age_years);
+            $dob_from_age = true;
+        }
     }
 
-    // ---------------------------
-    // Insert record
-    // ---------------------------
-    $sql = "INSERT INTO public_health_records 
-        (contact_number, name, email, date_of_birth, gender, referral_source, profile_photo, registration_completed, created_at)
-        VALUES 
-        ('$mobile', '$name', '$email', '$dob', '$gender', '$referral', '$photoUrl', TRUE, CURRENT_TIMESTAMP)";
+    // If no DOB and no age provided, show error
+    if (empty($dob)) {
+        $error = "Please provide either Date of Birth or Age information";
+    }
 
-    if (pg_query($con, $sql)) {
-        // Fetch new ID
-        $idQuery = "SELECT id FROM public_health_records WHERE contact_number = '$mobile' ORDER BY created_at DESC LIMIT 1";
-        $idResult = pg_query($con, $idQuery);
-        $newRecord = pg_fetch_assoc($idResult);
-        $new_id = $newRecord['id'];
-
+    // Proceed only if no error
+    if (!isset($error)) {
         // ---------------------------
-        // Parent registration
+        // Handle photo upload
         // ---------------------------
-        // If this is a parent registration, create the relationship
-        if (isset($_POST['is_parent']) && $_POST['is_parent'] == 'yes' && !empty($_POST['student_id'])) {
-            $student_id = pg_escape_string($con, $_POST['student_id']);
+        $photoUrl = null;
+        if (!empty($_POST['photo_data'])) {
+            $photoData = $_POST['photo_data'];
+            $photoData = str_replace('data:image/jpeg;base64,', '', $photoData);
+            $photoData = str_replace(' ', '+', $photoData);
+            $data = base64_decode($photoData);
 
-            // Check parent count again (in case of race conditions)
-            $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
-            $parentCountResult = pg_query($con, $parentCountQuery);
-            $parentCount = pg_fetch_assoc($parentCountResult)['parent_count'];
+            // Temporary file
+            $tempFileName = 'temp_profile_' . $mobile . '_' . time() . '.jpg';
+            $tempFilePath = sys_get_temp_dir() . '/' . $tempFileName;
+            file_put_contents($tempFilePath, $data);
 
-            if ($parentCount < 2) {
-                // Create relationship
-                $relationshipSql = "INSERT INTO parent_student_relationships (parent_id, student_id) 
-                                VALUES ('$new_id', '$student_id')";
-                pg_query($con, $relationshipSql);
+            // Prepare file for Drive
+            $uploadedFile = [
+                'name' => 'profile_' . $mobile . '_' . time() . '.jpg',
+                'type' => 'image/jpeg',
+                'tmp_name' => $tempFilePath,
+                'error' => 0,
+                'size' => filesize($tempFilePath)
+            ];
 
-                // Mark as parent
-                $updateSql = "UPDATE public_health_records SET is_parent = TRUE WHERE id = '$new_id'";
-                pg_query($con, $updateSql);
-            } else {
-                // Log error - this shouldn't happen due to frontend validation
-                error_log("Attempted to add third parent to student $student_id");
-            }
+            // Google Drive folder
+            $parentFolderId = '1LtKZNkfWzxrgMTN2GSHF1O-d6AmFsLRD';
+            $photoUrl = uploadeToDrive($uploadedFile, $parentFolderId, 'profile_' . $mobile);
+
+            unlink($tempFilePath); // cleanup
         }
 
-        // Redirect with query params (avoids resubmit)
-        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&beneficiary_id=" . urlencode($new_id));
-        exit;
-    } else {
-        $error = "Error: " . pg_last_error($con);
+        // ---------------------------
+        // Insert record
+        // ---------------------------
+        $sql = "INSERT INTO public_health_records 
+            (contact_number, name, email, date_of_birth, gender, referral_source, location_id, profile_photo, registration_completed, created_at)
+            VALUES 
+            ('$mobile', '$name', '$email', '$dob', '$gender', '$referral', '$location', '$photoUrl', TRUE, CURRENT_TIMESTAMP)";
+
+        if (pg_query($con, $sql)) {
+            // Fetch new ID
+            $idQuery = "SELECT id FROM public_health_records WHERE contact_number = '$mobile' ORDER BY created_at DESC LIMIT 1";
+            $idResult = pg_query($con, $idQuery);
+            $newRecord = pg_fetch_assoc($idResult);
+            $new_id = $newRecord['id'];
+
+            // ---------------------------
+            // Parent registration
+            // ---------------------------
+            // If this is a parent registration, create the relationship
+            if (isset($_POST['is_parent']) && $_POST['is_parent'] == 'yes' && !empty($_POST['student_id'])) {
+                $student_id = pg_escape_string($con, $_POST['student_id']);
+
+                // Check parent count again (in case of race conditions)
+                $parentCountQuery = "SELECT COUNT(*) as parent_count FROM parent_student_relationships WHERE student_id = '$student_id'";
+                $parentCountResult = pg_query($con, $parentCountQuery);
+                $parentCount = pg_fetch_assoc($parentCountResult)['parent_count'];
+
+                if ($parentCount < 2) {
+                    // Create relationship
+                    $relationshipSql = "INSERT INTO parent_student_relationships (parent_id, student_id) 
+                                    VALUES ('$new_id', '$student_id')";
+                    pg_query($con, $relationshipSql);
+
+                    // Mark as parent
+                    $updateSql = "UPDATE public_health_records SET is_parent = TRUE WHERE id = '$new_id'";
+                    pg_query($con, $updateSql);
+                } else {
+                    // Log error - this shouldn't happen due to frontend validation
+                    error_log("Attempted to add third parent to student $student_id");
+                }
+            }
+
+            // Redirect with query params (avoids resubmit)
+            header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&beneficiary_id=" . urlencode($new_id));
+            exit;
+        } else {
+            $error = "Error: " . pg_last_error($con);
+        }
     }
 }
 
@@ -281,6 +349,18 @@ if (isset($_GET['success'])) {
     $success = "Registration successful! Thank you.";
     $beneficiary_id = $_GET['beneficiary_id'] ?? null;
 }
+
+// ---------------------------
+// Fetch locations for dropdown
+// ---------------------------
+$locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
+$locationResult = pg_query($con, $locationQuery);
+$locations = [];
+if ($locationResult) {
+    while ($row = pg_fetch_assoc($locationResult)) {
+        $locations[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -290,7 +370,7 @@ if (isset($_GET['success'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -429,6 +509,12 @@ if (isset($_GET['success'])) {
         #mobileStatus {
             min-height: 24px;
         }
+
+        .dob-preview {
+            font-size: 0.9rem;
+            color: #28a745;
+            margin-top: 5px;
+        }
     </style>
 </head>
 
@@ -535,9 +621,18 @@ if (isset($_GET['success'])) {
 
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="date_of_birth" class="form-label required-field">Date of Birth</label>
-                                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                                                <small class="text-muted">If you know the exact DOB</small>
                                             </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="age_years" class="form-label">OR Enter Age</label>
+                                                <input type="number" class="form-control" id="age_years" name="age_years" min="1" max="120" placeholder="Enter age in years (e.g., 33)">
+                                                <small class="text-muted">If you don't know exact DOB, enter age in years</small>
+                                                <div id="dobPreview" class="dob-preview" style="display: none;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="gender" class="form-label required-field">Gender</label>
                                                 <select class="form-select" id="gender" name="gender" required>
@@ -549,6 +644,7 @@ if (isset($_GET['success'])) {
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="mb-4">
                                         <h5 class="section-title">
                                             <i class="fas fa-users"></i> Parent-Student Relationship
@@ -602,6 +698,25 @@ if (isset($_GET['success'])) {
                                             <label for="email" class="form-label">Email Address</label>
                                             <input type="email" class="form-control" id="email" name="email">
                                             <small class="text-muted">Optional - for receiving reports</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h5 class="section-title">
+                                            <i class="fas fa-map-marker-alt"></i> Location Information
+                                        </h5>
+
+                                        <div class="mb-3">
+                                            <label for="location" class="form-label required-field">Preferred Location</label>
+                                            <select class="form-select" id="location" name="location" required>
+                                                <option value="" selected disabled>Select Location</option>
+                                                <?php foreach ($locations as $loc): ?>
+                                                    <option value="<?php echo htmlspecialchars($loc['id']); ?>">
+                                                        <?php echo htmlspecialchars($loc['name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <small class="text-muted">Select your preferred branch location</small>
                                         </div>
                                     </div>
 
@@ -666,6 +781,11 @@ if (isset($_GET['success'])) {
             const cameraContainer = document.querySelector('.camera-container');
             const captureBtn = document.getElementById('captureBtn');
             const cancelCaptureBtn = document.getElementById('cancelCaptureBtn');
+
+            // DOB/Age elements
+            const dobInput = document.getElementById('date_of_birth');
+            const ageYears = document.getElementById('age_years');
+            const dobPreview = document.getElementById('dobPreview');
 
             // Track mobile verification status
             let isMobileVerified = false;
@@ -905,208 +1025,281 @@ if (isset($_GET['success'])) {
                 takePhotoBtn.style.display = 'block';
                 uploadPhotoBtn.style.display = 'block';
             });
-        });
-    </script>
-    <script>
-        // Add these variables at the top with other element declarations
-        const isParentYes = document.getElementById('is_parent_yes');
-        const isParentNo = document.getElementById('is_parent_no');
-        const studentIdSection = document.getElementById('studentIdSection');
-        const studentIdInput = document.getElementById('student_id');
-        const verifyStudentBtn = document.getElementById('verifyStudentBtn');
-        const resetStudentBtn = document.getElementById('resetStudentBtn');
-        const studentStatus = document.getElementById('studentStatus');
-        const studentSpinner = document.getElementById('studentSpinner');
-        const existingParentsInfo = document.getElementById('existingParentsInfo');
-        const parentsList = document.getElementById('parentsList');
-        const submitButton = document.querySelector('button[name="register"]');
 
-        // Create a hidden input to store the verified student ID for submission
-        const hiddenStudentIdInput = document.createElement('input');
-        hiddenStudentIdInput.type = 'hidden';
-        hiddenStudentIdInput.name = 'student_id';
-        hiddenStudentIdInput.id = 'hidden_student_id';
-        document.getElementById('registrationForm').appendChild(hiddenStudentIdInput);
+            // =============================================
+            // DOB/Age functionality
+            // =============================================
 
-        // Track student verification status
-        let isStudentVerified = false;
-        let verifiedStudentId = '';
+            // Clear age when DOB is entered
+            dobInput.addEventListener('change', function() {
+                if (this.value) {
+                    ageYears.value = '';
+                    ageYears.disabled = true;
+                    dobPreview.style.display = 'none';
+                } else {
+                    ageYears.disabled = false;
+                }
+            });
 
-        // Function to reset student verification to initial state
-        function resetStudentVerification() {
-            isStudentVerified = false;
-            verifiedStudentId = '';
-            studentIdInput.disabled = false;
-            studentIdInput.value = '';
-            studentIdInput.name = 'student_id'; // Restore the name attribute
-            hiddenStudentIdInput.value = ''; // Clear the hidden field
-            verifyStudentBtn.style.display = 'block';
-            resetStudentBtn.style.display = 'none';
-            studentStatus.innerHTML = '';
-            existingParentsInfo.style.display = 'none';
-            updateSubmitButton();
-        }
+            // Clear DOB when age is entered and calculate preview
+            ageYears.addEventListener('input', function() {
+                const years = parseInt(this.value);
 
-        // Toggle student ID section based on radio button
-        function toggleStudentSection() {
-            const isParent = isParentYes.checked;
-            studentIdSection.style.display = isParent ? 'block' : 'none';
+                if (years && years > 0) {
+                    dobInput.value = '';
+                    dobInput.disabled = true;
 
-            // Reset verification when switching from Yes to No
-            if (!isParent) {
-                resetStudentVerification();
-            } else {
+                    // Calculate and show preview DOB (January 1st)
+                    const now = new Date();
+                    const dob = new Date(now);
+                    dob.setFullYear(dob.getFullYear() - years);
+                    dob.setMonth(0); // January (0-indexed)
+                    dob.setDate(1); // 1st day
+
+                    const dateStr = dob.toISOString().split('T')[0];
+                    dobPreview.textContent = `📅 Calculated DOB: ${dateStr} (approx.)`;
+                    dobPreview.style.display = 'block';
+                } else {
+                    dobPreview.style.display = 'none';
+                    if (!dobInput.value) {
+                        dobInput.disabled = false;
+                    }
+                }
+            });
+
+            // Enable DOB if age field is cleared
+            ageYears.addEventListener('blur', function() {
+                if (!this.value && !dobInput.value) {
+                    dobInput.disabled = false;
+                }
+            });
+
+            // =============================================
+            // Parent-Student Relationship
+            // =============================================
+
+            const isParentYes = document.getElementById('is_parent_yes');
+            const isParentNo = document.getElementById('is_parent_no');
+            const studentIdSection = document.getElementById('studentIdSection');
+            const studentIdInput = document.getElementById('student_id');
+            const verifyStudentBtn = document.getElementById('verifyStudentBtn');
+            const resetStudentBtn = document.getElementById('resetStudentBtn');
+            const studentStatus = document.getElementById('studentStatus');
+            const studentSpinner = document.getElementById('studentSpinner');
+            const existingParentsInfo = document.getElementById('existingParentsInfo');
+            const parentsList = document.getElementById('parentsList');
+            const submitButton = document.querySelector('button[name="register"]');
+
+            // Create a hidden input to store the verified student ID for submission
+            const hiddenStudentIdInput = document.createElement('input');
+            hiddenStudentIdInput.type = 'hidden';
+            hiddenStudentIdInput.name = 'student_id';
+            hiddenStudentIdInput.id = 'hidden_student_id';
+            document.getElementById('registrationForm').appendChild(hiddenStudentIdInput);
+
+            // Track student verification status
+            let isStudentVerified = false;
+            let verifiedStudentId = '';
+
+            // Function to reset student verification to initial state
+            function resetStudentVerification() {
                 isStudentVerified = false;
+                verifiedStudentId = '';
+                studentIdInput.disabled = false;
+                studentIdInput.value = '';
+                studentIdInput.name = 'student_id';
+                hiddenStudentIdInput.value = '';
+                verifyStudentBtn.style.display = 'block';
+                resetStudentBtn.style.display = 'none';
+                studentStatus.innerHTML = '';
+                existingParentsInfo.style.display = 'none';
                 updateSubmitButton();
             }
-        }
 
-        isParentYes.addEventListener('change', toggleStudentSection);
-        isParentNo.addEventListener('change', toggleStudentSection);
+            // Toggle student ID section based on radio button
+            function toggleStudentSection() {
+                const isParent = isParentYes.checked;
+                studentIdSection.style.display = isParent ? 'block' : 'none';
 
-        // Verify student ID
-        verifyStudentBtn.addEventListener('click', function() {
-            const studentId = studentIdInput.value.trim();
-
-            if (!studentId) {
-                studentStatus.innerHTML = '<div class="alert alert-danger">Please enter a student ID</div>';
-                return;
-            }
-
-            verifyStudentBtn.disabled = true;
-            studentSpinner.style.display = 'inline-block';
-            studentStatus.innerHTML = '';
-
-            fetch('register_beneficiary.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `check_student_id=1&student_id=${studentId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Lock the input field for UI but keep it submittable
-                        studentIdInput.disabled = true;
-                        studentIdInput.name = ''; // Remove name to exclude from submission
-                        hiddenStudentIdInput.value = studentId; // Store value in hidden field
-
-                        isStudentVerified = true;
-                        verifiedStudentId = studentId;
-
-                        // Show reset button, hide verify button
-                        resetStudentBtn.style.display = 'block';
-                        verifyStudentBtn.style.display = 'none';
-
-                        let statusHtml = `<div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i>Student verified: ${data.student_name}<br>
-                Currently has ${data.parent_count} parent(s) registered
-                <div class="verified-badge mt-2"><i class="fas fa-lock me-1"></i>Verified & Locked</div>
-            </div>`;
-
-                        studentStatus.innerHTML = statusHtml;
-
-                        // Show existing parents if any
-                        if (data.existing_parents && data.existing_parents.length > 0) {
-                            let parentsHtml = '<ul class="mb-0">';
-                            data.existing_parents.forEach(parent => {
-                                parentsHtml += `<li>${parent.name} (ID: ${parent.id})</li>`;
-                            });
-                            parentsHtml += '</ul>';
-
-                            parentsList.innerHTML = parentsHtml;
-                            existingParentsInfo.style.display = 'block';
-
-                            // Show warning if already 2 parents
-                            if (data.parent_count >= 2) {
-                                studentStatus.innerHTML += '<div class="alert alert-warning mt-2">This student already has 2 parents registered. You cannot add more parents.</div>';
-                                isStudentVerified = false;
-                                // Re-enable editing if student has 2 parents already
-                                studentIdInput.disabled = false;
-                                studentIdInput.name = 'student_id';
-                                hiddenStudentIdInput.value = '';
-                                resetStudentBtn.style.display = 'none';
-                                verifyStudentBtn.style.display = 'block';
-                            }
-                        } else {
-                            existingParentsInfo.style.display = 'none';
-                        }
-                    } else {
-                        studentStatus.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${data.message}</div>`;
-                        isStudentVerified = false;
-                    }
-                    updateSubmitButton();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error verifying student ID</div>';
+                if (!isParent) {
+                    resetStudentVerification();
+                } else {
                     isStudentVerified = false;
                     updateSubmitButton();
-                })
-                .finally(() => {
-                    verifyStudentBtn.disabled = false;
-                    studentSpinner.style.display = 'none';
-                });
-        });
-
-        // Reset student verification
-        resetStudentBtn.addEventListener('click', function() {
-            resetStudentVerification();
-            studentIdInput.focus(); // Focus on the input field
-        });
-
-        // Update submit button state
-        function updateSubmitButton() {
-            if (isParentYes.checked && !isStudentVerified) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-ban me-2"></i> Please verify student ID first';
-            } else {
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-user-check me-2"></i> Complete Registration';
+                }
             }
-        }
 
-        // Add server-side validation
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
-            const isParent = isParentYes.checked;
-            const studentId = isStudentVerified ? hiddenStudentIdInput.value : studentIdInput.value.trim();
+            isParentYes.addEventListener('change', toggleStudentSection);
+            isParentNo.addEventListener('change', toggleStudentSection);
 
-            // Additional security: Verify the student ID hasn't been tampered with
-            if (isParent && isStudentVerified && studentId !== verifiedStudentId) {
-                e.preventDefault();
-                studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Security alert: Student ID has been modified after verification. Please verify again.</div>';
-                studentIdSection.scrollIntoView({
-                    behavior: 'smooth'
-                });
+            // Verify student ID
+            verifyStudentBtn.addEventListener('click', function() {
+                const studentId = studentIdInput.value.trim();
 
-                // Reset verification state
+                if (!studentId) {
+                    studentStatus.innerHTML = '<div class="alert alert-danger">Please enter a student ID</div>';
+                    return;
+                }
+
+                verifyStudentBtn.disabled = true;
+                studentSpinner.style.display = 'inline-block';
+                studentStatus.innerHTML = '';
+
+                fetch('register_beneficiary.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `check_student_id=1&student_id=${studentId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            studentIdInput.disabled = true;
+                            studentIdInput.name = '';
+                            hiddenStudentIdInput.value = studentId;
+
+                            isStudentVerified = true;
+                            verifiedStudentId = studentId;
+
+                            resetStudentBtn.style.display = 'block';
+                            verifyStudentBtn.style.display = 'none';
+
+                            let statusHtml = `<div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>Student verified: ${data.student_name}<br>
+                            Currently has ${data.parent_count} parent(s) registered
+                            <div class="verified-badge mt-2"><i class="fas fa-lock me-1"></i>Verified & Locked</div>
+                        </div>`;
+
+                            studentStatus.innerHTML = statusHtml;
+
+                            if (data.existing_parents && data.existing_parents.length > 0) {
+                                let parentsHtml = '<ul class="mb-0">';
+                                data.existing_parents.forEach(parent => {
+                                    parentsHtml += `<li>${parent.name} (ID: ${parent.id})</li>`;
+                                });
+                                parentsHtml += '</ul>';
+
+                                parentsList.innerHTML = parentsHtml;
+                                existingParentsInfo.style.display = 'block';
+
+                                if (data.parent_count >= 2) {
+                                    studentStatus.innerHTML += '<div class="alert alert-warning mt-2">This student already has 2 parents registered. You cannot add more parents.</div>';
+                                    isStudentVerified = false;
+                                    studentIdInput.disabled = false;
+                                    studentIdInput.name = 'student_id';
+                                    hiddenStudentIdInput.value = '';
+                                    resetStudentBtn.style.display = 'none';
+                                    verifyStudentBtn.style.display = 'block';
+                                }
+                            } else {
+                                existingParentsInfo.style.display = 'none';
+                            }
+                        } else {
+                            studentStatus.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${data.message}</div>`;
+                            isStudentVerified = false;
+                        }
+                        updateSubmitButton();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error verifying student ID</div>';
+                        isStudentVerified = false;
+                        updateSubmitButton();
+                    })
+                    .finally(() => {
+                        verifyStudentBtn.disabled = false;
+                        studentSpinner.style.display = 'none';
+                    });
+            });
+
+            // Reset student verification
+            resetStudentBtn.addEventListener('click', function() {
                 resetStudentVerification();
-                return;
+                studentIdInput.focus();
+            });
+
+            // Update submit button state
+            function updateSubmitButton() {
+                if (isParentYes.checked && !isStudentVerified) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-ban me-2"></i> Please verify student ID first';
+                } else {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-user-check me-2"></i> Complete Registration';
+                }
             }
 
-            // If user is a parent but hasn't verified student ID
-            if (isParent && !isStudentVerified) {
-                e.preventDefault();
-                studentStatus.innerHTML = '<div class="alert alert-danger">Please verify the student ID before submitting</div>';
-                studentIdSection.scrollIntoView({
-                    behavior: 'smooth'
-                });
-                return;
-            }
+            // Form validation before submit
+            document.getElementById('registrationForm').addEventListener('submit', function(e) {
+                const isParent = isParentYes.checked;
+                const studentId = isStudentVerified ? hiddenStudentIdInput.value : studentIdInput.value.trim();
+                const dob = document.getElementById('date_of_birth').value;
+                const age = document.getElementById('age_years').value;
 
-            // Additional validation for maximum parents
-            if (isParent && studentId) {
-                const parentCountMatch = studentStatus.textContent.match(/Currently has (\d+) parent/);
-                if (parentCountMatch && parseInt(parentCountMatch[1]) >= 2) {
+                // Check if either DOB or Age is provided
+                if (!dob && !age) {
                     e.preventDefault();
-                    studentStatus.innerHTML += '<div class="alert alert-danger mt-2">Cannot proceed. This student already has 2 parents.</div>';
+                    alert('Please provide either Date of Birth or Age information');
+                    return;
+                }
+
+                // Validate age if provided
+                if (age && parseInt(age) > 120) {
+                    e.preventDefault();
+                    alert('Age cannot exceed 120 years');
+                    return;
+                }
+
+                if (age && parseInt(age) < 1) {
+                    e.preventDefault();
+                    alert('Please enter a valid age (1-120 years)');
+                    return;
+                }
+
+                // Additional security: Verify the student ID hasn't been tampered with
+                if (isParent && isStudentVerified && studentId !== verifiedStudentId) {
+                    e.preventDefault();
+                    studentStatus.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Security alert: Student ID has been modified after verification. Please verify again.</div>';
+                    studentIdSection.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    resetStudentVerification();
+                    return;
+                }
+
+                if (isParent && !isStudentVerified) {
+                    e.preventDefault();
+                    studentStatus.innerHTML = '<div class="alert alert-danger">Please verify the student ID before submitting</div>';
                     studentIdSection.scrollIntoView({
                         behavior: 'smooth'
                     });
                     return;
                 }
-            }
+
+                if (isParent && studentId) {
+                    const parentCountMatch = studentStatus.textContent.match(/Currently has (\d+) parent/);
+                    if (parentCountMatch && parseInt(parentCountMatch[1]) >= 2) {
+                        e.preventDefault();
+                        studentStatus.innerHTML += '<div class="alert alert-danger mt-2">Cannot proceed. This student already has 2 parents.</div>';
+                        studentIdSection.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        return;
+                    }
+                }
+
+                // Validate location
+                const location = document.getElementById('location');
+                if (!location.value) {
+                    e.preventDefault();
+                    location.classList.add('is-invalid');
+                    location.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+            });
         });
     </script>
 </body>
