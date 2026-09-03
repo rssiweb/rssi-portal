@@ -15,7 +15,7 @@ validation();
 function isAdmin()
 {
     global $role;
-    return $role === 'Admin';
+    return $role === 'Admin' || $role === 'Offline Manager';
 }
 
 $event_id = $_GET['id'] ?? 0;
@@ -33,9 +33,10 @@ if ($event_id) {
 
 // Redirect if event not found
 if (!$event) {
-    $_SESSION['message'] = 'Event not found!';
-    $_SESSION['message_type'] = 'danger';
-    header("Location: create_event.php");
+    echo "<script>
+        alert(\"Event not found!\");
+        window.location.href = 'create_event.php';
+    </script>";
     exit;
 }
 
@@ -46,9 +47,10 @@ if ($event['created_by'] == $associatenumber || isAdmin()) {
 }
 
 if (!$canEdit) {
-    $_SESSION['message'] = 'You don\'t have permission to edit this event!';
-    $_SESSION['message_type'] = 'danger';
-    header("Location: create_event.php");
+    echo "<script>
+        alert(\"You don't have permission to edit this event!\");
+        window.location.href = 'create_event.php';
+    </script>";
     exit;
 }
 
