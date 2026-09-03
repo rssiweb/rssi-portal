@@ -138,7 +138,7 @@ $paymentModes = pg_fetch_all($paymentModesResult);
 <html>
 
 <head>
-    
+    <?php include 'includes/meta.php'; ?>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -355,8 +355,8 @@ $paymentModes = pg_fetch_all($paymentModesResult);
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <script>
         // Initialize date range picker

@@ -1325,8 +1325,7 @@ validation();
                     /* Beneficiary validation */
 
                     const beneficiaries =
-                        $('#beneficiarySelect').val() ||
-                        [];
+                        $('#beneficiarySelect').val() || [];
 
 
                     if (
