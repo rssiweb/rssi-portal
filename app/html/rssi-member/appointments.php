@@ -61,35 +61,41 @@ function buildAppointmentsQuery($con, $status_filter, $selected_academic_year)
     $query_where = [];
 
     $query = "
-        SELECT 
-            aa.id AS appointment_id,
-            aa.beneficiary_id,
-            aa.appointment_for,
-            aa.appointment_date,
-            aa.appointment_time,
-            aa.status,
-            aa.remarks,
-            aa.created_at AS appointment_created_at,
-            aa.updated_at,
-            aa.workflow,
-            creator.fullname AS created_by_name,
-            updater.fullname AS updated_by_name,
-            COALESCE(
-                (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
-                (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
-                (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
-                (SELECT parent_name FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
-            ) AS beneficiary_name,
-            COALESCE(
-                (SELECT contact FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
-                (SELECT phone FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
-                (SELECT contact_number FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
-                (SELECT contact FROM survey_data WHERE id::text = aa.beneficiary_id LIMIT 1)
-            ) AS beneficiary_contact
-        FROM appointments aa
-        LEFT JOIN rssimyaccount_members creator ON creator.associatenumber = aa.created_by
-        LEFT JOIN rssimyaccount_members updater ON updater.associatenumber = aa.updated_by
-    ";
+    SELECT 
+        aa.id AS appointment_id,
+        aa.beneficiary_id,
+        aa.appointment_for,
+        aa.appointment_date,
+        aa.appointment_time,
+        aa.status,
+        aa.remarks,
+        aa.created_at AS appointment_created_at,
+        aa.updated_at,
+        aa.workflow,
+        creator.fullname AS created_by_name,
+        updater.fullname AS updated_by_name,
+        COALESCE(
+            (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
+            (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
+            (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
+            'Deleted User'
+        ) AS beneficiary_name,
+        CASE 
+            WHEN (SELECT studentname FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1) IS NOT NULL THEN 'active'
+            WHEN (SELECT fullname FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1) IS NOT NULL THEN 'active'
+            WHEN (SELECT name FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1) IS NOT NULL THEN 'active'
+            ELSE 'deleted'
+        END AS beneficiary_status,
+        COALESCE(
+            (SELECT contact FROM rssimyprofile_student WHERE student_id = aa.beneficiary_id LIMIT 1),
+            (SELECT phone FROM rssimyaccount_members WHERE associatenumber = aa.beneficiary_id LIMIT 1),
+            (SELECT contact_number FROM public_health_records WHERE id::text = aa.beneficiary_id LIMIT 1),
+            'N/A'
+        ) AS beneficiary_contact
+    FROM appointments aa
+    LEFT JOIN rssimyaccount_members creator ON creator.associatenumber = aa.created_by
+    LEFT JOIN rssimyaccount_members updater ON updater.associatenumber = aa.updated_by
+";
 
     if ($status_filter !== 'all') {
         $query_where[] = "aa.status = $" . (count($query_params) + 1);
@@ -322,7 +328,7 @@ $result = pg_query_params($con, $query, $query_builder['params']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -704,7 +710,13 @@ $result = pg_query_params($con, $query, $query_builder['params']);
                                                                             </td>
                                                                             <td>
                                                                                 <div class="d-flex flex-column">
-                                                                                    <span class="fw-medium"><?= htmlspecialchars($row['beneficiary_name']) ?></span>
+                                                                                    <?php if ($row['beneficiary_status'] === 'deleted'): ?>
+                                                                                        <span class="text-muted fst-italic">
+                                                                                            <i class="bi bi-person-x"></i> <?= htmlspecialchars($row['beneficiary_name']) ?>
+                                                                                        </span>
+                                                                                    <?php else: ?>
+                                                                                        <span class="fw-medium"><?= htmlspecialchars($row['beneficiary_name']) ?></span>
+                                                                                    <?php endif; ?>
                                                                                     <small class="text-muted">Ben ID: <?= htmlspecialchars($row['beneficiary_id']) ?></small>
                                                                                     <small class="text-muted">Appt ID: <?= htmlspecialchars($row['appointment_id']) ?></small>
                                                                                 </div>
@@ -919,8 +931,8 @@ $result = pg_query_params($con, $query, $query_builder['params']);
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
