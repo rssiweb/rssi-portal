@@ -1,4 +1,4 @@
-FROM php:8.1.1-apache as build
+FROM php:8.1-apache as build
 
 RUN apt-get update && apt-get install -y git curl zip unzip &&\
     apt-get clean &&\
@@ -9,7 +9,7 @@ COPY app/composer.lock composer.lock
 COPY app/composer.json composer.json
 RUN composer install --no-dev
 
-FROM php:8.1.1-apache as prod
+FROM php:8.1-apache as prod
 RUN apt-get update && apt-get install -y libpq-dev &&\
     apt-get clean &&\
     rm -rf /var/cache/apt/lists &&\
