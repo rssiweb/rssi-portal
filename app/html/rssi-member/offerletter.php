@@ -368,7 +368,7 @@ $documents = [
                                                 'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
                                             ],
                                             'Intern' => ["", "one (1)", "4-hour", "4"],
-                                            'Volunteer' => ["", "", "4-hour", "3"],
+                                            'Volunteer' => ["", "four (4)", "4-hour", "3"],
                                             'VolunteerIntern' => ["", "three (3)", "4-hour", "3"],
                                         ];
 
@@ -384,7 +384,7 @@ $documents = [
                                                     $array['engagement'] === 'Volunteer' &&
                                                     stripos($array['position'], 'Intern') !== false
                                                 ) {
-                                                    list($notice_period, $mintenure, $workinghours, $workday) = $settings['VolunteerIntern'];
+                                                    list($notice_period, $mintenure, $workinghours, $workday) = $settings['Volunteer'];
                                                 }
 
                                                 // Normal behavior
@@ -452,13 +452,19 @@ $documents = [
                                             <?php } ?>
                                             <?php if ($array['project'] == "hvco_3_month") { ?>
                                                 <p>
-                                                    This is a three (3) month program. The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
+                                                    This is a three (3) month program.
+                                                </p>
+                                                <p>
+                                                    The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
                                                 </p>
                                             <?php } ?>
 
                                             <?php if ($array['project'] == "srijan") { ?>
                                                 <p>
-                                                    This is a two (2) month program. The work schedule comprises four (4) days per week, with each day requiring a four (4) hour commitment, inclusive of essential administrative responsibilities as required. You will be assigned one month in the morning shift and one month in the afternoon shift, based on business requirements.
+                                                    This is a two (2) month program.
+                                                </p>
+                                                <p>
+                                                    The work schedule comprises four (4) days per week, with each day requiring a four (4) hour commitment, inclusive of essential administrative responsibilities as required. You will be assigned one month in the morning shift and one month in the afternoon shift, based on business requirements.
                                                 </p>
                                             <?php } ?>
 
