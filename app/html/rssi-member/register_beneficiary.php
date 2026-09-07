@@ -237,7 +237,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     // Check if DOB is provided
     if (!empty($_POST['date_of_birth'])) {
-        $dob = pg_escape_string($con, $_POST['date_of_birth']);
+        $dobInput = $_POST['date_of_birth'];
+
+        // Validate DOB is not in the future
+        $today = new DateTime();
+        $dobDate = DateTime::createFromFormat('Y-m-d', $dobInput);
+
+        if (!$dobDate || $dobDate->format('Y-m-d') !== $dobInput) {
+            $error = "Please provide a valid Date of Birth.";
+        } elseif ($dobDate > $today) {
+            $error = "Date of Birth cannot be a future date.";
+        } else {
+            $dob = pg_escape_string($con, $dobInput);
+        }
     } else {
         // Check if age is provided
         $age_years = isset($_POST['age_years']) ? intval($_POST['age_years']) : 0;
@@ -622,8 +634,8 @@ if ($locationResult) {
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="date_of_birth" class="form-label">Date of Birth</label>
-                                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
-                                                <small class="text-muted">If you know the exact DOB</small>
+                                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" max="<?= date('Y-m-d') ?>">
+                                                <small class="text-muted">Enter the beneficiary's date of birth</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="age_years" class="form-label">OR Enter Age</label>
@@ -707,7 +719,7 @@ if ($locationResult) {
                                         </h5>
 
                                         <div class="mb-3">
-                                            <label for="location" class="form-label required-field">Preferred Location</label>
+                                            <label for="location" class="form-label required-field">Service Location</label>
                                             <select class="form-select" id="location" name="location" required>
                                                 <option value="" selected disabled>Select Location</option>
                                                 <?php foreach ($locations as $loc): ?>
@@ -716,7 +728,7 @@ if ($locationResult) {
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
-                                            <small class="text-muted">Select your preferred branch location</small>
+                                            <small class="text-muted">Select the location where the beneficiary will receive the service.</small>
                                         </div>
                                     </div>
 
@@ -1236,6 +1248,18 @@ if ($locationResult) {
                 const studentId = isStudentVerified ? hiddenStudentIdInput.value : studentIdInput.value.trim();
                 const dob = document.getElementById('date_of_birth').value;
                 const age = document.getElementById('age_years').value;
+
+                // Validate DOB is not in the future
+                if (dob) {
+                    const today = new Date().toISOString().split('T')[0];
+
+                    if (dob > today) {
+                        e.preventDefault();
+                        alert('Date of Birth cannot be a future date.');
+                        document.getElementById('date_of_birth').focus();
+                        return;
+                    }
+                }
 
                 // Check if either DOB or Age is provided
                 if (!dob && !age) {
