@@ -311,7 +311,7 @@ if (!$result) {
                         <tr>
                             <td>
                                 <div>
-                                    <span>Registered in system (dd/mm/yyyy):</span>
+                                    <span>Date of Admission (dd/mm/yyyy):</span>
                                     <span class="value registered"><?php echo date('d/m/Y', strtotime($array['doa'])); ?></span>
                                 </div>
                                 <br><br>
