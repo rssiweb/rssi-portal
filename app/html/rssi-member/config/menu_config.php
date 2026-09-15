@@ -427,6 +427,13 @@ class MenuConfig
                     'emart_orders.php' => ['title' => 'eMart Orders', 'show_in_menu' => true]
                 ]
             ],
+            'sales_analytics' => [
+                'section' => 'Community Supply',
+                'sidebar_id' => 'csu',
+                'pages' => [
+                    'sales_analytics.php' => ['title' => 'Sales Analytics', 'show_in_menu' => true]
+                ]
+            ],
 
             // ============ SCHEDULE HUB ============
             'shift_planner' => [
