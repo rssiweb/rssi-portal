@@ -14,6 +14,7 @@ validation();
 $id = $_GET['get_aid'] ?? 'Active';
 $month = $_GET['get_month'] ?? date('Y-m');
 $selectedCategories = $_GET['categories'] ?? [];
+$selectedClasses = $_GET['classes'] ?? [];
 
 // Date range
 $startDate = date("Y-m-01", strtotime($month));
@@ -28,6 +29,12 @@ if (!empty($selectedCategories)) {
     $validCategories = $result ? array_column(pg_fetch_all($result) ?: [], 'category_value') : [];
 }
 
+// Selected classes (validated dynamically on client side via fetch_class.php)
+$validClasses = [];
+if (!empty($selectedClasses)) {
+    $validClasses = array_values(array_filter($selectedClasses, fn($c) => $c !== ''));
+}
+
 // Build SQL WHERE clause
 $conditions = [];
 
@@ -40,8 +47,13 @@ if (!empty($validCategories)) {
     $conditions[] = "s.category IN (" . implode(',', $escaped) . ")";
 }
 
+if (!empty($validClasses)) {
+    $escaped = array_map(fn($c) => pg_escape_literal($con, $c), $validClasses);
+    $conditions[] = "s.class IN (" . implode(',', $escaped) . ")";
+}
+
 $whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
-$requireCategorySelection = empty($validCategories);
+$requireCategorySelection = empty($validCategories) && empty($validClasses);
 
 // Main query (same logic)
 $query = "
@@ -147,7 +159,7 @@ ORDER BY
     attendance_date;
 ";
 
-// Execute query if category is selected
+// Execute query if category or class is selected
 $studentIDCount = null;
 if (!$requireCategorySelection) {
     $result = pg_query($con, $query);
@@ -168,7 +180,7 @@ if (!$requireCategorySelection) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -211,10 +223,14 @@ if (!$requireCategorySelection) {
                                     <?php foreach ($selectedCategories as $cat): ?>
                                         <input type="hidden" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>">
                                     <?php endforeach; ?>
+                                    <!-- Add hidden field for selected classes -->
+                                    <?php foreach ($validClasses as $cls): ?>
+                                        <input type="hidden" name="classes[]" value="<?php echo htmlspecialchars($cls); ?>">
+                                    <?php endforeach; ?>
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                                    padding: 0px;
-                                    border: none;" title="Export CSV">
+    padding: 0px;
+    border: none;" title="Export CSV">
                                         <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
                                     </button>
                                 </form>
@@ -225,6 +241,7 @@ if (!$requireCategorySelection) {
                                     Record count:&nbsp;<?php echo $studentIDCount ?>
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
+                                <!-- HTML Form -->
                                 <!-- HTML Form -->
                                 <form action="" method="GET" class="row g-2 align-items-center">
                                     <div class="row">
@@ -252,15 +269,23 @@ if (!$requireCategorySelection) {
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <!-- <label>Categories</label> -->
-                                                <select name="categories[]" id="categories" class="form-select" multiple="multiple" required>
+                                                <!-- Categories -->
+                                                <select name="categories[]" id="categories" class="form-select" multiple="multiple">
                                                     <?php foreach ($validCategories as $category): ?>
                                                         <option value="<?= htmlspecialchars($category) ?>" selected>
                                                             <?= htmlspecialchars($category) ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
-                                                <small class="form-text text-muted">Select one or more categories (required)</small>
+                                                <small class="form-text text-muted">Select one or more categories</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 col-sm-2">
+                                            <div class="form-group">
+                                                <!-- Classes (NEW multiselect - fetched dynamically) -->
+                                                <select name="classes[]" id="classes" class="form-select" multiple="multiple"></select>
+                                                <small class="form-text text-muted">Select one or more classes</small>
                                             </div>
                                         </div>
 
@@ -273,7 +298,7 @@ if (!$requireCategorySelection) {
                                 </form>
                                 <?php if ($requireCategorySelection): ?>
                                     <div class="alert alert-warning mt-3">
-                                        Please select at least one category to view attendance data.
+                                        Please select at least one category or class to view attendance data.
                                     </div>
                                 <?php else: ?>
                                     <?php
@@ -368,13 +393,13 @@ if (!$requireCategorySelection) {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
 
     <!-- Initialize Select2 AFTER all scripts are loaded -->
     <script>
         $(document).ready(function() {
-            // Initialize Select2
+            // Initialize Select2 for categories (AJAX)
             $('#categories').select2({
                 ajax: {
                     url: 'fetch_category.php',
@@ -394,11 +419,59 @@ if (!$requireCategorySelection) {
                 },
                 minimumInputLength: 1,
                 placeholder: 'Search by category',
-                width: '100%'
+                width: '100%',
+                multiple: true
             });
 
-            // Your other main.js functionality can go here
-            // or keep it in main.js if it's properly structured
+            // Initialize Select2 for classes (AJAX - fetched dynamically)
+            $('#classes').select2({
+                ajax: {
+                    url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search by class',
+                width: '100%',
+                multiple: true
+            });
+
+            // Pre-populate selected values on page load (after form submission)
+            const selectedClasses = <?= json_encode($validClasses ?? []) ?>;
+            const selectedCategories = <?= json_encode($validCategories ?? []) ?>;
+
+            function prepopulateSelect2(selector, values, fetchUrl) {
+                values.forEach(val => {
+                    $.ajax({
+                        type: 'GET',
+                        url: fetchUrl,
+                        data: {
+                            q: val
+                        },
+                        dataType: 'json'
+                    }).then(data => {
+                        const match = data.results.find(option => option.id == val);
+                        if (match) {
+                            const newOption = new Option(match.text, match.id, true, true);
+                            $(selector).append(newOption).trigger('change');
+                        }
+                    });
+                });
+            }
+
+            prepopulateSelect2('#classes', selectedClasses, 'fetch_class.php');
+            prepopulateSelect2('#categories', selectedCategories, 'fetch_category.php');
         });
     </script>
 </body>

@@ -791,17 +791,17 @@ function monthly_attd_export()
   @$id = $_POST['id'];
   @$month = $_POST['month'];
   @$selectedCategories = isset($_POST['categories']) ? $_POST['categories'] : [];
+  @$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
 
   // Calculate the start and end dates of the month
   $startDate = date("Y-m-01", strtotime($month));
   $endDate = date("Y-m-t", strtotime($month));
 
-  // Get all available categories for validation
+  // Validate categories against DB
   $categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
   $categoriesResult = pg_query($con, $categoriesQuery);
   $allCategories = pg_fetch_all_columns($categoriesResult, 0);
 
-  // Validate selected categories against available categories
   $validCategories = [];
   foreach ($selectedCategories as $cat) {
     if (in_array($cat, $allCategories)) {
@@ -809,131 +809,201 @@ function monthly_attd_export()
     }
   }
 
-  // Build SQL conditions
+  // Validate classes against DB
+  $classesQuery = "SELECT DISTINCT class FROM rssimyprofile_student WHERE class IS NOT NULL ORDER BY class";
+  $classesResult = pg_query($con, $classesQuery);
+  $allClasses = pg_fetch_all_columns($classesResult, 0);
+
+  $validClasses = [];
+  foreach ($selectedClasses as $cls) {
+    if (in_array($cls, $allClasses)) {
+      $validClasses[] = pg_escape_string($con, $cls);
+    }
+  }
+
+  // Build conditions
   $idCondition = "";
   if ($id != null) {
-    $idCondition = "AND s.filterstatus = '$id'";
+    $idCondition = "AND s.filterstatus = '" . pg_escape_string($con, $id) . "'";
   }
 
   $categoryCondition = "";
   if (!empty($validCategories)) {
     $categoryList = "'" . implode("','", $validCategories) . "'";
     $categoryCondition = "AND s.category IN ($categoryList)";
-  } else {
-    // If no categories selected, return empty result
+  }
+
+  $classCondition = "";
+  if (!empty($validClasses)) {
+    $classList = "'" . implode("','", $validClasses) . "'";
+    $classCondition = "AND s.class IN ($classList)";
+  }
+
+  if (empty($validCategories) && empty($validClasses)) {
     $resultArr = [];
     exportAttendanceToCSV($resultArr, $startDate, $endDate);
     return;
   }
 
-  // Construct the SQL query with consistent attendance logic
-  $query = "WITH date_range AS (
-            SELECT generate_series(
-                '$startDate'::date, '$endDate'::date, '1 day'::interval
-            )::date AS attendance_date
-        ),
-        holidays AS (
-            SELECT holiday_date FROM holidays 
-            WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
-        ),
-        student_exceptions AS (
-            SELECT 
-                m.student_id,
-                e.exception_date AS attendance_date
-            FROM 
-                student_class_days_exceptions e
-            JOIN 
-                student_exception_mapping m ON e.exception_id = m.exception_id
-            WHERE 
-                e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
-        ),
-        attendance_data AS (
-            SELECT
-                s.student_id,
-                s.filterstatus,
-                s.studentname,
-                s.category,
-                s.class,
-                s.effectivefrom,
-                s.doa,
-                s.contact,
-                d.attendance_date,
-                COALESCE(
-                    CASE
-                        WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
-                        WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
-                        WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
-                        WHEN a.user_id IS NULL
-                             AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = d.attendance_date)
-                             AND EXISTS (
-                                SELECT 1 FROM student_class_days cw
-                                WHERE cw.category = s.category
-                                  AND cw.effective_from <= d.attendance_date
-                                  AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                                  AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
-                             )
-                             AND s.doa <= d.attendance_date
-                             THEN 'A' -- Absent only if it's a class day and not holiday/exception
-                        ELSE NULL -- NULL for non-class days
-                    END
-                ) AS attendance_status
-            FROM
-                date_range d
-            CROSS JOIN
-                rssimyprofile_student s
-            LEFT JOIN
-                attendance a ON s.student_id = a.user_id AND a.date = d.attendance_date
-            LEFT JOIN
-                holidays h ON d.attendance_date = h.holiday_date
-            LEFT JOIN
-                student_exceptions ex ON d.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
-            WHERE
-                (
-                    s.effectivefrom IS NULL OR 
-                    DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-                )
-                AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-                $idCondition
-                $categoryCondition
+  // Escaped date literals for reuse
+  $startDateEsc = pg_escape_literal($con, $startDate);
+  $endDateEsc   = pg_escape_literal($con, $endDate);
+  $monthEsc     = pg_escape_literal($con, $month);
+
+  // Construct the optimized SQL query
+  $query = "
+WITH
+-- 1) Filter students FIRST (small set), before any cross join
+filtered_students AS (
+    SELECT
+        s.student_id,
+        s.filterstatus,
+        s.studentname,
+        s.category,
+        s.class,
+        s.effectivefrom,
+        s.doa,
+        s.contact
+    FROM rssimyprofile_student s
+    WHERE
+        (
+            s.effectivefrom IS NULL OR
+            DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE($monthEsc, 'YYYY-MM'))::DATE
         )
-        SELECT
-            student_id,
-            filterstatus,
-            studentname,
-            category,
-            class,
-            contact,
-            attendance_date,
-            attendance_status,
-            " . generate_date_columns($startDate, $endDate) . ",
-            COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id) AS total_classes,
-            COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) AS attended_classes,
-            CASE
-                WHEN COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id) = 0 THEN NULL
-                ELSE CONCAT(
-                    ROUND(
-                        (COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) * 100.0) /
-                        COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) OVER (PARTITION BY student_id), 2
-                    ),
-                    '%'
-                )
-            END AS attendance_percentage
-        FROM attendance_data
-        GROUP BY
-            student_id,
-            filterstatus,
-            studentname,
-            category,
-            class,
-            contact,
-            attendance_date,
-            attendance_status
-        ORDER BY
-            CASE WHEN class = 'Pre-school' THEN 0 ELSE 1 END,
-            category,
-            class,
-            student_id,
-            attendance_date;
+        AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE($monthEsc, 'YYYY-MM'))::DATE
+        $idCondition
+        $categoryCondition
+        $classCondition
+),
+
+-- 2) Expand student_class_days into actual dates ONCE
+--    class_days is stored as e.g. 'Mon,Tue,Wed' -> split & match day names
+class_day_dates AS (
+    SELECT DISTINCT
+        cw.category,
+        d::date AS class_date
+    FROM student_class_days cw
+    CROSS JOIN LATERAL generate_series(
+        GREATEST(cw.effective_from, $startDateEsc::date),
+        LEAST(COALESCE(cw.effective_to, $endDateEsc::date), $endDateEsc::date),
+        interval '1 day'
+    ) d
+    WHERE TRIM(TO_CHAR(d, 'Dy')) = ANY (
+        string_to_array(REPLACE(cw.class_days, ' ', ''), ',')
+    )
+),
+
+-- 3) Dates on which attendance was actually taken (small set, computed once)
+days_with_attendance AS (
+    SELECT DISTINCT date
+    FROM attendance
+    WHERE date BETWEEN $startDateEsc::date AND $endDateEsc::date
+),
+
+-- 4) Holidays in range
+holidays_in_range AS (
+    SELECT holiday_date
+    FROM holidays
+    WHERE holiday_date BETWEEN $startDateEsc::date AND $endDateEsc::date
+),
+
+-- 5) Student exceptions in range
+student_exceptions AS (
+    SELECT
+        m.student_id,
+        e.exception_date AS attendance_date
+    FROM student_class_days_exceptions e
+    JOIN student_exception_mapping m ON e.exception_id = m.exception_id
+    WHERE e.exception_date BETWEEN $startDateEsc::date AND $endDateEsc::date
+),
+
+-- 6) Calendar days in range
+date_range AS (
+    SELECT generate_series($startDateEsc::date, $endDateEsc::date, interval '1 day')::date AS attendance_date
+),
+
+-- 7) Build attendance_data with proper joins (no correlated EXISTS)
+attendance_data AS (
+    SELECT
+        s.student_id,
+        s.filterstatus,
+        s.studentname,
+        s.category,
+        s.class,
+        s.contact,
+        d.attendance_date,
+        CASE
+            WHEN a.user_id IS NOT NULL THEN 'P'
+            WHEN h.holiday_date IS NOT NULL THEN NULL
+            WHEN ex.attendance_date IS NOT NULL THEN NULL
+            WHEN dwa.date IS NOT NULL
+                 AND cd.class_date IS NOT NULL
+                 AND s.doa <= d.attendance_date
+                 THEN 'A'
+            ELSE NULL
+        END AS attendance_status
+    FROM date_range d
+    CROSS JOIN filtered_students s
+    LEFT JOIN attendance a
+           ON a.user_id = s.student_id
+          AND a.date = d.attendance_date
+    LEFT JOIN holidays_in_range h
+           ON h.holiday_date = d.attendance_date
+    LEFT JOIN student_exceptions ex
+           ON ex.attendance_date = d.attendance_date
+          AND ex.student_id = s.student_id
+    LEFT JOIN days_with_attendance dwa
+           ON dwa.date = d.attendance_date
+    LEFT JOIN class_day_dates cd
+           ON cd.category = s.category
+          AND cd.class_date = d.attendance_date
+),
+
+-- 8) Compute totals per student ONCE (small aggregate)
+student_totals AS (
+    SELECT
+        student_id,
+        COUNT(*) FILTER (WHERE attendance_status IS NOT NULL) AS total_classes,
+        COUNT(*) FILTER (WHERE attendance_status = 'P')      AS attended_classes
+    FROM attendance_data
+    GROUP BY student_id
+)
+
+SELECT
+    ad.student_id,
+    ad.filterstatus,
+    ad.studentname,
+    ad.category,
+    ad.class,
+    ad.contact,
+    ad.attendance_date,
+    ad.attendance_status,
+    " . generate_date_columns($startDate, $endDate) . ",
+    st.total_classes,
+    st.attended_classes,
+    CASE
+        WHEN st.total_classes = 0 OR st.total_classes IS NULL THEN NULL
+        ELSE CONCAT(ROUND((st.attended_classes * 100.0) / st.total_classes, 2), '%')
+    END AS attendance_percentage
+FROM attendance_data ad
+JOIN student_totals st ON st.student_id = ad.student_id
+GROUP BY
+    ad.student_id,
+    ad.filterstatus,
+    ad.studentname,
+    ad.category,
+    ad.class,
+    ad.contact,
+    ad.attendance_date,
+    ad.attendance_status,
+    st.total_classes,
+    st.attended_classes
+ORDER BY
+    CASE WHEN ad.class = 'Pre-school' THEN 0 ELSE 1 END,
+    ad.category,
+    ad.class,
+    ad.student_id,
+    ad.attendance_date;
 ";
 
   $result = pg_query($con, $query);
@@ -945,7 +1015,6 @@ function monthly_attd_export()
 
   $resultArr = pg_fetch_all($result);
 
-  // Call the export function to generate and download the CSV
   exportAttendanceToCSV($resultArr, $startDate, $endDate);
 }
 // Function to generate date columns
