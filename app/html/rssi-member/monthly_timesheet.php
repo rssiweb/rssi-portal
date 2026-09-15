@@ -50,496 +50,325 @@ if (!empty($month)) {
     }
 
     $query = "
--- Query with updated logic for calculating scheduled workdays, considering DOJ and effective date
 WITH date_range AS (
-    SELECT generate_series(
-        '$startDate'::date,
-        '$endDate'::date,
-        '1 day'::interval
-    ) AS attendance_date
+    SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day'::interval)::date AS attendance_date
 ),
-holidays_excluded AS (
-    SELECT 
-        d.attendance_date
-    FROM 
-        date_range d
-    LEFT JOIN 
-        workday_exceptions w 
-        ON d.attendance_date = w.exception_date AND w.is_workday = TRUE
-    WHERE 
-        d.attendance_date NOT IN (
-            SELECT holiday_date 
-            FROM holidays 
-            WHERE is_flexi = false
-        ) 
-        OR w.is_workday IS NOT NULL -- Include workday exceptions even if it's a holiday
+
+-- 1. Holidays and workday exceptions as simple sets
+holiday_set AS (
+    SELECT holiday_date FROM holidays WHERE is_flexi = false
 ),
-sunday_count AS (
-    SELECT 
-        COUNT(*) AS total_sundays
-    FROM 
-        date_range
-    WHERE 
-        DATE_PART('dow', attendance_date) = 0 -- Sundays only
+workday_exc AS (
+    SELECT exception_date FROM workday_exceptions WHERE is_workday = TRUE
 ),
-employee_workdays AS (
-    SELECT 
-        m.associatenumber,
-        COUNT(h.attendance_date) AS workdays_employee
-    FROM 
-        holidays_excluded h
-    INNER JOIN 
-        rssimyaccount_members m
-        ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
-            AND 
-            LEAST(
-                CASE 
-                    -- If today is in the same month as attendance_date, use today
-                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
-                END,
-                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of today's date (if in the same month) or the associate's effective date
-    LEFT JOIN 
-        workday_exceptions w
-        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    -- Get the latest schedule for each date from associate_schedule_v2, considering end_date
-    LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
-        FROM associate_schedule_v2 s
-        WHERE s.associate_number = m.associatenumber
-        AND s.start_date <= h.attendance_date
-        -- Match day of week
-        AND s.workday = 
-            CASE DATE_PART('dow', h.attendance_date)
-                WHEN 1 THEN 'Mon'
-                WHEN 2 THEN 'Tue'
-                WHEN 3 THEN 'Wed'
-                WHEN 4 THEN 'Thu'
-                WHEN 5 THEN 'Fri'
-                WHEN 6 THEN 'Sat'
-                WHEN 0 THEN 'Sun'
-            END
-        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
-        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
-        ORDER BY s.start_date DESC
-        LIMIT 1
-    ) sched ON true
-    WHERE 
-        -- Only count workdays if a schedule exists for that day OR it's an exceptional workday
-        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
-    GROUP BY 
-        m.associatenumber
+
+-- Calendar: all dates in the month, minus holidays (unless overridden by workday_exc)
+calendar AS (
+    SELECT d.attendance_date
+    FROM date_range d
+    WHERE NOT EXISTS (SELECT 1 FROM holiday_set h WHERE h.holiday_date = d.attendance_date)
+       OR EXISTS (SELECT 1 FROM workday_exc w WHERE w.exception_date = d.attendance_date)
 ),
-others_workdays AS (
-    SELECT 
-        m.associatenumber,
-        COUNT(h.attendance_date) AS workdays_others
-    FROM 
-        holidays_excluded h
-    INNER JOIN 
-        rssimyaccount_members m
-        ON h.attendance_date BETWEEN 
-            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
-            AND 
-            LEAST(
-                CASE 
-                    -- If today is in the same month as attendance_date, use today
-                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
-                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
-                END,
-                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of today's date (if in the same month) or the associate's effectivedate
-    LEFT JOIN 
-        workday_exceptions w
-        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
-    -- Get the latest schedule for each date from associate_schedule_v2, considering end_date
-    LEFT JOIN LATERAL (
-        SELECT s.workday, s.start_date AS schedule_start, s.end_date AS schedule_end
-        FROM associate_schedule_v2 s
-        WHERE s.associate_number = m.associatenumber
-        AND s.start_date <= h.attendance_date
-        -- Match day of week
-        AND s.workday = 
-            CASE DATE_PART('dow', h.attendance_date)
-                WHEN 1 THEN 'Mon'
-                WHEN 2 THEN 'Tue'
-                WHEN 3 THEN 'Wed'
-                WHEN 4 THEN 'Thu'
-                WHEN 5 THEN 'Fri'
-                WHEN 6 THEN 'Sat'
-                WHEN 0 THEN 'Sun'
-            END
-        -- Only include schedules that are active on this date (no end_date OR end_date >= attendance_date)
-        AND (s.end_date IS NULL OR s.end_date >= h.attendance_date)
-        ORDER BY s.start_date DESC
-        LIMIT 1
-    ) sched ON true
-    WHERE 
-        -- Only count workdays if a schedule exists for that day OR it's an exceptional workday
-        (sched.workday IS NOT NULL OR w.is_workday IS NOT NULL)
-    GROUP BY 
-        m.associatenumber
+
+-- Total Sundays (hoisted out of the SELECT list)
+total_sundays AS (
+    SELECT COUNT(*) AS cnt
+    FROM date_range
+    WHERE EXTRACT(DOW FROM attendance_date) = 0
 ),
-holiday_dates AS (
-    SELECT 
-        m.associatenumber,
-        STRING_AGG(h.holiday_date::text, ', ') AS holiday_dates
-    FROM 
-        holidays h
-    INNER JOIN 
-        rssimyaccount_members m 
-        ON h.holiday_date BETWEEN 
-            GREATEST(m.doj, '$startDate'::date) 
-        AND 
-            LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
-    WHERE 
-        h.is_flexi = false
-    GROUP BY 
-        m.associatenumber
-),
-DynamicSchedule AS (
-    SELECT
-        s.associate_number,
-        s.start_date,
-        s.reporting_time,
-        s.exit_time,
-        m.filterstatus,
-        m.effectivedate,
-        COALESCE(
-            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
-            CASE
-                WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
-                ELSE CURRENT_DATE
-            END
-        ) AS end_date
-    FROM associate_schedule_v2 s  -- CHANGED: from associate_schedule to associate_schedule_v2
-    INNER JOIN rssimyaccount_members m
-        ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.created_at DESC
-),
-PunchInOut AS (
-    SELECT
-        a.user_id,
-        a.status,
-        DATE_TRUNC('day', a.punch_in) AS punch_date,
-        MIN(a.punch_in) AS punch_in,
-        CASE
-            WHEN COUNT(*) = 1 THEN NULL
-            ELSE MAX(a.punch_in)
-        END AS punch_out
-    FROM attendance a
-    GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
-),
-attendance_data AS (
+
+-- 2. Filtered members ONCE
+members AS (
     SELECT
         m.associatenumber,
         m.filterstatus,
         m.fullname,
         m.engagement,
         m.position,
-        COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
-        m.effectivedate,
+        m.phone,
         m.doj,
+        m.effectivedate,
+        COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode
+    FROM rssimyaccount_members m
+    WHERE m.grade <> 'D'
+      AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
+      AND (
+            m.filterstatus = 'Active'
+            OR (m.filterstatus = 'Inactive'
+                AND DATE_TRUNC('month', m.effectivedate)::date
+                    >= DATE_TRUNC('month', TO_DATE('$month','YYYY-MM'))::date)
+          )
+      $engagementCondition
+      " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
+),
+
+-- 3. Schedule: one row per (associate, workday) = latest schedule as of month end.
+--    dow is computed once here so joins are plain integer equality.
+sched_current AS (
+    SELECT DISTINCT ON (s.associate_number, s.workday)
+        s.associate_number,
+        s.workday,
+        CASE s.workday
+            WHEN 'Mon' THEN 1 WHEN 'Tue' THEN 2 WHEN 'Wed' THEN 3
+            WHEN 'Thu' THEN 4 WHEN 'Fri' THEN 5 WHEN 'Sat' THEN 6
+            WHEN 'Sun' THEN 0
+        END AS dow,
+        s.start_date,
+        s.end_date,
+        s.reporting_time,
+        s.exit_time
+    FROM associate_schedule_v2 s
+    WHERE s.start_date <= '$endDate'::date
+      AND (s.end_date IS NULL OR s.end_date >= '$startDate'::date)
+    ORDER BY s.associate_number, s.workday, s.start_date DESC
+),
+
+-- 4. Workdays per member (replaces employee_workdays + others_workdays)
+member_workdays AS (
+    SELECT
+        m.associatenumber,
+        COUNT(c.attendance_date) AS workdays
+    FROM members m
+    JOIN calendar c
+      ON c.attendance_date BETWEEN
+            GREATEST(DATE_TRUNC('month', c.attendance_date), m.doj)
+        AND LEAST(
+                CASE WHEN DATE_TRUNC('month', c.attendance_date) = DATE_TRUNC('month', CURRENT_DATE)
+                     THEN CURRENT_DATE
+                     ELSE (DATE_TRUNC('month', c.attendance_date) + INTERVAL '1 month - 1 day')::date
+                END,
+                COALESCE(m.effectivedate,
+                         (DATE_TRUNC('month', c.attendance_date) + INTERVAL '1 month - 1 day')::date)
+            )
+    JOIN sched_current sc
+      ON sc.associate_number = m.associatenumber
+     AND sc.dow = EXTRACT(DOW FROM c.attendance_date)::int
+     AND sc.start_date <= c.attendance_date
+     AND (sc.end_date IS NULL OR sc.end_date >= c.attendance_date)
+    GROUP BY m.associatenumber
+),
+
+-- 5. Current schedule string per member
+current_schedule_str AS (
+    SELECT
+        associate_number,
+        STRING_AGG(
+            workday, ', '
+            ORDER BY CASE workday
+                WHEN 'Mon' THEN 1 WHEN 'Tue' THEN 2 WHEN 'Wed' THEN 3
+                WHEN 'Thu' THEN 4 WHEN 'Fri' THEN 5 WHEN 'Sat' THEN 6 WHEN 'Sun' THEN 7
+            END
+        ) AS current_schedule
+    FROM sched_current
+    GROUP BY associate_number
+),
+
+-- 6. Holiday dates string per member
+holiday_dates AS (
+    SELECT
+        m.associatenumber,
+        STRING_AGG(h.holiday_date::text, ', ') AS holiday_dates
+    FROM holidays h
+    JOIN members m
+      ON h.holiday_date BETWEEN GREATEST(m.doj, '$startDate'::date)
+                            AND LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
+    WHERE h.is_flexi = false
+    GROUP BY m.associatenumber
+),
+
+-- 7. Punch in/out aggregated ONCE per (user, day) — no status split
+punch_agg AS (
+    SELECT
+        a.user_id,
+        DATE_TRUNC('day', a.punch_in)::date AS punch_date,
+        MIN(a.punch_in) AS punch_in,
+        CASE WHEN COUNT(*) = 1 THEN NULL ELSE MAX(a.punch_in) END AS punch_out
+    FROM attendance a
+    WHERE a.punch_in >= '$startDate'::date
+      AND a.punch_in <  ('$endDate'::date + INTERVAL '1 day')
+    GROUP BY a.user_id, DATE_TRUNC('day', a.punch_in)::date
+),
+
+-- 8. Exceptions aggregated ONCE
+entry_exc AS (
+    SELECT
+        e.submitted_by,
+        DATE(e.start_date_time) AS exc_date,
+        MIN(e.start_date_time) FILTER (WHERE e.sub_exception_type = 'missed-entry') AS missed_entry_time,
+        MIN(e.start_date_time) FILTER (WHERE e.sub_exception_type = 'late-entry')   AS late_entry_time
+    FROM exception_requests e
+    WHERE e.status = 'Approved'
+      AND e.exception_type = 'entry'
+      AND e.start_date_time >= '$startDate'::date
+      AND e.start_date_time <  ('$endDate'::date + INTERVAL '1 day')
+    GROUP BY e.submitted_by, DATE(e.start_date_time)
+),
+exit_exc AS (
+    SELECT
+        e.submitted_by,
+        DATE(e.end_date_time) AS exc_date,
+        MIN(e.end_date_time) AS exit_time
+    FROM exception_requests e
+    WHERE e.status = 'Approved'
+      AND e.exception_type = 'exit'
+      AND e.end_date_time >= '$startDate'::date
+      AND e.end_date_time <  ('$endDate'::date + INTERVAL '1 day')
+    GROUP BY e.submitted_by, DATE(e.end_date_time)
+),
+
+-- 9. Leaves aggregated ONCE
+leave_agg AS (
+    SELECT
+        l.applicantid,
         d.attendance_date,
-        
-        -- Override punch_in if missed-entry exception exists and is approved
-        COALESCE(
-            (
-                SELECT e.start_date_time
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-                LIMIT 1
-            ),
-            p.punch_in -- fallback to original punch_in if no exception
-        ) AS punch_in,
+        MAX(CASE WHEN l.halfday = 0 THEN 1 ELSE 0 END) AS has_full_leave,
+        SUM(CASE WHEN l.halfday = 1 THEN 1 ELSE 0 END) AS halfday_count
+    FROM leavedb_leavedb l
+    JOIN date_range d
+      ON d.attendance_date BETWEEN l.fromdate AND l.todate
+    WHERE l.status = 'Approved'
+    GROUP BY l.applicantid, d.attendance_date
+),
 
-        -- Handle punch_out logic similarly (using exception if available)
-        COALESCE(
-            (
-                SELECT e.end_date_time
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'exit'
-                AND d.attendance_date = DATE(e.end_date_time)
-                LIMIT 1
-            ),
-            p.punch_out
-        ) AS punch_out,
+-- 10. Base grid: member × calendar
+base AS (
+    SELECT
+        m.associatenumber, m.filterstatus, m.fullname, m.engagement, m.position,
+        m.phone, m.mode, m.effectivedate, m.doj,
+        c.attendance_date,
+        p.punch_in, p.punch_out,
+        sc.reporting_time, sc.exit_time,
+        ee.missed_entry_time, ee.late_entry_time,
+        xe.exit_time AS exc_exit_time,
+        COALESCE(la.has_full_leave, 0) AS has_full_leave,
+        COALESCE(la.halfday_count, 0)  AS halfday_count
+    FROM members m
+    CROSS JOIN calendar c
+    LEFT JOIN punch_agg p
+           ON p.user_id = m.associatenumber
+          AND p.punch_date = c.attendance_date
+    LEFT JOIN sched_current sc
+           ON sc.associate_number = m.associatenumber
+          AND sc.dow = EXTRACT(DOW FROM c.attendance_date)::int
+          AND sc.start_date <= c.attendance_date
+          AND (sc.end_date IS NULL OR sc.end_date >= c.attendance_date)
+    LEFT JOIN entry_exc ee
+           ON ee.submitted_by = m.associatenumber
+          AND ee.exc_date = c.attendance_date
+    LEFT JOIN exit_exc xe
+           ON xe.submitted_by = m.associatenumber
+          AND xe.exc_date = c.attendance_date
+    LEFT JOIN leave_agg la
+           ON la.applicantid = m.associatenumber
+          AND la.attendance_date = c.attendance_date
+),
 
-        -- Attendance status logic
+-- 11. Apply CASE logic once
+final AS (
+    SELECT
+        b.*,
+        COALESCE(b.missed_entry_time, b.punch_in)  AS eff_punch_in,
+        COALESCE(b.exc_exit_time,     b.punch_out) AS eff_punch_out,
+
         CASE
-            WHEN p.punch_in IS NOT NULL THEN 'P'
-            WHEN p.punch_in IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-            WHEN m.doj > d.attendance_date THEN NULL
+            WHEN b.punch_in IS NOT NULL THEN 'P'
+            WHEN b.doj > b.attendance_date THEN NULL
             ELSE 'A'
         END AS attendance_status,
 
-        ds.reporting_time,
-        ds.exit_time,
-
-        -- Updated Late status logic based on the overridden punch_in
         CASE
-        -- Leave condition
-            WHEN EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 0
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'Leave'
-            
-            -- Half-day condition
-            WHEN EXISTS (
-            SELECT 1
-            FROM leavedb_leavedb l
-            WHERE l.applicantid = m.associatenumber
-            AND l.status = 'Approved'
-            AND l.halfday = 1
-            AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            GROUP BY l.applicantid, d.attendance_date
-            HAVING COUNT(*) >= 2
-            ) THEN 'Leave'
-            
-            -- Half-day condition
-            WHEN EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 1
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'HF'
-             -- Late status logic for entry exception with late-entry subcategory
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'late-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN
+            WHEN b.has_full_leave = 1 THEN 'Leave'
+            WHEN b.halfday_count >= 2 THEN 'Leave'
+            WHEN b.halfday_count = 1  THEN 'HF'
+            WHEN b.late_entry_time IS NOT NULL THEN
                 CASE
-                    -- If punch_in is within the approved exception time
-                    WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM (
-                        SELECT e.start_date_time 
-                        FROM exception_requests e 
-                        WHERE e.submitted_by = m.associatenumber
-                        AND e.status = 'Approved'
-                        AND e.exception_type = 'entry'
-                        AND e.sub_exception_type = 'late-entry'
-                        AND d.attendance_date = DATE(e.start_date_time)
-                    )::time) THEN 'Exc.'
-                    -- If punch_in is after the approved exception time
-                    WHEN p.punch_in IS NOT NULL THEN 'Exc.L'
+                    WHEN b.punch_in IS NOT NULL
+                     AND b.punch_in::time <= b.late_entry_time::time THEN 'Exc.'
+                    WHEN b.punch_in IS NOT NULL THEN 'Exc.L'
                     ELSE NULL
                 END
-            -- If missed-entry exception is applied, recalculate the status
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN
+            WHEN b.missed_entry_time IS NOT NULL THEN
                 CASE
-                    -- If the overridden punch_in is late (after reporting time + 10 mins), it should be 'L'
-                    WHEN EXTRACT(EPOCH FROM COALESCE(
-                        (
-                            SELECT e.start_date_time
-                            FROM exception_requests e
-                            WHERE e.submitted_by = m.associatenumber
-                            AND e.status = 'Approved'
-                            AND e.exception_type = 'entry'
-                            AND e.sub_exception_type = 'missed-entry'
-                            AND d.attendance_date = DATE(e.start_date_time)
-                            LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
-                    -- If the overridden punch_in is within 10 mins of reporting time, it should be 'W'
-                    WHEN EXTRACT(EPOCH FROM COALESCE(
-                        (
-                            SELECT e.start_date_time
-                            FROM exception_requests e
-                            WHERE e.submitted_by = m.associatenumber
-                            AND e.status = 'Approved'
-                            AND e.exception_type = 'entry'
-                            AND e.sub_exception_type = 'missed-entry'
-                            AND d.attendance_date = DATE(e.start_date_time)
-                            LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time)
-                        AND EXTRACT(EPOCH FROM COALESCE(
-                            (
-                                SELECT e.start_date_time
-                                FROM exception_requests e
-                                WHERE e.submitted_by = m.associatenumber
-                                AND e.status = 'Approved'
-                                AND e.exception_type = 'entry'
-                                AND e.sub_exception_type = 'missed-entry'
-                            AND d.attendance_date = DATE(e.start_date_time)
-                            LIMIT 1
-                        ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
-                    -- If it's on time (or earlier), status should be NULL (not late)
+                    WHEN b.missed_entry_time::time > b.reporting_time + INTERVAL '10 minutes' THEN 'L'
+                    WHEN b.missed_entry_time::time > b.reporting_time
+                     AND b.missed_entry_time::time <= b.reporting_time + INTERVAL '10 minutes' THEN 'W'
                     ELSE NULL
                 END
-            -- For regular punch-ins, apply standard lateness logic
-            WHEN p.punch_in IS NOT NULL THEN
+            WHEN b.punch_in IS NOT NULL THEN
                 CASE
-                    WHEN ds.reporting_time IS NULL THEN 'NA'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
-                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
+                    WHEN b.reporting_time IS NULL THEN 'NA'
+                    WHEN b.punch_in::time > b.reporting_time + INTERVAL '1 minute'
+                     AND b.punch_in::time <= b.reporting_time + INTERVAL '11 minutes' THEN 'W'
+                    WHEN b.punch_in::time > b.reporting_time + INTERVAL '10 minutes' THEN 'L'
                     ELSE NULL
                 END
             ELSE NULL
         END AS late_status,
 
-        -- Exit status logic remains unchanged
         CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'exit'
-                AND d.attendance_date = DATE(e.end_date_time)
-            ) THEN 'Exc.'
+            WHEN b.exc_exit_time IS NOT NULL THEN 'Exc.'
+            WHEN b.punch_out IS NOT NULL
+             AND b.exit_time IS NOT NULL
+             AND b.punch_out::time < b.exit_time
+             AND b.halfday_count = 0 THEN 'EE'
             ELSE NULL
         END AS exit_status,
 
-        -- Status 'Exc.' for overridden punch-in time from exception
         CASE
-    -- Show 'Exc.' if approved exception exists
-    WHEN EXISTS (
-        SELECT 1
-        FROM exception_requests e
-        WHERE e.submitted_by = m.associatenumber
-        AND e.status = 'Approved'
-        AND e.exception_type = 'entry'
-        AND e.sub_exception_type = 'missed-entry'
-        AND d.attendance_date = DATE(e.start_date_time)
-    ) THEN 
-        -- Check if ds.reporting_time is NULL, then add 'NA'
-        CASE 
-            WHEN ds.reporting_time IS NULL THEN 'Exc.NA'
-            ELSE 'Exc.'
-        END
-    ELSE NULL
-END AS exception_status
-    FROM
-        date_range d
-    CROSS JOIN
-        rssimyaccount_members m
-    LEFT JOIN
-        PunchInOut p
-        ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
-    LEFT JOIN
-        DynamicSchedule ds
-        ON m.associatenumber = ds.associate_number
-        AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
-    WHERE
-        (
-            (m.filterstatus = 'Active') OR
-            (m.filterstatus = 'Inactive' AND DATE_TRUNC('month', m.effectivedate)::DATE >= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE)
-        )
-        AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        -- $idCondition
-        -- $teacherCondition
-        $engagementCondition
-        " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
+            WHEN b.missed_entry_time IS NOT NULL THEN
+                CASE WHEN b.reporting_time IS NULL THEN 'Exc.NA' ELSE 'Exc.' END
+            ELSE NULL
+        END AS exception_status
+    FROM base b
 )
-SELECT 
-    m.associatenumber,
-    m.fullname,
-    m.engagement,
-    m.position,
-    m.phone,
-    (
-        -- FIXED: Get ALL distinct workdays from schedules that apply in this month
-        -- First get distinct workdays with their order, then aggregate
-        SELECT STRING_AGG(s.workday, ', ')
-        FROM (
-            SELECT DISTINCT s.workday,
-                CASE s.workday
-                    WHEN 'Mon' THEN 1
-                    WHEN 'Tue' THEN 2
-                    WHEN 'Wed' THEN 3
-                    WHEN 'Thu' THEN 4
-                    WHEN 'Fri' THEN 5
-                    WHEN 'Sat' THEN 6
-                    WHEN 'Sun' THEN 7
-                END AS day_order
-            FROM associate_schedule_v2 s 
-            WHERE s.associate_number = m.associatenumber
-            AND s.start_date <= '$endDate'::date
-            -- Get schedules that would apply for any date in the month
-            AND NOT EXISTS (
-                -- Exclude schedules that are superseded by later schedules for the same workday
-                SELECT 1 FROM associate_schedule_v2 s2
-                WHERE s2.associate_number = s.associate_number
-                AND s2.workday = s.workday
-                AND s2.start_date > s.start_date
-                AND s2.start_date <= '$endDate'::date
-            )
-            ORDER BY day_order
-        ) AS s
-    ) AS current_schedule,
-    CASE 
-    WHEN m.engagement = 'Employee' THEN 
-        (SELECT workdays_employee 
-         FROM employee_workdays 
-         WHERE employee_workdays.associatenumber = m.associatenumber)
-    WHEN m.engagement = 'Member' THEN 0
-    ELSE 
-        (SELECT workdays_others  
-         FROM others_workdays  
-         WHERE others_workdays.associatenumber = m.associatenumber)
+
+SELECT
+    f.associatenumber,
+    f.fullname,
+    f.engagement,
+    f.position,
+    f.phone,
+    cs.current_schedule,
+    CASE
+        WHEN f.engagement = 'Employee' THEN COALESCE(mw.workdays, 0)
+        WHEN f.engagement = 'Member'   THEN 0
+        ELSE COALESCE(mw.workdays, 0)
     END AS work_schedule,
-    h.holiday_dates, -- Corrected line
-    (SELECT total_sundays FROM sunday_count) AS total_sundays,
-    COUNT(*) FILTER (WHERE punch_in IS NOT NULL AND punch_out IS NOT NULL) AS days_worked,
-    COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
-    STRING_AGG(CASE WHEN late_status = 'L' THEN attendance_date::text ELSE NULL END, ', ') AS late_dates,
-    COUNT(*) FILTER (WHERE late_status = 'W') AS warning_count,
-    STRING_AGG(CASE WHEN late_status = 'W' THEN attendance_date::text ELSE NULL END, ', ') AS warning_dates,
-    COUNT(*) FILTER (WHERE late_status = 'Leave') AS leave_count,
-    STRING_AGG(CASE WHEN late_status = 'Leave' THEN attendance_date::text ELSE NULL END, ', ') AS leave_dates,
-    COUNT(*) FILTER (WHERE late_status = 'HF') AS halfday_count,
-    STRING_AGG(CASE WHEN late_status = 'HF' THEN attendance_date::text ELSE NULL END, ', ') AS halfday_dates,
-    COUNT(*) FILTER (WHERE 
-        exception_status ILIKE '%Exc%' OR 
-        exit_status ILIKE '%Exc%' OR 
-        late_status ILIKE '%Exc%') AS exception_count,
-    STRING_AGG(CASE WHEN exception_status ILIKE '%Exc%' OR 
-        exit_status ILIKE '%Exc%' OR 
-        late_status ILIKE '%Exc%' THEN attendance_date::text ELSE NULL END, ', ') AS exception_dates
-FROM 
-    attendance_data ad
-JOIN 
-    rssimyaccount_members m
-    ON ad.associatenumber = m.associatenumber
-LEFT JOIN 
-    holiday_dates h
-    ON ad.associatenumber = h.associatenumber -- Correcting the join condition
-WHERE 
-    -- mode = 'Offline'
-    -- (m.engagement IN ('Employee', 'Intern') OR m.position IN ('Intern'))
-   -- AND 
-    grade!='D'
-    AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
-GROUP BY 
-    m.associatenumber, m.fullname, m.engagement, m.position, h.holiday_dates
-ORDER BY 
-    m.associatenumber;
+    hd.holiday_dates,
+    (SELECT cnt FROM total_sundays) AS total_sundays,
+    COUNT(*) FILTER (WHERE f.eff_punch_in IS NOT NULL AND f.eff_punch_out IS NOT NULL) AS days_worked,
+    COUNT(*) FILTER (WHERE f.late_status = 'L') AS late_count,
+    STRING_AGG(f.attendance_date::text, ', ') FILTER (WHERE f.late_status = 'L') AS late_dates,
+    COUNT(*) FILTER (WHERE f.late_status = 'W') AS warning_count,
+    STRING_AGG(f.attendance_date::text, ', ') FILTER (WHERE f.late_status = 'W') AS warning_dates,
+    COUNT(*) FILTER (WHERE f.late_status = 'Leave') AS leave_count,
+    STRING_AGG(f.attendance_date::text, ', ') FILTER (WHERE f.late_status = 'Leave') AS leave_dates,
+    COUNT(*) FILTER (WHERE f.late_status = 'HF') AS halfday_count,
+    STRING_AGG(f.attendance_date::text, ', ') FILTER (WHERE f.late_status = 'HF') AS halfday_dates,
+    COUNT(*) FILTER (
+        WHERE f.exception_status IN ('Exc.', 'Exc.NA')
+           OR f.exit_status = 'Exc.'
+           OR f.late_status IN ('Exc.', 'Exc.L')
+    ) AS exception_count,
+    STRING_AGG(f.attendance_date::text, ', ') FILTER (
+        WHERE f.exception_status IN ('Exc.', 'Exc.NA')
+           OR f.exit_status = 'Exc.'
+           OR f.late_status IN ('Exc.', 'Exc.L')
+    ) AS exception_dates
+FROM final f
+LEFT JOIN current_schedule_str cs ON cs.associate_number = f.associatenumber
+LEFT JOIN member_workdays      mw ON mw.associatenumber = f.associatenumber
+LEFT JOIN holiday_dates        hd ON hd.associatenumber = f.associatenumber
+GROUP BY
+    f.associatenumber,
+    f.fullname,
+    f.engagement,
+    f.position,
+    f.phone,
+    cs.current_schedule,
+    mw.workdays,
+    hd.holiday_dates
+ORDER BY f.associatenumber;
 ";
     $result = pg_query($con, $query);
 
