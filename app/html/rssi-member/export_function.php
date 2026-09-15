@@ -792,6 +792,7 @@ function monthly_attd_export()
   @$month = $_POST['month'];
   @$selectedCategories = isset($_POST['categories']) ? $_POST['categories'] : [];
   @$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
+  @$selectedLocation = isset($_POST['get_location']) ? $_POST['get_location'] : '';
 
   // Calculate the start and end dates of the month
   $startDate = date("Y-m-01", strtotime($month));
@@ -839,6 +840,11 @@ function monthly_attd_export()
     $classCondition = "AND s.class IN ($classList)";
   }
 
+  $locationCondition = "";
+  if (!empty($selectedLocation)) {
+    $locationCondition = "AND s.preferredbranch = '" . pg_escape_string($con, $selectedLocation) . "'";
+  }
+
   if (empty($validCategories) && empty($validClasses)) {
     $resultArr = [];
     exportAttendanceToCSV($resultArr, $startDate, $endDate);
@@ -874,6 +880,7 @@ filtered_students AS (
         $idCondition
         $categoryCondition
         $classCondition
+        $locationCondition
 ),
 
 -- 2) Expand student_class_days into actual dates ONCE

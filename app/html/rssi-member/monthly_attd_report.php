@@ -15,6 +15,7 @@ $id = $_GET['get_aid'] ?? 'Active';
 $month = $_GET['get_month'] ?? date('Y-m');
 $selectedCategories = $_GET['categories'] ?? [];
 $selectedClasses = $_GET['classes'] ?? [];
+$selected_location = $_GET['get_location'] ?? '';
 
 // Date range
 $startDate = date("Y-m-01", strtotime($month));
@@ -35,6 +36,14 @@ if (!empty($selectedClasses)) {
     $validClasses = array_values(array_filter($selectedClasses, fn($c) => $c !== ''));
 }
 
+// Get locations from office_locations table for dropdown
+$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+$locations_result = pg_query($con, $locations_query);
+$locations = [];
+while ($row = pg_fetch_assoc($locations_result)) {
+    $locations[] = $row['name'];
+}
+
 // Build SQL WHERE clause
 $conditions = [];
 
@@ -50,6 +59,10 @@ if (!empty($validCategories)) {
 if (!empty($validClasses)) {
     $escaped = array_map(fn($c) => pg_escape_literal($con, $c), $validClasses);
     $conditions[] = "s.class IN (" . implode(',', $escaped) . ")";
+}
+
+if (!empty($selected_location)) {
+    $conditions[] = "s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "'";
 }
 
 $whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
@@ -227,6 +240,7 @@ if (!$requireCategorySelection) {
                                     <?php foreach ($validClasses as $cls): ?>
                                         <input type="hidden" name="classes[]" value="<?php echo htmlspecialchars($cls); ?>">
                                     <?php endforeach; ?>
+                                    <input type="hidden" value="<?php echo htmlspecialchars($selected_location); ?>" name="get_location" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
     padding: 0px;
@@ -286,6 +300,21 @@ if (!$requireCategorySelection) {
                                                 <!-- Classes (NEW multiselect - fetched dynamically) -->
                                                 <select name="classes[]" id="classes" class="form-select" multiple="multiple"></select>
                                                 <small class="form-text text-muted">Select one or more classes</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 col-sm-2">
+                                            <div class="form-group">
+                                                <!-- Location Filter -->
+                                                <select name="get_location" id="get_location" class="form-select">
+                                                    <option value="">All Locations</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($location) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <small class="form-text text-muted">Location</small>
                                             </div>
                                         </div>
 
