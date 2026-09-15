@@ -11,11 +11,20 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
+// Get locations from office_locations table for dropdown
+$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+$locations_result = pg_query($con, $locations_query);
+$locations = [];
+while ($row = pg_fetch_assoc($locations_result)) {
+    $locations[] = $row['name'];
+}
+
 if (@$_POST['form-type'] == "exam_filter") {
     $class = $_POST['class'] ?? [];
     $category = $_POST['category'] ?? [];
     $student_ids = $_POST['student_ids'] ?? [];
     $excluded_ids = $_POST['excluded_ids'] ?? [];
+    $location = $_POST['location'] ?? [];
 
     $query = "SELECT student_id, studentname, category, class FROM rssimyprofile_student WHERE filterstatus='Active'";
     $conditions = [];
@@ -38,6 +47,11 @@ if (@$_POST['form-type'] == "exam_filter") {
     if (!empty($excluded_ids)) {
         $excluded_ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $excluded_ids));
         $conditions[] = "student_id NOT IN ('$excluded_ids_list')";
+    }
+
+    if (!empty($location)) {
+        $location_list = implode("','", array_map(fn($l) => pg_escape_string($con, $l), $location));
+        $conditions[] = "preferredbranch IN ('$location_list')";
     }
 
     if (!empty($conditions)) {
@@ -271,6 +285,18 @@ if (@$_POST['form-type'] == "exam") {
                                     <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
                                         <label for="excluded_ids" class="form-label small mb-1">Exclude Student IDs</label>
                                         <select class="form-select" id="excluded_ids" name="excluded_ids[]" multiple></select>
+                                    </div>
+
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                        <label for="locations" class="form-label small mb-1">Location</label>
+                                        <select class="form-select" id="locations" name="location[]" multiple>
+                                            <?php foreach ($locations as $loc): ?>
+                                                <option value="<?= htmlspecialchars($loc) ?>"
+                                                    <?= in_array($loc, (array)($_POST['location'] ?? [])) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($loc) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
 
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
@@ -705,6 +731,13 @@ if (@$_POST['form-type'] == "exam") {
                 placeholder: 'Search by class',
                 width: '100%',
                 minimumInputLength: 1,
+                multiple: true
+            });
+
+            // Locations (static list from PHP, no AJAX needed)
+            $('#locations').select2({
+                placeholder: 'Select location(s)',
+                width: '100%',
                 multiple: true
             });
         });

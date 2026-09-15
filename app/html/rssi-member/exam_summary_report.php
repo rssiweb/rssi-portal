@@ -13,6 +13,15 @@ if (!isLoggedIn("aid")) {
 $exam_type = $_GET['exam_type'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
 $class_filter = $_GET['get_class'] ?? []; // Fetch selected classes (if any)
+$location_filter = $_GET['get_location'] ?? []; // Fetch selected locations (if any)
+
+// Get locations from office_locations table for dropdown
+$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+$locations_result = pg_query($con, $locations_query);
+$locations = [];
+while ($row = pg_fetch_assoc($locations_result)) {
+    $locations[] = $row['name'];
+}
 
 $students_query = "
     SELECT 
@@ -84,6 +93,14 @@ if (!empty($class_filter)) {
     }, array_keys($class_filter));
     $students_query .= " AND exam_marks_data.class IN (" . implode(', ', $placeholders) . ")";
 }
+// Add the location filter if applicable
+if (!empty($location_filter)) {
+    $locOffset = 3 + count($class_filter); // offset = base params + class params
+    $placeholders = array_map(function ($key) use ($locOffset) {
+        return '$' . ($key + $locOffset);
+    }, array_keys($location_filter));
+    $students_query .= " AND student.preferredbranch IN (" . implode(', ', $placeholders) . ")";
+}
 // Order the results
 $students_query .= "ORDER BY 
         CASE 
@@ -103,6 +120,9 @@ $students_query .= "ORDER BY
 $params = [$exam_type, $academic_year];
 if (!empty($class_filter)) {
     $params = array_merge($params, $class_filter);
+}
+if (!empty($location_filter)) {
+    $params = array_merge($params, $location_filter);
 }
 
 $students_result = pg_query_params($con, $students_query, $params);
@@ -186,11 +206,12 @@ $classlist = [
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <?php include 'includes/meta.php' ?>
-    
+
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         table {
             width: 100%;
@@ -273,7 +294,7 @@ $classlist = [
                                             <label for="get_class" class="form-label me-2">Class:</label>
                                             <select name="get_class[]" id="get_class" class="form-select" multiple>
                                                 <?php if ($class_filter == null) { ?>
-                                                    <option disabled selected hidden>Select Class</option>
+                                                    <!-- <option disabled selected hidden>Select Class</option> -->
                                                     <?php foreach ($classlist as $cls) { ?>
                                                         <option><?php echo $cls ?></option>
                                                     <?php } ?>
@@ -284,6 +305,18 @@ $classlist = [
                                                                 } ?>><?php echo $cls ?></option>
                                                 <?php }
                                                 } ?>
+                                            </select>
+                                        </div>
+                                        <!-- Location -->
+                                        <div class="col-md-auto">
+                                            <label for="get_location" class="form-label me-2">Location:</label>
+                                            <select name="get_location[]" id="get_location" class="form-select" multiple>
+                                                <?php foreach ($locations as $loc) { ?>
+                                                    <option value="<?= htmlspecialchars($loc) ?>"
+                                                        <?php if (in_array($loc, $location_filter)) echo "selected"; ?>>
+                                                        <?= htmlspecialchars($loc) ?>
+                                                    </option>
+                                                <?php } ?>
                                             </select>
                                         </div>
 
@@ -385,8 +418,17 @@ $classlist = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#get_class, #get_location').select2({
+                placeholder: 'Select...',
+                width: '100%'
+            });
+        });
+    </script>
+
 </body>
 
 </html>
