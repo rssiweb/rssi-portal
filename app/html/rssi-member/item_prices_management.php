@@ -25,7 +25,11 @@ if ($isAjax) {
 // -----------------------------------------------------------------------------
 $action         = $_POST['action']   ?? '';
 $price_id       = $_POST['price_id'] ?? '';
-$item_id        = $_GET['item_id']   ?? $_POST['item_id'] ?? '';
+// Filter-scoped item id (used by the Filter Prices form via ?item_id=)
+$item_id = $_GET['item_id'] ?? $_POST['item_id'] ?? '';
+
+// Form-scoped item id (used ONLY by the Add/Edit Price form)
+$form_item_id = '';
 $message        = '';
 $error          = '';
 $price_data     = [];
@@ -269,19 +273,24 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     if ($result && pg_num_rows($result) > 0) {
         $source = pg_fetch_assoc($result);
         $edit_source_id = intval($source['price_id']);
-        $item_id = $source['item_id'];
+        $form_item_id = $source['item_id'];   // form only
         $price_data = $source;
     }
 } elseif (isset($_GET['add']) && is_numeric($_GET['add'])) {
-    $item_id = intval($_GET['add']);
+    $form_item_id = intval($_GET['add']);     // form only
+}
+
+// When a POST is used to add/edit, take the item from POST into the form scope
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
+    $form_item_id = intval($_POST['item_id']);
 }
 
 // -----------------------------------------------------------------------------
 // Item details
 // -----------------------------------------------------------------------------
 $item_details = [];
-if ($item_id) {
-    $result = pg_query($con, "SELECT item_id, item_name FROM stock_item WHERE item_id = " . intval($item_id));
+if ($form_item_id) {
+    $result = pg_query($con, "SELECT item_id, item_name FROM stock_item WHERE item_id = " . intval($form_item_id));
     if ($result && pg_num_rows($result) > 0) {
         $item_details = pg_fetch_assoc($result);
     }
