@@ -307,7 +307,7 @@ $units = pg_fetch_all($units_result) ?: [];
 $filters = [
     'item_id' => $_GET['item_id'] ?? '',
     'unit_id' => $_GET['unit_id'] ?? '',
-    'status'  => $_GET['status']  ?? 'active',
+    'status'  => $_GET['status']  ?? '',
 ];
 
 $where_conditions = [];
@@ -339,29 +339,37 @@ switch ($filters['status']) {
 $where_sql = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
 // -----------------------------------------------------------------------------
-// Fetch price list
+// Fetch price list — ONLY if at least one filter is applied
 // -----------------------------------------------------------------------------
-$sql = "SELECT
-            sip.*,
-            si.item_name,
-            siu.unit_name,
-            CASE
-                WHEN (sip.effective_end_date IS NULL OR sip.effective_end_date >= CURRENT_DATE)
-                     AND sip.effective_start_date <= CURRENT_DATE
-                THEN 'Active'
-                WHEN sip.effective_start_date > CURRENT_DATE
-                THEN 'Future'
-                ELSE 'Expired'
-            END as price_status
-        FROM stock_item_price sip
-        JOIN stock_item si ON sip.item_id = si.item_id
-        JOIN stock_item_unit siu ON sip.unit_id = siu.unit_id
-        $where_sql
-        ORDER BY sip.effective_start_date DESC, sip.price_id DESC
-        LIMIT 200";
+$hasFilter = !empty($filters['item_id'])
+    || !empty($filters['unit_id'])
+    || $filters['status'] !== '';
 
-$result = pg_query($con, $sql);
-$prices = pg_fetch_all($result) ?: [];
+$prices = [];
+
+if ($hasFilter) {
+    $sql = "SELECT
+                sip.*,
+                si.item_name,
+                siu.unit_name,
+                CASE
+                    WHEN (sip.effective_end_date IS NULL OR sip.effective_end_date >= CURRENT_DATE)
+                         AND sip.effective_start_date <= CURRENT_DATE
+                    THEN 'Active'
+                    WHEN sip.effective_start_date > CURRENT_DATE
+                    THEN 'Future'
+                    ELSE 'Expired'
+                END as price_status
+            FROM stock_item_price sip
+            JOIN stock_item si ON sip.item_id = si.item_id
+            JOIN stock_item_unit siu ON sip.unit_id = siu.unit_id
+            $where_sql
+            ORDER BY sip.effective_start_date DESC, sip.price_id DESC
+            LIMIT 200";
+
+    $result = pg_query($con, $sql);
+    $prices = pg_fetch_all($result) ?: [];
+}
 
 $filter_item_display = null;
 if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
@@ -671,6 +679,7 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                             <div class="col-md-3">
                                 <label class="form-label">Status</label>
                                 <select class="form-select" name="status">
+                                    <option value="" <?= $filters['status'] === '' ? 'selected' : '' ?>>Select status</option>
                                     <option value="active" <?= $filters['status'] === 'active'   ? 'selected' : '' ?>>Active only</option>
                                     <option value="inactive" <?= $filters['status'] === 'inactive' ? 'selected' : '' ?>>Inactive only</option>
                                     <option value="future" <?= $filters['status'] === 'future'   ? 'selected' : '' ?>>Future only</option>
@@ -697,7 +706,15 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Price History</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Price History</h5>
+
+                                <?php if (count($prices) > 0): ?>
+                                    <button type="button" class="btn btn-sm btn-outline-success" id="export-prices-btn">
+                                        <i class="bi bi-file-earmark-excel"></i> Export
+                                    </button>
+                                <?php endif; ?>
+                            </div>
 
                             <?php if (count($prices) > 0): ?>
                                 <div class="table-responsive">
@@ -809,11 +826,12 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                                 </div>
                             <?php else: ?>
                                 <div class="alert alert-info">
-                                    No price records found.
-                                    <?php if (!empty($filters['item_id']) || !empty($filters['unit_id'])): ?>
-                                        Try changing your filters or <a href="item_prices_management.php">clear all filters</a>.
+                                    <?php if (!$hasFilter): ?>
+                                        <i class="bi bi-funnel"></i>
+                                        Please select at least one filter (Item, Unit, or Status) and click <strong>Apply</strong> to view price records.
                                     <?php else: ?>
-                                        <a href="?add=">Add your first price</a>.
+                                        No price records found.
+                                        Try changing your filters or <a href="item_prices_management.php">clear all filters</a>.
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
@@ -981,9 +999,74 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
             }
 
             // Auto-hide alerts
-            setTimeout(() => {
-                document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close());
-            }, 5000);
+            // setTimeout(() => {
+            //     document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close());
+            // }, 5000);
+
+            // -----------------------------------------------------------------
+            // Export Price History table to CSV (Excel-compatible)
+            // -----------------------------------------------------------------
+            const exportBtn = document.getElementById('export-prices-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    // Grab the price history table specifically (inside .table-responsive)
+                    const table = document.querySelector('.table-responsive table');
+                    if (!table) {
+                        Swal.fire('Nothing to export', 'No price data available.', 'info');
+                        return;
+                    }
+
+                    const rows = [];
+
+                    // Header row
+                    const headers = Array.from(table.querySelectorAll('thead th'))
+                        .map(th => cleanCell(th.innerText));
+                    rows.push(headers);
+
+                    // Body rows
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                        const cells = Array.from(tr.querySelectorAll('td')).map(td => cleanCell(td.innerText));
+                        rows.push(cells);
+                    });
+
+                    // Build CSV
+                    const csv = rows.map(r =>
+                        r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
+                    ).join('\r\n');
+
+                    // Prepend BOM so Excel reads ₹ and accents correctly
+                    const blob = new Blob(['\uFEFF' + csv], {
+                        type: 'text/csv;charset=utf-8;'
+                    });
+                    const url = URL.createObjectURL(blob);
+
+                    // Filename with timestamp
+                    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'price_history_' + ts + '.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Exported',
+                        text: 'Price history downloaded as CSV.',
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+                });
+            }
+
+            // Normalise cell text: collapse whitespace, strip the "₹" formatting quirks
+            function cleanCell(text) {
+                return String(text)
+                    .replace(/\s+/g, ' ')
+                    .replace(/^"|"$/g, '')
+                    .trim();
+            }
 
             // -----------------------------------------------------------------
             // Loader modal
