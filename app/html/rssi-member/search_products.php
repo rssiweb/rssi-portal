@@ -1,12 +1,21 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/login_util.php");
+
+if (!isLoggedIn("aid")) {
+    http_response_code(401);
+    header('Content-Type: application/json');
+    echo json_encode(['results' => []]);
+    exit;
+}
+validation();
 
 header('Content-Type: application/json');
 
 // Get parameters
 $forStockManagement = isset($_GET['for_stock_management']) && $_GET['for_stock_management'] == 'true';
-$addStock = isset($_GET['add_stock']) && $_GET['add_stock'] == 'true';
-$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+$addStock           = isset($_GET['add_stock']) && $_GET['add_stock'] == 'true';
+$searchTerm         = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 if ($addStock) {
     // Special simplified query for add_stock that gets all items
@@ -24,10 +33,9 @@ if ($addStock) {
         NULL as original_price,
         i.rating,
         i.review_count,
-        sip.is_fixed_price,
+        NULL as is_fixed_price,
         i.is_featured
     FROM stock_item i
-    LEFT JOIN stock_item_price sip ON i.item_id = sip.item_id
     WHERE 1=1
     AND i.is_active = true";
 
@@ -35,7 +43,7 @@ if ($addStock) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
     }
 
-    $query .= " ORDER BY i.item_name";
+    $query .= " ORDER BY i.item_name LIMIT 20";
 } else {
     // Original query for all other cases
     $query = "SELECT
@@ -128,7 +136,7 @@ if ($result) {
                 $isFixedPrice = true;
             }
         }
-        
+
         $products[] = [
             'id' => (int)$row['item_id'],
             'name' => $row['item_name'],
@@ -145,7 +153,7 @@ if ($result) {
             'rating' => (float)($row['rating'] ?? 0),
             'review_count' => (int)($row['review_count'] ?? 0),
             'is_featured' => $row['is_featured'] ?? false,
-            'is_fixed_price' => $isFixedPrice  // Add this field
+            'is_fixed_price' => $isFixedPrice
         ];
     }
 }
