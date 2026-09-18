@@ -23,17 +23,23 @@ if ($isAjax) {
 // -----------------------------------------------------------------------------
 // Initialize variables
 // -----------------------------------------------------------------------------
-$action         = $_POST['action']   ?? '';
-$price_id       = $_POST['price_id'] ?? '';
-// Filter-scoped item id (used by the Filter Prices form via ?item_id=)
-$item_id = $_GET['item_id'] ?? $_POST['item_id'] ?? '';
+$action   = $_POST['action']   ?? '';
+$price_id = $_POST['price_id'] ?? '';
+$message  = '';
+$error    = '';
 
-// Form-scoped item id (used ONLY by the Add/Edit Price form)
+// Form-scoped item id (Add/Edit Price form only)
 $form_item_id = '';
-$message        = '';
-$error          = '';
-$price_data     = [];
-$edit_source_id = null;
+
+// Flash message after PRG redirect
+if (!empty($_SESSION['flash_message'])) {
+    $message = $_SESSION['flash_message'];
+    unset($_SESSION['flash_message']);
+}
+if (!empty($_SESSION['flash_error'])) {
+    $error = $_SESSION['flash_error'];
+    unset($_SESSION['flash_error']);
+}
 
 // -----------------------------------------------------------------------------
 // Handle form actions
@@ -55,11 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Field 'price_per_unit' is required for fixed prices");
             }
 
-            $item_id_v        = intval($_POST['item_id']);
-            $unit_id_v        = intval($_POST['unit_id']);
-            $start_date       = $_POST['effective_start_date'];
-            $end_date_raw     = trim($_POST['effective_end_date'] ?? '');
-            $end_date         = $end_date_raw !== '' ? $end_date_raw : null;
+            $item_id_v    = intval($_POST['item_id']);
+            $unit_id_v    = intval($_POST['unit_id']);
+            $start_date   = $_POST['effective_start_date'];
+            $end_date_raw = trim($_POST['effective_end_date'] ?? '');
+            $end_date     = $end_date_raw !== '' ? $end_date_raw : null;
 
             // Guard: end date must be >= start date
             if ($end_date !== null && $end_date < $start_date) {
@@ -73,8 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_fixed_price_v = $is_dynamic ? 'false' : 'true';
 
             // -----------------------------------------------------------------
-            // Overlap check — look for any row on same item+unit that would
-            // overlap. Prices are per unit, so unit_id matters.
+            // Overlap check
             // -----------------------------------------------------------------
             $exclude_id = ($action === 'edit' && $price_id) ? intval($price_id) : 0;
 
@@ -119,13 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conflict_start = $conflict['effective_start_date'];
 
                 if ($conflict_start < $start_date) {
-                    // Safe to set end date = day before the new price starts
                     $day_before = date('Y-m-d', strtotime($start_date . ' -1 day'));
-
                     if ($day_before < $conflict_start) {
                         $day_before = $conflict_start;
                     }
-
                     pg_query_params(
                         $con,
                         "UPDATE stock_item_price
@@ -135,7 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         [$day_before, intval($conflict['price_id'])]
                     );
                 } else {
-                    // Conflict starts on or after the new start.
                     $day_before = date('Y-m-d', strtotime($start_date . ' -1 day'));
                     if ($day_before >= $conflict_start) {
                         pg_query_params(
@@ -157,9 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // -----------------------------------------------------------------
-            // If creating a new version of an existing price, make sure the
-            // SOURCE row doesn't block the insert via the
-            // (item_id, unit_id, effective_start_date) unique constraint.
+            // If creating a new version of an existing price, release the
+            // unique-constraint slot held by the source row.
             // -----------------------------------------------------------------
             if ($action === 'edit' && !empty($price_id)) {
                 $src_id = intval($price_id);
@@ -218,10 +218,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if ($insert_res) {
-                $message = ($action === 'edit')
+                $successMsg = ($action === 'edit')
                     ? "New price version saved. Previous price closed."
                     : "Price added successfully!";
-                $price_data = [];
+
+                if ($isAjax) {
+                    if (!headers_sent()) {
+                        header('Content-Type: application/json');
+                    }
+                    echo json_encode(['status' => 'success', 'message' => $successMsg]);
+                    exit;
+                }
+
+                // PRG fallback (non-AJAX)
+                $_SESSION['flash_message'] = $successMsg;
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
             } else {
                 $pg_err = pg_last_error($con);
                 if (strpos($pg_err, 'unique_price_period') !== false) {
@@ -238,19 +250,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sql = "DELETE FROM stock_item_price WHERE price_id = " . intval($price_id);
             $result = pg_query($con, $sql);
             if ($result) {
-                $message = "Price deleted successfully!";
-            } else {
-                throw new Exception("Failed to delete price: " . pg_last_error($con));
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'success', 'message' => 'Price deleted successfully!']);
+                    exit;
+                }
+                $_SESSION['flash_message'] = "Price deleted successfully!";
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
             }
+            throw new Exception("Failed to delete price: " . pg_last_error($con));
         } elseif ($action === 'deactivate_current' && $price_id) {
             $today = date('Y-m-d');
             $sql = "UPDATE stock_item_price SET effective_end_date = '$today' WHERE price_id = " . intval($price_id);
             $result = pg_query($con, $sql);
             if ($result) {
-                $message = "Price deactivated successfully!";
-            } else {
-                throw new Exception("Failed to deactivate price: " . pg_last_error($con));
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'success', 'message' => 'Price deactivated successfully!']);
+                    exit;
+                }
+                $_SESSION['flash_message'] = "Price deactivated successfully!";
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
             }
+            throw new Exception("Failed to deactivate price: " . pg_last_error($con));
         }
     } catch (Exception $e) {
         if ($isAjax) {
@@ -265,28 +289,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // -----------------------------------------------------------------------------
-// Load data for editing → treat as "new version of this price"
+// Load data for editing
 // -----------------------------------------------------------------------------
+$price_data     = [];
+$edit_source_id = null;
+$edit_item      = null;
+
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $edit_id = intval($_GET['edit']);
     $result = pg_query($con, "SELECT * FROM stock_item_price WHERE price_id = $edit_id");
     if ($result && pg_num_rows($result) > 0) {
         $source = pg_fetch_assoc($result);
         $edit_source_id = intval($source['price_id']);
-        $form_item_id = $source['item_id'];   // form only
+        $form_item_id = $source['item_id'];
         $price_data = $source;
     }
 } elseif (isset($_GET['add']) && is_numeric($_GET['add'])) {
-    $form_item_id = intval($_GET['add']);     // form only
+    $form_item_id = intval($_GET['add']);
 }
 
-// When a POST is used to add/edit, take the item from POST into the form scope
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
+// POST-refill only when the request did NOT succeed (so after a validation
+// error we keep what the user typed; after success we already redirected).
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['item_id'])
+    && $action !== 'add' && $action !== 'edit'
+) {
     $form_item_id = intval($_POST['item_id']);
 }
 
 // -----------------------------------------------------------------------------
-// Item details
+// Item details for the Add/Edit form
 // -----------------------------------------------------------------------------
 $item_details = [];
 if ($form_item_id) {
@@ -296,7 +329,6 @@ if ($form_item_id) {
     }
 }
 
-$edit_item = null;
 if (!empty($price_data['item_id'])) {
     $r = pg_query($con, "SELECT item_id, item_name FROM stock_item WHERE item_id = " . intval($price_data['item_id']));
     if ($r && pg_num_rows($r) > 0) {
@@ -305,24 +337,32 @@ if (!empty($price_data['item_id'])) {
 }
 
 // -----------------------------------------------------------------------------
-// Units dropdown (still used for the filter + display joins)
+// Units dropdown (filter + display joins)
 // -----------------------------------------------------------------------------
 $units_result = pg_query($con, "SELECT unit_id, unit_name FROM stock_item_unit ORDER BY unit_name");
 $units = pg_fetch_all($units_result) ?: [];
 
 // -----------------------------------------------------------------------------
-// Filters
+// Filters — item_id is an ARRAY
 // -----------------------------------------------------------------------------
 $filters = [
-    'item_id' => $_GET['item_id'] ?? '',
+    'item_id' => $_GET['item_id'] ?? [],
     'unit_id' => $_GET['unit_id'] ?? '',
     'status'  => $_GET['status']  ?? '',
 ];
 
+// Normalise item_id to a clean int array
+if (!is_array($filters['item_id'])) {
+    $filters['item_id'] = ($filters['item_id'] === '' || $filters['item_id'] === null)
+        ? []
+        : [$filters['item_id']];
+}
+$item_ids = array_values(array_filter(array_map('intval', $filters['item_id']), fn($v) => $v > 0));
+
 $where_conditions = [];
 
-if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
-    $where_conditions[] = "sip.item_id = " . intval($filters['item_id']);
+if (!empty($item_ids)) {
+    $where_conditions[] = "sip.item_id = ANY(ARRAY[" . implode(',', $item_ids) . "]::int[])";
 }
 if (!empty($filters['unit_id']) && is_numeric($filters['unit_id'])) {
     $where_conditions[] = "sip.unit_id = " . intval($filters['unit_id']);
@@ -347,15 +387,11 @@ switch ($filters['status']) {
 
 $where_sql = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-// -----------------------------------------------------------------------------
-// Fetch price list — ONLY if at least one filter is applied
-// -----------------------------------------------------------------------------
-$hasFilter = !empty($filters['item_id'])
+$hasFilter = !empty($item_ids)
     || !empty($filters['unit_id'])
     || $filters['status'] !== '';
 
 $prices = [];
-
 if ($hasFilter) {
     $sql = "SELECT
                 sip.*,
@@ -380,12 +416,17 @@ if ($hasFilter) {
     $prices = pg_fetch_all($result) ?: [];
 }
 
-$filter_item_display = null;
-if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
-    $r = pg_query($con, "SELECT item_id, item_name FROM stock_item WHERE item_id = " . intval($filters['item_id']));
-    if ($r && pg_num_rows($r) > 0) {
-        $filter_item_display = pg_fetch_assoc($r);
-    }
+// Preselected items for the filter <select>
+$filter_items_display = [];
+if (!empty($item_ids)) {
+    $r = pg_query(
+        $con,
+        "SELECT item_id, item_name
+         FROM stock_item
+         WHERE item_id IN (" . implode(',', $item_ids) . ")
+         ORDER BY item_name"
+    );
+    $filter_items_display = pg_fetch_all($r) ?: [];
 }
 ?>
 <!doctype html>
@@ -450,6 +491,10 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
 
         .select2-container {
             width: 100% !important;
+        }
+
+        #filter_item_id+.select2-container .select2-selection--multiple {
+            min-height: 38px;
         }
     </style>
 </head>
@@ -528,23 +573,28 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="unit_id" class="form-label">Unit *</label>
-                                            <select class="form-select" id="unit_id" name="unit_id" required>
-                                                <?php if (!empty($price_data['unit_id'])):
-                                                    $selected_unit_name = '';
-                                                    foreach ($units as $u) {
-                                                        if ($u['unit_id'] == $price_data['unit_id']) {
-                                                            $selected_unit_name = $u['unit_name'];
-                                                            break;
-                                                        }
+
+                                            <?php if (!empty($price_data['unit_id'])):
+                                                // Edit flow: unit is fixed to the source price's unit
+                                                $selected_unit_name = '';
+                                                foreach ($units as $u) {
+                                                    if ($u['unit_id'] == $price_data['unit_id']) {
+                                                        $selected_unit_name = $u['unit_name'];
+                                                        break;
                                                     }
-                                                    if ($selected_unit_name):
-                                                ?>
-                                                        <option value="<?= (int)$price_data['unit_id'] ?>" selected>
-                                                            <?= htmlspecialchars($selected_unit_name) ?>
-                                                        </option>
-                                                <?php endif;
-                                                endif; ?>
-                                            </select>
+                                                }
+                                            ?>
+                                                <input type="text" class="form-control"
+                                                    value="<?= htmlspecialchars($selected_unit_name ?: ('unit #' . $price_data['unit_id'])) ?>"
+                                                    disabled>
+                                                <input type="hidden" name="unit_id" id="unit_id" value="<?= (int)$price_data['unit_id'] ?>">
+                                                <small class="text-muted">Locked to the source price's unit.</small>
+                                            <?php else: ?>
+                                                <select class="form-select" id="unit_id" name="unit_id" required></select>
+                                                <small class="text-muted" id="unit-hint">
+                                                    Pick an item first — the unit is set from that item's stock records.
+                                                </small>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -652,16 +702,19 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 <div class="col-12">
                     <div class="filter-card">
                         <h5 class="card-title">Filter Prices</h5>
-                        <form method="GET" action="" class="row g-3">
+                        <form method="GET" action="" class="row g-3" id="filter-form">
                             <div class="col-md-4">
-                                <label class="form-label">Item</label>
-                                <select class="form-select" id="filter_item_id" name="item_id">
-                                    <?php if ($filter_item_display): ?>
-                                        <option value="<?= (int)$filter_item_display['item_id'] ?>" selected>
-                                            <?= htmlspecialchars($filter_item_display['item_name']) ?>
+                                <label class="form-label">Item(s)</label>
+                                <select class="form-select" id="filter_item_id" name="item_id[]" multiple="multiple">
+                                    <?php foreach ($filter_items_display as $fi): ?>
+                                        <option value="<?= (int)$fi['item_id'] ?>" selected>
+                                            <?= htmlspecialchars($fi['item_name']) ?>
                                         </option>
-                                    <?php endif; ?>
+                                    <?php endforeach; ?>
                                 </select>
+                                <small class="text-muted" id="filter-item-hint">
+                                    Leave empty to search all items.
+                                </small>
                             </div>
 
                             <div class="col-md-3">
@@ -852,42 +905,6 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
         </section>
     </main>
 
-    <!-- Loader modal -->
-    <div class="modal fade" id="loaderModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content text-center">
-                <div class="modal-body py-4">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width:3rem;height:3rem;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <div id="loaderText">Submitting, please wait…</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Conflict confirmation modal (replaces native confirm()) -->
-    <div class="modal fade" id="conflictModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                        Price conflict
-                    </h5>
-                </div>
-                <div class="modal-body">
-                    <p id="conflictMessage"></p>
-                    <div id="conflictDetails" class="alert alert-light border small mb-0"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="conflictCancelBtn">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="conflictOkBtn">Proceed</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -898,7 +915,7 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
         $(function() {
 
             // -----------------------------------------------------------------
-            // Select2 AJAX config for items
+            // Select2 configs
             // -----------------------------------------------------------------
             function itemSelect2Config() {
                 return {
@@ -929,9 +946,6 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 };
             }
 
-            // -----------------------------------------------------------------
-            // Unit Select2 — AJAX-based, no preload
-            // -----------------------------------------------------------------
             function unitSelect2Config() {
                 return {
                     placeholder: "Type to search unit…",
@@ -956,7 +970,40 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 };
             }
 
-            // Form item picker
+            // Filter item picker — search by item name (like student-id/name search)
+            $('#filter_item_id').select2({
+                ajax: {
+                    url: 'search_products.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            add_stock: 'true',
+                            search: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        const rows = data.results || [];
+                        return {
+                            results: rows.map(r => ({
+                                id: r.id,
+                                text: r.name
+                            }))
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2,
+                placeholder: 'Search by item name',
+                multiple: true,
+                closeOnSelect: true, // ← closes + clears search after each pick
+                width: '100%'
+            });
+
+            // Render pre-selected <option selected> as tags on page load
+            $('#filter_item_id').trigger('change.select2');
+
+            // Form item + unit pickers
             const formItemSelect = $('#item_id').is('select') ? $('#item_id') : null;
             if (formItemSelect) {
                 formItemSelect.select2(itemSelect2Config());
@@ -969,18 +1016,135 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                     formItemSelect.append(presetItem).trigger('change');
                 <?php endif; ?>
             }
-
-            // Filter item picker
-            $('#filter_item_id').select2(itemSelect2Config());
-
-            // Form unit picker
-            $('#unit_id').select2(unitSelect2Config());
-
-            // Filter unit picker
+            // $('#unit_id').select2(unitSelect2Config());
             $('#filter_unit_id').select2(unitSelect2Config());
 
             // -----------------------------------------------------------------
-            // Dynamic price checkbox — disable / reset price fields
+            // Add-form: Unit is driven by the chosen Item.
+            // The unit options come from the item's stock_add records.
+            // -----------------------------------------------------------------
+            const unitSelectEl = document.getElementById('unit_id');
+
+            // Only touch it if it's an actual <select> (add mode).
+            // In edit mode it's a hidden input and we leave it alone.
+            if (unitSelectEl && unitSelectEl.tagName === 'SELECT') {
+
+                // Select2 for the (constrained) unit picker
+                $('#unit_id').select2({
+                    placeholder: 'Unit will be set from item',
+                    minimumInputLength: 0,
+                    width: '100%',
+                    ajax: {
+                        // We don't need a remote search here — options come from the item.
+                        // Return nothing so the user can't type arbitrary units.
+                        transport: function(params, success) {
+                            success({
+                                results: []
+                            });
+                        }
+                    }
+                });
+
+                // Helper to render a single unit option and select it
+                function setUnitOptions(unitList) {
+                    const $unit = $('#unit_id');
+                    const $hint = $('#unit-hint');
+
+                    // Clear existing options/tags
+                    $unit.val(null).trigger('change');
+
+                    if (!unitList || unitList.length === 0) {
+                        $hint.text('This item has no stock records yet, so no unit can be assigned.');
+                        $hint.removeClass('text-muted').addClass('text-danger');
+                        $unit.prop('disabled', true);
+                        return;
+                    }
+
+                    // Rebuild options from the item's units
+                    $unit.empty();
+                    unitList.forEach(u => {
+                        $unit.append(new Option(u.name, u.id, false, false));
+                    });
+
+                    $hint.text('Unit is set automatically from the item\'s stock records.')
+                        .removeClass('text-danger').addClass('text-muted');
+
+                    if (unitList.length === 1) {
+                        // Only one unit → lock it
+                        $unit.val(String(unitList[0].id)).trigger('change');
+                        $unit.prop('disabled', true);
+
+                        // Use a hidden input to actually submit the value
+                        // (disabled selects are not submitted)
+                        ensureHiddenUnitField(unitList[0].id);
+                    } else {
+                        // Multiple units → let user pick, but only among these
+                        $unit.prop('disabled', false);
+                        removeHiddenUnitField();
+                        // Auto-select the first one as a sensible default
+                        $unit.val(String(unitList[0].id)).trigger('change');
+                    }
+                }
+
+                // When the item picker changes, fetch its units and set them
+                $('#item_id').on('change', function() {
+                    const itemId = $(this).val();
+                    if (!itemId) {
+                        setUnitOptions([]);
+                        return;
+                    }
+
+                    $.ajax({
+                        url: 'check_items_unit.php',
+                        method: 'POST',
+                        data: {
+                            item_id: itemId
+                        },
+                        dataType: 'json',
+                        success: function(resp) {
+                            if (resp.error) {
+                                console.error(resp.error);
+                                setUnitOptions([]);
+                                return;
+                            }
+                            setUnitOptions(resp.units || []);
+                        },
+                        error: function(xhr) {
+                            console.error('check_item_units failed', xhr.status, xhr.statusText);
+                            setUnitOptions([]);
+                        }
+                    });
+                });
+
+                // Initial state — if item is already selected (e.g. via ?add=), fetch now
+                const initialItemId = $('#item_id').val();
+                if (initialItemId) {
+                    $('#item_id').trigger('change');
+                }
+
+                // Ensure a hidden field carries the unit value when the select is disabled
+                function ensureHiddenUnitField(unitId) {
+                    let $h = $('#unit_id_hidden');
+                    if ($h.length === 0) {
+                        $h = $('<input>', {
+                            type: 'hidden',
+                            id: 'unit_id_hidden',
+                            name: 'unit_id',
+                            value: unitId
+                        });
+                        $('#unit_id').after($h);
+                    } else {
+                        $h.val(unitId);
+                    }
+                }
+
+                function removeHiddenUnitField() {
+                    $('#unit_id_hidden').remove();
+                }
+            }
+
+            // -----------------------------------------------------------------
+            // Dynamic price checkbox
             // -----------------------------------------------------------------
             const dynamicChk = document.getElementById('is_dynamic_price');
             const priceFields = document.querySelectorAll('.price-field');
@@ -1007,18 +1171,12 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 applyDynamicState();
             }
 
-            // Auto-hide alerts
-            // setTimeout(() => {
-            //     document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close());
-            // }, 5000);
-
             // -----------------------------------------------------------------
-            // Export Price History table to CSV (Excel-compatible)
+            // Export Price History
             // -----------------------------------------------------------------
             const exportBtn = document.getElementById('export-prices-btn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', function() {
-                    // Grab the price history table specifically (inside .table-responsive)
                     const table = document.querySelector('.table-responsive table');
                     if (!table) {
                         Swal.fire('Nothing to export', 'No price data available.', 'info');
@@ -1026,30 +1184,24 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                     }
 
                     const rows = [];
-
-                    // Header row
                     const headers = Array.from(table.querySelectorAll('thead th'))
                         .map(th => cleanCell(th.innerText));
                     rows.push(headers);
 
-                    // Body rows
                     table.querySelectorAll('tbody tr').forEach(tr => {
                         const cells = Array.from(tr.querySelectorAll('td')).map(td => cleanCell(td.innerText));
                         rows.push(cells);
                     });
 
-                    // Build CSV
                     const csv = rows.map(r =>
                         r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
                     ).join('\r\n');
 
-                    // Prepend BOM so Excel reads ₹ and accents correctly
                     const blob = new Blob(['\uFEFF' + csv], {
                         type: 'text/csv;charset=utf-8;'
                     });
                     const url = URL.createObjectURL(blob);
 
-                    // Filename with timestamp
                     const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
                     const a = document.createElement('a');
                     a.href = url;
@@ -1069,48 +1221,15 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                 });
             }
 
-            // Normalise cell text: collapse whitespace, strip the "₹" formatting quirks
             function cleanCell(text) {
-                return String(text)
-                    .replace(/\s+/g, ' ')
-                    .replace(/^"|"$/g, '')
-                    .trim();
+                return String(text).replace(/\s+/g, ' ').replace(/^"|"$/g, '').trim();
             }
 
             // -----------------------------------------------------------------
-            // Loader modal
-            // -----------------------------------------------------------------
-            const loaderModalEl = document.getElementById('loaderModal');
-            const loaderModal = new bootstrap.Modal(loaderModalEl);
-            const loaderText = document.getElementById('loaderText');
-
-            function showLoader(text) {
-                loaderText.textContent = text || 'Submitting, please wait…';
-                loaderModal.show();
-            }
-
-            function hideLoader() {
-                loaderModal.hide();
-            }
-
-            // Conflict modal (Bootstrap — replaces native confirm())
-            const conflictModalEl = document.getElementById('conflictModal');
-            const conflictModal = new bootstrap.Modal(conflictModalEl, {
-                backdrop: 'static',
-                keyboard: false
-            });
-
-            // Wait for the browser to paint
-            function nextPaint() {
-                return new Promise(r =>
-                    requestAnimationFrame(() => requestAnimationFrame(r))
-                );
-            }
-
-            // -----------------------------------------------------------------
-            // Form submit with conflict confirmation
+            // Price form submit with conflict confirmation
             // -----------------------------------------------------------------
             const priceForm = document.getElementById('price-form');
+
             priceForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
@@ -1135,7 +1254,7 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                     });
                 }
 
-                // ---------- Pass 1: conflict check ----------
+                // Pass 1: conflict check
                 Swal.fire({
                     title: 'Checking…',
                     text: 'Checking for conflicts, please wait.',
@@ -1154,111 +1273,278 @@ if (!empty($filters['item_id']) && is_numeric($filters['item_id'])) {
                     return;
                 }
 
-                // Non-JSON response → render it
+                const bodyText1 = await res.text();
+
                 if (!ct.includes('application/json')) {
                     Swal.close();
-                    const html = await res.text();
-                    renderResponse(html);
+                    Swal.fire('Unexpected response', 'Server returned non-JSON. Please reload.', 'error');
                     return;
                 }
 
-                const data = await res.json();
+                let data;
+                try {
+                    data = JSON.parse(bodyText1);
+                } catch (err) {
+                    Swal.close();
+                    Swal.fire('Error', 'Invalid JSON from server.', 'error');
+                    return;
+                }
 
-                // Server error
                 if (data.status === 'error') {
                     Swal.close();
                     Swal.fire('Error', data.message, 'error');
                     return;
                 }
 
-                // No conflict → render response
-                if (data.status !== 'conflict') {
+                // Successful add/edit → reload with flash
+                if (data.status === 'success') {
                     Swal.close();
-                    renderResponse(JSON.stringify(data));
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved',
+                        text: data.message,
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = window.location.pathname + window.location.search;
+                    });
                     return;
                 }
 
-                // ---------- Conflict: show SweetAlert confirm ----------
-                const prev = data.conflict;
-                const prevPrice = prev.price_per_unit === null ?
-                    'Dynamic' :
-                    '₹' + parseFloat(prev.price_per_unit).toFixed(2);
+                // Conflict path
+                if (data.status === 'conflict') {
+                    const prev = data.conflict;
+                    const prevPrice = prev.price_per_unit === null ?
+                        'Dynamic' :
+                        '₹' + parseFloat(prev.price_per_unit).toFixed(2);
 
-                const conflictHtml =
-                    '<div style="text-align:left;font-size:14px;">' +
-                    '<div><strong>Existing price:</strong> ' + prevPrice + '</div>' +
-                    '<div><strong>From:</strong> ' + prev.effective_start_date +
-                    ' <strong>To:</strong> ' + (prev.effective_end_date || 'Ongoing') + '</div>' +
-                    '<hr style="margin:8px 0;">' +
-                    '<div><strong>New price will start from:</strong> ' + data.new_start + '</div>' +
-                    '</div>';
+                    const conflictHtml =
+                        '<div style="text-align:left;font-size:14px;">' +
+                        '<div><strong>Existing price:</strong> ' + prevPrice + '</div>' +
+                        '<div><strong>From:</strong> ' + prev.effective_start_date +
+                        ' <strong>To:</strong> ' + (prev.effective_end_date || 'Ongoing') + '</div>' +
+                        '<hr style="margin:8px 0;">' +
+                        '<div><strong>New price will start from:</strong> ' + data.new_start + '</div>' +
+                        '</div>';
 
-                const confirmed = await Swal.fire({
-                    title: 'Price conflict',
-                    html: conflictHtml,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Proceed',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#0d6efd',
-                    cancelButtonColor: '#6c757d',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                });
+                    const confirmed = await Swal.fire({
+                        title: 'Price conflict',
+                        html: conflictHtml,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Proceed',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    });
 
-                if (!confirmed.isConfirmed) {
+                    if (!confirmed.isConfirmed) return;
+
+                    // Pass 2: confirmed submission
+                    Swal.fire({
+                        title: 'Submission is in progress…',
+                        html: 'Please wait while we save the new price.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    await new Promise(r => setTimeout(r, 30));
+
+                    let res2;
+                    try {
+                        res2 = await postForm({
+                            confirm_end_date: '1'
+                        });
+                    } catch (err) {
+                        Swal.close();
+                        Swal.fire('Network error', err.message, 'error');
+                        return;
+                    }
+
+                    const ct2 = res2.headers.get('content-type') || '';
+                    const bodyText2 = await res2.text();
+
+                    Swal.close();
+
+                    if (ct2.includes('application/json')) {
+                        try {
+                            const data2 = JSON.parse(bodyText2);
+                            if (data2.status === 'error') {
+                                Swal.fire('Error', data2.message, 'error');
+                                return;
+                            }
+                            if (data2.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Saved',
+                                    text: data2.message,
+                                    timer: 1200,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = window.location.pathname + window.location.search;
+                                });
+                                return;
+                            }
+                        } catch (_) {
+                            /* fall through */
+                        }
+                    }
+
+                    Swal.fire('Unexpected response', 'Please reload the page.', 'error');
+                }
+            });
+
+            // -----------------------------------------------------------------
+            // FILTER SUBMIT — validate item+unit combination, then fetch
+            //
+            // Rule: if a Unit is selected AND any selected item does NOT belong
+            // to that unit (per stock_add), block and name the offending items.
+            // No auto-deselect, no auto-filter.
+            //
+            // IMPORTANT: If the validator cannot be reached, we DO NOT fail open —
+            // we block the search and inform the user.
+            // -----------------------------------------------------------------
+            const filterForm = document.getElementById('filter-form');
+            let filterBypassOnce = false;
+
+            filterForm.addEventListener('submit', async function(e) {
+                if (filterBypassOnce) {
+                    filterBypassOnce = false;
+                    return; // allow the real submit (loader already shown)
+                }
+
+                const unitId = $('#filter_unit_id').val();
+                const selectedItems = $('#filter_item_id').val() || [];
+
+                // No unit, or no items → allow freely (mixed units OK).
+                // Still show a fetching loader so the user sees progress.
+                if (!unitId || selectedItems.length === 0) {
+                    e.preventDefault();
+                    showFetchingLoaderThenSubmit();
                     return;
                 }
 
-                // ---------- Pass 2: submission in progress ----------
+                e.preventDefault();
+
+                // Pass 1: verification loader
                 Swal.fire({
-                    title: 'Submission is in progress…',
-                    html: 'Please wait while we save the new price.',
+                    title: 'Checking…',
+                    text: 'Verifying filter criteria, please wait.',
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     didOpen: () => Swal.showLoading()
                 });
 
-                // Give SweetAlert a beat to render before the fetch starts
-                await new Promise(r => setTimeout(r, 30));
-
+                // Ask the server which items belong to this unit (source: stock_add)
+                let data;
                 try {
-                    res = await postForm({
-                        confirm_end_date: '1'
+                    const params = new URLSearchParams();
+                    params.append('unit_id', unitId);
+                    selectedItems.forEach(id => params.append('item_ids[]', id));
+
+                    const res = await fetch('check_items_unit.php', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: params
                     });
+
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status);
+                    }
+
+                    data = await res.json();
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
                 } catch (err) {
                     Swal.close();
-                    Swal.fire('Network error', err.message, 'error');
+                    console.error('Unit/item validation failed', err);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Could not verify items',
+                        html: 'We could not check whether the selected items belong to the chosen unit.<br>' +
+                            'Please try again. If the problem persists, contact support.' +
+                            '<div style="margin-top:8px;font-size:12px;color:#6c757d;">' +
+                            escapeHtml(err.message || String(err)) +
+                            '</div>',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#0d6efd'
+                    });
                     return;
                 }
 
-                const ct2 = res.headers.get('content-type') || '';
-                const bodyText = await res.text();
-
+                // Close the verification loader now that we have an answer
                 Swal.close();
 
-                // If server returned JSON error, show it
-                if (ct2.includes('application/json')) {
-                    try {
-                        const data2 = JSON.parse(bodyText);
-                        if (data2.status === 'error') {
-                            Swal.fire('Error', data2.message, 'error');
-                            return;
-                        }
-                    } catch (_) {
-                        /* fall through */
-                    }
+                const mismatched = data.mismatched || []; // [{id, name}, ...]
+
+                if (mismatched.length === 0) {
+                    // Verified OK → show "fetching data" loader and submit for real
+                    showFetchingLoaderThenSubmit();
+                    return;
                 }
 
-                // Otherwise render the returned page
-                renderResponse(bodyText);
+                const unitName = data.unit_name || ('unit #' + unitId);
+                const listHtml = mismatched
+                    .map(m => '<li><strong>' + escapeHtml(m.name) + '</strong></li>')
+                    .join('');
+
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Unit doesn\'t match',
+                    html: '<div style="text-align:left;">' +
+                        'The unit <strong>' + escapeHtml(unitName) + '</strong> you selected ' +
+                        'does not match all the items you have chosen.<br><br>' +
+                        'Please remove the following item(s) so that all selected items ' +
+                        'share the same unit — you can only search items of the same unit together:' +
+                        '<ul style="margin-top:8px;">' + listHtml + '</ul>' +
+                        '</div>',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0d6efd',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                // Do NOT submit — user must remove the offending items manually.
             });
 
-            function renderResponse(html) {
-                document.open();
-                document.write(html);
-                document.close();
+            // -----------------------------------------------------------------
+            // Show "Fetching data…" then submit the filter form for real.
+            // The loader is intentionally not closed — the browser will navigate
+            // away and the modal disappears with the page.
+            // -----------------------------------------------------------------
+            function showFetchingLoaderThenSubmit() {
+                Swal.fire({
+                    title: 'Fetching data…',
+                    text: 'Please wait while we load the matching price records.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                // Let the loader paint before the synchronous submit kicks in
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        filterBypassOnce = true;
+                        filterForm.submit();
+                    });
+                });
             }
+
+            function escapeHtml(s) {
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
         });
     </script>
 </body>
