@@ -180,12 +180,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $insert_success = true;
                 } else {
                     pg_query($con, "ROLLBACK");
-                    echo '<script>alert("Error updating signup table.");</script>';
+                    $rollback_response = [
+                        'status' => 'error',
+                        'title' => 'Error!',
+                        'message' => 'Error updating signup table.',
+                        'redirect' => null
+                    ];
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                        header('Content-Type: application/json');
+                        echo json_encode($rollback_response);
+                        exit;
+                    }
+                    $_SESSION['form_response'] = $rollback_response;
+                    header('Location: ' . $_SERVER['PHP_SELF'] . '?application_number=' . urlencode($application_number));
                     exit;
                 }
             } else {
                 pg_query($con, "ROLLBACK");
-                echo '<script>alert("Error: ' . addslashes(pg_last_error($con)) . '");</script>';
+                $rollback_response = [
+                    'status' => 'error',
+                    'title' => 'Error!',
+                    'message' => pg_last_error($con),
+                    'redirect' => null
+                ];
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                    header('Content-Type: application/json');
+                    echo json_encode($rollback_response);
+                    exit;
+                }
+                $_SESSION['form_response'] = $rollback_response;
+                header('Location: ' . $_SERVER['PHP_SELF'] . '?application_number=' . urlencode($application_number));
                 exit;
             }
         } elseif ($offer_extended === 'No') {
@@ -304,26 +328,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Collect response data instead of echoing scripts directly
+    $response = [];
+
     if (isset($result_insert_query) && $result_insert_query && pg_affected_rows($result_insert_query) > 0) {
-        // Insert was successful
-        echo '<script>
-            var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
-            alert("Record successfully inserted into rssimyaccount_members.");
-            window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Redirect to the applicant profile page
-        </script>';
+        $response = [
+            'status' => 'success',
+            'title' => 'Success!',
+            'message' => 'Record successfully inserted into rssimyaccount_members.',
+            'redirect' => 'applicant_profile.php?application_number=' . urlencode($application_number)
+        ];
     } elseif ($cmdtuples == 1) {
-        // Profile was updated successfully
-        echo '<script>
-            var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
-            alert("Changes to the Applicant Profile have been saved successfully.");
-            window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Reload the page
-        </script>';
+        $response = [
+            'status' => 'success',
+            'title' => 'Success!',
+            'message' => 'Changes to the Applicant Profile have been saved successfully.',
+            'redirect' => 'applicant_profile.php?application_number=' . urlencode($application_number)
+        ];
     } else {
-        // Handle error case (either insert or update failed)
-        echo '<script>
-            alert("Error: Unable to complete the operation. ' . addslashes(pg_last_error($con)) . '");
-        </script>';
+        $response = [
+            'status' => 'error',
+            'title' => 'Error!',
+            'message' => 'Unable to complete the operation. ' . pg_last_error($con),
+            'redirect' => null
+        ];
     }
+
+    // If AJAX request, return JSON
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+
+    // Non-AJAX fallback
+    $_SESSION['form_response'] = $response;
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?application_number=' . urlencode($application_number));
+    exit;
 }
 
 $isFormDisabled = null;
@@ -368,6 +409,9 @@ $isFormDisabled = null;
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- Add this in the <head> section -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -1016,27 +1060,80 @@ $isFormDisabled = null;
         });
     </script>
     <script>
-        // Function to show loading modal
         function showLoadingModal() {
             $('#myModal').modal('show');
         }
 
-        // Function to hide loading modal
         function hideLoadingModal() {
             $('#myModal').modal('hide');
         }
 
-        // Add event listener to form submission
         document.getElementById('signup').addEventListener('submit', function(event) {
-            // Show loading modal when form is submitted
+            event.preventDefault();
+
             showLoadingModal();
+
+            const form = this;
+            const formData = new FormData(form);
+
+            fetch(form.action || window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoadingModal();
+
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: data.title,
+                            text: data.message,
+                            confirmButtonText: 'OK',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then((result) => {
+                            if (result.isConfirmed && data.redirect) {
+                                window.location.href = data.redirect;
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: data.title,
+                            text: data.message,
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                })
+                .catch(error => {
+                    hideLoadingModal();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'An unexpected error occurred. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('Error:', error);
+                });
         });
 
-        // Optional: Close loading modal when the page is fully loaded
-        window.addEventListener('load', function() {
-            // Hide loading modal
-            hideLoadingModal();
-        });
+        // Show session-based response (non-AJAX fallback)
+        <?php if (isset($_SESSION['form_response'])): ?>
+            <?php $resp = $_SESSION['form_response'];
+            unset($_SESSION['form_response']); ?>
+            Swal.fire({
+                icon: '<?php echo $resp['status'] === 'success' ? 'success' : 'error'; ?>',
+                title: '<?php echo addslashes($resp['title']); ?>',
+                text: '<?php echo addslashes($resp['message']); ?>',
+                confirmButtonText: 'OK'
+            }) <?php if (!empty($resp['redirect'])): ?>.then(() => {
+                    window.location.href = '<?php echo addslashes($resp['redirect']); ?>';
+                }) <?php endif; ?>;
+        <?php endif; ?>
     </script>
     <script>
         $(document).ready(function() {
