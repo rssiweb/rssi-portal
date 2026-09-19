@@ -1584,6 +1584,13 @@ echo "<script>
                                                                     </span>
                                                                 <?php endif; ?>
                                                             </div>
+                                                            <span class="text-end pe-3">
+                                                                <a href="#" class="text-muted"
+                                                                    onclick="showEmploymentHistory('<?php echo $search_id; ?>'); return false;"
+                                                                    title="View change history of Type of Association, Job Type, Designation, Grade">
+                                                                    <i class="bi bi-clock-history"></i> View History
+                                                                </a>
+                                                            </span>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
@@ -2132,6 +2139,50 @@ echo "<script>
 
     </main><!-- End #main -->
 
+    <!-- Employment Field History Modal -->
+    <div class="modal fade" id="employmentHistoryModal" tabindex="-1" aria-labelledby="employmentHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="employmentHistoryModalLabel">
+                        <i class="bi bi-clock-history"></i> Employment Change History
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Optional: Filter chips -->
+                <div class="modal-header border-top-0 pt-2 pb-2">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary active"
+                            data-filter="all" onclick="filterEmploymentHistory('all', this)">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-filter="engagement" onclick="filterEmploymentHistory('engagement', this)">Type of Association</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-filter="job_type" onclick="filterEmploymentHistory('job_type', this)">Job Type</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-filter="position" onclick="filterEmploymentHistory('position', this)">Designation</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-filter="grade" onclick="filterEmploymentHistory('grade', this)">Grade</button>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <div id="employmentHistoryContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading history...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
@@ -2666,7 +2717,290 @@ echo "<script>
             }
         }
     </script>
+    <script>
+        // ===== Employment Field History Modal =====
+        let empHistoryOffset = 0;
+        const EMP_HISTORY_LIMIT = 10;
+        let currentEmpHistoryAssociate = null;
+        let currentEmpHistoryFilter = 'all';
+        let empHistoryModal = null;
+        let empHistoryRecords = []; // cache loaded records
 
+        // Field display labels and colors
+        const FIELD_LABELS = {
+            'engagement': {
+                label: 'Type of Association',
+                color: 'bg-primary'
+            },
+            'job_type': {
+                label: 'Job Type',
+                color: 'bg-info text-dark'
+            },
+            'position': {
+                label: 'Designation',
+                color: 'bg-success'
+            },
+            'grade': {
+                label: 'Grade',
+                color: 'bg-warning text-dark'
+            },
+            'class': {
+                label: 'Work Mode',
+                color: 'bg-secondary'
+            },
+            'shift': {
+                label: 'Shift',
+                color: 'bg-dark'
+            },
+            'role': {
+                label: 'Access Role',
+                color: 'bg-danger'
+            }
+        };
+
+        function showEmploymentHistory(associatenumber) {
+            currentEmpHistoryAssociate = associatenumber;
+            currentEmpHistoryFilter = 'all';
+            empHistoryOffset = 0;
+            empHistoryRecords = [];
+
+            // Reset filter buttons
+            document.querySelectorAll('#employmentHistoryModal [data-filter]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === 'all');
+            });
+
+            // Reset content
+            document.getElementById('employmentHistoryContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading history...</p>
+        </div>`;
+
+            if (!empHistoryModal) {
+                empHistoryModal = new bootstrap.Modal(document.getElementById('employmentHistoryModal'));
+            }
+            empHistoryModal.show();
+
+            loadEmploymentHistory(associatenumber, 0, true);
+        }
+
+        function loadEmploymentHistory(associatenumber, offset, isFirstLoad) {
+            const limit = EMP_HISTORY_LIMIT;
+            const url = `get_employment_history.php?associatenumber=${encodeURIComponent(associatenumber)}&offset=${offset}&limit=${limit}`;
+
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error('Network error');
+                    return r.json();
+                })
+                .then(data => {
+                    const container = document.getElementById('employmentHistoryContent');
+
+                    if (isFirstLoad) {
+                        container.innerHTML = '';
+                        empHistoryRecords = [];
+                    } else {
+                        // Remove previous "Load More" / end-of-list blocks
+                        const existing = document.getElementById('loadMoreEmpBtn');
+                        if (existing) existing.closest('div').remove();
+                        const endMsg = document.getElementById('empHistoryEnd');
+                        if (endMsg) endMsg.remove();
+                    }
+
+                    if (isFirstLoad && data.records.length === 0) {
+                        container.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No change history found for this associate.
+                    </div>`;
+                        return;
+                    }
+
+                    // Cache records
+                    empHistoryRecords = empHistoryRecords.concat(data.records);
+
+                    // Re-render based on active filter
+                    renderEmploymentHistory();
+
+                    // Show "Load More" if more available
+                    if (data.has_more) {
+                        const loadMoreHtml = `
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                id="loadMoreEmpBtn"
+                                onclick="loadMoreEmploymentHistory()">
+                            <i class="bi bi-arrow-down-circle"></i> Load 10 More
+                        </button>
+                        <div class="small text-muted mt-1">
+                            Showing ${empHistoryRecords.length} record(s)
+                        </div>
+                    </div>`;
+                        document.getElementById('employmentHistoryContent')
+                            .insertAdjacentHTML('beforeend', loadMoreHtml);
+                    } else if (!isFirstLoad) {
+                        document.getElementById('employmentHistoryContent')
+                            .insertAdjacentHTML('beforeend',
+                                `<div id="empHistoryEnd" class="text-center text-muted small mt-3">
+                            <i class="bi bi-check-circle"></i> No more records
+                        </div>`);
+                    }
+
+                    empHistoryOffset += data.records.length;
+                })
+                .catch(error => {
+                    console.error('Error loading employment history:', error);
+                    document.getElementById('employmentHistoryContent').innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Failed to load history. Please try again.
+                </div>`;
+                });
+        }
+
+        function loadMoreEmploymentHistory() {
+            if (!currentEmpHistoryAssociate) return;
+            const btn = document.getElementById('loadMoreEmpBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
+            }
+            loadEmploymentHistory(currentEmpHistoryAssociate, empHistoryOffset, false);
+        }
+
+        function filterEmploymentHistory(field, btnEl) {
+            currentEmpHistoryFilter = field;
+            // Update active state on buttons
+            document.querySelectorAll('#employmentHistoryModal [data-filter]').forEach(btn => {
+                btn.classList.toggle('active', btn === btnEl);
+            });
+            renderEmploymentHistory();
+        }
+
+        function renderEmploymentHistory() {
+            const container = document.getElementById('employmentHistoryContent');
+
+            // Remove existing rendered records (keep any trailing Load More, so clear all and rebuild)
+            // We'll rebuild from cache and re-append the Load More button if present.
+            const loadMoreBtn = document.getElementById('loadMoreEmpBtn');
+            const hasMore = !!loadMoreBtn;
+
+            // Filter records
+            const filtered = currentEmpHistoryFilter === 'all' ?
+                empHistoryRecords :
+                empHistoryRecords.filter(r => r.field_name === currentEmpHistoryFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> No records to display for this filter.
+            </div>`;
+                // Re-append Load More button if there are more pages
+                if (hasMore) {
+                    document.getElementById('employmentHistoryContent').insertAdjacentHTML('beforeend', buildLoadMoreHtml());
+                }
+                return;
+            }
+
+            const listHtml = filtered.map(row => {
+                const meta = FIELD_LABELS[row.field_name] || {
+                    label: row.field_name,
+                    color: 'bg-secondary'
+                };
+                const fromDate = formatDate(row.effective_from);
+                const toDate = row.effective_to ? formatDate(row.effective_to) : 'Present';
+                const changedAt = row.changed_at ? new Date(row.changed_at).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '';
+
+                return `
+            <div class="card mb-2 shadow-sm border-0">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="mb-1">
+                                <span class="badge ${meta.color} me-2">${escapeHtml(meta.label)}</span>
+                                <span class="text-muted">${escapeHtml(row.old_value || '—')}</span>
+                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                <strong class="text-success">${escapeHtml(row.new_value || '—')}</strong>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-calendar-range"></i>
+                                Effective: <strong>${fromDate}</strong> → <strong>${toDate}</strong>
+                            </div>
+                            ${row.changed_by ? `<div class="small text-muted"><i class="bi bi-person"></i> Changed by: ${escapeHtml(row.changed_by)}</div>` : ''}
+                        </div>
+                        <div class="text-end small text-muted ms-2" style="min-width: 130px;">
+                            ${changedAt}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            }).join('');
+
+            // Rebuild content
+            container.innerHTML = listHtml;
+
+            // Re-append Load More button if more pages available
+            if (hasMore) {
+                container.insertAdjacentHTML('beforeend', buildLoadMoreHtml());
+            } else if (empHistoryOffset > 0) {
+                container.insertAdjacentHTML('beforeend',
+                    `<div id="empHistoryEnd" class="text-center text-muted small mt-3">
+                <i class="bi bi-check-circle"></i> No more records
+            </div>`);
+            }
+        }
+
+        function buildLoadMoreHtml() {
+            return `
+        <div class="text-center mt-3">
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    id="loadMoreEmpBtn"
+                    onclick="loadMoreEmploymentHistory()">
+                <i class="bi bi-arrow-down-circle"></i> Load 10 More
+            </button>
+            <div class="small text-muted mt-1">
+                Showing ${empHistoryRecords.length} record(s)
+            </div>
+        </div>`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            return d.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Reset on modal close
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalEl = document.getElementById('employmentHistoryModal');
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    empHistoryOffset = 0;
+                    currentEmpHistoryAssociate = null;
+                    empHistoryRecords = [];
+                    currentEmpHistoryFilter = 'all';
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
