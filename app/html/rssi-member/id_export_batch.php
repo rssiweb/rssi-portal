@@ -13,6 +13,18 @@ if (!isset($_GET['batch_id'])) {
 
 $batch_id = pg_escape_string($con, $_GET['batch_id']);
 
+// Optional: filter by specific item IDs (for "Export Selected")
+$ids = isset($_GET['ids']) && $_GET['ids'] !== '' ? explode(',', $_GET['ids']) : [];
+
+$idFilter = '';
+if (!empty($ids)) {
+    // Sanitize each ID and build a safe IN clause
+    $safeIds = array_map(function ($id) use ($con) {
+        return "'" . pg_escape_string($con, trim($id)) . "'";
+    }, $ids);
+    $idFilter = " AND i.id IN (" . implode(',', $safeIds) . ")";
+}
+
 // Updated query: support both students and associates using COALESCE
 $query = "
     SELECT 
@@ -36,6 +48,7 @@ $query = "
     LEFT JOIN rssimyaccount_members m ON i.student_id = m.associatenumber
     LEFT JOIN rssimyaccount_members a ON i.order_placed_by = a.associatenumber
     WHERE i.batch_id = '$batch_id'
+    $idFilter
     ORDER BY s.class NULLS LAST, s.category NULLS LAST, studentname, photourl
 ";
 
@@ -44,9 +57,13 @@ if (!$result) {
     die('Error fetching batch data');
 }
 
+// Determine filename: append "_selected" when filtered
+$filenameSuffix = !empty($ids) ? '_selected' : '';
+$filename = 'ID_Card_Orders_' . $batch_id . $filenameSuffix . '.csv';
+
 // CSV output setup
 header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename=ID_Card_Orders_' . $batch_id . '.csv');
+header('Content-Disposition: attachment; filename=' . $filename);
 
 $output = fopen('php://output', 'w');
 

@@ -17,7 +17,7 @@ validation();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -352,8 +352,8 @@ validation();
     <!-- Bootstrap 5.3 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Select2 JS -->
@@ -573,37 +573,40 @@ validation();
                         `);
 
                         let batchDetails = `
-                            <div class="batch-header d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="text-muted">Created by ${batch.created_by_name} on ${new Date(batch.created_date).toLocaleString()}</span>
-                                </div>
-                                <div>
-                                    <button class="btn btn-sm btn-primary" id="add-students-btn">
-                                        <i class="bi bi-plus-lg"></i> Add Students
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="table-responsive mt-3">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Photo</th>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Status</th>
-                                            <th>Type</th>
-                                            <th>Payment</th>
-                                            <th>Payment Id</th>
-                                            <th>Remarks</th>
-                                            <th>Last Issued</th>
-                                            <th>Times Issued</th>
-                                            <th>Requested By</th>
-                                            <th>Date</th>
-                                            ${canEdit ? '<th>Actions</th>' : ''}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        `;
+    <div class="batch-header d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted">Created by ${batch.created_by_name} on ${new Date(batch.created_date).toLocaleString()}</span>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-primary" id="add-students-btn">
+                <i class="bi bi-plus-lg"></i> Add Students
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive mt-3">
+        <table class="table table-hover align-middle" id="batch-items-table">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;">
+                        <input type="checkbox" class="form-check-input" id="select-all-items">
+                    </th>
+                    <th>Photo</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Payment</th>
+                    <th>Payment Id</th>
+                    <th>Remarks</th>
+                    <th>Last Issued</th>
+                    <th>Times Issued</th>
+                    <th>Requested By</th>
+                    <th>Date</th>
+                    ${canEdit ? '<th>Actions</th>' : ''}
+                </tr>
+            </thead>
+            <tbody>
+`;
 
                         if (items.length > 0) {
                             addedStudentIds = [];
@@ -611,11 +614,14 @@ validation();
                                 addedStudentIds.push(item.student_id);
 
                                 batchDetails += `
-                                    <tr>
-                                        <td>
-                                            <img src="${item.photourl || 'default_photo.jpg'}" class="student-photo"/>
-                                        </td>
-                                        <td>${item.student_id}</td>
+        <tr data-item-id="${item.id}">
+            <td>
+                <input type="checkbox" class="form-check-input item-checkbox" value="${item.id}">
+            </td>
+            <td>
+                <img src="${item.photourl || 'default_photo.jpg'}" class="student-photo"/>
+            </td>
+            <td>${item.student_id}</td>
                                         <td>${item.studentname}</td>
                                         <td>${item.filterstatus}</td>
                                         <td>
@@ -647,12 +653,12 @@ validation();
                             });
                         } else {
                             batchDetails += `
-                                <tr>
-                                    <td colspan="${canEdit ? 12 : 11}" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox"></i> No items in this batch
-                                    </td>
-                                </tr>
-                            `;
+        <tr>
+            <td colspan="${canEdit ? 14 : 13}" class="text-center py-4 text-muted">
+                <i class="bi bi-inbox"></i> No items in this batch
+            </td>
+        </tr>
+    `;
                         }
 
                         batchDetails += `
@@ -664,22 +670,22 @@ validation();
                         // Add batch actions for admin
                         if (isAdmin) {
                             batchDetails += `
-                            <div class="batch-actions d-flex justify-content-between align-items-center mt-3">
-                                <div>
-                                    <span class="text-muted">${items.length} items in batch</span>
-                                </div>
-                                <div>
-                                    ${items.length > 0 && batch.status === 'Pending' ? `
-                                    <button class="btn btn-sm btn-success" id="place-order-btn" data-batch-id="${batch.batch_id}">
-                                        <i class="bi bi-send-check"></i> Place Order for All
-                                    </button>
-                                    ` : ''}
-                                    <button class="btn btn-sm btn-secondary ms-2" id="export-batch-btn" data-batch-id="${batch.batch_id}">
-                                        <i class="bi bi-download"></i> Export
-                                    </button>
-                                </div>
-                            </div>
-                            `;
+    <div class="batch-actions d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <span class="text-muted"><span id="selected-count">0</span> of ${items.length} selected</span>
+        </div>
+        <div>
+            ${items.length > 0 && batch.status === 'Pending' ? `
+            <button class="btn btn-sm btn-success" id="place-order-btn" data-batch-id="${batch.batch_id}">
+                <i class="bi bi-send-check"></i> Place Order for All
+            </button>
+            ` : ''}
+            <button class="btn btn-sm btn-secondary ms-2" id="export-batch-btn" data-batch-id="${batch.batch_id}">
+                <i class="bi bi-download"></i> <span id="export-btn-label">Export All</span>
+            </button>
+        </div>
+    </div>
+    `;
                         }
 
                         $('#batch-details-container').html(batchDetails);
@@ -688,6 +694,41 @@ validation();
                         $('#add-students-btn').click(function() {
                             addStudentsModal.show();
                         });
+
+                        /* ===== Selection logic ===== */
+                        function updateSelectionUI() {
+                            const total = $('.item-checkbox').length;
+                            const checked = $('.item-checkbox:checked').length;
+
+                            $('#selected-count').text(checked);
+
+                            // Sync "Select All" checkbox state
+                            $('#select-all-items').prop('checked', total > 0 && checked === total);
+                            $('#select-all-items').prop('indeterminate', checked > 0 && checked < total);
+
+                            // Update the single Export button's label dynamically
+                            if (checked > 0) {
+                                $('#export-btn-label').text(`Export Selected (${checked})`);
+                            } else {
+                                $('#export-btn-label').text('Export All');
+                            }
+                        }
+
+                        // Select All checkbox
+                        $(document).off('change', '#select-all-items').on('change', '#select-all-items', function() {
+                            const isChecked = $(this).prop('checked');
+                            $('.item-checkbox').prop('checked', isChecked);
+                            updateSelectionUI();
+                        });
+
+                        // Individual checkbox
+                        $(document).off('change', '.item-checkbox').on('change', '.item-checkbox', function() {
+                            updateSelectionUI();
+                        });
+
+                        // Initialize UI (in case checkboxes were previously checked)
+                        updateSelectionUI();
+                        /* ===== End selection logic ===== */
 
                         $('.remove-item').click(function() {
                             const itemId = $(this).data('id');
@@ -814,7 +855,18 @@ validation();
 
                             $('#export-batch-btn').click(function() {
                                 const batchId = $(this).data('batch-id');
-                                window.location.href = 'id_export_batch.php?batch_id=' + encodeURIComponent(batchId);
+                                const selectedIds = $('.item-checkbox:checked').map(function() {
+                                    return $(this).val();
+                                }).get();
+
+                                let url = 'id_export_batch.php?batch_id=' + encodeURIComponent(batchId);
+
+                                // If any items are selected, export only those
+                                if (selectedIds.length > 0) {
+                                    url += '&ids=' + encodeURIComponent(selectedIds.join(','));
+                                }
+
+                                window.location.href = url;
                             });
                         }
                     } else {
