@@ -35,14 +35,12 @@ if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumb
  * Log employment field changes to associate_employment_history table
  * Also closes the previous "current" record by setting effective_to
  */
-function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $newValue, $changedBy, $changeReason = null, $remarks = null)
+function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $newValue, $changedBy, $changeReason = null)
 {
-    // Don't log if values are identical
     if ((string)$oldValue === (string)$newValue) {
         return;
     }
 
-    // Step 1: Close the previous open record for this field (set effective_to = yesterday)
     $closeQuery = "UPDATE associate_employment_history 
                    SET effective_to = CURRENT_DATE - INTERVAL '1 day'
                    WHERE associatenumber = $1 
@@ -50,11 +48,10 @@ function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $ne
                      AND effective_to IS NULL";
     pg_query_params($con, $closeQuery, [$associatenumber, $fieldName]);
 
-    // Step 2: Insert the new history record with effective_from = today
     $insertQuery = "INSERT INTO associate_employment_history 
                     (associatenumber, field_name, old_value, new_value, changed_by, 
-                     effective_from, effective_to, change_reason, remarks) 
-                    VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, NULL, $6, $7)";
+                     effective_from, effective_to, change_reason) 
+                    VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, NULL, $6)";
 
     pg_query_params($con, $insertQuery, [
         $associatenumber,
@@ -62,8 +59,7 @@ function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $ne
         $oldValue,
         $newValue,
         $changedBy,
-        $changeReason,
-        $remarks
+        $changeReason
     ]);
 }
 // ===== END HELPER FUNCTIONS =====
@@ -467,12 +463,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($update_fields)) {
             if (isset($cmdtuples) && $cmdtuples == 1) {
 
-                // ===== ADD THIS: Log history for tracked fields =====
+                // ===== Log history for tracked fields =====
+                $changeReason = trim($_POST['change_reason'] ?? '') ?: null;
+
                 foreach ($history_tracked_fields as $tracked_field) {
                     if (in_array($tracked_field, $updated_fields)) {
                         $oldVal = $old_values_for_history[$tracked_field] ?? null;
 
-                        // For 'grade', new value is not in $_POST — fetch from DB
                         if ($tracked_field === 'grade') {
                             $gradeQuery = "SELECT grade FROM rssimyaccount_members WHERE associatenumber = $1";
                             $gradeResult = pg_query_params($con, $gradeQuery, [$search_id]);
@@ -482,9 +479,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $newVal = $_POST[$tracked_field] ?? null;
                         }
 
-                        $changeReason = $_POST['change_reason'] ?? null;
-                        $remarks      = $_POST['remarks'] ?? null;
-
                         logEmploymentHistory(
                             $con,
                             $search_id,
@@ -492,8 +486,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $oldVal,
                             $newVal,
                             $associatenumber,
-                            $changeReason,
-                            $remarks
+                            $changeReason
                         );
                     }
                 }
@@ -1693,6 +1686,16 @@ echo "<script>
                                                                                     </select>
                                                                                 </td>
                                                                             </tr>
+                                                                            <!-- Reason for change (edit mode only) -->
+                                                                            <tr id="change_reason_row" style="display:none;">
+                                                                                <td><label for="change_reason">Reason for change:</label></td>
+                                                                                <td>
+                                                                                    <input type="text" name="change_reason" id="change_reason"
+                                                                                        class="form-control"
+                                                                                        placeholder="e.g., Promotion, Correction, Transfer"
+                                                                                        maxlength="200">
+                                                                                </td>
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -2243,6 +2246,18 @@ echo "<script>
 
             // mark section
             section.classList.toggle('editing', toEdit);
+
+            // Show/hide the change_reason row only in the Roles card
+            if (sectionId === 'roles') {
+                const reasonRow = section.querySelector('#change_reason_row');
+                if (reasonRow) {
+                    reasonRow.style.display = toEdit ? '' : 'none';
+                    const reasonInput = section.querySelector('#change_reason');
+                    if (reasonInput && !toEdit) {
+                        reasonInput.value = ''; // clear when leaving edit mode
+                    }
+                }
+            }
 
             // Handle all inputs/selects/textareas (skip hidden inputs)
             const inputs = section.querySelectorAll('input, select, textarea');
@@ -2929,7 +2944,8 @@ echo "<script>
                                 <i class="bi bi-calendar-range"></i>
                                 Effective: <strong>${fromDate}</strong> → <strong>${toDate}</strong>
                             </div>
-                            ${row.changed_by ? `<div class="small text-muted"><i class="bi bi-person"></i> Changed by: ${escapeHtml(row.changed_by)}</div>` : ''}
+                                                        ${row.changed_by ? `<div class="small text-muted"><i class="bi bi-person"></i> Changed by: ${escapeHtml(row.changed_by)}</div>` : ''}
+                            ${row.change_reason ? `<div class="small text-muted"><i class="bi bi-chat-left-text"></i> Reason: ${escapeHtml(row.change_reason)}</div>` : ''}
                         </div>
                         <div class="text-end small text-muted ms-2" style="min-width: 130px;">
                             ${changedAt}

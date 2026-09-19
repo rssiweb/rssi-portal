@@ -30,7 +30,7 @@ $fetchLimit = $limit + 1; // fetch one extra to detect has_more
 
 $query = "SELECT history_id, associatenumber, field_name, old_value, new_value,
                  changed_by, changed_at, effective_from, effective_to,
-                 change_reason, remarks
+                 change_reason
           FROM associate_employment_history
           WHERE associatenumber = $1
             AND field_name IN ('engagement', 'job_type', 'position', 'grade')
