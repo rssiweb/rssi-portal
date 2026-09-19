@@ -363,11 +363,33 @@ $hrms_data = [];
 
 if ($hrms_result) {
     while ($row = pg_fetch_assoc($hrms_result)) {
-        $fieldname = pg_escape_string($con, $row['fieldname']);
-        $currentValueQuery = "SELECT $fieldname AS current_value FROM rssimyaccount_members WHERE associatenumber = '{$row['associatenumber']}'";
-        $currentValueResult = pg_query($con, $currentValueQuery);
-        $currentValueRow = pg_fetch_assoc($currentValueResult);
-        $row['current_value'] = $currentValueRow['current_value'] ?? '<em>Not Available</em>';
+        $fieldname = $row['fieldname'];
+
+        // Special case: raw_photo requests should show the *approved* photo
+        // as the "current value" (not the raw one, since raw_photo IS the
+        // pending value the user just submitted).
+        if ($fieldname === 'raw_photo') {
+            $currentValueQuery = "SELECT photo AS current_value 
+                                  FROM rssimyaccount_members 
+                                  WHERE associatenumber = $1";
+            $currentValueResult = pg_query_params($con, $currentValueQuery, [$row['associatenumber']]);
+            $currentValueRow = $currentValueResult ? pg_fetch_assoc($currentValueResult) : null;
+            $row['current_value'] = $currentValueRow['current_value'] ?? null;
+            $row['current_value_is_photo_link'] = true; // flag for the view
+        } else {
+            $fieldname_escaped = pg_escape_string($con, $fieldname);
+            $currentValueQuery = "SELECT $fieldname_escaped AS current_value 
+                                  FROM rssimyaccount_members 
+                                  WHERE associatenumber = $1";
+            $currentValueResult = pg_query_params($con, $currentValueQuery, [$row['associatenumber']]);
+            $currentValueRow = $currentValueResult ? pg_fetch_assoc($currentValueResult) : null;
+            $row['current_value'] = $currentValueRow['current_value'] ?? null;
+            $row['current_value_is_photo_link'] = false;
+        }
+
+        // Flag whether submitted_value should be rendered as a clickable link
+        $row['submitted_value_is_url'] = in_array($fieldname, ['raw_photo', 'photo']);
+
         $hrms_data[] = $row;
     }
 }
@@ -601,8 +623,37 @@ if ($student_result) {
                                                             <td><?= htmlspecialchars($row['associatenumber']) ?></td>
                                                             <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                             <td><?= htmlspecialchars($row['fieldname']) ?></td>
-                                                            <td><?= htmlspecialchars($row['current_value']) ?></td>
-                                                            <td><?= htmlspecialchars($row['submitted_value']) ?></td>
+
+                                                            <!-- Current Value column -->
+                                                            <td>
+                                                                <?php if (!empty($row['current_value_is_photo_link']) && !empty($row['current_value'])): ?>
+                                                                    <a href="<?= htmlspecialchars($row['current_value']) ?>"
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        class="file-link">
+                                                                        View
+                                                                    </a>
+                                                                <?php elseif (!empty($row['current_value'])): ?>
+                                                                    <?= htmlspecialchars($row['current_value']) ?>
+                                                                <?php else: ?>
+                                                                    <em>Not Available</em>
+                                                                <?php endif; ?>
+                                                            </td>
+
+                                                            <!-- Submitted Value column -->
+                                                            <td>
+                                                                <?php if (!empty($row['submitted_value_is_url']) && !empty($row['submitted_value'])): ?>
+                                                                    <a href="<?= htmlspecialchars($row['submitted_value']) ?>"
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        class="file-link">
+                                                                        View
+                                                                    </a>
+                                                                <?php else: ?>
+                                                                    <?= htmlspecialchars($row['submitted_value']) ?>
+                                                                <?php endif; ?>
+                                                            </td>
+
                                                             <td><?= htmlspecialchars($row['reviewer_status']) ?></td>
                                                         </tr>
                                                     <?php endforeach; ?>

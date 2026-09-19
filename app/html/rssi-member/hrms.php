@@ -18,8 +18,8 @@ validation();
 ?>
 <?php
 $search_id = ($role === 'Admin')
-    ? (isset($_GET['associatenumber']) ? $_GET['associatenumber'] : null)
-    : $associatenumber;
+    ? (isset($_GET['associatenumber']) ? strtoupper($_GET['associatenumber']) : null)
+    : strtoupper($associatenumber);
 
 // Deny access if non-Admin user manipulates the URL
 if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumber'] !== $associatenumber) {
@@ -35,23 +35,29 @@ if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumb
  * Log employment field changes to associate_employment_history table
  * Also closes the previous "current" record by setting effective_to
  */
-function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $newValue, $changedBy, $changeReason = null)
+function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $newValue, $changedBy, $changeReason = null, $effectiveFrom = null)
 {
     if ((string)$oldValue === (string)$newValue) {
         return;
     }
 
+    // If effective_from is not provided, fall back to today
+    if (empty($effectiveFrom) || !strtotime($effectiveFrom)) {
+        $effectiveFrom = date('Y-m-d');
+    }
+
+    // Close the previous open record: effective_to = (new effective_from - 1 day)
     $closeQuery = "UPDATE associate_employment_history 
-                   SET effective_to = CURRENT_DATE - INTERVAL '1 day'
-                   WHERE associatenumber = $1 
-                     AND field_name = $2 
+                   SET effective_to = ($1::date - INTERVAL '1 day')
+                   WHERE associatenumber = $2 
+                     AND field_name = $3 
                      AND effective_to IS NULL";
-    pg_query_params($con, $closeQuery, [$associatenumber, $fieldName]);
+    pg_query_params($con, $closeQuery, [$effectiveFrom, $associatenumber, $fieldName]);
 
     $insertQuery = "INSERT INTO associate_employment_history 
                     (associatenumber, field_name, old_value, new_value, changed_by, 
                      effective_from, effective_to, change_reason) 
-                    VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, NULL, $6)";
+                    VALUES ($1, $2, $3, $4, $5, $6::date, NULL, $7)";
 
     pg_query_params($con, $insertQuery, [
         $associatenumber,
@@ -59,6 +65,7 @@ function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $ne
         $oldValue,
         $newValue,
         $changedBy,
+        $effectiveFrom,
         $changeReason
     ]);
 }
@@ -464,7 +471,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($cmdtuples) && $cmdtuples == 1) {
 
                 // ===== Log history for tracked fields =====
-                $changeReason = trim($_POST['change_reason'] ?? '') ?: null;
+                $changeReason  = trim($_POST['change_reason'] ?? '') ?: null;
+                $effectiveFrom = trim($_POST['effective_from'] ?? '') ?: null;
+
+                // Validate effective_from format — must be Y-m-d, else null
+                if ($effectiveFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $effectiveFrom)) {
+                    $effectiveFrom = null;
+                }
 
                 foreach ($history_tracked_fields as $tracked_field) {
                     if (in_array($tracked_field, $updated_fields)) {
@@ -486,7 +499,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $oldVal,
                             $newVal,
                             $associatenumber,
-                            $changeReason
+                            $changeReason,
+                            $effectiveFrom
                         );
                     }
                 }
@@ -1038,6 +1052,58 @@ echo "<script>
                                                 <fieldset>
                                                     <!-- Employee Details Tab -->
                                                     <div id="employee-details" class="tab-pane active" role="tabpanel">
+
+                                                        <!-- Profile Photo Card (User-editable) -->
+                                                        <?php if ($search_id === $associatenumber): ?>
+                                                            <div class="card" id="photo_card">
+                                                                <div class="card-header">
+                                                                    Profile Photo
+                                                                    <span class="text-muted small ms-auto">JPG, PNG · Max 2 MB</span>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center gap-4 flex-wrap">
+                                                                        <!-- Preview circle: HIDDEN by default. Only appears when a file is picked -->
+                                                                        <div id="photoPreviewWrapper"
+                                                                            style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:#e9ecef;display:none;align-items:center;justify-content:center;border:3px dashed #ced4da;">
+                                                                            <img id="photoPreview" src="" alt="Preview"
+                                                                                style="width:100%;height:100%;object-fit:cover;">
+                                                                        </div>
+
+                                                                        <!-- Upload controls -->
+                                                                        <div class="flex-grow-1">
+                                                                            <input type="file"
+                                                                                id="photoFileInput"
+                                                                                class="form-control"
+                                                                                accept="image/jpeg,image/jpg,image/png"
+                                                                                onchange="previewPhotoFile(this)">
+
+                                                                            <div class="d-flex gap-2 mt-2 flex-wrap">
+                                                                                <button type="button"
+                                                                                    class="btn btn-primary btn-sm"
+                                                                                    id="uploadPhotoBtn"
+                                                                                    onclick="uploadProfilePhoto()"
+                                                                                    disabled>
+                                                                                    <i class="bi bi-cloud-upload"></i> Upload Photo
+                                                                                </button>
+                                                                                <button type="button"
+                                                                                    class="btn btn-outline-secondary btn-sm"
+                                                                                    id="clearPhotoBtn"
+                                                                                    onclick="resetPhotoInput()"
+                                                                                    style="display:none;">
+                                                                                    <i class="bi bi-x-circle"></i> Clear
+                                                                                </button>
+                                                                            </div>
+
+                                                                            <div id="photoUploadStatus" class="small mt-2"></div>
+                                                                            <div class="small text-muted mt-2">
+                                                                                Select a JPG or PNG (max 2 MB). Your photo will be reviewed by an Admin before it appears on your profile.
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endif; ?>
+
                                                         <div class="card" id="address_details">
                                                             <div class="card-header">
                                                                 Communication Details
@@ -1696,6 +1762,18 @@ echo "<script>
                                                                                         maxlength="200">
                                                                                 </td>
                                                                             </tr>
+
+                                                                            <!-- Effective From (edit mode only) -->
+                                                                            <tr id="effective_from_row" style="display:none;">
+                                                                                <td><label for="effective_from">Effective From:</label></td>
+                                                                                <td>
+                                                                                    <input type="date" name="effective_from" id="effective_from"
+                                                                                        class="form-control">
+                                                                                    <div class="form-text">
+                                                                                        The date from which this change takes effect. Leave blank to use today.
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -2247,7 +2325,7 @@ echo "<script>
             // mark section
             section.classList.toggle('editing', toEdit);
 
-            // Show/hide the change_reason row only in the Roles card
+            // Show/hide the reason + effective_from rows only in the Roles card
             if (sectionId === 'roles') {
                 const reasonRow = section.querySelector('#change_reason_row');
                 if (reasonRow) {
@@ -2255,6 +2333,15 @@ echo "<script>
                     const reasonInput = section.querySelector('#change_reason');
                     if (reasonInput && !toEdit) {
                         reasonInput.value = ''; // clear when leaving edit mode
+                    }
+                }
+
+                const effRow = section.querySelector('#effective_from_row');
+                if (effRow) {
+                    effRow.style.display = toEdit ? '' : 'none';
+                    const effInput = section.querySelector('#effective_from');
+                    if (effInput && !toEdit) {
+                        effInput.value = ''; // clear when leaving edit mode
                     }
                 }
             }
@@ -2947,8 +3034,9 @@ echo "<script>
                                                         ${row.changed_by ? `<div class="small text-muted"><i class="bi bi-person"></i> Changed by: ${escapeHtml(row.changed_by)}</div>` : ''}
                             ${row.change_reason ? `<div class="small text-muted"><i class="bi bi-chat-left-text"></i> Reason: ${escapeHtml(row.change_reason)}</div>` : ''}
                         </div>
-                        <div class="text-end small text-muted ms-2" style="min-width: 130px;">
-                            ${changedAt}
+                                                <div class="text-end small text-muted ms-2" style="min-width: 150px;">
+                            <div><i class="bi bi-clock"></i> Updated on:</div>
+                            <div>${changedAt}</div>
                         </div>
                     </div>
                 </div>
@@ -3016,6 +3104,177 @@ echo "<script>
                 });
             }
         });
+    </script>
+    <script>
+        // ===== Profile Photo Upload (Google Drive) =====
+        // Behaviour:
+        //   - Preview circle stays HIDDEN until user picks a file
+        //   - After successful upload → preview disappears again (clean page)
+        //   - Upload uses the same Google Drive helper as elsewhere in the app
+
+        // ===== On page load: if raw_photo already has a pending request,
+        // disable the upload UI and show a warning =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const rawPhotoPending = Array.isArray(pendingFields) &&
+                pendingFields.some(f => f.fieldname === 'raw_photo' && f.status === 'Pending');
+
+            if (!rawPhotoPending) return;
+
+            const input = document.getElementById('photoFileInput');
+            const uploadBtn = document.getElementById('uploadPhotoBtn');
+            const clearBtn = document.getElementById('clearPhotoBtn');
+            const status = document.getElementById('photoUploadStatus');
+            const card = document.getElementById('photo_card');
+
+            if (input) input.disabled = true;
+            if (uploadBtn) uploadBtn.disabled = true;
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            if (status) {
+                status.innerHTML = '<span class="text-warning"><i class="bi bi-hourglass-split"></i> You already have a pending photo change request. Please wait for approval or rejection before uploading a new photo.</span>';
+            }
+
+            // Optional: grey out the card header to reinforce the state
+            if (card) card.classList.add('border', 'border-warning');
+        });
+
+        function previewPhotoFile(input) {
+            const status = document.getElementById('photoUploadStatus');
+            const wrapper = document.getElementById('photoPreviewWrapper');
+            const preview = document.getElementById('photoPreview');
+            const uploadBtn = document.getElementById('uploadPhotoBtn');
+            const clearBtn = document.getElementById('clearPhotoBtn');
+
+            // Guard: if raw_photo is pending, refuse to even preview
+            const rawPhotoPending = Array.isArray(pendingFields) &&
+                pendingFields.some(f => f.fieldname === 'raw_photo' && f.status === 'Pending');
+
+            if (rawPhotoPending) {
+                status.innerHTML = '<span class="text-warning"><i class="bi bi-hourglass-split"></i> You already have a pending photo change request. Please wait for approval or rejection.</span>';
+                input.value = '';
+                wrapper.style.display = 'none';
+                uploadBtn.disabled = true;
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            const file = input.files[0];
+
+            // Client-side validation
+            const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowed.includes(file.type)) {
+                status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Only JPG and PNG are allowed.</span>';
+                input.value = '';
+                wrapper.style.display = 'none';
+                uploadBtn.disabled = true;
+                clearBtn.style.display = 'none';
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> File too large. Max 2 MB.</span>';
+                input.value = '';
+                wrapper.style.display = 'none';
+                uploadBtn.disabled = true;
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            // Show circular preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                wrapper.style.display = 'flex';
+                uploadBtn.disabled = false;
+                clearBtn.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+
+            status.innerHTML = `<span class="text-muted"><i class="bi bi-file-earmark-image"></i> Ready to upload: ${escapeHtmlJs(file.name)}</span>`;
+        }
+
+        function resetPhotoInput() {
+            const input = document.getElementById('photoFileInput');
+            const wrapper = document.getElementById('photoPreviewWrapper');
+            const preview = document.getElementById('photoPreview');
+            const status = document.getElementById('photoUploadStatus');
+            const uploadBtn = document.getElementById('uploadPhotoBtn');
+            const clearBtn = document.getElementById('clearPhotoBtn');
+
+            input.value = '';
+            preview.src = '';
+            wrapper.style.display = 'none';
+            status.innerHTML = '';
+            uploadBtn.disabled = true;
+            clearBtn.style.display = 'none';
+        }
+
+        function uploadProfilePhoto() {
+            const input = document.getElementById('photoFileInput');
+            const status = document.getElementById('photoUploadStatus');
+            const btn = document.getElementById('uploadPhotoBtn');
+
+            if (!input.files || !input.files[0]) {
+                status.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Please choose a file first.</span>';
+                return;
+            }
+
+            const file = input.files[0];
+
+            const fd = new FormData();
+            fd.append('action', 'upload_raw_photo');
+            fd.append('associatenumber', '<?php echo htmlspecialchars($search_id); ?>');
+            fd.append('photo', file);
+
+            // UI: loading state
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+            status.innerHTML = '<span class="text-muted">Uploading to Google Drive, please wait...</span>';
+
+            fetch('upload_profile_photo.php', {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> ${escapeHtmlJs(data.message || 'Photo uploaded successfully.')}</span>`;
+
+                        // After successful upload: hide preview + reset file input → clean page
+                        setTimeout(() => {
+                            resetPhotoInput();
+                            status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Photo uploaded successfully. Awaiting admin approval.</span>';
+                        }, 600);
+                    } else {
+                        status.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${escapeHtmlJs(data.message || 'Upload failed.')}</span>`;
+                        // Error: re-enable so user can retry
+                        btn.disabled = false;
+                        btn.innerHTML = originalBtnHtml;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Network error. Please try again.</span>';
+                    // Network error: re-enable so user can retry
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                })
+                .finally(() => {
+                    // Always restore the button TEXT. The disabled state is handled
+                    // per-branch above (disabled on success, enabled on error).
+                    btn.innerHTML = originalBtnHtml;
+                });
+        }
+
+        function escapeHtmlJs(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
     </script>
 </body>
 
