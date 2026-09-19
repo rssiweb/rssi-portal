@@ -30,6 +30,43 @@ if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumb
     exit;
 }
 
+// ===== ADD HISTORY TRACKING HELPER FUNCTIONS HERE =====
+/**
+ * Log employment field changes to associate_employment_history table
+ * Also closes the previous "current" record by setting effective_to
+ */
+function logEmploymentHistory($con, $associatenumber, $fieldName, $oldValue, $newValue, $changedBy, $changeReason = null, $remarks = null)
+{
+    // Don't log if values are identical
+    if ((string)$oldValue === (string)$newValue) {
+        return;
+    }
+
+    // Step 1: Close the previous open record for this field (set effective_to = yesterday)
+    $closeQuery = "UPDATE associate_employment_history 
+                   SET effective_to = CURRENT_DATE - INTERVAL '1 day'
+                   WHERE associatenumber = $1 
+                     AND field_name = $2 
+                     AND effective_to IS NULL";
+    pg_query_params($con, $closeQuery, [$associatenumber, $fieldName]);
+
+    // Step 2: Insert the new history record with effective_from = today
+    $insertQuery = "INSERT INTO associate_employment_history 
+                    (associatenumber, field_name, old_value, new_value, changed_by, 
+                     effective_from, effective_to, change_reason, remarks) 
+                    VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, NULL, $6, $7)";
+
+    pg_query_params($con, $insertQuery, [
+        $associatenumber,
+        $fieldName,
+        $oldValue,
+        $newValue,
+        $changedBy,
+        $changeReason,
+        $remarks
+    ]);
+}
+// ===== END HELPER FUNCTIONS =====
 
 // Step 1: Fetch current associate data (this part remains the same)
 $sql = "SELECT 
@@ -167,6 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $unauthorized_updates = []; // To track unauthorized update attempts
         $pending_approval_fields = []; // Initialize to track fields for pending approval
 
+        // ===== ADD THIS: Capture old values for history tracking =====
+        $history_tracked_fields = ['engagement', 'job_type', 'position', 'class', 'shift', 'grade'];
+        $old_values_for_history = [];
+        foreach ($history_tracked_fields as $tracked_field) {
+            $old_values_for_history[$tracked_field] = $current_data[$tracked_field] ?? null;
+        }
+        // ===== END =====
+
         // Define field groups
         $admin_only_fields = [
             'doj',
@@ -284,6 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($grade !== $current_data['grade']) {
                     $update_fields[] = "grade = '$grade'";
                     $updated_fields[] = "grade";
+                    $old_values_for_history['grade'] = $current_data['grade']; // <-- ADD THIS
                 }
             }
         }
@@ -420,6 +466,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle the success or failure of the update operation
         if (!empty($update_fields)) {
             if (isset($cmdtuples) && $cmdtuples == 1) {
+
+                // ===== ADD THIS: Log history for tracked fields =====
+                foreach ($history_tracked_fields as $tracked_field) {
+                    if (in_array($tracked_field, $updated_fields)) {
+                        $oldVal = $old_values_for_history[$tracked_field] ?? null;
+
+                        // For 'grade', new value is not in $_POST — fetch from DB
+                        if ($tracked_field === 'grade') {
+                            $gradeQuery = "SELECT grade FROM rssimyaccount_members WHERE associatenumber = $1";
+                            $gradeResult = pg_query_params($con, $gradeQuery, [$search_id]);
+                            $gradeRow = $gradeResult ? pg_fetch_assoc($gradeResult) : null;
+                            $newVal = $gradeRow['grade'] ?? null;
+                        } else {
+                            $newVal = $_POST[$tracked_field] ?? null;
+                        }
+
+                        $changeReason = $_POST['change_reason'] ?? null;
+                        $remarks      = $_POST['remarks'] ?? null;
+
+                        logEmploymentHistory(
+                            $con,
+                            $search_id,
+                            $tracked_field,
+                            $oldVal,
+                            $newVal,
+                            $associatenumber,
+                            $changeReason,
+                            $remarks
+                        );
+                    }
+                }
+                // ===== END =====
+
                 echo "<script>
                 alert('The following fields were updated: " . implode(", ", $updated_fields) . "');
                 if (window.history.replaceState) {
