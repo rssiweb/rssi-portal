@@ -147,51 +147,13 @@ if (!pg_query($con, "BEGIN")) {
 }
 
 try {
-    // Get monthly fee category ID
-    $monthlyFeeQuery = "SELECT id FROM fee_categories WHERE category_name = 'Monthly Fee'";
-    $monthlyFeeResult = pg_query($con, $monthlyFeeQuery);
-    $monthlyFeeCategoryId = pg_fetch_assoc($monthlyFeeResult)['id'] ?? null;
-
-    if (!$monthlyFeeCategoryId) {
-        throw new Exception("Monthly Fee category not found");
-    }
-
-    // Get previous carry forward amounts
-    $carryForwardQuery = "SELECT COALESCE(SUM(carry_forward), 0) as total_carry_forward
-                         FROM fee_payments 
-                         WHERE student_id = $1
-                         AND category_id = $2
-                         AND (academic_year < $3 OR (academic_year = $3 AND month != $4))";
-    $carryForwardResult = pg_query_params(
-        $con,
-        $carryForwardQuery,
-        [$studentId, $monthlyFeeCategoryId, $year, $month]
-    );
-    $carryForward = (float)(pg_fetch_assoc($carryForwardResult)['total_carry_forward'] ?? 0);
-
-    // Get current monthly fee amount
-    $monthlyFeeQuery = "SELECT fs.amount 
-                       FROM fee_structure fs
-                       JOIN rssimyprofile_student s ON fs.class = s.class
-                       WHERE fs.category_id = $1
-                       AND s.student_id = $2
-                       AND $3 BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')";
-    $monthlyFeeResult = pg_query_params(
-        $con,
-        $monthlyFeeQuery,
-        [$monthlyFeeCategoryId, $studentId, "$year-$month-01"]
-    );
-    $monthlyFeeAmount = (float)(pg_fetch_assoc($monthlyFeeResult)['amount'] ?? 0);
-
-    // Calculate adjusted monthly fee with carry forward
-    $adjustedMonthlyFee = $monthlyFeeAmount + $carryForward;
 
     // Prepare payment insert statement
     $insertQuery = "INSERT INTO fee_payments 
-                   (student_id, academic_year, month, category_id, amount, 
-                    due_amount, carry_forward, payment_type, transaction_id, 
-                    collected_by, collection_date, notes)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
+               (student_id, academic_year, month, category_id, amount, 
+                payment_type, transaction_id, 
+                collected_by, collection_date, notes)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
     $stmt = pg_prepare($con, "insert_payment", $insertQuery);
     if (!$stmt) {
         throw new Exception("Failed to prepare payment insert statement");
@@ -206,40 +168,14 @@ try {
         $method = $paymentMethods[$categoryId] ?? 'cash';
         $refNo = ($method === 'online') ? ($referenceNumbers[$categoryId] ?? '') : null;
 
-        $dueAfterPayment = 0;
-        $currentCarryForward = 0;
-
-        // Handle monthly fee specially
-        if ($categoryId == $monthlyFeeCategoryId) {
-            $dueAfterPayment = max($adjustedMonthlyFee - $amount, 0);
-            $currentCarryForward = $adjustedMonthlyFee - $amount;
-        }
-        // Handle previous dues
-        elseif ($categoryId === 'previous_due') {
-            $dueAfterPayment = max($carryForward - $amount, 0);
-            $currentCarryForward = -$amount;
-        }
-        // Regular categories
-        else {
-            $categoryQuery = "SELECT amount FROM fee_structure fs
-                            JOIN fee_categories fc ON fs.category_id = fc.id
-                            WHERE fc.id = $1 AND fs.class = 
-                            (SELECT class FROM rssimyprofile_student WHERE student_id = $2)";
-            $categoryResult = pg_query_params($con, $categoryQuery, [$categoryId, $studentId]);
-            $categoryAmount = (float)(pg_fetch_assoc($categoryResult)['amount'] ?? 0);
-            $dueAfterPayment = max($categoryAmount - $amount, 0);
-        }
-
         $params = [
             $studentId,
             $year,
             $month,
-            ($categoryId === 'previous_due') ? null : $categoryId,
+            $categoryId,
             $amount,
-            $dueAfterPayment,
-            ($categoryId == $monthlyFeeCategoryId || $categoryId === 'previous_due') ? $currentCarryForward : 0,
-            $method, // Now using per-category payment method
-            $refNo,  // Reference number for online payments
+            $method,
+            $refNo,
             $collectedBy,
             $paymentDate,
             $notes
