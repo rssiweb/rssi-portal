@@ -34,7 +34,7 @@ $balance = pg_fetch_assoc($balRes) ?: [
     'current_balance' => 0
 ];
 
-// -------- Flash message from a successful POST (set before redirect) --------
+// -------- Flash messages --------
 $flashSuccess = $_SESSION['cashflow_flash_success'] ?? null;
 unset($_SESSION['cashflow_flash_success']);
 
@@ -57,7 +57,6 @@ unset($_SESSION['cashflow_flash_error']);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-
         .balance-card {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
@@ -171,6 +170,25 @@ unset($_SESSION['cashflow_flash_error']);
         .cf-pagination .page-item.disabled .page-link {
             color: #cbd5e1;
         }
+
+        /* Multi-row transaction grid */
+        .txn-row {
+            background: #fff;
+            border-radius: 0.75rem;
+            padding: 0.75rem 0.5rem;
+            transition: background 0.15s;
+        }
+
+        .txn-row:hover {
+            background: #fafbfc;
+        }
+
+        .remove-row-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            line-height: 1;
+        }
     </style>
 </head>
 
@@ -218,60 +236,34 @@ unset($_SESSION['cashflow_flash_error']);
                                 </div>
                             </div>
 
-                            <!-- Add transaction -->
+                            <!-- Add transactions (multi-row) -->
                             <div class="card mb-4">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-pencil-square me-2"></i>Add transaction</span>
+                                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span><i class="bi bi-pencil-square me-2"></i>Add transactions</span>
                                     <span class="badge bg-light text-dark rounded-pill px-3 py-2">
                                         Balance: <span id="quickBalanceHint">₹<?php echo number_format($balance['current_balance'], 2); ?></span>
                                     </span>
                                 </div>
                                 <div class="card-body">
-                                    <form id="transactionForm" enctype="multipart/form-data" class="row g-3 align-items-end">
-                                        <div class="col-md-2">
-                                            <label class="form-label">Type *</label>
-                                            <select class="form-select" id="transType" name="type" required>
-                                                <option value="earning">Earning</option>
-                                                <option value="expense">Expense</option>
-                                            </select>
+                                    <form id="transactionForm" enctype="multipart/form-data">
+                                        <!-- Column headers (desktop only) -->
+                                        <div class="row g-2 align-items-center mb-2 d-none d-lg-flex px-2">
+                                            <div class="col-lg-1"><label class="form-label small mb-0">Type</label></div>
+                                            <div class="col-lg-2"><label class="form-label small mb-0">Amount (₹)</label></div>
+                                            <div class="col-lg-2"><label class="form-label small mb-0">Category</label></div>
+                                            <div class="col-lg-2"><label class="form-label small mb-0">Date</label></div>
+                                            <div class="col-lg-3"><label class="form-label small mb-0">Notes / Description</label></div>
+                                            <div class="col-lg-2"><label class="form-label small mb-0">Receipt</label></div>
                                         </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label">Amount (₹) *</label>
-                                            <input type="number" step="0.01" min="0.01" class="form-control"
-                                                id="transAmount" name="amount" placeholder="0.00" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label">Category *</label>
-                                            <select class="form-select" id="transCategory" name="category_name" required>
-                                                <option value="">Select</option>
-                                                <?php foreach ($categories as $c): ?>
-                                                    <option value="<?php echo htmlspecialchars($c['name']); ?>"
-                                                        data-type="<?php echo $c['type']; ?>">
-                                                        <?php echo htmlspecialchars($c['name']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label">Date *</label>
-                                            <input type="date" class="form-control" id="transDate"
-                                                name="transaction_date" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Notes / Description</label>
-                                            <input type="text" class="form-control" id="transNotes"
-                                                name="notes" placeholder="e.g. Bill no, donor name">
-                                        </div>
-                                        <div class="col-md-8">
-                                            <label class="form-label">Upload bill / receipt (PDF/JPG/PNG, max 5MB)</label>
-                                            <input type="file" class="form-control" id="transReceipt"
-                                                name="receipt"
-                                                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                                                onchange="validateReceipt(this)">
-                                        </div>
-                                        <div class="col-md-4 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary w-100" id="submitTransactionBtn">
-                                                <i class="bi bi-check-lg me-1"></i>Record transaction
+
+                                        <div id="txnRows"></div>
+
+                                        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="addRowBtn">
+                                                <i class="bi bi-plus-circle me-1"></i>Add row
+                                            </button>
+                                            <button type="submit" class="btn btn-primary" id="submitTransactionBtn">
+                                                <i class="bi bi-check-lg me-1"></i>Save all
                                             </button>
                                         </div>
                                     </form>
@@ -507,6 +499,59 @@ unset($_SESSION['cashflow_flash_error']);
         </div>
     </div>
 
+    <!-- Template for one transaction row -->
+    <template id="txnRowTemplate">
+        <div class="row g-2 align-items-end txn-row mb-2 pb-2 border-bottom">
+            <div class="col-lg-1 col-6">
+                <label class="form-label small d-lg-none">Type</label>
+                <select class="form-select form-select-sm" name="rows[__idx__][type]" required>
+                    <option value="earning">Earning</option>
+                    <option value="expense">Expense</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-6">
+                <label class="form-label small d-lg-none">Amount (₹)</label>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"
+                    name="rows[__idx__][amount]" placeholder="0.00" required>
+            </div>
+            <div class="col-lg-2 col-6">
+                <label class="form-label small d-lg-none">Category</label>
+                <select class="form-select form-select-sm" name="rows[__idx__][category_name]" required>
+                    <option value="">Select</option>
+                    <?php foreach ($categories as $c): ?>
+                        <option value="<?php echo htmlspecialchars($c['name']); ?>"
+                            data-type="<?php echo $c['type']; ?>">
+                            <?php echo htmlspecialchars($c['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-lg-2 col-6">
+                <label class="form-label small d-lg-none">Date</label>
+                <input type="date" class="form-control form-control-sm"
+                    name="rows[__idx__][transaction_date]" required>
+            </div>
+            <div class="col-lg-3 col-6">
+                <label class="form-label small d-lg-none">Notes</label>
+                <input type="text" class="form-control form-control-sm"
+                    name="rows[__idx__][notes]" placeholder="e.g. Bill no, donor">
+            </div>
+            <div class="col-lg-2 col-4">
+                <label class="form-label small d-lg-none">Receipt</label>
+                <input type="file" class="form-control form-control-sm"
+                    name="rows[__idx__][receipt]"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    onchange="validateReceipt(this)">
+            </div>
+            <div class="col-lg-auto col-2 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn"
+                    title="Remove row">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
         <i class="bi bi-arrow-up-short"></i>
     </a>
@@ -556,6 +601,42 @@ unset($_SESSION['cashflow_flash_error']);
         }
 
         // =========================================================
+        //  Filter categories by transaction type
+        // =========================================================
+        function applyCategoryFilterToRow(row) {
+            const typeSelect = row.querySelector('[name$="[type]"]');
+            const catSelect = row.querySelector('[name$="[category_name]"]');
+            if (!typeSelect || !catSelect) return;
+
+            const selectedType = typeSelect.value; // 'earning' | 'expense'
+            const currentCat = catSelect.value;
+
+            // Walk the options and toggle visibility
+            Array.from(catSelect.options).forEach(opt => {
+                if (opt.value === '') return; // keep the placeholder
+                const optType = opt.dataset.type || 'both';
+                const matches = (optType === 'both') || (optType === selectedType);
+                opt.hidden = !matches;
+                opt.disabled = !matches;
+            });
+
+            // If the previously selected category is no longer valid, reset it
+            const current = catSelect.querySelector(`option[value="${CSS.escape(currentCat)}"]`);
+            if (current && (current.hidden || current.disabled)) {
+                catSelect.value = '';
+            }
+        }
+
+        // Wire the change handler whenever a row's Type dropdown changes
+        function bindCategoryFilter(row) {
+            const typeSelect = row.querySelector('[name$="[type]"]');
+            if (!typeSelect) return;
+            typeSelect.addEventListener('change', () => applyCategoryFilterToRow(row));
+            // Apply once so the row starts with the correct filtered list
+            applyCategoryFilterToRow(row);
+        }
+
+        // =========================================================
         //  State + date helpers
         // =========================================================
         const state = {
@@ -588,6 +669,56 @@ unset($_SESSION['cashflow_flash_error']);
             nd.setDate(nd.getDate() + n);
             return nd;
         }
+
+        // =========================================================
+        //  Multi-row transaction entry
+        // =========================================================
+        let rowCounter = 0;
+
+        function addTransactionRow(values = {}) {
+            const tpl = document.getElementById('txnRowTemplate');
+            const html = tpl.innerHTML.replace(/__idx__/g, rowCounter++);
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+            const row = wrapper.firstElementChild;
+
+            if (values.type) row.querySelector('[name$="[type]"]').value = values.type;
+            if (values.amount) row.querySelector('[name$="[amount]"]').value = values.amount;
+            if (values.category_name) row.querySelector('[name$="[category_name]"]').value = values.category_name;
+            if (values.transaction_date) row.querySelector('[name$="[transaction_date]"]').value = values.transaction_date;
+            if (values.notes) row.querySelector('[name$="[notes]"]').value = values.notes;
+
+            // NEW — filter the category dropdown for this row
+            bindCategoryFilter(row);
+
+            document.getElementById('txnRows').appendChild(row);
+            updateRemoveButtons();
+            return row;
+        }
+
+        function updateRemoveButtons() {
+            const rows = document.querySelectorAll('.txn-row');
+            rows.forEach(r => {
+                const btn = r.querySelector('.remove-row-btn');
+                btn.disabled = (rows.length === 1);
+                btn.style.opacity = (rows.length === 1) ? '0.4' : '1';
+            });
+        }
+
+        document.getElementById('addRowBtn').addEventListener('click', () => {
+            const row = addTransactionRow({
+                transaction_date: new Date().toISOString().slice(0, 10)
+            });
+            row.querySelector('[name$="[amount]"]').focus();
+        });
+
+        document.getElementById('txnRows').addEventListener('click', e => {
+            const btn = e.target.closest('.remove-row-btn');
+            if (!btn || btn.disabled) return;
+            btn.closest('.txn-row').remove();
+            updateRemoveButtons();
+        });
 
         // =========================================================
         //  90-day window enforcement
@@ -883,16 +1014,45 @@ unset($_SESSION['cashflow_flash_error']);
         }
 
         // =========================================================
-        //  Form submit
+        //  Form submit — batch of rows
         // =========================================================
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
             const form = e.target;
-            const fd = new FormData(form);
             const btn = document.getElementById('submitTransactionBtn');
+            const msg = document.getElementById('formMessage');
+            msg.innerHTML = '';
+
+            const rows = form.querySelectorAll('.txn-row');
+            if (!rows.length) {
+                Swal.fire('No rows', 'Add at least one transaction.', 'warning');
+                return;
+            }
+
+            // Check every row has the required basics
+            let invalid = null;
+            rows.forEach((r, i) => {
+                const amount = r.querySelector('[name$="[amount]"]').value;
+                const category = r.querySelector('[name$="[category_name]"]').value;
+                const date = r.querySelector('[name$="[transaction_date]"]').value;
+                if ((!amount || parseFloat(amount) <= 0) || !category || !date) {
+                    invalid = i + 1;
+                }
+            });
+            if (invalid !== null) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete row',
+                    text: 'Please fill amount, category, and date in row ' + invalid + '.'
+                });
+                return;
+            }
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Recording...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+            const fd = new FormData(form);
 
             fetch('add_transaction.php', {
                     method: 'POST',
@@ -905,8 +1065,8 @@ unset($_SESSION['cashflow_flash_error']);
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Transaction recorded',
-                        text: 'The entry has been saved successfully.',
+                        title: 'Saved',
+                        html: `<strong>${res.inserted}</strong> transaction(s) recorded successfully.`,
                         timer: 1400,
                         timerProgressBar: true,
                         showConfirmButton: false
@@ -916,10 +1076,10 @@ unset($_SESSION['cashflow_flash_error']);
                 })
                 .catch(err => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Record transaction';
+                    btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save all';
                     Swal.fire({
                         icon: 'error',
-                        title: 'Could not record',
+                        title: 'Could not save',
                         text: err.message || 'Something went wrong.',
                         confirmButtonColor: '#1e3c72'
                     });
@@ -1065,7 +1225,6 @@ unset($_SESSION['cashflow_flash_error']);
             const fromVal = document.getElementById('fFrom').value;
             const toVal = document.getElementById('fTo').value;
 
-            // Reset UI
             document.getElementById('detailsRangeInfo').innerHTML =
                 '<span class="spinner-border spinner-border-sm me-2"></span>Loading summary…';
             document.getElementById('detTotalEarnings').textContent = '₹0.00';
@@ -1117,12 +1276,10 @@ unset($_SESSION['cashflow_flash_error']);
             const t = res.totals;
             const cats = res.categories;
 
-            // Range label
             document.getElementById('detailsRangeInfo').innerHTML =
                 `<i class="bi bi-calendar-range me-1"></i>${escapeHtml(res.meta.from)} → ${escapeHtml(res.meta.to)}` +
                 ` &nbsp;<span class="badge bg-light text-dark">${res.meta.days} day${res.meta.days > 1 ? 's' : ''}</span>`;
 
-            // Totals
             document.getElementById('detTotalEarnings').textContent = fmtMoney(t.earnings);
             document.getElementById('detTotalExpenses').textContent = fmtMoney(t.expenses);
             const netEl = document.getElementById('detNetBalance');
@@ -1130,7 +1287,6 @@ unset($_SESSION['cashflow_flash_error']);
             netEl.classList.remove('text-success', 'text-danger');
             netEl.classList.add(t.net >= 0 ? 'text-success' : 'text-danger');
 
-            // Category tables
             const earnBody = document.getElementById('detEarningTable');
             if (cats.earnings.length) {
                 earnBody.innerHTML = cats.earnings.map(r =>
@@ -1244,7 +1400,10 @@ unset($_SESSION['cashflow_flash_error']);
         //  Init
         // =========================================================
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
+            // Seed the first transaction row with today's date
+            addTransactionRow({
+                transaction_date: new Date().toISOString().slice(0, 10)
+            });
 
             const todayYmd = dateToYmd(new Date());
             document.getElementById('fFrom').max = todayYmd;

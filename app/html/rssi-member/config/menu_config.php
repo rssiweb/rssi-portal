@@ -427,6 +427,13 @@ class MenuConfig
                     'emart_orders.php' => ['title' => 'eMart Orders', 'show_in_menu' => true]
                 ]
             ],
+            'cashflow' => [
+                'section' => 'Community Supply',
+                'sidebar_id' => 'csu',
+                'pages' => [
+                    'cashflow.php' => ['title' => 'Cashflow', 'show_in_menu' => true]
+                ]
+            ],
             'sales_analytics' => [
                 'section' => 'Community Supply',
                 'sidebar_id' => 'csu',
