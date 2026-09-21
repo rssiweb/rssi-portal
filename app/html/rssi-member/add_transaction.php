@@ -49,11 +49,22 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
     exit;
 }
 
-// -------- Balance guard (expense only) --------
+// -------- Balance guard (expense only) — computed inline --------
 if ($type === 'expense') {
-    $balRes = pg_query($con, "SELECT current_balance FROM cashflow_balance");
+    $balRes = pg_query($con, "
+        SELECT COALESCE(
+            SUM(CASE WHEN type = 'earning' THEN amount ELSE -amount END),
+            0
+        ) AS current_balance
+        FROM cashflow_transactions
+    ");
+    if (!$balRes) {
+        echo json_encode(['success' => false, 'error' => pg_last_error($con)]);
+        exit;
+    }
     $balRow = pg_fetch_assoc($balRes);
     $currentBalance = floatval($balRow['current_balance'] ?? 0);
+
     if ($amount > $currentBalance) {
         echo json_encode([
             'success' => false,

@@ -20,8 +20,14 @@ $catRes = pg_query($con, "SELECT id, name, type FROM cashflow_categories
                           WHERE is_active = TRUE ORDER BY type, name");
 $categories = pg_fetch_all($catRes) ?: [];
 
-// -------- Balance (initial paint) --------
-$balRes  = pg_query($con, "SELECT * FROM cashflow_balance");
+// -------- Balance (initial paint) — computed inline from transactions --------
+$balRes = pg_query($con, "
+    SELECT
+        COALESCE(SUM(CASE WHEN type = 'earning' THEN amount ELSE 0 END), 0)  AS total_earnings,
+        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0)  AS total_expenses,
+        COALESCE(SUM(CASE WHEN type = 'earning' THEN amount ELSE -amount END), 0) AS current_balance
+    FROM cashflow_transactions
+");
 $balance = pg_fetch_assoc($balRes) ?: [
     'total_earnings'  => 0,
     'total_expenses'  => 0,
@@ -51,13 +57,6 @@ unset($_SESSION['cashflow_flash_error']);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background: #f5f7fb;
-        }
 
         .balance-card {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -124,7 +123,6 @@ unset($_SESSION['cashflow_flash_error']);
             color: #fecaca !important;
         }
 
-        /* Filter bar styling */
         .filter-bar {
             background: #f9fafb;
             border-radius: 1rem;
@@ -156,7 +154,6 @@ unset($_SESSION['cashflow_flash_error']);
             background-color: #f9fafb;
         }
 
-        /* Custom small pagination */
         .cf-pagination .page-link {
             border-radius: 0.5rem;
             margin: 0 0.15rem;
@@ -282,7 +279,7 @@ unset($_SESSION['cashflow_flash_error']);
                                 </div>
                             </div>
 
-                            <!-- Transaction history (with merged filter + export) -->
+                            <!-- Transaction history -->
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <span><i class="bi bi-table me-2"></i>Transaction history</span>
@@ -292,6 +289,22 @@ unset($_SESSION['cashflow_flash_error']);
                                 <div class="card-body">
                                     <!-- Filter bar -->
                                     <div class="filter-bar mb-3">
+                                        <!-- Quick range chips -->
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="quickLast7Btn">
+                                                <i class="bi bi-calendar-week me-1"></i>Last 7 days
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="quickThisMonthBtn">
+                                                <i class="bi bi-calendar-month me-1"></i>This month
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="quickLast90Btn">
+                                                <i class="bi bi-calendar-range me-1"></i>Last 90 days
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill ms-auto" id="viewDetailsBtn">
+                                                <i class="bi bi-bar-chart-line me-1"></i>View details
+                                            </button>
+                                        </div>
+
                                         <div class="row g-2 align-items-end">
                                             <div class="col-6 col-md-2">
                                                 <label class="form-label small">From date</label>
@@ -389,17 +402,126 @@ unset($_SESSION['cashflow_flash_error']);
         </section>
     </main>
 
+    <!-- ============================= -->
+    <!-- Details Modal                 -->
+    <!-- ============================= -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius:1rem;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">
+                        <i class="bi bi-bar-chart-line me-2"></i>Financial summary
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="small text-secondary mb-3" id="detailsRangeInfo"></div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">Total earnings</div>
+                                    <div class="h4 fw-bold text-success mb-0" id="detTotalEarnings">₹0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">Total expenses</div>
+                                    <div class="h4 fw-bold text-danger mb-0" id="detTotalExpenses">₹0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">Net balance</div>
+                                    <div class="h4 fw-bold mb-0" id="detNetBalance">₹0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="small fw-semibold mb-2">Earnings vs Expenses</div>
+                                    <canvas id="chartTotals" height="180"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="small fw-semibold mb-2">Category-wise split</div>
+                                    <canvas id="chartCategories" height="180"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold text-success">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Earnings by category
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detEarningTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold text-danger">
+                                <i class="bi bi-arrow-up-circle me-1"></i>Expenses by category
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detExpenseTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
         <i class="bi bi-arrow-up-short"></i>
     </a>
 
+    <!-- Vendor JS -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets_new/js/main.js"></script>
 
     <script>
-        // ---------- helpers ----------
+        // =========================================================
+        //  Helpers
+        // =========================================================
         function escapeHtml(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({
                 '&': '&amp;',
@@ -433,7 +555,9 @@ unset($_SESSION['cashflow_flash_error']);
             }
         }
 
-        // ---------- filters state ----------
+        // =========================================================
+        //  State + date helpers
+        // =========================================================
         const state = {
             from: '',
             to: '',
@@ -446,7 +570,6 @@ unset($_SESSION['cashflow_flash_error']);
 
         const MAX_RANGE_DAYS = 90;
 
-        // Date helpers (local-time safe, no UTC off-by-one)
         function ymdToDate(ymd) {
             if (!ymd) return null;
             const [y, m, d] = ymd.split('-').map(Number);
@@ -466,7 +589,9 @@ unset($_SESSION['cashflow_flash_error']);
             return nd;
         }
 
-        // Enforce the 90-day window between #fFrom and #fTo and clamp values
+        // =========================================================
+        //  90-day window enforcement
+        // =========================================================
         function enforceDateWindow(changedSide) {
             const fromEl = document.getElementById('fFrom');
             const toEl = document.getElementById('fTo');
@@ -481,7 +606,6 @@ unset($_SESSION['cashflow_flash_error']);
             today.setHours(0, 0, 0, 0);
             const todayYmd = dateToYmd(today);
 
-            // Neither side set → clear bounds
             if (!fromYmd && !toYmd) {
                 ['min', 'max'].forEach(a => {
                     fromEl.removeAttribute(a);
@@ -494,7 +618,6 @@ unset($_SESSION['cashflow_flash_error']);
             if (changedSide === 'from' && fromYmd) {
                 const fromD = ymdToDate(fromYmd);
 
-                // Can't be after today
                 if (fromD > today) {
                     fromEl.value = todayYmd;
                     fromYmd = todayYmd;
@@ -510,7 +633,6 @@ unset($_SESSION['cashflow_flash_error']);
                 toEl.min = fromYmd;
                 toEl.max = dateToYmd(maxTo > today ? today : maxTo);
 
-                // Pull To into range if out of window
                 if (toYmd) {
                     const toD = ymdToDate(toYmd);
                     if (toD < fromD2) {
@@ -529,7 +651,6 @@ unset($_SESSION['cashflow_flash_error']);
             if (changedSide === 'to' && toYmd) {
                 const toD = ymdToDate(toYmd);
 
-                // Can't be after today
                 if (toD > today) {
                     toEl.value = todayYmd;
                     toYmd = todayYmd;
@@ -544,7 +665,6 @@ unset($_SESSION['cashflow_flash_error']);
                 fromEl.min = dateToYmd(minFrom);
                 fromEl.max = toYmd;
 
-                // Pull From into range if out of window
                 if (fromYmd) {
                     const fromD = ymdToDate(fromYmd);
                     if (fromD > toD2) {
@@ -558,7 +678,6 @@ unset($_SESSION['cashflow_flash_error']);
                 }
             }
 
-            // Final range indicator
             if (fromEl.value && toEl.value) {
                 const days = Math.round(
                     (ymdToDate(toEl.value) - ymdToDate(fromEl.value)) / (1000 * 60 * 60 * 24)
@@ -567,7 +686,6 @@ unset($_SESSION['cashflow_flash_error']);
             }
         }
 
-        // ---------- date range validation (pre-fetch / pre-export sanity check) ----------
         function validateDateRange() {
             const fromVal = document.getElementById('fFrom').value;
             const toVal = document.getElementById('fTo').value;
@@ -600,7 +718,9 @@ unset($_SESSION['cashflow_flash_error']);
             return true;
         }
 
-        // ---------- load ----------
+        // =========================================================
+        //  Load transactions
+        // =========================================================
         function loadTransactions() {
             if (!validateDateRange()) return;
 
@@ -623,8 +743,8 @@ unset($_SESSION['cashflow_flash_error']);
 
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
-                <span class="spinner-border spinner-border-sm me-2"></span>Loading…
-            </td></tr>`;
+            <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+        </td></tr>`;
 
             fetch('get_transactions.php?' + params.toString(), {
                     cache: 'no-store'
@@ -637,8 +757,8 @@ unset($_SESSION['cashflow_flash_error']);
                 })
                 .catch(err => {
                     tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">
-                        ${escapeHtml(err.message)}
-                    </td></tr>`;
+                    ${escapeHtml(err.message)}
+                </td></tr>`;
                 });
         }
 
@@ -648,8 +768,8 @@ unset($_SESSION['cashflow_flash_error']);
 
             if (!rows.length) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
-                    <i class="bi bi-inbox fs-4 d-block mb-1"></i>No transactions found for the selected filters.
-                </td></tr>`;
+                <i class="bi bi-inbox fs-4 d-block mb-1"></i>No transactions found for the selected filters.
+            </td></tr>`;
                 document.getElementById('rowCountInfo').textContent = '';
                 return;
             }
@@ -661,7 +781,7 @@ unset($_SESSION['cashflow_flash_error']);
 
                 const receipt = t.receipt_drive_url ?
                     `<a href="${t.receipt_drive_url}" target="_blank" class="small text-decoration-none">
-                           <i class="bi bi-paperclip"></i> View</a>` :
+                       <i class="bi bi-paperclip"></i> View</a>` :
                     '<span class="text-muted small">—</span>';
 
                 const amtClass = t.type === 'earning' ? 'text-success' : 'text-danger';
@@ -669,14 +789,14 @@ unset($_SESSION['cashflow_flash_error']);
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="text-nowrap">${escapeHtml(t.transaction_date)}</td>
-                    <td>${typeBadge}</td>
-                    <td>${escapeHtml(t.category_name)}</td>
-                    <td><span class="note-badge">${escapeHtml(t.notes || '—')}</span></td>
-                    <td>${receipt}</td>
-                    <td class="text-end fw-semibold ${amtClass} text-nowrap">
-                        ${sign} ${fmtMoney(t.amount)}
-                    </td>`;
+                <td class="text-nowrap">${escapeHtml(t.transaction_date)}</td>
+                <td>${typeBadge}</td>
+                <td>${escapeHtml(t.category_name)}</td>
+                <td><span class="note-badge">${escapeHtml(t.notes || '—')}</span></td>
+                <td>${receipt}</td>
+                <td class="text-end fw-semibold ${amtClass} text-nowrap">
+                    ${sign} ${fmtMoney(t.amount)}
+                </td>`;
                 tbody.appendChild(row);
             });
         }
@@ -729,7 +849,6 @@ unset($_SESSION['cashflow_flash_error']);
             ul.appendChild(mkLi('<i class="bi bi-chevron-double-left"></i>', 1, page === 1));
             ul.appendChild(mkLi('<i class="bi bi-chevron-left"></i>', page - 1, page === 1));
 
-            // Show up to 5 page numbers around current
             let startPage = Math.max(1, page - 2);
             let endPage = Math.min(total_pages, startPage + 4);
             startPage = Math.max(1, endPage - 4);
@@ -742,7 +861,9 @@ unset($_SESSION['cashflow_flash_error']);
             ul.appendChild(mkLi('<i class="bi bi-chevron-double-right"></i>', total_pages, page === total_pages));
         }
 
-        // ---------- balance ----------
+        // =========================================================
+        //  Balance
+        // =========================================================
         function refreshBalance() {
             fetch('get_balance.php?_t=' + Date.now(), {
                     cache: 'no-store'
@@ -761,7 +882,9 @@ unset($_SESSION['cashflow_flash_error']);
                 });
         }
 
-        // ---------- form submit (with reload + sweetalert) ----------
+        // =========================================================
+        //  Form submit
+        // =========================================================
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = e.target;
@@ -780,7 +903,6 @@ unset($_SESSION['cashflow_flash_error']);
                 .then(res => {
                     if (!res.success) throw new Error(res.error || 'Failed');
 
-                    // SweetAlert then full page reload
                     Swal.fire({
                         icon: 'success',
                         title: 'Transaction recorded',
@@ -804,7 +926,9 @@ unset($_SESSION['cashflow_flash_error']);
                 });
         });
 
-        // ---------- filter buttons ----------
+        // =========================================================
+        //  Filter buttons
+        // =========================================================
         document.getElementById('applyFiltersBtn').addEventListener('click', () => {
             state.page = 1;
             loadTransactions();
@@ -830,7 +954,6 @@ unset($_SESSION['cashflow_flash_error']);
             loadTransactions();
         });
 
-        // Enforce 90-day window whenever either side changes
         document.getElementById('fFrom').addEventListener('change', () => {
             enforceDateWindow('from');
             validateDateRange();
@@ -840,7 +963,6 @@ unset($_SESSION['cashflow_flash_error']);
             validateDateRange();
         });
 
-        // Enter key in search box triggers search
         document.getElementById('fSearch').addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -849,7 +971,42 @@ unset($_SESSION['cashflow_flash_error']);
             }
         });
 
-        // ---------- export ----------
+        // =========================================================
+        //  Quick range chips
+        // =========================================================
+        function applyQuickRange(kind) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let fromD, toD = today;
+
+            if (kind === 'last7') {
+                fromD = addDays(today, -6);
+            } else if (kind === 'thisMonth') {
+                fromD = new Date(today.getFullYear(), today.getMonth(), 1);
+            } else if (kind === 'last90') {
+                fromD = addDays(today, -89);
+            }
+
+            const fromEl = document.getElementById('fFrom');
+            const toEl = document.getElementById('fTo');
+
+            fromEl.value = dateToYmd(fromD);
+            toEl.value = dateToYmd(toD);
+
+            enforceDateWindow('from');
+            validateDateRange();
+
+            state.page = 1;
+            loadTransactions();
+        }
+
+        document.getElementById('quickLast7Btn').addEventListener('click', () => applyQuickRange('last7'));
+        document.getElementById('quickThisMonthBtn').addEventListener('click', () => applyQuickRange('thisMonth'));
+        document.getElementById('quickLast90Btn').addEventListener('click', () => applyQuickRange('last90'));
+
+        // =========================================================
+        //  Export
+        // =========================================================
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             const fromVal = document.getElementById('fFrom').value;
             const toVal = document.getElementById('fTo').value;
@@ -878,11 +1035,217 @@ unset($_SESSION['cashflow_flash_error']);
             window.location.href = 'export_csv.php?' + params.toString();
         });
 
-        // ---------- init ----------
+        // =========================================================
+        //  Details modal
+        // =========================================================
+        let chartTotals = null;
+        let chartCategories = null;
+        let detailsModalInstance = null;
+
+        document.getElementById('viewDetailsBtn').addEventListener('click', () => {
+            const fromVal = document.getElementById('fFrom').value;
+            const toVal = document.getElementById('fTo').value;
+
+            if (!fromVal || !toVal) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No date range selected',
+                    html: 'The details view needs a date range.<br>Showing the <strong>last 90 days</strong> for you now.',
+                    confirmButtonColor: '#1e3c72'
+                }).then(() => {
+                    applyQuickRange('last90');
+                    setTimeout(openDetailsModal, 350);
+                });
+                return;
+            }
+            openDetailsModal();
+        });
+
+        function openDetailsModal() {
+            const fromVal = document.getElementById('fFrom').value;
+            const toVal = document.getElementById('fTo').value;
+
+            // Reset UI
+            document.getElementById('detailsRangeInfo').innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2"></span>Loading summary…';
+            document.getElementById('detTotalEarnings').textContent = '₹0.00';
+            document.getElementById('detTotalExpenses').textContent = '₹0.00';
+            document.getElementById('detNetBalance').textContent = '₹0.00';
+            document.getElementById('detEarningTable').innerHTML =
+                '<tr><td colspan="2" class="text-center text-muted small">Loading…</td></tr>';
+            document.getElementById('detExpenseTable').innerHTML =
+                '<tr><td colspan="2" class="text-center text-muted small">Loading…</td></tr>';
+
+            if (chartTotals) {
+                chartTotals.destroy();
+                chartTotals = null;
+            }
+            if (chartCategories) {
+                chartCategories.destroy();
+                chartCategories = null;
+            }
+
+            if (!detailsModalInstance) {
+                detailsModalInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
+            }
+            detailsModalInstance.show();
+
+            const params = new URLSearchParams({
+                from: fromVal,
+                to: toVal,
+                category: document.getElementById('fCategory').value,
+                type: document.getElementById('fType').value,
+                q: document.getElementById('fSearch').value.trim(),
+                _t: Date.now()
+            });
+
+            fetch('get_summary.php?' + params.toString(), {
+                    cache: 'no-store'
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) throw new Error(res.error || 'Failed to load summary');
+                    renderDetails(res);
+                })
+                .catch(err => {
+                    document.getElementById('detailsRangeInfo').innerHTML =
+                        `<span class="text-danger">${escapeHtml(err.message)}</span>`;
+                });
+        }
+
+        function renderDetails(res) {
+            const t = res.totals;
+            const cats = res.categories;
+
+            // Range label
+            document.getElementById('detailsRangeInfo').innerHTML =
+                `<i class="bi bi-calendar-range me-1"></i>${escapeHtml(res.meta.from)} → ${escapeHtml(res.meta.to)}` +
+                ` &nbsp;<span class="badge bg-light text-dark">${res.meta.days} day${res.meta.days > 1 ? 's' : ''}</span>`;
+
+            // Totals
+            document.getElementById('detTotalEarnings').textContent = fmtMoney(t.earnings);
+            document.getElementById('detTotalExpenses').textContent = fmtMoney(t.expenses);
+            const netEl = document.getElementById('detNetBalance');
+            netEl.textContent = fmtMoney(t.net);
+            netEl.classList.remove('text-success', 'text-danger');
+            netEl.classList.add(t.net >= 0 ? 'text-success' : 'text-danger');
+
+            // Category tables
+            const earnBody = document.getElementById('detEarningTable');
+            if (cats.earnings.length) {
+                earnBody.innerHTML = cats.earnings.map(r =>
+                        `<tr><td>${escapeHtml(r.category)}</td><td class="text-end">${fmtMoney(r.total)}</td></tr>`
+                    ).join('') +
+                    `<tr class="fw-semibold border-top">
+                <td>Total</td><td class="text-end">${fmtMoney(t.earnings)}</td>
+            </tr>`;
+            } else {
+                earnBody.innerHTML =
+                    '<tr><td colspan="2" class="text-muted small">No earnings in this range.</td></tr>';
+            }
+
+            const expBody = document.getElementById('detExpenseTable');
+            if (cats.expenses.length) {
+                expBody.innerHTML = cats.expenses.map(r =>
+                        `<tr><td>${escapeHtml(r.category)}</td><td class="text-end">${fmtMoney(r.total)}</td></tr>`
+                    ).join('') +
+                    `<tr class="fw-semibold border-top">
+                <td>Total</td><td class="text-end">${fmtMoney(t.expenses)}</td>
+            </tr>`;
+            } else {
+                expBody.innerHTML =
+                    '<tr><td colspan="2" class="text-muted small">No expenses in this range.</td></tr>';
+            }
+
+            // Chart 1 — totals bar
+            const ctxTotals = document.getElementById('chartTotals').getContext('2d');
+            chartTotals = new Chart(ctxTotals, {
+                type: 'bar',
+                data: {
+                    labels: ['Earnings', 'Expenses'],
+                    datasets: [{
+                        data: [t.earnings, t.expenses],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 8,
+                        barThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: v => '₹' + Number(v).toLocaleString('en-IN')
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2 — category doughnut
+            const labels = [
+                ...cats.earnings.map(r => 'Earning · ' + r.category),
+                ...cats.expenses.map(r => 'Expense · ' + r.category)
+            ];
+            const values = [
+                ...cats.earnings.map(r => parseFloat(r.total)),
+                ...cats.expenses.map(r => parseFloat(r.total))
+            ];
+            const colors = [
+                ...cats.earnings.map((_, i) => `hsl(${150 + i * 20}, 65%, ${55 - i * 3}%)`),
+                ...cats.expenses.map((_, i) => `hsl(${0 + i * 20}, 70%, ${60 - i * 3}%)`)
+            ];
+
+            const ctxCat = document.getElementById('chartCategories').getContext('2d');
+            chartCategories = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length ? labels : ['No data'],
+                    datasets: [{
+                        data: values.length ? values : [1],
+                        backgroundColor: colors.length ? colors : ['#e5e7eb'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    if (!values.length) return 'No data';
+                                    return ctx.label + ': ₹' + Number(ctx.raw).toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =========================================================
+        //  Init
+        // =========================================================
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
 
-            // Prevent future dates in the filter inputs on first load
             const todayYmd = dateToYmd(new Date());
             document.getElementById('fFrom').max = todayYmd;
             document.getElementById('fTo').max = todayYmd;
@@ -890,7 +1253,6 @@ unset($_SESSION['cashflow_flash_error']);
             loadTransactions();
             refreshBalance();
 
-            // Show flash from a previous request (if any)
             <?php if ($flashSuccess): ?>
                 Swal.fire({
                     icon: 'success',
