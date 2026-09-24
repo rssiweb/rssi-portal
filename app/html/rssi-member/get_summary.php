@@ -36,26 +36,32 @@ if ($days > MAX_RANGE_DAYS) {
     exit;
 }
 
-// -------- Build WHERE --------
+// -------- Build WHERE (columns prefixed with ct.) --------
 $where  = [];
 $params = [];
 $i = 1;
 
-$where[]  = "transaction_date >= $" . $i++;
+$where[]  = "ct.transaction_date >= $" . $i++;
 $params[] = $from;
-$where[]  = "transaction_date <= $" . $i++;
+
+$where[]  = "ct.transaction_date <= $" . $i++;
 $params[] = $to;
 
 if ($category !== '') {
-    $where[]  = "category_name = $" . $i++;
+    // Filter on the joined category name
+    $where[]  = "cc.name = $" . $i++;
     $params[] = $category;
 }
 if (in_array($type, ['earning', 'expense'], true)) {
-    $where[]  = "type = $" . $i++;
+    $where[]  = "ct.type = $" . $i++;
     $params[] = $type;
 }
 if ($q !== '') {
-    $where[]  = "(notes ILIKE $" . $i . " OR category_name ILIKE $" . $i . " OR CAST(amount AS TEXT) ILIKE $" . $i . ")";
+    $where[]  = "(
+                    ct.notes ILIKE $" . $i . "
+                 OR cc.name  ILIKE $" . $i . "
+                 OR CAST(ct.amount AS TEXT) ILIKE $" . $i . "
+                 )";
     $params[] = '%' . $q . '%';
     $i++;
 }
@@ -64,33 +70,51 @@ $whereSql = 'WHERE ' . implode(' AND ', $where);
 
 // -------- Totals --------
 $totSql = "SELECT
-    COALESCE(SUM(CASE WHEN type='earning' THEN amount ELSE 0 END), 0) AS earnings,
-    COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END), 0) AS expenses
-    FROM cashflow_transactions
+    COALESCE(SUM(CASE WHEN ct.type='earning' THEN ct.amount ELSE 0 END), 0) AS earnings,
+    COALESCE(SUM(CASE WHEN ct.type='expense' THEN ct.amount ELSE 0 END), 0) AS expenses
+    FROM cashflow_transactions ct
+    LEFT JOIN cashflow_categories cc ON cc.id = ct.category_id
     $whereSql";
+
 $totRes = pg_query_params($con, $totSql, $params);
-$tot    = pg_fetch_assoc($totRes) ?: ['earnings' => 0, 'expenses' => 0];
+if (!$totRes) {
+    echo json_encode(['success' => false, 'error' => pg_last_error($con)]);
+    exit;
+}
+$tot = pg_fetch_assoc($totRes) ?: ['earnings' => 0, 'expenses' => 0];
 
 $earnings = (float)$tot['earnings'];
 $expenses = (float)$tot['expenses'];
 $net      = $earnings - $expenses;
 
 // -------- Category breakdown --------
-$catSql = "SELECT type, category_name, SUM(amount) AS total
-           FROM cashflow_transactions
+$catSql = "SELECT 
+                ct.type,
+                cc.name AS category_name,
+                SUM(ct.amount) AS total
+           FROM cashflow_transactions ct
+           LEFT JOIN cashflow_categories cc ON cc.id = ct.category_id
            $whereSql
-           GROUP BY type, category_name
-           ORDER BY type, total DESC";
+           GROUP BY ct.type, cc.name
+           ORDER BY ct.type, total DESC";
+
 $catRes = pg_query_params($con, $catSql, $params);
+if (!$catRes) {
+    echo json_encode(['success' => false, 'error' => pg_last_error($con)]);
+    exit;
+}
 $catRows = pg_fetch_all($catRes) ?: [];
 
 $earnCats = [];
 $expCats  = [];
 foreach ($catRows as $r) {
+    // Handle orphaned category_id (null name) — label them clearly
+    $catName = $r['category_name'] ?? 'Uncategorized';
+
     if ($r['type'] === 'earning') {
-        $earnCats[] = ['category' => $r['category_name'], 'total' => (float)$r['total']];
+        $earnCats[] = ['category' => $catName, 'total' => (float)$r['total']];
     } else {
-        $expCats[]  = ['category' => $r['category_name'], 'total' => (float)$r['total']];
+        $expCats[]  = ['category' => $catName, 'total' => (float)$r['total']];
     }
 }
 

@@ -18,7 +18,6 @@ $addStock           = isset($_GET['add_stock']) && $_GET['add_stock'] == 'true';
 $searchTerm         = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 if ($addStock) {
-    // Special simplified query for add_stock that gets all items
     $query = "SELECT
         i.item_id,
         i.item_name,
@@ -34,7 +33,8 @@ if ($addStock) {
         i.rating,
         i.review_count,
         NULL as is_fixed_price,
-        i.is_featured
+        i.is_featured,
+        i.is_cashflow
     FROM stock_item i
     WHERE 1=1
     AND i.is_active = true";
@@ -45,7 +45,6 @@ if ($addStock) {
 
     $query .= " ORDER BY i.item_name LIMIT 20";
 } else {
-    // Original query for all other cases
     $query = "SELECT
         i.item_id,
         i.item_name,
@@ -62,7 +61,8 @@ if ($addStock) {
         i.rating,
         i.review_count,
         sip.is_fixed_price,
-        i.is_featured
+        i.is_featured,
+        i.is_cashflow
     FROM 
         stock_item i
     LEFT JOIN stock_add sa ON i.item_id = sa.item_id
@@ -77,28 +77,25 @@ if ($addStock) {
     WHERE 1=1
     AND i.is_active = true";
 
-    // Apply access scope filter
     if ($forStockManagement) {
         $query .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
     } else {
         $query .= " AND i.access_scope = 'public'";
     }
 
-    // Add search condition
     if (!empty($searchTerm)) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
     }
 
+    // i.is_cashflow must be added to GROUP BY since it's a non-aggregated column
     $query .= " GROUP BY 
-        i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured,
+        i.item_id, i.item_name, i.description, i.rating, i.review_count, i.is_featured, i.is_cashflow,
         u.unit_id, u.unit_name, p.price_per_unit, p.unit_quantity, p.discount_percentage, p.original_price, sip.is_fixed_price
     ORDER BY 
         i.is_featured DESC, i.item_name";
 }
 
-// Only apply pagination for non-stock management and non-add_stock cases
 if (!$forStockManagement && !$addStock) {
-    // Get total count for pagination
     $countQuery = "SELECT COUNT(DISTINCT i.item_id) as total FROM stock_item i 
                    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
                    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
@@ -116,20 +113,19 @@ if (!$forStockManagement && !$addStock) {
         $countQuery .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
     }
 
-    $countResult = pg_query($con, $countQuery);
-    $totalItems = pg_fetch_assoc($countResult)['total'];
+    $countResult  = pg_query($con, $countQuery);
+    $totalItems   = pg_fetch_assoc($countResult)['total'];
     $itemsPerPage = isset($_GET['itemsPerPage']) ? max(5, min(100, intval($_GET['itemsPerPage']))) : 5;
-    $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-    $totalPages = ceil($totalItems / $itemsPerPage);
+    $currentPage  = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $totalPages   = ceil($totalItems / $itemsPerPage);
     $query .= " LIMIT $itemsPerPage OFFSET " . (($currentPage - 1) * $itemsPerPage);
 }
 
-$result = pg_query($con, $query);
-
+$result   = pg_query($con, $query);
 $products = [];
+
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
-        // Properly handle PostgreSQL boolean conversion
         $isFixedPrice = false;
         if (isset($row['is_fixed_price'])) {
             if ($row['is_fixed_price'] === 't' || $row['is_fixed_price'] === '1' || $row['is_fixed_price'] === true || $row['is_fixed_price'] === 'true') {
@@ -137,37 +133,43 @@ if ($result) {
             }
         }
 
+        // Normalize is_cashflow -> boolean
+        $isCashflow = false;
+        if (isset($row['is_cashflow'])) {
+            if ($row['is_cashflow'] === 't' || $row['is_cashflow'] === '1' || $row['is_cashflow'] === true || $row['is_cashflow'] === 'true') {
+                $isCashflow = true;
+            }
+        }
+
         $products[] = [
-            'id' => (int)$row['item_id'],
-            'name' => $row['item_name'],
-            'price' => (float)$row['price_per_unit'],
-            'original_price' => isset($row['original_price']) ? (float)$row['original_price'] : (float)$row['price_per_unit'],
-            'image' => $row['image_url'],
-            'description' => $row['description'] ?? '',
-            'unit_name' => $row['unit_name'],
-            'unit_id' => $row['unit_id'],
-            'unit_quantity' => $row['unit_quantity'] ?? 1,
-            'in_stock' => $row['in_stock'] !== null ? (int)$row['in_stock'] : 0,
-            'soldOut' => $row['in_stock'] === null || $row['in_stock'] <= 0,
+            'id'                  => (int)$row['item_id'],
+            'name'                => $row['item_name'],
+            'price'               => (float)$row['price_per_unit'],
+            'original_price'      => isset($row['original_price']) ? (float)$row['original_price'] : (float)$row['price_per_unit'],
+            'image'               => $row['image_url'],
+            'description'         => $row['description'] ?? '',
+            'unit_name'           => $row['unit_name'],
+            'unit_id'             => $row['unit_id'],
+            'unit_quantity'       => $row['unit_quantity'] ?? 1,
+            'in_stock'            => $row['in_stock'] !== null ? (int)$row['in_stock'] : 0,
+            'soldOut'             => $row['in_stock'] === null || $row['in_stock'] <= 0,
             'discount_percentage' => (float)($row['discount_percentage'] ?? 0),
-            'rating' => (float)($row['rating'] ?? 0),
-            'review_count' => (int)($row['review_count'] ?? 0),
-            'is_featured' => $row['is_featured'] ?? false,
-            'is_fixed_price' => $isFixedPrice
+            'rating'              => (float)($row['rating'] ?? 0),
+            'review_count'        => (int)($row['review_count'] ?? 0),
+            'is_featured'         => $row['is_featured'] ?? false,
+            'is_cashflow'         => $isCashflow,
+            'is_fixed_price'      => $isFixedPrice
         ];
     }
 }
 
-// Return different response formats based on context
 if ($forStockManagement || $addStock) {
-    echo json_encode([
-        'results' => $products
-    ]);
+    echo json_encode(['results' => $products]);
 } else {
     echo json_encode([
-        'products' => $products,
-        'totalPages' => $totalPages,
+        'products'    => $products,
+        'totalPages'  => $totalPages,
         'currentPage' => $currentPage,
-        'totalItems' => $totalItems
+        'totalItems'  => $totalItems
     ]);
 }

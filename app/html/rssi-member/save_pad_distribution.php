@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $recorded_by = $associatenumber;
     $distribution_date = pg_escape_string($con, $_POST['distribution_date']);
     $quantity = pg_escape_string($con, $_POST['quantity']);
-    
+
     // Begin transaction for atomic operations
     pg_query($con, "BEGIN");
 
@@ -32,10 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             while ($student = pg_fetch_assoc($studentsResult)) {
                 $student_id = $student['student_id'];
-                $transaction_out_id = uniqid(); // Unique ID for each record
-                
-                $query = "INSERT INTO stock_out (
-                            transaction_out_id, 
+
+                $query = "INSERT INTO stock_out ( 
                             distributed_to, 
                             date, 
                             quantity_distributed, 
@@ -43,7 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             item_distributed, 
                             unit
                           ) VALUES (
-                            '$transaction_out_id',
                             '$student_id', 
                             '$distribution_date', 
                             $quantity, 
@@ -76,10 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 foreach ($student_ids as $student_id) {
                     $student_id = pg_escape_string($con, $student_id);
-                    $transaction_out_id = uniqid(); // Unique ID for each record
-                    
+
                     $query = "INSERT INTO stock_out (
-                                transaction_out_id, 
                                 distributed_to, 
                                 date, 
                                 quantity_distributed, 
@@ -87,7 +82,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 item_distributed, 
                                 unit
                               ) VALUES (
-                                '$transaction_out_id',
                                 '$student_id', 
                                 '$distribution_date', 
                                 $quantity, 
@@ -121,7 +115,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Commit transaction if all operations succeeded
         pg_query($con, "COMMIT");
-
     } catch (Exception $e) {
         // Rollback transaction on error
         pg_query($con, "ROLLBACK");

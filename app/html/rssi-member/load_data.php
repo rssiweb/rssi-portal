@@ -32,6 +32,7 @@ switch ($view) {
     case 'stock_add':
         $query = "
             SELECT
+                a.transaction_id AS Ref,
                 a.date_received,
                 i.item_name,
                 a.quantity_received,
@@ -43,7 +44,8 @@ switch ($view) {
             FROM stock_item i
             JOIN stock_add a ON i.item_id = a.item_id
             JOIN stock_item_unit u ON u.unit_id = a.unit_id
-            GROUP BY 
+            GROUP BY
+                a.transaction_id, 
                 a.date_received,
                 a.source,
                 a.description,
@@ -178,5 +180,3 @@ if (empty($data)) {
     }
     echo '</tbody></table></div>';
 }
-
-

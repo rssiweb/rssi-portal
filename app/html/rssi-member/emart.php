@@ -87,7 +87,6 @@ validation();
 
     <!-- =========================================================
          BOOTSTRAP JS
-         IMPORTANT: Must load BEFORE custom JavaScript
     ========================================================== -->
     <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
@@ -158,6 +157,15 @@ validation();
             margin-left: 5px;
         }
 
+        .cashflow-badge {
+            font-size: 0.7rem;
+            background-color: #6f42c1;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
         .fixed-price-badge {
             font-size: 0.7rem;
             background-color: #4caf50;
@@ -200,15 +208,6 @@ validation();
             color: #666;
         }
 
-        /*
-         * =========================================================
-         * SUBMISSION OVERLAY
-         *
-         * This is intentionally NOT a Bootstrap modal.
-         * It appears immediately with its backdrop.
-         * =========================================================
-         */
-
         #submissionOverlay {
             position: fixed;
             inset: 0;
@@ -247,16 +246,10 @@ validation();
             color: #444;
         }
 
-        /*
-         * Make sure normal Bootstrap modal is below our submission overlay
-         */
         #orderConfirmationModal {
             z-index: 1055;
         }
 
-        /*
-         * Select2 inside Bootstrap modal
-         */
         .select2-container {
             width: 100% !important;
         }
@@ -276,10 +269,6 @@ validation();
 
     <?php include 'inactive_session_expire_check.php'; ?>
 
-
-    <!-- =========================================================
-         MAIN
-    ========================================================== -->
 
     <main id="main" class="main">
 
@@ -307,9 +296,7 @@ validation();
                             <br>
 
 
-                            <!-- =================================================
-                                 ITEMS PER PAGE
-                            ================================================== -->
+                            <!-- ITEMS PER PAGE -->
 
                             <div class="container">
 
@@ -350,9 +337,7 @@ validation();
                                 <div class="row">
 
 
-                                    <!-- =================================================
-                                         PRODUCTS
-                                    ================================================== -->
+                                    <!-- PRODUCTS -->
 
                                     <div class="col-md-6">
 
@@ -412,9 +397,7 @@ validation();
                                     </div>
 
 
-                                    <!-- =================================================
-                                         CART
-                                    ================================================== -->
+                                    <!-- CART -->
 
                                     <div class="col-md-6">
 
@@ -476,9 +459,7 @@ validation();
     </main>
 
 
-    <!-- =========================================================
-         CHECKOUT MODAL
-    ========================================================== -->
+    <!-- CHECKOUT MODAL -->
 
     <div
         class="modal fade"
@@ -520,9 +501,7 @@ validation();
                     <div class="modal-body">
 
 
-                        <!-- =================================================
-                             ORDER SUMMARY
-                        ================================================== -->
+                        <!-- ORDER SUMMARY -->
 
                         <div class="row mb-4">
 
@@ -541,29 +520,12 @@ validation();
 
                                             <tr>
 
-                                                <th>
-                                                    Item
-                                                </th>
-
-                                                <th>
-                                                    Unit #
-                                                </th>
-
-                                                <th>
-                                                    Unit Price
-                                                </th>
-
-                                                <th>
-                                                    Discount %
-                                                </th>
-
-                                                <th>
-                                                    Total
-                                                </th>
-
-                                                <th>
-                                                    Action
-                                                </th>
+                                                <th>Item</th>
+                                                <th>Unit #</th>
+                                                <th>Unit Price</th>
+                                                <th>Discount %</th>
+                                                <th>Total</th>
+                                                <th>Action</th>
 
                                             </tr>
 
@@ -607,9 +569,7 @@ validation();
                         </div>
 
 
-                        <!-- =================================================
-                             BENEFICIARY + PAYMENT
-                        ================================================== -->
+                        <!-- BENEFICIARY + PAYMENT -->
 
                         <div class="row">
 
@@ -696,17 +656,11 @@ validation();
                                         Select Payment Mode
                                     </option>
 
-                                    <option value="cash">
-                                        Cash
-                                    </option>
+                                    <option value="cash">Cash</option>
 
-                                    <option value="online">
-                                        Online Payment
-                                    </option>
+                                    <option value="online">Online Payment</option>
 
-                                    <option value="freebie">
-                                        Freebies (no payment required)
-                                    </option>
+                                    <option value="freebie">Freebies (no payment required)</option>
 
                                 </select>
 
@@ -715,9 +669,7 @@ validation();
                         </div>
 
 
-                        <!-- =================================================
-                             TRANSACTION ID
-                        ================================================== -->
+                        <!-- TRANSACTION ID -->
 
                         <div class="row mt-3">
 
@@ -761,9 +713,7 @@ validation();
                         </div>
 
 
-                        <!-- =================================================
-                             REMARKS
-                        ================================================== -->
+                        <!-- REMARKS -->
 
                         <div class="row mt-3">
 
@@ -790,10 +740,6 @@ validation();
 
                     </div>
 
-
-                    <!-- =================================================
-                         FOOTER
-                    ================================================== -->
 
                     <div class="modal-footer">
 
@@ -827,15 +773,7 @@ validation();
     </div>
 
 
-    <!-- =========================================================
-         SUBMISSION OVERLAY
-
-         IMPORTANT:
-         This is NOT a Bootstrap modal.
-
-         It gives immediate:
-         BACKDROP + SPINNER + MESSAGE
-    ========================================================== -->
+    <!-- SUBMISSION OVERLAY -->
 
     <div
         id="submissionOverlay"
@@ -866,9 +804,7 @@ validation();
     </div>
 
 
-    <!-- =========================================================
-         BACK TO TOP
-    ========================================================== -->
+    <!-- BACK TO TOP -->
 
     <a
         href="#"
@@ -879,17 +815,8 @@ validation();
     </a>
 
 
-    <!-- =========================================================
-         MAIN JS
-         Include ONLY ONCE
-    ========================================================== -->
-
     <script src="../assets_new/js/main.js"></script>
 
-
-    <!-- =========================================================
-         CUSTOM JAVASCRIPT
-    ========================================================== -->
 
     <script>
         /* =========================================================
@@ -929,11 +856,8 @@ validation();
 
 
         let totalPages = 1;
-
         let cart = [];
-
         let products = [];
-
         let isCheckoutModalOpen = false;
 
 
@@ -943,805 +867,325 @@ validation();
 
         document.addEventListener('DOMContentLoaded', function() {
 
-            const urlParams =
-                new URLSearchParams(window.location.search);
+            const urlParams = new URLSearchParams(window.location.search);
 
 
             if (urlParams.has('itemsPerPage')) {
-
-                itemsPerPage =
-                    parseInt(
-                        urlParams.get('itemsPerPage')
-                    );
-
-                sessionStorage.setItem(
-                    'emartItemsPerPage',
-                    itemsPerPage
-                );
-
-            } else if (
-                sessionStorage.getItem('emartItemsPerPage')
-            ) {
-
-                itemsPerPage =
-                    parseInt(
-                        sessionStorage.getItem(
-                            'emartItemsPerPage'
-                        )
-                    );
+                itemsPerPage = parseInt(urlParams.get('itemsPerPage'));
+                sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
+            } else if (sessionStorage.getItem('emartItemsPerPage')) {
+                itemsPerPage = parseInt(sessionStorage.getItem('emartItemsPerPage'));
             }
 
 
-            document.getElementById(
-                'itemsPerPage'
-            ).value = itemsPerPage;
+            document.getElementById('itemsPerPage').value = itemsPerPage;
 
-
-            /* =====================================================
-               ITEMS PER PAGE
-            ====================================================== */
 
             document
                 .getElementById('itemsPerPage')
                 .addEventListener('change', function() {
 
-                    itemsPerPage =
-                        parseInt(this.value);
+                    itemsPerPage = parseInt(this.value);
 
-
-                    sessionStorage.setItem(
-                        'emartItemsPerPage',
-                        itemsPerPage
-                    );
-
+                    sessionStorage.setItem('emartItemsPerPage', itemsPerPage);
 
                     fetch('update_session.php', {
-
                         method: 'POST',
-
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
                         },
-
                         body: `itemsPerPage=${itemsPerPage}`
-
                     });
 
-
-                    loadProducts(
-                        1,
-                        currentSearchTerm
-                    );
-
+                    loadProducts(1, currentSearchTerm);
                 });
 
 
-            /* =====================================================
-               INITIAL PRODUCTS
-            ====================================================== */
+            loadProducts(pageNumber, currentSearchTerm);
 
-            loadProducts(
-                pageNumber,
-                currentSearchTerm
-            );
-
-
-            /* =====================================================
-               SEARCH
-            ====================================================== */
 
             document
                 .getElementById('searchButton')
                 .addEventListener('click', function() {
 
-                    const searchTerm =
-                        document
+                    const searchTerm = document
                         .getElementById('searchInput')
                         .value
                         .trim();
 
-
-                    loadProducts(
-                        1,
-                        searchTerm
-                    );
-
+                    loadProducts(1, searchTerm);
                 });
 
 
-            /* =====================================================
-               CLEAR SEARCH
-            ====================================================== */
-
-            const clearSearchBtn =
-                document.getElementById(
-                    'clearSearch'
-                );
-
+            const clearSearchBtn = document.getElementById('clearSearch');
 
             if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
 
-                clearSearchBtn.addEventListener(
-                    'click',
-                    function() {
-
-                        document
-                            .getElementById(
-                                'searchInput'
-                            )
-                            .value = '';
-
-
-                        loadProducts(
-                            1,
-                            ''
-                        );
-
-                    }
-                );
+                    document.getElementById('searchInput').value = '';
+                    loadProducts(1, '');
+                });
             }
 
 
-            /* =====================================================
-               SEARCH ENTER
-            ====================================================== */
-
             document
                 .getElementById('searchInput')
-                .addEventListener(
-                    'keypress',
-                    function(e) {
+                .addEventListener('keypress', function(e) {
 
-                        if (e.key === 'Enter') {
-
-                            const searchTerm =
-                                this.value.trim();
-
-
-                            loadProducts(
-                                1,
-                                searchTerm
-                            );
-                        }
-
+                    if (e.key === 'Enter') {
+                        const searchTerm = this.value.trim();
+                        loadProducts(1, searchTerm);
                     }
-                );
+                });
 
 
-            /* =====================================================
-               BROWSER BACK / FORWARD
-            ====================================================== */
+            window.addEventListener('popstate', function() {
 
-            window.addEventListener(
-                'popstate',
-                function() {
+                const params = new URLSearchParams(window.location.search);
 
-                    const params =
-                        new URLSearchParams(
-                            window.location.search
-                        );
+                const page = parseInt(params.get('page')) || 1;
+                const searchTerm = params.get('search') || '';
+                const newItemsPerPage = parseInt(params.get('itemsPerPage')) || 5;
 
+                itemsPerPage = newItemsPerPage;
 
-                    const page =
-                        parseInt(
-                            params.get('page')
-                        ) || 1;
+                document.getElementById('itemsPerPage').value = itemsPerPage;
+                document.getElementById('searchInput').value = searchTerm;
 
+                loadProducts(page, searchTerm);
+            });
 
-                    const searchTerm =
-                        params.get('search') || '';
-
-
-                    const newItemsPerPage =
-                        parseInt(
-                            params.get('itemsPerPage')
-                        ) || 5;
-
-
-                    itemsPerPage =
-                        newItemsPerPage;
-
-
-                    document
-                        .getElementById(
-                            'itemsPerPage'
-                        )
-                        .value =
-                        itemsPerPage;
-
-
-                    document
-                        .getElementById(
-                            'searchInput'
-                        )
-                        .value =
-                        searchTerm;
-
-
-                    loadProducts(
-                        page,
-                        searchTerm
-                    );
-
-                }
-            );
-
-
-            /* =====================================================
-               CHECKOUT MODAL EVENTS
-            ====================================================== */
 
             const checkoutModalElement =
-                document.getElementById(
-                    'orderConfirmationModal'
-                );
+                document.getElementById('orderConfirmationModal');
 
 
             if (checkoutModalElement) {
 
-                checkoutModalElement.addEventListener(
-                    'shown.bs.modal',
-                    function() {
+                checkoutModalElement.addEventListener('shown.bs.modal', function() {
+                    isCheckoutModalOpen = true;
+                    initialiseBeneficiarySelect();
+                });
 
-                        isCheckoutModalOpen = true;
 
-                        initialiseBeneficiarySelect();
+                checkoutModalElement.addEventListener('hidden.bs.modal', function() {
 
+                    isCheckoutModalOpen = false;
+
+                    const select = $('#beneficiarySelect');
+
+                    if (select.hasClass('select2-hidden-accessible')) {
+                        select.select2('destroy');
                     }
-                );
 
-
-                checkoutModalElement.addEventListener(
-                    'hidden.bs.modal',
-                    function() {
-
-                        isCheckoutModalOpen = false;
-
-
-                        const select =
-                            $('#beneficiarySelect');
-
-
-                        if (
-                            select.hasClass(
-                                'select2-hidden-accessible'
-                            )
-                        ) {
-
-                            select.select2(
-                                'destroy'
-                            );
-                        }
-
-
-                        document
-                            .getElementById(
-                                'orderForm'
-                            )
-                            .classList
-                            .remove(
-                                'was-validated'
-                            );
-
-                    }
-                );
-
+                    document
+                        .getElementById('orderForm')
+                        .classList
+                        .remove('was-validated');
+                });
             }
 
 
-            /* =====================================================
-               PAYMENT MODE
-            ====================================================== */
+            $('#paymentMode').on('change', function() {
 
-            $('#paymentMode').on(
-                'change',
-                function() {
+                const paymentMode = $(this).val();
 
-                    const paymentMode =
-                        $(this).val();
+                if (paymentMode === 'online') {
+                    $('#transactionIdContainer').show();
+                    $('#transactionId').prop('required', true);
+                } else {
+                    $('#transactionIdContainer').hide();
+                    $('#transactionId').prop('required', false);
+                    $('#transactionId').val('');
+                }
 
-
-                    if (
-                        paymentMode === 'online'
-                    ) {
-
-                        $('#transactionIdContainer')
-                            .show();
+                updateBeneficiaryWarning();
+            });
 
 
-                        $('#transactionId')
-                            .prop(
-                                'required',
-                                true
-                            );
+            $('#beneficiarySelect').on('change', function() {
+                updateBeneficiaryWarning();
+            });
+
+
+            $('#orderForm').on('submit', function(e) {
+
+                e.preventDefault();
+
+                const form = this;
+
+
+                if (!form.checkValidity()) {
+                    e.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+
+                const beneficiaries = $('#beneficiarySelect').val() || [];
+
+                if (beneficiaries.length === 0) {
+                    $('#beneficiarySelect').addClass('is-invalid');
+                    return;
+                }
+
+                $('#beneficiarySelect').removeClass('is-invalid');
+
+
+                if (cart.length === 0) {
+                    alert('Your cart is empty.');
+                    closeCheckoutModal();
+                    return;
+                }
+
+
+                $('#submitOrderBtn').prop('disabled', true);
+
+                showSubmissionOverlay();
+
+
+                const paymentMode = $('#paymentMode').val();
+
+                const transactionId =
+                    paymentMode === 'online' ?
+                    $('#transactionId').val().trim() :
+                    '';
+
+                const remarks = $('#remarks').val().trim();
+
+
+                /* =================================================
+                   BUILD CART DATA — including isCashflow
+                   (the ONLY place changed for cashflow flag)
+                ================================================== */
+
+                const cartData = [];
+
+
+                cart.forEach(function(item) {
+
+                    if (item.isFixedPrice) {
+
+                        cartData.push({
+                            productId: item.id,
+                            count: item.count,
+                            productPoints: item.price * item.count,
+                            customPrice: null,
+                            discount: 0,
+                            isFixedPrice: true,
+                            isCashflow: !!item.isCashflow
+                        });
 
                     } else {
 
-                        $('#transactionIdContainer')
-                            .hide();
+                        const units = item.units || [];
 
+                        units.forEach(function(unitData, index) {
 
-                        $('#transactionId')
-                            .prop(
-                                'required',
-                                false
-                            );
-
-
-                        $('#transactionId')
-                            .val('');
-
-                    }
-
-
-                    updateBeneficiaryWarning();
-
-                }
-            );
-
-
-            /* =====================================================
-               BENEFICIARY CHANGE
-            ====================================================== */
-
-            $('#beneficiarySelect').on(
-                'change',
-                function() {
-
-                    updateBeneficiaryWarning();
-
-                }
-            );
-
-
-            /* =====================================================
-               ORDER FORM SUBMIT
-            ====================================================== */
-
-            $('#orderForm').on(
-                'submit',
-                function(e) {
-
-                    e.preventDefault();
-
-
-                    const form = this;
-
-
-                    /* Browser validation */
-
-                    if (!form.checkValidity()) {
-
-                        e.stopPropagation();
-
-                        form.classList.add(
-                            'was-validated'
-                        );
-
-                        return;
-                    }
-
-
-                    /* Beneficiary validation */
-
-                    const beneficiaries =
-                        $('#beneficiarySelect').val() || [];
-
-
-                    if (
-                        beneficiaries.length === 0
-                    ) {
-
-                        $('#beneficiarySelect')
-                            .addClass(
-                                'is-invalid'
-                            );
-
-                        return;
-
-                    }
-
-
-                    $('#beneficiarySelect')
-                        .removeClass(
-                            'is-invalid'
-                        );
-
-
-                    /* Cart validation */
-
-                    if (
-                        cart.length === 0
-                    ) {
-
-                        alert(
-                            'Your cart is empty.'
-                        );
-
-                        closeCheckoutModal();
-
-                        return;
-
-                    }
-
-
-                    /* Disable button immediately */
-
-                    $('#submitOrderBtn')
-                        .prop(
-                            'disabled',
-                            true
-                        );
-
-
-                    /*
-                     * =================================================
-                     * SHOW SUBMISSION OVERLAY IMMEDIATELY
-                     *
-                     * No Bootstrap modal is used here.
-                     *
-                     * Therefore:
-                     * backdrop + spinner + message
-                     * appear together immediately.
-                     * =================================================
-                     */
-
-                    showSubmissionOverlay();
-
-
-                    /* =================================================
-                       PAYMENT DATA
-                    ================================================== */
-
-                    const paymentMode =
-                        $('#paymentMode').val();
-
-
-                    const transactionId =
-                        paymentMode === 'online' ?
-                        $('#transactionId')
-                        .val()
-                        .trim() :
-                        '';
-
-
-                    const remarks =
-                        $('#remarks')
-                        .val()
-                        .trim();
-
-
-                    /* =================================================
-                       BUILD CART DATA
-                    ================================================== */
-
-                    const cartData = [];
-
-
-                    cart.forEach(function(item) {
-
-                        if (item.isFixedPrice) {
+                            const price = parseFloat(unitData.price) || 0;
+                            const discount = parseFloat(unitData.discount) || 0;
+                            const finalPrice = price * (1 - discount / 100);
 
                             cartData.push({
-
                                 productId: item.id,
+                                count: 1,
+                                productPoints: finalPrice,
+                                customPrice: price,
+                                discount: discount,
+                                isFixedPrice: false,
+                                isCashflow: !!item.isCashflow,
+                                unitNumber: index + 1
+                            });
 
-                                count: item.count,
+                        });
 
-                                productPoints: (
-                                    item.price *
-                                    item.count
-                                ),
+                    }
 
-                                customPrice: null,
+                });
 
-                                discount: 0,
 
-                                isFixedPrice: true
+                const totalPoints = cartData.reduce(function(sum, item) {
+                    return sum + (parseFloat(item.productPoints) || 0);
+                }, 0);
+
+
+                const orderData = new URLSearchParams({
+
+                    'form-type': 'orders',
+
+                    'associatenumber': "<?php echo htmlspecialchars($associatenumber, ENT_QUOTES); ?>",
+                    'fullname': "<?php echo htmlspecialchars($fullname, ENT_QUOTES); ?>",
+                    'doj': "<?php echo htmlspecialchars($doj, ENT_QUOTES); ?>",
+                    'email': "<?php echo htmlspecialchars($email, ENT_QUOTES); ?>",
+
+                    'totalPoints': totalPoints.toFixed(2),
+                    'cart': JSON.stringify(cartData),
+                    'paymentMode': paymentMode,
+                    'transactionId': transactionId,
+                    'remarks': remarks,
+                    'beneficiaries': JSON.stringify(beneficiaries)
+
+                });
+
+
+                fetch('process_order.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: orderData
+                    })
+                    .then(function(response) {
+
+                        if (!response.ok) {
+                            throw new Error('Server returned HTTP ' + response.status);
+                        }
+
+                        return response.json();
+                    })
+                    .then(function(data) {
+
+                        console.log('Order response:', data);
+
+                        if (data.status === 'success') {
+
+                            alert(data.message || 'Order placed successfully.');
+
+                            hideSubmissionOverlay();
+
+                            closeCheckoutModal(function() {
+
+                                cleanupModalArtifacts();
+
+                                window.location.href =
+                                    'order_confirmation.php?id=' +
+                                    encodeURIComponent(data.order_id);
 
                             });
 
                         } else {
 
-                            /*
-                             * Dynamic products:
-                             * EACH UNIT is submitted separately.
-                             */
+                            hideSubmissionOverlay();
+                            $('#submitOrderBtn').prop('disabled', false);
 
-                            const units =
-                                item.units || [];
-
-
-                            units.forEach(
-                                function(unitData, index) {
-
-                                    const price =
-                                        parseFloat(
-                                            unitData.price
-                                        ) || 0;
-
-
-                                    const discount =
-                                        parseFloat(
-                                            unitData.discount
-                                        ) || 0;
-
-
-                                    const finalPrice =
-                                        price *
-                                        (
-                                            1 -
-                                            discount / 100
-                                        );
-
-
-                                    cartData.push({
-
-                                        productId: item.id,
-
-                                        count: 1,
-
-                                        productPoints: finalPrice,
-
-                                        customPrice: price,
-
-                                        discount: discount,
-
-                                        isFixedPrice: false,
-
-                                        unitNumber: index + 1
-
-                                    });
-
-                                }
-                            );
-
+                            alert(data.message || 'Unable to place the order.');
                         }
 
+                    })
+                    .catch(function(error) {
+
+                        console.error('Order submission error:', error);
+
+                        hideSubmissionOverlay();
+                        $('#submitOrderBtn').prop('disabled', false);
+
+                        alert('An error occurred while placing the order. Please try again.');
                     });
 
+            });
 
-                    /* =================================================
-                       TOTAL
-                    ================================================== */
-
-                    const totalPoints =
-                        cartData.reduce(
-                            function(sum, item) {
-
-                                return sum +
-                                    (
-                                        parseFloat(
-                                            item.productPoints
-                                        ) || 0
-                                    );
-
-                            },
-                            0
-                        );
-
-
-                    /* =================================================
-                       ORDER DATA
-                    ================================================== */
-
-                    const orderData =
-                        new URLSearchParams({
-
-                            'form-type': 'orders',
-
-                            'associatenumber': "<?php echo htmlspecialchars($associatenumber, ENT_QUOTES); ?>",
-
-                            'fullname': "<?php echo htmlspecialchars($fullname, ENT_QUOTES); ?>",
-
-                            'doj': "<?php echo htmlspecialchars($doj, ENT_QUOTES); ?>",
-
-                            'email': "<?php echo htmlspecialchars($email, ENT_QUOTES); ?>",
-
-                            'totalPoints': totalPoints.toFixed(2),
-
-                            'cart': JSON.stringify(
-                                cartData
-                            ),
-
-                            'paymentMode': paymentMode,
-
-                            'transactionId': transactionId,
-
-                            'remarks': remarks,
-
-                            'beneficiaries': JSON.stringify(
-                                beneficiaries
-                            )
-
-                        });
-
-
-                    /* =================================================
-                       SEND ORDER
-                    ================================================== */
-
-                    fetch(
-                            'process_order.php', {
-
-                                method: 'POST',
-
-                                headers: {
-
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-
-                                },
-
-                                body: orderData
-
-                            }
-                        )
-
-                        .then(
-                            function(response) {
-
-                                if (!response.ok) {
-
-                                    throw new Error(
-                                        'Server returned HTTP ' +
-                                        response.status
-                                    );
-
-                                }
-
-
-                                return response.json();
-
-                            }
-                        )
-
-                        .then(
-                            function(data) {
-
-                                console.log(
-                                    'Order response:',
-                                    data
-                                );
-
-
-                                if (
-                                    data.status ===
-                                    'success'
-                                ) {
-
-                                    /*
-                                     * =================================================
-                                     * SUCCESS
-                                     *
-                                     * DO NOT REMOVE OVERLAY YET.
-                                     *
-                                     * First show:
-                                     *
-                                     * "Order placed successfully"
-                                     *
-                                     * User clicks OK.
-                                     *
-                                     * ONLY THEN:
-                                     * 1. Remove submission overlay
-                                     * 2. Remove checkout modal
-                                     * 3. Remove Bootstrap backdrop
-                                     * 4. Redirect
-                                     * =================================================
-                                     */
-
-                                    const successMessage =
-                                        data.message ||
-                                        'Order placed successfully.';
-
-
-                                    alert(
-                                        successMessage
-                                    );
-
-
-                                    /*
-                                     * User clicked OK.
-                                     * Now remove everything.
-                                     */
-
-                                    hideSubmissionOverlay();
-
-
-                                    closeCheckoutModal(
-                                        function() {
-
-                                            /*
-                                             * Extra cleanup only after
-                                             * Bootstrap has finished hiding.
-                                             */
-
-                                            cleanupModalArtifacts();
-
-
-                                            /*
-                                             * Redirect AFTER cleanup.
-                                             */
-
-                                            window.location.href =
-                                                'order_confirmation.php?id=' +
-                                                encodeURIComponent(
-                                                    data.order_id
-                                                );
-
-                                        }
-                                    );
-
-
-                                } else {
-
-                                    /*
-                                     * Server returned an error.
-                                     * Remove only submission overlay.
-                                     * Keep checkout modal open so user
-                                     * can correct/retry.
-                                     */
-
-                                    hideSubmissionOverlay();
-
-
-                                    $('#submitOrderBtn')
-                                        .prop(
-                                            'disabled',
-                                            false
-                                        );
-
-
-                                    alert(
-                                        data.message ||
-                                        'Unable to place the order.'
-                                    );
-
-                                }
-
-                            }
-                        )
-
-                        .catch(
-                            function(error) {
-
-                                console.error(
-                                    'Order submission error:',
-                                    error
-                                );
-
-
-                                /*
-                                 * Remove submission overlay
-                                 * but keep checkout modal open.
-                                 */
-
-                                hideSubmissionOverlay();
-
-
-                                $('#submitOrderBtn')
-                                    .prop(
-                                        'disabled',
-                                        false
-                                    );
-
-
-                                alert(
-                                    'An error occurred while placing the order. Please try again.'
-                                );
-
-                            }
-                        );
-
-                }
-            );
-
-
-            /* =====================================================
-               INITIAL CART
-            ====================================================== */
 
             renderCart();
-
             updateCartCount();
 
         });
@@ -1753,61 +1197,25 @@ validation();
 
         function showSubmissionOverlay() {
 
-            const overlay =
-                document.getElementById(
-                    'submissionOverlay'
-                );
+            const overlay = document.getElementById('submissionOverlay');
 
-
-            if (!overlay) {
-                return;
-            }
-
+            if (!overlay) return;
 
             overlay.classList.add('show');
+            overlay.setAttribute('aria-hidden', 'false');
 
-            overlay.setAttribute(
-                'aria-hidden',
-                'false'
-            );
-
-
-            /*
-             * Prevent background scrolling.
-             */
-
-            document.body.style.overflow =
-                'hidden';
-
+            document.body.style.overflow = 'hidden';
         }
 
 
         function hideSubmissionOverlay() {
 
-            const overlay =
-                document.getElementById(
-                    'submissionOverlay'
-                );
+            const overlay = document.getElementById('submissionOverlay');
 
-
-            if (!overlay) {
-                return;
-            }
-
+            if (!overlay) return;
 
             overlay.classList.remove('show');
-
-            overlay.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-
-
-            /*
-             * Do NOT remove body modal state here.
-             * Bootstrap checkout modal may still be open.
-             */
-
+            overlay.setAttribute('aria-hidden', 'true');
         }
 
 
@@ -1815,48 +1223,23 @@ validation();
            LOAD PRODUCTS
         ========================================================== */
 
-        function loadProducts(
-            page = 1,
-            searchTerm = ''
-        ) {
+        function loadProducts(page = 1, searchTerm = '') {
 
-            const productList =
-                document.getElementById(
-                    'productList'
-                );
-
+            const productList = document.getElementById('productList');
 
             productList.innerHTML = `
-
                 <div class="text-center my-5">
-
-                    <div
-                        class="spinner-border"
-                        role="status">
-
-                        <span class="visually-hidden">
-                            Loading...
-                        </span>
-
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-
                 </div>
-
             `;
 
 
-            updateUrl(
-                page,
-                searchTerm
-            );
+            updateUrl(page, searchTerm);
 
-
-            pageNumber =
-                parseInt(page);
-
-
-            currentSearchTerm =
-                searchTerm;
+            pageNumber = parseInt(page);
+            currentSearchTerm = searchTerm;
 
 
             return fetch(
@@ -1864,76 +1247,36 @@ validation();
                     `&search=${encodeURIComponent(searchTerm)}` +
                     `&itemsPerPage=${itemsPerPage}`
                 )
+                .then(function(response) {
 
-                .then(
-                    function(response) {
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                'Network response was not ok'
-                            );
-
-                        }
-
-
-                        return response.json();
-
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                )
 
-                .then(
-                    function(data) {
+                    return response.json();
+                })
+                .then(function(data) {
 
-                        products =
-                            data.products || [];
+                    products = data.products || [];
+                    totalPages = parseInt(data.totalPages) || 1;
 
+                    renderProducts(products);
+                    renderPagination();
 
-                        totalPages =
-                            parseInt(
-                                data.totalPages
-                            ) || 1;
+                    return data;
+                })
+                .catch(function(error) {
 
+                    console.error('Error loading products:', error);
 
-                        renderProducts(
-                            products
-                        );
-
-
-                        renderPagination();
-
-
-                        return data;
-
-                    }
-                )
-
-                .catch(
-                    function(error) {
-
-                        console.error(
-                            'Error loading products:',
-                            error
-                        );
-
-
-                        productList.innerHTML = `
-
+                    productList.innerHTML = `
                         <div class="alert alert-danger">
-
-                            Error loading products.
-                            Please try again.
-
+                            Error loading products. Please try again.
                         </div>
-
                     `;
 
-
-                        throw error;
-
-                    }
-                );
-
+                    throw error;
+                });
         }
 
 
@@ -1941,53 +1284,27 @@ validation();
            UPDATE URL
         ========================================================== */
 
-        function updateUrl(
-            page,
-            searchTerm
-        ) {
+        function updateUrl(page, searchTerm) {
 
-            const urlParams =
-                new URLSearchParams();
-
+            const urlParams = new URLSearchParams();
 
             if (page > 1) {
-
-                urlParams.set(
-                    'page',
-                    page
-                );
-
+                urlParams.set('page', page);
             }
-
 
             if (searchTerm) {
-
-                urlParams.set(
-                    'search',
-                    searchTerm
-                );
-
+                urlParams.set('search', searchTerm);
             }
-
 
             if (itemsPerPage != 5) {
-
-                urlParams.set(
-                    'itemsPerPage',
-                    itemsPerPage
-                );
-
+                urlParams.set('itemsPerPage', itemsPerPage);
             }
-
 
             history.pushState(
                 null,
                 '',
-                urlParams.toString() ?
-                `?${urlParams}` :
-                window.location.pathname
+                urlParams.toString() ? `?${urlParams}` : window.location.pathname
             );
-
         }
 
 
@@ -1995,15 +1312,9 @@ validation();
            RENDER PRODUCTS
         ========================================================== */
 
-        function renderProducts(
-            productsList
-        ) {
+        function renderProducts(productsList) {
 
-            const productList =
-                document.getElementById(
-                    'productList'
-                );
-
+            const productList = document.getElementById('productList');
 
             productList.innerHTML = '';
 
@@ -2011,363 +1322,202 @@ validation();
             if (!productsList.length) {
 
                 productList.innerHTML = `
-
                     <div class="alert alert-info">
-
                         No products found matching your search.
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            productsList.forEach(function(product) {
+
+                const cartItem = cart.find(item => item.id == product.id);
+                const currentQuantity = cartItem ? cartItem.count : 0;
+
+                const hasDiscount = parseFloat(product.discount_percentage) > 0;
+                const originalPrice = parseFloat(product.original_price) || 0;
+                const productPrice = parseFloat(product.price) || 0;
+                const discountPercentage = parseFloat(product.discount_percentage) || 0;
+
+                const displayPrice = hasDiscount ?
+                    (originalPrice * (1 - discountPercentage / 100)).toFixed(2) :
+                    productPrice.toFixed(2);
+
+                const stock = parseInt(product.in_stock) || 0;
+                const stockStatus = stock <= 0;
+                const lowStock = stock > 0 && stock <= 5;
+
+                const isFixed =
+                    product.is_fixed_price == true ||
+                    product.is_fixed_price == 1;
+
+                const isCashflow =
+                    product.is_cashflow == true ||
+                    product.is_cashflow == 1 ||
+                    product.is_cashflow === 't';
+
+                const cashflowBadge = isCashflow ?
+                    `<span class="cashflow-badge">Cash Flow</span>` :
+                    '';
+
+                const priceTypeBadge = (isFixed ?
+                    `<span class="fixed-price-badge">Fixed Price</span>` :
+                    `<span class="dynamic-price-badge">Dynamic Price</span>`
+                ) + cashflowBadge;
+
+
+                const productCard = document.createElement('div');
+
+                productCard.className =
+                    'product-card mb-4 p-3 border rounded bg-white';
+
+                productCard.innerHTML = `
+
+                    <div class="d-flex">
+
+                        <div
+                            class="col-6 me-3"
+                            style="height:150px;">
+
+                            <img
+                                src="${escapeHtml(product.image)}"
+                                alt="${escapeHtml(product.name)}"
+                                class="img-fluid h-100 w-100 object-fit-cover rounded">
+
+                        </div>
+
+
+                        <div class="flex-grow-1">
+
+                            <h5 class="mb-1">
+                                ${escapeHtml(product.name)}
+                            </h5>
+
+
+                            <small class="text-muted">
+                                Product Id- ${product.id}
+                            </small>
+
+
+                            ${priceTypeBadge}
+
+
+                            ${
+                                parseFloat(product.rating) > 0
+                                ? `
+                                    <div class="d-flex align-items-center mb-1">
+
+                                        <div class="text-warning">
+                                            ${'★'.repeat(Math.round(parseFloat(product.rating)))}
+                                            ${'☆'.repeat(5 - Math.round(parseFloat(product.rating)))}
+                                        </div>
+
+                                        <small class="text-muted ms-2">
+                                            ${product.review_count || 0} reviews
+                                        </small>
+
+                                    </div>
+                                  `
+                                : ''
+                            }
+
+
+                            ${
+                                product.description
+                                ? `
+                                    <p
+                                        class="text-muted small mb-2"
+                                        style="
+                                            display:-webkit-box;
+                                            -webkit-line-clamp:2;
+                                            -webkit-box-orient:vertical;
+                                            overflow:hidden;
+                                        ">
+                                        ${escapeHtml(product.description)}
+                                    </p>
+                                  `
+                                : ''
+                            }
+
+
+                            <div class="mb-2">
+
+                                ${
+                                    hasDiscount
+                                    ? `
+                                        <span class="text-danger fs-5 fw-bold">
+                                            ₹${displayPrice}
+                                        </span>
+
+                                        <span class="text-decoration-line-through text-muted ms-2">
+                                            ₹${originalPrice.toFixed(2)}
+                                        </span>
+
+                                        <span class="badge bg-danger ms-2">
+                                            ${discountPercentage}% off
+                                        </span>
+                                      `
+                                    : `
+                                        <span class="fs-5 fw-bold">
+                                            ₹${displayPrice}
+                                        </span>
+                                      `
+                                }
+
+                                <span class="text-muted">
+                                    for ${product.unit_quantity}
+                                    ${escapeHtml(product.unit_name)}
+                                </span>
+
+                                ${
+                                    !isFixed
+                                    ? `
+                                        <br>
+                                        <small class="text-warning">
+                                            Price can be set at checkout
+                                        </small>
+                                      `
+                                    : ''
+                                }
+
+                            </div>
+
+
+                            ${
+                                stockStatus
+                                ? `
+                                    <div class="text-danger mb-2">
+                                        Out of Stock
+                                    </div>
+                                  `
+                                : lowStock
+                                ? `
+                                    <div class="text-danger mb-2">
+                                        Only ${stock} left in stock
+                                    </div>
+
+                                    ${quantityControl(product, currentQuantity, stock)}
+                                  `
+                                : `
+                                    <div class="text-success mb-2">
+                                        In Stock (${stock} available)
+                                    </div>
+
+                                    ${quantityControl(product, currentQuantity, stock)}
+                                  `
+                            }
+
+                        </div>
 
                     </div>
 
                 `;
 
-                return;
+                productList.appendChild(productCard);
 
-            }
-
-
-            productsList.forEach(
-                function(product) {
-
-                    const cartItem =
-                        cart.find(
-                            item =>
-                            item.id == product.id
-                        );
-
-
-                    const currentQuantity =
-                        cartItem ?
-                        cartItem.count :
-                        0;
-
-
-                    const hasDiscount =
-                        parseFloat(
-                            product.discount_percentage
-                        ) > 0;
-
-
-                    const originalPrice =
-                        parseFloat(
-                            product.original_price
-                        ) || 0;
-
-
-                    const productPrice =
-                        parseFloat(
-                            product.price
-                        ) || 0;
-
-
-                    const discountPercentage =
-                        parseFloat(
-                            product.discount_percentage
-                        ) || 0;
-
-
-                    const displayPrice =
-                        hasDiscount ?
-                        (
-                            originalPrice *
-                            (
-                                1 -
-                                discountPercentage / 100
-                            )
-                        ).toFixed(2) :
-                        productPrice.toFixed(2);
-
-
-                    const stock =
-                        parseInt(
-                            product.in_stock
-                        ) || 0;
-
-
-                    const stockStatus =
-                        stock <= 0;
-
-
-                    const lowStock =
-                        stock > 0 &&
-                        stock <= 5;
-
-
-                    const isFixed =
-                        product.is_fixed_price == true ||
-                        product.is_fixed_price == 1;
-
-
-                    const priceTypeBadge =
-                        isFixed
-
-                        ?
-                        `
-                                <span class="fixed-price-badge">
-                                    Fixed Price
-                                </span>
-                              `
-
-                        :
-                        `
-                                <span class="dynamic-price-badge">
-                                    Dynamic Price
-                                </span>
-                              `;
-
-
-                    const productCard =
-                        document.createElement(
-                            'div'
-                        );
-
-
-                    productCard.className =
-                        'product-card mb-4 p-3 border rounded bg-white';
-
-
-                    productCard.innerHTML = `
-
-                        <div class="d-flex">
-
-                            <div
-                                class="col-6 me-3"
-                                style="height:150px;">
-
-                                <img
-                                    src="${escapeHtml(product.image)}"
-                                    alt="${escapeHtml(product.name)}"
-                                    class="img-fluid h-100 w-100 object-fit-cover rounded">
-
-                            </div>
-
-
-                            <div class="flex-grow-1">
-
-                                <h5 class="mb-1">
-
-                                    ${escapeHtml(product.name)}
-
-                                </h5>
-
-
-                                <small class="text-muted">
-
-                                    Product Id- ${product.id}
-
-                                </small>
-
-
-                                ${priceTypeBadge}
-
-
-                                ${
-                                    parseFloat(product.rating) > 0
-
-                                    ? `
-
-                                        <div class="d-flex align-items-center mb-1">
-
-                                            <div class="text-warning">
-
-                                                ${
-                                                    '★'.repeat(
-                                                        Math.round(
-                                                            parseFloat(
-                                                                product.rating
-                                                            )
-                                                        )
-                                                    )
-                                                }
-
-                                                ${
-                                                    '☆'.repeat(
-                                                        5 -
-                                                        Math.round(
-                                                            parseFloat(
-                                                                product.rating
-                                                            )
-                                                        )
-                                                    )
-                                                }
-
-                                            </div>
-
-
-                                            <small class="text-muted ms-2">
-
-                                                ${product.review_count || 0}
-                                                reviews
-
-                                            </small>
-
-                                        </div>
-
-                                      `
-
-                                    : ''
-                                }
-
-
-                                ${
-                                    product.description
-
-                                    ? `
-
-                                        <p
-                                            class="text-muted small mb-2"
-                                            style="
-                                                display:-webkit-box;
-                                                -webkit-line-clamp:2;
-                                                -webkit-box-orient:vertical;
-                                                overflow:hidden;
-                                            ">
-
-                                            ${escapeHtml(
-                                                product.description
-                                            )}
-
-                                        </p>
-
-                                      `
-
-                                    : ''
-                                }
-
-
-                                <div class="mb-2">
-
-                                    ${
-                                        hasDiscount
-
-                                        ? `
-
-                                            <span class="text-danger fs-5 fw-bold">
-
-                                                ₹${displayPrice}
-
-                                            </span>
-
-
-                                            <span class="text-decoration-line-through text-muted ms-2">
-
-                                                ₹${originalPrice.toFixed(2)}
-
-                                            </span>
-
-
-                                            <span class="badge bg-danger ms-2">
-
-                                                ${discountPercentage}% off
-
-                                            </span>
-
-                                          `
-
-                                        : `
-
-                                            <span class="fs-5 fw-bold">
-
-                                                ₹${displayPrice}
-
-                                            </span>
-
-                                          `
-                                    }
-
-
-                                    <span class="text-muted">
-
-                                        for ${product.unit_quantity}
-                                        ${escapeHtml(product.unit_name)}
-
-                                    </span>
-
-
-                                    ${
-                                        !isFixed
-
-                                        ? `
-
-                                            <br>
-
-                                            <small class="text-warning">
-
-                                                Price can be set at checkout
-
-                                            </small>
-
-                                          `
-
-                                        : ''
-                                    }
-
-                                </div>
-
-
-                                ${
-                                    stockStatus
-
-                                    ? `
-
-                                        <div class="text-danger mb-2">
-
-                                            Out of Stock
-
-                                        </div>
-
-                                      `
-
-                                    : lowStock
-
-                                    ? `
-
-                                        <div class="text-danger mb-2">
-
-                                            Only ${stock} left in stock
-
-                                        </div>
-
-
-                                        ${quantityControl(
-                                            product,
-                                            currentQuantity,
-                                            stock
-                                        )}
-
-                                      `
-
-                                    : `
-
-                                        <div class="text-success mb-2">
-
-                                            In Stock (${stock} available)
-
-                                        </div>
-
-
-                                        ${quantityControl(
-                                            product,
-                                            currentQuantity,
-                                            stock
-                                        )}
-
-                                      `
-                                }
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-
-                    productList.appendChild(
-                        productCard
-                    );
-
-                }
-            );
-
+            });
         }
 
 
@@ -2375,23 +1525,16 @@ validation();
            QUANTITY CONTROL
         ========================================================== */
 
-        function quantityControl(
-            product,
-            currentQuantity,
-            stock
-        ) {
+        function quantityControl(product, currentQuantity, stock) {
 
             return `
-
                 <div class="btn-quantity d-flex align-items-center">
 
                     <button
                         class="btn btn-sm btn-outline-secondary"
                         type="button"
                         onclick="decreaseCount(${product.id})">
-
                         <i class="bi bi-dash"></i>
-
                     </button>
 
 
@@ -2411,15 +1554,11 @@ validation();
                         class="btn btn-sm btn-primary"
                         type="button"
                         onclick="increaseCount(${product.id})">
-
                         <i class="bi bi-plus"></i>
-
                     </button>
 
                 </div>
-
             `;
-
         }
 
 
@@ -2429,121 +1568,74 @@ validation();
 
         function renderPagination() {
 
-            const container =
-                document.getElementById(
-                    'paginationContainer'
-                );
-
+            const container = document.getElementById('paginationContainer');
 
             container.innerHTML = '';
 
-
-            if (totalPages <= 1) {
-                return;
-            }
+            if (totalPages <= 1) return;
 
 
             let html = `
-
                 <nav aria-label="Page navigation">
-
                     <ul class="pagination justify-content-center">
 
-                        <li class="page-item ${
-                            pageNumber === 1
-                                ? 'disabled'
-                                : ''
-                        }">
+                        <li class="page-item ${pageNumber === 1 ? 'disabled' : ''}">
 
                             <a
                                 class="page-link"
                                 href="#"
                                 onclick="
-                                    loadProducts(
-                                        ${pageNumber - 1},
-                                        currentSearchTerm
-                                    );
+                                    loadProducts(${pageNumber - 1}, currentSearchTerm);
                                     return false;
                                 ">
-
                                 &laquo;
-
                             </a>
 
                         </li>
-
             `;
 
 
-            for (
-                let i = 1; i <= totalPages; i++
-            ) {
+            for (let i = 1; i <= totalPages; i++) {
 
                 html += `
-
-                    <li class="page-item ${
-                        i === pageNumber
-                            ? 'active'
-                            : ''
-                    }">
+                    <li class="page-item ${i === pageNumber ? 'active' : ''}">
 
                         <a
                             class="page-link"
                             href="#"
                             onclick="
-                                loadProducts(
-                                    ${i},
-                                    currentSearchTerm
-                                );
+                                loadProducts(${i}, currentSearchTerm);
                                 return false;
                             ">
-
                             ${i}
-
                         </a>
 
                     </li>
-
                 `;
-
             }
 
 
             html += `
-
-                        <li class="page-item ${
-                            pageNumber >= totalPages
-                                ? 'disabled'
-                                : ''
-                        }">
+                        <li class="page-item ${pageNumber >= totalPages ? 'disabled' : ''}">
 
                             <a
                                 class="page-link"
                                 href="#"
                                 onclick="
-                                    loadProducts(
-                                        ${pageNumber + 1},
-                                        currentSearchTerm
-                                    );
+                                    loadProducts(${pageNumber + 1}, currentSearchTerm);
                                     return false;
                                 ">
-
                                 &raquo;
-
                             </a>
 
                         </li>
 
                     </ul>
-
                 </nav>
-
             `;
 
 
-            container.innerHTML =
-                html;
-
+            container.innerHTML = html;
         }
 
 
@@ -2557,23 +1649,22 @@ validation();
             price,
             count,
             unitName,
-            isFixedPrice
+            isFixedPrice,
+            isCashflow
         ) {
 
-            const id =
-                parseInt(productId);
-
+            const id = parseInt(productId);
 
             const fixed =
                 isFixedPrice == true ||
                 isFixedPrice == 1;
 
+            const cashflowFlag =
+                isCashflow == true ||
+                isCashflow == 1 ||
+                isCashflow === 't';
 
-            const existingIndex =
-                cart.findIndex(
-                    item =>
-                    item.id == id
-                );
+            const existingIndex = cart.findIndex(item => item.id == id);
 
 
             if (count > 0) {
@@ -2581,123 +1672,64 @@ validation();
                 let units = [];
 
 
-                /*
-                 * Preserve already entered dynamic
-                 * prices when quantity changes.
-                 */
+                if (!fixed && existingIndex >= 0) {
 
-                if (
-                    !fixed &&
-                    existingIndex >= 0
-                ) {
+                    const oldUnits = cart[existingIndex].units || [];
 
-                    const oldUnits =
-                        cart[existingIndex].units || [];
-
-
-                    for (
-                        let i = 0; i < count; i++
-                    ) {
+                    for (let i = 0; i < count; i++) {
 
                         if (oldUnits[i]) {
-
                             units.push({
-                                price: parseFloat(
-                                    oldUnits[i].price
-                                ) || 0,
-
-                                discount: parseFloat(
-                                    oldUnits[i].discount
-                                ) || 0
+                                price: parseFloat(oldUnits[i].price) || 0,
+                                discount: parseFloat(oldUnits[i].discount) || 0
                             });
-
                         } else {
-
                             units.push({
-
                                 price: parseFloat(price) || 0,
-
                                 discount: 0
-
                             });
-
                         }
-
                     }
 
                 } else if (!fixed) {
 
-                    for (
-                        let i = 0; i < count; i++
-                    ) {
-
+                    for (let i = 0; i < count; i++) {
                         units.push({
-
                             price: parseFloat(price) || 0,
-
                             discount: 0
-
                         });
-
                     }
-
                 }
 
 
                 const cartItem = {
-
                     id: id,
-
                     name: productName,
-
                     price: parseFloat(price) || 0,
-
                     count: parseInt(count),
-
                     unitName: unitName,
-
                     isFixedPrice: fixed,
-
+                    isCashflow: cashflowFlag,
                     units: units
-
                 };
 
 
-                if (
-                    existingIndex >= 0
-                ) {
-
-                    cart[existingIndex] =
-                        cartItem;
-
+                if (existingIndex >= 0) {
+                    cart[existingIndex] = cartItem;
                 } else {
-
-                    cart.push(
-                        cartItem
-                    );
-
+                    cart.push(cartItem);
                 }
 
             } else {
 
-                if (
-                    existingIndex >= 0
-                ) {
-
-                    cart.splice(
-                        existingIndex,
-                        1
-                    );
-
+                if (existingIndex >= 0) {
+                    cart.splice(existingIndex, 1);
                 }
-
             }
 
 
             renderCart();
-
             updateCartCount();
-
         }
 
 
@@ -2707,205 +1739,125 @@ validation();
 
         function renderCart() {
 
-            const cartList =
-                document.getElementById(
-                    'cartList'
-                );
-
-
-            const cartTotal =
-                document.getElementById(
-                    'cartTotal'
-                );
-
+            const cartList = document.getElementById('cartList');
+            const cartTotal = document.getElementById('cartTotal');
 
             cartList.innerHTML = '';
 
-
             let total = 0;
-
             let hasDynamicItems = false;
 
 
-            cart.forEach(
-                function(item) {
+            cart.forEach(function(item) {
 
-                    const isFixed =
-                        item.isFixedPrice;
+                const isFixed = item.isFixedPrice;
 
-
-                    let itemTotal = 0;
-
-                    let priceDisplay = '';
+                let itemTotal = 0;
+                let priceDisplay = '';
 
 
-                    if (isFixed) {
+                if (isFixed) {
 
-                        itemTotal =
-                            item.price *
-                            item.count;
+                    itemTotal = item.price * item.count;
+                    total += itemTotal;
 
+                    priceDisplay = `₹${item.price.toFixed(2)}`;
 
-                        total +=
-                            itemTotal;
+                } else {
 
+                    hasDynamicItems = true;
 
-                        priceDisplay =
-                            `₹${item.price.toFixed(2)}`;
-
-                    } else {
-
-                        hasDynamicItems =
-                            true;
-
-
-                        priceDisplay = `
-
-                            <span class="price-to-be-set">
-
-                                Price to be set at checkout
-
-                            </span>
-
-                        `;
-
-                    }
+                    priceDisplay = `
+                        <span class="price-to-be-set">
+                            Price to be set at checkout
+                        </span>
+                    `;
+                }
 
 
-                    const listItem =
-                        document.createElement(
-                            'li'
-                        );
+                const listItem = document.createElement('li');
+
+                listItem.className = `
+                    list-group-item
+                    d-flex
+                    justify-content-between
+                    align-items-center
+                    ${isFixed ? 'cart-item-fixed' : 'cart-item-dynamic'}
+                `;
 
 
-                    listItem.className =
-                        `list-group-item
-                         d-flex
-                         justify-content-between
-                         align-items-center
-                         ${
-                            isFixed
-                                ? 'cart-item-fixed'
-                                : 'cart-item-dynamic'
-                         }`;
+                listItem.innerHTML = `
 
-
-                    listItem.innerHTML = `
+                    <div>
 
                         <div>
-
-                            <div>
-
-                                ${escapeHtml(item.name)}
-
-                            </div>
-
-
-                            <small class="text-muted">
-
-                                ${item.count}
-                                ×
-                                ${priceDisplay}
-
-
-                                ${
-                                    !isFixed
-
-                                    ? `
-
-                                        <span class="badge bg-warning text-dark">
-
-                                            Dynamic
-
-                                        </span>
-
-                                      `
-
-                                    : ''
-                                }
-
-                            </small>
-
+                            ${escapeHtml(item.name)}
                         </div>
 
 
-                        <div>
+                        <small class="text-muted">
+
+                            ${item.count} × ${priceDisplay}
 
                             ${
-                                isFixed
-
-                                ? `
-
-                                    <span class="me-3">
-
-                                        ₹${itemTotal.toFixed(2)}
-
-                                    </span>
-
-                                  `
-
+                                item.isCashflow
+                                ? `<span class="cashflow-badge">Cash Flow</span>`
                                 : ''
                             }
 
+                            ${
+                                !isFixed
+                                ? `<span class="badge bg-warning text-dark">Dynamic</span>`
+                                : ''
+                            }
 
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-danger"
-                                onclick="removeFromCart(${item.id})">
+                        </small>
 
-                                <i class="bi bi-x"></i>
-
-                            </button>
-
-                        </div>
-
-                    `;
+                    </div>
 
 
-                    cartList.appendChild(
-                        listItem
-                    );
+                    <div>
 
-                }
-            );
+                        ${
+                            isFixed
+                            ? `<span class="me-3">₹${itemTotal.toFixed(2)}</span>`
+                            : ''
+                        }
+
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="removeFromCart(${item.id})">
+                            <i class="bi bi-x"></i>
+                        </button>
+
+                    </div>
+                `;
+
+
+                cartList.appendChild(listItem);
+            });
 
 
             if (hasDynamicItems) {
 
-                const noteItem =
-                    document.createElement(
-                        'li'
-                    );
+                const noteItem = document.createElement('li');
 
-
-                noteItem.className =
-                    'list-group-item text-warning bg-light';
-
+                noteItem.className = 'list-group-item text-warning bg-light';
 
                 noteItem.innerHTML = `
-
                     <small>
-
                         <i class="bi bi-info-circle"></i>
-
-                        Dynamic item prices will be set
-                        at checkout.
-
+                        Dynamic item prices will be set at checkout.
                     </small>
-
                 `;
 
-
-                cartList.appendChild(
-                    noteItem
-                );
-
+                cartList.appendChild(noteItem);
             }
 
 
-            cartTotal.textContent =
-                `₹${total.toFixed(2)}`;
-
+            cartTotal.textContent = `₹${total.toFixed(2)}`;
         }
 
 
@@ -2913,38 +1865,19 @@ validation();
            REMOVE FROM MAIN CART
         ========================================================== */
 
-        function removeFromCart(
-            productId
-        ) {
+        function removeFromCart(productId) {
 
-            const id =
-                parseInt(productId);
+            const id = parseInt(productId);
 
+            const index = cart.findIndex(item => item.id == id);
 
-            const index =
-                cart.findIndex(
-                    item =>
-                    item.id == id
-                );
+            if (index === -1) return;
 
-
-            if (index === -1) {
-                return;
-            }
-
-
-            cart.splice(
-                index,
-                1
-            );
-
+            cart.splice(index, 1);
 
             renderCart();
-
             updateCartCount();
-
             renderProducts(products);
-
         }
 
 
@@ -2954,37 +1887,20 @@ validation();
 
         function updateCartCount() {
 
-            const totalItems =
-                cart.reduce(
-                    function(sum, item) {
-
-                        return sum +
-                            item.count;
-
-                    },
-                    0
-                );
+            const totalItems = cart.reduce(function(sum, item) {
+                return sum + item.count;
+            }, 0);
 
 
             document
-                .querySelectorAll(
-                    '.cart-count'
-                )
-                .forEach(
-                    function(element) {
+                .querySelectorAll('.cart-count')
+                .forEach(function(element) {
 
-                        element.textContent =
-                            totalItems;
+                    element.textContent = totalItems;
 
-
-                        element.style.display =
-                            totalItems > 0 ?
-                            'inline-block' :
-                            'none';
-
-                    }
-                );
-
+                    element.style.display =
+                        totalItems > 0 ? 'inline-block' : 'none';
+                });
         }
 
 
@@ -2992,76 +1908,38 @@ validation();
            INCREASE
         ========================================================== */
 
-        function increaseCount(
-            productId
-        ) {
+        function increaseCount(productId) {
 
-            const input =
-                document.getElementById(
-                    `count${productId}`
-                );
+            const input = document.getElementById(`count${productId}`);
+            if (!input) return;
 
+            const currentCount = parseInt(input.value) || 0;
 
-            if (!input) {
-                return;
-            }
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+
+            const stock = parseInt(product.in_stock) || 0;
 
 
-            const currentCount =
-                parseInt(
-                    input.value
-                ) || 0;
+            if (currentCount < stock) {
 
-
-            const product =
-                products.find(
-                    p =>
-                    p.id == productId
-                );
-
-
-            if (!product) {
-                return;
-            }
-
-
-            const stock =
-                parseInt(
-                    product.in_stock
-                ) || 0;
-
-
-            if (
-                currentCount < stock
-            ) {
-
-                const newCount =
-                    currentCount + 1;
-
-
-                input.value =
-                    newCount;
-
+                const newCount = currentCount + 1;
+                input.value = newCount;
 
                 updateCart(
                     product.id,
                     product.name,
-                    parseFloat(
-                        product.price
-                    ) || 0,
+                    parseFloat(product.price) || 0,
                     newCount,
                     product.unit_name,
-                    product.is_fixed_price
+                    product.is_fixed_price,
+                    product.is_cashflow
                 );
 
             } else {
 
-                alert(
-                    `You cannot order more than ${stock} items of this product.`
-                );
-
+                alert(`You cannot order more than ${stock} items of this product.`);
             }
-
         }
 
 
@@ -3069,64 +1947,32 @@ validation();
            DECREASE
         ========================================================== */
 
-        function decreaseCount(
-            productId
-        ) {
+        function decreaseCount(productId) {
 
-            const input =
-                document.getElementById(
-                    `count${productId}`
-                );
+            const input = document.getElementById(`count${productId}`);
+            if (!input) return;
 
+            const currentCount = parseInt(input.value) || 0;
 
-            if (!input) {
-                return;
-            }
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
 
 
-            const currentCount =
-                parseInt(
-                    input.value
-                ) || 0;
+            if (currentCount > 0) {
 
-
-            const product =
-                products.find(
-                    p =>
-                    p.id == productId
-                );
-
-
-            if (!product) {
-                return;
-            }
-
-
-            if (
-                currentCount > 0
-            ) {
-
-                const newCount =
-                    currentCount - 1;
-
-
-                input.value =
-                    newCount;
-
+                const newCount = currentCount - 1;
+                input.value = newCount;
 
                 updateCart(
                     product.id,
                     product.name,
-                    parseFloat(
-                        product.price
-                    ) || 0,
+                    parseFloat(product.price) || 0,
                     newCount,
                     product.unit_name,
-                    product.is_fixed_price
+                    product.is_fixed_price,
+                    product.is_cashflow
                 );
-
             }
-
         }
 
 
@@ -3134,80 +1980,36 @@ validation();
            VALIDATE QUANTITY
         ========================================================== */
 
-        function validateQuantityInput(
-            productId
-        ) {
+        function validateQuantityInput(productId) {
 
-            const input =
-                document.getElementById(
-                    `count${productId}`
-                );
+            const input = document.getElementById(`count${productId}`);
+            const product = products.find(p => p.id == productId);
 
+            if (!input || !product) return;
 
-            const product =
-                products.find(
-                    p =>
-                    p.id == productId
-                );
+            let value = parseInt(input.value);
+            if (isNaN(value)) value = 0;
 
+            const stock = parseInt(product.in_stock) || 0;
 
-            if (
-                !input ||
-                !product
-            ) {
-                return;
-            }
-
-
-            let value =
-                parseInt(
-                    input.value
-                );
-
-
-            if (isNaN(value)) {
-                value = 0;
-            }
-
-
-            const stock =
-                parseInt(
-                    product.in_stock
-                ) || 0;
-
-
-            if (value < 0) {
-                value = 0;
-            }
-
+            if (value < 0) value = 0;
 
             if (value > stock) {
-
                 value = stock;
-
-
-                alert(
-                    `You cannot order more than ${stock} items of this product.`
-                );
-
+                alert(`You cannot order more than ${stock} items of this product.`);
             }
 
-
-            input.value =
-                value;
-
+            input.value = value;
 
             updateCart(
                 product.id,
                 product.name,
-                parseFloat(
-                    product.price
-                ) || 0,
+                parseFloat(product.price) || 0,
                 value,
                 product.unit_name,
-                product.is_fixed_price
+                product.is_fixed_price,
+                product.is_cashflow
             );
-
         }
 
 
@@ -3217,132 +2019,60 @@ validation();
 
         function placeOrder() {
 
-            console.log(
-                'Place Order clicked. Cart:',
-                cart
-            );
+            console.log('Place Order clicked. Cart:', cart);
 
 
-            if (
-                !cart ||
-                cart.length === 0
-            ) {
-
-                alert(
-                    'Your cart is empty!'
-                );
-
+            if (!cart || cart.length === 0) {
+                alert('Your cart is empty!');
                 return;
-
             }
 
-
-            /*
-             * Render checkout.
-             */
 
             renderCheckoutSummary();
 
 
-            /*
-             * Reset checkout form.
-             */
+            $('#beneficiarySelect').val(null).trigger('change');
+            $('#paymentMode').val('');
+            $('#transactionId').val('');
+            $('#transactionIdContainer').hide();
+            $('#remarks').val('');
 
-            $('#beneficiarySelect')
-                .val(null)
-                .trigger('change');
-
-
-            $('#paymentMode')
-                .val('');
-
-
-            $('#transactionId')
-                .val('');
-
-
-            $('#transactionIdContainer')
-                .hide();
-
-
-            $('#remarks')
-                .val('');
-
-
-            $('#submitOrderBtn')
-                .prop(
-                    'disabled',
-                    false
-                );
-
+            $('#submitOrderBtn').prop('disabled', false);
 
             document
-                .getElementById(
-                    'orderForm'
-                )
+                .getElementById('orderForm')
                 .classList
-                .remove(
-                    'was-validated'
-                );
+                .remove('was-validated');
 
 
-            /*
-             * Open Bootstrap checkout modal.
-             */
-
-            const modalElement =
-                document.getElementById(
-                    'orderConfirmationModal'
-                );
-
+            const modalElement = document.getElementById('orderConfirmationModal');
 
             if (!modalElement) {
-
-                console.error(
-                    'orderConfirmationModal not found.'
-                );
-
+                console.error('orderConfirmationModal not found.');
                 return;
-
             }
 
 
             try {
 
-                const checkoutModal =
-                    bootstrap.Modal.getOrCreateInstance(
-                        modalElement, {
-                            backdrop: 'static',
-                            keyboard: false
-                        }
-                    );
+                const checkoutModal = bootstrap.Modal.getOrCreateInstance(
+                    modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    }
+                );
 
-
-                isCheckoutModalOpen =
-                    true;
-
-
+                isCheckoutModalOpen = true;
                 checkoutModal.show();
 
-
-                console.log(
-                    'Checkout modal opened.'
-                );
+                console.log('Checkout modal opened.');
 
             } catch (error) {
 
-                console.error(
-                    'Unable to open checkout modal:',
-                    error
-                );
+                console.error('Unable to open checkout modal:', error);
 
-
-                alert(
-                    'Unable to open checkout page. Please refresh the page and try again.'
-                );
-
+                alert('Unable to open checkout page. Please refresh the page and try again.');
             }
-
         }
 
 
@@ -3352,246 +2082,131 @@ validation();
 
         function renderCheckoutSummary() {
 
-            const body =
-                document.getElementById(
-                    'orderSummaryBody'
-                );
-
+            const body = document.getElementById('orderSummaryBody');
 
             body.innerHTML = '';
 
 
-            cart.forEach(
-                function(item) {
+            cart.forEach(function(item) {
 
-                    if (item.isFixedPrice) {
-
-                        const itemTotal =
-                            item.price *
-                            item.count;
+                const cashflowBadgeHtml = item.isCashflow ?
+                    `<span class="cashflow-badge">Cash Flow</span>` :
+                    '';
 
 
-                        const row =
-                            document.createElement(
-                                'tr'
-                            );
+                if (item.isFixedPrice) {
 
+                    const itemTotal = item.price * item.count;
 
-                        row.className =
-                            'fixed-item-row';
+                    const row = document.createElement('tr');
 
+                    row.className = 'fixed-item-row';
+
+                    row.innerHTML = `
+
+                        <td>
+                            ${escapeHtml(item.name)}
+                            ${cashflowBadgeHtml}
+                        </td>
+
+                        <td>${item.count}</td>
+
+                        <td>
+                            <span class="fw-bold">₹${item.price.toFixed(2)}</span>
+                        </td>
+
+                        <td>
+                            <span class="text-muted">0%</span>
+                        </td>
+
+                        <td class="item-total">₹${itemTotal.toFixed(2)}</td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="removeCartItemFromCheckout(${item.id})">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </td>
+
+                    `;
+
+                    body.appendChild(row);
+
+                } else {
+
+                    const units = item.units || [];
+
+                    units.forEach(function(unitData, unitIndex) {
+
+                        const price = parseFloat(unitData.price) || 0;
+                        const discount = parseFloat(unitData.discount) || 0;
+                        const finalPrice = price * (1 - discount / 100);
+
+                        const row = document.createElement('tr');
+
+                        row.className = 'dynamic-item-row';
+                        row.setAttribute('data-product-id', item.id);
+                        row.setAttribute('data-unit-index', unitIndex);
 
                         row.innerHTML = `
 
                             <td>
-
                                 ${escapeHtml(item.name)}
-
+                                ${cashflowBadgeHtml}
                             </td>
-
 
                             <td>
-
-                                ${item.count}
-
+                                <span class="unit-number">Unit #${unitIndex + 1}</span>
                             </td>
-
 
                             <td>
-
-                                <span class="fw-bold">
-
-                                    ₹${item.price.toFixed(2)}
-
-                                </span>
-
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm unit-price-input"
+                                    value="${price}"
+                                    min="0"
+                                    step="0.01"
+                                    data-product-id="${item.id}"
+                                    data-unit-index="${unitIndex}"
+                                    oninput="updateDynamicPrice(${item.id}, ${unitIndex})">
                             </td>
-
 
                             <td>
-
-                                <span class="text-muted">
-
-                                    0%
-
-                                </span>
-
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm discount-input"
+                                    value="${discount}"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    data-product-id="${item.id}"
+                                    data-unit-index="${unitIndex}"
+                                    oninput="updateDynamicPrice(${item.id}, ${unitIndex})">
                             </td>
 
-
-                            <td class="item-total">
-
-                                ₹${itemTotal.toFixed(2)}
-
-                            </td>
-
+                            <td class="item-total">₹${finalPrice.toFixed(2)}</td>
 
                             <td>
-
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-danger"
-                                    onclick="removeCartItemFromCheckout(${item.id})">
-
+                                    title="Remove this unit"
+                                    onclick="removeDynamicUnitFromCheckout(${item.id}, ${unitIndex})">
                                     <i class="bi bi-x"></i>
-
                                 </button>
-
                             </td>
 
                         `;
 
-
-                        body.appendChild(
-                            row
-                        );
-
-                    } else {
-
-                        /*
-                         * Dynamic products:
-                         * create one row for EACH unit.
-                         */
-
-                        const units =
-                            item.units || [];
-
-
-                        units.forEach(
-                            function(unitData, unitIndex) {
-
-                                const price =
-                                    parseFloat(
-                                        unitData.price
-                                    ) || 0;
-
-
-                                const discount =
-                                    parseFloat(
-                                        unitData.discount
-                                    ) || 0;
-
-
-                                const finalPrice =
-                                    price *
-                                    (
-                                        1 -
-                                        discount / 100
-                                    );
-
-
-                                const row =
-                                    document.createElement(
-                                        'tr'
-                                    );
-
-
-                                row.className =
-                                    'dynamic-item-row';
-
-
-                                row.setAttribute(
-                                    'data-product-id',
-                                    item.id
-                                );
-
-
-                                row.setAttribute(
-                                    'data-unit-index',
-                                    unitIndex
-                                );
-
-
-                                row.innerHTML = `
-
-                                    <td>
-
-                                        ${escapeHtml(item.name)}
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <span class="unit-number">
-
-                                            Unit #${unitIndex + 1}
-
-                                        </span>
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input
-                                            type="number"
-                                            class="form-control form-control-sm unit-price-input"
-                                            value="${price}"
-                                            min="0"
-                                            step="0.01"
-                                            data-product-id="${item.id}"
-                                            data-unit-index="${unitIndex}"
-                                            oninput="updateDynamicPrice(${item.id}, ${unitIndex})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input
-                                            type="number"
-                                            class="form-control form-control-sm discount-input"
-                                            value="${discount}"
-                                            min="0"
-                                            max="100"
-                                            step="0.01"
-                                            data-product-id="${item.id}"
-                                            data-unit-index="${unitIndex}"
-                                            oninput="updateDynamicPrice(${item.id}, ${unitIndex})">
-
-                                    </td>
-
-
-                                    <td class="item-total">
-
-                                        ₹${finalPrice.toFixed(2)}
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <button
-                                            type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Remove this unit"
-                                            onclick="removeDynamicUnitFromCheckout(${item.id}, ${unitIndex})">
-
-                                            <i class="bi bi-x"></i>
-
-                                        </button>
-
-                                    </td>
-
-                                `;
-
-
-                                body.appendChild(
-                                    row
-                                );
-
-                            }
-                        );
-
-                    }
-
+                        body.appendChild(row);
+                    });
                 }
-            );
+            });
 
 
             updateOrderTotal();
-
         }
 
 
@@ -3599,62 +2214,27 @@ validation();
            REMOVE COMPLETE CART ITEM FROM CHECKOUT
         ========================================================== */
 
-        function removeCartItemFromCheckout(
-            productId
-        ) {
+        function removeCartItemFromCheckout(productId) {
 
-            const id =
-                parseInt(productId);
+            const id = parseInt(productId);
 
+            const cartIndex = cart.findIndex(item => item.id == id);
 
-            const cartIndex =
-                cart.findIndex(
-                    item =>
-                    item.id == id
-                );
+            if (cartIndex === -1) return;
 
-
-            if (cartIndex === -1) {
-                return;
-            }
-
-
-            /*
-             * Remove the COMPLETE product.
-             * This is used for fixed-price products.
-             */
-
-            cart.splice(
-                cartIndex,
-                1
-            );
-
+            cart.splice(cartIndex, 1);
 
             renderCart();
-
             updateCartCount();
-
             renderProducts(products);
 
 
             if (cart.length === 0) {
-
                 closeCheckoutModal();
-
                 return;
-
             }
 
-
-            /*
-             * Re-render checkout WITHOUT closing
-             * and reopening the Bootstrap modal.
-             *
-             * This prevents backdrop problems.
-             */
-
             renderCheckoutSummary();
-
         }
 
 
@@ -3662,103 +2242,37 @@ validation();
            REMOVE ONLY ONE DYNAMIC UNIT
         ========================================================== */
 
-        function removeDynamicUnitFromCheckout(
-            productId,
-            unitIndex
-        ) {
+        function removeDynamicUnitFromCheckout(productId, unitIndex) {
 
-            const id =
-                parseInt(productId);
+            const id = parseInt(productId);
+            const cartIndex = cart.findIndex(item => item.id == id);
 
+            if (cartIndex === -1) return;
 
-            const cartIndex =
-                cart.findIndex(
-                    item =>
-                    item.id == id
-                );
+            const item = cart[cartIndex];
 
+            if (!item.units || !item.units[unitIndex]) return;
 
-            if (cartIndex === -1) {
-                return;
-            }
+            item.units.splice(unitIndex, 1);
+            item.count = item.units.length;
 
 
-            const item =
-                cart[cartIndex];
-
-
-            if (
-                !item.units ||
-                !item.units[unitIndex]
-            ) {
-
-                return;
-
-            }
-
-
-            /*
-             * THIS IS THE IMPORTANT FIX.
-             *
-             * Remove ONLY the clicked unit.
-             */
-
-            item.units.splice(
-                unitIndex,
-                1
-            );
-
-
-            /*
-             * Update product quantity.
-             */
-
-            item.count =
-                item.units.length;
-
-
-            /*
-             * If no units remain,
-             * remove the whole product.
-             */
-
-            if (
-                item.count <= 0
-            ) {
-
-                cart.splice(
-                    cartIndex,
-                    1
-                );
-
+            if (item.count <= 0) {
+                cart.splice(cartIndex, 1);
             }
 
 
             renderCart();
-
             updateCartCount();
-
             renderProducts(products);
 
 
-            if (
-                cart.length === 0
-            ) {
-
+            if (cart.length === 0) {
                 closeCheckoutModal();
-
                 return;
-
             }
 
-
-            /*
-             * Rebuild only the checkout table.
-             * The modal itself stays open.
-             */
-
             renderCheckoutSummary();
-
         }
 
 
@@ -3766,128 +2280,50 @@ validation();
            UPDATE DYNAMIC PRICE
         ========================================================== */
 
-        function updateDynamicPrice(
-            productId,
-            unitIndex
-        ) {
+        function updateDynamicPrice(productId, unitIndex) {
 
-            const id =
-                parseInt(productId);
+            const id = parseInt(productId);
 
+            const item = cart.find(cartItem => cartItem.id == id);
 
-            const item =
-                cart.find(
-                    cartItem =>
-                    cartItem.id == id
-                );
+            if (!item || !item.units || !item.units[unitIndex]) return;
 
 
-            if (
-                !item ||
-                !item.units ||
-                !item.units[unitIndex]
-            ) {
+            const row = document.querySelector(
+                `.dynamic-item-row[data-product-id="${id}"][data-unit-index="${unitIndex}"]`
+            );
 
-                return;
-
-            }
+            if (!row) return;
 
 
-            const row =
-                document.querySelector(
-                    `.dynamic-item-row[data-product-id="${id}"][data-unit-index="${unitIndex}"]`
-                );
+            const priceInput = row.querySelector('.unit-price-input');
+            const discountInput = row.querySelector('.discount-input');
 
+            let price = parseFloat(priceInput.value) || 0;
+            let discount = parseFloat(discountInput.value) || 0;
 
-            if (!row) {
-                return;
-            }
+            if (price < 0) price = 0;
+            if (discount < 0) discount = 0;
+            if (discount > 100) discount = 100;
 
+            priceInput.value = price;
+            discountInput.value = discount;
 
-            const priceInput =
-                row.querySelector(
-                    '.unit-price-input'
-                );
-
-
-            const discountInput =
-                row.querySelector(
-                    '.discount-input'
-                );
-
-
-            let price =
-                parseFloat(
-                    priceInput.value
-                ) || 0;
-
-
-            let discount =
-                parseFloat(
-                    discountInput.value
-                ) || 0;
-
-
-            if (price < 0) {
-                price = 0;
-            }
-
-
-            if (discount < 0) {
-                discount = 0;
-            }
-
-
-            if (discount > 100) {
-                discount = 100;
-            }
-
-
-            priceInput.value =
-                price;
-
-
-            discountInput.value =
-                discount;
-
-
-            /*
-             * Save price directly inside cart.
-             */
 
             item.units[unitIndex] = {
-
                 price: price,
-
                 discount: discount
-
             };
 
 
-            const finalPrice =
-                price *
-                (
-                    1 -
-                    discount / 100
-                );
-
-
-            const totalCell =
-                row.querySelector(
-                    '.item-total'
-                );
-
+            const finalPrice = price * (1 - discount / 100);
+            const totalCell = row.querySelector('.item-total');
 
             if (totalCell) {
-
-                totalCell.textContent =
-                    `₹${finalPrice.toFixed(2)}`;
-
+                totalCell.textContent = `₹${finalPrice.toFixed(2)}`;
             }
 
-
             updateOrderTotal();
-
         }
 
 
@@ -3899,57 +2335,27 @@ validation();
 
             let total = 0;
 
+            cart.forEach(function(item) {
 
-            cart.forEach(
-                function(item) {
+                if (item.isFixedPrice) {
 
-                    if (
-                        item.isFixedPrice
-                    ) {
+                    total += item.price * item.count;
 
-                        total +=
-                            item.price *
-                            item.count;
+                } else {
 
-                    } else {
+                    const units = item.units || [];
 
-                        const units =
-                            item.units || [];
+                    units.forEach(function(unit) {
 
+                        const price = parseFloat(unit.price) || 0;
+                        const discount = parseFloat(unit.discount) || 0;
 
-                        units.forEach(
-                            function(unit) {
-
-                                const price =
-                                    parseFloat(
-                                        unit.price
-                                    ) || 0;
-
-
-                                const discount =
-                                    parseFloat(
-                                        unit.discount
-                                    ) || 0;
-
-
-                                total +=
-                                    price *
-                                    (
-                                        1 -
-                                        discount / 100
-                                    );
-
-                            }
-                        );
-
-                    }
-
+                        total += price * (1 - discount / 100);
+                    });
                 }
-            );
-
+            });
 
             return total;
-
         }
 
 
@@ -3959,20 +2365,13 @@ validation();
 
         function updateOrderTotal() {
 
-            const total =
-                calculateOrderTotal();
+            const total = calculateOrderTotal();
 
-
-            document.getElementById(
-                    'orderTotal'
-                ).textContent =
+            document.getElementById('orderTotal').textContent =
                 `₹${total.toFixed(2)}`;
 
-
             updateFreebieOptionBasedOnTotal();
-
             updateBeneficiaryWarning();
-
         }
 
 
@@ -3982,87 +2381,32 @@ validation();
 
         function updateFreebieOptionBasedOnTotal() {
 
-            const total =
-                calculateOrderTotal();
+            const total = calculateOrderTotal();
+            const paymentModeSelect = $('#paymentMode');
 
-
-            const paymentModeSelect =
-                $('#paymentMode');
-
-
-            const freebieOption =
-                paymentModeSelect.find(
-                    'option[value="freebie"]'
-                );
-
-
-            const cashOption =
-                paymentModeSelect.find(
-                    'option[value="cash"]'
-                );
-
-
-            const onlineOption =
-                paymentModeSelect.find(
-                    'option[value="online"]'
-                );
+            const freebieOption = paymentModeSelect.find('option[value="freebie"]');
+            const cashOption = paymentModeSelect.find('option[value="cash"]');
+            const onlineOption = paymentModeSelect.find('option[value="online"]');
 
 
             if (total > 0) {
 
-                cashOption.prop(
-                    'disabled',
-                    false
-                );
+                cashOption.prop('disabled', false);
+                onlineOption.prop('disabled', false);
+                freebieOption.prop('disabled', true);
 
-
-                onlineOption.prop(
-                    'disabled',
-                    false
-                );
-
-
-                freebieOption.prop(
-                    'disabled',
-                    true
-                );
-
-
-                if (
-                    paymentModeSelect.val() ===
-                    'freebie'
-                ) {
-
+                if (paymentModeSelect.val() === 'freebie') {
                     paymentModeSelect.val('');
-
                 }
 
             } else {
 
-                cashOption.prop(
-                    'disabled',
-                    true
-                );
+                cashOption.prop('disabled', true);
+                onlineOption.prop('disabled', true);
+                freebieOption.prop('disabled', false);
 
-
-                onlineOption.prop(
-                    'disabled',
-                    true
-                );
-
-
-                freebieOption.prop(
-                    'disabled',
-                    false
-                );
-
-
-                paymentModeSelect.val(
-                    'freebie'
-                );
-
+                paymentModeSelect.val('freebie');
             }
-
         }
 
 
@@ -4072,24 +2416,10 @@ validation();
 
         function initialiseBeneficiarySelect() {
 
-            const select =
-                $('#beneficiarySelect');
+            const select = $('#beneficiarySelect');
 
-
-            /*
-             * Destroy existing Select2 first.
-             */
-
-            if (
-                select.hasClass(
-                    'select2-hidden-accessible'
-                )
-            ) {
-
-                select.select2(
-                    'destroy'
-                );
-
+            if (select.hasClass('select2-hidden-accessible')) {
+                select.select2('destroy');
             }
 
 
@@ -4098,49 +2428,30 @@ validation();
                 dropdownParent: $('#orderConfirmationModal'),
 
                 ajax: {
-
                     url: 'search_beneficiaries.php',
-
                     dataType: 'json',
-
                     delay: 250,
-
                     data: function(params) {
-
                         return {
                             q: params.term
                         };
-
                     },
-
                     processResults: function(data) {
-
                         return {
-
                             results: data.results || []
-
                         };
-
                     }
-
                 },
 
                 minimumInputLength: 2,
-
                 placeholder: 'Search by name, ID, or contact',
-
                 allowClear: false,
-
                 closeOnSelect: true,
-
                 width: '100%'
-
             });
 
 
-            select.val(null)
-                .trigger('change');
-
+            select.val(null).trigger('change');
         }
 
 
@@ -4150,58 +2461,27 @@ validation();
 
         function updateBeneficiaryWarning() {
 
-            const selectedBeneficiaries =
-                $('#beneficiarySelect')
-                .val() || [];
+            const selectedBeneficiaries = $('#beneficiarySelect').val() || [];
+            const beneficiaryCount = selectedBeneficiaries.length;
+
+            const orderTotal = calculateOrderTotal();
+            const warningDiv = $('#multipleBeneficiaryWarning');
 
 
-            const beneficiaryCount =
-                selectedBeneficiaries.length;
+            if (beneficiaryCount > 1) {
 
+                const totalCollection = orderTotal * beneficiaryCount;
 
-            const orderTotal =
-                calculateOrderTotal();
-
-
-            const warningDiv =
-                $('#multipleBeneficiaryWarning');
-
-
-            if (
-                beneficiaryCount > 1
-            ) {
-
-                const totalCollection =
-                    orderTotal *
-                    beneficiaryCount;
-
-
-                $('#totalCollectionAmount')
-                    .text(
-                        totalCollection.toFixed(2)
-                    );
-
-
-                $('#orderTotalPerBeneficiary')
-                    .text(
-                        orderTotal.toFixed(2)
-                    );
-
-
-                $('#beneficiaryCount')
-                    .text(
-                        beneficiaryCount
-                    );
-
+                $('#totalCollectionAmount').text(totalCollection.toFixed(2));
+                $('#orderTotalPerBeneficiary').text(orderTotal.toFixed(2));
+                $('#beneficiaryCount').text(beneficiaryCount);
 
                 warningDiv.show();
 
             } else {
 
                 warningDiv.hide();
-
             }
-
         }
 
 
@@ -4209,85 +2489,38 @@ validation();
            CLOSE CHECKOUT MODAL
         ========================================================== */
 
-        function closeCheckoutModal(
-            callback
-        ) {
+        function closeCheckoutModal(callback) {
 
-            const modalElement =
-                document.getElementById(
-                    'orderConfirmationModal'
-                );
-
+            const modalElement = document.getElementById('orderConfirmationModal');
 
             if (!modalElement) {
-
-                if (callback) {
-                    callback();
-                }
-
+                if (callback) callback();
                 return;
-
             }
 
 
-            const modalInstance =
-                bootstrap.Modal.getInstance(
-                    modalElement
-                );
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
 
 
-            /*
-             * If not open.
-             */
+            if (!modalInstance || !modalElement.classList.contains('show')) {
 
-            if (
-                !modalInstance ||
-                !modalElement.classList.contains(
-                    'show'
-                )
-            ) {
-
-                isCheckoutModalOpen =
-                    false;
-
-
-                if (callback) {
-                    callback();
-                }
-
+                isCheckoutModalOpen = false;
+                if (callback) callback();
                 return;
-
             }
 
 
-            /*
-             * Wait for Bootstrap's hidden event.
-             */
-
-            const handler =
-                function() {
-
-                    isCheckoutModalOpen =
-                        false;
+            const handler = function() {
+                isCheckoutModalOpen = false;
+                if (callback) callback();
+            };
 
 
-                    if (callback) {
-                        callback();
-                    }
-
-                };
-
-
-            modalElement.addEventListener(
-                'hidden.bs.modal',
-                handler, {
-                    once: true
-                }
-            );
-
+            modalElement.addEventListener('hidden.bs.modal', handler, {
+                once: true
+            });
 
             modalInstance.hide();
-
         }
 
 
@@ -4297,44 +2530,20 @@ validation();
 
         function cleanupModalArtifacts() {
 
-            /*
-             * Only run after Bootstrap has finished hiding
-             * the checkout modal.
-             */
-
             document
-                .querySelectorAll(
-                    '.modal-backdrop'
-                )
-                .forEach(
-                    function(backdrop) {
-
-                        backdrop.remove();
-
-                    }
-                );
+                .querySelectorAll('.modal-backdrop')
+                .forEach(function(backdrop) {
+                    backdrop.remove();
+                });
 
 
-            document.body.classList.remove(
-                'modal-open'
-            );
+            document.body.classList.remove('modal-open');
 
-
-            document.body.style.overflow =
-                '';
-
-
-            document.body.style.paddingRight =
-                '';
-
-
-            document.body.style.removeProperty(
-                'padding-right'
-            );
-
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.body.style.removeProperty('padding-right');
 
             hideSubmissionOverlay();
-
         }
 
 
@@ -4342,47 +2551,16 @@ validation();
            HTML ESCAPE
         ========================================================== */
 
-        function escapeHtml(
-            value
-        ) {
+        function escapeHtml(value) {
 
-            if (
-                value === null ||
-                value === undefined
-            ) {
-
-                return '';
-
-            }
-
+            if (value === null || value === undefined) return '';
 
             return String(value)
-
-                .replace(
-                    /&/g,
-                    '&amp;'
-                )
-
-                .replace(
-                    /</g,
-                    '&lt;'
-                )
-
-                .replace(
-                    />/g,
-                    '&gt;'
-                )
-
-                .replace(
-                    /"/g,
-                    '&quot;'
-                )
-
-                .replace(
-                    /'/g,
-                    '&#039;'
-                );
-
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
     </script>
 

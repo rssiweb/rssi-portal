@@ -113,9 +113,7 @@ if ($finalBalance < 0) {
 
 // -------- Phase 2: upload receipts --------
 foreach ($validated as $idx => &$v) {
-    $v['receipt_drive_id']  = null;
     $v['receipt_drive_url'] = null;
-    $v['receipt_file_name'] = null;
 
     if (!isset($_FILES['rows']['name'][$idx]['receipt'])) continue;
     $fileErr = $_FILES['rows']['error'][$idx]['receipt'] ?? UPLOAD_ERR_NO_FILE;
@@ -150,10 +148,6 @@ foreach ($validated as $idx => &$v) {
             throw new Exception('Drive helper did not return a valid URL.');
         }
         $v['receipt_drive_url'] = $driveUrl;
-        $v['receipt_file_name'] = $file['name'];
-        if (preg_match('#/d/([a-zA-Z0-9_-]+)#', $driveUrl, $m)) {
-            $v['receipt_drive_id'] = $m[1];
-        }
     } catch (Throwable $e) {
         error_log('Cashflow Drive upload failed: ' . $e->getMessage());
         echo json_encode([
@@ -170,8 +164,7 @@ pg_query($con, "BEGIN");
 $inserted = 0;
 foreach ($validated as $v) {
     $sql = "INSERT INTO cashflow_transactions
-            (transaction_date, type, category_id, category_name, amount, notes,
-             receipt_drive_id, receipt_drive_url, receipt_file_name, created_by)
+            (transaction_date, type, category_id, category_name, amount, notes, receipt_drive_url, created_by)
             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)";
     $params = [
         $v['transaction_date'],
@@ -180,9 +173,7 @@ foreach ($validated as $v) {
         $v['category_name'],
         $v['amount'],
         $v['notes'],
-        $v['receipt_drive_id'],
         $v['receipt_drive_url'],
-        $v['receipt_file_name'],
         $aid
     ];
     $res = pg_query_params($con, $sql, $params);

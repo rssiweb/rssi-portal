@@ -361,11 +361,12 @@ unset($_SESSION['cashflow_flash_error']);
                                                     <th>Notes</th>
                                                     <th>Receipt</th>
                                                     <th class="text-end">Amount (₹)</th>
+                                                    <th>Created By</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tableBody">
                                                 <tr>
-                                                    <td colspan="6" class="text-center text-muted py-4">
+                                                    <td colspan="7" class="text-center text-muted py-4">
                                                         <span class="spinner-border spinner-border-sm me-2"></span>Loading…
                                                     </td>
                                                 </tr>
@@ -564,6 +565,31 @@ unset($_SESSION['cashflow_flash_error']);
     <script src="../assets_new/js/main.js"></script>
 
     <script>
+        function formatDate(ymd) {
+            if (!ymd) return '';
+            const [y, m, d] = String(ymd).split('-').map(Number);
+            if (!y || !m || !d) return ymd;
+            const date = new Date(y, m - 1, d);
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function formatDateTime(dt) {
+            if (!dt) return '';
+            // Postgres timestamps come as "YYYY-MM-DD HH:MM:SS"; replace space with T
+            const d = new Date(String(dt).replace(' ', 'T'));
+            if (isNaN(d)) return dt;
+            return d.toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
         // =========================================================
         //  Helpers
         // =========================================================
@@ -873,7 +899,7 @@ unset($_SESSION['cashflow_flash_error']);
             });
 
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">
             <span class="spinner-border spinner-border-sm me-2"></span>Loading…
         </td></tr>`;
 
@@ -887,7 +913,7 @@ unset($_SESSION['cashflow_flash_error']);
                     renderPagination(res.pagination);
                 })
                 .catch(err => {
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">
                     ${escapeHtml(err.message)}
                 </td></tr>`;
                 });
@@ -898,7 +924,7 @@ unset($_SESSION['cashflow_flash_error']);
             tbody.innerHTML = '';
 
             if (!rows.length) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">
                 <i class="bi bi-inbox fs-4 d-block mb-1"></i>No transactions found for the selected filters.
             </td></tr>`;
                 document.getElementById('rowCountInfo').textContent = '';
@@ -920,14 +946,18 @@ unset($_SESSION['cashflow_flash_error']);
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                <td class="text-nowrap">${escapeHtml(t.transaction_date)}</td>
-                <td>${typeBadge}</td>
-                <td>${escapeHtml(t.category_name)}</td>
-                <td><span class="note-badge">${escapeHtml(t.notes || '—')}</span></td>
-                <td>${receipt}</td>
-                <td class="text-end fw-semibold ${amtClass} text-nowrap">
-                    ${sign} ${fmtMoney(t.amount)}
-                </td>`;
+    <td class="text-nowrap">${escapeHtml(formatDate(t.transaction_date))}</td>
+    <td>${typeBadge}</td>
+    <td>${escapeHtml(t.category_name)}</td>
+    <td><span class="note-badge">${escapeHtml(t.notes || '—')}</span></td>
+    <td>${receipt}</td>
+    <td class="text-end fw-semibold ${amtClass} text-nowrap">
+        ${sign} ${fmtMoney(t.amount)}
+    </td>
+    <td class="text-nowrap">
+        <div>${escapeHtml(t.created_by_name || t.created_by || '—')}</div>
+        <small class="text-muted">${escapeHtml(formatDateTime(t.created_at))}</small>
+    </td>`;
                 tbody.appendChild(row);
             });
         }

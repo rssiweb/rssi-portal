@@ -35,10 +35,9 @@ if ($_POST) {
             // Loop through each recipient for this item
             foreach ($_POST['distributed_to'] as $distributed_to) {
                 // Generate a unique transaction_out_id for each row
-                $transaction_out_id = uniqid();
 
-                $query = "INSERT INTO stock_out (transaction_out_id, date, item_distributed, unit, description, quantity_distributed, distributed_to, distributed_by, timestamp)
-                          VALUES ('$transaction_out_id', '$date', '$item_distributed', '$unit', '$description', '$quantity_distributed', '$distributed_to', '$distributed_by', '$timestamp')";
+                $query = "INSERT INTO stock_out (date, item_distributed, unit, description, quantity_distributed, distributed_to, distributed_by, timestamp)
+                          VALUES ('$date', '$item_distributed', '$unit', '$description', '$quantity_distributed', '$distributed_to', '$distributed_by', '$timestamp')";
 
                 $result = pg_query($con, $query);
 
@@ -82,7 +81,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -229,8 +228,8 @@ while ($row = pg_fetch_assoc($unit_result)) {
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="../assets_new/js/main.js"></script>
+
     <script>
         // GLOBAL bag shared by all components
         let itemsBag = [];

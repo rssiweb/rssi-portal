@@ -54,12 +54,11 @@ if ($_POST) {
         }
 
         // Insert the record
-        $transaction_id = uniqid();
         $result = pg_query_params(
             $con,
-            "INSERT INTO stock_add (transaction_id, date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-            [$transaction_id, $date_received, $source, $item_id, $unit_id, $description, $quantity_received, $timestamp, $added_by]
+            "INSERT INTO stock_add (date_received, source, item_id, unit_id, description, quantity_received, timestamp, added_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            [$date_received, $source, $item_id, $unit_id, $description, $quantity_received, $timestamp, $added_by]
         );
 
         if (!$result) {
@@ -93,7 +92,7 @@ while ($row = pg_fetch_assoc($result)) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
 

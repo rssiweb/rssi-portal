@@ -203,8 +203,7 @@ try {
 
         // Insert stock_out for each item
         foreach ($completeCart as $item) {
-            $stockOutQuery = "INSERT INTO stock_out (
-                transaction_out_id, 
+            $stockOutQuery = "INSERT INTO stock_out ( 
                 date, 
                 item_distributed, 
                 unit, 
@@ -214,7 +213,6 @@ try {
                 distributed_by, 
                 timestamp
             ) VALUES (
-                $6,
                 CURRENT_DATE,
                 $1,
                 (SELECT unit_id FROM stock_item_price WHERE item_id = $1 LIMIT 1),
@@ -230,8 +228,7 @@ try {
                 $remarks,
                 $item['count'],
                 $beneficiary,
-                $associatenumber,
-                uniqid()
+                $associatenumber
             ];
 
             $stockOutResult = pg_query_params($con, $stockOutQuery, $stockOutParams);
