@@ -1164,32 +1164,58 @@ if ($_POST['form-type'] == "contact_Form") {
 }
 
 if (isset($_POST['form-type']) && $_POST['form-type'] == 'holiday') {
-  // Get the year from the POST request
-  $year = isset($_POST['year']) ? $_POST['year'] : date("Y");
+  // Get params from POST
+  $year     = isset($_POST['year'])     ? (int) $_POST['year']  : (int) date("Y");
+  $location = isset($_POST['location']) ? trim($_POST['location']) : '';
 
-  // Query to fetch holidays for the given year
-  $query = "SELECT holiday_date, TO_CHAR(holiday_date, 'Day') AS day, holiday_name 
-          FROM holidays 
-          WHERE EXTRACT(YEAR FROM holiday_date) = $1
-          AND is_public=true
-          ORDER BY holiday_date ASC";
-  // Prepare the query
-  $result = pg_prepare($con, "holiday_query", $query);
+  // Base query — only public holidays
+  $sql = "SELECT
+                h.holiday_date,
+                TRIM(TO_CHAR(h.holiday_date, 'Day')) AS day,
+                h.holiday_name,
+                ol.name AS location_name
+            FROM holidays h
+            LEFT JOIN office_locations ol ON ol.id = h.location
+            WHERE EXTRACT(YEAR FROM h.holiday_date) = \$1
+              AND h.is_public = true";
 
-  // Execute the query with the year parameter
-  $result = pg_execute($con, "holiday_query", array($year));
+  $params = [$year];
 
-  // Check if the query executed successfully
-  if ($result) {
-    $holidays = pg_fetch_all($result);
-    if ($holidays) {
-      echo json_encode($holidays);
-    } else {
-      echo json_encode(["message" => "No holidays found for this year."]);
-    }
-  } else {
-    echo json_encode(["error" => "Error executing the query."]);
+  // Optional location filter
+  if ($location !== '') {
+    $sql .= " AND (ol.name = \$2 OR h.location IS NULL)";
+    $params[] = $location;
   }
+
+  $sql .= " ORDER BY h.holiday_date ASC";
+
+  $result = @pg_query_params($con, $sql, $params);
+
+  if (!$result) {
+    error_log("Holiday list query failed: " . pg_last_error($con));
+    echo json_encode(["error" => "Error executing the query."]);
+    return;
+  }
+
+  $holidays = pg_fetch_all($result);
+
+  if ($holidays) {
+    echo json_encode($holidays);
+  } else {
+    echo json_encode([]);
+  }
+}
+
+if (isset($_POST['form-type']) && $_POST['form-type'] === 'locations') {
+  $result = pg_query($con, "SELECT name FROM office_locations WHERE is_active = true ORDER BY name");
+  if (!$result) {
+    echo json_encode([]);
+    return;
+  }
+  $names = pg_fetch_all_columns($result, 0);
+  header('Content-Type: application/json');
+  echo json_encode($names);
+  return;
 }
 
 if (@$_POST['form-type'] == "hierarchy") {
