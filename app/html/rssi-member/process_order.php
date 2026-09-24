@@ -31,21 +31,21 @@ try {
 
     // Updated query to include is_fixed_price from stock_item_price table
     $productQuery = "SELECT 
-        i.item_id as product_id,
-        i.item_name,
-        p.price_per_unit as price,
-        p.is_fixed_price,
-        u.unit_name,
-        p.unit_quantity,
-        COALESCE(SUM(sa.quantity_received), 0) - COALESCE(SUM(so.quantity_distributed), 0) AS available_stock
-    FROM stock_item i
-    JOIN stock_item_price p ON i.item_id = p.item_id
-    JOIN stock_item_unit u ON p.unit_id = u.unit_id
-    LEFT JOIN stock_add sa ON i.item_id = sa.item_id
-    LEFT JOIN stock_out so ON i.item_id = so.item_distributed
-    WHERE i.item_id IN ($productIdsString)
-    AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
-    GROUP BY i.item_id, i.item_name, p.price_per_unit, p.is_fixed_price, u.unit_name, p.unit_quantity";
+    i.item_id as product_id,
+    i.item_name,
+    p.price_per_unit as price,
+    p.is_fixed_price,
+    COALESCE(u.unit_name, 'Unit') AS unit_name,
+    COALESCE(p.unit_quantity, 1) AS unit_quantity,
+    COALESCE(SUM(sa.quantity_received), 0) - COALESCE(SUM(so.quantity_distributed), 0) AS available_stock
+FROM stock_item i
+JOIN stock_item_price p ON i.item_id = p.item_id
+LEFT JOIN stock_item_unit u ON p.unit_id = u.unit_id
+LEFT JOIN stock_add sa ON i.item_id = sa.item_id
+LEFT JOIN stock_out so ON i.item_id = so.item_distributed
+WHERE i.item_id IN ($productIdsString)
+AND CURRENT_DATE BETWEEN p.effective_start_date AND COALESCE(p.effective_end_date, CURRENT_DATE)
+GROUP BY i.item_id, i.item_name, p.price_per_unit, p.is_fixed_price, u.unit_name, p.unit_quantity";
 
     $productResult = pg_query($con, $productQuery);
     if (!$productResult) {
