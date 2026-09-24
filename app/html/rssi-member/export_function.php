@@ -794,9 +794,18 @@ function monthly_attd_export()
   @$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
   @$selectedLocation = isset($_POST['get_location']) ? $_POST['get_location'] : '';
 
+  // De-duplicate
+  $selectedCategories = array_values(array_unique((array) $selectedCategories));
+  $selectedClasses    = array_values(array_unique((array) $selectedClasses));
+
+  // Validate month format
+  if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+    $month = date('Y-m');
+  }
+
   // Calculate the start and end dates of the month
   $startDate = date("Y-m-01", strtotime($month));
-  $endDate = date("Y-m-t", strtotime($month));
+  $endDate   = date("Y-m-t",  strtotime($month));
 
   // Validate categories against DB
   $categoriesQuery = "SELECT DISTINCT category FROM rssimyprofile_student WHERE category IS NOT NULL ORDER BY category";
@@ -854,7 +863,7 @@ function monthly_attd_export()
   // Escaped date literals for reuse
   $startDateEsc = pg_escape_literal($con, $startDate);
   $endDateEsc   = pg_escape_literal($con, $endDate);
-  $monthEsc     = pg_escape_literal($con, $month);
+  $monthEsc     = pg_escape_literal($con, $startDate); // pass a full ISO date
 
   // Construct the optimized SQL query
   $query = "
@@ -869,52 +878,52 @@ filtered_students AS (
         s.class,
         s.effectivefrom,
         s.doa,
-        s.contact
+        s.contact,
+        s.preferredbranch
     FROM rssimyprofile_student s
     WHERE
         (
             s.effectivefrom IS NULL OR
-            DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE($monthEsc, 'YYYY-MM'))::DATE
+            DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', $monthEsc::date)::DATE
         )
-        AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE($monthEsc, 'YYYY-MM'))::DATE
+        AND DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', $monthEsc::date)::DATE
         $idCondition
         $categoryCondition
         $classCondition
         $locationCondition
 ),
 
--- 2) Expand student_class_days into actual dates ONCE
---    class_days is stored as e.g. 'Mon,Tue,Wed' -> split & match day names
+-- 2) Expand student_class_days into actual dates ONCE, per location
 class_day_dates AS (
     SELECT DISTINCT
         cw.category,
+        ol.name AS location_name,
         d::date AS class_date
     FROM student_class_days cw
+    JOIN office_locations ol ON ol.id = cw.location
     CROSS JOIN LATERAL generate_series(
         GREATEST(cw.effective_from, $startDateEsc::date),
         LEAST(COALESCE(cw.effective_to, $endDateEsc::date), $endDateEsc::date),
         interval '1 day'
     ) d
-    WHERE TRIM(TO_CHAR(d, 'Dy')) = ANY (
-        string_to_array(REPLACE(cw.class_days, ' ', ''), ',')
+    WHERE LOWER(TRIM(TO_CHAR(d, 'Dy'))) = ANY (
+        regexp_split_to_array(
+            LOWER(REPLACE(cw.class_days, ' ', '')), ','
+        )
     )
 ),
 
--- 3) Dates on which attendance was actually taken (small set, computed once)
-days_with_attendance AS (
-    SELECT DISTINCT date
-    FROM attendance
-    WHERE date BETWEEN $startDateEsc::date AND $endDateEsc::date
-),
-
--- 4) Holidays in range
+-- 3) Holidays in range, scoped by location
 holidays_in_range AS (
-    SELECT holiday_date
-    FROM holidays
-    WHERE holiday_date BETWEEN $startDateEsc::date AND $endDateEsc::date
+    SELECT
+        h.holiday_date,
+        ol.name AS location_name
+    FROM holidays h
+    LEFT JOIN office_locations ol ON ol.id = h.location
+    WHERE h.holiday_date BETWEEN $startDateEsc::date AND $endDateEsc::date
 ),
 
--- 5) Student exceptions in range
+-- 4) Student exceptions in range
 student_exceptions AS (
     SELECT
         m.student_id,
@@ -924,12 +933,12 @@ student_exceptions AS (
     WHERE e.exception_date BETWEEN $startDateEsc::date AND $endDateEsc::date
 ),
 
--- 6) Calendar days in range
+-- 5) Calendar days in range
 date_range AS (
     SELECT generate_series($startDateEsc::date, $endDateEsc::date, interval '1 day')::date AS attendance_date
 ),
 
--- 7) Build attendance_data with proper joins (no correlated EXISTS)
+-- 6) Build attendance_data with proper joins (no global punch check, no correlated EXISTS)
 attendance_data AS (
     SELECT
         s.student_id,
@@ -943,30 +952,35 @@ attendance_data AS (
             WHEN a.user_id IS NOT NULL THEN 'P'
             WHEN h.holiday_date IS NOT NULL THEN NULL
             WHEN ex.attendance_date IS NOT NULL THEN NULL
-            WHEN dwa.date IS NOT NULL
-                 AND cd.class_date IS NOT NULL
+            WHEN cd.class_date IS NOT NULL
                  AND s.doa <= d.attendance_date
                  THEN 'A'
             ELSE NULL
         END AS attendance_status
     FROM date_range d
     CROSS JOIN filtered_students s
-    LEFT JOIN attendance a
-           ON a.user_id = s.student_id
-          AND a.date = d.attendance_date
+    LEFT JOIN (
+        SELECT DISTINCT
+            TRIM(user_id::text) AS user_id,
+            punch_in::date      AS attendance_day
+        FROM attendance
+        WHERE punch_in::date BETWEEN $startDateEsc::date AND $endDateEsc::date
+    ) a
+           ON TRIM(a.user_id) = TRIM(s.student_id::text)
+          AND a.attendance_day = d.attendance_date
     LEFT JOIN holidays_in_range h
-           ON h.holiday_date = d.attendance_date
+           ON h.holiday_date   = d.attendance_date
+          AND h.location_name  = s.preferredbranch
     LEFT JOIN student_exceptions ex
            ON ex.attendance_date = d.attendance_date
-          AND ex.student_id = s.student_id
-    LEFT JOIN days_with_attendance dwa
-           ON dwa.date = d.attendance_date
+          AND ex.student_id      = s.student_id
     LEFT JOIN class_day_dates cd
-           ON cd.category = s.category
-          AND cd.class_date = d.attendance_date
+           ON cd.category      = s.category
+          AND cd.location_name = s.preferredbranch
+          AND cd.class_date    = d.attendance_date
 ),
 
--- 8) Compute totals per student ONCE (small aggregate)
+-- 7) Compute totals per student ONCE (small aggregate)
 student_totals AS (
     SELECT
         student_id,
@@ -1013,9 +1027,10 @@ ORDER BY
     ad.attendance_date;
 ";
 
-  $result = pg_query($con, $query);
+  $result = @pg_query($con, $query);
 
   if (!$result) {
+    error_log("Monthly attendance export query failed: " . pg_last_error($con));
     echo "An error occurred.\n";
     exit;
   }
@@ -1024,6 +1039,7 @@ ORDER BY
 
   exportAttendanceToCSV($resultArr, $startDate, $endDate);
 }
+
 // Function to generate date columns
 function generate_date_columns($startDate, $endDate)
 {
