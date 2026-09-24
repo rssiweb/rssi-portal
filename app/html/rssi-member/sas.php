@@ -10,53 +10,67 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Initialize all variables used in the form
-$status = $_GET['status'] ?? 'Active'; // Initialize status with default value
-$startDate = $_GET['start_date'] ?? date('Y-m-01');
-$endDate = $_GET['end_date'] ?? date('Y-m-t');
+// ---------------------------------------------------------------------------
+// Initialize filters
+// ---------------------------------------------------------------------------
+$status             = $_GET['status']      ?? 'Active';
+$startDate          = $_GET['start_date']  ?? date('Y-m-01');
+$endDate            = $_GET['end_date']    ?? date('Y-m-t');
 $selectedCategories = (array)($_GET['categories'] ?? []);
-$selectedClasses = (array)($_GET['classes'] ?? []);
-$selectedStudents = (array)($_GET['students'] ?? []);
+$selectedClasses    = (array)($_GET['classes']    ?? []);
+$selectedStudents   = (array)($_GET['students']   ?? []);
+$selectedLocations  = (array)($_GET['locations']  ?? []);
 
-// Initialize variables
-$hasFilters = false;
-$attendanceData = [];
-$averagePercentage = 0;
-$message = "Please select filters to view attendance data";
+$selectedCategories = array_values(array_unique($selectedCategories));
+$selectedClasses    = array_values(array_unique($selectedClasses));
+$selectedStudents   = array_values(array_unique($selectedStudents));
+$selectedLocations  = array_values(array_unique($selectedLocations));
 
-// Only process if at least one filter is set (excluding default values)
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) $startDate = date('Y-m-01');
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate))   $endDate   = date('Y-m-t');
+
+$hasFilters          = false;
+$attendanceData      = [];
+$averagePercentage   = 0;
+$message             = "Please select filters to view attendance data";
+$validCategories     = [];
+$validClasses        = [];
+$validStudents       = [];
+$validLocations      = [];
+
+// ---------------------------------------------------------------------------
+// Process only when real filters are applied
+// ---------------------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function ($v, $k) {
-    // Ignore these default parameters when checking for filters
     $defaults = ['status' => 'Active', 'start_date' => date('Y-m-01'), 'end_date' => date('Y-m-t')];
     return !(array_key_exists($k, $defaults) && $v == $defaults[$k]);
 }, ARRAY_FILTER_USE_BOTH))) {
 
     $hasFilters = true;
-    $startTime = microtime(true);
+    $startTime  = microtime(true);
 
     function makePlaceholders($array)
     {
         return implode(',', array_map(fn($i) => '$' . ($i + 1), array_keys($array)));
     }
 
-    // Validate and filter selections
     function validateSelection($con, $table, $column, $values)
     {
         if (empty($values)) return [];
-        $ph = makePlaceholders($values);
+        $ph  = makePlaceholders($values);
         $sql = "SELECT $column FROM $table WHERE $column IN ($ph)";
-        $res = pg_query_params($con, $sql, $values);
+        $res = @pg_query_params($con, $sql, $values);
         return $res ? array_column(pg_fetch_all($res) ?: [], $column) : [];
     }
 
-    $validCategories = !empty($selectedCategories) ? validateSelection($con, 'school_categories', 'category_value', $selectedCategories) : [];
-    $validClasses = !empty($selectedClasses) ? validateSelection($con, 'school_classes', 'value', $selectedClasses) : [];
-    $validStudents = [];
+    $validCategories = !empty($selectedCategories) ? validateSelection($con, 'school_categories',  'category_value', $selectedCategories) : [];
+    $validClasses    = !empty($selectedClasses)    ? validateSelection($con, 'school_classes',     'value',          $selectedClasses)    : [];
+    $validLocations  = !empty($selectedLocations)  ? validateSelection($con, 'office_locations',   'name',           $selectedLocations)  : [];
 
     if (!empty($selectedStudents)) {
-        $ph = makePlaceholders($selectedStudents);
+        $ph  = makePlaceholders($selectedStudents);
         $sql = "SELECT student_id, studentname FROM rssimyprofile_student WHERE student_id IN ($ph)";
-        $res = pg_query_params($con, $sql, $selectedStudents);
+        $res = @pg_query_params($con, $sql, $selectedStudents);
         $validStudents = $res ? pg_fetch_all($res) ?: [] : [];
     }
 
@@ -73,6 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
         $conditions[] = "s.class IN ('$list')";
     }
 
+    if (!empty($validLocations)) {
+        $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $validLocations));
+        $conditions[] = "s.preferredbranch IN ('$list')";
+    }
+
     if (!empty($validStudents)) {
         $ids = array_column($validStudents, 'student_id');
         $list = implode("','", array_map(fn($v) => pg_escape_string($con, $v), $ids));
@@ -81,135 +100,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
 
     $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    // Main query (only executed if we have valid filters)
     if (!empty($conditions)) {
         $query = "
-    WITH date_range AS (
+WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
 ),
 holidays AS (
-    SELECT holiday_date FROM holidays 
-    WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
+    SELECT h.holiday_date, ol.name AS location_name
+    FROM holidays h
+    LEFT JOIN office_locations ol ON ol.id = h.location
+    WHERE h.holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 student_exceptions AS (
-    SELECT 
+    SELECT
         m.student_id,
         e.exception_date AS attendance_date
-    FROM 
-        student_class_days_exceptions e
-    JOIN 
-        student_exception_mapping m ON e.exception_id = m.exception_id
-    WHERE 
-        e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
+    FROM student_class_days_exceptions e
+    JOIN student_exception_mapping m ON e.exception_id = m.exception_id
+    WHERE e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 filtered_students AS (
-    SELECT student_id, studentname, category, class, doa
+    SELECT student_id, studentname, category, class, doa, preferredbranch
     FROM rssimyprofile_student s
     $whereClause
 ),
 student_class_days_filtered AS (
-    SELECT 
-        fs.student_id, 
-        fs.studentname, 
-        fs.category, 
+    SELECT
+        fs.student_id,
+        fs.studentname,
+        fs.category,
         fs.class,
         d.attendance_date,
         TO_CHAR(d.attendance_date, 'YYYY-MM') AS month_year,
-        CASE 
-            WHEN cw.category IS NOT NULL THEN TRUE
-            ELSE FALSE
-        END AS is_class_day,
-        CASE 
-            WHEN a.user_id IS NOT NULL THEN TRUE
-            ELSE FALSE
-        END AS is_present,
-        CASE 
-            WHEN h.holiday_date IS NOT NULL THEN TRUE
-            ELSE FALSE
-        END AS is_holiday,
-        CASE 
-            WHEN se.student_id IS NOT NULL THEN TRUE
-            ELSE FALSE
-        END AS has_exception
+        CASE WHEN cw.category IS NOT NULL THEN TRUE ELSE FALSE END AS is_class_day,
+        CASE WHEN a.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_present,
+        CASE WHEN h.holiday_date IS NOT NULL THEN TRUE ELSE FALSE END AS is_holiday,
+        CASE WHEN se.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_exception
     FROM date_range d
     CROSS JOIN filtered_students fs
-    LEFT JOIN holidays h ON h.holiday_date = d.attendance_date
-    LEFT JOIN student_exceptions se ON se.student_id = fs.student_id 
-        AND se.attendance_date = d.attendance_date
-    LEFT JOIN attendance a ON a.user_id = fs.student_id 
-        AND a.date = d.attendance_date
+    LEFT JOIN holidays h
+           ON h.holiday_date   = d.attendance_date
+          AND h.location_name  = fs.preferredbranch
+    LEFT JOIN student_exceptions se
+           ON se.student_id      = fs.student_id
+          AND se.attendance_date = d.attendance_date
     LEFT JOIN (
-        SELECT DISTINCT 
+        -- Deduped punch-in source: one row per (user, punch day)
+        SELECT DISTINCT
+            TRIM(user_id::text) AS user_id,
+            punch_in::date      AS attendance_day
+        FROM attendance
+        WHERE punch_in::date BETWEEN '$startDate'::date AND '$endDate'::date
+    ) a
+           ON TRIM(a.user_id)   = TRIM(fs.student_id::text)
+          AND a.attendance_day  = d.attendance_date
+    LEFT JOIN (
+        SELECT
             cw.category,
             cw.class_days,
             cw.effective_from,
-            cw.effective_to
+            cw.effective_to,
+            ol.name AS location_name
         FROM student_class_days cw
+        JOIN office_locations ol ON ol.id = cw.location
         WHERE cw.effective_from <= '$endDate'::date
           AND (cw.effective_to IS NULL OR cw.effective_to >= '$startDate'::date)
-    ) cw ON cw.category = fs.category
-        AND cw.effective_from <= d.attendance_date
-        AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-        AND (
-            cw.class_days LIKE '%Mon%' AND EXTRACT(DOW FROM d.attendance_date) = 1 OR
-            cw.class_days LIKE '%Tue%' AND EXTRACT(DOW FROM d.attendance_date) = 2 OR
-            cw.class_days LIKE '%Wed%' AND EXTRACT(DOW FROM d.attendance_date) = 3 OR
-            cw.class_days LIKE '%Thu%' AND EXTRACT(DOW FROM d.attendance_date) = 4 OR
-            cw.class_days LIKE '%Fri%' AND EXTRACT(DOW FROM d.attendance_date) = 5 OR
-            cw.class_days LIKE '%Sat%' AND EXTRACT(DOW FROM d.attendance_date) = 6 OR
-            cw.class_days LIKE '%Sun%' AND EXTRACT(DOW FROM d.attendance_date) = 0
-        )
+    ) cw
+      ON cw.category       = fs.category
+     AND cw.location_name  = fs.preferredbranch
+     AND cw.effective_from <= d.attendance_date
+     AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+     AND (
+         LOWER(cw.class_days) LIKE '%mon%' AND EXTRACT(DOW FROM d.attendance_date) = 1 OR
+         LOWER(cw.class_days) LIKE '%tue%' AND EXTRACT(DOW FROM d.attendance_date) = 2 OR
+         LOWER(cw.class_days) LIKE '%wed%' AND EXTRACT(DOW FROM d.attendance_date) = 3 OR
+         LOWER(cw.class_days) LIKE '%thu%' AND EXTRACT(DOW FROM d.attendance_date) = 4 OR
+         LOWER(cw.class_days) LIKE '%fri%' AND EXTRACT(DOW FROM d.attendance_date) = 5 OR
+         LOWER(cw.class_days) LIKE '%sat%' AND EXTRACT(DOW FROM d.attendance_date) = 6 OR
+         LOWER(cw.class_days) LIKE '%sun%' AND EXTRACT(DOW FROM d.attendance_date) = 0
+     )
     WHERE d.attendance_date >= fs.doa
 ),
 attendance_data AS (
     SELECT
-        student_id, 
-        studentname, 
-        category, 
-        class, 
-        month_year, 
+        student_id,
+        studentname,
+        category,
+        class,
+        month_year,
         attendance_date,
         CASE
-            WHEN is_present THEN 'P'
-            WHEN is_holiday THEN NULL
+            WHEN is_present    THEN 'P'
+            WHEN is_holiday    THEN NULL
             WHEN has_exception THEN NULL
-            WHEN is_class_day THEN (
-                SELECT 
-                    CASE 
-                        WHEN EXISTS (
-                            SELECT 1 
-                            FROM attendance a 
-                            WHERE a.date = scd.attendance_date
-                            LIMIT 1
-                        ) THEN 'A' 
-                        ELSE NULL 
-                    END
-            )
+            WHEN is_class_day  THEN 'A'
             ELSE NULL
         END AS attendance_status
-    FROM student_class_days_filtered scd
+    FROM student_class_days_filtered
 ),
 monthly_aggregate AS (
-    SELECT 
-        student_id, 
-        studentname, 
-        category, 
-        class, 
+    SELECT
+        student_id,
+        studentname,
+        category,
+        class,
         month_year,
         COUNT(DISTINCT attendance_date) FILTER (WHERE attendance_status IS NOT NULL) AS total_classes,
-        COUNT(DISTINCT attendance_date) FILTER (WHERE attendance_status = 'P') AS attended_classes
+        COUNT(DISTINCT attendance_date) FILTER (WHERE attendance_status = 'P')      AS attended_classes
     FROM attendance_data
     GROUP BY student_id, studentname, category, class, month_year
 )
-SELECT 
-    student_id, 
-    studentname, 
-    category, 
-    class, 
+SELECT
+    student_id,
+    studentname,
+    category,
+    class,
     month_year,
     total_classes,
     attended_classes,
-    CASE 
+    CASE
         WHEN total_classes = 0 THEN NULL
         ELSE ROUND((attended_classes * 100.0) / total_classes, 2)
     END AS attendance_percentage
@@ -218,12 +227,17 @@ WHERE total_classes > 0
 ORDER BY studentname, month_year;
 ";
 
-        $result = pg_query($con, $query);
-        $attendanceData = pg_fetch_all($result) ?: [];
+        $result = @pg_query($con, $query);
+        if (!$result) {
+            error_log("Attendance summary query failed: " . pg_last_error($con));
+            $message = "Failed to generate attendance data. Please try again.";
+        } else {
+            $attendanceData = pg_fetch_all($result) ?: [];
+        }
 
-        // Calculate average percentage
+        // Average percentage
         $totalPercentage = 0;
-        $monthCount = 0;
+        $monthCount      = 0;
         foreach ($attendanceData as $row) {
             if ($row['attendance_percentage'] !== null) {
                 $totalPercentage += $row['attendance_percentage'];
@@ -232,14 +246,14 @@ ORDER BY studentname, month_year;
         }
         $averagePercentage = $monthCount > 0 ? round($totalPercentage / $monthCount, 2) : 0;
 
-        // Handle CSV export
+        // ---------------- CSV export ----------------
         if (isset($_GET['export']) && $_GET['export'] === 'csv') {
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename=attendance_summary_' . date('Y-m-d') . '.csv');
             $output = fopen('php://output', 'w');
 
             $headers = ['Sl. No.', 'Student ID', 'Student Name', 'Category', 'Class'];
-            $months = array_unique(array_column($attendanceData, 'month_year'));
+            $months  = array_unique(array_column($attendanceData, 'month_year'));
             sort($months);
 
             foreach ($months as $month) {
@@ -258,18 +272,18 @@ ORDER BY studentname, month_year;
                     $students[$id] = [
                         'info' => [
                             'studentname' => $row['studentname'],
-                            'category' => $row['category'],
-                            'class' => $row['class']
+                            'category'    => $row['category'],
+                            'class'       => $row['class'],
                         ],
-                        'months' => [],
+                        'months'        => [],
                         'total_present' => 0,
-                        'total_classes' => 0
+                        'total_classes' => 0,
                     ];
                 }
                 $students[$id]['months'][$row['month_year']] = [
-                    'present' => $row['attended_classes'],
-                    'total' => $row['total_classes'],
-                    'percentage' => $row['attendance_percentage']
+                    'present'    => $row['attended_classes'],
+                    'total'      => $row['total_classes'],
+                    'percentage' => $row['attendance_percentage'],
                 ];
                 $students[$id]['total_present'] += $row['attended_classes'];
                 $students[$id]['total_classes'] += $row['total_classes'];
@@ -282,7 +296,7 @@ ORDER BY studentname, month_year;
                     $id,
                     $data['info']['studentname'],
                     $data['info']['category'],
-                    $data['info']['class']
+                    $data['info']['class'],
                 ];
                 foreach ($months as $m) {
                     $month = $data['months'][$m] ?? ['present' => '', 'total' => '', 'percentage' => ''];
@@ -300,18 +314,11 @@ ORDER BY studentname, month_year;
             fclose($output);
             exit;
         }
-
-        echo "<script>console.log('Attendance summary generated in " . round((microtime(true) - $startTime), 3) . " seconds');</script>";
     } else {
         $message = "No valid filters selected. Please check your filter values.";
     }
 }
-
-// The HTML portion of your page would go here
-// You can use $hasFilters, $attendanceData, $averagePercentage, and $message variables
-// to display appropriate content
 ?>
-
 <!doctype html>
 <html lang="en">
 
@@ -319,16 +326,13 @@ ORDER BY studentname, month_year;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
-    <!-- Favicons -->
+
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <!-- Include Date Range Picker CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
     <style>
         .summary-card {
@@ -351,7 +355,7 @@ ORDER BY studentname, month_year;
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
@@ -363,7 +367,7 @@ ORDER BY studentname, month_year;
                                 <div class="col-md-2">
                                     <label class="form-label">Status</label>
                                     <select name="status" class="form-select">
-                                        <option value="Active" <?= $status == 'Active' ? 'selected' : '' ?>>Active</option>
+                                        <option value="Active" <?= $status == 'Active'   ? 'selected' : '' ?>>Active</option>
                                         <option value="Inactive" <?= $status == 'Inactive' ? 'selected' : '' ?>>Inactive</option>
                                     </select>
                                 </div>
@@ -375,6 +379,17 @@ ORDER BY studentname, month_year;
                                         value="<?= !empty($startDate) && !empty($endDate) ? htmlspecialchars("$startDate - $endDate") : '' ?>">
                                     <input type="hidden" name="start_date" value="<?= htmlspecialchars($startDate) ?>">
                                     <input type="hidden" name="end_date" value="<?= htmlspecialchars($endDate) ?>">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Location</label>
+                                    <select name="locations[]" id="locations" class="form-select" multiple>
+                                        <?php foreach ($validLocations as $loc): ?>
+                                            <option value="<?= htmlspecialchars($loc) ?>" selected>
+                                                <?= htmlspecialchars($loc) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-2">
@@ -399,7 +414,7 @@ ORDER BY studentname, month_year;
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label class="form-label">Students (Optional)</label>
                                     <select name="students[]" id="students" class="form-select" multiple>
                                         <?php foreach ($validStudents as $student): ?>
@@ -426,87 +441,88 @@ ORDER BY studentname, month_year;
                             </form>
 
                             <?php if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['status'])): ?>
-                                <div class="summary-card mt-4">
-                                    <h5>Report Summary</h5>
-                                    <p>Date Range: <?= date('M j, Y', strtotime($startDate)) ?> to <?= date('M j, Y', strtotime($endDate)) ?></p>
-                                    <p>Status: <?= $status ?></p>
-                                    <p>Average Attendance Percentage: <?= $averagePercentage ?>%</p>
-                                </div>
+                                <?php if (!empty($attendanceData)): ?>
+                                    <div class="summary-card mt-4">
+                                        <h5>Report Summary</h5>
+                                        <p>Date Range: <?= date('M j, Y', strtotime($startDate)) ?> to <?= date('M j, Y', strtotime($endDate)) ?></p>
+                                        <p>Status: <?= htmlspecialchars($status) ?></p>
+                                        <p>Average Attendance Percentage: <?= $averagePercentage ?>%</p>
+                                    </div>
 
-                                <div class="table-responsive mt-4">
-                                    <table class="table table-bordered table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Sl. No.</th>
-                                                <th>Student ID</th>
-                                                <th>Student Name</th>
-                                                <th>Category</th>
-                                                <th>Class</th>
-                                                <?php
-                                                // Get unique months in the date range and SORT THEM PROPERLY
-                                                $months = array_unique(array_column($attendanceData, 'month_year'));
-                                                usort($months, function ($a, $b) {
-                                                    return strtotime($a . '-01') <=> strtotime($b . '-01');
-                                                });
-
-                                                foreach ($months as $month) {
-                                                    echo "<th>" . date('M Y', strtotime($month . '-01')) . "<br>Present/Total</th>";
-                                                }
-                                                ?>
-                                                <th>Overall Percentage</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $students = [];
-                                            foreach ($attendanceData as $row) {
-                                                $students[$row['student_id']]['info'] = [
-                                                    'studentname' => $row['studentname'],
-                                                    'category' => $row['category'],
-                                                    'class' => $row['class']
-                                                ];
-                                                $students[$row['student_id']]['months'][$row['month_year']] = [
-                                                    'present' => $row['attended_classes'],
-                                                    'total' => $row['total_classes'],
-                                                    'percentage' => $row['attendance_percentage']
-                                                ];
-                                            }
-
-                                            $slNo = 1;
-                                            foreach ($students as $studentId => $data):
-                                                // Calculate overall stats
-                                                $totalPresent = 0;
-                                                $totalClasses = 0;
-                                                foreach ($data['months'] as $month) {
-                                                    $totalPresent += $month['present'];
-                                                    $totalClasses += $month['total'];
-                                                }
-                                                $overallPercentage = $totalClasses > 0 ? round(($totalPresent / $totalClasses) * 100, 2) : 0;
-                                            ?>
+                                    <div class="table-responsive mt-4">
+                                        <table class="table table-bordered table-striped">
+                                            <thead>
                                                 <tr>
-                                                    <td><?= $slNo++ ?></td>
-                                                    <td><?= htmlspecialchars($studentId) ?></td>
-                                                    <td><?= htmlspecialchars($data['info']['studentname']) ?></td>
-                                                    <td><?= htmlspecialchars($data['info']['category']) ?></td>
-                                                    <td><?= htmlspecialchars($data['info']['class']) ?></td>
-                                                    <?php foreach ($months as $month):
-                                                        $monthData = $data['months'][$month] ?? null;
+                                                    <th>Sl. No.</th>
+                                                    <th>Student ID</th>
+                                                    <th>Student Name</th>
+                                                    <th>Category</th>
+                                                    <th>Class</th>
+                                                    <?php
+                                                    $months = array_unique(array_column($attendanceData, 'month_year'));
+                                                    usort($months, function ($a, $b) {
+                                                        return strtotime($a . '-01') <=> strtotime($b . '-01');
+                                                    });
+                                                    foreach ($months as $month) {
+                                                        echo "<th>" . date('M Y', strtotime($month . '-01')) . "<br>Present/Total</th>";
+                                                    }
                                                     ?>
-                                                        <td>
-                                                            <?php if ($monthData): ?>
-                                                                <?= $monthData['present'] ?>/<?= $monthData['total'] ?>
-                                                                (<?= $monthData['percentage'] ?>%)
-                                                            <?php else: ?>
-                                                                -
-                                                            <?php endif; ?>
-                                                        </td>
-                                                    <?php endforeach; ?>
-                                                    <td><?= $overallPercentage ?>%</td>
+                                                    <th>Overall Percentage</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $students = [];
+                                                foreach ($attendanceData as $row) {
+                                                    $students[$row['student_id']]['info'] = [
+                                                        'studentname' => $row['studentname'],
+                                                        'category'    => $row['category'],
+                                                        'class'       => $row['class'],
+                                                    ];
+                                                    $students[$row['student_id']]['months'][$row['month_year']] = [
+                                                        'present'    => $row['attended_classes'],
+                                                        'total'      => $row['total_classes'],
+                                                        'percentage' => $row['attendance_percentage'],
+                                                    ];
+                                                }
+
+                                                $slNo = 1;
+                                                foreach ($students as $studentId => $data):
+                                                    $totalPresent = 0;
+                                                    $totalClasses = 0;
+                                                    foreach ($data['months'] as $month) {
+                                                        $totalPresent += $month['present'];
+                                                        $totalClasses += $month['total'];
+                                                    }
+                                                    $overallPercentage = $totalClasses > 0 ? round(($totalPresent / $totalClasses) * 100, 2) : 0;
+                                                ?>
+                                                    <tr>
+                                                        <td><?= $slNo++ ?></td>
+                                                        <td><?= htmlspecialchars($studentId) ?></td>
+                                                        <td><?= htmlspecialchars($data['info']['studentname']) ?></td>
+                                                        <td><?= htmlspecialchars($data['info']['category']) ?></td>
+                                                        <td><?= htmlspecialchars($data['info']['class']) ?></td>
+                                                        <?php foreach ($months as $month):
+                                                            $monthData = $data['months'][$month] ?? null;
+                                                        ?>
+                                                            <td>
+                                                                <?php if ($monthData): ?>
+                                                                    <?= $monthData['present'] ?>/<?= $monthData['total'] ?>
+                                                                    (<?= $monthData['percentage'] ?>%)
+                                                                <?php else: ?>
+                                                                    -
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        <?php endforeach; ?>
+                                                        <td><?= $overallPercentage ?>%</td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="alert alert-info mt-4"><?= htmlspecialchars($message) ?></div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -514,18 +530,18 @@ ORDER BY studentname, month_year;
             </div>
         </section>
     </main>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
-    <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
 
     <script>
         $(document).ready(function() {
-            // Define the function first
+            // ---------- Students (status-aware) ----------
             function initializeStudentSelect(status = 'Active') {
                 $('#students').select2({
                     ajax: {
@@ -535,7 +551,7 @@ ORDER BY studentname, month_year;
                         data: function(params) {
                             return {
                                 q: params.term,
-                                status: status // Pass the current status value
+                                status: status
                             };
                         },
                         processResults: function(data) {
@@ -551,34 +567,27 @@ ORDER BY studentname, month_year;
                 });
             }
 
-            // Get initial status from dropdown and initialize
             const initialStatus = $("select[name='status']").val() || 'Active';
-            initializeStudentSelect(initialStatus); // Call the function here
+            initializeStudentSelect(initialStatus);
 
-            // Update when status changes
             $("select[name='status']").on('change', function() {
                 const newStatus = $(this).val();
-                // Destroy and reinitialize with new status
                 $('#students').select2('destroy').empty();
-                initializeStudentSelect(newStatus); // Reinitialize with new status
+                initializeStudentSelect(newStatus);
             });
 
-            // Other Select2 initializations
+            // ---------- Categories ----------
             $('#categories').select2({
                 ajax: {
                     url: 'fetch_category.php',
                     dataType: 'json',
                     delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
                     cache: true
                 },
                 minimumInputLength: 1,
@@ -586,30 +595,54 @@ ORDER BY studentname, month_year;
                 width: '100%'
             });
 
+            // ---------- Classes ----------
             $('#classes').select2({
                 ajax: {
                     url: 'fetch_class.php',
                     dataType: 'json',
                     delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
-                    },
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    }),
                     cache: true
                 },
                 minimumInputLength: 1,
                 placeholder: 'Search by class',
                 width: '100%'
             });
+
+            // ---------- Locations ----------
+            $('#locations').select2({
+                ajax: {
+                    url: 'fetch_locations.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term
+                    }),
+                    processResults: function(data) {
+                        const results = (data || [])
+                            .filter(l => l.is_active === true || l.is_active === 't' || l.is_active === 1)
+                            .map(l => ({
+                                id: l.name,
+                                text: l.name
+                            }));
+                        return {
+                            results: results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0,
+                placeholder: 'Search by location',
+                width: '100%'
+            });
         });
-    </script>
-    <script>
+
+        // ---------- Date range picker ----------
         $(document).ready(function() {
             $('.date-range-picker').daterangepicker({
                 opens: 'right',
@@ -633,7 +666,6 @@ ORDER BY studentname, month_year;
             });
         });
     </script>
-
 </body>
 
 </html>
