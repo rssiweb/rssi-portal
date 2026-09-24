@@ -74,8 +74,10 @@ WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, interval '1 day')::date AS attendance_date
 ),
 holidays AS (
-    SELECT holiday_date FROM holidays 
-    WHERE holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
+    SELECT h.holiday_date, ol.name AS location_name
+    FROM holidays h
+    LEFT JOIN office_locations ol ON ol.id = h.location
+    WHERE h.holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 student_exceptions AS (
     SELECT 
@@ -100,31 +102,45 @@ attendance_data AS (
         d.attendance_date,
         COALESCE(
             CASE
-                WHEN a.user_id IS NOT NULL THEN 'P' -- Present if attendance record exists
-                WHEN h.holiday_date IS NOT NULL THEN NULL -- NULL for holidays (not counted)
-                WHEN ex.attendance_date IS NOT NULL THEN NULL -- NULL for exceptions (not counted)
+                WHEN a.user_id IS NOT NULL THEN 'P'
+                WHEN h.holiday_date IS NOT NULL THEN NULL
+                WHEN ex.attendance_date IS NOT NULL THEN NULL
                 WHEN a.user_id IS NULL
-                     AND EXISTS (SELECT 1 FROM attendance att WHERE att.date = d.attendance_date)
                      AND EXISTS (
-                        SELECT 1 FROM student_class_days cw
-                        WHERE cw.category = s.category
-                          AND cw.effective_from <= d.attendance_date
-                          AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
-                          AND POSITION(TO_CHAR(d.attendance_date, 'Dy') IN cw.class_days) > 0
+                         SELECT 1
+                         FROM student_class_days cw
+                         JOIN office_locations ol ON ol.id = cw.location
+                         WHERE cw.category = s.category
+                           AND ol.name = s.preferredbranch
+                           AND cw.effective_from <= d.attendance_date
+                           AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+                           AND LOWER(TRIM(TO_CHAR(d.attendance_date, 'Dy'))) = ANY(
+                                 regexp_split_to_array(
+                                     LOWER(REPLACE(cw.class_days, ' ', '')), ','
+                                 )
+                               )
                      )
                      AND s.doa <= d.attendance_date
-                     THEN 'A' -- Absent only if it's a class day and not holiday/exception
-                ELSE NULL -- NULL for non-class days
+                     THEN 'A'
+                ELSE NULL
             END
         ) AS attendance_status
     FROM
         date_range d
     CROSS JOIN
         rssimyprofile_student s
+    LEFT JOIN (
+        SELECT DISTINCT
+            TRIM(user_id::text) AS user_id,
+            punch_in::date      AS attendance_day
+        FROM attendance
+        WHERE punch_in::date BETWEEN '$startDate'::date AND '$endDate'::date
+    ) a
+      ON TRIM(a.user_id) = TRIM(s.student_id::text)
+     AND a.attendance_day = d.attendance_date
     LEFT JOIN
-        attendance a ON s.student_id = a.user_id AND a.date = d.attendance_date
-    LEFT JOIN
-        holidays h ON d.attendance_date = h.holiday_date
+    holidays h ON d.attendance_date = h.holiday_date
+              AND h.location_name = s.preferredbranch
     LEFT JOIN
         student_exceptions ex ON d.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
     WHERE
@@ -500,7 +516,7 @@ if (!$requireCategorySelection) {
             }
 
             prepopulateSelect2('#classes', selectedClasses, 'fetch_class.php');
-            prepopulateSelect2('#categories', selectedCategories, 'fetch_category.php');
+            // prepopulateSelect2('#categories', selectedCategories, 'fetch_category.php');
         });
     </script>
 </body>
