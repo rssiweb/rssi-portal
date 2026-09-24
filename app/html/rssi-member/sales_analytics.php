@@ -297,7 +297,7 @@ $ordersQuery = "
         $mrpExpr,
         $finalExpr,
         COALESCE(oi.discount_percent, 0)
-    ORDER BY o.order_date DESC, o.order_id DESC
+    ORDER BY o.order_id DESC
 ";
 $ordersResult = pg_query_params($con, $ordersQuery, $productParams);
 $ordersData = $ordersResult ? pg_fetch_all($ordersResult) : [];
@@ -899,17 +899,22 @@ $paymentModes = $paymentModesResult ? pg_fetch_all($paymentModesResult) : [];
                 $('#lineItemsTable').DataTable({
                     paging: true,
                     pageLength: 25,
+
                     lengthMenu: [
                         [10, 25, 50, 100, -1],
                         [10, 25, 50, 100, "All"]
                     ],
-                    order: [
-                        [1, 'desc']
-                    ],
+
+                    // IMPORTANT:
+                    // Do not apply any initial sorting.
+                    // Keep the order returned by the database.
+                    order: [],
+
                     columnDefs: [{
                         orderable: false,
                         targets: [10]
                     }],
+
                     language: {
                         search: "Search line items:",
                         lengthMenu: "Show _MENU_ entries",
@@ -917,6 +922,7 @@ $paymentModes = $paymentModesResult ? pg_fetch_all($paymentModesResult) : [];
                         infoEmpty: "No line items",
                         zeroRecords: "No matching line items found"
                     },
+
                     dom: '<"row mb-2"<"col-md-6"l><"col-md-6"f>>rt<"row mt-2"<"col-md-6"i><"col-md-6"p>>'
                 });
             }
