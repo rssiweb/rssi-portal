@@ -894,11 +894,15 @@ filtered_students AS (
 ),
 
 -- 2) Expand student_class_days into actual dates ONCE, per location
+--    Includes class_start_time so we can gate 'A' marks on current time.
+--    GROUP BY ensures one row per (category, location, date) even if multiple
+--    slots exist — we take the latest class_start_time for that day.
 class_day_dates AS (
-    SELECT DISTINCT
+    SELECT
         cw.category,
         ol.name AS location_name,
-        d::date AS class_date
+        d::date AS class_date,
+        MAX(cw.class_start_time) AS class_start_time
     FROM student_class_days cw
     JOIN office_locations ol ON ol.id = cw.location
     CROSS JOIN LATERAL generate_series(
@@ -911,6 +915,7 @@ class_day_dates AS (
             LOWER(REPLACE(cw.class_days, ' ', '')), ','
         )
     )
+    GROUP BY cw.category, ol.name, d::date
 ),
 
 -- 3) Holidays in range, scoped by location
@@ -954,6 +959,15 @@ attendance_data AS (
             WHEN ex.attendance_date IS NOT NULL THEN NULL
             WHEN cd.class_date IS NOT NULL
                  AND s.doa <= d.attendance_date
+                 AND (
+                     -- Past dates: always allow 'A'
+                     d.attendance_date < CURRENT_DATE
+                     -- Today: only allow 'A' after class_start_time
+                     OR (
+                         d.attendance_date = CURRENT_DATE
+                         AND CURRENT_TIME >= cd.class_start_time
+                     )
+                 )
                  THEN 'A'
             ELSE NULL
         END AS attendance_status

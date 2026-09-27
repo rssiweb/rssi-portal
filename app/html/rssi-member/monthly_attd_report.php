@@ -119,6 +119,11 @@ attendance_data AS (
                                      LOWER(REPLACE(cw.class_days, ' ', '')), ','
                                  )
                                )
+                           -- NEW CONDITION: Ensure we don't mark 'A' before class start time on the current day
+                           AND (
+                               d.attendance_date < CURRENT_DATE 
+                               OR (d.attendance_date = CURRENT_DATE AND CURRENT_TIME >= cw.class_start_time)
+                           )
                      )
                      AND s.doa <= d.attendance_date
                      THEN 'A'
@@ -187,7 +192,6 @@ ORDER BY
     student_id,
     attendance_date;
 ";
-
 // Execute query if category or class is selected
 $studentIDCount = null;
 if (!$requireCategorySelection) {

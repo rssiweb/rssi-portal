@@ -135,7 +135,8 @@ student_class_days_filtered AS (
         CASE WHEN cw.category IS NOT NULL THEN TRUE ELSE FALSE END AS is_class_day,
         CASE WHEN a.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_present,
         CASE WHEN h.holiday_date IS NOT NULL THEN TRUE ELSE FALSE END AS is_holiday,
-        CASE WHEN se.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_exception
+        CASE WHEN se.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_exception,
+        cw.class_start_time
     FROM date_range d
     CROSS JOIN filtered_students fs
     LEFT JOIN holidays h
@@ -160,6 +161,7 @@ student_class_days_filtered AS (
             cw.class_days,
             cw.effective_from,
             cw.effective_to,
+            cw.class_start_time,
             ol.name AS location_name
         FROM student_class_days cw
         JOIN office_locations ol ON ol.id = cw.location
@@ -193,7 +195,16 @@ attendance_data AS (
             WHEN is_present    THEN 'P'
             WHEN is_holiday    THEN NULL
             WHEN has_exception THEN NULL
-            WHEN is_class_day  THEN 'A'
+            WHEN is_class_day
+                 -- Don't mark 'A' on a future date, or on today before class starts
+                 AND (
+                     attendance_date < CURRENT_DATE
+                     OR (
+                         attendance_date = CURRENT_DATE
+                         AND CURRENT_TIME >= class_start_time
+                     )
+                 )
+                 THEN 'A'
             ELSE NULL
         END AS attendance_status
     FROM student_class_days_filtered
