@@ -13,10 +13,48 @@ validation();
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ---------- NEW: Handle edit of effective_from / effective_to ----------
+    if (isset($_POST['action']) && $_POST['action'] === 'edit_effective') {
+        $editId    = (int) $_POST['edit_id'];
+        $editFrom  = $_POST['edit_effective_from'] ?? '';
+        $editTo    = $_POST['edit_effective_to']   ?? '';
+
+        // Validate
+        if ($editId <= 0 || empty($editFrom)) {
+            $_SESSION['error_message'] = "Invalid edit request.";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!empty($editTo) && $editTo < $editFrom) {
+            $_SESSION['error_message'] = "Effective To cannot be earlier than Effective From.";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
+        }
+
+        $fromEsc = pg_escape_literal($con, $editFrom);
+        $toSql   = !empty($editTo) ? pg_escape_literal($con, $editTo) : 'NULL';
+
+        $updateSql = "UPDATE student_class_days
+                      SET effective_from = $fromEsc,
+                          effective_to   = $toSql
+                      WHERE id = $editId";
+
+        $ok = pg_query($con, $updateSql);
+        if ($ok) {
+            $_SESSION['success_message'] = "Schedule dates updated successfully!";
+        } else {
+            $_SESSION['error_message'] = "Failed to update dates: " . pg_last_error($con);
+        }
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    // ---------- Existing add/update schedule logic ----------
     $category      = pg_escape_string($con, $_POST['category']);
     $location      = (int) $_POST['location'];
     $class_days    = pg_escape_string($con, $_POST['class_days']);
     $effectiveFrom = pg_escape_string($con, $_POST['effective_from']);
+    $classStart    = pg_escape_string($con, $_POST['class_start_time']); // NEW
+    $classEnd      = pg_escape_string($con, $_POST['class_end_time']);   // NEW
 
     pg_query($con, "BEGIN");
 
@@ -27,8 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       AND effective_to IS NULL";
     pg_query($con, $updateQuery);
 
-    $insertQuery = "INSERT INTO student_class_days (category, location, class_days, effective_from)
-                    VALUES ('$category', $location, '$class_days', '$effectiveFrom')";
+    // NEW: include class_start_time and class_end_time
+    $insertQuery = "INSERT INTO student_class_days 
+                        (category, location, class_days, effective_from, class_start_time, class_end_time)
+                    VALUES 
+                        ('$category', $location, '$class_days', '$effectiveFrom', '$classStart', '$classEnd')";
     $result = pg_query($con, $insertQuery);
 
     if ($result) {
@@ -243,14 +284,14 @@ if ($show_history && $historyTotal > 0) {
 
                             <form method="POST" class="mb-4">
                                 <div class="row mb-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="category" class="form-label">Category</label>
                                         <select class="form-select" id="category" name="category" required>
                                             <option value="">Select Category</option>
                                             <?php
                                             $catResult = pg_query($con, "SELECT category_name, category_value
-                                                                          FROM school_categories
-                                                                          ORDER BY category_name");
+                                          FROM school_categories
+                                          ORDER BY category_name");
                                             if ($catResult) {
                                                 while ($row = pg_fetch_assoc($catResult)) {
                                                     echo '<option value="' . htmlspecialchars($row['category_value']) . '">'
@@ -262,7 +303,7 @@ if ($show_history && $historyTotal > 0) {
                                         </select>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="location" class="form-label">Location</label>
                                         <select class="form-select" id="location" name="location" required>
                                             <option value="">Select Location</option>
@@ -274,9 +315,23 @@ if ($show_history && $historyTotal > 0) {
                                         </select>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="effective_from" class="form-label">Effective From</label>
                                         <input type="date" class="form-control" id="effective_from" name="effective_from" required>
+                                    </div>
+
+                                    <!-- NEW: Start time -->
+                                    <div class="col-md-3">
+                                        <label for="class_start_time" class="form-label">Class Start Time</label>
+                                        <input type="time" class="form-control" id="class_start_time" name="class_start_time" required>
+                                    </div>
+                                </div>
+
+                                <!-- NEW ROW: End time -->
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label for="class_end_time" class="form-label">Class End Time</label>
+                                        <input type="time" class="form-control" id="class_end_time" name="class_end_time" required>
                                     </div>
                                 </div>
 
@@ -354,7 +409,9 @@ if ($show_history && $historyTotal > 0) {
                                             <th>Category</th>
                                             <th>Location</th>
                                             <th>Class Days</th>
+                                            <th>Class Time</th>
                                             <th>Effective From</th>
+                                            <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -376,15 +433,40 @@ if ($show_history && $historyTotal > 0) {
                                                         ?>
                                                     </td>
                                                     <td>
+                                                        <?php if (!empty($setting['class_start_time']) && !empty($setting['class_end_time'])): ?>
+                                                            <span class="badge bg-light text-dark border">
+                                                                <i class="bi bi-clock me-1"></i>
+                                                                <?= htmlspecialchars(date('h:i A', strtotime($setting['class_start_time']))) ?>
+                                                                &ndash;
+                                                                <?= htmlspecialchars(date('h:i A', strtotime($setting['class_end_time']))) ?>
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="text-muted">—</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
                                                         <?= !empty($setting['effective_from'])
                                                             ? htmlspecialchars(date('d-M-Y', strtotime($setting['effective_from'])))
                                                             : '—' ?>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editEffectiveModal"
+                                                            data-id="<?= (int)$setting['id'] ?>"
+                                                            data-category="<?= htmlspecialchars($setting['category'] ?? '') ?>"
+                                                            data-location="<?= htmlspecialchars($locationMap[$setting['location']] ?? '') ?>"
+                                                            data-from="<?= htmlspecialchars($setting['effective_from'] ?? '') ?>"
+                                                            data-to="<?= htmlspecialchars($setting['effective_to'] ?? '') ?>">
+                                                            <i class="bi bi-pencil-square"></i> Edit
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="4" class="empty-state">
+                                                <td colspan="6" class="empty-state">
                                                     No active settings<?= $selected_location ? ' for ' . htmlspecialchars($locationMap[$selected_location] ?? '') : '' ?>.
                                                 </td>
                                             </tr>
@@ -436,8 +518,10 @@ if ($show_history && $historyTotal > 0) {
                                                     <th>Category</th>
                                                     <th>Location</th>
                                                     <th>Class Days</th>
+                                                    <th>Class Time</th>
                                                     <th>Effective From</th>
                                                     <th>Effective To</th>
+                                                    <th class="text-end">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -457,8 +541,32 @@ if ($show_history && $historyTotal > 0) {
                                                             }
                                                             ?>
                                                         </td>
+                                                        <td>
+                                                            <?php if (!empty($setting['class_start_time']) && !empty($setting['class_end_time'])): ?>
+                                                                <span class="badge bg-light text-dark border">
+                                                                    <i class="bi bi-clock me-1"></i>
+                                                                    <?= htmlspecialchars(date('h:i A', strtotime($setting['class_start_time']))) ?>
+                                                                    &ndash;
+                                                                    <?= htmlspecialchars(date('h:i A', strtotime($setting['class_end_time']))) ?>
+                                                                </span>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">—</span>
+                                                            <?php endif; ?>
                                                         <td><?= !empty($setting['effective_from']) ? htmlspecialchars(date('d-M-Y', strtotime($setting['effective_from']))) : '—' ?></td>
                                                         <td><?= !empty($setting['effective_to']) ? htmlspecialchars(date('d-M-Y', strtotime($setting['effective_to']))) : '—' ?></td>
+                                                        <td class="text-end">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-primary"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editEffectiveModal"
+                                                                data-id="<?= (int)$setting['id'] ?>"
+                                                                data-category="<?= htmlspecialchars($setting['category'] ?? '') ?>"
+                                                                data-location="<?= htmlspecialchars($locationMap[$setting['location']] ?? '') ?>"
+                                                                data-from="<?= htmlspecialchars($setting['effective_from'] ?? '') ?>"
+                                                                data-to="<?= htmlspecialchars($setting['effective_to'] ?? '') ?>">
+                                                                <i class="bi bi-pencil-square"></i> Edit
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -512,6 +620,51 @@ if ($show_history && $historyTotal > 0) {
         </section>
 
     </main>
+    <!-- ============ EDIT EFFECTIVE DATES MODAL ============ -->
+    <div class="modal fade" id="editEffectiveModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="edit_effective">
+                <input type="hidden" name="edit_id" id="edit_id">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-range me-1"></i> Edit Effective Dates
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-2 small text-muted">
+                        <strong id="edit_ctx_category"></strong>
+                        &middot;
+                        <span id="edit_ctx_location"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Effective From</label>
+                            <input type="date" class="form-control" name="edit_effective_from" id="edit_effective_from" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Effective To
+                                <small class="text-muted">(leave blank = active)</small>
+                            </label>
+                            <input type="date" class="form-control" name="edit_effective_to" id="edit_effective_to">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -532,6 +685,26 @@ if ($show_history && $historyTotal > 0) {
         }
 
         checkboxes.forEach(c => c.addEventListener('change', updateClassDays));
+        // Default times if empty
+        const startTimeInput = document.getElementById('class_start_time');
+        const endTimeInput = document.getElementById('class_end_time');
+        if (startTimeInput && !startTimeInput.value) startTimeInput.value = '11:00';
+        if (endTimeInput && !endTimeInput.value) endTimeInput.value = '18:30';
+
+        // Populate edit modal from clicked button
+        const editModal = document.getElementById('editEffectiveModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function(event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                document.getElementById('edit_id').value = btn.getAttribute('data-id') || '';
+                document.getElementById('edit_effective_from').value = btn.getAttribute('data-from') || '';
+                document.getElementById('edit_effective_to').value = btn.getAttribute('data-to') || '';
+                document.getElementById('edit_ctx_category').textContent = btn.getAttribute('data-category') || '';
+                document.getElementById('edit_ctx_location').textContent = btn.getAttribute('data-location') || '';
+            });
+        }
     </script>
 </body>
 
