@@ -118,14 +118,11 @@ if ($hasFilters) {
     }
 
     // Add location filter if selected
+    // $location holds the location ID (from the dropdown) and
+    // s.preferredbranch stores the location ID too — so compare ID to ID.
     if (!empty($location)) {
-        // Get location name from ID
-        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
-        $locationNameResult = pg_query($con, $locationNameQuery);
-        $locationNameRow = pg_fetch_assoc($locationNameResult);
-        $locationName = $locationNameRow['name'];
-
-        $query .= " AND s.preferredbranch = '$locationName'";
+        $locationId = pg_escape_string($con, $location);
+        $query .= " AND s.preferredbranch = '$locationId'";
     }
 
     $query .= " ORDER BY s.class, s.studentname";

@@ -53,14 +53,12 @@ LEFT JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
 WHERE p.is_settled = FALSE";
 
     // Add location filter if selected
+    // All three location columns now store IDs — compare directly.
     if (!empty($location)) {
-        // Get location name from ID
-        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
-        $locationNameResult = pg_query($con, $locationNameQuery);
-        $locationNameRow = pg_fetch_assoc($locationNameResult);
-        $locationName = $locationNameRow['name'];
-
-        $paymentsQuery .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName' OR h.location_id = '$location')";
+        $locationId = pg_escape_string($con, $location);
+        $paymentsQuery .= " AND (s.preferredbranch = '$locationId'
+                            OR m.basebranch = '$locationId'
+                            OR h.location_id = '$locationId')";
     }
 
     $paymentsQuery .= " ORDER BY p.id DESC";
@@ -81,12 +79,10 @@ WHERE p.is_settled = FALSE";
 
     // Add location filter to summary if selected
     if (!empty($location)) {
-        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
-        $locationNameResult = pg_query($con, $locationNameQuery);
-        $locationNameRow = pg_fetch_assoc($locationNameResult);
-        $locationName = $locationNameRow['name'];
-
-        $summaryQuery .= " AND (s.preferredbranch = '$locationName' OR m.basebranch = '$locationName' OR h.location_id = '$location')";
+        $locationId = pg_escape_string($con, $location);
+        $summaryQuery .= " AND (s.preferredbranch = '$locationId'
+                            OR m.basebranch = '$locationId'
+                            OR h.location_id = '$locationId')";
     }
 
     $summaryResult = pg_query($con, $summaryQuery);
@@ -101,32 +97,31 @@ FROM settlements s
 LEFT JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
 LEFT JOIN public_health_records h ON s.settled_by = h.id::text
 LEFT JOIN (
-    SELECT DISTINCT settlement_id, STRING_AGG(DISTINCT preferredbranch, ', ') AS location_name
+    SELECT loc_data.settlement_id,
+           STRING_AGG(DISTINCT ol.name, ', ') AS location_name
     FROM (
-        SELECT sp.settlement_id, stu.preferredbranch
+        SELECT sp.settlement_id, stu.preferredbranch::int AS location_id
         FROM settlement_payments sp
         JOIN fee_payments fp ON sp.payment_id = fp.id
         LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
         WHERE stu.preferredbranch IS NOT NULL
     ) loc_data
-    GROUP BY settlement_id
+    LEFT JOIN office_locations ol ON ol.id = loc_data.location_id
+    GROUP BY loc_data.settlement_id
 ) sl ON s.id = sl.settlement_id
 WHERE 1=1";
 
     // Add location filter if selected
+    // preferredbranch stores the location ID; compare directly.
     if (!empty($location)) {
-        $locationNameQuery = "SELECT name FROM office_locations WHERE id = '$location'";
-        $locationNameResult = pg_query($con, $locationNameQuery);
-        $locationNameRow = pg_fetch_assoc($locationNameResult);
-        $locationName = $locationNameRow['name'];
-
+        $locationId = pg_escape_string($con, $location);
         $settlementsQuery .= " AND s.id IN (
-            SELECT DISTINCT sp.settlement_id
-            FROM settlement_payments sp
-            JOIN fee_payments fp ON sp.payment_id = fp.id
-            LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
-            WHERE stu.preferredbranch = '$locationName'
-        )";
+        SELECT DISTINCT sp.settlement_id
+        FROM settlement_payments sp
+        JOIN fee_payments fp ON sp.payment_id = fp.id
+        LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
+        WHERE stu.preferredbranch = '$locationId'
+    )";
     }
 
     $settlementsQuery .= " ORDER BY s.settlement_date DESC";
