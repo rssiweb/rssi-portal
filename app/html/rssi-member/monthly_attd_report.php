@@ -36,12 +36,15 @@ if (!empty($selectedClasses)) {
     $validClasses = array_values(array_filter($selectedClasses, fn($c) => $c !== ''));
 }
 
-// Get locations from office_locations table for dropdown
-$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+// Get locations from office_locations table for dropdown (id + name)
+$locations_query = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-    $locations[] = $row['name'];
+    $locations[] = [
+        'id'   => $row['id'],
+        'name' => $row['name']
+    ];
 }
 
 // Build SQL WHERE clause
@@ -74,7 +77,9 @@ WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, interval '1 day')::date AS attendance_date
 ),
 holidays AS (
-    SELECT h.holiday_date, ol.name AS location_name
+    SELECT h.holiday_date,
+           ol.id   AS location_id,
+           ol.name AS location_name
     FROM holidays h
     LEFT JOIN office_locations ol ON ol.id = h.location
     WHERE h.holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
@@ -101,13 +106,13 @@ attendance_data AS (
                 WHEN ex.attendance_date IS NOT NULL THEN NULL
                 WHEN a.user_id IS NULL
                      AND EXISTS (
-                         SELECT 1
-                         FROM student_class_days cw
-                         JOIN office_locations ol ON ol.id = cw.location
-                         WHERE cw.category = s.category
-                           AND ol.name = s.preferredbranch
-                           AND cw.effective_from <= d.attendance_date
-                           AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
+                        SELECT 1
+                        FROM student_class_days cw
+                        JOIN office_locations ol ON ol.id = cw.location
+                        WHERE cw.category = s.category
+                        AND ol.id::text = s.preferredbranch::text
+                        AND cw.effective_from <= d.attendance_date
+                        AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
                            AND LOWER(TRIM(TO_CHAR(d.attendance_date, 'Dy'))) = ANY(
                                  regexp_split_to_array(
                                      LOWER(REPLACE(cw.class_days, ' ', '')), ','
@@ -138,8 +143,8 @@ attendance_data AS (
       ON TRIM(a.user_id) = TRIM(s.student_id::text)
      AND a.attendance_day = d.attendance_date
     LEFT JOIN
-    holidays h ON d.attendance_date = h.holiday_date
-              AND h.location_name = s.preferredbranch
+holidays h ON d.attendance_date = h.holiday_date
+          AND h.location_id::text = s.preferredbranch::text
     LEFT JOIN
         student_exceptions ex ON d.attendance_date = ex.attendance_date AND s.student_id = ex.student_id
     WHERE
@@ -319,12 +324,13 @@ if (!$requireCategorySelection) {
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <!-- Location Filter -->
+                                                <!-- Location Filter (value = ID, label = name) -->
                                                 <select name="get_location" id="get_location" class="form-select">
                                                     <option value="">All Locations</option>
                                                     <?php foreach ($locations as $location): ?>
-                                                        <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($location) ?>
+                                                        <option value="<?= (int)$location['id'] ?>"
+                                                            <?= ((int)$location['id'] === (int)$selected_location) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($location['name']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>

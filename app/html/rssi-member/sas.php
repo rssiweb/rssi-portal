@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty(array_filter($_GET, function 
 
     $validCategories = !empty($selectedCategories) ? validateSelection($con, 'school_categories',  'category_value', $selectedCategories) : [];
     $validClasses    = !empty($selectedClasses)    ? validateSelection($con, 'school_classes',     'value',          $selectedClasses)    : [];
-    $validLocations  = !empty($selectedLocations)  ? validateSelection($con, 'office_locations',   'name',           $selectedLocations)  : [];
+    $validLocations  = !empty($selectedLocations)  ? validateSelection($con, 'office_locations',   'id',             $selectedLocations)  : [];
 
     if (!empty($selectedStudents)) {
         $ph  = makePlaceholders($selectedStudents);
@@ -106,7 +106,9 @@ WITH date_range AS (
     SELECT generate_series('$startDate'::date, '$endDate'::date, '1 day')::date AS attendance_date
 ),
 holidays AS (
-    SELECT h.holiday_date, ol.name AS location_name
+    SELECT h.holiday_date,
+           ol.id   AS location_id,
+           ol.name AS location_name
     FROM holidays h
     LEFT JOIN office_locations ol ON ol.id = h.location
     WHERE h.holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
@@ -139,9 +141,9 @@ student_class_days_filtered AS (
         cw.class_start_time
     FROM date_range d
     CROSS JOIN filtered_students fs
-    LEFT JOIN holidays h
-           ON h.holiday_date   = d.attendance_date
-          AND h.location_name  = fs.preferredbranch
+        LEFT JOIN holidays h
+           ON h.holiday_date        = d.attendance_date
+          AND h.location_id::text    = fs.preferredbranch::text
     LEFT JOIN student_exceptions se
            ON se.student_id      = fs.student_id
           AND se.attendance_date = d.attendance_date
@@ -162,15 +164,16 @@ student_class_days_filtered AS (
             cw.effective_from,
             cw.effective_to,
             cw.class_start_time,
+            ol.id   AS location_id,
             ol.name AS location_name
         FROM student_class_days cw
         JOIN office_locations ol ON ol.id = cw.location
         WHERE cw.effective_from <= '$endDate'::date
           AND (cw.effective_to IS NULL OR cw.effective_to >= '$startDate'::date)
     ) cw
-      ON cw.category       = fs.category
-     AND cw.location_name  = fs.preferredbranch
-     AND cw.effective_from <= d.attendance_date
+      ON cw.category         = fs.category
+     AND cw.location_id::text = fs.preferredbranch::text
+     AND cw.effective_from   <= d.attendance_date
      AND (cw.effective_to IS NULL OR cw.effective_to >= d.attendance_date)
      AND (
          LOWER(cw.class_days) LIKE '%mon%' AND EXTRACT(DOW FROM d.attendance_date) = 1 OR
@@ -395,11 +398,22 @@ ORDER BY studentname, month_year;
                                 <div class="col-md-2">
                                     <label class="form-label">Location</label>
                                     <select name="locations[]" id="locations" class="form-select" multiple>
-                                        <?php foreach ($validLocations as $loc): ?>
-                                            <option value="<?= htmlspecialchars($loc) ?>" selected>
-                                                <?= htmlspecialchars($loc) ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                                        <?php
+                                        if (!empty($validLocations)) {
+                                            // Resolve IDs back to names for display
+                                            $ids = array_map(fn($v) => (int)$v, $validLocations);
+                                            $idList = implode(',', $ids);
+                                            $locRows = pg_fetch_all(pg_query(
+                                                $con,
+                                                "SELECT id, name FROM office_locations WHERE id IN ($idList) ORDER BY name"
+                                            )) ?: [];
+                                            foreach ($locRows as $loc) {
+                                                echo '<option value="' . (int)$loc['id'] . '" selected>'
+                                                    . htmlspecialchars($loc['name'])
+                                                    . '</option>';
+                                            }
+                                        }
+                                        ?>
                                     </select>
                                 </div>
 
@@ -638,7 +652,7 @@ ORDER BY studentname, month_year;
                         const results = (data || [])
                             .filter(l => l.is_active === true || l.is_active === 't' || l.is_active === 1)
                             .map(l => ({
-                                id: l.name,
+                                id: l.id, // ← now sends ID
                                 text: l.name
                             }));
                         return {

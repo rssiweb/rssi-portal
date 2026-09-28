@@ -606,6 +606,16 @@ function student_export()
     return "";
   }
 
+  // Build location id → name map (preferredbranch now stores location IDs)
+  $locationNames = [];
+  $locRows = pg_fetch_all(pg_query(
+    $con,
+    "SELECT id, name FROM office_locations"
+  )) ?: [];
+  foreach ($locRows as $lr) {
+    $locationNames[(string)$lr['id']] = $lr['name'];
+  }
+
   // Write data rows
   foreach ($resultArr as $array) {
     // Get form status for this student
@@ -636,7 +646,10 @@ function student_export()
       maskAadhar($array['guardianaadhar']),
       $array['effectivefrom'],
       $array['remarks'],
-      $array['preferredbranch'],
+      // Resolve location name from ID; fall back to the raw value if not found
+      (!empty($array['preferredbranch']) && isset($locationNames[(string)$array['preferredbranch']]))
+        ? $locationNames[(string)$array['preferredbranch']]
+        : $array['preferredbranch'],
       $formStatus['form_1a'],  // Form 1A Available
       $form1bValue              // Form 1B Available (only if condition met)
     ]);
@@ -679,6 +692,16 @@ function donation_old_export()
   $resultArr = pg_fetch_all($result);
   echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Currency,Amount of donation,Invoice no,Invoice link' . "\n";
   $counter = 1; // Initialize the counter
+
+  // Build location id → name map (preferredbranch now stores location IDs)
+  $locationNames = [];
+  $locRows = pg_fetch_all(pg_query(
+    $con,
+    "SELECT id, name FROM office_locations"
+  )) ?: [];
+  foreach ($locRows as $lr) {
+    $locationNames[(string)$lr['id']] = $lr['name'];
+  }
 
   foreach ($resultArr as $array) {
 
@@ -900,6 +923,7 @@ filtered_students AS (
 class_day_dates AS (
     SELECT
         cw.category,
+        ol.id   AS location_id,
         ol.name AS location_name,
         d::date AS class_date,
         MAX(cw.class_start_time) AS class_start_time
@@ -915,13 +939,14 @@ class_day_dates AS (
             LOWER(REPLACE(cw.class_days, ' ', '')), ','
         )
     )
-    GROUP BY cw.category, ol.name, d::date
+    GROUP BY cw.category, ol.id, ol.name, d::date
 ),
 
 -- 3) Holidays in range, scoped by location
 holidays_in_range AS (
     SELECT
         h.holiday_date,
+        ol.id   AS location_id,
         ol.name AS location_name
     FROM holidays h
     LEFT JOIN office_locations ol ON ol.id = h.location
@@ -981,13 +1006,13 @@ attendance_data AS (
           AND a.attendance_day = d.attendance_date
     LEFT JOIN holidays_in_range h
            ON h.holiday_date   = d.attendance_date
-          AND h.location_name  = s.preferredbranch
+          AND h.location_id::text = s.preferredbranch::text
     LEFT JOIN student_exceptions ex
            ON ex.attendance_date = d.attendance_date
           AND ex.student_id      = s.student_id
     LEFT JOIN class_day_dates cd
            ON cd.category      = s.category
-          AND cd.location_name = s.preferredbranch
+          AND cd.location_id::text = s.preferredbranch::text
           AND cd.class_date    = d.attendance_date
 ),
 
