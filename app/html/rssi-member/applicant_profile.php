@@ -15,10 +15,14 @@ validation();
 
 $application_number = isset($_GET['application_number']) ? $_GET['application_number'] : null;
 
-// SQL query to fetch current data
-$sql = "SELECT * FROM signup WHERE application_number='$application_number'";
+// SQL query to fetch current data (with branch name resolved)
+$sql = "SELECT s.*, ol.name AS branch_name
+        FROM signup s
+        LEFT JOIN office_locations ol ON ol.id = s.branch
+        WHERE s.application_number = '$application_number'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
+
 // Check if there are any results
 if ($resultArr && count($resultArr) > 0) {
     // Accessing specific column values from the first result (assuming there is only one row)
@@ -151,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             college_name, enrollment_number
         )
         SELECT 
-            applicant_name, email, branch, gender, date_of_birth,
+            applicant_name, email, NULLIF(TRIM(branch::text), '')::integer, gender, date_of_birth,
             postal_address, permanent_address, work_experience,
             identifier_number, application_number, post_select,
             association, telephone, identifier, applicant_photo,
@@ -636,8 +640,7 @@ $isFormDisabled = null;
                                                                 <label for="branch">Preferred
                                                                     Branch:</label>
                                                             </td>
-                                                            <td><?php echo $array["branch"] ?>
-                                                            </td>
+                                                            <td><?php echo htmlspecialchars($array['branch_name'] ?? $array['branch']); ?>
                                                         </tr>
                                                         <tr>
                                                             <td>

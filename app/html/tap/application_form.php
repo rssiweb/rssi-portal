@@ -13,8 +13,11 @@ if (!isLoggedIn("tid")) {
 validation();
 ?>
 <?php
-// SQL query to fetch current data
-$sql = "SELECT * FROM signup WHERE application_number='$application_number'";
+// SQL query to fetch current data (with branch name resolved)
+$sql = "SELECT s.*, ol.name AS branch_name
+        FROM signup s
+        LEFT JOIN office_locations ol ON ol.id = s.branch
+        WHERE s.application_number = '$application_number'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
 
@@ -547,8 +550,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="branch">Preferred
                                                                     Branch:</label>
                                                             </td>
-                                                            <td><?php echo $array["branch"] ?>
-                                                            </td>
+                                                            <td><?php echo htmlspecialchars($array['branch_name'] ?? $array['branch']); ?>
                                                         </tr>
                                                         <tr>
                                                             <td>

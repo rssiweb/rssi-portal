@@ -12,6 +12,25 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// ===== Location ID → name map =====
+$locationMap = [];
+$locRes = pg_query($con, "SELECT id, name FROM office_locations");
+if ($locRes) {
+    while ($r = pg_fetch_assoc($locRes)) {
+        $locationMap[(string)$r['id']] = $r['name'];
+    }
+    pg_free_result($locRes);
+}
+
+/**
+ * Resolve a location value (ID or name) to display name.
+ */
+function locationName($locationMap, $value)
+{
+    if ($value === null || $value === '') return '';
+    return $locationMap[(string)$value] ?? $value;
+}
+
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
@@ -313,7 +332,7 @@ $documents = [
                     <tbody>
                         <tr>
                             <td>
-                                <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . $array['depb'] . '<br><br>
+                                <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . htmlspecialchars(locationName($locationMap, $array['depb'])) . '<br><br>
 
                                         ' . $array['fullname'] . '<br>
                                         ' . $array['currentaddress'] . '<br><br>

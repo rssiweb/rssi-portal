@@ -12,6 +12,24 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// ===== Location ID → name map =====
+$locationMap = [];
+$locRes = pg_query($con, "SELECT id, name FROM office_locations");
+if ($locRes) {
+    while ($r = pg_fetch_assoc($locRes)) {
+        $locationMap[(string)$r['id']] = $r['name'];
+    }
+    pg_free_result($locRes);
+}
+
+/**
+ * Resolve a location value (ID or name) to a display name.
+ */
+function locationName($locationMap, $value)
+{
+    if ($value === null || $value === '') return '';
+    return $locationMap[(string)$value] ?? $value;
+}
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
@@ -72,7 +90,7 @@ if (!$result) {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php include 'includes/meta.php' ?>
 
-    
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
@@ -261,7 +279,7 @@ if (!$result) {
                                 <!-- HTML Starts Here -->
                                 <p>
                                     <?php echo $formattedDate; ?><br>
-                                    RSSI/<?php echo $array['associatenumber']; ?>/<?php echo $array['depb']; ?><br><br>
+                                    RSSI/<?php echo $array['associatenumber']; ?>/<?php echo htmlspecialchars(locationName($locationMap, $array['depb'])); ?><br><br>
 
                                     <?php echo $array['fullname']; ?><br>
                                     <?php echo $array['currentaddress']; ?><br><br>
