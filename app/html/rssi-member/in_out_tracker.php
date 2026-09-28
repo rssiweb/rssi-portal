@@ -131,17 +131,24 @@ if (!empty($id)) {
     $query .= " AND fl.user_id = '" . pg_escape_string($con, $id) . "'";
 }
 
-// Optional location filter
+// Optional location filter (search by location ID)
+$locationName = '';   // we still resolve the name for later use (summary query)
 if (!empty($location)) {
-    $locationNameQuery  = "SELECT name FROM office_locations WHERE id = '" . pg_escape_string($con, $location) . "'";
+    $locationId = pg_escape_string($con, $location);
+
+    $locationNameQuery  = "SELECT name FROM office_locations WHERE id = '$locationId'";
     $locationNameResult = pg_query($con, $locationNameQuery);
     $locationNameRow    = pg_fetch_assoc($locationNameResult);
     $locationName       = $locationNameRow['name'] ?? '';
 
+    // s.preferredbranch stores the ID now.
+    // m.basebranch still stores the name (assumption) — keep that comparison as-is.
+    $query .= " AND (s.preferredbranch = '$locationId'";
+
     if ($locationName !== '') {
-        $query .= " AND (s.preferredbranch = '" . pg_escape_string($con, $locationName) . "'
-                     OR m.basebranch = '" . pg_escape_string($con, $locationName) . "')";
+        $query .= " OR m.basebranch = '" . pg_escape_string($con, $locationName) . "'";
     }
+    $query .= ")";
 }
 
 $query .= " ORDER BY fl.punch_in DESC";
@@ -181,9 +188,9 @@ if (empty($id) && $isSingleDayView) {
             WHERE a.punch_in >= $1::date
               AND a.punch_in <  ($2::date + INTERVAL '1 day')
               " . (!empty($location) && !empty($locationName)
-        ? " AND (s.preferredbranch = '" . pg_escape_string($con, $locationName) . "'
-                              OR m.basebranch = '" . pg_escape_string($con, $locationName) . "')"
-        : "") . "
+    ? " AND (s.preferredbranch = '" . pg_escape_string($con, $location) . "'
+              OR m.basebranch = '" . pg_escape_string($con, $locationName) . "')"
+    : "") . "
         ) t
         GROUP BY category
     ";

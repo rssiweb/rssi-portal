@@ -14,7 +14,7 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-$aid = $_SESSION['aid'] ?? ($associatenumber ?? 'unknown');
+$aid = $associatenumber;
 
 $driveParentFolderId = '1tlExZTumfTJRU5xQh_bcVFXxN-u96UkV';
 
@@ -164,13 +164,12 @@ pg_query($con, "BEGIN");
 $inserted = 0;
 foreach ($validated as $v) {
     $sql = "INSERT INTO cashflow_transactions
-            (transaction_date, type, category_id, category_name, amount, notes, receipt_drive_url, created_by)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)";
+            (transaction_date, type, category_id, amount, notes, receipt_drive_url, created_by)
+            VALUES ($1,$2,$3,$4,$5,$6,$7)";
     $params = [
         $v['transaction_date'],
         $v['type'],
         $v['category_id'],
-        $v['category_name'],
         $v['amount'],
         $v['notes'],
         $v['receipt_drive_url'],

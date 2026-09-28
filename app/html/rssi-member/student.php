@@ -34,12 +34,27 @@ if (!is_array($class) && !empty($class)) {
 // Initialize result array
 $resultArr = [];
 
-// Get locations from office_locations table for dropdown
-$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+// Optional: normalize a legacy location NAME → ID (in case old bookmarks send a name)
+if (!empty($selected_location) && !is_numeric($selected_location)) {
+  $locRow = pg_fetch_assoc(pg_query_params(
+    $con,
+    "SELECT id FROM office_locations WHERE name = $1 LIMIT 1",
+    [$selected_location]
+  ));
+  if ($locRow) {
+    $selected_location = $locRow['id'];
+  }
+}
+
+// Get locations from office_locations table for dropdown (id + name)
+$locations_query = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-  $locations[] = $row['name'];
+  $locations[] = [
+    'id'   => $row['id'],
+    'name' => $row['name']
+  ];
 }
 
 // Build the query based on search type
@@ -52,7 +67,7 @@ if ($searchByIdOnly) {
     $query = "SELECT * FROM rssimyprofile_student WHERE student_id = $1";
     $params = [$stid];
 
-    // Add location filter if selected
+    // Add location filter if selected (preferredbranch stores the location ID)
     if (!empty($selected_location)) {
       $query .= " AND preferredbranch = $" . (count($params) + 1);
       $params[] = $selected_location;
@@ -67,17 +82,16 @@ if ($searchByIdOnly) {
 
     $paramCount = 3; // Start counting from 3
 
-    // Add location filter if selected
+    // Add location filter if selected (preferredbranch stores the location ID)
     if (!empty($selected_location)) {
       $query .= " AND preferredbranch = $$paramCount";
       $params[] = $selected_location;
       $paramCount++;
     }
 
-    // Add category filter (now supports multiple values)
+    // Add category filter (supports multiple values)
     if (!empty($category)) {
       if (is_array($category)) {
-        // Generate numbered placeholders for each category
         $placeholders = [];
         foreach ($category as $catItem) {
           $placeholders[] = "$$paramCount";
@@ -92,10 +106,9 @@ if ($searchByIdOnly) {
       }
     }
 
-    // Add class filter (now supports multiple values)
+    // Add class filter (supports multiple values)
     if (!empty($class)) {
       if (is_array($class)) {
-        // Generate numbered placeholders for each class
         $placeholders = [];
         foreach ($class as $classItem) {
           $placeholders[] = "$$paramCount";
@@ -123,7 +136,6 @@ if (!empty($query)) {
 // Function to check form availability for a student (defined once)
 function getStudentForms($student_id, $con)
 {
-  // Check for Form 1A - get the most recent submitted one
   $query1A = "SELECT file_path, application_number, submitted_at 
                 FROM student_applications 
                 WHERE student_id = $1 
@@ -133,7 +145,6 @@ function getStudentForms($student_id, $con)
   $result1A = pg_query_params($con, $query1A, array($student_id));
   $form1A = pg_fetch_assoc($result1A);
 
-  // Check for Form 1B - get the most recent submitted one
   $query1B = "SELECT file_path, application_number, submitted_at 
                 FROM student_applications 
                 WHERE student_id = $1 
@@ -149,7 +160,7 @@ function getStudentForms($student_id, $con)
   ];
 }
 
-// Add form status to each student (executed only once after the query)
+// Add form status to each student
 if (!empty($resultArr)) {
   foreach ($resultArr as &$student) {
     $formStatus = getStudentForms($student['student_id'], $con);
@@ -191,13 +202,11 @@ $aadharStats = [
 ];
 
 foreach ($resultArr as $student) {
-  // Gender count
   $gender = strtolower($student['gender'] ?? '');
   if ($gender === 'male') $maleCount++;
   elseif ($gender === 'female') $femaleCount++;
   else $binaryCount++;
 
-  // Age band calculation
   if (!empty($student['dateofbirth'])) {
     $birthDate = new DateTime($student['dateofbirth']);
     $today = new DateTime();
@@ -210,7 +219,6 @@ foreach ($resultArr as $student) {
     else $ageBands['21+']++;
   }
 
-  // Caste statistics
   $caste = $student['caste'] ?? 'Not Declared';
   if (array_key_exists($caste, $casteStats)) {
     $casteStats[$caste]++;
@@ -218,7 +226,6 @@ foreach ($resultArr as $student) {
     $casteStats['Not Declared']++;
   }
 
-  // Aadhar availability
   $aadhar = $student['aadhar_available'] ?? '';
   if (strtolower($aadhar) === 'yes') {
     $aadharStats['Available']++;
@@ -226,36 +233,12 @@ foreach ($resultArr as $student) {
     $aadharStats['Not Available']++;
   }
 }
-
-$classlist = [
-  "Nursery",
-  "LKG",
-  "UKG",
-  "Pre-school",
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  '10',
-  "11",
-  "12",
-  "Vocational training",
-  "x"
-];
-
-$categories = ['LG1', 'LG2-A', 'LG2-B', 'LG2-C', 'LG3', 'LG4', 'LG4S1', 'LG4S2', 'WLG3', 'WLG4S1', 'LGX-U', 'Undefined'];
 ?>
 <?php
 function formatContact($role, $contact)
 {
   return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
 }
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -277,8 +260,6 @@ function formatContact($role, $contact)
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <?php include 'includes/meta.php' ?>
 
-
-
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
   <!-- Vendor CSS Files -->
@@ -290,11 +271,9 @@ function formatContact($role, $contact)
   <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-  <!-- Glow Cookies v3.0.1 -->
   <script>
     glowCookies.start('en', {
       analytics: 'G-S25QWTFJ2S',
-      //facebookPixel: '',
       policyLink: 'https://www.rssi.in/disclaimer'
     });
   </script>
@@ -306,14 +285,11 @@ function formatContact($role, $contact)
     }
 
     td {
-
-      /* css-3 */
       white-space: -o-pre-wrap;
       word-wrap: break-word;
       white-space: pre-wrap;
       white-space: -moz-pre-wrap;
       white-space: -pre-wrap;
-
     }
 
     @media (min-width:767px) {
@@ -328,7 +304,6 @@ function formatContact($role, $contact)
       #cw1 {
         width: 100% !important;
       }
-
     }
 
     #cw {
@@ -406,16 +381,6 @@ function formatContact($role, $contact)
       height: 8px;
       margin-top: 5px;
     }
-
-    /* .select2-container--default .select2-selection--multiple .select2-selection__choice {
-      background-color: #0d6efd;
-      color: white;
-      border: none;
-    } */
-
-    /* .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-      color: white;
-    } */
   </style>
   <!-- CSS Library Files -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -424,13 +389,11 @@ function formatContact($role, $contact)
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
   <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
-
-  <!-- JavaScript Library Files -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
   <script>
     $(document).ready(function() {
-      // Initialize Select2 for student IDs
+      // Student ID
       $('#get_stid').select2({
         ajax: {
           url: 'fetch_students.php',
@@ -451,21 +414,57 @@ function formatContact($role, $contact)
         minimumInputLength: 2,
         placeholder: 'Select student',
         allowClear: true,
-        width: '100%' // Ensure proper width
+        width: '100%'
       });
 
-      // Initialize Select2 for Category (multi-select)
+      // Category (multi-select, AJAX)
       $('#get_category').select2({
-        placeholder: 'Select Category(ies)',
+        ajax: {
+          url: 'fetch_category.php',
+          dataType: 'json',
+          delay: 250,
+          data: function(params) {
+            return {
+              q: params.term || ''
+            };
+          },
+          processResults: function(data) {
+            return {
+              results: data.results || []
+            };
+          },
+          cache: true
+        },
+        minimumInputLength: 0,
+        placeholder: 'Search category(ies)',
         allowClear: true,
-        width: '250px'
+        width: '250px',
+        multiple: true
       });
 
-      // Initialize Select2 for Class (multi-select)
+      // Class (multi-select, AJAX)
       $('#get_class').select2({
-        placeholder: 'Select Class(es)',
+        ajax: {
+          url: 'fetch_class.php',
+          dataType: 'json',
+          delay: 250,
+          data: function(params) {
+            return {
+              q: params.term || ''
+            };
+          },
+          processResults: function(data) {
+            return {
+              results: data.results || []
+            };
+          },
+          cache: true
+        },
+        minimumInputLength: 0,
+        placeholder: 'Search class(es)',
         allowClear: true,
-        width: '250px'
+        width: '250px',
+        multiple: true
       });
     });
   </script>
@@ -503,7 +502,6 @@ function formatContact($role, $contact)
                       <form method="POST" action="export_function.php" target="_blank" style="display:inline-block;">
                         <input type="hidden" name="export_type" value="student">
 
-                        <!-- Preserve search parameters -->
                         <input type="hidden" name="get_module" value="<?= htmlspecialchars($module ?? '') ?>">
                         <input type="hidden" name="get_id" value="<?= htmlspecialchars($id ?? '') ?>">
                         <input type="hidden" name="get_category"
@@ -542,10 +540,8 @@ function formatContact($role, $contact)
                     </h2>
                     <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                       <div class="accordion-body">
-                        <!-- Dashboard Cards -->
                         <div class="col-12">
                           <div class="row">
-                            <!-- Card 1: Total Students and Gender Distribution -->
                             <div class="col-md-6 col-lg-3">
                               <div class="dashboard-card">
                                 <div class="dashboard-card-header">
@@ -563,7 +559,6 @@ function formatContact($role, $contact)
                               </div>
                             </div>
 
-                            <!-- Card 2: Age Band Distribution -->
                             <div class="col-md-6 col-lg-3">
                               <div class="dashboard-card">
                                 <div class="dashboard-card-header">
@@ -586,7 +581,6 @@ function formatContact($role, $contact)
                               </div>
                             </div>
 
-                            <!-- Card 3: Caste Information -->
                             <div class="col-md-6 col-lg-3">
                               <div class="dashboard-card">
                                 <div class="dashboard-card-header">
@@ -609,7 +603,6 @@ function formatContact($role, $contact)
                               </div>
                             </div>
 
-                            <!-- Card 4: Aadhar Availability -->
                             <div class="col-md-6 col-lg-3">
                               <div class="dashboard-card">
                                 <div class="dashboard-card-header">
@@ -639,12 +632,11 @@ function formatContact($role, $contact)
                 </div>
               </div>
 
-              <!-- <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span> -->
               <form action="" method="POST" id="searchForm">
                 <div class="form-group d-flex flex-wrap align-items-end gap-3">
                   <input type="hidden" name="form-type" value="search">
 
-                  <!-- Module (required unless searching by ID) -->
+                  <!-- Module -->
                   <div class="d-flex flex-column" style="width: max-content;">
                     <select name="get_module" id="get_module" class="form-select" required>
                       <?php if ($module == null) { ?>
@@ -658,7 +650,7 @@ function formatContact($role, $contact)
                     <small class="form-text text-muted">Module<span style="color:red">*</span></small>
                   </div>
 
-                  <!-- Status (required unless searching by ID) -->
+                  <!-- Status -->
                   <div class="d-flex flex-column" style="width: max-content;">
                     <select name="get_id" id="get_id" class="form-select" required>
                       <?php if ($id == null) { ?>
@@ -672,42 +664,46 @@ function formatContact($role, $contact)
                     <small class="form-text text-muted">Status<span style="color:red">*</span></small>
                   </div>
 
-                  <!-- Category (optional - now multi-select) -->
+                  <!-- Category (multi-select, AJAX-loaded) -->
                   <div class="d-flex flex-column" style="width: max-content;">
                     <select name="get_category[]" id="get_category" class="form-select" multiple>
-                      <?php foreach ($categories as $cat) {
-                        $selected = (in_array($cat, (array)$category)) ? 'selected' : '';
-                        echo "<option value=\"$cat\" $selected>$cat</option>";
-                      } ?>
+                      <?php
+                      foreach ((array)$category as $cat) {
+                        if ($cat === '') continue;
+                        echo '<option value="' . htmlspecialchars($cat) . '" selected>' . htmlspecialchars($cat) . '</option>';
+                      }
+                      ?>
                     </select>
                     <small class="form-text text-muted">Category</small>
                   </div>
 
-                  <!-- Class (optional - now multi-select) -->
+                  <!-- Class (multi-select, AJAX-loaded) -->
                   <div class="d-flex flex-column" style="width: max-content;">
                     <select name="get_class[]" id="get_class" class="form-select" multiple>
-                      <?php foreach ($classlist as $cls) {
-                        $selected = (in_array($cls, (array)$class)) ? 'selected' : '';
-                        echo "<option value=\"$cls\" $selected>$cls</option>";
-                      } ?>
+                      <?php
+                      foreach ((array)$class as $cls) {
+                        if ($cls === '') continue;
+                        echo '<option value="' . htmlspecialchars($cls) . '" selected>' . htmlspecialchars($cls) . '</option>';
+                      }
+                      ?>
                     </select>
                     <small class="form-text text-muted">Class</small>
                   </div>
 
-                  <!-- Location Filter -->
+                  <!-- Location Filter (value = ID, label = name) -->
                   <div class="d-flex flex-column" style="width: max-content;">
                     <select name="get_location" id="get_location" class="form-select">
                       <option value="">All Locations</option>
                       <?php foreach ($locations as $location): ?>
-                        <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
-                          <?= htmlspecialchars($location) ?>
+                        <option value="<?= (int)$location['id'] ?>" <?= ((int)$location['id'] === (int)$selected_location) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($location['name']) ?>
                         </option>
                       <?php endforeach; ?>
                     </select>
                     <small class="form-text text-muted">Location</small>
                   </div>
 
-                  <!-- AAID Dropdown -->
+                  <!-- Student ID -->
                   <div class="col-md-3 col-lg-2">
                     <div class="form-group">
                       <select class="form-select" id="get_stid" name="get_stid" required>
@@ -750,7 +746,6 @@ function formatContact($role, $contact)
                       <th>Contact</th>
                       <th>Status</th>
                       <th>Plan</th>
-                      <!-- <th>Emergency</th> -->
                       <th>Form 1A</th>
                       <th>Form 1B</th>
                       <th></th>
@@ -783,15 +778,6 @@ function formatContact($role, $contact)
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo $array['type_of_admission']; ?></td>
-                          <!-- <td style="white-space: unset;">
-                            <?php
-                            echo $array['emergency_contact_number'];
-                            if (!empty($array['alternate_number'])) {
-                              echo ", " . $array['alternate_number'];
-                            }
-                            ?>
-                          </td> -->
-                          <!-- Form 1A Column -->
                           <td style="white-space: unset;">
                             <?php if ($array['form_1a_available']): ?>
                               <a href="<?= htmlspecialchars($array['form_1a_file_path']) ?>" target="_blank">
@@ -804,10 +790,8 @@ function formatContact($role, $contact)
                               <span class="text-muted">No</span>
                             <?php endif; ?>
                           </td>
-                          <!-- Form 1B Column -->
                           <td style="white-space: unset;">
                             <?php
-                            // Show Form 1B only for non-LG1 students who don't have school info
                             $showForm1B = !($array['category'] == 'LG1' || !empty($array['nameoftheschool']));
                             if ($showForm1B):
                             ?>
@@ -822,7 +806,7 @@ function formatContact($role, $contact)
                                 <span class="text-muted">No</span>
                               <?php endif; ?>
                             <?php else: ?>
-                              <!-- <span class="text-muted">N/A</span> -->
+                              <!-- N/A -->
                             <?php endif; ?>
                           </td>
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> ">Edit Profile</a>&nbsp;|&nbsp;
@@ -843,7 +827,6 @@ function formatContact($role, $contact)
                     elseif (sizeof($resultArr) == 0 && $stid == "") :
                     ?>
                       <?php
-                      // Build the filter message
                       $filters = array();
 
                       if (!empty($module)) {
@@ -859,10 +842,17 @@ function formatContact($role, $contact)
                         $filters[] = is_array($class) ? trim(implode(', ', $class)) : trim($class);
                       }
                       if (!empty($selected_location)) {
-                        $filters[] = trim($selected_location);
+                        // Resolve location id to name for the message
+                        $locName = '';
+                        foreach ($locations as $loc) {
+                          if ((int)$loc['id'] === (int)$selected_location) {
+                            $locName = $loc['name'];
+                            break;
+                          }
+                        }
+                        $filters[] = $locName !== '' ? trim($locName) : trim($selected_location);
                       }
 
-                      // Build the message with "and" before the last item
                       $filterMessage = '';
                       if (!empty($filters)) {
                         $last = array_pop($filters);
@@ -888,6 +878,7 @@ function formatContact($role, $contact)
                   </tbody>
                 </table>
               </div>
+
               <!-- Modal -->
               <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
@@ -939,7 +930,6 @@ function formatContact($role, $contact)
       function toggleFields() {
         const idOnly = idOnlyCheckbox.checked;
 
-        // Toggle disabled state
         document.getElementById("get_module").disabled = idOnly;
         document.getElementById("get_id").disabled = idOnly;
         document.getElementById("get_category").disabled = idOnly;
@@ -948,19 +938,14 @@ function formatContact($role, $contact)
         stidField.disabled = !idOnly;
         stidRequired.style.display = idOnly ? 'inline' : 'none';
 
-        // Toggle required attributes
         document.getElementById("get_module").required = !idOnly;
         document.getElementById("get_id").required = !idOnly;
         stidField.required = idOnly;
       }
 
-      // Initial setup
       toggleFields();
-
-      // Add event listener for checkbox change
       idOnlyCheckbox.addEventListener('change', toggleFields);
 
-      // Form validation
       searchForm.addEventListener('submit', function(e) {
         if (idOnlyCheckbox.checked && !stidField.value.trim()) {
           e.preventDefault();
@@ -998,11 +983,9 @@ function formatContact($role, $contact)
         $('#table-id').DataTable({
           paging: false,
           columnDefs: [{
-              orderable: false,
-              targets: [0, 15]
-            } // Disable sorting on photo, forms, and action columns
-          ]
-          // other options...
+            orderable: false,
+            targets: [0, 15]
+          }]
         });
       <?php endif; ?>
     });
