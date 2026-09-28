@@ -925,7 +925,7 @@ if (!function_exists('makeClickableLinks')) {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
   <!-- JavaScript Library Files -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Select2 JS (after jQuery) -->
+  <!-- Select2 JS (after jQuery) -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <!-- Template Main JS File -->
@@ -998,9 +998,7 @@ if (!function_exists('makeClickableLinks')) {
             <div class="mb-3">
               <label for="event_location" class="form-label required-field">Event Location <span class="text-danger">*</span></label>
               <select class="form-select" id="event_location" name="event_location" required>
-                <option value="" disabled selected>Select location from the list</option>
-                <option value="Lucknow">Lucknow</option>
-                <option value="West Bengal">West Bengal</option>
+                <option value="" disabled selected>Loading locations...</option>
               </select>
               <div class="form-text">Choose where the event will take place</div>
             </div>
@@ -1029,6 +1027,37 @@ if (!function_exists('makeClickableLinks')) {
   <!-- Scripts -->
   <script>
     $(document).ready(function() {
+
+      // Populate Event Location dropdown from fetch_locations.php
+      $.ajax({
+        url: 'fetch_locations.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(locations) {
+          const $sel = $('#event_location');
+          $sel.empty();
+          $sel.append('<option value="" disabled selected>Select location from the list</option>');
+
+          if (Array.isArray(locations) && locations.length > 0) {
+            locations.forEach(function(loc) {
+              // Use id as value, name as visible text
+              $sel.append($('<option>', {
+                value: loc.id,
+                text: loc.name
+              }));
+            });
+          } else {
+            $sel.append('<option value="" disabled>No active locations available</option>');
+          }
+        },
+        error: function(xhr, status, err) {
+          console.error('Failed to load locations:', err);
+          const $sel = $('#event_location');
+          $sel.empty();
+          $sel.append('<option value="" disabled selected>Failed to load locations</option>');
+        }
+      });
+
       // Add red asterisk to required fields
       $('form')
         .find('input[required]:not(.no-required-mark), select[required], textarea[required]')
@@ -1127,21 +1156,48 @@ if (!function_exists('makeClickableLinks')) {
     // Reset form function
     function resetEventForm() {
       const form = document.getElementById('eventForm');
-      if (form) {
-        form.reset();
+      if (!form) return;
+
+      // 1. Native reset
+      form.reset();
+
+      // 2. Select2 for #event_name
+      if ($('#event_name').data('select2')) {
+        $('#event_name').val(null).trigger('change');
+        $('#event_name').trigger('select2:clearing');
       }
 
-      // Clear Quill editor
+      // 3. Reset #event_location (no re-fetch — options already loaded)
+      const $loc = $('#event_location');
+      if ($loc.length) {
+        $loc.val('');
+      }
+
+      // 4. Clear Quill editor
       const quill = window.quillManager?.getQuillInstance('event_description_editor');
       if (quill) {
         quill.setContents([]);
         window.quillManager.saveEditorContent('event_description_editor');
       }
 
-      // Hide preview
-      document.getElementById('imagePreview').style.display = 'none';
+      // 5. Clear image preview
+      const preview = document.getElementById('imagePreview');
+      if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
 
-      // Re-enable form if it was disabled
+      // 6. Remove validation error styling
+      form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+      form.querySelectorAll('.text-danger.small').forEach(el => el.remove());
+      const editorContainer = document.getElementById('event_description_editor');
+      if (editorContainer) editorContainer.classList.remove('border-danger');
+
+      // 7. Reset submit button state
+      showLoadingState(false);
+
+      // 8. Re-enable everything
       enableForm(true);
     }
 
@@ -1685,15 +1741,23 @@ if (!function_exists('makeClickableLinks')) {
           if (dateData.holidays?.length > 0) {
             content += `<h6 class="mt-3 mb-2"><i class="bi bi-calendar-event me-2"></i>Holidays</h6>`;
             dateData.holidays.forEach(holiday => {
+              // Build location line only if location_name exists
+              const locationLine = holiday.location_name ?
+                `<div class="small text-muted mt-1">
+                     <i class="bi bi-geo-alt me-1"></i> ${escapeHtml(holiday.location_name)}
+                   </div>` :
+                '';
+
               content += `
             <div class="card mb-2 border-danger">
               <div class="card-body p-3">
                 <h6 class="card-title text-danger mb-1">
-                  <i class="bi bi-flag me-2"></i>${holiday.name}
+                  <i class="bi bi-flag me-2"></i>${escapeHtml(holiday.name)}
                 </h6>
-                <p class="card-text mb-0 small">
-                  <i class="bi bi-calendar-date me-1"></i> ${holiday.date}
-                </p>
+                <div class="small text-muted">
+                  <i class="bi bi-calendar-date me-1"></i> ${escapeHtml(holiday.date)}
+                </div>
+                ${locationLine}
               </div>
             </div>
           `;

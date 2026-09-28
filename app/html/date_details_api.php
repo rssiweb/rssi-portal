@@ -119,21 +119,27 @@ try {
         'error' => null
     ];
 
-    // Fetch holidays for this specific date
+    // Fetch holidays for this specific date (with location name)
     $holidayResult = pg_query_params(
         $con,
-        "SELECT holiday_name, holiday_date::date as date
-         FROM holidays 
-         WHERE holiday_date = $1 
-         ORDER BY holiday_name",
+        "SELECT h.holiday_name,
+                h.holiday_date::date AS date,
+                h.location,
+                ol.name AS location_name
+         FROM holidays h
+         LEFT JOIN office_locations ol ON ol.id = h.location
+         WHERE h.holiday_date = $1
+         ORDER BY h.holiday_name",
         [$date]
     );
 
     if ($holidayResult) {
         while ($row = pg_fetch_assoc($holidayResult)) {
             $response['holidays'][] = [
-                'name' => $row['holiday_name'],
-                'date' => $row['date']
+                'name'          => $row['holiday_name'],
+                'date'          => $row['date'],
+                'location_id'   => $row['location'] ? (int)$row['location'] : null,
+                'location_name' => $row['location_name'] ?? null
             ];
         }
     }

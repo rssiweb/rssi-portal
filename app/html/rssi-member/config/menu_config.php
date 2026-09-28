@@ -485,6 +485,22 @@ class MenuConfig
                 ]
             ],
 
+            'workday_exceptions' => [
+                'section' => 'Schedule Hub',
+                'sidebar_id' => 'rostermanagement',
+                'pages' => [
+                    'workday_exceptions.php' => ['title' => 'Workday Exceptions', 'show_in_menu' => true]
+                ]
+            ],
+
+            'holiday_management' => [
+                'section' => 'Schedule Hub',
+                'sidebar_id' => 'rostermanagement',
+                'pages' => [
+                    'holiday_management.php' => ['title' => 'Holiday Management', 'show_in_menu' => true]
+                ]
+            ],
+
             // ============ SURVEY ============
             'create_survey' => [
                 'section' => 'Survey',
